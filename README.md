@@ -26,13 +26,13 @@
 # Major Components
 
 1. Raspberry Pi
-   a. Touch Screen
-   b. Speaker
-   c. Microphone
-   d. Home Assistant
-   e. runs all the code
-2. PWA
-   a. Chat
-   b. App View
-3. Pen & Paper
-   a. You just can't beat it.
+    - Touch Screen
+    - Speaker
+    - Microphone
+    - Home Assistant
+    - runs all the code
+3. PWA
+    - Chat
+    - App View
+4. Pen & Paper
+    - You just can't beat it.
