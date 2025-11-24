@@ -36,3 +36,5 @@
     - App View
 4. Pen & Paper
     - You just can't beat it.
+
+# LICENSE -- AGPLv3
