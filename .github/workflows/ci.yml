@@ -46,9 +46,6 @@ jobs:
       - name: Install project
         run: poetry install --no-interaction
 
-      - name: Run database migrations
-        run: poetry run alembic upgrade head
-
       - name: Run mypy
         run: poetry run mypy planned
 
