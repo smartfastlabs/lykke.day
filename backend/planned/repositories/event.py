@@ -1,5 +1,6 @@
-from .base import BaseRepository
 from planned.objects import Event
+
+from .base import BaseRepository
 
 
 class EventRepository(BaseRepository[Event]):

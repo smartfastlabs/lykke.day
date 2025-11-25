@@ -1,13 +1,13 @@
-from datetime import datetime, timedelta, timezone, date
+from datetime import UTC, datetime, timedelta
 
-from planned.objects import Calendar, Event
 from planned.gateways import google
-from planned.repositories import calendar_repo, auth_token_repo, event_repo
+from planned.objects import Calendar, Event
+from planned.repositories import auth_token_repo, calendar_repo, event_repo
 
 
 class CalendarService:
     async def sync_google(
-        self, calendar: Calendar, 
+        self, calendar: Calendar,
         lookback: datetime,
     ) -> tuple[list[Event], list[Event]]:
         events, deleted_events = [], []
@@ -27,13 +27,13 @@ class CalendarService:
 
 
     async def sync(self, calendar: Calendar) -> list[Event]:
-        lookback: datetime = datetime.now(timezone.utc) - timedelta(days=2)
+        lookback: datetime = datetime.now(UTC) - timedelta(days=2)
         if calendar.last_sync_at:
             lookback = calendar.last_sync_at - timedelta(minutes=30)
 
         try:
             if calendar.platform == "google":
-                calendar.last_sync_at = datetime.now(timezone.utc)
+                calendar.last_sync_at = datetime.now(UTC)
                 return await self.sync_google(
                     calendar,
                     lookback=lookback,

@@ -1,8 +1,10 @@
-from .base import BaseObject
-from datetime import datetime, timezone
-from pydantic import Field
-from uuid import UUID
 import uuid
+from datetime import UTC, datetime
+from uuid import UUID
+
+from pydantic import Field
+
+from .base import BaseObject
 
 
 class PushSubscription(BaseObject):
@@ -11,6 +13,6 @@ class PushSubscription(BaseObject):
     auth: str
     uuid: UUID = Field(default_factory=uuid.uuid4)
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         alias="createdAt",
     )

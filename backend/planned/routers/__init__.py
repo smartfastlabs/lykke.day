@@ -1,9 +1,6 @@
 from fastapi import APIRouter
 
-from . import google
-from . import events
-from . import routines
-from . import push_subscriptions
+from . import events, google, push_subscriptions, routines
 
 router = APIRouter()
 

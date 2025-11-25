@@ -1,10 +1,13 @@
-import os
+import contextlib
 import datetime
+import os
+from pathlib import Path
+from typing import Generic, TypeVar
+
 import aiofiles
 import aiofiles.os
-from typing import Generic, TypeVar
-from pathlib import Path
 
+from planned import settings
 from planned.objects.base import BaseObject
 from planned.utils.json import read_directory
 
@@ -25,7 +28,7 @@ class BaseRepository(Generic[ObjectType]):
         return obj.model_dump_json(indent=4, by_alias=False)
 
     async def get(self, id: str) -> ObjectType:
-        async with aiofiles.open(self._get_file_path(id), mode="r") as f:
+        async with aiofiles.open(self._get_file_path(id)) as f:
             contents = await f.read()
 
         return self.parse_json(contents)
@@ -44,17 +47,17 @@ class BaseRepository(Generic[ObjectType]):
     async def search(self, date: datetime.date | None = None):
         if date is None:
             return await read_directory(
-                os.path.abspath(f"../data/{self._prefix}"),
+                os.path.abspath(f"{settings.DATA_PATH}/{self._prefix}"),
                 self.Object,
             )
 
         if hasattr(self.Object, "date"):
             return await read_directory(
-                f"../data/{self._prefix}/{date}",
+                f"{settings.DATA_PATH}/{self._prefix}/{date}",
                 self.Object,
             )
 
-        raise Exception("You can't search by date!")
+        raise Exception(f"You can't search {self.Object.__name__}s by date!")
 
     async def delete(self, id: str) -> None:
         try:
@@ -63,12 +66,10 @@ class BaseRepository(Generic[ObjectType]):
             pass
 
     async def delete_by_date(self, date=datetime.date) -> None:
-        try:
+        with contextlib.suppress(FileNotFoundError):
             await aiofiles.os.rmdir(
-                os.path.abspath(f"../data/{self._prefix}/{date}"),
+                os.path.abspath(f"{settings.DATA_PATH}/{self._prefix}/{date}"),
             )
-        except FileNotFoundError:
-            pass
 
     def _get_object_path(self, temp: str | ObjectType) -> str:
         if isinstance(temp, self.Object):
@@ -79,4 +80,4 @@ class BaseRepository(Generic[ObjectType]):
         return f"{self._prefix}/{temp}"
 
     def _get_file_path(self, temp: str | ObjectType) -> str:
-        return os.path.abspath(f"../data/{self._get_object_path(temp)}.json")
+        return os.path.abspath(f"{settings.DATA_PATH}/{self._get_object_path(temp)}.json")

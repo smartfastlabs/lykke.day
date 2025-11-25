@@ -1,5 +1,6 @@
-from .base import BaseRepository
 from planned.objects import AuthToken
+
+from .base import BaseRepository
 
 
 class AuthTokenRepository(BaseRepository[AuthToken]):

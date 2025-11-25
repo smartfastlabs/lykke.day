@@ -1,5 +1,5 @@
 import os
-from typing import TypeVar, Type
+from typing import TypeVar
 
 import aiofiles
 import aiofiles.os
@@ -9,7 +9,7 @@ from planned.objects.base import BaseObject
 T = TypeVar("T", bound=BaseObject)
 
 
-async def read_directory(directory: str, model: Type[T]) -> list[T]:
+async def read_directory(directory: str, model: type[T]) -> list[T]:
     """
     Read all *.json files in `directory` and deserialize them into instances of `model`.
 
@@ -33,7 +33,7 @@ async def read_directory(directory: str, model: Type[T]) -> list[T]:
         if not os.path.isfile(full_path):
             continue
 
-        async with aiofiles.open(full_path, mode="r") as f:
+        async with aiofiles.open(full_path) as f:
             contents = await f.read()
 
         try:

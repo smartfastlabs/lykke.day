@@ -3,15 +3,14 @@ import json
 import aiohttp
 from webpush import WebPush, WebPushMessage, WebPushSubscription  # type: ignore
 
-from planned import exceptions, objects
-from planned.settings import settings
+from planned import exceptions, objects, settings
 
 from .base import BaseService
 
 wp = WebPush(
     public_key=settings.VAPID_PUBLIC_KEY.encode("utf-8"),
     private_key=settings.VAPID_SECRET_KEY.encode("utf-8"),
-    subscriber="todd@jaspertheapp.com",
+    subscriber="todd@smartfast.com",
 )
 
 

@@ -1,5 +1,6 @@
-from .base import BaseRepository
 from planned.objects import PushSubscription
+
+from .base import BaseRepository
 
 
 class PushSubscriptionRepository(BaseRepository[PushSubscription]):

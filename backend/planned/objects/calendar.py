@@ -1,8 +1,9 @@
-from .base import BaseObject
-from pydantic import Field
-from uuid import UUID
 from datetime import datetime
-from typing import Optional
+from uuid import UUID
+
+from pydantic import Field
+
+from .base import BaseObject
 
 
 class Calendar(BaseObject):
@@ -10,4 +11,4 @@ class Calendar(BaseObject):
     auth_token_uuid: UUID = Field(alias="authTokenUuid")
     platform_id: str = Field(alias="platformId")
     platform: str
-    last_sync_at: Optional[datetime] = Field(default=None, alias="lastSyncAt")
+    last_sync_at: datetime | None = Field(default=None, alias="lastSyncAt")

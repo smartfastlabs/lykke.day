@@ -1,5 +1,4 @@
 import asyncio
-import os
 import tempfile
 from asyncio.subprocess import create_subprocess_exec
 

@@ -1,11 +1,10 @@
-from datetime import date, datetime, timezone, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from gcsa.google_calendar import GoogleCalendar
 from google_auth_oauthlib.flow import Flow
 
 from planned.objects import Calendar, Event
 from planned.objects.auth_token import AuthToken
-
 
 # Google OAuth Flow
 CLIENT_SECRET_FILE = ".credentials.json"
@@ -66,7 +65,7 @@ def load_calendar_events(
     for e in get_google_calendar(calendar, token).get_events(
         single_events=True,
         showDeleted=False,
-        time_max=datetime.now(timezone.utc) + timedelta(days=30),
+        time_max=datetime.now(UTC) + timedelta(days=30),
     ):
         if is_after(e.end, e.updated):
             print(f"It looks like the event `{e.summary}` has already happened")

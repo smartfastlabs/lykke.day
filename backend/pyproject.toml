@@ -47,7 +47,6 @@ build-backend = "poetry.core.masonry.api"
 
 # Environment configurations
 [tool.planned.env]
-database_url = "postgresql://planned:straderishere@postgres:5432/planned_dev"
 pythonpath = "."
 
 [tool.black]

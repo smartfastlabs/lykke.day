@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
-from planned.utils.dates import get_current_date
 from planned.objects import Event
 from planned.repositories import event_repo
+from planned.utils.dates import get_current_date
 
 router = APIRouter()
 

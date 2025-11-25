@@ -1,6 +1,7 @@
+import struct
+
 import pvporcupine
 import pyaudio
-import struct
 
 ACCESS_KEY = "peRaidcVma8bYAHuxjPa5oJ0mp/1+dTpCTcFA31k+cRVRaDHpy4VCQ=="
 

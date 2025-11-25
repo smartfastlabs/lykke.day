@@ -1,24 +1,25 @@
-from .base import BaseObject
-from google.oauth2.credentials import Credentials
-from datetime import datetime, timezone
-from pydantic import Field
-from typing import Optional
-from uuid import UUID
 import uuid
+from datetime import UTC, datetime
+from uuid import UUID
+
+from google.oauth2.credentials import Credentials
+from pydantic import Field
+
+from .base import BaseObject
 
 
 class AuthToken(BaseObject):
     platform: str
     token: str
-    refresh_token: Optional[str] = Field(default=None, alias="refreshToken")
-    token_uri: Optional[str] = Field(default=None, alias="tokenUri")
-    client_id: Optional[str] = Field(default=None, alias="clientId")
-    client_secret: Optional[str] = Field(default=None, alias="clientSecret")
-    scopes: Optional[list] = Field(default=None, alias="scopes")
-    expires_at: Optional[datetime] = Field(default=None, alias="expiresAt")
+    refresh_token: str | None = Field(default=None, alias="refreshToken")
+    token_uri: str | None = Field(default=None, alias="tokenUri")
+    client_id: str | None = Field(default=None, alias="clientId")
+    client_secret: str | None = Field(default=None, alias="clientSecret")
+    scopes: list | None = Field(default=None, alias="scopes")
+    expires_at: datetime | None = Field(default=None, alias="expiresAt")
     uuid: UUID = Field(default_factory=uuid.uuid4)
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc), alias="createdAt"
+        default_factory=lambda: datetime.now(UTC), alias="createdAt"
     )
 
     def google_credentials(self):

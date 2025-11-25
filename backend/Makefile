@@ -6,4 +6,4 @@ serve:
 
 .PHONY: test
 test:
-	poetry run pytest tests --vcr-record=once
+	ENV_FILE=.env.test poetry run pytest tests --vcr-record=once

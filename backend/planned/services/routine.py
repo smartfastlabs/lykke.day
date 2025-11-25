@@ -1,10 +1,11 @@
 import datetime
-from .base import BaseService
 
 from planned import objects
+from planned.objects import RoutineInstance, RoutineInstanceStatus
+from planned.repositories import routine_instance_repo, routine_repo
 from planned.utils.dates import get_current_date
-from planned.objects import RoutineInstance, Routine
-from planned.repositories import routine_repo, routine_instance_repo
+
+from .base import BaseService
 
 
 def is_routine_active(routine: objects.Routine, date:  datetime.date) -> bool:
@@ -23,11 +24,13 @@ class RoutineService(BaseService):
         result: list[RoutineInstance] = []
 
         for routine in await routine_repo.search():
+            print(routine)
             if is_routine_active(routine, date):
                 result.append(
                     objects.RoutineInstance(
                         routine=routine,
                         date=date,
+                        status=RoutineInstanceStatus.NOT_READY if routine.available_time else RoutineInstanceStatus.READY,
                     )
                 )
 

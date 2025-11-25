@@ -1,10 +1,9 @@
-from .push_subscription import PushSubscriptionRepository
 from .auth_token import AuthTokenRepository
 from .calendar import CalendarRepository
 from .event import EventRepository
+from .push_subscription import PushSubscriptionRepository
 from .routine import RoutineRepository
 from .routine_instance import RoutineInstanceRepository
-
 
 auth_token_repo = AuthTokenRepository()
 calendar_repo = CalendarRepository()

@@ -1,15 +1,15 @@
 import asyncio
 import sys
 import traceback
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Never
+from typing import Never
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from planned import routers
-from planned.settings import settings
+from planned import routers, settings
 from planned.services import calendar_svc
 
 

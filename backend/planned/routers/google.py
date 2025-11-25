@@ -3,12 +3,11 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from google.auth.credentials import Credentials as GoogleCredentials
 from googleapiclient.discovery import build
 
+from planned.gateways.google import get_flow
 from planned.objects import AuthToken, Calendar
 from planned.repositories import auth_token_repo, calendar_repo
-from planned.gateways.google import get_flow
 
 # Auth state storage (in memory for simplicity, use a database in production)
 oauth_states = {}

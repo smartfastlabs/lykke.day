@@ -1,5 +1,6 @@
-from .base import BaseRepository
 from planned.objects import Calendar
+
+from .base import BaseRepository
 
 
 class CalendarRepository(BaseRepository[Calendar]):

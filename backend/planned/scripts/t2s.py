@@ -1,6 +1,7 @@
+from array import array
+
 import pvorca
 import pyaudio
-from array import array
 
 ACCESS_KEY = "peRaidcVma8bYAHuxjPa5oJ0mp/1+dTpCTcFA31k+cRVRaDHpy4VCQ=="
 

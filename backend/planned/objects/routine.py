@@ -1,8 +1,8 @@
-from datetime import time, date, datetime
+from datetime import date, datetime, time
 from enum import Enum
-from typing import List, Optional
 
 from pydantic import Field
+
 from .base import BaseObject
 
 
@@ -53,11 +53,11 @@ class Routine(BaseObject):
     category: Category
 
     # Optional time fields; Pydantic will parse "HH:MM" strings into datetime.time
-    available_time: Optional[time] = Field(default=None, alias="availableTime")
-    start_time: Optional[time] = Field(default=None, alias="startTime")
-    end_time: Optional[time] = Field(default=None, alias="endTime")
+    available_time: time | None = Field(default=None, alias="availableTime")
+    start_time: time | None = Field(default=None, alias="startTime")
+    end_time: time | None = Field(default=None, alias="endTime")
 
-    schedule_days: Optional[List[DayOfWeek]] = Field(default=None, alias="scheduleDays")
+    schedule_days: list[DayOfWeek] | None = Field(default=None, alias="scheduleDays")
 
 
 
