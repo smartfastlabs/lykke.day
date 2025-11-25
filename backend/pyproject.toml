@@ -110,16 +110,15 @@ module = "googleapiclient.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = "gcsa.event"
-ignore_missing_imports = true
-
-
-[[tool.mypy.overrides]]
-module = "gcsa.google_calendar"
+module = "gcsa.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "google_auth_oauthlib.flow"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "aiofiles.*"
 ignore_missing_imports = true
 
 
