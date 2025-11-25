@@ -11,3 +11,6 @@ class BaseException(Exception):
 class NotFoundException(BaseException):
     def __init__(self: Self) -> None:
         super().__init__("not found", 404)
+
+class PushNotificationException(BaseException):
+    pass

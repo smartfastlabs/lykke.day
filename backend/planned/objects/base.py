@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Self, Any
 
 import pydantic
 
@@ -10,16 +10,18 @@ class BaseObject(pydantic.BaseModel):
         # frozen=True,
     )
 
-    def clone(self, **kwargs) -> Self:
+    def clone(self, **kwargs: dict[str, Any]) -> Self:
         return self.model_copy(update=kwargs)
 
     @property
     def id(self) -> str:
-        if hasattr(self, "uuid"):
+        if hasattr(self, "guid"):
+            return str(self.guid)
+        elif hasattr(self, "uuid"):
             return str(self.uuid)
-        elif hasattr(self, "platform_id"):
+        elif hasattr(self, "platform_id") and hasattr(self, "platform"):
             return f"{self.platform}_{self.platform_id}"
         elif hasattr(self, "email"):
-            return self.email
+            return str(self.email)
 
         raise AttributeError("No suitable ID attribute found.")

@@ -3,26 +3,32 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from google.oauth2.credentials import Credentials
-from pydantic import Field
+from pydantic import Field, ConfigDict
 
 from .base import BaseObject
 
 
 class AuthToken(BaseObject):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        validate_by_alias=False,
+        validate_by_name=True,
+        # frozen=True,
+    )
     platform: str
     token: str
-    refresh_token: str | None = Field(default=None, alias="refreshToken")
-    token_uri: str | None = Field(default=None, alias="tokenUri")
-    client_id: str | None = Field(default=None, alias="clientId")
-    client_secret: str | None = Field(default=None, alias="clientSecret")
-    scopes: list | None = Field(default=None, alias="scopes")
-    expires_at: datetime | None = Field(default=None, alias="expiresAt")
+    refresh_token: str | None = None
+    token_uri: str | None = None
+    client_id: str | None = None
+    client_secret: str | None = None
+    scopes: list | None = None
+    expires_at: datetime | None = None
     uuid: UUID = Field(default_factory=uuid.uuid4)
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), alias="createdAt"
+        default_factory=lambda: datetime.now(UTC)
     )
 
-    def google_credentials(self):
+    def google_credentials(self) -> Credentials:
         """
         Returns the credentials for Google API.
         """

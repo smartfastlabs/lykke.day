@@ -26,7 +26,7 @@ class CalendarService:
         return events, deleted_events
 
 
-    async def sync(self, calendar: Calendar) -> list[Event]:
+    async def sync(self, calendar: Calendar) -> tuple[list[Event], list[Event]]:
         lookback: datetime = datetime.now(UTC) - timedelta(days=2)
         if calendar.last_sync_at:
             lookback = calendar.last_sync_at - timedelta(minutes=30)
@@ -46,7 +46,7 @@ class CalendarService:
             f"Sync not implemented for platform {calendar.platform}"
         )
 
-    async def sync_all(self):
+    async def sync_all(self) -> None:
         for calendar in await calendar_repo.search():
             events, deleted_events = await self.sync(calendar)
             for event in events:

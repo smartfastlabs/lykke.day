@@ -1,4 +1,5 @@
 import contextlib
+from uuid import UUID
 import datetime
 import os
 from pathlib import Path
@@ -21,19 +22,19 @@ class BaseRepository(Generic[ObjectType]):
     Object: type[ObjectType]
     _prefix: str
 
-    def parse_json(self, data: dict) -> ObjectType:
+    def parse_json(self, data: str) -> ObjectType:
         return self.Object.model_validate_json(data, by_alias=False, by_name=True)
 
-    def to_json(self, obj: ObjectType) -> dict:
+    def to_json(self, obj: ObjectType) -> str:
         return obj.model_dump_json(indent=4, by_alias=False)
 
-    async def get(self, id: str) -> ObjectType:
-        async with aiofiles.open(self._get_file_path(id)) as f:
+    async def get(self, temp: str | UUID) -> ObjectType:
+        async with aiofiles.open(self._get_file_path(str(temp))) as f:
             contents = await f.read()
 
         return self.parse_json(contents)
 
-    async def put(self, obj, key: str | None = None):
+    async def put(self, obj: ObjectType, key: str | None = None) -> ObjectType:
         path = Path(self._get_file_path(key or obj))
 
         # Async mkdir - creates parent directories
@@ -44,7 +45,7 @@ class BaseRepository(Generic[ObjectType]):
 
         return obj
 
-    async def search(self, date: datetime.date | None = None):
+    async def search(self, date: datetime.date | None = None) -> list[ObjectType]:
         if date is None:
             return await read_directory(
                 os.path.abspath(f"{settings.DATA_PATH}/{self._prefix}"),
@@ -59,13 +60,11 @@ class BaseRepository(Generic[ObjectType]):
 
         raise Exception(f"You can't search {self.Object.__name__}s by date!")
 
-    async def delete(self, id: str) -> None:
-        try:
-            await aiofiles.os.remove(self._get_file_path(temp))
-        except FileNotFoundError:
-            pass
+    async def delete(self, temp: str | UUID) -> None:
+        with contextlib.suppress(FileExistsError):
+            await aiofiles.os.remove(self._get_file_path(str(temp)))
 
-    async def delete_by_date(self, date=datetime.date) -> None:
+    async def delete_by_date(self, date: datetime.date) -> None:
         with contextlib.suppress(FileNotFoundError):
             await aiofiles.os.rmdir(
                 os.path.abspath(f"{settings.DATA_PATH}/{self._prefix}/{date}"),
@@ -73,7 +72,7 @@ class BaseRepository(Generic[ObjectType]):
 
     def _get_object_path(self, temp: str | ObjectType) -> str:
         if isinstance(temp, self.Object):
-            if hasattr(self.Object, "date"):
+            if hasattr(temp, "date"):
                 return f"{self._prefix}/{temp.date}/{temp.id}"
             return f"{self._prefix}/{temp.id}"
 

@@ -1,3 +1,4 @@
+from typing import cast
 import secrets
 from datetime import datetime, timedelta
 
@@ -16,7 +17,7 @@ router = APIRouter()
 
 
 @router.get("/login")
-async def google_login():
+async def google_login() -> RedirectResponse:
     state = secrets.token_urlsafe(16)
     authorization_url, state = get_flow("login").authorization_url(
         access_type="offline",
@@ -49,7 +50,7 @@ def verify_state(
         )
 
     state_data = oauth_states[state]
-    if datetime.now() > state_data["expiry"]:
+    if datetime.now() > cast(datetime, state_data["expiry"]):
         del oauth_states[state]
         raise HTTPException(
             status_code=400,
@@ -70,7 +71,7 @@ async def google_login_callback(
     request: Request,
     state: str,
     code: str,
-):
+) -> RedirectResponse:
     if not code or not verify_state(state, "login"):
         raise HTTPException(
             status_code=400,

@@ -48,16 +48,16 @@ class Routine(BaseObject):
     name: str
     description: str
 
-    timing_type: TimingType = Field(alias="timingType")
+    timing_type: TimingType
     frequency: Frequency
     category: Category
 
     # Optional time fields; Pydantic will parse "HH:MM" strings into datetime.time
-    available_time: time | None = Field(default=None, alias="availableTime")
-    start_time: time | None = Field(default=None, alias="startTime")
-    end_time: time | None = Field(default=None, alias="endTime")
+    available_time: time | None = None
+    start_time: time | None = None
+    end_time: time | None = None
 
-    schedule_days: list[DayOfWeek] | None = Field(default=None, alias="scheduleDays")
+    schedule_days: list[DayOfWeek] | None = None
 
 
 
@@ -65,9 +65,9 @@ class RoutineInstance(BaseObject):
     routine: Routine
     date: date
     status: RoutineInstanceStatus
-    completed_at: datetime | None = Field(default=None, alias="completedAt")
+    completed_at: datetime | None = None
 
     @property
-    def id(self):
+    def id(self) -> str:
         return self.routine.id
 

@@ -21,7 +21,7 @@ async def subscribe(
     background_tasks: BackgroundTasks,
     request: SubscriptionRequest,
 ) -> objects.PushSubscription:
-    result = await push_subscription_repo.put(
+    result: objects.PushSubscription = await push_subscription_repo.put(
         objects.PushSubscription(
             endpoint=request.endpoint,
             p256dh=request.keys.p256dh,

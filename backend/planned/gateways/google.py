@@ -22,7 +22,7 @@ REDIRECT_URIS: dict[str, str] = {
 }
 
 
-def get_flow(flow_name: str):
+def get_flow(flow_name: str) -> Flow:
     return Flow.from_client_secrets_file(
         CLIENT_SECRET_FILE,
         scopes=SCOPES,
@@ -62,25 +62,25 @@ def load_calendar_events(
 ) -> list[Event]:
     events: list[Event] = []
     print(f"Loading events for calendar {calendar.name}...")
-    for e in get_google_calendar(calendar, token).get_events(
+    for event in get_google_calendar(calendar, token).get_events(
         single_events=True,
         showDeleted=False,
         time_max=datetime.now(UTC) + timedelta(days=30),
     ):
-        if is_after(e.end, e.updated):
-            print(f"It looks like the event `{e.summary}` has already happened")
+        if is_after(event.end, event.updated):
+            print(f"It looks like the event `{event.summary}` has already happened")
             continue
 
-        if e.other.get("status") == "cancelled":
-            print(f"It looks like the event `{e.summary}` has been cancelled")
+        if event.other.get("status") == "cancelled":
+            print(f"It looks like the event `{event.summary}` has been cancelled")
 
         else:
-            print(f"Loaded event {e.id}: {e.summary}")
+            print(f"Loaded event {event.id}: {event.summary}")
 
         try:
-            events.append(Event.from_google(calendar.id, e))
+            events.append(Event.from_google(calendar.id, event))
         except Exception as e:
-            print(f"Error converting event {e.id}: {e}")
+            print(f"Error converting event {event.id}: {e}")
             continue
 
     return events

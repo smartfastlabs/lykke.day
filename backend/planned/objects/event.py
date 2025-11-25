@@ -8,20 +8,20 @@ from .base import BaseObject
 
 class Event(BaseObject):
     name: str
-    calendar_id: str = Field(alias="calendarId")
-    platform_id: str = Field(alias="platformId")
+    calendar_id: str 
+    platform_id: str 
     platform: str
     status: str
-    starts_at: datetime | None = Field(default=None, alias="startsAt")
-    ends_at: datetime | None = Field(default=None, alias="endsAt")
+    starts_at: datetime 
+    ends_at: datetime | None = None
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), alias="createdAt"
+        default_factory=lambda: datetime.now(UTC)
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), alias="updatedAt"
+        default_factory=lambda: datetime.now(UTC)
     )
 
-    @computed_field
+    @computed_field # mypy: ignore
     @property
     def date(self) -> dt_date:
         return self.starts_at.date()

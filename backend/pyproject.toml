@@ -13,7 +13,7 @@ notion-client = "2.3.0"
 gcsa = "2.5.1"
 uvicorn = "^0.23.0"
 alembic = "^1.11.0"
-fastapi = "^0.100.0"
+fastapi = "^0.122.0"
 sqlalchemy = "^2.0.0"
 psycopg2-binary = "^2.9.0"
 pydantic-settings = "^2.8.1"
@@ -84,7 +84,8 @@ combine-as-imports = true
 "*_test.py" = ["ALL"]
 
 [tool.mypy]
-python_version = "3.11"
+exclude="scripts.*"
+python_version = "3.13"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -97,11 +98,31 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+disable_error_code = ["prop-decorator"]
 
 [[tool.mypy.overrides]]
 module = "planned"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
+
+[[tool.mypy.overrides]]
+module = "googleapiclient.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "gcsa.event"
+ignore_missing_imports = true
+
+
+[[tool.mypy.overrides]]
+module = "gcsa.google_calendar"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "google_auth_oauthlib.flow"
+ignore_missing_imports = true
+
+
 
 [tool.pytest.ini_options]
 addopts = "--cov=planned --cov-report=term-missing --cov-report=xml"

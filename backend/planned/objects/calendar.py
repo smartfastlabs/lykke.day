@@ -8,7 +8,7 @@ from .base import BaseObject
 
 class Calendar(BaseObject):
     name: str
-    auth_token_uuid: UUID = Field(alias="authTokenUuid")
-    platform_id: str = Field(alias="platformId")
+    auth_token_uuid: UUID 
+    platform_id: str 
     platform: str
-    last_sync_at: datetime | None = Field(default=None, alias="lastSyncAt")
+    last_sync_at: datetime | None = None

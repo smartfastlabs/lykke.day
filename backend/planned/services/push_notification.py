@@ -19,7 +19,7 @@ class PushNotificationService(BaseService):
         self,
         subscription: objects.PushSubscription,
         content: str | dict,
-    ):
+    ) -> None:
         if isinstance(content, dict):
             content = json.dumps(content)
         # Implement the logic to send a push notification
@@ -43,7 +43,7 @@ class PushNotificationService(BaseService):
 
             if not response.ok:
                 raise exceptions.PushNotificationException(
-                    f"Failed to send push notification: {response.status} {response.reason}"
+                    f"Failed to send push notification: {response.status} {response.reason}", 504,
                 )
 
 push_svc = PushNotificationService()
