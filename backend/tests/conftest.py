@@ -15,7 +15,7 @@ def today():
 
 @pytest.fixture
 def test_date():
-    with freeze_time("2025-11-27"):
+    with freeze_time("2025-11-27 00:00:00-6:00"):
         yield datetime.date(2025, 11, 27)
 
 
