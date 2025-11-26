@@ -52,7 +52,7 @@ class BaseRepository(Generic[ObjectType]):
                 self.Object,
             )
 
-        if hasattr(self.Object, "date"):
+        if "date" in self.Object.model_fields or hasattr(self.Object, "date"):
             return await read_directory(
                 f"{settings.DATA_PATH}/{self._prefix}/{date}",
                 self.Object,
