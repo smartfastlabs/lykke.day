@@ -4,7 +4,13 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Never
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
+from starlette.middleware.sessions import SessionMiddleware
+
+from planned import routers, settings
+from planned.services import calendar_svc
 
 logger.remove()
 logger.add(
@@ -12,13 +18,6 @@ logger.add(
     colorize=True,
     format="<green>{time}</green> <level>{message}</level>",
 )
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware
-
-from planned import routers, settings
-from planned.services import calendar_svc
 
 
 @asynccontextmanager

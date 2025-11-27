@@ -11,11 +11,7 @@ from .base import BaseService
 
 
 def is_routine_active(routine: objects.Routine, date: datetime.date) -> bool:
-    if routine.schedule_days:
-        if date.weekday() not in routine.schedule_days:
-            return False
-
-    return True
+    return not (routine.schedule_days and date.weekday() not in routine.schedule_days)
 
 
 class RoutineService(BaseService):
