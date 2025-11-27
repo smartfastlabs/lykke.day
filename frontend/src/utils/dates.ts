@@ -1,4 +1,4 @@
-import { Task, Weekday } from "../types/tasks";
+import { Task, Weekday } from "../types/routines";
 
 export function getDateString(date: Date = new Date()): string {
   const year = date.getFullYear();

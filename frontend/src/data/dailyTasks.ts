@@ -1,4 +1,4 @@
-import { Task } from "../types/tasks";
+import { Task } from "../types/routines";
 
 export const exampleTasks: Task[] = [
   {

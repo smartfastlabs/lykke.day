@@ -9,7 +9,11 @@ export type TimingType = "DEADLINE" | "FIXED_TIME" | "TIME_WINDOW" | "FLEXIBLE";
 export type Frequency = "DAILY" | "CUSTOM_WEEKLY";
 export type Category = "hygiene" | "nutrition" | "health" | "pet" | "chore";
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-export type RoutineInstanceStatus = "COMPLETE" | "NOT_READY" | "READY" | "PUNTED";
+export type RoutineInstanceStatus =
+  | "COMPLETE"
+  | "NOT_READY"
+  | "READY"
+  | "PUNTED";
 
 export interface AuthToken {
   platform: string;

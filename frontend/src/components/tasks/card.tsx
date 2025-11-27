@@ -1,5 +1,5 @@
 import { Component, Show, createMemo, createSignal } from "solid-js";
-import type { Task } from "../../types/tasks";
+import type { Task } from "../../types/routines";
 import { getTime } from "../../utils/dates";
 import TimeBadge from "../shared/timeBadge";
 import TaskStatusBadge from "./statusBadge";
