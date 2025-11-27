@@ -12,11 +12,12 @@ class Settings(BaseSettings):
     VAPID_PUBLIC_KEY: str = ""
     ENVIRONMENT: str = "development"
     DATA_PATH: str = "../data"
+    SESSION_SECRET: str = ""
 
     model_config = SettingsConfigDict(
-        # Default to ".env", but allow overriding with ENV_FILE
         env_file=os.getenv("ENV_FILE", ".env"),
         case_sensitive=True,
     )
+
 
 settings = Settings()

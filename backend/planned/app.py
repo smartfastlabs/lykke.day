@@ -42,7 +42,7 @@ app = FastAPI(
 
 app.add_middleware(
     SessionMiddleware,
-    secret_key="secret-key",  # TODO: Move to settings
+    secret_key=settings.SESSION_SECRET,
 )
 
 # Set all CORS enabled origins
