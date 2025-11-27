@@ -2292,6 +2292,23 @@ toml = ["tomli (>=2.0.1)"]
 yaml = ["pyyaml (>=6.0.1)"]
 
 [[package]]
+name = "pydantic-to-typescript"
+version = "2.0.0"
+description = "Convert pydantic models to typescript interfaces"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pydantic_to_typescript-2.0.0-py3-none-any.whl", hash = "sha256:5bc5e1a940c1a39e4e3a6124bd3bda1b0fc6df85c673a4781b94a1f4150cae15"},
+    {file = "pydantic_to_typescript-2.0.0.tar.gz", hash = "sha256:06e92e8d10759ffebe3abdd4de14015bbf80809fa9960273be6041d8509662be"},
+]
+
+[package.dependencies]
+pydantic = "*"
+
+[package.extras]
+dev = ["coverage", "pytest", "pytest-cov", "ruff"]
+
+[[package]]
 name = "pyee"
 version = "13.0.0"
 description = "A rough port of Node.js's EventEmitter to Python with a few tricks of its own"
@@ -3260,4 +3277,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.13"
-content-hash = "df28e309f1f6792d87c0f72879ced68c85db580fbe700646cdfc30537286769f"
+content-hash = "23ace50545a852133436d7386814202505129090ae44adc7ab7a27096b8e0182"

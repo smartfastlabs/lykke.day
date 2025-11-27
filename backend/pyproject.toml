@@ -28,6 +28,7 @@ aiohttp = "^3.13.2"
 webpush = "^1.0.6"
 playwright = "^1.56.0"
 loguru = "^0.7.3"
+pydantic-to-typescript = "^2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=23.3.0"
