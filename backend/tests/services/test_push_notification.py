@@ -1,6 +1,8 @@
+from types import SimpleNamespace
+
 import equals
 import pytest
-from dobles import InstanceDouble, expect
+from dobles import InstanceDouble, allow, expect
 from pydantic import AnyHttpUrl
 from webpush import WebPushSubscription  # type: ignore
 
@@ -31,6 +33,21 @@ async def test_send_notification():
             encrypted="encrypted",
             headers={"header": "t"}
         )
+    )
+
+    session = InstanceDouble("aiohttp.ClientSession")
+    expect(session).__aenter__().and_return(session)
+    allow(session).__aexit__
+    expect(push_notification.aiohttp).ClientSession().and_return(session)
+    async def response():
+        return SimpleNamespace(ok=True)
+
+    expect(session).post(
+        url=subscription.endpoint,
+        data="encrypted",
+        headers={"header": "t"}
+    ).and_return(
+        response()
     )
 
     await push_notification.push_svc.send_notification(

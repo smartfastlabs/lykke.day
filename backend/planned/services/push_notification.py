@@ -22,7 +22,7 @@ class PushNotificationService(BaseService):
     ) -> None:
         if isinstance(content, dict):
             content = json.dumps(content)
-        # Implement the logic to send a push notification
+
         message: WebPushMessage = wp.get(
             content,
             WebPushSubscription(
