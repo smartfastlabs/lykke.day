@@ -1,7 +1,7 @@
 import { getRequestEvent } from "solid-js/web";
 
 import { globalNotifications } from "../providers/notifications";
-import { Event } from "../types/api";
+import { Event, Task } from "../types/api";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -90,6 +90,18 @@ export const eventAPI = {
 
   getTodays: async (): Event[] => {
     const resp = await fetchJSON(`/api/events/today`, {
+      method: "GET",
+    });
+
+    return resp.data as Event[];
+  },
+};
+
+export const taskAPI = {
+  ...genericCrud("tasks"),
+
+  getTodays: async (): Event[] => {
+    const resp = await fetchJSON(`/api/tasks/today`, {
       method: "GET",
     });
 

@@ -50,7 +50,7 @@ const TaskService = {
         definition: task,
         date: date,
         statuses: [],
-      });
+      } as Task);
     }
 
     TaskStorage.saveTasks(date, tasks);

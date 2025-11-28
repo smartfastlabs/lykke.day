@@ -9,11 +9,7 @@ export type TimingType = "DEADLINE" | "FIXED_TIME" | "TIME_WINDOW" | "FLEXIBLE";
 export type Frequency = "DAILY" | "CUSTOM_WEEKLY";
 export type Category = "hygiene" | "nutrition" | "health" | "pet" | "chore";
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-export type RoutineInstanceStatus =
-  | "COMPLETE"
-  | "NOT_READY"
-  | "READY"
-  | "PUNTED";
+export type TaskStatus = "COMPLETE" | "NOT_READY" | "READY" | "PUNTED";
 
 export interface AuthToken {
   platform: string;
@@ -38,7 +34,7 @@ export interface Calendar {
 export interface Day {
   date: string;
   events: Event[];
-  routine_instances: RoutineInstance[];
+  tasks: Task[];
 }
 export interface Event {
   name: string;
@@ -53,10 +49,10 @@ export interface Event {
   date: string;
   guid: string;
 }
-export interface RoutineInstance {
+export interface Task {
   routine: Routine;
   date: string;
-  status: RoutineInstanceStatus;
+  status: TaskStatus;
   completed_at?: string | null;
 }
 export interface Routine {
