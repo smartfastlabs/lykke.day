@@ -11,4 +11,4 @@ async def test_schedule_today(test_date):
     assert result.events[0].name == "Sifleet Family Thanksgiving"
 
 
-    assert len(result.routine_instances) == 2
+    assert len(result.tasks) == 2

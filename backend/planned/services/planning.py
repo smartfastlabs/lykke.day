@@ -12,7 +12,7 @@ class PlanningService(BaseService):
         return objects.Day(
             date=date,
             events=await event_repo.search(date),
-            routine_instances=await routine_svc.schedule(date),
+            tasks=await routine_svc.schedule(date),
         )
 
 

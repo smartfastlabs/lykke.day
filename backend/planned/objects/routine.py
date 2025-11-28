@@ -4,7 +4,7 @@ from enum import Enum
 from .base import BaseObject
 
 
-class RoutineInstanceStatus(str, Enum):
+class TaskStatus(str, Enum):
     COMPLETE = "COMPLETE"
     NOT_READY = "NOT_READY"
     READY = "READY"
@@ -58,10 +58,10 @@ class Routine(BaseObject):
     schedule_days: list[DayOfWeek] | None = None
 
 
-class RoutineInstance(BaseObject):
+class Task(BaseObject):
     routine: Routine
     date: date
-    status: RoutineInstanceStatus
+    status: TaskStatus
     completed_at: datetime | None = None
 
     @property
