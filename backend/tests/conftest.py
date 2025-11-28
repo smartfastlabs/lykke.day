@@ -1,6 +1,7 @@
 import datetime
 import shutil
 import tempfile
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -49,6 +50,18 @@ def clear_repos():
 
 
 @pytest.fixture
+def test_deleted_event(test_date):
+    return objects.Event(
+        name="Test Event",
+        calendar_id="test-calendar",
+        platform_id="test-id",
+        platform="testing",
+        status="cancelled",
+        starts_at=test_date + datetime.timedelta(hours=2),
+    )
+
+
+@pytest.fixture
 def test_event(test_date):
     return objects.Event(
         name="Test Event",
@@ -57,4 +70,23 @@ def test_event(test_date):
         platform="testing",
         status="status",
         starts_at=test_date + datetime.timedelta(days=2),
+    )
+
+
+@pytest.fixture
+def test_calendar(test_auth_token):
+    return objects.Calendar(
+        name="Test Calendar",
+        auth_token_uuid=test_auth_token.uuid,
+        platform="google",
+        platform_id="platform_id",
+    )
+
+
+@pytest.fixture
+def test_auth_token():
+    return objects.AuthToken(
+        platform="testing",
+        platform_id="test-auth-token",
+        token="token",
     )
