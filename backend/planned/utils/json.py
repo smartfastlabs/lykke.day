@@ -1,3 +1,4 @@
+import json
 import os
 from typing import TypeVar
 
@@ -38,14 +39,16 @@ async def read_directory(directory: str, model: type[T]) -> list[T]:
             contents = await f.read()
 
         try:
-            obj = model.model_validate_json(
-                contents,
+            data = json.loads(contents)
+            data["id"] = filename.split(".")[0]
+            obj = model.model_validate(
+                data,
                 by_alias=False,
                 by_name=True,
             )
             objects.append(obj)
         except Exception as e:
             logger.info(f"Error loading object from {full_path}: {e}")
-            continue
+            raise
 
     return objects

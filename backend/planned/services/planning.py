@@ -8,7 +8,10 @@ from .routine import routine_svc
 
 
 class PlanningService(BaseService):
-    async def schedule_day(self, date: datetime.date) -> objects.Day:
+    async def schedule_day(
+        self,
+        date: datetime.date,
+    ) -> objects.Day:
         return objects.Day(
             date=date,
             events=await event_repo.search(date),

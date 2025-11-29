@@ -1,11 +1,13 @@
 from fastapi import APIRouter
 
-from . import events, google, push_subscriptions, routines, tasks
+from . import days, events, google, push_subscriptions, routines, tasks
 
 router = APIRouter()
 
 router.include_router(
-    routines.router, prefix="/routines", tags=["routine"],
+    routines.router,
+    prefix="/routines",
+    tags=["routine"],
 )
 
 router.include_router(
@@ -33,4 +35,14 @@ router.include_router(
     tasks.router,
     prefix="/tasks",
     tags=["tasks"],
+)
+
+router.include_router(
+    days.router,
+    prefix="/days",
+    tags=[
+        "day",
+        "scheduling",
+        "planning",
+    ],
 )

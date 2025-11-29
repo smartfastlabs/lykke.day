@@ -2,10 +2,14 @@
   "id": "gym",
   "name": "Gym Workout",
   "description": "Go to the gym at 6:15am on Mon/Wed/Fri.",
-  "timing_type": "FIXED_TIME",
-  "frequency": "CUSTOM_WEEKLY",
   "category": "HEALTH",
-  "type": "ACTIVITY",
-  "start_time": "06:15",
-  "schedule_days": [0, 3]
+  "task_definition_id": "gym",
+  "task_schedule": {
+    "timing_type": "FIXED_TIME",
+    "start_time": "06:15"
+  },
+  "routine_schedule": {
+    "frequency": "CUSTOM_WEEKLY",
+    "schedule_days": [0, 3]
+  }
 }

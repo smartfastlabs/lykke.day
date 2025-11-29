@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import datetime
+import json
 import os
 import shutil
 from pathlib import Path
@@ -32,8 +33,8 @@ class BaseRepository(Generic[ObjectType]):
     Object: type[ObjectType]
     _prefix: str
 
-    def parse_json(self, data: str) -> ObjectType:
-        return self.Object.model_validate_json(data, by_alias=False, by_name=True)
+    def get_object(self, data: dict) -> ObjectType:
+        return self.Object.model_validate(data, by_alias=False, by_name=True)
 
     def to_json(self, obj: ObjectType) -> str:
         return obj.model_dump_json(indent=4, by_alias=False)
@@ -42,7 +43,9 @@ class BaseRepository(Generic[ObjectType]):
         async with aiofiles.open(self._get_file_path(str(temp))) as f:
             contents = await f.read()
 
-        return self.parse_json(contents)
+        data = json.loads(contents)
+        data["id"] = temp
+        return self.get_object(data)
 
     async def put(self, obj: ObjectType, key: str | None = None) -> ObjectType:
         path = Path(self._get_file_path(key or obj))
@@ -63,10 +66,12 @@ class BaseRepository(Generic[ObjectType]):
             )
 
         if "date" in self.Object.model_fields or hasattr(self.Object, "date"):
-            return await read_directory(
+            result = await read_directory(
                 f"{settings.DATA_PATH}/{self._prefix}/{date}",
                 self.Object,
             )
+
+            return result
 
         raise Exception(f"You can't search {self.Object.__name__}s by date!")
 

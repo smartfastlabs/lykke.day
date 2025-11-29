@@ -1,21 +1,9 @@
 from datetime import date, datetime, time
 from enum import Enum
+from typing import TYPE_CHECKING, Optional
 
 from .base import BaseObject
-
-
-class TaskType(str, Enum):
-    EVENT = "EVENT"
-    CHORE = "CHORE"
-    ERRAND = "ERRAND"
-    ACTIVITY = "ACTIVITY"
-
-
-class TimingType(str, Enum):
-    DEADLINE = "DEADLINE"
-    FIXED_TIME = "FIXED_TIME"
-    TIME_WINDOW = "TIME_WINDOW"
-    FLEXIBLE = "FLEXIBLE"
+from .task import TaskSchedule, TaskType
 
 
 class Frequency(str, Enum):
@@ -44,18 +32,18 @@ class DayOfWeek(int, Enum):
     SUNDAY = 6
 
 
+class RoutineSchedule(BaseObject):
+    frequency: Frequency
+
+    weekdays: list[DayOfWeek] | None = None
+
+
 class Routine(BaseObject):
     id: str
     name: str
     description: str
+    task_definition_id: str
 
-    timing_type: TimingType
-    frequency: Frequency
     category: Category
-    type: TaskType
-
-    available_time: time | None = None
-    start_time: time | None = None
-    end_time: time | None = None
-
-    schedule_days: list[DayOfWeek] | None = None
+    routine_schedule: RoutineSchedule
+    task_schedule: TaskSchedule | None = None
