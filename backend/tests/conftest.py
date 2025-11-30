@@ -77,7 +77,7 @@ def test_event(test_date):
 def test_calendar(test_auth_token):
     return objects.Calendar(
         name="Test Calendar",
-        auth_token_uuid=test_auth_token.uuid,
+        auth_token_id=test_auth_token.id,
         platform="google",
         platform_id="platform_id",
     )

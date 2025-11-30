@@ -75,10 +75,8 @@ class BaseRepository(Generic[ObjectType]):
 
         raise Exception(f"You can't search {self.Object.__name__}s by date!")
 
-    async def delete(self, temp: str | UUID | ObjectType) -> None:
+    async def delete(self, temp: ObjectType) -> None:
         with contextlib.suppress(FileExistsError):
-            if isinstance(temp, UUID):
-                temp = str(temp)
             await aiofiles.os.remove(self._get_file_path(temp))
 
     async def delete_by_date(self, date: datetime.date) -> None:

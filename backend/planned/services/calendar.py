@@ -18,7 +18,7 @@ class CalendarService:
     ) -> tuple[list[Event], list[Event]]:
         events, deleted_events = [], []
 
-        token = await auth_token_repo.get(calendar.auth_token_uuid)
+        token = await auth_token_repo.get(calendar.auth_token_id)
         for event in google.load_calendar_events(
             calendar,
             lookback=lookback,
@@ -57,13 +57,13 @@ class CalendarService:
             for event in events:
                 await event_repo.put(event)
             for event in deleted_events:
-                await event_repo.delete(event.id)
+                await event_repo.delete(event)
 
     async def run(self) -> None:
         logger.info("Starting Calendar Service...")
         self.running = True
         while self.running:
-            wait_time: int = 60 * 10
+            wait_time: int = 5 * 60
             try:
                 logger.info("Syncing events...")
                 await self.sync_all()

@@ -26,7 +26,7 @@ export interface AuthToken {
 export interface BaseObject {}
 export interface Calendar {
   name: string;
-  auth_token_uuid: string;
+  auth_token_id: string;
   platform_id: string;
   platform: string;
   last_sync_at?: string | null;

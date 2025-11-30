@@ -54,7 +54,7 @@ async def test_google(
         ]
     )
     expect(auth_token_repo).get(
-        test_calendar.auth_token_uuid,
+        test_calendar.auth_token_id,
     ).and_return(test_auth_token)
 
     (
