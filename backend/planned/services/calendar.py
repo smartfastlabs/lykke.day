@@ -59,27 +59,5 @@ class CalendarService:
             for event in deleted_events:
                 await event_repo.delete(event)
 
-    async def run(self) -> None:
-        logger.info("Starting Calendar Service...")
-        self.running = True
-        while self.running:
-            wait_time: int = 5 * 60
-            try:
-                logger.info("Syncing events...")
-                await self.sync_all()
-            except Exception as e:
-                logger.info(f"Error during sync: {e}")
-                wait_time = 10
-
-            # Sleep in small steps so we can stop quickly
-            while self.running and wait_time >= 0:
-                wait_time -= 1
-                await asyncio.sleep(1)
-
-        logger.info("Stopping Calendar Service...")
-
-    def stop(self) -> None:
-        self.running = False
-
 
 calendar_svc = CalendarService()

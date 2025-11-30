@@ -22,9 +22,6 @@ class AuthService(BaseService):
     hash: str | None = None
 
     async def set_password(self, value: str) -> None:
-        print(f"Password value: {value!r}")
-        print(f"Password length: {len(value)}")
-        print(f"Password bytes: {len(value.encode())}")
         self.hash = pwd_context.hash(value)
         async with aiofiles.open(_PATH, mode="w") as f:
             await f.write(self.hash)

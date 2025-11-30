@@ -64,9 +64,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 datetime.fromisoformat(logged_in_at)
             else:
                 raise exceptions.AuthorizationError("Invalid datetime format")
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:
             raise exceptions.AuthorizationError(
                 "Invalid session data. Please log in again.",
-            )
+            ) from e
 
         return await call_next(request)

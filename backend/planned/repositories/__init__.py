@@ -1,6 +1,7 @@
 from .auth_token import AuthTokenRepository
 from .calendar import CalendarRepository
 from .event import EventRepository
+from .message import MessageRepository
 from .push_subscription import PushSubscriptionRepository
 from .routine import RoutineRepository
 from .task import TaskRepository
@@ -13,3 +14,4 @@ push_subscription_repo = PushSubscriptionRepository()
 routine_repo = RoutineRepository()
 task_repo = TaskRepository()
 task_definition_repo = TaskDefinitionRepository()
+message_repo = MessageRepository()
