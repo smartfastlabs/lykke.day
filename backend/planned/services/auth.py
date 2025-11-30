@@ -1,8 +1,41 @@
+import os
+from contextlib import suppress
+
+import aiofiles
+from passlib.context import CryptContext
+
+from planned import settings
+
 from .base import BaseService
+
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+)
+
+_PATH = os.path.abspath(
+    f"{settings.DATA_PATH}/.password-hash",
+)
 
 
 class AuthService(BaseService):
-    pass
+    hash: str | None = None
+
+    async def set_password(self, value: str) -> None:
+        print(f"Password value: {value!r}")
+        print(f"Password length: {len(value)}")
+        print(f"Password bytes: {len(value.encode())}")
+        self.hash = pwd_context.hash(value)
+        async with aiofiles.open(_PATH, mode="w") as f:
+            await f.write(self.hash)
+
+    async def confirm_password(self, value: str) -> bool:
+        if not self.hash:
+            with suppress(FileNotFoundError):
+                async with aiofiles.open(_PATH) as f:
+                    self.hash = await f.read()
+
+        return pwd_context.verify(value, self.hash)
 
 
 auth_svc = AuthService()

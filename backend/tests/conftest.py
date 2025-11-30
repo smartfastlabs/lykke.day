@@ -4,10 +4,11 @@ import tempfile
 from uuid import uuid4
 
 import pytest
+from dobles import allow
 from fastapi.testclient import TestClient
 from freezegun import freeze_time
 
-from planned import objects, settings
+from planned import middlewares, objects, settings
 from planned.app import app
 from planned.utils.dates import get_current_date, get_current_datetime
 
@@ -23,12 +24,12 @@ def test_date():
         yield datetime.date(2025, 11, 27)
 
 
-client = TestClient(app)
-
-
 @pytest.fixture
 def test_client():
-    return client
+    # Make a request that sets up the session, then modify it
+    with TestClient(app) as client:
+        allow(middlewares.auth).mock_for_testing.and_return(True)
+        yield client
 
 
 @pytest.fixture

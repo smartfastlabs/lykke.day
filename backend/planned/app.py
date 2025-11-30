@@ -4,13 +4,15 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Never
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from starlette.middleware.sessions import SessionMiddleware
 
 from planned import routers, settings
+from planned.middlewares.auth import AuthMiddleware
 from planned.services import calendar_svc
+from planned.utils.dates import get_current_datetime
 
 logger.remove()
 logger.add(
@@ -40,6 +42,9 @@ app = FastAPI(
 )
 
 
+app.add_middleware(
+    AuthMiddleware,  # type: ignore
+)
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.SESSION_SECRET,
@@ -73,8 +78,9 @@ app.include_router(
 
 
 @app.get("/health")
-def health_check() -> dict[str, str]:
+def health_check(request: Request) -> dict[str, str]:
     """
     Health check endpoint.
     """
+
     return {"status": "healthy"}

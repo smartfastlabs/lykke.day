@@ -6,7 +6,18 @@ from planned.utils.dates import get_current_date
 
 @pytest.mark.asyncio
 async def test_get_today(test_client, test_date):
-    result = test_client.get("/events/today")
+    result = test_client.get(
+        "/health",
+        cookies={
+            "session": "eyJsb2dnZWRfaW5fYXQiOiAiMjAyNS0xMS0zMCAxMjoyMzozNy4zMTQxMzctMDY6MDAifQ==.aSyNiQ.mTEp-AIEJCZubmsZMpWHT70rX_U",
+        },
+    )
+    result = test_client.get(
+        "/events/today",
+        cookies={
+            "session": "eyJsb2dnZWRfaW5fYXQiOiAiMjAyNS0xMS0zMCAxMjoyMzozNy4zMTQxMzctMDY6MDAifQ==.aSyNiQ.mTEp-AIEJCZubmsZMpWHT70rX_U",
+        },
+    )
     assert result.json() == [
         {
             "name": "Sifleet Family Thanksgiving",

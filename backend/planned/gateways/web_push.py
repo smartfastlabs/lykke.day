@@ -40,5 +40,4 @@ async def send_notification(
         if not response.ok:
             raise exceptions.PushNotificationError(
                 f"Failed to send push notification: {response.status} {response.reason}",
-                504,
             )
