@@ -2,11 +2,10 @@ import { TaskStatusType, Task, TaskStatus } from "..types/tasks";
 
 import { TaskStorage } from "../utils/localStorage/tasks";
 import { getDateString, getTime, getDayOfWeek } from "../utils/dates";
-
-import { exampleTasks } from "../data/dailyTasks";
+import { dayAPI } from "utils/api";
 
 const TaskService = {
-  getTasksForDate: (date?: string | null) => {
+  getTasksForDate: async (date?: string | null) => {
     if (!date) {
       date = getDateString();
     }
@@ -20,7 +19,7 @@ const TaskService = {
     return TaskService.scheduleTasksForDate(date);
   },
 
-  setTaskStatus: (task: Task, status: TaskStatusType): Task => {
+  setTaskStatus: async (task: Task, status: TaskStatusType): Task => {
     console.log(task);
     task.statuses.push({
       type: status,
@@ -31,12 +30,13 @@ const TaskService = {
     return task;
   },
 
-  scheduleTasksForDate: (date?: string | null): Task[] => {
+  scheduleTasksForDate: async (date?: string | null): Task[] => {
     if (!date) {
       date = getDateString();
     }
 
     console.log("Scheduling Date", date);
+
     const tasks: Task[] = [];
 
     for (const task of exampleTasks) {
