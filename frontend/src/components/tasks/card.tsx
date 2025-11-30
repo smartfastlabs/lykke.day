@@ -67,18 +67,15 @@ export const TaskCard: Component<TaskCardProps> = (props) => {
   };
 
   const startTime = createMemo(() => {
-    const v = props.task.definition.startTime || props.task.definition.endTime;
+    console.log(props.task);
+    const v = props.task.schedule.start_time || props.task.schedule.end_time;
     if (v) {
       return getTime(props.task.date, v);
     }
   });
 
   const taskStatus = createMemo(() => {
-    if (props.task.statuses.length) {
-      return props.task.statuses[props.task.statuses.length - 1].type;
-    }
-
-    return "PENDING";
+    return props.task.status;
   });
 
   return (
@@ -110,10 +107,10 @@ export const TaskCard: Component<TaskCardProps> = (props) => {
             class="font-semibold text-gray-500 truncate"
             style="margin-bottom: -.3em"
           >
-            {props.task.definition.name}
+            {props.task.task_definition.name}
           </h3>
           <span class="text-sm text-gray-500 capitalize">
-            #{props.task.definition.category}
+            #{props.task.task_definition.category}
           </span>
         </div>
 

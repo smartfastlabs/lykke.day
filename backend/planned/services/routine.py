@@ -40,6 +40,7 @@ class RoutineService(BaseService):
                     task_definition=await task_definition_repo.get(
                         routine.task_definition_id,
                     ),
+                    schedule=routine.task_schedule,
                     date=date,
                     status=get_starting_task_status(routine),
                 )

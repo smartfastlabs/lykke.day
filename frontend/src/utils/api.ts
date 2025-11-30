@@ -111,10 +111,10 @@ export const taskAPI = {
 
 export const dayAPI = {
   scheduleToday: async (): Day => {
-    const resp = await fetchJSON(`/api/days/schedule/today`, {
+    const resp = await fetchJSON("/api/days/today/schedule", {
       method: "PUT",
     });
 
-    return resp.data as Event[];
+    return resp.data as Day;
   },
 };

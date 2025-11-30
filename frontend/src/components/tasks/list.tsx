@@ -54,10 +54,10 @@ export function TaskList(props: TaskListProps) {
 
   // Compute offset from start time
   const offsetForTask = (task) => {
-    if (task.definition.startTime || task.definition.endTime) {
+    if (task.schedule.start_time || task.schedule.end_time) {
       const time = getTime(
         task.date,
-        task.definition.startTime || task.definition.endTime
+        task.schedule.start_time || task.schedule.end_time
       );
       return offsetForTime(time);
     }

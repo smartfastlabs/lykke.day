@@ -26,6 +26,16 @@ const statusConfig: Record<
   TaskStatusType,
   { label: string; color: string; icon: any }
 > = {
+  NOT_READY: {
+    label: "Pending",
+    color: "text-yellow-700 bg-yellow-50 border-yellow-200",
+    icon: clock,
+  },
+  READY: {
+    label: "Pending",
+    color: "text-yellow-700 bg-yellow-50 border-yellow-200",
+    icon: clock,
+  },
   PENDING: {
     label: "Pending",
     color: "text-yellow-700 bg-yellow-50 border-yellow-200",
@@ -60,6 +70,7 @@ const statusConfig: Record<
 
 const TaskStatusBadge: Component<TaskStatusBadgeProps> = (props) => {
   const cfg = () => statusConfig[props.status];
+  console.log(props.status);
 
   return <Icon path={cfg().icon} class={`w-8 h-8 ${cfg().color}`} />;
 };

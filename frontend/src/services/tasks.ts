@@ -1,11 +1,11 @@
-import { TaskStatusType, Task, TaskStatus } from "..types/tasks";
+import { TaskStatusType, Task, TaskStatus, Day } from "..types/tasks";
 
 import { TaskStorage } from "../utils/localStorage/tasks";
 import { getDateString, getTime, getDayOfWeek } from "../utils/dates";
-import { dayAPI } from "utils/api";
+import { dayAPI } from "../utils/api";
 
 const TaskService = {
-  getTasksForDate: async (date?: string | null) => {
+  getTasksForDate: async (date?: string | null): Promise<Task[]> => {
     if (!date) {
       date = getDateString();
     }
@@ -16,10 +16,10 @@ const TaskService = {
       return existingTasks;
     }
 
-    return TaskService.scheduleTasksForDate(date);
+    return TaskService.scheduleToday();
   },
 
-  setTaskStatus: async (task: Task, status: TaskStatusType): Task => {
+  setTaskStatus: async (task: Task, status: TaskStatusType): Promise<Task> => {
     console.log(task);
     task.statuses.push({
       type: status,
@@ -30,32 +30,17 @@ const TaskService = {
     return task;
   },
 
-  scheduleTasksForDate: async (date?: string | null): Task[] => {
-    if (!date) {
-      date = getDateString();
+  scheduleToday: async (): Promise<Task[]> => {
+    console.log("Scheduling Date");
+
+    const day: Day = await dayAPI.scheduleToday();
+    for (const task of day.tasks) {
+      console.log(task);
     }
 
-    console.log("Scheduling Date", date);
+    TaskStorage.saveTasks(day.date, day.tasks);
 
-    const tasks: Task[] = [];
-
-    for (const task of exampleTasks) {
-      if (task.frequency == "CUSTOM_WEEKLY") {
-        if (!task.scheduleDays?.includes(getDayOfWeek())) {
-          continue;
-        }
-      }
-
-      tasks.push({
-        definition: task,
-        date: date,
-        statuses: [],
-      } as Task);
-    }
-
-    TaskStorage.saveTasks(date, tasks);
-
-    return tasks;
+    return day.tasks;
   },
 };
 
