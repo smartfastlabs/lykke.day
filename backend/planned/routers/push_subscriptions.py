@@ -1,6 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks
 
-from planned import gateways, objects
+from planned import objects
+from planned.gateways import web_push
 from planned.repositories import push_subscription_repo
 
 router = APIRouter()
@@ -30,7 +31,7 @@ async def subscribe(
     )
 
     background_tasks.add_task(
-        gateways.web_push.send_notification,
+        web_push.send_notification,
         subscription=result,
         content={
             "title": "Notifications Enabled!",
