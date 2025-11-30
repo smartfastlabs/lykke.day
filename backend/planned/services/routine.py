@@ -34,16 +34,16 @@ class RoutineService(BaseService):
         for routine in await routine_repo.search():
             logger.info(routine)
             if is_routine_active(routine.routine_schedule, date):
-                result.append(
-                    objects.Task(
-                        routine_id=routine.id,
-                        task_definition=await task_definition_repo.get(
-                            routine.task_definition_id,
-                        ),
-                        date=date,
-                        status=get_starting_task_status(routine),
-                    )
+                task = objects.Task(
+                    id=f"{routine.id}-{date}",
+                    routine_id=routine.id,
+                    task_definition=await task_definition_repo.get(
+                        routine.task_definition_id,
+                    ),
+                    date=date,
+                    status=get_starting_task_status(routine),
                 )
+                result.append(await task_repo.put(task))
 
         return result
 

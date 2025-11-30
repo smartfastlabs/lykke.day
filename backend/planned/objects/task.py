@@ -8,6 +8,7 @@ from .base import BaseObject
 
 
 class TaskType(str, Enum):
+    MEAL = "MEAL"
     EVENT = "EVENT"
     CHORE = "CHORE"
     ERRAND = "ERRAND"
@@ -49,7 +50,3 @@ class Task(BaseObject):
     completed_at: datetime | None = None
     schedule: TaskSchedule | None = None
     routine_id: str | None = None
-
-    @property
-    def id(self) -> str:
-        return f"{self.date}:{self.task_definition.id}"

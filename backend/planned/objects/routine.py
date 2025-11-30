@@ -43,9 +43,9 @@ class RoutineSchedule(BaseModel):
 class Routine(BaseObject):
     id: str
     name: str
-    description: str
     task_definition_id: str
 
     category: Category
     routine_schedule: RoutineSchedule
+    description: str = ""
     task_schedule: TaskSchedule | None = None
