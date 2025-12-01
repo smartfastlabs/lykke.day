@@ -12,4 +12,4 @@ async def test_schedule_today(test_date, clear_repos):
 
     assert len(result.tasks) == 2
 
-    assert await day_svc.load_day(test_date) == result
+    assert await day_svc.load_day_context(test_date) == result

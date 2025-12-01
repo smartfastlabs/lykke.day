@@ -12,7 +12,7 @@ from .base import BaseObject
 def get_datetime(
     value: dt_date | datetime | None,
     use_start_of_day: bool = True,
-) -> datetime:
+) -> datetime | None:
     if value is None:
         return None
 
@@ -44,21 +44,16 @@ class Event(BaseObject):
 
     @classmethod
     def from_google(cls, calendar_id: str, google_event: GoogleEvent) -> "Event":
-        try:
-            event = cls(
-                calendar_id=calendar_id,
-                status=google_event.other.get("status", "NA"),
-                name=google_event.summary,
-                starts_at=get_datetime(google_event.start),
-                ends_at=get_datetime(google_event.end),
-                platform_id=google_event.id or "NA",
-                platform="google",
-                created_at=google_event.created.astimezone(UTC).replace(tzinfo=None),
-                updated_at=google_event.updated.astimezone(UTC).replace(tzinfo=None),
-                id=f"google:{calendar_id}-{google_event.id}",
-            )
-            return event
-
-        except Exception as e:
-            foo = e
-            breakpoint()
+        event = cls(
+            calendar_id=calendar_id,
+            status=google_event.other.get("status", "NA"),
+            name=google_event.summary,
+            starts_at=get_datetime(google_event.start),  # type: ignore
+            ends_at=get_datetime(google_event.end),
+            platform_id=google_event.id or "NA",
+            platform="google",
+            created_at=google_event.created.astimezone(UTC).replace(tzinfo=None),
+            updated_at=google_event.updated.astimezone(UTC).replace(tzinfo=None),
+            id=f"google:{calendar_id}-{google_event.id}",
+        )
+        return event

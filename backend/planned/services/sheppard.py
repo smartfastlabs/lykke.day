@@ -25,6 +25,11 @@ def notifiy_user(message: str, urgency: Literal["low", "medium", "high"]) -> Non
     pass
 
 
+def filter_tasks(tasks: list[objects.Task]) -> list[objects.Task]:
+    tasks = [t for t in tasks if t.status == "READY"]
+    return tasks
+
+
 class SheppardService(BaseService):
     running: bool
     agent: Runnable
@@ -49,7 +54,7 @@ class SheppardService(BaseService):
     async def run_loop(
         self,
     ) -> None:
-        day: objects.Day = await day_svc.load_day(get_current_date())
+        day: objects.DayContext = await day_svc.load_day_context(get_current_date())
         prompt = templates.render(
             "check-in.md",
             current_time=get_current_time(),

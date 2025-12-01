@@ -1,4 +1,7 @@
-from datetime import date as dt_date
+from datetime import date as dt_date, datetime
+from enum import Enum
+
+from pydantic import BaseModel, Field
 
 from .base import BaseObject
 from .event import Event
@@ -6,12 +9,33 @@ from .message import Message
 from .task import Task
 
 
+class DayTag(str, Enum):
+    WEEKEND = "WEEKEND"
+    VACATION = "VACATION"
+    WORKDAY = "WORKDAY"
+
+
+class DayStatus(str, Enum):
+    UNSCHEDULED = "UNSCHEDULED"
+    SCHEDULED = "SCHEDULED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETE = "COMPLETE"
+
+
 class Day(BaseObject):
     date: dt_date
-    events: list[Event]
-    tasks: list[Task]
-    messages: list[Message]
+    tags: list[DayTag] = Field(default_factory=list)
+    status: DayStatus = DayStatus.UNSCHEDULED
+    scheduled_at: datetime | None = None
 
     def model_post_init(self, __context):  # type: ignore
         super().model_post_init(__context)
         self.id = str(self.date)
+
+
+class DayContext(BaseModel):
+    date: dt_date
+    day: Day
+    events: list[Event]
+    tasks: list[Task]
+    messages: list[Message]

@@ -1,5 +1,6 @@
 import textwrap
 from pathlib import Path
+from typing import Any
 
 from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 
@@ -19,6 +20,6 @@ env = Environment(
 )
 
 
-def render(template_name: str, **kwargs) -> str:
+def render(template_name: str, **kwargs: Any) -> str:
     template = env.get_template(template_name)
     return textwrap.dedent(template.render(**kwargs)).strip()
