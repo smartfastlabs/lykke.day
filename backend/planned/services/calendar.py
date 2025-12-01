@@ -52,7 +52,7 @@ class CalendarService:
         )
 
     async def sync_all(self) -> None:
-        for calendar in await calendar_repo.search():
+        for calendar in await calendar_repo.all():
             events, deleted_events = await self.sync(calendar)
             for event in events:
                 await event_repo.put(event)

@@ -1,8 +1,8 @@
 from planned.objects.routine import Routine
 
-from .base import BaseRepository
+from .base import BaseConfigRepository
 
 
-class RoutineRepository(BaseRepository[Routine]):
+class RoutineRepository(BaseConfigRepository[Routine]):
     Object = Routine
     _prefix = "config/routines"

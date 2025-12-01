@@ -1,8 +1,8 @@
 from planned.objects.alarm import Alarm
 
-from .base import BaseRepository
+from .base import BaseConfigRepository
 
 
-class AlarmRepository(BaseRepository[Alarm]):
+class AlarmRepository(BaseConfigRepository[Alarm]):
     Object = Alarm
     _prefix = "config/alarms"

@@ -1,8 +1,8 @@
 from planned.objects import TaskDefinition
 
-from .base import BaseRepository
+from .base import BaseConfigRepository
 
 
-class TaskDefinitionRepository(BaseRepository[TaskDefinition]):
+class TaskDefinitionRepository(BaseConfigRepository[TaskDefinition]):
     Object = TaskDefinition
     _prefix = "config/task-definitions"

@@ -6,7 +6,7 @@ from pydantic import Field, computed_field
 
 from planned import settings
 
-from .base import BaseObject
+from .base import BaseDateObject
 
 
 def get_datetime(
@@ -26,7 +26,7 @@ def get_datetime(
     )
 
 
-class Event(BaseObject):
+class Event(BaseDateObject):
     name: str
     calendar_id: str
     platform_id: str
@@ -37,10 +37,8 @@ class Event(BaseObject):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
-    @computed_field  # mypy: ignore
-    @property
-    def date(self) -> dt_date:
-        return self.starts_at.astimezone(ZoneInfo(settings.TIMEZONE)).date()
+    def _get_datetime(self) -> datetime:
+        return self.starts_at
 
     @classmethod
     def from_google(cls, calendar_id: str, google_event: GoogleEvent) -> "Event":

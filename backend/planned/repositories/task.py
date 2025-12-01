@@ -1,8 +1,8 @@
 from planned.objects import Task
 
-from .base import BaseRepository
+from .base import BaseDateRepository
 
 
-class TaskRepository(BaseRepository[Task]):
+class TaskRepository(BaseDateRepository[Task]):
     Object = Task
     _prefix = "tasks"

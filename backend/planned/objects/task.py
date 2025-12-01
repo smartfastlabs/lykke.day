@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 from pydantic import BaseModel
 
-from .base import BaseObject
+from .base import BaseDateObject, BaseObject
 
 
 class TaskType(str, Enum):
@@ -43,10 +43,13 @@ class TaskSchedule(BaseModel):
     timing_type: TimingType
 
 
-class Task(BaseObject):
-    date: dt_date
+class Task(BaseDateObject):
+    scheduled_date: dt_date
     status: TaskStatus
     task_definition: TaskDefinition
     completed_at: datetime | None = None
     schedule: TaskSchedule | None = None
     routine_id: str | None = None
+
+    def _get_date(self) -> dt_date:
+        return self.scheduled_date

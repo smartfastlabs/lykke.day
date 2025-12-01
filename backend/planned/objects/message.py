@@ -6,16 +6,14 @@ from pydantic import computed_field
 
 from planned import settings
 
-from .base import BaseObject
+from .base import BaseDateObject
 
 
-class Message(BaseObject):
+class Message(BaseDateObject):
     author: Literal["system", "agent", "user"]
     sent_at: datetime
     content: str
     read_at: datetime | None = None
 
-    @computed_field  # mypy: ignore
-    @property
-    def date(self) -> dt_date:
-        return self.starts_at.astimezone(ZoneInfo(settings.TIMEZONE)).date()  # type: ignore
+    def _get_datetime(self) -> datetime:
+        return self.sent_at

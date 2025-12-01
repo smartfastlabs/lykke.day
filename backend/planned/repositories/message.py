@@ -1,8 +1,8 @@
 from planned.objects import Message
 
-from .base import BaseRepository
+from .base import BaseDateRepository
 
 
-class MessageRepository(BaseRepository[Message]):
+class MessageRepository(BaseDateRepository[Message]):
     Object = Message
     _prefix = "messages"

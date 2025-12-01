@@ -1,8 +1,8 @@
 from planned.objects import PushSubscription
 
-from .base import BaseRepository
+from .base import BaseCrudRepository
 
 
-class PushSubscriptionRepository(BaseRepository[PushSubscription]):
+class PushSubscriptionRepository(BaseCrudRepository[PushSubscription]):
     Object = PushSubscription
     _prefix = "push_subscriptions"

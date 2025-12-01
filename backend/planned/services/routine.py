@@ -31,7 +31,7 @@ class RoutineService(BaseService):
         await task_repo.delete_by_date(date)
         result: list[Task] = []
 
-        for routine in await routine_repo.search():
+        for routine in await routine_repo.all():
             logger.info(routine)
             if is_routine_active(routine.routine_schedule, date):
                 task = objects.Task(
@@ -41,7 +41,7 @@ class RoutineService(BaseService):
                         routine.task_definition_id,
                     ),
                     schedule=routine.task_schedule,
-                    date=date,
+                    scheduled_date=date,
                     status=get_starting_task_status(routine),
                 )
                 result.append(await task_repo.put(task))

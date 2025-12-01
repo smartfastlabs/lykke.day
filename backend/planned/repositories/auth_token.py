@@ -1,8 +1,8 @@
 from planned.objects import AuthToken
 
-from .base import BaseRepository
+from .base import BaseCrudRepository
 
 
-class AuthTokenRepository(BaseRepository[AuthToken]):
+class AuthTokenRepository(BaseCrudRepository[AuthToken]):
     Object = AuthToken
     _prefix = "auth_tokens"

@@ -8,4 +8,4 @@ router = APIRouter()
 
 @router.get("/")
 async def list_routines() -> list[Routine]:
-    return await routine_repo.search()
+    return await routine_repo.all()
