@@ -12,6 +12,6 @@ class Day(BaseObject):
     tasks: list[Task]
     messages: list[Message]
 
-    def model_post_init(self, __context):
+    def model_post_init(self, __context):  # type: ignore
         super().model_post_init(__context)
         self.id = str(self.date)

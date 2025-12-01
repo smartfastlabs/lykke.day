@@ -20,6 +20,7 @@ class DayService(BaseService):
     async def load_day(
         self,
         date: datetime.date,
+        schedule_routines: bool = True,
     ) -> objects.Day:
         tasks: list[objects.Task]
         events: list[objects.Event]
@@ -30,6 +31,9 @@ class DayService(BaseService):
             event_repo.search(date),
             message_repo.search(date),
         )
+
+        if schedule_routines and not tasks:
+            tasks = await routine_svc.schedule(date)
 
         return objects.Day(
             date=date,

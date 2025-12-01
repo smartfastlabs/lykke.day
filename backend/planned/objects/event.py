@@ -31,17 +31,12 @@ class Event(BaseObject):
             calendar_id=calendar_id,
             status=google_event.other.get("status", "NA"),
             name=google_event.summary,
-            # TODO: WHY IS THIS SO WEIRD
-            starts_at=google_event.start.astimezone(UTC).replace(
-                tzinfo=UTC,
-            )
-            if isinstance(google_event.start, datetime)
-            else google_event.start,
-            ends_at=google_event.end.astimezone(UTC).replace(
-                tzinfo=UTC,
-            )
-            if isinstance(google_event.end, datetime)
-            else google_event.end,
+            starts_at=google_event.start.replace(tzinfo=UTC).astimezone(
+                ZoneInfo(settings.TIMEZONE)
+            ),
+            ends_at=google_event.end.replace(tzinfo=UTC).astimezone(
+                ZoneInfo(settings.TIMEZONE)
+            ),
             platform_id=google_event.id or "NA",
             platform="google",
             created_at=google_event.created.astimezone(UTC).replace(tzinfo=None),

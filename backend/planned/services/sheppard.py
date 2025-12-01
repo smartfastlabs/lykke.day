@@ -9,6 +9,7 @@ from planned.utils.dates import get_current_date
 
 from .base import BaseService
 from .calendar import calendar_svc
+from .day import day_svc
 
 
 class SheppardService(BaseService):
@@ -30,7 +31,7 @@ class SheppardService(BaseService):
     async def run_loop(
         self,
     ) -> None:
-        return None
+        day: objects.Day = await day_svc.load_day(get_current_date())
 
     async def run(self) -> None:
         logger.info("Starting Sheppard Service...")

@@ -18,4 +18,4 @@ class Message(BaseObject):
     @computed_field  # mypy: ignore
     @property
     def date(self) -> dt_date:
-        return self.starts_at.astimezone(ZoneInfo(settings.TIMEZONE)).date()
+        return self.starts_at.astimezone(ZoneInfo(settings.TIMEZONE)).date()  # type: ignore
