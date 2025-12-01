@@ -8,7 +8,6 @@ from planned import settings
 
 USER_TEMPLATE_PATH: Path = (Path(settings.DATA_PATH) / "config" / "prompts").resolve()
 TEMPLATE_PATH: Path = Path(__file__).parent.parent.parent / "prompts"
-print(TEMPLATE_PATH)
 
 env = Environment(
     loader=ChoiceLoader(
@@ -20,6 +19,6 @@ env = Environment(
 )
 
 
-def render(template_name: str, **kwargs: Any) -> str:
+def render(template_name: str, /, **kwargs: Any) -> str:
     template = env.get_template(template_name)
     return textwrap.dedent(template.render(**kwargs)).strip()

@@ -1,3 +1,4 @@
+from .alarm import Alarm, AlarmType
 from .auth_token import AuthToken
 from .base import BaseObject
 from .calendar import Calendar

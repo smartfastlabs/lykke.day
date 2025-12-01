@@ -1,3 +1,4 @@
+from .alarm import AlarmRepository
 from .auth_token import AuthTokenRepository
 from .calendar import CalendarRepository
 from .day import DayRepository
@@ -17,3 +18,4 @@ task_repo = TaskRepository()
 task_definition_repo = TaskDefinitionRepository()
 message_repo = MessageRepository()
 day_repo = DayRepository()
+alarm_repo = AlarmRepository()

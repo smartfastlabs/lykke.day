@@ -1,8 +1,9 @@
-from datetime import date as dt_date, datetime
+from datetime import date as dt_date, datetime, time
 from enum import Enum
 
 from pydantic import BaseModel, Field
 
+from .alarm import Alarm
 from .base import BaseObject
 from .event import Event
 from .message import Message
@@ -27,6 +28,7 @@ class Day(BaseObject):
     tags: list[DayTag] = Field(default_factory=list)
     status: DayStatus = DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
+    alarms: list[Alarm] = Field(default_factory=list)
 
     def model_post_init(self, __context):  # type: ignore
         super().model_post_init(__context)
