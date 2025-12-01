@@ -32,7 +32,7 @@ def test_client():
         yield client
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def clear_repos():
     old_value = settings.DATA_PATH
     with tempfile.TemporaryDirectory() as temp_dir:

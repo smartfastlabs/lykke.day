@@ -78,7 +78,7 @@ app.include_router(
 
 
 @app.get("/health")
-def health_check(request: Request) -> dict[str, str]:
+def health_check() -> dict[str, str]:
     """
     Health check endpoint.
     """
