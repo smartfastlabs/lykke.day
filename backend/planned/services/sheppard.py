@@ -1,24 +1,42 @@
 import asyncio
-import datetime
+from textwrap import dedent
+from typing import Literal
 
+from langchain.agents import create_agent
+from langchain_core.runnables import Runnable
 from loguru import logger
 
 from planned import objects
 from planned.repositories import event_repo, message_repo, task_repo
-from planned.utils.dates import get_current_date
+from planned.utils import templates
+from planned.utils.dates import get_current_date, get_current_time
 
 from .base import BaseService
 from .calendar import calendar_svc
 from .day import day_svc
 
 
+def get_weather(city: str) -> str:
+    """Get weather for a given city."""
+    return f"It's always sunny in {city}!"
+
+
+def notifiy_user(message: str, urgency: Literal["low", "medium", "high"]) -> None:
+    pass
+
+
 class SheppardService(BaseService):
     running: bool
-    current_day: objects.Day
+    agent: Runnable
 
-    def init(self, day: objects.Day) -> None:
+    def __init__(self) -> None:
+        self.agent = create_agent(
+            model="claude-sonnet-4-5",
+            tools=[get_weather],
+            system_prompt="You are a helpful assistant",
+        )
+
         self.running = False
-        self.current_day = day
 
     async def process_message(
         self,
@@ -32,6 +50,12 @@ class SheppardService(BaseService):
         self,
     ) -> None:
         day: objects.Day = await day_svc.load_day(get_current_date())
+        prompt = templates.render(
+            "check-in.md",
+            current_time=get_current_time(),
+            tasks=day.tasks,
+            events=day.events,
+        )
 
     async def run(self) -> None:
         logger.info("Starting Sheppard Service...")

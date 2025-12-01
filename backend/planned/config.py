@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DATA_PATH: str = "../data"
     SESSION_SECRET: str = ""
+    ANTHROPIC_API_KEY: str = ""
 
     model_config = SettingsConfigDict(
         env_file=os.getenv("ENV_FILE", ".env"),
@@ -21,3 +22,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+os.environ["ANTHROPIC_API_KEY"] = settings.ANTHROPIC_API_KEY
