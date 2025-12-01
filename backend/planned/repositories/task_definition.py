@@ -5,4 +5,4 @@ from .base import BaseRepository
 
 class TaskDefinitionRepository(BaseRepository[TaskDefinition]):
     Object = TaskDefinition
-    _prefix = "task-definitions"
+    _prefix = "config/task-definitions"

@@ -14,3 +14,9 @@ def get_current_datetime() -> datetime.datetime:
     desired_timezone = ZoneInfo(settings.TIMEZONE)
 
     return datetime.datetime.now(tz=desired_timezone)
+
+
+def get_current_time() -> datetime.time:
+    desired_timezone = ZoneInfo(settings.TIMEZONE)
+
+    return datetime.datetime.now(tz=desired_timezone).time()

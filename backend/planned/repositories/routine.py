@@ -5,4 +5,4 @@ from .base import BaseRepository
 
 class RoutineRepository(BaseRepository[Routine]):
     Object = Routine
-    _prefix = "routines"
+    _prefix = "config/routines"

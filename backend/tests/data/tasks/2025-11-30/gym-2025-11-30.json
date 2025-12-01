@@ -1,0 +1,19 @@
+{
+    "id": "gym-2025-11-30",
+    "date": "2025-11-30",
+    "status": "READY",
+    "task_definition": {
+        "id": "gym",
+        "name": "Gym Workout",
+        "description": "Go to the gym at 6:15am on Mon/Wed/Fri.",
+        "type": "ACTIVITY"
+    },
+    "completed_at": null,
+    "schedule": {
+        "available_time": null,
+        "start_time": "06:15:00",
+        "end_time": null,
+        "timing_type": "FIXED_TIME"
+    },
+    "routine_id": "gym"
+}
