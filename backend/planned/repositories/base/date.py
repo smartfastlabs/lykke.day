@@ -4,6 +4,7 @@ import datetime
 import json
 import os
 import shutil
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Generic, TypeVar
 
@@ -31,6 +32,16 @@ async def delete_dir(path: str) -> None:
 class BaseDateRepository(Generic[ObjectType]):
     Object: type[ObjectType]
     _prefix: str
+    _observers: list[Callable[[ObjectType], Awaitable[None]]]
+
+    def __init__(self) -> None:
+        self._observers = []
+
+    def register_observer(
+        self,
+        observer: Callable[[ObjectType], Awaitable[None]],
+    ) -> None:
+        self._observers.append(observer)
 
     def get_object(self, data: dict) -> ObjectType:
         return self.Object.model_validate(data, by_alias=False, by_name=True)
@@ -55,6 +66,7 @@ class BaseDateRepository(Generic[ObjectType]):
         async with aiofiles.open(path, mode="w") as f:
             await f.write(self.to_json(obj))
 
+        await asyncio.gather(*(observer(obj) for observer in self._observers))
         return obj
 
     async def search(self, date: datetime.date) -> list[ObjectType]:

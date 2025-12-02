@@ -1,6 +1,6 @@
 from .alarm import Alarm, AlarmType
 from .auth_token import AuthToken
-from .base import BaseObject
+from .base import BaseDateObject, BaseObject
 from .calendar import Calendar
 from .day import Day, DayContext, DayStatus, DayTag
 from .event import Event

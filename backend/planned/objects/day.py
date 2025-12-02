@@ -30,7 +30,7 @@ class Day(BaseObject):
     scheduled_at: datetime | None = None
     alarms: list[Alarm] = Field(default_factory=list)
 
-    def model_post_init(self, __context__=None):
+    def model_post_init(self, __context__=None) -> None:  # type: ignore
         self.id = str(self.date)
 
 

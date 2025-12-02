@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+from typing import TypeVar
 
 from planned import objects
 from planned.repositories import day_repo, event_repo, message_repo, task_repo
@@ -8,8 +9,18 @@ from planned.utils.dates import get_current_datetime
 from .base import BaseService
 from .routine import routine_svc
 
+T = TypeVar("T", bound=objects.BaseDateObject)
+
 
 class DayService(BaseService):
+    def __init__(self) -> None:
+        for repo in (event_repo, message_repo, task_repo):
+            repo.register_observer(self.on_change)
+
+    async def on_change(self, obj: T) -> None:
+        # TODO Get this to be in memory, shoudl there be one per date?
+        pass
+
     async def schedule_day(
         self,
         date: datetime.date,
