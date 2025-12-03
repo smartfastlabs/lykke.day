@@ -3,6 +3,8 @@ import datetime
 from collections.abc import Awaitable, Callable
 from typing import Protocol, TypeVar, cast
 
+from blinker import Signal
+
 from planned import exceptions, objects
 from planned.repositories import day_repo, event_repo, message_repo, task_repo
 from planned.utils.dates import get_current_date, get_current_datetime
@@ -30,46 +32,45 @@ def replace(lst: list[T], obj: T) -> None:
 
 
 class DayService(BaseService):
-    ctx: objects.DayContext | None
+    ctx: objects.DayContext
     date: datetime.date
-    _observers: list[Callable[[str], Awaitable[None]]]
+    signal_source: Signal
 
-    def __init__(self, date: datetime.date) -> None:
-        self.ctx = None
-        self.date = date
-        self._observers = []
+    def __init__(
+        self,
+        ctx: objects.DayContext,
+    ) -> None:
+        self.ctx = ctx
+        self.date = ctx.day.date
+        self.signal_source = Signal()
+
         for repo in (event_repo, message_repo, task_repo):
-            repo.register_observer(self.on_change)
+            repo.signal_source.connect(self.on_change)
+
+    @classmethod
+    async def for_date(cls, date: datetime.date) -> "DayService":
+        return cls(ctx=await cls._load_context(date))
 
     async def on_change(self, change: str, obj: T) -> None:
         if obj.date != self.date:
             return
 
-        ctx: objects.DayContext = await self.get_context()
         if change == "delete":
             if isinstance(obj, objects.Event):
-                ctx.events = [e for e in ctx.events if e.id != obj.id]
+                self.ctx.events = [e for e in self.ctx.events if e.id != obj.id]
             elif isinstance(obj, objects.Task):
-                ctx.tasks = [e for e in ctx.tasks if e.id != obj.id]
+                self.ctx.tasks = [e for e in self.ctx.tasks if e.id != obj.id]
             elif isinstance(obj, objects.Message):
-                ctx.messages = [e for e in ctx.messages if e.id != obj.id]
+                self.ctx.messages = [e for e in self.ctx.messages if e.id != obj.id]
         elif change == "put":
             if isinstance(obj, objects.Event):
-                replace(ctx.events, cast("objects.Event", obj))
+                replace(self.ctx.events, cast("objects.Event", obj))
             elif isinstance(obj, objects.Task):
-                replace(ctx.tasks, cast("objects.Task", obj))
+                replace(self.ctx.tasks, cast("objects.Task", obj))
             elif isinstance(obj, objects.Message):
-                replace(ctx.messages, cast("objects.Message", obj))
+                replace(self.ctx.messages, cast("objects.Message", obj))
 
-        await asyncio.gather(*(observer("update") for observer in self._observers))
-
-    async def get_context(self) -> objects.DayContext:
-        if self.ctx:
-            if self.ctx.day.date == self.date:
-                return self.ctx
-
-        self.ctx = await self.load_context()
-        return self.ctx
+        await self.signal_source.send_async(change, obj=obj)
 
     async def set_date(self, date: datetime.date) -> None:
         if self.date != date:
@@ -79,7 +80,13 @@ class DayService(BaseService):
     async def schedule(
         self,
     ) -> objects.DayContext:
-        date: datetime.date = self.date
+        return await self._schedule(self.date)
+
+    @classmethod
+    async def _schedule(
+        cls,
+        date: datetime.date,
+    ) -> objects.DayContext:
         await asyncio.gather(
             routine_svc.schedule(date),
             day_repo.put(
@@ -92,18 +99,28 @@ class DayService(BaseService):
             ),
         )
 
-        return await self.load_context()
+        return await cls._load_context(date)
 
     async def load_context(
         self,
+        schedule_routines: bool = True,
+    ) -> objects.DayContext:
+        self.ctx = await self._load_context(
+            self.date,
+            schedule_routines=schedule_routines,
+        )
+        return self.ctx
+
+    @classmethod
+    async def _load_context(
+        cls,
+        date: datetime.date,
         schedule_routines: bool = True,
     ) -> objects.DayContext:
         tasks: list[objects.Task]
         events: list[objects.Event]
         messages: list[objects.Message]
         day: objects.Day
-
-        date: datetime.date = self.date
 
         try:
             tasks, events, messages, day = await asyncio.gather(
@@ -113,7 +130,7 @@ class DayService(BaseService):
                 day_repo.get(str(date)),
             )
         except exceptions.NotFoundError:
-            return await self.schedule()
+            return await cls._schedule(date)
 
         if schedule_routines and not tasks:
             tasks = await routine_svc.schedule(date)

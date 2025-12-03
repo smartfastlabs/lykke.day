@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 from textwrap import dedent
 from typing import Literal
 
@@ -33,8 +34,10 @@ def filter_tasks(tasks: list[objects.Task]) -> list[objects.Task]:
 class SheppardService(BaseService):
     running: bool
     agent: Runnable
+    day_svc: DayService
 
-    def __init__(self) -> None:
+    def __init__(self, day_svc: DayService) -> None:
+        self.day_svc = day_svc
         self.agent = create_agent(
             model="claude-sonnet-4-5",
             tools=[get_weather],
@@ -42,6 +45,11 @@ class SheppardService(BaseService):
         )
 
         self.running = False
+
+    @classmethod
+    async def new(cls) -> "SheppardService":
+        day_svc = await DayService.for_date(get_current_date())
+        return cls(day_svc=day_svc)
 
     async def process_message(
         self,
@@ -54,7 +62,14 @@ class SheppardService(BaseService):
     async def run_loop(
         self,
     ) -> None:
-        day: objects.DayContext = await DayService(get_current_date()).load_context()
+        day: objects.DayContext = await (
+            await DayService.for_date(get_current_date())
+        ).load_context()
+
+        date: datetime.date = get_current_date()
+        if date != self.day_svc.date:
+            await self.day_svc.set_date(date)
+
         prompt = templates.render(
             "check-in.md",
             current_time=get_current_time(),
@@ -87,6 +102,3 @@ class SheppardService(BaseService):
 
     def stop(self) -> None:
         self.running = False
-
-
-sheppard_svc = SheppardService()

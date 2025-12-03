@@ -10,6 +10,7 @@ from typing import Generic, TypeVar
 
 import aiofiles
 import aiofiles.os
+from blinker import Signal
 
 from planned import settings
 from planned.objects.base import BaseDateObject
@@ -32,16 +33,10 @@ async def delete_dir(path: str) -> None:
 class BaseDateRepository(Generic[ObjectType]):
     Object: type[ObjectType]
     _prefix: str
-    _observers: list[Callable[[str, ObjectType], Awaitable[None]]]
+    signal_source: Signal
 
     def __init__(self) -> None:
-        self._observers = []
-
-    def register_observer(
-        self,
-        observer: Callable[[str, ObjectType], Awaitable[None]],
-    ) -> None:
-        self._observers.append(observer)
+        self.signal_source = Signal()
 
     def get_object(self, data: dict) -> ObjectType:
         return self.Object.model_validate(data, by_alias=False, by_name=True)
@@ -60,13 +55,12 @@ class BaseDateRepository(Generic[ObjectType]):
     async def put(self, obj: ObjectType) -> ObjectType:
         path = Path(self._get_file_path(obj.date, obj.id))
 
-        # Async mkdir - creates parent directories
         await aiofiles.os.makedirs(path.parent, exist_ok=True)
 
         async with aiofiles.open(path, mode="w") as f:
             await f.write(self.to_json(obj))
 
-        await asyncio.gather(*(observer("put", obj) for observer in self._observers))
+        await self.signal_source.send_async("put", obj=obj)
         return obj
 
     async def search(self, date: datetime.date) -> list[ObjectType]:
@@ -81,7 +75,7 @@ class BaseDateRepository(Generic[ObjectType]):
         with contextlib.suppress(FileExistsError):
             await aiofiles.os.remove(self._get_file_path(obj.date, obj.id))
 
-        await asyncio.gather(*(observer("delete", obj) for observer in self._observers))
+        await self.signal_source.send_async("delete", obj=obj)
 
     async def delete_by_date(self, date: datetime.date | str) -> None:
         await delete_dir(

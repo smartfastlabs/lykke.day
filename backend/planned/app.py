@@ -11,7 +11,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from planned import routers, settings
 from planned.middlewares.auth import AuthMiddleware
-from planned.services import sheppard_svc
+from planned.services import SheppardService
 from planned.utils.dates import get_current_datetime
 
 logger.remove()
@@ -27,6 +27,7 @@ async def init_lifespan(app: FastAPI) -> AsyncIterator[Never]:
     """
     Lifespan context manager for FastAPI application.
     """
+    sheppard_svc = await SheppardService.new()
 
     task = asyncio.create_task(sheppard_svc.run())
     yield  # type: ignore

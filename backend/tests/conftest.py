@@ -8,7 +8,7 @@ from dobles import allow
 from fastapi.testclient import TestClient
 from freezegun import freeze_time
 
-from planned import middlewares, objects, settings
+from planned import middlewares, objects, services, settings
 from planned.app import app
 from planned.utils.dates import get_current_date, get_current_datetime
 
@@ -20,7 +20,10 @@ def today():
 
 @pytest.fixture
 def test_date():
-    with freeze_time("2025-11-27 00:00:00-6:00"):
+    with freeze_time(
+        "2025-11-27 00:00:00-6:00",
+        real_asyncio=True,
+    ):
         yield datetime.date(2025, 11, 27)
 
 
@@ -91,3 +94,32 @@ def test_auth_token():
         platform_id="test-auth-token",
         token="token",
     )
+
+
+@pytest.fixture
+def test_day(test_date):
+    return objects.Day(
+        date=test_date,
+        status=objects.DayStatus.SCHEDULED,
+        scheduled_at=get_current_datetime(),
+    )
+
+
+@pytest.fixture
+def test_day_ctx(test_day, test_event):
+    return objects.DayContext(
+        day=test_day,
+        tasks=[],
+        events=[test_event],
+        messages=[],
+    )
+
+
+@pytest.fixture
+def test_day_svc(test_day_ctx):
+    return services.DayService(test_day_ctx)
+
+
+@pytest.fixture
+def test_sheppard_svc(test_day_svc):
+    return services.SheppardService(day_svc=test_day_svc)

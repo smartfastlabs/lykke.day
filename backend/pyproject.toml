@@ -33,6 +33,7 @@ langchain-anthropic = "^1.2.0"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 bcrypt = "4.3.0" # 5.0 has a bug that doesn't work with pathlib
 jinja2 = "^3.1.6"
+blinker = "^1.9.0"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=23.3.0"

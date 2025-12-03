@@ -5,7 +5,7 @@ from planned.services import DayService
 
 @pytest.mark.asyncio
 async def test_schedule_today(test_date):
-    day_svc = DayService(test_date)
+    day_svc = await DayService.for_date(test_date)
     result = await day_svc.schedule()
     assert len(result.events) == 1
 

@@ -15,9 +15,9 @@ router = APIRouter()
 
 @router.put("/today/schedule")
 async def schedule_today() -> DayContext:
-    return await DayService(get_current_date()).schedule()
+    return await (await DayService.for_date(get_current_date())).schedule()
 
 
 @router.get("/today")
 async def get_today() -> DayContext:
-    return await DayService(get_current_date()).load_context()
+    return (await DayService.for_date(get_current_date())).ctx
