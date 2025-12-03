@@ -41,7 +41,6 @@ class RoutineSchedule(BaseModel):
 
 
 class Routine(BaseObject):
-    id: str
     name: str
     task_definition_id: str
 

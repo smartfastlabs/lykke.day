@@ -71,13 +71,13 @@ class SheppardService(BaseService):
                 logger.info("Syncing events...")
                 await calendar_svc.sync_all()
             except Exception as e:
-                logger.info(f"Error during sync: {e}")
+                logger.exception(f"Error during sync: {e}")
                 wait_time = 10
             else:
                 try:
                     await self.run_loop()
                 except Exception as e:
-                    logger.info(f"Error during sync: {e}")
+                    logger.exception(f"Error during Sheppard Loop: {e}")
                     wait_time = 10
 
             # Sleep in small steps so we can stop quickly

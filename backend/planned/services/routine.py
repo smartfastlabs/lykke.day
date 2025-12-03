@@ -35,7 +35,6 @@ class RoutineService(BaseService):
             logger.info(routine)
             if is_routine_active(routine.routine_schedule, date):
                 task = objects.Task(
-                    id=f"{routine.id}-{date}",
                     routine_id=routine.id,
                     task_definition=await task_definition_repo.get(
                         routine.task_definition_id,

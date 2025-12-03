@@ -52,6 +52,5 @@ class Event(BaseDateObject):
             platform="google",
             created_at=google_event.created.astimezone(UTC).replace(tzinfo=None),
             updated_at=google_event.updated.astimezone(UTC).replace(tzinfo=None),
-            id=f"google:{calendar_id}-{google_event.id}",
         )
         return event
