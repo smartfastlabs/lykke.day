@@ -5,4 +5,4 @@ from .base import BaseCrudRepository
 
 class PushSubscriptionRepository(BaseCrudRepository[PushSubscription]):
     Object = PushSubscription
-    _prefix = "push_subscriptions"
+    _prefix = "push-subscriptions"
