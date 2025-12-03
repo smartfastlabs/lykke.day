@@ -23,6 +23,13 @@ class DayStatus(str, Enum):
     COMPLETE = "COMPLETE"
 
 
+class DayMode(str, Enum):
+    PRE_DAY = "PRE_DAY"
+    LYKKE = "LYKKE"
+    WORK = "WORK"
+    POST_DAY = "POST_DAY"
+
+
 class Day(BaseObject):
     date: dt_date
     tags: list[DayTag] = Field(default_factory=list)

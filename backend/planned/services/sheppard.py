@@ -8,7 +8,6 @@ from langchain_core.runnables import Runnable
 from loguru import logger
 
 from planned import objects
-from planned.repositories import event_repo, message_repo, task_repo
 from planned.utils import templates
 from planned.utils.dates import get_current_date, get_current_time
 
@@ -32,11 +31,19 @@ def filter_tasks(tasks: list[objects.Task]) -> list[objects.Task]:
 
 
 class SheppardService(BaseService):
-    running: bool
     agent: Runnable
     day_svc: DayService
+    mode: Literal[
+        "idle",
+        "active",
+        "sleeping",
+        "paused",
+        "stopping",
+        "starting",
+    ]
 
-    def __init__(self, day_svc: DayService) -> None:
+    def __init__(self, day_svc: DayService, mode: str = "starting") -> None:
+        self.mode = mode
         self.day_svc = day_svc
         self.agent = create_agent(
             model="claude-sonnet-4-5",
@@ -44,43 +51,61 @@ class SheppardService(BaseService):
             system_prompt="You are a helpful assistant",
         )
 
-        self.running = False
-
     @classmethod
     async def new(cls) -> "SheppardService":
         day_svc = await DayService.for_date(get_current_date())
         return cls(day_svc=day_svc)
 
-    async def process_message(
-        self,
-        msg: objects.Message,
-    ) -> list[objects.Message]:
-        result: list[objects.Message] = []
-
-        return result
-
     async def run_loop(
         self,
     ) -> None:
-        day: objects.DayContext = await (
-            await DayService.for_date(get_current_date())
-        ).load_context()
-
         date: datetime.date = get_current_date()
         if date != self.day_svc.date:
-            await self.day_svc.set_date(date)
+            await self.end_day()
 
-        prompt = templates.render(
-            "check-in.md",
+        prompt = self.checkin_prompt()
+
+    def _render_prompt(self, template_name: str, **kwargs) -> str:
+        return templates.render(
+            template_name,
             current_time=get_current_time(),
-            tasks=day.tasks,
-            events=day.events,
+            tasks=self.day_svc.ctx.tasks,
+            events=self.day_svc.ctx.events,
+            **kwargs,
         )
+
+    def checkin_prompt(self) -> str:
+        return self._render_prompt(
+            "check-in.md",
+        )
+
+    def morning_summary_prompt(self) -> str:
+        return self._render_prompt(
+            "morning-summary.md",
+        )
+
+    def evening_summary_prompt(self) -> str:
+        return self._render_prompt(
+            "evening-summary.md",
+        )
+
+    async def end_day(self) -> None:
+        # Cleanup tasks, send summary, etc.
+        # Make sure tomorrow's day is scheduled
+        self.mode = "idle"
+        await self.day_svc.end()
+
+    async def start_day(self, template: str = "default") -> None:
+        # Confirm yesterday is ended
+        # If it is not already scheduled, schedule
+        # Update the day service to the new date
+        # send morning summary
+        self.mode = "active"
+        await self.day_svc.start(template=template)
 
     async def run(self) -> None:
         logger.info("Starting Sheppard Service...")
-        self.running = True
-        while self.running:
+        while self.is_running:
             wait_time: int = 30
             try:
                 logger.info("Syncing events...")
@@ -96,9 +121,13 @@ class SheppardService(BaseService):
                     wait_time = 10
 
             # Sleep in small steps so we can stop quickly
-            while self.running and wait_time >= 0:
+            while self.is_running and wait_time >= 0:
                 wait_time -= 1
                 await asyncio.sleep(1)
 
     def stop(self) -> None:
-        self.running = False
+        self.mode = "stopping"
+
+    @property
+    def is_running(self) -> bool:
+        return self.mode not in ("stopping", "starting")

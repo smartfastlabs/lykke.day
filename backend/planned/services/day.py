@@ -77,6 +77,14 @@ class DayService(BaseService):
             self.date = date
             self.ctx = await self.load_context()
 
+    async def start(self, template: str = "default") -> None:
+        # confirm it is scheduled and do any all the things for the template
+        # set the status, etc.
+        pass
+
+    async def end(self) -> None:
+        pass
+
     async def schedule(
         self,
     ) -> objects.DayContext:
@@ -95,7 +103,6 @@ class DayService(BaseService):
                     status=objects.DayStatus.SCHEDULED,
                     scheduled_at=get_current_datetime(),
                 ),
-                key=str(date),
             ),
         )
 

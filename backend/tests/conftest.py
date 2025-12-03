@@ -122,4 +122,7 @@ def test_day_svc(test_day_ctx):
 
 @pytest.fixture
 def test_sheppard_svc(test_day_svc):
-    return services.SheppardService(day_svc=test_day_svc)
+    return services.SheppardService(
+        day_svc=test_day_svc,
+        mode="idle",
+    )

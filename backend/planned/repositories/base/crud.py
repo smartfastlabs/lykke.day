@@ -12,8 +12,8 @@ class BaseCrudRepository(BaseConfigRepository[ObjectType], Generic[ObjectType]):
     def to_json(self, obj: ObjectType) -> str:
         return obj.model_dump_json(indent=4, by_alias=False)
 
-    async def put(self, obj: ObjectType, key: str | None = None) -> ObjectType:
-        path = Path(self._get_file_path(key or obj.id))
+    async def put(self, obj: ObjectType) -> ObjectType:
+        path = Path(self._get_file_path(obj.id))
 
         # Async mkdir - creates parent directories
         await aiofiles.os.makedirs(path.parent, exist_ok=True)
