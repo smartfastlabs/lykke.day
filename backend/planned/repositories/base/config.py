@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 
 import aiofiles
 
-from planned import settings
+from planned import exceptions, settings
 from planned.objects.base import BaseObject
 from planned.utils.json import read_directory
 
@@ -22,8 +22,13 @@ class BaseConfigRepository(Generic[ObjectType]):
         return self.Object.model_validate(data, by_alias=False, by_name=True)
 
     async def get(self, key: str) -> ObjectType:
-        async with aiofiles.open(self._get_file_path(key)) as f:
-            contents = await f.read()
+        try:
+            async with aiofiles.open(self._get_file_path(key)) as f:
+                contents = await f.read()
+        except FileNotFoundError:
+            raise exceptions.NotFoundError(
+                f"`{self.__class__.__name__}` with key '{key}' not found",
+            )
 
         data = json.loads(contents)
         data["id"] = key

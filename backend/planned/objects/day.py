@@ -35,7 +35,6 @@ class Day(BaseObject):
 
 
 class DayContext(BaseModel):
-    date: dt_date
     day: Day
     events: list[Event]
     tasks: list[Task]

@@ -1,11 +1,13 @@
 import asyncio
 
-from planned.services import day_svc
+from planned.services import DayService
 from planned.utils.dates import get_current_date
 
 
 async def main():
-    result = await day_svc.schedule_day(get_current_date())
+    result = await DayService(
+        get_current_date(),
+    ).schedule()
     breakpoint()
 
 

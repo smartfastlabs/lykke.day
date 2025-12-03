@@ -13,7 +13,7 @@ from planned.utils.dates import get_current_date, get_current_time
 
 from .base import BaseService
 from .calendar import calendar_svc
-from .day import day_svc
+from .day import DayService
 
 
 def get_weather(city: str) -> str:
@@ -54,7 +54,7 @@ class SheppardService(BaseService):
     async def run_loop(
         self,
     ) -> None:
-        day: objects.DayContext = await day_svc.load_day_context(get_current_date())
+        day: objects.DayContext = await DayService(get_current_date()).load_context()
         prompt = templates.render(
             "check-in.md",
             current_time=get_current_time(),

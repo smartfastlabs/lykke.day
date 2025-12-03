@@ -32,14 +32,14 @@ async def delete_dir(path: str) -> None:
 class BaseDateRepository(Generic[ObjectType]):
     Object: type[ObjectType]
     _prefix: str
-    _observers: list[Callable[[ObjectType], Awaitable[None]]]
+    _observers: list[Callable[[str, ObjectType], Awaitable[None]]]
 
     def __init__(self) -> None:
         self._observers = []
 
     def register_observer(
         self,
-        observer: Callable[[ObjectType], Awaitable[None]],
+        observer: Callable[[str, ObjectType], Awaitable[None]],
     ) -> None:
         self._observers.append(observer)
 
@@ -66,7 +66,7 @@ class BaseDateRepository(Generic[ObjectType]):
         async with aiofiles.open(path, mode="w") as f:
             await f.write(self.to_json(obj))
 
-        await asyncio.gather(*(observer(obj) for observer in self._observers))
+        await asyncio.gather(*(observer("put", obj) for observer in self._observers))
         return obj
 
     async def search(self, date: datetime.date) -> list[ObjectType]:
@@ -80,6 +80,8 @@ class BaseDateRepository(Generic[ObjectType]):
     async def delete(self, obj: ObjectType) -> None:
         with contextlib.suppress(FileExistsError):
             await aiofiles.os.remove(self._get_file_path(obj.date, obj.id))
+
+        await asyncio.gather(*(observer("delete", obj) for observer in self._observers))
 
     async def delete_by_date(self, date: datetime.date | str) -> None:
         await delete_dir(
