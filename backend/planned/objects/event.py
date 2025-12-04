@@ -42,7 +42,9 @@ class Event(BaseDateObject):
 
     @classmethod
     def from_google(cls, calendar_id: str, google_event: GoogleEvent) -> "Event":
+        breakpoint()
         event = cls(
+            id=f"{calendar_id}-{google_event.id}",
             calendar_id=calendar_id,
             status=google_event.other.get("status", "NA"),
             name=google_event.summary,

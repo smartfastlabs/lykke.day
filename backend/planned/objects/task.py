@@ -7,6 +7,23 @@ from pydantic import BaseModel
 from .base import BaseDateObject, BaseObject
 
 
+class TaskFrequency(str, Enum):
+    DAILY = "DAILY"
+    CUSTOM_WEEKLY = "CUSTOM_WEEKLY"
+    WEEKLY = "WEEKLY"
+    ONCE = "ONCE"
+    YEARLY = "YEARLY"
+    MONTHLY = "MONTHLY"
+
+
+class TaskCategory(str, Enum):
+    HYGIENE = "HYGIENE"
+    NUTRITION = "NUTRITION"
+    HEALTH = "HEALTH"
+    PET = "PET"
+    HOUSE = "HOUSE"
+
+
 class TaskType(str, Enum):
     MEAL = "MEAL"
     EVENT = "EVENT"
@@ -45,8 +62,11 @@ class TaskSchedule(BaseModel):
 
 class Task(BaseDateObject):
     scheduled_date: dt_date
+    name: str
     status: TaskStatus
     task_definition: TaskDefinition
+    category: TaskCategory
+    frequency: TaskFrequency
     completed_at: datetime | None = None
     schedule: TaskSchedule | None = None
     routine_id: str | None = None

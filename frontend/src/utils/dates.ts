@@ -38,6 +38,7 @@ export function getTime(date: string, time: string): Date {
 
   // Construct a Date in the user's local timezone
   const localDate = new Date(year, month, day, hour, minute);
+  console.log("Creating date", date, time, localDate);
 
   return localDate;
 }

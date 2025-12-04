@@ -6,5 +6,12 @@ from .day import Day, DayContext, DayStatus, DayTag
 from .event import Event
 from .message import Message
 from .push_subscription import PushSubscription
-from .routine import Routine, RoutineSchedule, TaskType
-from .task import Task, TaskDefinition, TaskSchedule, TaskStatus
+from .routine import Routine, RoutineSchedule
+from .task import (
+    Task,
+    TaskDefinition,
+    TaskFrequency,
+    TaskSchedule,
+    TaskStatus,
+    TaskType,
+)

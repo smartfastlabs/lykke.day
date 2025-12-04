@@ -34,10 +34,8 @@ class SheppardService(BaseService):
     agent: Runnable
     day_svc: DayService
     mode: Literal[
-        "idle",
         "active",
         "sleeping",
-        "paused",
         "stopping",
         "starting",
     ]
@@ -92,7 +90,7 @@ class SheppardService(BaseService):
     async def end_day(self) -> None:
         # Cleanup tasks, send summary, etc.
         # Make sure tomorrow's day is scheduled
-        self.mode = "idle"
+        self.mode = "sleeping"
         await self.day_svc.end()
 
     async def start_day(self, template: str = "default") -> None:
@@ -105,6 +103,7 @@ class SheppardService(BaseService):
 
     async def run(self) -> None:
         logger.info("Starting Sheppard Service...")
+        self.mode = "active"
         while self.is_running:
             wait_time: int = 30
             try:

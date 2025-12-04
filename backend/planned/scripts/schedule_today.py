@@ -5,9 +5,7 @@ from planned.utils.dates import get_current_date
 
 
 async def main():
-    result = await DayService(
-        get_current_date(),
-    ).schedule()
+    result = await (await DayService.for_date(get_current_date())).schedule()
     breakpoint()
 
 

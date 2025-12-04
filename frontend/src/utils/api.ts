@@ -118,3 +118,13 @@ export const dayAPI = {
     return resp.data as Day;
   },
 };
+
+export const planningAPI = {
+  previewToday: async (): Task[] => {
+    const resp = await fetchJSON("/api/planning/preview/today", {
+      method: "GET",
+    });
+
+    return resp.data as Task[];
+  },
+};

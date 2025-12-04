@@ -17,6 +17,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import Home from "./components/pages/home";
+import DayStart from "./components/pages/day/start";
 
 library.add(
   faGear,
@@ -115,6 +116,7 @@ export default function App() {
         )}
       >
         <Route path="/" component={Home} />
+        <Route path="/day/start" component={DayStart} />
       </Router>
       <SettingsButton onClick={enablePush} />
     </>

@@ -23,18 +23,15 @@ def get_starting_task_status(routine: objects.Routine) -> TaskStatus:
     return TaskStatus.READY
 
 
-class RoutineService(BaseService):
-    async def schedule(self, date: datetime.date | None = None) -> list[Task]:
-        if date is None:
-            date = get_current_date()
-
-        await task_repo.delete_by_date(date)
+class PlanningService(BaseService):
+    async def preview(self, date: datetime.date) -> list[Task]:
         result: list[Task] = []
-
         for routine in await routine_repo.all():
             logger.info(routine)
             if is_routine_active(routine.routine_schedule, date):
                 task = objects.Task(
+                    name=f"Routine: {routine.name}",
+                    frequency=routine.routine_schedule.frequency,
                     routine_id=routine.id,
                     task_definition=await task_definition_repo.get(
                         routine.task_definition_id,
@@ -42,10 +39,19 @@ class RoutineService(BaseService):
                     schedule=routine.task_schedule,
                     scheduled_date=date,
                     status=get_starting_task_status(routine),
+                    category=routine.category,
                 )
-                result.append(await task_repo.put(task))
+                result.append(task)
+
+        return result
+
+    async def schedule(self, date: datetime.date) -> list[Task]:
+        await task_repo.delete_by_date(date)
+        result: list[Task] = await self.preview(date)
+        for task in result:
+            await task_repo.put(task)
 
         return result
 
 
-routine_svc = RoutineService()
+planning_svc = PlanningService()

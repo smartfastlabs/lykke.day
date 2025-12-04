@@ -10,7 +10,7 @@ from planned.repositories import day_repo, event_repo, message_repo, task_repo
 from planned.utils.dates import get_current_date, get_current_datetime
 
 from .base import BaseService
-from .routine import routine_svc
+from .planning import planning_svc
 
 T = TypeVar("T", bound=objects.BaseDateObject)
 
@@ -96,7 +96,7 @@ class DayService(BaseService):
         date: datetime.date,
     ) -> objects.DayContext:
         await asyncio.gather(
-            routine_svc.schedule(date),
+            planning_svc.schedule(date),
             day_repo.put(
                 objects.Day(
                     date=date,
@@ -140,7 +140,7 @@ class DayService(BaseService):
             return await cls._schedule(date)
 
         if schedule_routines and not tasks:
-            tasks = await routine_svc.schedule(date)
+            tasks = await planning_svc.schedule(date)
 
         return objects.DayContext(
             day=day,
