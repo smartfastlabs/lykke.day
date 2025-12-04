@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     DATA_PATH: str = "../data"
     SESSION_SECRET: str = ""
     ANTHROPIC_API_KEY: str = ""
+    PRINTER_NAME: str = "HP_OfficeJet_Pro_9010_series"
 
     model_config = SettingsConfigDict(
         env_file=os.getenv("ENV_FILE", ".env"),

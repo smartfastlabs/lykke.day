@@ -1,7 +1,8 @@
-import asyncio
+import contextlib
 import tempfile
 from asyncio.subprocess import create_subprocess_exec
 
+import aiofiles.os
 from playwright.async_api import async_playwright
 
 APP_URL = "https://master-bedroom.local/day/today/print"
@@ -9,7 +10,10 @@ PRINTER_NAME = "HP_OfficeJet_Pro_9010_series_5FB872"
 MEDIA_NAME = "Custom.252x396"  # 3.5in x 5.5in (252 x 396 points)
 
 
-async def generate_pdf_from_page(url: str) -> str:
+async def generate_pdf_from_page(
+    url: str,
+    pdf_path: str | None = None,
+) -> str:
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         page = await browser.new_page()
@@ -17,9 +21,10 @@ async def generate_pdf_from_page(url: str) -> str:
         await page.goto(url, wait_until="networkidle")
         await page.wait_for_selector("text=Your Agenda (P1)")
 
-        tmp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
-        pdf_path = tmp_file.name
-        tmp_file.close()
+        if pdf_path is None:
+            tmp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+            pdf_path = tmp_file.name
+            tmp_file.close()
 
         # PDF page is exactly 3.5" x 5.5"
         await page.pdf(
@@ -35,7 +40,10 @@ async def generate_pdf_from_page(url: str) -> str:
     return pdf_path
 
 
-async def send_pdf_to_printer(pdf_path: str):
+async def send_pdf_to_printer(
+    pdf_path: str,
+    delete_after: bool = True,
+) -> None:
     cmd = [
         "lp",
         "-d",
@@ -50,4 +58,6 @@ async def send_pdf_to_printer(pdf_path: str):
     proc = await create_subprocess_exec(*cmd)
     await proc.wait()
 
-    # os.remove(pdf_path)
+    if delete_after:
+        with contextlib.suppress(FileExistsError):
+            await aiofiles.os.remove(pdf_path)

@@ -8,7 +8,6 @@ from planned import exceptions
 
 
 def mock_for_testing() -> bool:
-    return True
     return False
 
 

@@ -2,10 +2,10 @@ import asyncio
 import tempfile
 from asyncio.subprocess import create_subprocess_exec
 
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, expect
 
-APP_URL = "https://master-bedroom.local/day/today/print"
-PRINTER_NAME = "HP_OfficeJet_Pro_9010_series_5FB872"
+APP_URL = "http://localhost:3000/day/print"
+PRINTER_NAME = "HP_OfficeJet_Pro_9010_series"
 MEDIA_NAME = "Custom.252x396"  # 3.5in x 5.5in (252 x 396 points)
 
 
@@ -15,7 +15,7 @@ async def generate_pdf_from_page(url: str) -> str:
         page = await browser.new_page()
 
         await page.goto(url, wait_until="networkidle")
-        await page.wait_for_selector("text=Your Agenda (P1)")
+        await page.wait_for_selector("text=Ready")
 
         tmp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
         pdf_path = tmp_file.name
