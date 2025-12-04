@@ -7,7 +7,7 @@ from fastapi import APIRouter
 
 from planned.objects import DayContext
 from planned.repositories import event_repo, task_repo
-from planned.services import DayService
+from planned.services import DayService, planning_svc
 from planned.utils.dates import get_current_date
 
 router = APIRouter()
@@ -15,7 +15,7 @@ router = APIRouter()
 
 @router.put("/today/schedule")
 async def schedule_today() -> DayContext:
-    return await (await DayService.for_date(get_current_date())).schedule()
+    return await planning_svc.schedule(get_current_date())
 
 
 @router.get("/today")

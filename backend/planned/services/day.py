@@ -1,16 +1,18 @@
 import asyncio
 import datetime
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from typing import Protocol, TypeVar, cast
 
 from blinker import Signal
 
 from planned import exceptions, objects
+from planned.objects.user_settings import user_settings
 from planned.repositories import day_repo, event_repo, message_repo, task_repo
 from planned.utils.dates import get_current_date, get_current_datetime
+from planned.utils.decorators import hybridmethod
 
 from .base import BaseService
-from .planning import planning_svc
 
 T = TypeVar("T", bound=objects.BaseDateObject)
 
@@ -49,7 +51,7 @@ class DayService(BaseService):
 
     @classmethod
     async def for_date(cls, date: datetime.date) -> "DayService":
-        return cls(ctx=await cls._load_context(date))
+        return cls(ctx=await cls.load_context(date))
 
     async def on_change(self, change: str, obj: T) -> None:
         if obj.date != self.date:
@@ -85,48 +87,23 @@ class DayService(BaseService):
     async def end(self) -> None:
         pass
 
-    async def schedule(
-        self,
-    ) -> objects.DayContext:
-        return await self._schedule(self.date)
-
-    @classmethod
-    async def _schedule(
-        cls,
-        date: datetime.date,
-    ) -> objects.DayContext:
-        await asyncio.gather(
-            planning_svc.schedule(date),
-            day_repo.put(
-                objects.Day(
-                    date=date,
-                    status=objects.DayStatus.SCHEDULED,
-                    scheduled_at=get_current_datetime(),
-                ),
-            ),
-        )
-
-        return await cls._load_context(date)
-
+    @hybridmethod
     async def load_context(
         self,
-        schedule_routines: bool = True,
     ) -> objects.DayContext:
-        self.ctx = await self._load_context(
+        self.ctx = await type(self).load_context(
             self.date,
-            schedule_routines=schedule_routines,
         )
         return self.ctx
 
-    @classmethod
-    async def _load_context(
+    @load_context.classmethod
+    async def load_context_cls(
         cls,
         date: datetime.date,
-        schedule_routines: bool = True,
     ) -> objects.DayContext:
-        tasks: list[objects.Task]
-        events: list[objects.Event]
-        messages: list[objects.Message]
+        tasks: list[objects.Task] = []
+        events: list[objects.Event] = []
+        messages: list[objects.Message] = []
         day: objects.Day
 
         try:
@@ -137,10 +114,7 @@ class DayService(BaseService):
                 day_repo.get(str(date)),
             )
         except exceptions.NotFoundError:
-            return await cls._schedule(date)
-
-        if schedule_routines and not tasks:
-            tasks = await planning_svc.schedule(date)
+            day = cls.base_day(date)
 
         return objects.DayContext(
             day=day,
@@ -148,3 +122,25 @@ class DayService(BaseService):
             events=events,
             messages=messages,
         )
+
+    @classmethod
+    def base_day(cls, date: datetime.date) -> objects.Day:
+        return objects.Day(
+            date=date,
+            status=objects.DayStatus.UNSCHEDULED,
+            template_id=user_settings.template_defaults[date.weekday()],
+        )
+
+    @classmethod
+    async def get_or_preview(cls, date: datetime.date) -> objects.Day:
+        with suppress(exceptions.NotFoundError):
+            return await day_repo.get(str(date))
+
+        return cls.base_day(date)
+
+    @classmethod
+    async def get_or_create(cls, date: datetime.date) -> objects.Day:
+        with suppress(exceptions.NotFoundError):
+            return await day_repo.get(str(date))
+
+        return await day_repo.put(cls.base_day(date))

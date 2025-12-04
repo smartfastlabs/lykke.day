@@ -14,10 +14,10 @@ router = APIRouter()
 
 
 @router.put("/prompts/{prompt_name}")
-async def schedule_today(
+async def prompts(
     prompt_name: str,
-) -> DayContext:
-    return await (await DayService.for_date(get_current_date())).schedule()
+) -> str:
+    return f"This is a placeholder response for prompt: {prompt_name}"
 
 
 @router.get("/today")

@@ -1,13 +1,22 @@
+import asyncio
 import datetime
 
 from loguru import logger
 
 from planned import objects
-from planned.objects import Task, TaskStatus
-from planned.repositories import routine_repo, task_definition_repo, task_repo
+from planned.objects import DayContext, Task, TaskStatus
+from planned.repositories import (
+    day_repo,
+    event_repo,
+    message_repo,
+    routine_repo,
+    task_definition_repo,
+    task_repo,
+)
 from planned.utils.dates import get_current_date
 
 from .base import BaseService
+from .day import DayService
 
 
 def is_routine_active(schedule: objects.RoutineSchedule, date: datetime.date) -> bool:
@@ -24,7 +33,7 @@ def get_starting_task_status(routine: objects.Routine) -> TaskStatus:
 
 
 class PlanningService(BaseService):
-    async def preview(self, date: datetime.date) -> list[Task]:
+    async def preview_tasks(self, date: datetime.date) -> list[Task]:
         result: list[Task] = []
         for routine in await routine_repo.all():
             logger.info(routine)
@@ -45,11 +54,32 @@ class PlanningService(BaseService):
 
         return result
 
-    async def schedule(self, date: datetime.date) -> list[Task]:
+    async def preview(self, date: datetime.date) -> DayContext:
+        result: DayContext = DayContext(
+            day=await DayService.get_or_preview(date),
+            tasks=[],
+            events=[],
+            messages=[],
+        )
+        result.tasks, result.events, result.messages = await asyncio.gather(
+            self.preview_tasks(date),
+            event_repo.search(date),
+            message_repo.search(date),
+        )
+
+        return result
+
+    async def schedule(
+        self,
+        date: datetime.date,
+    ) -> objects.DayContext:
         await task_repo.delete_by_date(date)
-        result: list[Task] = await self.preview(date)
-        for task in result:
-            await task_repo.put(task)
+
+        result: objects.DayContext = await self.preview(date)
+        await asyncio.gather(
+            day_repo.put(result.day),
+            *[task_repo.put(task) for task in result.tasks],
+        )
 
         return result
 
