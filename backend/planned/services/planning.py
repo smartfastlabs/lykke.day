@@ -69,6 +69,15 @@ class PlanningService(BaseService):
 
         return result
 
+    async def unschedule(self, date: datetime.date) -> None:
+        await task_repo.delete_by_date(
+            date,
+            lambda t: t.routine_id is not None,
+        )
+        day = await DayService.get_or_create(date)
+        day.status = objects.DayStatus.UNSCHEDULED
+        await day_repo.put(day)
+
     async def schedule(
         self,
         date: datetime.date,

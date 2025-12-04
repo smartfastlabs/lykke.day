@@ -77,9 +77,35 @@ class BaseDateRepository(Generic[ObjectType]):
 
         await self.signal_source.send_async("delete", obj=obj)
 
-    async def delete_by_date(self, date: datetime.date | str) -> None:
-        await delete_dir(
-            os.path.abspath(f"{settings.DATA_PATH}/dates/{date}/{self._prefix}")
+    async def delete_by_date(
+        self,
+        date: datetime.date | str,
+        filter_by: Callable[[ObjectType], bool] | None = None,
+    ) -> None:
+        dir_path = os.path.abspath(
+            f"{settings.DATA_PATH}/dates/{date}/{self._prefix}",
+        )
+
+        if filter_by is None:
+            await delete_dir(dir_path)
+            return
+
+        if not os.path.exists(dir_path):
+            return
+
+        async def maybe_delete(filepath: str) -> None:
+            async with aiofiles.open(filepath) as f:
+                data = json.loads(await f.read())
+            obj = self.get_object(data)
+            if filter_by(obj):
+                await aiofiles.os.remove(filepath)
+
+        await asyncio.gather(
+            *[
+                maybe_delete(os.path.join(dir_path, filename))
+                for filename in os.listdir(dir_path)
+                if os.path.isfile(os.path.join(dir_path, filename))
+            ]
         )
 
     def _get_file_path(self, date: datetime.date, key: str) -> str:

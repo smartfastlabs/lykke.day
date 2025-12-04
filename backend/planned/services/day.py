@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from typing import Protocol, TypeVar, cast
 
@@ -9,7 +8,6 @@ from blinker import Signal
 from planned import exceptions, objects
 from planned.objects.user_settings import user_settings
 from planned.repositories import day_repo, event_repo, message_repo, task_repo
-from planned.utils.dates import get_current_date, get_current_datetime
 from planned.utils.decorators import hybridmethod
 
 from .base import BaseService
