@@ -17,7 +17,7 @@ const TimeBadge: Component<TimeBadgeProps> = (props) => {
     }).format(props.value);
 
   return (
-    <time class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-3 py-1 text-sm text-gray-800 shadow-sm">
+    <time class="w-[80px] items-center rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs text-gray-800 shadow-sm">
       {timeText()}
     </time>
   );

@@ -3,6 +3,7 @@ import type { Task } from "../../types/routines";
 import { getTime } from "../../utils/dates";
 import TimeBadge from "../shared/timeBadge";
 import TaskStatusBadge from "./statusBadge";
+import TaskRow from "./row";
 
 interface TaskCardProps {
   task: Task;
@@ -66,14 +67,6 @@ export const TaskCard: Component<TaskCardProps> = (props) => {
     isSwiping = false;
   };
 
-  const startTime = createMemo(() => {
-    console.log(props.task);
-    const v = props.task.schedule.start_time || props.task.schedule.end_time;
-    if (v) {
-      return getTime(props.task.date, v);
-    }
-  });
-
   const taskStatus = createMemo(() => {
     return props.task.status;
   });
@@ -94,33 +87,14 @@ export const TaskCard: Component<TaskCardProps> = (props) => {
 
       {/* Foreground Card */}
       <div
-        class="relative bg-gray-100 p-3 flex items-center justify-between transition-transform duration-150 active:scale-[0.97]"
+        class="relative bg-gray-100 p-3 transition-transform duration-150 active:scale-[0.97]"
         style={{
           transform: `translateX(${translateX()}px)`,
           transition: translateX() === 0 ? "transform 0.2s ease-out" : "none",
         }}
         role="button"
       >
-        {/* Left side: title + category stacked */}
-        <div class="flex flex-col">
-          <h3
-            class="font-semibold text-gray-500 truncate"
-            style="margin-bottom: -.3em"
-          >
-            {props.task.task_definition.name}
-          </h3>
-          <span class="text-sm text-gray-500 capitalize">
-            #{props.task.task_definition.category}
-          </span>
-        </div>
-
-        {/* Right side: badge */}
-        <Show
-          when={taskStatus() === "PENDING" && startTime()}
-          fallback={<TaskStatusBadge status={taskStatus()} />}
-        >
-          <TimeBadge value={startTime()} />
-        </Show>
+        <TaskRow {...props.task} />
       </div>
     </div>
   );
