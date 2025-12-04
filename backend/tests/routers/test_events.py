@@ -22,5 +22,6 @@ async def test_get_today(test_client, test_date):
             "updated_at": "2025-11-05T11:15:00Z",
             "date": "2025-11-27",
             "id": "google:gcal-family-004-family-thanksgiving-2025",
+            "frequency": "YEARLY",
         }
     ]

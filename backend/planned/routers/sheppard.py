@@ -17,7 +17,7 @@ router = APIRouter()
 async def schedule_today(
     prompt_name: str,
 ) -> DayContext:
-    return await (await DayService.for_date(get_current_date()))
+    return await (await DayService.for_date(get_current_date())).schedule()
 
 
 @router.get("/today")

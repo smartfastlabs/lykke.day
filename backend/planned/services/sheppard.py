@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 from textwrap import dedent
-from typing import Literal
+from typing import Any, Literal
 
 from langchain.agents import create_agent
 from langchain_core.runnables import Runnable
@@ -30,17 +30,24 @@ def filter_tasks(tasks: list[objects.Task]) -> list[objects.Task]:
     return tasks
 
 
+SheppardMode = Literal[
+    "active",
+    "sleeping",
+    "stopping",
+    "starting",
+]
+
+
 class SheppardService(BaseService):
     agent: Runnable
     day_svc: DayService
-    mode: Literal[
-        "active",
-        "sleeping",
-        "stopping",
-        "starting",
-    ]
+    mode: SheppardMode
 
-    def __init__(self, day_svc: DayService, mode: str = "starting") -> None:
+    def __init__(
+        self,
+        day_svc: DayService,
+        mode: SheppardMode = "starting",
+    ) -> None:
         self.mode = mode
         self.day_svc = day_svc
         self.agent = create_agent(
@@ -63,7 +70,7 @@ class SheppardService(BaseService):
 
         prompt = self.checkin_prompt()
 
-    def _render_prompt(self, template_name: str, **kwargs) -> str:
+    def _render_prompt(self, template_name: str, **kwargs: Any) -> str:
         return templates.render(
             template_name,
             current_time=get_current_time(),

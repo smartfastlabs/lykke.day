@@ -19,7 +19,7 @@ class CalendarService:
         events, deleted_events = [], []
 
         token = await auth_token_repo.get(calendar.auth_token_id)
-        for event in google.load_calendar_events(
+        for event in await google.load_calendar_events(
             calendar,
             lookback=lookback,
             token=token,

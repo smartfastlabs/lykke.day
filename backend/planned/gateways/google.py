@@ -1,11 +1,14 @@
+import asyncio
+import re
 from datetime import UTC, date, datetime, timedelta
+from enum import Enum
 
+from gcsa.event import Event as GoogleEvent
 from gcsa.google_calendar import GoogleCalendar
 from google_auth_oauthlib.flow import Flow
 from loguru import logger
 
-from planned.objects import Calendar, Event
-from planned.objects.auth_token import AuthToken
+from planned.objects import AuthToken, Calendar, Event, TaskFrequency
 
 # Google OAuth Flow
 CLIENT_SECRET_FILE = ".credentials.json"
@@ -16,7 +19,6 @@ SCOPES = [
     "https://www.googleapis.com/auth/userinfo.email",
     "openid",
 ]
-
 REDIRECT_URIS: dict[str, str] = {
     "login": "http://localhost:8080/google/callback/login",
     "calendar": "http://localhost:8080/google/callback/calendar",
@@ -41,29 +43,117 @@ def get_google_calendar(calendar: Calendar, token: AuthToken) -> GoogleCalendar:
     )
 
 
+def parse_recurrence_frequency(recurrence: list[str] | None) -> TaskFrequency:
+    """Parse Google Calendar recurrence rules to determine TaskFrequency.
+
+    Args:
+        recurrence: List of RRULE strings from Google Calendar event.
+                   Example: ["RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR"]
+
+    Returns:
+        The appropriate TaskFrequency enum value.
+    """
+    if not recurrence:
+        return TaskFrequency.ONCE
+
+    for rule in recurrence:
+        if not rule.startswith("RRULE:"):
+            continue
+
+        # Extract FREQ value
+        freq_match = re.search(r"FREQ=(\w+)", rule)
+        if not freq_match:
+            continue
+
+        freq = freq_match.group(1).upper()
+
+        if freq == "DAILY":
+            return TaskFrequency.DAILY
+        elif freq == "WEEKLY":
+            # Check if it's a custom weekly schedule (multiple specific days)
+            byday_match = re.search(r"BYDAY=([A-Z,]+)", rule)
+            if byday_match:
+                days = byday_match.group(1).split(",")
+                # If more than one day specified, it's a custom weekly schedule
+                if len(days) > 1:
+                    return TaskFrequency.CUSTOM_WEEKLY
+            return TaskFrequency.WEEKLY
+        elif freq == "MONTHLY":
+            return TaskFrequency.MONTHLY
+        elif freq == "YEARLY":
+            return TaskFrequency.YEARLY
+
+    return TaskFrequency.ONCE
+
+
+def get_event_frequency(
+    event: GoogleEvent,
+    gc: GoogleCalendar,
+    frequency_cache: dict[str, TaskFrequency],
+) -> TaskFrequency:
+    """Determine the frequency of an event, fetching parent event if necessary.
+
+    Args:
+        event: The Google Calendar event (may be an instance of a recurring event).
+        gc: The GoogleCalendar client for fetching parent events.
+        frequency_cache: Cache of recurring_event_id -> TaskFrequency to avoid repeat lookups.
+
+    Returns:
+        The appropriate TaskFrequency enum value.
+    """
+    # Check if this event is an instance of a recurring event
+
+    if not event.recurring_event_id:
+        # Not a recurring event instance, check if it has its own recurrence
+        recurrence = getattr(event, "recurrence", None)
+        return parse_recurrence_frequency(recurrence)
+
+    # Check cache first
+    if event.recurring_event_id in frequency_cache:
+        return frequency_cache[event.recurring_event_id]
+
+    # Fetch the parent event to get recurrence rules
+    try:
+        parent_event = gc.get_event(event.recurring_event_id)
+        recurrence = getattr(parent_event, "recurrence", None)
+        frequency = parse_recurrence_frequency(recurrence)
+    except Exception as e:
+        logger.warning(
+            f"Failed to fetch parent event {event.recurring_event_id} for event {event.id}: {e}"
+        )
+        frequency = TaskFrequency.ONCE
+
+    # Cache the result
+    frequency_cache[event.recurring_event_id] = frequency
+    return frequency
+
+
 def is_after(
     d1: datetime | date,
     d2: datetime | date,
 ) -> bool:
     if type(d1) is type(d2):
         return d2 > d1
-
     if isinstance(d1, datetime):
         d1 = d1.date()
     elif isinstance(d2, datetime):
         d2 = d2.date()
-
     return d2 > d1
 
 
-def load_calendar_events(
+def _load_calendar_events_sync(
     calendar: Calendar,
     lookback: datetime,
     token: AuthToken,
 ) -> list[Event]:
+    """Synchronous implementation of calendar event loading."""
     events: list[Event] = []
+    frequency_cache: dict[str, TaskFrequency] = {}
+
     logger.info(f"Loading events for calendar {calendar.name}...")
-    for event in get_google_calendar(calendar, token).get_events(
+    gc = get_google_calendar(calendar, token)
+
+    for event in gc.get_events(
         single_events=True,
         showDeleted=False,
         time_max=datetime.now(UTC) + timedelta(days=30),
@@ -73,17 +163,29 @@ def load_calendar_events(
                 f"It looks like the event `{event.summary}` has already happened"
             )
             continue
-
         if event.other.get("status") == "cancelled":
             logger.info(f"It looks like the event `{event.summary}` has been cancelled")
-
         else:
             logger.info(f"Loaded event {event.id}: {event.summary}")
-
         try:
-            events.append(Event.from_google(calendar.id, event))
+            # Get frequency, fetching parent event if this is a recurring instance
+            frequency = get_event_frequency(event, gc, frequency_cache)
+            events.append(Event.from_google(calendar.id, event, frequency))
         except Exception as e:
             logger.info(f"Error converting event {event.id}: {e}")
             continue
-
     return events
+
+
+async def load_calendar_events(
+    calendar: Calendar,
+    lookback: datetime,
+    token: AuthToken,
+) -> list[Event]:
+    """Asynchronously load calendar events by running the sync operation in a thread pool."""
+    return await asyncio.to_thread(
+        _load_calendar_events_sync,
+        calendar,
+        lookback,
+        token,
+    )

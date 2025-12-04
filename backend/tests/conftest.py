@@ -69,6 +69,7 @@ def test_deleted_event(test_date):
 def test_event(test_date):
     return objects.Event(
         name="Test Event",
+        frequency="ONCE",
         calendar_id="test-calendar",
         platform_id="test-id",
         platform="testing",
