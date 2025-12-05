@@ -1,7 +1,7 @@
 import { getRequestEvent } from "solid-js/web";
 
 import { globalNotifications } from "../providers/notifications";
-import { Event, Task, Day } from "../types/api";
+import { Event, Task, Day, DayContext } from "../types/api";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -120,11 +120,25 @@ export const dayAPI = {
 };
 
 export const planningAPI = {
-  previewToday: async (): Task[] => {
+  scheduleToday: async (): Promise<DayContext> => {
+    const resp = await fetchJSON("/api/planning/schedule/today", {
+      method: "PUT",
+    });
+
+    return resp.data as DayContext;
+  },
+  previewToday: async (): Promise<DayContext> => {
     const resp = await fetchJSON("/api/planning/preview/today", {
       method: "GET",
     });
 
-    return resp.data as Task[];
+    return resp.data as DayContext;
+  },
+  previewTomorrow: async (): Promise<DayContext> => {
+    const resp = await fetchJSON("/api/planning/preview/tomorrow", {
+      method: "GET",
+    });
+
+    return resp.data as DayContext;
   },
 };

@@ -22,12 +22,13 @@ class BaseConfigRepository(Generic[ObjectType]):
         return self.Object.model_validate(data, by_alias=False, by_name=True)
 
     async def get(self, key: str) -> ObjectType:
+        path: str = self._get_file_path(key)
         try:
-            async with aiofiles.open(self._get_file_path(key)) as f:
+            async with aiofiles.open(path) as f:
                 contents = await f.read()
         except FileNotFoundError:
             raise exceptions.NotFoundError(
-                f"`{self.__class__.__name__}` with key '{key}' not found",
+                f"`{self.Object.__name__}` with key '{key}' not found. Path was '{path}'.",
             )
 
         data = json.loads(contents)

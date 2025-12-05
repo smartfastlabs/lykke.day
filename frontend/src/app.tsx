@@ -17,7 +17,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import Home from "./components/pages/home";
-import DayStart from "./components/pages/day/start";
+import Today from "./components/pages/day/today";
+import Tomorrow from "./components/pages/day/tomorrow";
 import DayPrint from "./components/pages/day/print";
 
 library.add(
@@ -55,18 +56,19 @@ export default function App() {
     <>
       <Router
         root={(props) => (
-          <NotificationProvider>
-            <TaskProvider>
+          <TaskProvider>
+            <NotificationProvider>
               <MetaProvider>
                 <Title>Todd's Daily Planer</Title>
                 <Suspense>{props.children}</Suspense>
               </MetaProvider>
-            </TaskProvider>
-          </NotificationProvider>
+            </NotificationProvider>
+          </TaskProvider>
         )}
       >
         <Route path="/" component={Home} />
-        <Route path="/day/start" component={DayStart} />
+        <Route path="/today" component={Today} />
+        <Route path="/tomorrow" component={Tomorrow} />
         <Route path="/day/print" component={DayPrint} />
       </Router>
     </>

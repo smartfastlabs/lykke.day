@@ -4,9 +4,11 @@ import datetime
 from loguru import logger
 
 from planned import objects
-from planned.objects import DayContext, Task, TaskStatus
+from planned.objects import DayContext, DayTemplate, Task, TaskStatus
+from planned.objects.user_settings import user_settings
 from planned.repositories import (
     day_repo,
+    day_template_repo,
     event_repo,
     message_repo,
     routine_repo,
@@ -55,11 +57,13 @@ class PlanningService(BaseService):
         return result
 
     async def preview(self, date: datetime.date) -> DayContext:
+        template: DayTemplate = await day_template_repo.get(
+            user_settings.template_defaults[date.weekday()],
+        )
+
         result: DayContext = DayContext(
-            day=await DayService.get_or_preview(date),
-            tasks=[],
-            events=[],
-            messages=[],
+            day=DayService.base_day(date),
+            alarms=template.alarms,
         )
         result.tasks, result.events, result.messages = await asyncio.gather(
             self.preview_tasks(date),

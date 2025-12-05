@@ -2,7 +2,7 @@ from .alarm import Alarm, AlarmType
 from .auth_token import AuthToken
 from .base import BaseDateObject, BaseObject
 from .calendar import Calendar
-from .day import Day, DayContext, DayStatus, DayTag
+from .day import Day, DayContext, DayStatus, DayTag, DayTemplate
 from .event import Event
 from .message import Message
 from .push_subscription import PushSubscription
@@ -15,4 +15,3 @@ from .task import (
     TaskStatus,
     TaskType,
 )
-from .user_settings import user_settings

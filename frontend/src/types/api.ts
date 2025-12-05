@@ -5,13 +5,23 @@
 /* Do not modify it by hand - just update the pydantic models and then re-run the script
 */
 
+export type AlarmType = "GENTLE" | "FIRM" | "LOUD" | "SIREN";
+export type DayTag = "WEEKEND" | "VACATION" | "WORKDAY";
+export type DayStatus = "UNSCHEDULED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETE";
+export type TaskFrequency = "DAILY" | "CUSTOM_WEEKLY" | "WEEKLY" | "ONCE" | "YEARLY" | "MONTHLY";
 export type TaskStatus = "COMPLETE" | "NOT_READY" | "READY" | "PUNTED";
 export type TaskType = "MEAL" | "EVENT" | "CHORE" | "ERRAND" | "ACTIVITY";
+export type TaskCategory = "HYGIENE" | "NUTRITION" | "HEALTH" | "PET" | "HOUSE";
 export type TimingType = "DEADLINE" | "FIXED_TIME" | "TIME_WINDOW" | "FLEXIBLE";
-export type Category = "HYGIENE" | "NUTRITION" | "HEALTH" | "PET" | "HOUSE";
-export type Frequency = "DAILY" | "CUSTOM_WEEKLY" | "ONCE" | "YEARLY" | "MONTHLY";
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
+export interface Alarm {
+  id?: string;
+  name: string;
+  time: string;
+  type: AlarmType;
+  description?: string | null;
+}
 export interface AuthToken {
   id?: string;
   platform: string;
@@ -24,6 +34,10 @@ export interface AuthToken {
   expires_at?: string | null;
   uuid?: string;
   created_at?: string;
+}
+export interface BaseDateObject {
+  id?: string;
+  date: string;
 }
 export interface BaseObject {
   id?: string;
@@ -39,8 +53,17 @@ export interface Calendar {
 export interface Day {
   id?: string;
   date: string;
-  events: Event[];
-  tasks: Task[];
+  template_id?: string;
+  tags?: DayTag[];
+  status?: DayStatus;
+  scheduled_at?: string | null;
+}
+export interface DayContext {
+  day: Day;
+  events?: Event[];
+  tasks?: Task[];
+  messages?: Message[];
+  alarms?: Alarm[];
 }
 export interface Event {
   id?: string;
@@ -50,6 +73,7 @@ export interface Event {
   platform: string;
   status: string;
   starts_at: string;
+  frequency: TaskFrequency;
   ends_at?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -57,12 +81,16 @@ export interface Event {
 }
 export interface Task {
   id?: string;
-  date: string;
+  scheduled_date: string;
+  name: string;
   status: TaskStatus;
   task_definition: TaskDefinition;
+  category: TaskCategory;
+  frequency: TaskFrequency;
   completed_at?: string | null;
   schedule?: TaskSchedule | null;
   routine_id?: string | null;
+  date: string;
 }
 export interface TaskDefinition {
   id: string;
@@ -76,6 +104,19 @@ export interface TaskSchedule {
   end_time?: string | null;
   timing_type: TimingType;
 }
+export interface Message {
+  id?: string;
+  author: "system" | "agent" | "user";
+  sent_at: string;
+  content: string;
+  read_at?: string | null;
+  date: string;
+}
+export interface DayTemplate {
+  id?: string;
+  tasks?: string[];
+  alarms?: Alarm[];
+}
 export interface PushSubscription {
   id?: string;
   endpoint: string;
@@ -85,15 +126,15 @@ export interface PushSubscription {
   createdAt?: string;
 }
 export interface Routine {
-  id: string;
+  id?: string;
   name: string;
   task_definition_id: string;
-  category: Category;
+  category: TaskCategory;
   routine_schedule: RoutineSchedule;
   description?: string;
   task_schedule?: TaskSchedule | null;
 }
 export interface RoutineSchedule {
-  frequency: Frequency;
+  frequency: TaskFrequency;
   weekdays?: DayOfWeek[] | null;
 }

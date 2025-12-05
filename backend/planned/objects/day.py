@@ -41,7 +41,6 @@ class Day(BaseObject):
     tags: list[DayTag] = Field(default_factory=list)
     status: DayStatus = DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
-    alarms: list[Alarm] = Field(default_factory=list)
 
     def model_post_init(self, __context__=None) -> None:  # type: ignore
         self.id = str(self.date)
@@ -49,6 +48,7 @@ class Day(BaseObject):
 
 class DayContext(BaseModel):
     day: Day
-    events: list[Event]
-    tasks: list[Task]
-    messages: list[Message]
+    events: list[Event] = Field(default_factory=list)
+    tasks: list[Task] = Field(default_factory=list)
+    messages: list[Message] = Field(default_factory=list)
+    alarms: list[Alarm] = Field(default_factory=list)
