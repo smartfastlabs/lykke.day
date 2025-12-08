@@ -9,6 +9,7 @@ async def test_get_today(test_client, test_date):
     result = test_client.get(
         "/events/today",
     )
+
     assert result.json() == [
         {
             "name": "Sifleet Family Thanksgiving",
@@ -21,7 +22,8 @@ async def test_get_today(test_client, test_date):
             "created_at": "2025-11-05T11:15:00Z",
             "updated_at": "2025-11-05T11:15:00Z",
             "date": "2025-11-27",
-            "id": "google:gcal-family-004-family-thanksgiving-2025",
+            "id": "google:family-thanksgiving-2025",
             "frequency": "YEARLY",
+            "people": [],
         }
     ]

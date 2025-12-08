@@ -23,7 +23,6 @@ def play_audio(url: str) -> None:
     kill_current_player()
 
     logger.info(f"Playing Video: {url}")
-    return
 
     # yt-dlp extracts the audio URL, mpv plays it
     # --no-video ensures audio-only playback
