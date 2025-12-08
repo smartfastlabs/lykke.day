@@ -59,8 +59,3 @@ def test_get_datetime_with_date_end_of_day():
     assert result == datetime(
         2025, 12, 9, 23, 59, 59, tzinfo=ZoneInfo("America/Chicago")
     )
-
-
-def test_get_datetime_with_none():
-    """None should return None."""
-    assert get_datetime(None, "America/New_York") is None

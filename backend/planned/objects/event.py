@@ -12,18 +12,16 @@ from .task import TaskFrequency
 
 
 def get_datetime(
-    value: dt_date | datetime | None,
+    value: dt_date | datetime,
     timezone: str,
     use_start_of_day: bool = True,
-) -> datetime | None:
-    if value is None:
-        return None
+) -> datetime:
     if isinstance(value, datetime):
         if value.tzinfo is not None:
             # Datetime already has timezone info, just convert to target
             return value.astimezone(ZoneInfo(settings.TIMEZONE))
         # Naive datetime, assume it's in the given timezone
-        return value.replace(tzinfo=ZoneInfo(timezone or UTC)).astimezone(
+        return value.replace(tzinfo=ZoneInfo(timezone)).astimezone(
             ZoneInfo(settings.TIMEZONE)
         )
     return datetime.combine(
@@ -69,7 +67,9 @@ class Event(BaseDateObject):
             ends_at=get_datetime(
                 google_event.end,
                 google_event.timezone,
-            ),
+            )
+            if google_event.end
+            else None,
             platform_id=google_event.id or "NA",
             platform="google",
             created_at=google_event.created.astimezone(UTC).replace(tzinfo=None),
