@@ -8,12 +8,13 @@ from langchain_core.runnables import Runnable
 from loguru import logger
 
 from planned import objects
-from planned.utils import templates
-from planned.utils.dates import get_current_date, get_current_time
+from planned.utils import templates, youtube
+from planned.utils.dates import get_current_date, get_current_datetime, get_current_time
 
 from .base import BaseService
 from .calendar import calendar_svc
 from .day import DayService
+from .planning import planning_svc
 
 
 def get_weather(city: str) -> str:
@@ -42,6 +43,7 @@ class SheppardService(BaseService):
     agent: Runnable
     day_svc: DayService
     mode: SheppardMode
+    last_run: datetime.datetime | None = None
 
     def __init__(
         self,
@@ -49,6 +51,7 @@ class SheppardService(BaseService):
         mode: SheppardMode = "starting",
     ) -> None:
         self.mode = mode
+        self.last_run = None
         self.day_svc = day_svc
         self.agent = create_agent(
             model="claude-sonnet-4-5",
@@ -67,8 +70,23 @@ class SheppardService(BaseService):
         date: datetime.date = get_current_date()
         if date != self.day_svc.date:
             await self.end_day()
+            await self.start_day()
+
+        current_time: datetime.time = get_current_time()
+        for alarm in self.day_svc.ctx.day.alarms:
+            if alarm.triggered_at:
+                continue
+
+            if self.last_run is None or alarm.time < current_time:
+                alarm.triggered_at = current_time
+                logger.info(f"Triggering alarm: {alarm.name} at {alarm.time}")
+
+                youtube.play_audio("https://www.youtube.com/watch?v=Gcv7re2dEVg")
+                await self.day_svc.save()
 
         prompt = self.checkin_prompt()
+
+        self.last_run = datetime.datetime.now()
 
     def _render_prompt(self, template_name: str, **kwargs: Any) -> str:
         return templates.render(
@@ -97,7 +115,6 @@ class SheppardService(BaseService):
     async def end_day(self) -> None:
         # Cleanup tasks, send summary, etc.
         # Make sure tomorrow's day is scheduled
-        self.mode = "sleeping"
         await self.day_svc.end()
 
     async def start_day(self, template: str = "default") -> None:
@@ -105,8 +122,10 @@ class SheppardService(BaseService):
         # If it is not already scheduled, schedule
         # Update the day service to the new date
         # send morning summary
-        self.mode = "active"
-        await self.day_svc.start(template=template)
+        self.day_svc = await DayService.for_date(get_current_date())
+
+        if self.day_svc.ctx.day.status != objects.DayStatus.SCHEDULED:
+            await planning_svc.schedule(self.day_svc.date)
 
     async def run(self) -> None:
         logger.info("Starting Sheppard Service...")

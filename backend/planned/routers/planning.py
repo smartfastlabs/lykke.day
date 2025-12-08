@@ -25,11 +25,21 @@ async def preview_today() -> DayContext:
     return await planning_svc.preview(get_current_date())
 
 
-@router.get("/preview/tomorrow")
+@router.get("/tomorrow/preview")
 async def preview_tomorrow() -> DayContext:
     return await planning_svc.preview(get_tomorrows_date())
 
 
-@router.get("/preview/{date}")
+@router.put("/tomorrow/schedule")
+async def schedule_tomorrow() -> DayContext:
+    return await planning_svc.schedule(get_tomorrows_date())
+
+
+@router.get("/date/{date}/preview")
 async def preview_date(date: datetime.date) -> DayContext:
     return await planning_svc.preview(date)
+
+
+@router.put("/date/{date}/schedule")
+async def schedule_date(date: datetime.date) -> DayContext:
+    return await planning_svc.schedule(date)

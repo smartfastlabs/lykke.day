@@ -38,3 +38,8 @@ class AuthorizationError(BaseError):
 class ServerError(BaseError):
     status_code = 500
     _message = "oops..."
+
+
+class TokenExpiredError(BaseError):
+    status_code = 401
+    _message = "token has expired"

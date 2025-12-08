@@ -5,9 +5,12 @@ from enum import Enum
 
 from gcsa.event import Event as GoogleEvent
 from gcsa.google_calendar import GoogleCalendar
+from google.auth.exceptions import RefreshError
+from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import Flow
 from loguru import logger
 
+from planned import exceptions
 from planned.objects import AuthToken, Calendar, Event, TaskFrequency
 
 # Google OAuth Flow
@@ -34,13 +37,22 @@ def get_flow(flow_name: str) -> Flow:
 
 
 def get_google_calendar(calendar: Calendar, token: AuthToken) -> GoogleCalendar:
-    return GoogleCalendar(
-        calendar.platform_id,
-        credentials=token.google_credentials(),
-        token_path=".token.pickle",
-        credentials_path=CLIENT_SECRET_FILE,
-        read_only=True,
-    )
+    try:
+        credentials = token.google_credentials()
+        # Force a refresh check
+        if credentials.expired and credentials.refresh_token:
+            credentials.refresh(Request())
+
+        return GoogleCalendar(
+            calendar.platform_id,
+            credentials=credentials,
+            token_path=".token.pickle",
+            credentials_path=CLIENT_SECRET_FILE,
+            read_only=True,
+        )
+    except RefreshError:
+        # Token is invalid - need to re-authenticate
+        raise exceptions.TokenExpiredError("User needs to re-authenticate")
 
 
 def parse_recurrence_frequency(recurrence: list[str] | None) -> TaskFrequency:

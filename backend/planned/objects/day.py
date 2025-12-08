@@ -39,6 +39,7 @@ class Day(BaseObject):
     date: dt_date
     template_id: str = "default"
     tags: list[DayTag] = Field(default_factory=list)
+    alarms: list[Alarm] = Field(default_factory=list)
     status: DayStatus = DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
 
@@ -51,4 +52,3 @@ class DayContext(BaseModel):
     events: list[Event] = Field(default_factory=list)
     tasks: list[Task] = Field(default_factory=list)
     messages: list[Message] = Field(default_factory=list)
-    alarms: list[Alarm] = Field(default_factory=list)

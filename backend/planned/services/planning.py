@@ -62,8 +62,7 @@ class PlanningService(BaseService):
         )
 
         result: DayContext = DayContext(
-            day=DayService.base_day(date),
-            alarms=template.alarms,
+            day=DayService.base_day(date, template=template),
         )
         result.tasks, result.events, result.messages = await asyncio.gather(
             self.preview_tasks(date),

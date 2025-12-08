@@ -6,7 +6,7 @@ import subprocess
 player_process: subprocess.Popen | None = None
 
 
-def kill_current_player():
+def kill_current_player() -> None:
     """Stop any currently playing audio."""
     global player_process
     if player_process and player_process.poll() is None:
@@ -14,7 +14,7 @@ def kill_current_player():
         player_process = None
 
 
-def play_audio(url: str):
+def play_audio(url: str) -> None:
     """Play audio from a YouTube URL using yt-dlp and mpv."""
     global player_process
 

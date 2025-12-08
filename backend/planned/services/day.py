@@ -31,6 +31,9 @@ def replace(lst: list[T], obj: T) -> None:
     lst.append(obj)
 
 
+_SERVICE_CACHE: dict[datetime.date, "DayService"] = {}
+
+
 class DayService(BaseService):
     ctx: objects.DayContext
     date: datetime.date
@@ -46,6 +49,12 @@ class DayService(BaseService):
 
         for repo in (event_repo, message_repo, task_repo):
             repo.signal_source.connect(self.on_change)
+
+    def __new__(cls, ctx: objects.DayContext) -> "DayService":
+        if ctx.day.date not in _SERVICE_CACHE:
+            instance = super().__new__(cls)
+            _SERVICE_CACHE[ctx.day.date] = instance
+        return _SERVICE_CACHE[ctx.day.date]
 
     @classmethod
     async def for_date(cls, date: datetime.date) -> "DayService":
@@ -96,7 +105,7 @@ class DayService(BaseService):
 
     @load_context.classmethod
     async def load_context_cls(
-        cls,
+        cls,  # noqa: N805
         date: datetime.date,
     ) -> objects.DayContext:
         tasks: list[objects.Task] = []
@@ -122,11 +131,16 @@ class DayService(BaseService):
         )
 
     @classmethod
-    def base_day(cls, date: datetime.date) -> objects.Day:
+    def base_day(
+        cls,
+        date: datetime.date,
+        template: objects.DayTemplate | None = None,
+    ) -> objects.Day:
         return objects.Day(
             date=date,
             status=objects.DayStatus.UNSCHEDULED,
             template_id=user_settings.template_defaults[date.weekday()],
+            alarms=template.alarms if template else [],
         )
 
     @classmethod
@@ -142,3 +156,6 @@ class DayService(BaseService):
             return await day_repo.get(str(date))
 
         return await day_repo.put(cls.base_day(date))
+
+    async def save(self) -> None:
+        await day_repo.put(self.ctx.day)

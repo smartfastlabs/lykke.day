@@ -2,9 +2,17 @@ from datetime import date as dt_date, datetime, time
 from enum import Enum
 from typing import TYPE_CHECKING, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .base import BaseDateObject, BaseObject
+
+
+class TaskTag(str, Enum):
+    AVOIDANT = "AVOIDANT"
+    FORGETTABLE = "FORGETTABLE"
+    IMPORTANT = "IMPORTANT"
+    URGENT = "URGENT"
+    FUN = "FUN"
 
 
 class TaskFrequency(str, Enum):
@@ -70,6 +78,7 @@ class Task(BaseDateObject):
     completed_at: datetime | None = None
     schedule: TaskSchedule | None = None
     routine_id: str | None = None
+    tags: list[TaskTag] = Field(default_factory=list)
 
     def _get_date(self) -> dt_date:
         return self.scheduled_date

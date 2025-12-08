@@ -117,6 +117,14 @@ export const dayAPI = {
 
     return resp.data as Day;
   },
+
+  getToday: async (): Day => {
+    const resp = await fetchJSON("/api/days/today", {
+      method: "GET",
+    });
+
+    return resp.data as Day;
+  },
 };
 
 export const planningAPI = {

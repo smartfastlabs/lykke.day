@@ -35,7 +35,6 @@ config.autoAddCss = false;
 
 import { onMount } from "solid-js";
 import { NotificationProvider } from "./providers/notifications";
-import { TaskProvider } from "./providers/tasks";
 
 export default function App() {
   onMount(() => {
@@ -56,18 +55,15 @@ export default function App() {
     <>
       <Router
         root={(props) => (
-          <TaskProvider>
-            <NotificationProvider>
-              <MetaProvider>
-                <Title>Todd's Daily Planer</Title>
-                <Suspense>{props.children}</Suspense>
-              </MetaProvider>
-            </NotificationProvider>
-          </TaskProvider>
+          <NotificationProvider>
+            <MetaProvider>
+              <Title>Todd's Daily Planer</Title>
+              <Suspense>{props.children}</Suspense>
+            </MetaProvider>
+          </NotificationProvider>
         )}
       >
-        <Route path="/" component={Home} />
-        <Route path="/today" component={Today} />
+        <Route path="/" component={Today} />
         <Route path="/tomorrow" component={Tomorrow} />
         <Route path="/day/print" component={DayPrint} />
       </Router>

@@ -20,3 +20,4 @@ class Alarm(BaseObject):
     time: dt_time
     type: AlarmType
     description: str | None = None
+    triggered_at: dt_time | None = None
