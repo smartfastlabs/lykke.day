@@ -7,6 +7,7 @@ from pydantic import Field, computed_field
 from planned import settings
 
 from .base import BaseDateObject
+from .person import Person
 from .task import TaskFrequency
 
 
@@ -38,6 +39,7 @@ class Event(BaseDateObject):
     ends_at: datetime | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    people: list[Person] = Field(default_factory=list)
 
     def _get_datetime(self) -> datetime:
         return self.starts_at
@@ -50,7 +52,7 @@ class Event(BaseDateObject):
         frequency: TaskFrequency,
     ) -> "Event":
         event = cls(
-            id=f"{calendar_id}-{google_event.id}",
+            id=f"google:{google_event.id}",
             frequency=frequency,
             calendar_id=calendar_id,
             status=google_event.other.get("status", "NA"),
@@ -61,5 +63,12 @@ class Event(BaseDateObject):
             platform="google",
             created_at=google_event.created.astimezone(UTC).replace(tzinfo=None),
             updated_at=google_event.updated.astimezone(UTC).replace(tzinfo=None),
+            people=[
+                Person(
+                    name=a.display_name or None,
+                    email=a.email,
+                )
+                for a in google_event.attendees
+            ],
         )
         return event

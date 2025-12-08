@@ -2,6 +2,8 @@ import os
 import signal
 import subprocess
 
+from loguru import logger
+
 # Track the current player process
 player_process: subprocess.Popen | None = None
 
@@ -19,6 +21,9 @@ def play_audio(url: str) -> None:
     global player_process
 
     kill_current_player()
+
+    logger.info(f"Playing Video: {url}")
+    return
 
     # yt-dlp extracts the audio URL, mpv plays it
     # --no-video ensures audio-only playback

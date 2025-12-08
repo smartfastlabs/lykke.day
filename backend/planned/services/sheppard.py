@@ -67,8 +67,7 @@ class SheppardService(BaseService):
     async def run_loop(
         self,
     ) -> None:
-        date: datetime.date = get_current_date()
-        if date != self.day_svc.date:
+        if get_current_date() != self.day_svc.date:
             await self.end_day()
             await self.start_day()
 
@@ -77,7 +76,7 @@ class SheppardService(BaseService):
             if alarm.triggered_at:
                 continue
 
-            if self.last_run is None or alarm.time < current_time:
+            if alarm.time < current_time:
                 alarm.triggered_at = current_time
                 logger.info(f"Triggering alarm: {alarm.name} at {alarm.time}")
 

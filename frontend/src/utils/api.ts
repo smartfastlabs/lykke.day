@@ -117,13 +117,20 @@ export const dayAPI = {
 
     return resp.data as Day;
   },
+  getTomorrow: async (): DayContext => {
+    const resp = await fetchJSON("/api/days/tomorrow", {
+      method: "GET",
+    });
 
-  getToday: async (): Day => {
+    return resp.data as DayContext;
+  },
+
+  getToday: async (): DayContext => {
     const resp = await fetchJSON("/api/days/today", {
       method: "GET",
     });
 
-    return resp.data as Day;
+    return resp.data as DayContext;
   },
 };
 

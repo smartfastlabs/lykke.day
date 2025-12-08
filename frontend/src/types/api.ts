@@ -13,6 +13,7 @@ export type TaskStatus = "COMPLETE" | "NOT_READY" | "READY" | "PUNTED";
 export type TaskType = "MEAL" | "EVENT" | "CHORE" | "ERRAND" | "ACTIVITY";
 export type TaskCategory = "HYGIENE" | "NUTRITION" | "HEALTH" | "PET" | "HOUSE";
 export type TimingType = "DEADLINE" | "FIXED_TIME" | "TIME_WINDOW" | "FLEXIBLE";
+export type TaskTag = "AVOIDANT" | "FORGETTABLE" | "IMPORTANT" | "URGENT" | "FUN";
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface Alarm {
@@ -21,6 +22,7 @@ export interface Alarm {
   time: string;
   type: AlarmType;
   description?: string | null;
+  triggered_at?: string | null;
 }
 export interface AuthToken {
   id?: string;
@@ -55,6 +57,7 @@ export interface Day {
   date: string;
   template_id?: string;
   tags?: DayTag[];
+  alarms?: Alarm[];
   status?: DayStatus;
   scheduled_at?: string | null;
 }
@@ -63,7 +66,6 @@ export interface DayContext {
   events?: Event[];
   tasks?: Task[];
   messages?: Message[];
-  alarms?: Alarm[];
 }
 export interface Event {
   id?: string;
@@ -77,7 +79,15 @@ export interface Event {
   ends_at?: string | null;
   created_at?: string;
   updated_at?: string;
+  people?: Person[];
   date: string;
+}
+export interface Person {
+  id?: string;
+  name?: string | null;
+  email?: string | null;
+  phone_number?: string | null;
+  relationship?: string | null;
 }
 export interface Task {
   id?: string;
@@ -90,6 +100,7 @@ export interface Task {
   completed_at?: string | null;
   schedule?: TaskSchedule | null;
   routine_id?: string | null;
+  tags?: TaskTag[];
   date: string;
 }
 export interface TaskDefinition {

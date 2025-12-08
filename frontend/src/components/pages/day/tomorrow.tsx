@@ -1,34 +1,27 @@
 import Page from "../../shared/layout/page";
-import { getTime } from "../../../utils/dates";
-import TimeBadge from "../../shared/timeBadge";
-import { createMemo, For, Component, createResource } from "solid-js";
-import TaskRow from "../../tasks/row";
-import EventRow from "../../events/row";
-import { eventAPI, planningAPI } from "../../../utils/api";
+import { Component, createResource } from "solid-js";
+import { dayAPI } from "../../../utils/api";
 
-export const DayStart: Component = () => {
-  const [dayContext] = createResource(planningAPI.previewTomorrow);
+import DayPreview from "../../days/preview";
 
-  const dailyTasks = createMemo(() => {
-    return dayContext()?.tasks || [];
-  });
-
-  const specialTasks = createMemo(() => {
-    return dailyTasks().filter((task) => task.task_definition.is_special);
-  });
-
-  const dailyEvents = createMemo(() => {
-    return dayContext()?.events || [];
-  });
+export const Tomorrow: Component = () => {
+  const [dayContext] = createResource(dayAPI.getTomorrow);
 
   return (
     <Page>
-      <For each={dayContext()?.tasks}>{(task) => <TaskRow {...task} />}</For>
-      <For each={dayContext()?.events}>
-        {(event) => <EventRow {...event} />}
-      </For>
+      <div class="text-center">
+        <h1 class="text-2xl  font-light text-gray-900 mb-1">Tomorrow</h1>
+        <p class="text-sm text-gray-400">
+          {new Date().toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+          })}
+        </p>
+      </div>
+      <DayPreview dayContext={dayContext()} />
     </Page>
   );
 };
 
-export default DayStart;
+export default Tomorrow;

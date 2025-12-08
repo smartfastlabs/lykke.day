@@ -11,7 +11,7 @@ from planned.repositories import day_repo, event_repo, task_repo
 from planned.services import DayService, planning_svc
 from planned.utils.dates import get_current_date
 
-from .helpers.days import load_todays_day_svc
+from .helpers.days import load_todays_day_svc, load_tomorrows_day_svc
 
 router = APIRouter()
 
@@ -23,6 +23,16 @@ async def schedule_today() -> DayContext:
 
 @router.get("/today")
 async def get_today(day_svc: DayService = Depends(load_todays_day_svc)) -> DayContext:
+    if day_svc.ctx.day.status != DayStatus.SCHEDULED:
+        return await planning_svc.schedule(day_svc.ctx.day.date)
+
+    return day_svc.ctx
+
+
+@router.get("/tomorrow")
+async def get_tomorrow(
+    day_svc: DayService = Depends(load_tomorrows_day_svc),
+) -> DayContext:
     if day_svc.ctx.day.status != DayStatus.SCHEDULED:
         return await planning_svc.schedule(day_svc.ctx.day.date)
 

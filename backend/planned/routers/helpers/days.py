@@ -1,7 +1,7 @@
 import datetime
 
 from planned.services import DayService
-from planned.utils.dates import get_current_date
+from planned.utils.dates import get_current_date, get_tomorrows_date
 
 
 async def load_day_svc(date: datetime.date) -> DayService:
@@ -10,3 +10,7 @@ async def load_day_svc(date: datetime.date) -> DayService:
 
 async def load_todays_day_svc() -> DayService:
     return await DayService.for_date(get_current_date())
+
+
+async def load_tomorrows_day_svc() -> DayService:
+    return await DayService.for_date(get_tomorrows_date())
