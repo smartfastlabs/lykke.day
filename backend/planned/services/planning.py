@@ -88,6 +88,7 @@ class PlanningService(BaseService):
         await task_repo.delete_by_date(date)
 
         result: objects.DayContext = await self.preview(date)
+        result.day.status = "SCHEDULED"
         await asyncio.gather(
             day_repo.put(result.day),
             *[task_repo.put(task) for task in result.tasks],

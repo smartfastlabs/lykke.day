@@ -18,11 +18,14 @@ const isInfrequent = (frequency: TaskFrequency): boolean => {
 
 const formatTime = (timeStr: string): string => {
   const date = new Date(timeStr);
-  return date.toLocaleTimeString("en-US", {
+  const result = date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
+  console.log("formatTime", timeStr, result);
+  return result;
 };
 
 const formatAlarmTime = (timeStr: string): string => {

@@ -12,6 +12,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from planned import routers, settings
 from planned.middlewares.auth import AuthMiddleware
 from planned.services import SheppardService
+from planned.utils import youtube
 from planned.utils.dates import get_current_datetime
 
 logger.remove()
@@ -33,6 +34,7 @@ async def init_lifespan(app: FastAPI) -> AsyncIterator[Never]:
     yield  # type: ignore
     sheppard_svc.stop()
     task.cancel()
+    youtube.kill_current_player()
 
 
 app = FastAPI(

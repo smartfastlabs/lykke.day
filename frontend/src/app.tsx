@@ -64,6 +64,9 @@ export default function App() {
         )}
       >
         <Route path="/" component={Today} />
+        <Route path="/today" component={Today} />
+        <Route path="/pwa" component={Today} />
+        <Route path="/kiosk" component={Today} />
         <Route path="/tomorrow" component={Tomorrow} />
         <Route path="/day/print" component={DayPrint} />
       </Router>
