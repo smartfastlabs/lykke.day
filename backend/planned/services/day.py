@@ -125,8 +125,13 @@ class DayService(BaseService):
 
         return objects.DayContext(
             day=day,
-            tasks=tasks,
-            events=events,
+            tasks=sorted(
+                tasks,
+                key=lambda x: x.schedule.start_time
+                if x.schedule and x.schedule.start_time
+                else datetime.time(23, 59),
+            ),
+            events=sorted(events, key=lambda e: e.starts_at),
             messages=messages,
         )
 

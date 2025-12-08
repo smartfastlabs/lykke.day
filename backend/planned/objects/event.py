@@ -13,14 +13,19 @@ from .task import TaskFrequency
 
 def get_datetime(
     value: dt_date | datetime | None,
+    timezone: str,
     use_start_of_day: bool = True,
 ) -> datetime | None:
     if value is None:
         return None
-
     if isinstance(value, datetime):
-        return value.replace(tzinfo=UTC).astimezone(ZoneInfo(settings.TIMEZONE))
-
+        if value.tzinfo is not None:
+            # Datetime already has timezone info, just convert to target
+            return value.astimezone(ZoneInfo(settings.TIMEZONE))
+        # Naive datetime, assume it's in the given timezone
+        return value.replace(tzinfo=ZoneInfo(timezone or UTC)).astimezone(
+            ZoneInfo(settings.TIMEZONE)
+        )
     return datetime.combine(
         value,
         time(0, 0, 0) if use_start_of_day else time(23, 59, 59),
@@ -57,8 +62,14 @@ class Event(BaseDateObject):
             calendar_id=calendar_id,
             status=google_event.other.get("status", "NA"),
             name=google_event.summary,
-            starts_at=get_datetime(google_event.start),  # type: ignore
-            ends_at=get_datetime(google_event.end),
+            starts_at=get_datetime(
+                google_event.start,
+                google_event.timezone,
+            ),
+            ends_at=get_datetime(
+                google_event.end,
+                google_event.timezone,
+            ),
             platform_id=google_event.id or "NA",
             platform="google",
             created_at=google_event.created.astimezone(UTC).replace(tzinfo=None),

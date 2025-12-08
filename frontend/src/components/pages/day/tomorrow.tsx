@@ -1,25 +1,22 @@
 import Page from "../../shared/layout/page";
-import { Component, createResource } from "solid-js";
+import { Component, Show, createResource } from "solid-js";
 import { dayAPI } from "../../../utils/api";
 
 import DayPreview from "../../days/preview";
+import { getDateString } from "../../../utils/dates";
 
 export const Tomorrow: Component = () => {
   const [dayContext] = createResource(dayAPI.getTomorrow);
 
   return (
     <Page>
-      <div class="text-center">
-        <h1 class="text-2xl  font-light text-gray-900 mb-1">Tomorrow</h1>
-        <p class="text-sm text-gray-400">
-          {new Date().toLocaleDateString("en-US", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })}
-        </p>
-      </div>
-      <DayPreview dayContext={dayContext()} />
+      <Show when={dayContext()}>
+        <div class="text-center">
+          <h1 class="text-2xl  font-light text-gray-900 mb-1">Tomorrow</h1>
+          <p class="text-sm text-gray-400">{dayContext()?.day.date}</p>
+        </div>
+        <DayPreview dayContext={dayContext()} />
+      </Show>
     </Page>
   );
 };
