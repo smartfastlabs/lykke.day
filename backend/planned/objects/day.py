@@ -12,7 +12,7 @@ from .task import Task
 
 class DayTemplate(BaseObject):
     tasks: list[str] = Field(default_factory=list)
-    alarms: list[Alarm] = Field(default_factory=list)
+    alarm: Alarm | None = None
 
 
 class DayTag(str, Enum):
@@ -39,7 +39,7 @@ class Day(BaseObject):
     date: dt_date
     template_id: str = "default"
     tags: list[DayTag] = Field(default_factory=list)
-    alarms: list[Alarm] = Field(default_factory=list)
+    alarm: Alarm | None = None
     status: DayStatus = DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
 

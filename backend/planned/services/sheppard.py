@@ -72,11 +72,8 @@ class SheppardService(BaseService):
             await self.start_day()
 
         current_time: datetime.time = get_current_time()
-        for alarm in self.day_svc.ctx.day.alarms:
-            if alarm.triggered_at:
-                continue
-
-            if alarm.time < current_time:
+        if alarm := self.day_svc.ctx.day.alarm:
+            if alarm.triggered_at is None and alarm.time < current_time:
                 alarm.triggered_at = current_time
                 logger.info(f"Triggering alarm: {alarm.name} at {alarm.time}")
 

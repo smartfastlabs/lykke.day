@@ -8,7 +8,16 @@
 export type AlarmType = "GENTLE" | "FIRM" | "LOUD" | "SIREN";
 export type DayTag = "WEEKEND" | "VACATION" | "WORKDAY";
 export type DayStatus = "UNSCHEDULED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETE";
-export type TaskFrequency = "DAILY" | "CUSTOM_WEEKLY" | "WEEKLY" | "ONCE" | "YEARLY" | "MONTHLY";
+export type TaskFrequency =
+  | "DAILY"
+  | "CUSTOM_WEEKLY"
+  | "WEEKLY"
+  | "ONCE"
+  | "YEARLY"
+  | "MONTHLY"
+  | "BI_WEEKLY"
+  | "WORK_DAYS"
+  | "WEEKENDS";
 export type TaskStatus = "COMPLETE" | "NOT_READY" | "READY" | "PUNTED";
 export type TaskType = "MEAL" | "EVENT" | "CHORE" | "ERRAND" | "ACTIVITY";
 export type TaskCategory = "HYGIENE" | "NUTRITION" | "HEALTH" | "PET" | "HOUSE";
@@ -57,7 +66,7 @@ export interface Day {
   date: string;
   template_id?: string;
   tags?: DayTag[];
-  alarms?: Alarm[];
+  alarm?: Alarm | null;
   status?: DayStatus;
   scheduled_at?: string | null;
 }
@@ -126,7 +135,7 @@ export interface Message {
 export interface DayTemplate {
   id?: string;
   tasks?: string[];
-  alarms?: Alarm[];
+  alarm?: Alarm | null;
 }
 export interface PushSubscription {
   id?: string;

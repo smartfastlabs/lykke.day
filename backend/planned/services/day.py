@@ -7,7 +7,13 @@ from blinker import Signal
 
 from planned import exceptions, objects
 from planned.objects.user_settings import user_settings
-from planned.repositories import day_repo, event_repo, message_repo, task_repo
+from planned.repositories import (
+    day_repo,
+    day_template_repo,
+    event_repo,
+    message_repo,
+    task_repo,
+)
 from planned.utils.decorators import hybridmethod
 
 from .base import BaseService
@@ -121,7 +127,7 @@ class DayService(BaseService):
                 day_repo.get(str(date)),
             )
         except exceptions.NotFoundError:
-            day = cls.base_day(date)
+            day = await cls.base_day(date)
 
         return objects.DayContext(
             day=day,
@@ -136,16 +142,21 @@ class DayService(BaseService):
         )
 
     @classmethod
-    def base_day(
+    async def base_day(
         cls,
         date: datetime.date,
-        template: objects.DayTemplate | None = None,
+        template_id: str | None = None,
     ) -> objects.Day:
+        if template_id is None:
+            template_id = user_settings.template_defaults[date.weekday()]
+
+        template: objects.DayTemplate = await day_template_repo.get(template_id)
+
         return objects.Day(
             date=date,
             status=objects.DayStatus.UNSCHEDULED,
-            template_id=user_settings.template_defaults[date.weekday()],
-            alarms=template.alarms if template else [],
+            template_id=template.id,
+            alarm=template.alarm,
         )
 
     @classmethod
@@ -153,7 +164,7 @@ class DayService(BaseService):
         with suppress(exceptions.NotFoundError):
             return await day_repo.get(str(date))
 
-        return cls.base_day(date)
+        return await cls.base_day(date)
 
     @classmethod
     async def get_or_create(cls, date: datetime.date) -> objects.Day:

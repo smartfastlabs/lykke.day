@@ -4,18 +4,6 @@ import { dayAPI } from "../../../utils/api";
 import { Day, Task, Event, Alarm } from "../../../types/api";
 import type { DayContext, TaskFrequency } from "../../../types/api";
 
-// Frequencies that are "surprising" / infrequent
-const INFREQUENT_FREQUENCIES: TaskFrequency[] = [
-  "ONCE",
-  "YEARLY",
-  "MONTHLY",
-  "WEEKLY",
-];
-
-const isInfrequent = (frequency: TaskFrequency): boolean => {
-  return INFREQUENT_FREQUENCIES.includes(frequency);
-};
-
 const formatTime = (timeStr: string): string => {
   const date = new Date(timeStr);
   const result = date.toLocaleTimeString("en-US", {
@@ -36,7 +24,6 @@ const formatAlarmTime = (timeStr: string): string => {
   return `${h12}:${minutes} ${ampm}`;
 };
 
-// Summary stat component
 const StatBlock: Component<{ label: string; count: number }> = (props) => (
   <div class="flex flex-col items-center">
     <span class="text-3xl font-light text-gray-900">{props.count}</span>
@@ -46,8 +33,7 @@ const StatBlock: Component<{ label: string; count: number }> = (props) => (
   </div>
 );
 
-// Infrequent item row
-const HighlightRow: Component<{
+const Row: Component<{
   name: string;
   subtitle: string;
   time?: string;
@@ -106,77 +92,61 @@ export const DayPreview: Component<PreviewProps> = (props) => {
   // All items
   const tasks = createMemo(() => props.dayContext?.tasks || []);
   const events = createMemo(() => props.dayContext?.events || []);
-  const alarms = createMemo(() => props.dayContext?.day.alarms || []);
-  // Filtered to infrequent/surprising items
-  const infrequentTasks = createMemo(() =>
-    tasks().filter((task) => isInfrequent(task.frequency))
-  );
-  const infrequentEvents = createMemo(() =>
-    events().filter((event) => isInfrequent(event.frequency))
-  );
-  // Check if there's anything notable to highlight
-  const hasHighlights = createMemo(
-    () =>
-      infrequentTasks().length > 0 ||
-      infrequentEvents().length > 0 ||
-      alarms().length > 0
-  );
-  const handleStartDay = () => {
-    // TODO: Navigate to main day view or mark day as started
-    console.log("Starting day...");
-  };
+  const alarm = createMemo(() => props.dayContext?.day.alarm);
+
+  function filterTasks(categories: string | string[]): Task[] {
+    if (!tasks()) {
+      return [];
+    }
+    const categoryList = Array.isArray(categories) ? categories : [categories];
+    return tasks().filter((t) => categoryList.includes(t.category));
+  }
   return (
     <div class="flex flex-col min-h-full px-4 py-6">
-      {/* Summary Stats */}
-      <div class="flex justify-center gap-8 mb-8 pb-6 border-b border-gray-100">
-        <StatBlock label="Tasks" count={tasks().length} />
-        <StatBlock label="Events" count={events().length} />
-        <StatBlock label="Alarms" count={alarms().length} />
-      </div>
-      {/* Highlights Section */}
       <div class="flex-1">
-        <Show when={alarms().length > 0}>
+        <Show when={alarm()}>
           <div class="mb-6">
-            <SectionHeader title="Alarms" />
-            <For each={alarms()}>{(alarm) => <AlarmRow alarm={alarm} />}</For>
+            <AlarmRow alarm={alarm()} />
           </div>
         </Show>
-        {/* Infrequent Events */}
-        <Show when={infrequentEvents().length > 0}>
-          <div class="mb-6">
-            <SectionHeader title="Notable Events" />
-            <For each={infrequentEvents()}>
-              {(event) => (
-                <HighlightRow
-                  name={event.name}
-                  subtitle="Event"
-                  time={formatTime(event.starts_at)}
-                  frequency={event.frequency}
-                />
-              )}
-            </For>
-          </div>
-        </Show>
-        {/* Infrequent Tasks */}
-        <Show when={infrequentTasks().length > 0}>
-          <div class="mb-6">
-            <SectionHeader title="Don't Forget" />
-            <For each={infrequentTasks()}>
-              {(task) => (
-                <HighlightRow
-                  name={task.name}
-                  subtitle={task.task_definition.type}
-                  time={
-                    task.schedule?.time
-                      ? formatAlarmTime(task.schedule.time)
-                      : undefined
-                  }
-                  frequency={task.frequency}
-                />
-              )}
-            </For>
-          </div>
-        </Show>
+        <div class="mb-6">
+          <SectionHeader title="Events" />
+          <For each={events()}>
+            {(event) => (
+              <Row
+                name={event.name}
+                subtitle="Event"
+                time={formatTime(event.starts_at)}
+                frequency={event.frequency}
+              />
+            )}
+          </For>
+        </div>
+        <div class="mb-6">
+          <SectionHeader title="Don't Forget" />
+          <For each={filterTasks(["HOUSE", "PET"])}>
+            {(task) => (
+              <Row
+                name={task.name}
+                subtitle={task.task_definition.type}
+                time={
+                  task.schedule?.time
+                    ? formatAlarmTime(task.schedule.time)
+                    : undefined
+                }
+                frequency={task.frequency}
+              />
+            )}
+          </For>
+        </div>
+      </div>
+      <SectionHeader title="ADLs" />
+      <div class="flex justify-center gap-8 mx-10 mb-8 pb-6 border-b border-gray-100">
+        <For each={["HYGIENE", "NUTRITION", "HEALTH"]}>
+          {(category) => (
+            <StatBlock label={category} count={filterTasks(category).length} />
+          )}
+        </For>
       </div>
     </div>
   );

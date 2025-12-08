@@ -12,7 +12,7 @@ export const Tomorrow: Component = () => {
     <Page>
       <Show when={dayContext()}>
         <div class="text-center">
-          <h1 class="text-2xl  font-light text-gray-900 mb-1">Tomorrow</h1>
+          <h1 class="text-4xl  font-bold text-gray-500 mb-1">Tomorrow</h1>
           <p class="text-sm text-gray-400">{dayContext()?.day.date}</p>
         </div>
         <DayPreview dayContext={dayContext()} />

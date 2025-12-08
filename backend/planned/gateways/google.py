@@ -85,11 +85,18 @@ def parse_recurrence_frequency(recurrence: list[str] | None) -> TaskFrequency:
             # Check if it's a custom weekly schedule (multiple specific days)
             byday_match = re.search(r"BYDAY=([A-Z,]+)", rule)
             if byday_match:
-                days = byday_match.group(1).split(",")
+                days = set(byday_match.group(1).split(","))
+                print(days)
                 # If more than one day specified, it's a custom weekly schedule
-                if len(days) > 1:
-                    return TaskFrequency.CUSTOM_WEEKLY
-            return TaskFrequency.WEEKLY
+                if days == {"MO", "TU", "WE", "TH", "FR"}:
+                    return TaskFrequency.WEEK_DAYS
+                elif days == {"SA", "SU"}:
+                    return TaskFrequency.WEEKEND_DAYS
+                elif len(days) == 1:
+                    return TaskFrequency.WEEKLY
+                elif len(days) == 2:
+                    return TaskFrequency.BI_WEEKLY
+                return TaskFrequency.CUSTOM_WEEKLY
         elif freq == "MONTHLY":
             return TaskFrequency.MONTHLY
         elif freq == "YEARLY":

@@ -57,12 +57,11 @@ class PlanningService(BaseService):
         return result
 
     async def preview(self, date: datetime.date) -> DayContext:
-        template: DayTemplate = await day_template_repo.get(
-            user_settings.template_defaults[date.weekday()],
-        )
-
         result: DayContext = DayContext(
-            day=DayService.base_day(date, template=template),
+            day=await DayService.base_day(
+                date,
+                template_id=user_settings.template_defaults[date.weekday()],
+            ),
         )
         result.tasks, result.events, result.messages = await asyncio.gather(
             self.preview_tasks(date),

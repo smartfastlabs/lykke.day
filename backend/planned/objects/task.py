@@ -22,6 +22,9 @@ class TaskFrequency(str, Enum):
     ONCE = "ONCE"
     YEARLY = "YEARLY"
     MONTHLY = "MONTHLY"
+    BI_WEEKLY = "BI_WEEKLY"
+    WEEK_DAYS = "WORK_DAYS"
+    WEEKEND_DAYS = "WEEKENDS"
 
 
 class TaskCategory(str, Enum):
