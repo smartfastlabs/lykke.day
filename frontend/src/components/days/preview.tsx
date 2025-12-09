@@ -101,6 +101,16 @@ export const DayPreview: Component<PreviewProps> = (props) => {
     const categoryList = Array.isArray(categories) ? categories : [categories];
     return tasks().filter((t) => categoryList.includes(t.category));
   }
+
+  function filterEvents(frequencies: string | string[]): Event[] {
+    if (!events()) {
+      return [];
+    }
+    const frequencyList = Array.isArray(frequencies)
+      ? frequencies
+      : [frequencies];
+    return events().filter((e) => frequencyList.includes(e.frequency));
+  }
   return (
     <div class="flex flex-col min-h-full px-4 py-6">
       <div class="flex-1">
@@ -110,8 +120,31 @@ export const DayPreview: Component<PreviewProps> = (props) => {
           </div>
         </Show>
         <div class="mb-6">
-          <SectionHeader title="Events" />
-          <For each={events()}>
+          <SectionHeader title="Noteable Events" />
+          <For
+            each={filterEvents(["ONCE", "MONTHLY", "CUSTOM_WEEKLY", "YEARLY"])}
+          >
+            {(event) => (
+              <Row
+                name={event.name}
+                subtitle="Event"
+                time={formatTime(event.starts_at)}
+                frequency={event.frequency}
+              />
+            )}
+          </For>
+        </div>
+        <div class="mb-6">
+          <SectionHeader title="Routine Events" />
+          <For
+            each={filterEvents([
+              "WEEKLY",
+              "WEEKEND_DAYS",
+              "WORK_DAYS",
+              "BI_WEEKLY",
+              "DAILY",
+            ])}
+          >
             {(event) => (
               <Row
                 name={event.name}

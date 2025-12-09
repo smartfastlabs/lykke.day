@@ -171,7 +171,7 @@ class DayService(BaseService):
         with suppress(exceptions.NotFoundError):
             return await day_repo.get(str(date))
 
-        return await day_repo.put(cls.base_day(date))
+        return await day_repo.put(await cls.base_day(date))
 
     async def save(self) -> None:
         await day_repo.put(self.ctx.day)
