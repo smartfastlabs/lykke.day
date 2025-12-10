@@ -22,7 +22,7 @@ export default function Login() {
     } catch {
       setError("Authentication failed");
     } finally {
-      setIsLoading(false);
+        window.location.href = '/';
     }
   };
 

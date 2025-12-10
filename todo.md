@@ -1,4 +1,4 @@
-* Get login working 
+[x] Get login working 
 * Handle Token expiration and reauth
     * UPDATE OLD CALENDARS
 * GET PWA WORKING

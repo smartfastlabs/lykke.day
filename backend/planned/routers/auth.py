@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 
 from planned import exceptions
 from planned.objects import BaseObject, Event
@@ -35,7 +35,7 @@ class LoginRequest(BaseObject):
 
 
 @router.put("/login")
-async def login(data: LoginRequest, request: Request) -> StatusResponse:
+async def login(data: LoginRequest, request: Request, response: Response,) -> StatusResponse:
     if not await auth_svc.confirm_password(
         data.password,
     ):
@@ -43,5 +43,7 @@ async def login(data: LoginRequest, request: Request) -> StatusResponse:
             "no no no",
         )
 
-    request.session["logged_in_at"] = str(get_current_datetime())
+    now: str = str(get_current_datetime())
+    response.set_cookie(key="logged_in_at", value=now, httponly=False, max_age=60*60*24*90,)
+    request.session["logged_in_at"] = now
     return StatusResponse()
