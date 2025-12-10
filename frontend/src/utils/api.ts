@@ -108,6 +108,19 @@ export const taskAPI = {
     return resp.data as Event[];
   },
 };
+export const authAPI = {
+  login: async (password: string): any => {
+    const resp = await fetchJSON("/api/auth/login", {
+      method: "PUT",
+      body: JSON.stringify({password}),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return resp.data;
+  },
+}
 
 export const dayAPI = {
   scheduleToday: async (): Day => {

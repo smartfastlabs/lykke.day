@@ -17,6 +17,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import Home from "./components/pages/home";
+import Login from "./components/pages/login"
 import Today from "./components/pages/day/today";
 import Tomorrow from "./components/pages/day/tomorrow";
 import DayPrint from "./components/pages/day/print";
@@ -64,6 +65,7 @@ export default function App() {
         )}
       >
         <Route path="/" component={Today} />
+        <Route path="/login" component={Login} />
         <Route path="/today" component={Today} />
         <Route path="/pwa" component={Today} />
         <Route path="/kiosk" component={Today} />
