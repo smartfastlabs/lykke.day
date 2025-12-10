@@ -24,12 +24,24 @@ self.addEventListener("push", function (event) {
 
 self.addEventListener("notificationclick", function (event) {
   event.notification.close();
-  console.log("Notification clicked:", event.notification.data);
+  const url = event.notification.data?.url || "/";
 
-  // const notificationData = event?.target?.data || {};
-  // console.log(notificationData);
-
-  // event.waitUntil(clients.openWindow(data.url || "/"));
+  if (url) {
+    event.waitUntil(
+      clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+        // If app is already open, focus it and send message
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && "focus" in client) {
+            client.focus();
+            client.postMessage({ type: "NAVIGATE", url });
+            return;
+          }
+        }
+        // No window open, open a new one directly to the URL
+        return clients.openWindow(url);
+      })
+    );
+  }
 });
 
 const CACHE_NAME = 'app-cache-v1';

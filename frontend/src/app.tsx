@@ -1,4 +1,4 @@
-import { Router, Route } from "@solidjs/router";
+import { Router, useNavigate, Route } from "@solidjs/router";
 import { Title, Meta, MetaProvider } from "@solidjs/meta";
 import { Component, Suspense } from "solid-js";
 import { FontAwesomeIcon } from "solid-fontawesome";
@@ -15,6 +15,8 @@ import {
   faFaceSmileWink,
   faGear,
 } from "@fortawesome/free-solid-svg-icons";
+import { onMount, onCleanup } from "solid-js";
+import { NotificationProvider } from "./providers/notifications";
 
 import Home from "./components/pages/home";
 import Login from "./components/pages/login"
@@ -34,10 +36,28 @@ library.add(
 
 config.autoAddCss = false;
 
-import { onMount } from "solid-js";
-import { NotificationProvider } from "./providers/notifications";
+function NavigationHandler() {
+  const navigate = useNavigate();
+
+  onMount(() => {
+    const handleSWMessage = (event) => {
+      if (event.data?.type === "NAVIGATE" && event.data?.url) {
+        navigate(event.data.url);
+      }
+    };
+
+    navigator.serviceWorker?.addEventListener("message", handleSWMessage);
+
+    onCleanup(() => {
+      navigator.serviceWorker?.removeEventListener("message", handleSWMessage);
+    });
+  });
+
+  return null
+}
 
 export default function App() {
+
   onMount(() => {
     // Skip auth check on login page to avoid redirect loop
     if (window.location.pathname !== '/login') {
@@ -62,6 +82,7 @@ export default function App() {
           console.log("SW registration failed: ", registrationError);
         });
     }
+
   });
 
   return (
@@ -69,6 +90,7 @@ export default function App() {
       <Router
         root={(props) => (
           <NotificationProvider>
+          <NavigationHandler />
             <MetaProvider>
               <Title>Todd's Daily Planer</Title>
               <Suspense>{props.children}</Suspense>
