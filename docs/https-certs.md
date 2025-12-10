@@ -110,26 +110,26 @@ You should now have an HTTPS server on your Raspberry Pi listening on port 443.
 
 To avoid HTTPS warnings on your Mac, you must trust the `mkcert` root CA in the macOS keychain.
 
-### Step 1 — Copy the CA to your Mac
+### Step 1 — Temporarily serve the CA from the Raspberry Pi
 
 On the Raspberry Pi, run:
 
-    scp ~/.local/share/mkcert/rootCA.pem your-mac-username@your-mac-ip:~/Downloads/
-
-(Replace `your-mac-username` and `your-mac-ip` accordingly.)
+    cd $(mkcert -CAROOT)
+    python3 -m http.server 8080
 
 ### Step 2 — Add the certificate to macOS Keychain
 
 On your Mac:
 
-1. Open **Keychain Access** (Applications → Utilities → Keychain Access).
-2. In the left sidebar, select **System** keychain (not “login”).
-3. Drag `rootCA.pem` from `~/Downloads` into the **System** keychain.
-4. Double-click the imported certificate (it will likely be named something like “mkcert development CA”).
-5. Expand the **Trust** section.
-6. Set **“When using this certificate”** to **“Always Trust”**.
-7. Close the window; macOS will prompt for your password. Enter it to save the changes.
-8. Restart **Chrome** and **Safari**.
+1. Download the CA: http://<YOUR-DOMAIN>.local:8080/rootCA.pem
+2. Open **Keychain Access** (Applications → Utilities → Keychain Access).
+3. In the left sidebar, select **System** keychain (not “login”).
+4. Drag `rootCA.pem` from `~/Downloads` into the **System** keychain.
+5. Double-click the imported certificate (it will likely be named something like “mkcert development CA”).
+6. Expand the **Trust** section.
+7. Set **“When using this certificate”** to **“Always Trust”**.
+8. Close the window; macOS will prompt for your password. Enter it to save the changes.
+9. Restart **Chrome** and **Safari**.
 
 ### Browsers affected
 
@@ -144,32 +144,11 @@ After this, both browsers should trust certificates issued by your Raspberry Pi�
 
 iOS requires installing the CA as a profile and then explicitly enabling trust.
 
-### Step 1 — Transfer `rootCA.pem` to your iPhone or iPad
-
-You can use any of these options:
-
-- **AirDrop** from your Mac to your iOS device.
-- **Email** the file to yourself and open it on your iOS device.
-- Temporarily serve the file from the Pi and download it via Safari.
-
-For example, to serve it temporarily from the Pi:
-
-1. On the Pi:
-
-   cd ~/.local/share/mkcert
-   python3 -m http.server 8000
-
-2. On your iOS device, open Safari and go to:
-
-   http://<pi-ip-address>:8000/
-
-3. Tap `rootCA.pem` to download it.
-
-### Step 2 — Install the downloaded profile
+### Step 1 — Install the downloaded profile
 
 On your iOS device:
-
-1. When you tap `rootCA.pem`, iOS will prompt to allow downloading a configuration profile. Tap **Allow**.
+1. On Your iPhone go to: http://<YOUR-DOMAIN>.local:8080/rootCA.pem
+1. iOS will prompt to allow downloading a configuration profile. Tap **Allow**.
 2. Open **Settings**.
 3. You should see **Profile Downloaded** near the top. If not, go to:
 
@@ -180,7 +159,7 @@ On your iOS device:
 6. Enter your passcode if prompted.
 7. Tap **Install** again to confirm.
 
-### Step 3 — Trust the root certificate
+### Step 2 — Trust the root certificate
 
 This step is required for iOS to fully trust the CA for SSL:
 
@@ -195,65 +174,3 @@ This step is required for iOS to fully trust the CA for SSL:
 After this, **Safari on iOS** will trust certificates issued by the mkcert CA running on your Raspberry Pi.
 
 ---
-
-## 5. Testing the Setup
-
-From your Mac or iOS device, try visiting your Pi over HTTPS.
-
-### Using a hostname
-
-If you set up DNS or a hosts file entry for `myserver.local`:
-
-    https://myserver.local
-
-Make sure your Mac / iOS device can resolve this hostname to the Pi’s IP.
-
-### Using the local IP
-
-Alternatively, you can use the IP you included in the certificate (for example, `192.168.1.42`):
-
-    https://192.168.1.42
-
-You should see:
-
-- A **secure padlock** (no red warnings).
-- No “Your connection is not private” / “Untrusted certificate” errors.
-
----
-
-## 6. Troubleshooting
-
-### Browser still shows certificate warnings
-
-- Confirm that you generated the certificate with all hostnames/IPs you actually use. For example, if you visit `https://myserver.local` but only created a cert for `localhost`, it will not be trusted.
-- Regenerate the certificate with all needed names, for example:
-
-      mkcert myserver.local 192.168.1.42 localhost
-
-- Ensure you imported the correct root CA (`rootCA.pem`) on macOS/iOS, and that it’s the same one used on the Pi.
-
-### iOS says “Not Verified” or still warns
-
-- Double-check that you:
-  - Installed the downloaded profile.
-  - Enabled full trust in **Settings → General → About → Certificate Trust Settings**.
-
-### Chrome still doesn’t trust the certificate on macOS
-
-- Make sure the CA was added to the **System** keychain (not just “login”).
-- After changing trust settings, fully quit and restart Chrome.
-
----
-
-## 7. Summary
-
-You have now:
-
-- Installed `mkcert` on your Raspberry Pi via APT.
-- Created and installed a local CA on the Pi.
-- Generated HTTPS certificates for your local server.
-- Trusted the mkcert CA on:
-  - macOS (Chrome and Safari)
-  - iOS (Safari)
-
-This gives you a secure, trusted HTTPS development environment for your Raspberry Pi that works smoothly across your local devices.
