@@ -1,19 +1,22 @@
+import { useNavigate } from "@solidjs/router";
 import SettingsButton from "../settingsButton";
 
 export default function Page(props) {
+  const navigate = useNavigate()
   const enablePush = () => {
-    console.log("Enabling push notifications...");
-    if (Notification.permission === "granted") {
-      const notification = new Notification("Ooops ;)", {
-        body: "You're already subscribed to push notifications.",
-        icon: "/images/icons/jasper/192.png", // Your PWA icon
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().then((granted) => {
+        console.log('Persistent storage:', granted ? 'granted' : 'denied');
       });
-      notification.onclick = (event) => {
-        event.preventDefault(); // Prevent the browser from focusing the Notification's tab
-        console.log("Notification clicked!");
-        // You can open a new tab, navigate to a specific URL, or perform other actions here
-        window.open("https://www.example.com", "_blank");
-      };
+    }
+    if (Notification.permission === "granted") {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification("asdOops!", {
+          body: "You're already subscribed to push notifications.",
+          icon: "/icons/192.png",
+          data: { url: "/tomorrow" }
+        });
+      })
     } else if ("serviceWorker" in navigator) {
       console.log("Service Worker is supported");
       navigator.serviceWorker.ready.then((registration) => {

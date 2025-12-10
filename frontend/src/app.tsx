@@ -45,7 +45,6 @@ export default function App() {
         .split('; ')
         .find(row => row.startsWith('logged_in_at='));
 
-      console.log(sessionCookie)
       if (!sessionCookie) {
         window.location.href = '/login';
         return;
@@ -53,7 +52,6 @@ export default function App() {
     }
 
     // Register service worker
-    console.log(navigator);
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")
