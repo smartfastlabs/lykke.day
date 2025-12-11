@@ -13,6 +13,7 @@ from .task import Task
 class DayTemplate(BaseObject):
     tasks: list[str] = Field(default_factory=list)
     alarm: Alarm | None = None
+    icon: str | None = None
 
 
 class DayTag(str, Enum):

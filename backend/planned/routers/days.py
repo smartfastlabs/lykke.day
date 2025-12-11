@@ -6,8 +6,8 @@ if TYPE_CHECKING:
 
 from fastapi import APIRouter, Depends
 
-from planned.objects import BaseObject, Day, DayContext, DayStatus
-from planned.repositories import day_repo, event_repo, task_repo
+from planned.objects import BaseObject, Day, DayContext, DayStatus, DayTemplate
+from planned.repositories import day_repo, event_repo, task_repo, day_template_repo
 from planned.services import DayService, planning_svc
 from planned.utils.dates import get_current_date
 
@@ -49,3 +49,7 @@ async def update_day(date: datetime.date, request: UpdateDayRequest) -> Day:
     if request.status is not None:
         day.status = request.status
     return await day_repo.put(day)
+
+@router.get("/templates")
+async def get_templates() -> list[DayTemplate]:
+    return await day_template_repo.all()

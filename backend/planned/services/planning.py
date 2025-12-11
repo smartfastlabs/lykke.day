@@ -1,9 +1,10 @@
 import asyncio
 import datetime
+from contextlib import suppress 
 
 from loguru import logger
 
-from planned import objects
+from planned import objects, exceptions
 from planned.objects import DayContext, DayTemplate, Task, TaskStatus
 from planned.objects.user_settings import user_settings
 from planned.repositories import (
@@ -61,6 +62,11 @@ class PlanningService(BaseService):
         date: datetime.date, 
         template_id: str | None = None,
     ) -> DayContext:
+        if template_id is None:
+            with suppress(exceptions.NotFoundError):
+                existing_day = await day_repo.get(date)
+                template_id = existing_day.template_id
+
         if template_id is None:
             template_id = user_settings.template_defaults[date.weekday()]
 

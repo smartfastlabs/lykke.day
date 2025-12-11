@@ -1,7 +1,7 @@
 import { getRequestEvent } from "solid-js/web";
 
 import { globalNotifications } from "../providers/notifications";
-import { Event, Task, Day, DayContext } from "../types/api";
+import { Event, Task, Day, DayContext, DayTemplate } from "../types/api";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -136,6 +136,13 @@ export const dayAPI = {
     });
 
     return resp.data as DayContext;
+  },
+  getTemplates: async (): DayTemplate[] => {
+    const resp = await fetchJSON("/api/days/templates", {
+      method: "GET",
+    });
+
+    return resp.data as DayTemplate[];
   },
 
   getToday: async (): DayContext => {

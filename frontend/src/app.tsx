@@ -1,22 +1,8 @@
 import { Router, useNavigate, Route } from "@solidjs/router";
 import { Title, Meta, MetaProvider } from "@solidjs/meta";
 import { Component, Suspense } from "solid-js";
-import { FontAwesomeIcon } from "solid-fontawesome";
 import "./index.css";
 
-import { config, library } from "@fortawesome/fontawesome-svg-core";
-import "@fortawesome/fontawesome-svg-core/styles.css";
-import {
-  faCoffee,
-  faUser,
-  faChartBar,
-  faCogs,
-  faBroom,
-  faFaceSmileWink,
-  faGrip,
-  faGear,
-  faGripVertical,
-} from "@fortawesome/free-solid-svg-icons";
 import { onMount, onCleanup } from "solid-js";
 import { NotificationProvider } from "./providers/notifications";
 
@@ -27,19 +13,10 @@ import Today from "./components/pages/day/today";
 import Tomorrow from "./components/pages/day/tomorrow";
 import DayPrint from "./components/pages/day/print";
 import NavPage from "./components/pages/navigation"
+import DayTemplatePage from "./components/pages/day/templates";
 
-library.add(
-  faGear,
-  faGripVertical,
-  faFaceSmileWink,
-  faBroom,
-  faCogs,
-  faCoffee,
-  faUser,
-  faChartBar
-);
+import "./utils/icons" 
 
-config.autoAddCss = false;
 
 function NavigationHandler() {
   const navigate = useNavigate();
@@ -113,6 +90,7 @@ export default function App() {
         <Route path="/kiosk" component={Today} />
         <Route path="/tomorrow" component={Tomorrow} />
         <Route path="/day/print" component={DayPrint} />
+        <Route path="/day-templates" component={DayTemplatePage} />
       </Router>
     </>
   );
