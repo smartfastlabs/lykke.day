@@ -14,8 +14,8 @@ from planned.repositories import (
     message_repo,
     task_repo,
 )
+from planned.utils.dates import get_current_datetime, get_current_time
 from planned.utils.decorators import hybridmethod
-from planned.utils.dates import get_current_datetime
 
 from .base import BaseService
 
@@ -177,27 +177,53 @@ class DayService(BaseService):
     async def save(self) -> None:
         await day_repo.put(self.ctx.day)
 
+    async def get_upcomming_tasks(
+        self,
+        look_ahead: datetime.timedelta = datetime.timedelta(minutes=30),
+    ) -> list[objects.Task]:
+        now: datetime.time = get_current_time()
+        cutoff_time: datetime.time = (get_current_datetime() + look_ahead).time()
 
-    async def get_upcomming_tasks(self) -> list[objects.Task]:
-        now: datetime.datetime = get_current_datetime()
+        if cutoff_time < get_current_time():
+            # tomorrow
+            return self.ctx.tasks
 
         result: list[objects.Task] = []
         for task in self.ctx.tasks:
             if task.completed_at or not task.schedule:
                 continue
 
-            if task.schedule.timing_type == objects.TimingType.DEADLINE:
-                pass
-            elif task.schedule.timing_type == objects.TimingType.FIXED_TIME:
-                pass
-            elif task.schedule.timing_type == objects.TimingType.TIME_WINDOW:
-                pass
-            elif task.schedule.timing_type == objects.TimingType.FLEXIBLE:
-                pass
-            else:
+            if task.schedule.available_time:
+                if task.schedule.available_time < now:
+                    continue
+
+            elif task.schedule.start_time:
+                if cutoff_time < task.schedule.start_time:
+                    continue
+
+            elif task.schedule.end_time and cutoff_time < task.schedule.end_time:
                 continue
 
-
             result.append(task)
+
+        return result
+
+    async def get_upcomming_events(
+        self,
+        look_ahead: datetime.timedelta = datetime.timedelta(minutes=30),
+    ) -> list[objects.Event]:
+        now: datetime.datetime = get_current_datetime()
+        result: list[objects.Task] = []
+        for event in self.ctx.events:
+            if event.status == "cancelled":
+                continue
+
+            if event.starts_at < now:
+                if event.ends_at and event.ends_at < now:
+                    continue
+            elif event.starts_at - now > look_ahead:
+                continue
+
+            result.append(event)
 
         return result

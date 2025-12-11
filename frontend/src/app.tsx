@@ -6,17 +6,15 @@ import "./index.css";
 import { onMount, onCleanup } from "solid-js";
 import { NotificationProvider } from "./providers/notifications";
 
-import  PushSubscriptions  from "./components/pages/pushNotifications";
+import PushSubscriptions from "./components/pages/pushNotifications";
 import Home from "./components/pages/home";
-import Login from "./components/pages/login"
+import Login from "./components/pages/login";
 import Today from "./components/pages/day/today";
 import Tomorrow from "./components/pages/day/tomorrow";
 import DayPrint from "./components/pages/day/print";
-import NavPage from "./components/pages/navigation"
-import DayTemplatePage from "./components/pages/day/templates";
+import NavPage from "./components/pages/navigation";
 
-import "./utils/icons" 
-
+import "./utils/icons";
 
 function NavigationHandler() {
   const navigate = useNavigate();
@@ -34,10 +32,10 @@ function NavigationHandler() {
       navigator.serviceWorker?.removeEventListener("message", handleSWMessage);
     });
 
-    if (window.location.pathname !== '/login') {
+    if (window.location.pathname !== "/login") {
       const sessionCookie = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('logged_in_at='));
+        .split("; ")
+        .find((row) => row.startsWith("logged_in_at="));
 
       if (!sessionCookie) {
         navigate("/login");
@@ -46,11 +44,10 @@ function NavigationHandler() {
     }
   });
 
-  return null
+  return null;
 }
 
 export default function App() {
-
   onMount(() => {
     // Skip auth check on login page to avoid redirect loop
 
@@ -65,7 +62,6 @@ export default function App() {
           console.log("SW registration failed: ", registrationError);
         });
     }
-
   });
 
   return (
@@ -73,7 +69,7 @@ export default function App() {
       <Router
         root={(props) => (
           <NotificationProvider>
-          <NavigationHandler />
+            <NavigationHandler />
             <MetaProvider>
               <Title>Todd's Daily Planer</Title>
               <Suspense>{props.children}</Suspense>
@@ -90,7 +86,6 @@ export default function App() {
         <Route path="/kiosk" component={Today} />
         <Route path="/tomorrow" component={Tomorrow} />
         <Route path="/day/print" component={DayPrint} />
-        <Route path="/day-templates" component={DayTemplatePage} />
       </Router>
     </>
   );

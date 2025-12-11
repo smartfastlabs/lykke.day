@@ -50,7 +50,7 @@ async def test_delete_by_date(test_date):
 
 
 @pytest.mark.asyncio
-async def test_put(test_event):
+async def test_put(test_event, clear_repos):
     await event_repo.put(
         test_event,
     )

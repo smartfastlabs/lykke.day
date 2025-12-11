@@ -2,6 +2,7 @@ import datetime
 import shutil
 import tempfile
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 import pytest
 from dobles import allow
@@ -25,6 +26,11 @@ def test_date():
         real_asyncio=True,
     ):
         yield datetime.date(2025, 11, 27)
+
+
+@pytest.fixture
+def test_date_tomorrow(test_date):
+    return test_date + datetime.timedelta(days=1)
 
 
 @pytest.fixture
@@ -54,19 +60,30 @@ def clear_repos():
 
 
 @pytest.fixture
-def test_deleted_event(test_date):
+def test_deleted_event(test_date_tomorrow):
+    starts_at = datetime.datetime.combine(
+        test_date_tomorrow,
+        datetime.time(hour=2),
+        tzinfo=ZoneInfo(settings.TIMEZONE),
+    )
     return objects.Event(
         name="Test Event",
         calendar_id="test-calendar",
         platform_id="test-id",
         platform="testing",
         status="cancelled",
-        starts_at=test_date + datetime.timedelta(hours=2),
+        starts_at=starts_at,
     )
 
 
 @pytest.fixture
-def test_event(test_date):
+def test_event(test_date_tomorrow):
+    starts_at = datetime.datetime.combine(
+        test_date_tomorrow,
+        datetime.time(hour=2),
+        tzinfo=ZoneInfo(settings.TIMEZONE),
+    )
+
     return objects.Event(
         name="Test Event",
         frequency="ONCE",
@@ -74,7 +91,26 @@ def test_event(test_date):
         platform_id="test-id",
         platform="testing",
         status="status",
-        starts_at=test_date + datetime.timedelta(days=2),
+        starts_at=starts_at,
+    )
+
+
+@pytest.fixture
+def test_event_today(test_date):
+    starts_at = datetime.datetime.combine(
+        test_date,
+        datetime.time(hour=2),
+        tzinfo=ZoneInfo(settings.TIMEZONE),
+    )
+
+    return objects.Event(
+        name="Test Event",
+        frequency="ONCE",
+        calendar_id="test-calendar",
+        platform_id="test-id",
+        platform="testing",
+        status="status",
+        starts_at=starts_at,
     )
 
 
@@ -107,11 +143,15 @@ def test_day(test_date):
 
 
 @pytest.fixture
-def test_day_ctx(test_day, test_event):
+def test_day_ctx(
+    test_day,
+    test_event_today,
+    test_task_today,
+):
     return objects.DayContext(
         day=test_day,
-        tasks=[],
-        events=[test_event],
+        tasks=[test_task_today],
+        events=[test_event_today],
         messages=[],
     )
 
@@ -126,4 +166,25 @@ def test_sheppard_svc(test_day_svc):
     return services.SheppardService(
         day_svc=test_day_svc,
         mode="idle",
+    )
+
+
+@pytest.fixture
+def test_task_today(test_date):
+    return objects.Task(
+        name="Test Task Today",
+        status=objects.TaskStatus.READY,
+        category=objects.TaskCategory.HOUSE,
+        frequency=objects.TaskFrequency.DAILY,
+        scheduled_date=test_date,
+        task_definition=objects.TaskDefinition(
+            id="test-task",
+            name="Test Task",
+            description="you get the idea",
+            type=objects.TaskType.ACTIVITY,
+        ),
+        schedule=objects.TaskSchedule(
+            timing_type=objects.TimingType.DEADLINE,
+            start_time=datetime.time(2, 0),
+        ),
     )

@@ -1,10 +1,10 @@
 import asyncio
 import datetime
-from contextlib import suppress 
+from contextlib import suppress
 
 from loguru import logger
 
-from planned import objects, exceptions
+from planned import exceptions, objects
 from planned.objects import DayContext, DayTemplate, Task, TaskStatus
 from planned.objects.user_settings import user_settings
 from planned.repositories import (
@@ -58,13 +58,13 @@ class PlanningService(BaseService):
         return result
 
     async def preview(
-        self, 
-        date: datetime.date, 
+        self,
+        date: datetime.date,
         template_id: str | None = None,
     ) -> DayContext:
         if template_id is None:
             with suppress(exceptions.NotFoundError):
-                existing_day = await day_repo.get(date)
+                existing_day = await day_repo.get(str(date))
                 template_id = existing_day.template_id
 
         if template_id is None:
@@ -101,7 +101,7 @@ class PlanningService(BaseService):
         await task_repo.delete_by_date(date)
 
         result: objects.DayContext = await self.preview(
-            date, 
+            date,
             template_id=template_id,
         )
         result.day.status = objects.DayStatus.SCHEDULED

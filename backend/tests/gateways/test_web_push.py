@@ -14,6 +14,7 @@ from planned.gateways import web_push
 @pytest.mark.asyncio
 async def test_send_notification():
     subscription = objects.PushSubscription(
+        device_name="Test Device",
         endpoint="https://example.com",
         p256dh="p256dh",
         auth="auth",

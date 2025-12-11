@@ -72,7 +72,7 @@ class SheppardService(BaseService):
             await self.start_day()
 
         current_time: datetime.time = get_current_time()
-        if alarm := self.day_svc.ctx.day.alarm:
+        if alarm := self.day_svc.ctx.day.alarm:  # noqa
             if alarm.triggered_at is None and alarm.time < current_time:
                 alarm.triggered_at = current_time
                 logger.info(f"Triggering alarm: {alarm.name} at {alarm.time}")
@@ -82,6 +82,9 @@ class SheppardService(BaseService):
 
         for task in await self.day_svc.get_upcomming_tasks():
             logger.info(f"UPCOMING TASK {task.task_definition.name}")
+
+        for event in await self.day_svc.get_upcomming_events():
+            logger.info(f"UPCOMING EVENT{event.name}")
 
         prompt = self.checkin_prompt()
 
