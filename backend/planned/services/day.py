@@ -194,7 +194,7 @@ class DayService(BaseService):
                 continue
 
             if task.schedule.available_time:
-                if task.schedule.available_time < now:
+                if task.schedule.available_time > now:
                     continue
 
             elif task.schedule.start_time:

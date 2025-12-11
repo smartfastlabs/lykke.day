@@ -81,7 +81,7 @@ class SheppardService(BaseService):
                 await self.day_svc.save()
 
         for task in await self.day_svc.get_upcomming_tasks():
-            logger.info(f"UPCOMING TASK {task.task_definition.name}")
+            logger.info(f"UPCOMING TASK {task.name}")
 
         for event in await self.day_svc.get_upcomming_events():
             logger.info(f"UPCOMING EVENT{event.name}")

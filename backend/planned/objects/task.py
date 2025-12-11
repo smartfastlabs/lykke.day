@@ -70,6 +70,16 @@ class TaskSchedule(BaseModel):
     end_time: time | None = None
     timing_type: TimingType
 
+    def __bool__(self):
+        for foo in (
+            self.available_time,
+            self.start_time,
+            self.end_time,
+        ):
+            if foo is not None:
+                return True
+        return False
+
 
 class Task(BaseDateObject):
     scheduled_date: dt_date
