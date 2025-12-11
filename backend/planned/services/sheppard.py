@@ -117,7 +117,7 @@ class SheppardService(BaseService):
     async def end_day(self) -> None:
         # Cleanup tasks, send summary, etc.
         # Make sure tomorrow's day is scheduled
-        await self.day_svc.end()
+        pass
 
     async def start_day(self, template: str = "default") -> None:
         # Confirm yesterday is ended
