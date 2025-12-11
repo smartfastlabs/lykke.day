@@ -7,6 +7,7 @@ import {
   faCalendarDay,
   faCalendarPlus,
   faBell,
+  faHouse,
 } from "@fortawesome/free-solid-svg-icons";
 
 import Page from "../shared/layout/page";
@@ -18,6 +19,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  { label: "Home", icon: faHouse, url: "/" },
   { label: "Login", icon: faRightToBracket, url: "/login" },
   { label: "Settings", icon: faGear, url: "/settings" },
   { label: "Today", icon: faCalendarDay, url: "/today" },

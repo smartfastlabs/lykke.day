@@ -8,6 +8,7 @@ export const Home: Component = () => {
   const { tasks } = useTaskManager();
   return (
     <Page>
+      HASDFSD
       <TaskList startTime="05:30" endTime="23:00" tasks={tasks} />
     </Page>
   );

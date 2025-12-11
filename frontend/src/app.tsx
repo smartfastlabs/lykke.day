@@ -15,6 +15,7 @@ import DayPrint from "./components/pages/day/print";
 import NavPage from "./components/pages/navigation";
 
 import "./utils/icons";
+import { TaskProvider } from "./providers/tasks";
 
 function NavigationHandler() {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ export default function App() {
   });
 
   return (
-    <>
+    <TaskProvider>
       <Router
         root={(props) => (
           <NotificationProvider>
@@ -77,7 +78,7 @@ export default function App() {
           </NotificationProvider>
         )}
       >
-        <Route path="/" component={Today} />
+        <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
         <Route path="/navigation" component={NavPage} />
         <Route path="/push-subscriptions" component={PushSubscriptions} />
@@ -87,6 +88,6 @@ export default function App() {
         <Route path="/tomorrow" component={Tomorrow} />
         <Route path="/day/print" component={DayPrint} />
       </Router>
-    </>
+    </TaskProvider>
   );
 }

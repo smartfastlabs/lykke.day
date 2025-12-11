@@ -5,7 +5,6 @@ import {
   useContext,
   onMount,
 } from "solid-js";
-import TaskService from "../services/tasks";
 
 const TaskContext = createContext();
 
