@@ -201,7 +201,7 @@ class DayService(BaseService):
                 if cutoff_time < task.schedule.start_time:
                     continue
 
-            elif task.schedule.end_time and cutoff_time < task.schedule.end_time:
+            if task.schedule.end_time and now > task.schedule.end_time:
                 continue
 
             result.append(task)
