@@ -8,6 +8,7 @@ from .base import BaseObject
 
 
 class PushSubscription(BaseObject):
+    device_name: str
     endpoint: str
     p256dh: str
     auth: str

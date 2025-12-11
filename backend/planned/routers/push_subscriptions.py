@@ -13,6 +13,7 @@ class Keys(objects.BaseObject):
 
 
 class SubscriptionRequest(objects.BaseObject):
+    device_name: str
     endpoint: str
     keys: Keys
 
@@ -24,6 +25,7 @@ async def subscribe(
 ) -> objects.PushSubscription:
     result: objects.PushSubscription = await push_subscription_repo.put(
         objects.PushSubscription(
+            device_name=request.device_name,
             endpoint=request.endpoint,
             p256dh=request.keys.p256dh,
             auth=request.keys.auth,

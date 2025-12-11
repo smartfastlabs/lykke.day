@@ -1,4 +1,5 @@
 import { createSignal } from "solid-js";
+import Page from "../shared/layout/page";
 import { authAPI } from "../../utils/api";
 
 export default function Login() {
@@ -27,6 +28,7 @@ export default function Login() {
   };
 
   return (
+    <Page>
     <div class="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-6">
       <div class="w-full max-w-sm">
         <h1 class="text-2xl font-medium text-neutral-900 text-center mb-8">
@@ -63,5 +65,6 @@ export default function Login() {
         </form>
       </div>
     </div>
+    </Page>
   );
 }

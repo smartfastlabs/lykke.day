@@ -13,19 +13,24 @@ import {
   faCogs,
   faBroom,
   faFaceSmileWink,
+  faGrip,
   faGear,
+  faGripVertical,
 } from "@fortawesome/free-solid-svg-icons";
 import { onMount, onCleanup } from "solid-js";
 import { NotificationProvider } from "./providers/notifications";
 
+import  PushSubscriptions  from "./components/pages/pushNotifications";
 import Home from "./components/pages/home";
 import Login from "./components/pages/login"
 import Today from "./components/pages/day/today";
 import Tomorrow from "./components/pages/day/tomorrow";
 import DayPrint from "./components/pages/day/print";
+import NavPage from "./components/pages/navigation"
 
 library.add(
   faGear,
+  faGripVertical,
   faFaceSmileWink,
   faBroom,
   faCogs,
@@ -101,6 +106,8 @@ export default function App() {
       >
         <Route path="/" component={Today} />
         <Route path="/login" component={Login} />
+        <Route path="/navigation" component={NavPage} />
+        <Route path="/push-subscriptions" component={PushSubscriptions} />
         <Route path="/today" component={Today} />
         <Route path="/pwa" component={Today} />
         <Route path="/kiosk" component={Today} />
