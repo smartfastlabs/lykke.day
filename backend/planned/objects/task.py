@@ -70,7 +70,7 @@ class TaskSchedule(BaseModel):
     end_time: time | None = None
     timing_type: TimingType
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         for foo in (
             self.available_time,
             self.start_time,

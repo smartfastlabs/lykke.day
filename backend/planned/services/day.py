@@ -213,7 +213,7 @@ class DayService(BaseService):
         look_ahead: datetime.timedelta = datetime.timedelta(minutes=30),
     ) -> list[objects.Event]:
         now: datetime.datetime = get_current_datetime()
-        result: list[objects.Task] = []
+        result: list[objects.Event] = []
         for event in self.ctx.events:
             if event.status == "cancelled":
                 continue
