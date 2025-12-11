@@ -51,6 +51,17 @@ function NavigationHandler() {
     onCleanup(() => {
       navigator.serviceWorker?.removeEventListener("message", handleSWMessage);
     });
+
+    if (window.location.pathname !== '/login') {
+      const sessionCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('logged_in_at='));
+
+      if (!sessionCookie) {
+        navigate("/login");
+        return;
+      }
+    }
   });
 
   return null
@@ -60,16 +71,6 @@ export default function App() {
 
   onMount(() => {
     // Skip auth check on login page to avoid redirect loop
-    if (window.location.pathname !== '/login') {
-      const sessionCookie = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('logged_in_at='));
-
-      if (!sessionCookie) {
-        window.location.href = '/login';
-        return;
-      }
-    }
 
     // Register service worker
     if ("serviceWorker" in navigator) {
