@@ -7,7 +7,7 @@ ACCESS_KEY = "peRaidcVma8bYAHuxjPa5oJ0mp/1+dTpCTcFA31k+cRVRaDHpy4VCQ=="
 
 access_key = ACCESS_KEY  # just use the string directly
 keyword_paths = [
-    "/home/toddsifleet/github/planned.day/models/hey-leo_en_raspberry-pi_v3_0_0/hey-leo_en_raspberry-pi_v3_0_0.ppn"
+    "/home/toddsifleet/github/planned.day.backup/models/hey-leo_en_raspberry-pi_v3_0_0/hey-leo_en_raspberry-pi_v3_0_0.ppn"
 ]
 
 handle = pvporcupine.create(access_key=access_key, keyword_paths=keyword_paths)
