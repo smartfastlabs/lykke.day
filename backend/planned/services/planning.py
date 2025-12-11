@@ -56,11 +56,18 @@ class PlanningService(BaseService):
 
         return result
 
-    async def preview(self, date: datetime.date) -> DayContext:
+    async def preview(
+        self, 
+        date: datetime.date, 
+        template_id: str | None = None,
+    ) -> DayContext:
+        if template_id is None:
+            template_id = user_settings.template_defaults[date.weekday()]
+
         result: DayContext = DayContext(
             day=await DayService.base_day(
                 date,
-                template_id=user_settings.template_defaults[date.weekday()],
+                template_id=template_id,
             ),
         )
         result.tasks, result.events, result.messages = await asyncio.gather(
@@ -83,10 +90,14 @@ class PlanningService(BaseService):
     async def schedule(
         self,
         date: datetime.date,
+        template_id: str | None = None,
     ) -> objects.DayContext:
         await task_repo.delete_by_date(date)
 
-        result: objects.DayContext = await self.preview(date)
+        result: objects.DayContext = await self.preview(
+            date, 
+            template_id=template_id,
+        )
         result.day.status = objects.DayStatus.SCHEDULED
         await asyncio.gather(
             day_repo.put(result.day),

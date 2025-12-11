@@ -15,6 +15,7 @@ from planned.repositories import (
     task_repo,
 )
 from planned.utils.decorators import hybridmethod
+from planned.utils.dates import get_current_datetime
 
 from .base import BaseService
 
@@ -175,3 +176,28 @@ class DayService(BaseService):
 
     async def save(self) -> None:
         await day_repo.put(self.ctx.day)
+
+
+    async def get_upcomming_tasks(self) -> list[objects.Task]:
+        now: datetime.datetime = get_current_datetime()
+
+        result: list[objects.Task] = []
+        for task in self.ctx.tasks:
+            if task.completed_at or not task.schedule:
+                continue
+
+            if task.schedule.timing_type == objects.TimingType.DEADLINE:
+                pass
+            elif task.schedule.timing_type == objects.TimingType.FIXED_TIME:
+                pass
+            elif task.schedule.timing_type == objects.TimingType.TIME_WINDOW:
+                pass
+            elif task.schedule.timing_type == objects.TimingType.FLEXIBLE:
+                pass
+            else:
+                continue
+
+
+            result.append(task)
+
+        return result

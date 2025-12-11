@@ -80,6 +80,9 @@ class SheppardService(BaseService):
                 youtube.play_audio("https://www.youtube.com/watch?v=Gcv7re2dEVg")
                 await self.day_svc.save()
 
+        for task in await self.day_svc.get_upcomming_tasks():
+            logger.info(f"UPCOMING TASK {task.task_definition.name}")
+
         prompt = self.checkin_prompt()
 
         self.last_run = datetime.datetime.now()

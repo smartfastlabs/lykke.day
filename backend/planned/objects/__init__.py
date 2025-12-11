@@ -9,6 +9,7 @@ from .push_subscription import PushSubscription
 from .routine import Routine, RoutineSchedule
 from .task import (
     Task,
+    TimingType,
     TaskDefinition,
     TaskFrequency,
     TaskSchedule,
