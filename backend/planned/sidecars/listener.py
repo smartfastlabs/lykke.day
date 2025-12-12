@@ -1,11 +1,14 @@
+import asyncio
 import time
 
 import numpy as np
 import pvcheetah
 import pvcobra
 import pvporcupine
-from planned import settings
+from loguru import logger
 from pvrecorder import PvRecorder
+
+from planned import settings
 
 ACCESS_KEY = settings.PVPORCUPINE_ACCESS_KEY
 
@@ -108,35 +111,48 @@ def record_until_silence():
     return recorded_frames
 
 
-try:
-    recorder.start()
-    print("Waiting for wake word...")
+async def _run_loop():
+    try:
+        recorder.start()
+        print("Waiting for wake word...")
 
-    while True:
-        frame = recorder.read()
-        keyword_index = porcupine.process(frame)
+        while True:
+            frame = recorder.read()
+            keyword_index = porcupine.process(frame)
 
-        if keyword_index >= 0:
-            print("\nWake word detected!")
+            if keyword_index >= 0:
+                print("\nWake word detected!")
 
-            frames = record_until_silence()
-            text = transcribe_audio(frames, porcupine.sample_rate)
+                frames = record_until_silence()
+                text = transcribe_audio(frames, porcupine.sample_rate)
 
-            if text:
-                print(f"\nTranscription: {text}\n")
+                if text:
+                    print(f"\nTranscription: {text}\n")
+                else:
+                    print("\n(No speech detected)\n")
+
+                print("Waiting for wake word...")
             else:
-                print("\n(No speech detected)\n")
+                print(".", end="", flush=True)
 
-            print("Waiting for wake word...")
-        else:
-            print(".", end="", flush=True)
+    except KeyboardInterrupt:
+        print("\nStopping...")
 
-except KeyboardInterrupt:
-    print("\nStopping...")
+    finally:
+        recorder.stop()
+        recorder.delete()
+        porcupine.delete()
+        cheetah.delete()
+        cobra.delete()
 
-finally:
-    recorder.stop()
-    recorder.delete()
-    porcupine.delete()
-    cheetah.delete()
-    cobra.delete()
+
+async def run_async():
+    while True:
+        try:
+            await _run_loop()
+        except Exception as e:
+            logger.exception(f"Error Listening: {e}")
+
+
+def run():
+    asyncio.run(run_async())
