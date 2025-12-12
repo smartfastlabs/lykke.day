@@ -156,3 +156,7 @@ async def run_async():
 
 def run():
     asyncio.run(run_async())
+
+
+if __name__ == "__main__":
+    run()
