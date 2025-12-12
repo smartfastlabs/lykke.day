@@ -1,26 +1,23 @@
 import struct
+import webrtcvad
 import time
-import wave
-from datetime import datetime
-from pathlib import Path
-
+import numpy as np
 import pvporcupine
+import pvcheetah
 import pyaudio
-from planned import settings
+
+ACCESS_KEY = "peRaidcVma8bYAHuxjPa5oJ0mp/1+dTpCTcFA31k+cRVRaDHpy4VCQ=="
 
 # Configuration
 SILENCE_THRESHOLD = 500  # Adjust based on your mic/environment (RMS amplitude)
-SILENCE_DURATION = 1.0  # Seconds of silence before saving
-OUTPUT_DIR = Path("recordings")
+SILENCE_DURATION = 1.0   # Seconds of silence before processing
 
 keyword_paths = [
     "/home/toddsifleet/github/planned.day.backup/models/hey-leo_en_raspberry-pi_v3_0_0/hey-leo_en_raspberry-pi_v3_0_0.ppn"
 ]
 
-handle = pvporcupine.create(
-    access_key=settings.PVPORCUPINE_ACCESS_KEY,
-    keyword_paths=keyword_paths,
-)
+handle = pvporcupine.create(access_key=ACCESS_KEY, keyword_paths=keyword_paths)
+cheetah = pvcheetah.create(access_key=ACCESS_KEY)
 
 # --- PyAudio setup ---
 pa = pyaudio.PyAudio()
@@ -33,6 +30,45 @@ audio_stream = pa.open(
     input_device_index=2,
 )
 
+
+vad = webrtcvad.Vad(2)  # Aggressiveness: 0-3 (3 = most aggressive filtering)
+
+def record_until_silence():
+    print("\nListening... (speak now)")
+    
+    recorded_frames = []
+    silence_start = None
+    
+    # WebRTC VAD requires 10, 20, or 30ms frames at 8/16/32/48kHz
+    # Porcupine's frame length may differ, so we accumulate samples
+    samples_per_vad_frame = int(handle.sample_rate * 0.03)  # 30ms
+    sample_buffer = []
+    
+    while True:
+        frame = get_next_audio_frame()
+        recorded_frames.append(frame)
+        sample_buffer.extend(frame)
+        
+        # Process when we have enough for VAD
+        while len(sample_buffer) >= samples_per_vad_frame:
+            vad_frame = sample_buffer[:samples_per_vad_frame]
+            sample_buffer = sample_buffer[samples_per_vad_frame:]
+            
+            # Convert to bytes for webrtcvad
+            audio_bytes = struct.pack(f"{len(vad_frame)}h", *vad_frame)
+            is_speech = vad.is_speech(audio_bytes, handle.sample_rate)
+            
+            if not is_speech:
+                if silence_start is None:
+                    silence_start = time.time()
+                elif time.time() - silence_start >= SILENCE_DURATION:
+                    print("\nSilence detected, transcribing...")
+                    return recorded_frames
+            else:
+                silence_start = None
+                print("*", end="", flush=True)
+    
+    return recorded_frames
 
 def get_next_audio_frame():
     """
@@ -51,72 +87,69 @@ def calculate_rms(samples):
     return (sum_squares / len(samples)) ** 0.5
 
 
-def save_audio(frames, sample_rate, output_path):
-    """Save recorded frames to a WAV file."""
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with wave.open(str(output_path), "wb") as wf:
-        wf.setnchannels(1)
-        wf.setsampwidth(2)  # 16-bit = 2 bytes
-        wf.setframerate(sample_rate)
-
-        # Convert list of sample tuples back to bytes
-        for frame in frames:
-            wf.writeframes(struct.pack("h" * len(frame), *frame))
-
-    print(f"\nSaved recording to: {output_path}")
-
-
-def record_until_silence():
+def transcribe_audio(frames, sample_rate):
     """
-    Record audio until silence is detected for SILENCE_DURATION seconds.
-    Returns the recorded frames.
+    Transcribe recorded audio frames using Cheetah.
+    Resamples if necessary to match Cheetah's expected sample rate.
     """
-    print("\nListening... (speak now)")
+    # Flatten all frames into a single array
+    all_samples = []
+    for frame in frames:
+        all_samples.extend(frame)
+    
+    # Resample if Cheetah expects a different sample rate
+    if sample_rate != cheetah.sample_rate:
+        audio_array = np.array(all_samples, dtype=np.float32)
+        ratio = cheetah.sample_rate / sample_rate
+        new_length = int(len(audio_array) * ratio)
+        resampled = np.interp(
+            np.linspace(0, len(audio_array), new_length),
+            np.arange(len(audio_array)),
+            audio_array
+        ).astype(np.int16)
+        all_samples = resampled.tolist()
+    
+    # Process in chunks matching Cheetah's frame length
+    transcript = ""
+    for i in range(0, len(all_samples), cheetah.frame_length):
+        chunk = all_samples[i:i + cheetah.frame_length]
+        
+        # Pad the last chunk if necessary
+        if len(chunk) < cheetah.frame_length:
+            chunk = chunk + [0] * (cheetah.frame_length - len(chunk))
+        
+        partial, is_endpoint = cheetah.process(chunk)
+        transcript += partial
+    
+    # Flush to get any remaining transcription
+    final = cheetah.flush()
+    transcript += final
+    
+    return transcript.strip()
 
-    recorded_frames = []
-    silence_start = None
 
-    while True:
-        frame = get_next_audio_frame()
-        recorded_frames.append(frame)
-
-        rms = calculate_rms(frame)
-
-        if rms < SILENCE_THRESHOLD:
-            # Currently silent
-            if silence_start is None:
-                silence_start = time.time()
-            elif time.time() - silence_start >= SILENCE_DURATION:
-                print("Silence detected, stopping recording.")
-                break
-        else:
-            # Sound detected, reset silence timer
-            silence_start = None
-            print("*", end="", flush=True)
-
-    return recorded_frames
 
 
 try:
     print("Waiting for wake word...")
-
+    
     while True:
         keyword_index = handle.process(get_next_audio_frame())
-
+        
         if keyword_index >= 0:
             print("\nWake word detected!")
-
+            
             # Record until silence
             frames = record_until_silence()
-
-            # Generate unique filename with timestamp
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = OUTPUT_DIR / f"recording_{timestamp}.wav"
-
-            # Save the recording
-            save_audio(frames, handle.sample_rate, output_path)
-
+            
+            # Transcribe the recording
+            text = transcribe_audio(frames, handle.sample_rate)
+            
+            if text:
+                print(f"\nTranscription: {text}\n")
+            else:
+                print("\n(No speech detected)\n")
+            
             print("Waiting for wake word...")
         else:
             print(".", end="", flush=True)
@@ -130,3 +163,4 @@ finally:
         audio_stream.close()
     pa.terminate()
     handle.delete()
+    cheetah.delete()
