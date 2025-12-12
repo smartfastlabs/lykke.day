@@ -112,7 +112,7 @@ export const authAPI = {
   login: async (password: string): any => {
     const resp = await fetchJSON("/api/auth/login", {
       method: "PUT",
-      body: JSON.stringify({password}),
+      body: JSON.stringify({ password }),
       headers: {
         "Content-Type": "application/json",
       },
@@ -120,7 +120,15 @@ export const authAPI = {
 
     return resp.data;
   },
-}
+};
+
+export const alarmAPI = {
+  stopAll: async (): null => {
+    fetchJSON("/api/sheppard/stop-alarm", {
+      method: "PUT",
+    });
+  },
+};
 
 export const dayAPI = {
   scheduleToday: async (): Day => {

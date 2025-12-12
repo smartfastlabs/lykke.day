@@ -6,10 +6,10 @@ import devtools from "solid-devtools/vite";
 export default defineConfig({
   plugins: [devtools(), solidPlugin(), tailwindcss()],
   server: {
-    // https: {
-    //   cert: "./.certs/master-bedroom.local.pem",
-    //   key: "./.certs/master-bedroom.local-key.pem",
-    // },
+    https: {
+      cert: "./.certs/master-bedroom.local.pem",
+      key: "./.certs/master-bedroom.local-key.pem",
+    },
     allowedHosts: ["master-bedroom.local"],
     proxy: {
       "/api": {

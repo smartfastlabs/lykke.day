@@ -8,14 +8,17 @@ import {
   faCalendarPlus,
   faBell,
   faHouse,
+  faMugHot,
 } from "@fortawesome/free-solid-svg-icons";
 
 import Page from "../shared/layout/page";
+import { alarmAPI } from "../../utils/api";
 
 interface NavItem {
   label: string;
   icon: IconDefinition;
-  url: string;
+  url?: string;
+  method: CallableFunction;
 }
 
 const navItems: NavItem[] = [
@@ -25,19 +28,29 @@ const navItems: NavItem[] = [
   { label: "Today", icon: faCalendarDay, url: "/today" },
   { label: "Tomorrow", icon: faCalendarPlus, url: "/tomorrow" },
   { label: "Notifications", icon: faBell, url: "/notifications" },
+  { label: "Alarm", icon: faMugHot, method: alarmAPI.stopAll },
 ];
 
 const NavPage: Component = () => {
   const navigate = useNavigate();
 
+  function onClick(item: NavItem) {
+    if (item.url) {
+      return navigate(item.url);
+    }
+    if (item.method) {
+      return item.method();
+    }
+  }
+
   return (
     <Page>
-      <div class="grid grid-cols-2 gap-10 max-w-md mx-auto">
+      <div class="grid grid-cols-2 p-5 gap-10 max-w-md mx-auto">
         <For each={navItems}>
           {(item) => (
             <button
-              onClick={() => navigate(item.url)}
-              class="aspect-square flex flex-col items-center justify-center gap-2 bg-gray-100 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-600 transition-colors duration-150"
+              onClick={() => onClick(item)}
+              class="p-4 aspect-square flex flex-col items-center justify-center gap-2 bg-gray-100 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-600 transition-colors duration-150"
             >
               <svg
                 viewBox={`0 0 ${item.icon.icon[0]} ${item.icon.icon[1]}`}

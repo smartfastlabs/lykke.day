@@ -1,8 +1,17 @@
 from fastapi import APIRouter
 
-from . import auth, days, events, google, planning, push_subscriptions, tasks
+from . import auth, days, events, google, planning, push_subscriptions, sheppard, tasks
 
 router = APIRouter()
+router.include_router(
+    sheppard.router,
+    prefix="/sheppard",
+    tags=[
+        "routine",
+        "alarms",
+        "planning",
+    ],
+)
 
 router.include_router(
     planning.router,

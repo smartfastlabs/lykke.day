@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends
 from planned.objects import DayContext, Task
 from planned.repositories import event_repo, task_repo
 from planned.services import DayService
+from planned.utils import youtube
 from planned.utils.dates import get_current_date
 
 router = APIRouter()
@@ -20,11 +21,11 @@ async def prompts(
     return f"This is a placeholder response for prompt: {prompt_name}"
 
 
-@router.get("/today")
-async def get_today() -> DayContext:
-    return (await DayService.for_date(get_current_date())).ctx
+@router.put("/stop-alarm")
+async def stop_alarm() -> None:
+    youtube.kill_current_player()
 
 
-@router.put("/day/start")
-async def start_day() -> DayContext:
-    return (await DayService.for_date(get_current_date())).ctx
+@router.get("/start-alarm")
+async def start_alarm() -> None:
+    youtube.play_audio("https://www.youtube.com/watch?v=Gcv7re2dEVg")
