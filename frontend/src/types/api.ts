@@ -136,9 +136,11 @@ export interface DayTemplate {
   id?: string;
   tasks?: string[];
   alarm?: Alarm | null;
+  icon?: string | null;
 }
 export interface PushSubscription {
   id?: string;
+  device_name: string;
   endpoint: string;
   p256dh: string;
   auth: string;
