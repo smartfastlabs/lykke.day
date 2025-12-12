@@ -2887,6 +2887,18 @@ files = [
 ]
 
 [[package]]
+name = "pvcobra"
+version = "2.1.0"
+description = "Cobra voice activity detection (VAD) engine"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "pvcobra-2.1.0-py3-none-any.whl", hash = "sha256:9c5f7fbb5a0fa592f00a869a6d3970d2b6e4d8d9d61b61df6cbbe85985e96c0b"},
+    {file = "pvcobra-2.1.0.tar.gz", hash = "sha256:62797f56809314517350c01246f99a7b5ff373d366a3614d73aa2984917dfa6f"},
+]
+
+[[package]]
 name = "pvporcupine"
 version = "3.0.5"
 description = "Porcupine wake word engine."
@@ -2896,6 +2908,18 @@ groups = ["main"]
 files = [
     {file = "pvporcupine-3.0.5-py3-none-any.whl", hash = "sha256:b80b31a38b1a622e492e19683f60efdcddd1662204830fcad50df90f01723356"},
     {file = "pvporcupine-3.0.5.tar.gz", hash = "sha256:48f92ab10a904b811e69afb18175d2bd4857ccec8be094f42449961a80fa2af1"},
+]
+
+[[package]]
+name = "pvrecorder"
+version = "1.2.7"
+description = "Recorder library for Picovoice."
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "pvrecorder-1.2.7-py3-none-any.whl", hash = "sha256:72c44be78069be92a602b0dfad42fbdc62b536f47c151e62076ee49ba877dfb0"},
+    {file = "pvrecorder-1.2.7.tar.gz", hash = "sha256:f60b2174bff317c4349a916f59b5e71914a120f8313a9458f9ee25b89a800c75"},
 ]
 
 [[package]]
@@ -2924,32 +2948,6 @@ files = [
 
 [package.dependencies]
 pyasn1 = ">=0.6.1,<0.7.0"
-
-[[package]]
-name = "pyaudio"
-version = "0.2.14"
-description = "Cross-platform audio I/O with PortAudio"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "PyAudio-0.2.14-cp310-cp310-win32.whl", hash = "sha256:126065b5e82a1c03ba16e7c0404d8f54e17368836e7d2d92427358ad44fefe61"},
-    {file = "PyAudio-0.2.14-cp310-cp310-win_amd64.whl", hash = "sha256:2a166fc88d435a2779810dd2678354adc33499e9d4d7f937f28b20cc55893e83"},
-    {file = "PyAudio-0.2.14-cp311-cp311-win32.whl", hash = "sha256:506b32a595f8693811682ab4b127602d404df7dfc453b499c91a80d0f7bad289"},
-    {file = "PyAudio-0.2.14-cp311-cp311-win_amd64.whl", hash = "sha256:bbeb01d36a2f472ae5ee5e1451cacc42112986abe622f735bb870a5db77cf903"},
-    {file = "PyAudio-0.2.14-cp312-cp312-win32.whl", hash = "sha256:5fce4bcdd2e0e8c063d835dbe2860dac46437506af509353c7f8114d4bacbd5b"},
-    {file = "PyAudio-0.2.14-cp312-cp312-win_amd64.whl", hash = "sha256:12f2f1ba04e06ff95d80700a78967897a489c05e093e3bffa05a84ed9c0a7fa3"},
-    {file = "PyAudio-0.2.14-cp313-cp313-win32.whl", hash = "sha256:95328285b4dab57ea8c52a4a996cb52be6d629353315be5bfda403d15932a497"},
-    {file = "PyAudio-0.2.14-cp313-cp313-win_amd64.whl", hash = "sha256:692d8c1446f52ed2662120bcd9ddcb5aa2b71f38bda31e58b19fb4672fffba69"},
-    {file = "PyAudio-0.2.14-cp38-cp38-win32.whl", hash = "sha256:858caf35b05c26d8fc62f1efa2e8f53d5fa1a01164842bd622f70ddc41f55000"},
-    {file = "PyAudio-0.2.14-cp38-cp38-win_amd64.whl", hash = "sha256:2dac0d6d675fe7e181ba88f2de88d321059b69abd52e3f4934a8878e03a7a074"},
-    {file = "PyAudio-0.2.14-cp39-cp39-win32.whl", hash = "sha256:f745109634a7c19fa4d6b8b7d6967c3123d988c9ade0cd35d4295ee1acdb53e9"},
-    {file = "PyAudio-0.2.14-cp39-cp39-win_amd64.whl", hash = "sha256:009f357ee5aa6bc8eb19d69921cd30e98c42cddd34210615d592a71d09c4bd57"},
-    {file = "PyAudio-0.2.14.tar.gz", hash = "sha256:78dfff3879b4994d1f4fc6485646a57755c6ee3c19647a491f790a0895bd2f87"},
-]
-
-[package.extras]
-test = ["numpy"]
 
 [[package]]
 name = "pycparser"
@@ -3934,20 +3932,6 @@ pydantic = ">=2.11.7"
 pyjwt = ">=2.10.1"
 
 [[package]]
-name = "webrtcvad"
-version = "2.0.10"
-description = "Python interface to the Google WebRTC Voice Activity Detector (VAD)"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "webrtcvad-2.0.10.tar.gz", hash = "sha256:f1bed2fb25b63fb7b1a55d64090c993c9c9167b28485ae0bcdd81cf6ede96aea"},
-]
-
-[package.extras]
-dev = ["check-manifest", "memory_profiler", "nose", "psutil", "unittest2", "zest.releaser"]
-
-[[package]]
 name = "win32-setctime"
 version = "1.2.0"
 description = "A small Python utility to set file creation time on Windows"
@@ -4515,4 +4499,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "efdca066fdf0c3a9604ad56be8dd7a6b973d190ca1d7830f6eb4282aeec9a74b"
+content-hash = "a159075dca0fa13ef2b34dd8eb3e81204da6b50e50c5585ba45dff79eb0aad8e"
