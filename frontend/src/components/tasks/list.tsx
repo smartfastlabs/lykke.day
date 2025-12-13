@@ -1,7 +1,7 @@
 import { For, onMount, createSignal, createEffect, Show } from "solid-js";
 import { getTime } from "../../utils/dates";
 import { TaskCard } from "./card";
-import { useTaskManager } from "../../providers/tasks";
+import { useSheppardManager } from "../../providers/sheppard";
 
 type Task = {
   id: string;
@@ -20,7 +20,7 @@ export function TaskList(props: TaskListProps) {
   const HOUR_HEIGHT = 100; // px per hour
   const MINUTE_HEIGHT = HOUR_HEIGHT / 60; // pixel scale per minute
   const [now, setNow] = createSignal(new Date());
-  const { setTaskStatus } = useTaskManager();
+  const { setTaskStatus } = useSheppardManager();
   let scrollRef: HTMLDivElement | undefined;
 
   // Helper: convert "HH:mm" -> Date (for today)

@@ -57,6 +57,7 @@ class CalendarService:
             for event in events:
                 await event_repo.put(event)
             for event in deleted_events:
+                logger.info(f"DELETING EVENT: {event.name}")
                 await event_repo.delete(event)
 
 

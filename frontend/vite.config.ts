@@ -2,14 +2,21 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import solidPlugin from "vite-plugin-solid";
 import devtools from "solid-devtools/vite";
+import { existsSync } from "fs";
+
+const certPath = "./.certs/master-bedroom.local.pem";
+const keyPath = "./.certs/master-bedroom.local-key.pem";
+const certsExist = existsSync(certPath) && existsSync(keyPath);
 
 export default defineConfig({
   plugins: [devtools(), solidPlugin(), tailwindcss()],
   server: {
-    https: {
-      cert: "./.certs/master-bedroom.local.pem",
-      key: "./.certs/master-bedroom.local-key.pem",
-    },
+    ...(certsExist && {
+      https: {
+        cert: certPath,
+        key: keyPath,
+      },
+    }),
     allowedHosts: ["master-bedroom.local"],
     proxy: {
       "/api": {

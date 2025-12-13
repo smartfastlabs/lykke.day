@@ -23,11 +23,11 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Home", icon: faHouse, url: "/" },
-  { label: "Login", icon: faRightToBracket, url: "/login" },
-  { label: "Settings", icon: faGear, url: "/settings" },
+  { label: "Notifications", icon: faBell, url: "/notifications" },
   { label: "Today", icon: faCalendarDay, url: "/today" },
   { label: "Tomorrow", icon: faCalendarPlus, url: "/tomorrow" },
-  { label: "Notifications", icon: faBell, url: "/notifications" },
+  { label: "Settings", icon: faGear, url: "/settings" },
+  { label: "Login", icon: faRightToBracket, url: "/login" },
   { label: "Alarm", icon: faMugHot, method: alarmAPI.stopAll },
 ];
 

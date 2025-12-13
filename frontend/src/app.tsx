@@ -5,6 +5,7 @@ import "./index.css";
 
 import { onMount, onCleanup } from "solid-js";
 import { NotificationProvider } from "./providers/notifications";
+import { SheppardProvider } from "./providers/sheppard";
 
 import PushSubscriptions from "./components/pages/pushNotifications";
 import Home from "./components/pages/home";
@@ -15,7 +16,6 @@ import DayPrint from "./components/pages/day/print";
 import NavPage from "./components/pages/navigation";
 
 import "./utils/icons";
-import { TaskProvider } from "./providers/tasks";
 
 function NavigationHandler() {
   const navigate = useNavigate();
@@ -66,7 +66,7 @@ export default function App() {
   });
 
   return (
-    <TaskProvider>
+    <SheppardProvider>
       <Router
         root={(props) => (
           <NotificationProvider>
@@ -88,6 +88,6 @@ export default function App() {
         <Route path="/tomorrow" component={Tomorrow} />
         <Route path="/day/print" component={DayPrint} />
       </Router>
-    </TaskProvider>
+    </SheppardProvider>
   );
 }
