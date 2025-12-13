@@ -6,7 +6,7 @@ import {
   onMount,
 } from "solid-js";
 import { DayContext } from "../types/api";
-import { dayAPI } from "../utils/api";
+import { dayAPI, taskAPI } from "../utils/api";
 
 const SheppardContext = createContext();
 
@@ -20,6 +20,8 @@ export function SheppardProvider(props) {
 
   onMount(async () => {
     const ctx = await dayAPI.getToday();
+    dayContextManager.mutate(ctx);
+    dayManager.mutate(ctx.day);
     taskManager.mutate(ctx.tasks);
     eventManager.mutate(ctx.event);
   });
@@ -32,12 +34,14 @@ export function SheppardProvider(props) {
   };
 
   const setTaskStatus = async (task: Any, status: Any) => {
-    await updateTask(await TaskService.setTaskStatus(task, status));
+    await updateTask(await taskAPI.setTaskStatus(task, status));
   };
 
   const value = {
     tasks,
     events,
+    day,
+    dayContext,
     updateTask,
     setTaskStatus,
   };

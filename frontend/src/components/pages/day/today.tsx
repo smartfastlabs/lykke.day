@@ -1,11 +1,12 @@
 import Page from "../../shared/layout/page";
 import { Component, createResource } from "solid-js";
-import { dayAPI } from "../../../utils/api";
+
+import { useSheppardManager } from "../../../providers/sheppard";
 
 import DayPreview from "../../days/preview";
 
 export const Today: Component = () => {
-  const [dayContext] = createResource(dayAPI.getToday);
+  const { dayContext } = useSheppardManager();
 
   return (
     <Page>

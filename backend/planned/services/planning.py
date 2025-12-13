@@ -53,6 +53,8 @@ class PlanningService(BaseService):
                     status=get_starting_task_status(routine),
                     category=routine.category,
                 )
+                if "Dog Walk" in routine.name:
+                    breakpoint()
                 result.append(task)
 
         return result

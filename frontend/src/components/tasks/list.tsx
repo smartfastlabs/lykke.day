@@ -45,11 +45,11 @@ export function TaskList(props: TaskListProps) {
     return list;
   };
   const completeTask = async (task: Task) => {
-    return setTaskStatus(task, "COMPLETED");
+    return setTaskStatus(task, "COMPLETE");
   };
 
   const puntTask = async (task: Task) => {
-    return setTaskStatus(task, "DEFERRED");
+    return setTaskStatus(task, "PUNTED");
   };
 
   // Compute offset from start time

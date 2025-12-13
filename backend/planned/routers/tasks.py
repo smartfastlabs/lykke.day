@@ -23,11 +23,11 @@ class UpdateTaskRequest(BaseObject):
 
 @router.patch("/{date}/{id}")
 async def update_task(
-    request: Request,
+    request: UpdateTaskRequest,
     date: dt.date,
     id: uuid.UUID,
 ) -> Task:
-    task: Task = task_repo.get(date, str(id))
+    task: Task = await task_repo.get(date, str(id))
 
     if request.status:
         task.status = request.status

@@ -6,6 +6,9 @@ import {
   faUser,
   faChartBar,
   faCogs,
+  faSquareCheck,
+  faCheckSquare,
+  faClock,
   faBroom,
   faFaceSmileWink,
   faGrip,
@@ -18,6 +21,7 @@ import {
   faHouse,
   faUsers,
   faBook,
+  faSquare,
   faPalette,
   faHeart,
   faBed,
@@ -30,15 +34,30 @@ import {
   faGraduationCap,
   faCakeCandles,
   faStar,
+  // Task category & type icons
+  faUtensils,
+  faDroplet,
+  faPaw,
+  faHeartPulse,
+  faBowlFood,
+  faCalendar,
+  faBasketShopping,
+  faPersonWalking,
+  faCircle,
 } from "@fortawesome/free-solid-svg-icons";
+
+import type { TaskCategory, TaskType } from "../types/api";
 
 library.add(
   faGear,
   faGripVertical,
+  faSquareCheck,
+  faCheckSquare,
   faFaceSmileWink,
   faBroom,
   faCogs,
   faCoffee,
+  faClock,
   faUser,
   faChartBar,
   faGrip,
@@ -54,13 +73,24 @@ library.add(
   faBed,
   faSun,
   faMoon,
+  faSquare,
   faUmbrellaBeach,
   faMugHot,
   faPersonRunning,
   faTree,
   faGraduationCap,
   faCakeCandles,
-  faStar
+  faStar,
+  // Task category & type icons
+  faUtensils,
+  faDroplet,
+  faPaw,
+  faHeartPulse,
+  faBowlFood,
+  faCalendar,
+  faBasketShopping,
+  faPersonWalking,
+  faCircle
 );
 
 export const icons: Record<string, IconDefinition> = {
@@ -82,11 +112,44 @@ export const icons: Record<string, IconDefinition> = {
   nature: faTree,
   learning: faGraduationCap,
   celebration: faCakeCandles,
+  clock: faClock,
   focus: faStar,
+  checkMark: faCheckSquare,
+  square: faSquare,
 };
 
 config.autoAddCss = false;
 
 export function getIcon(key: string): IconDefinition | null {
-  return icons[key];
+  return icons[key] ?? null;
+}
+
+// Task Category icons
+const categoryIcons: Record<TaskCategory, IconDefinition> = {
+  NUTRITION: faUtensils,
+  HYGIENE: faDroplet,
+  PET: faPaw,
+  HEALTH: faHeartPulse,
+  HOUSE: faHouse,
+};
+
+export function getCategoryIcon(
+  category?: TaskCategory
+): IconDefinition | null {
+  if (!category) return null;
+  return categoryIcons[category] ?? null;
+}
+
+// Task Type icons
+const typeIcons: Record<TaskType, IconDefinition> = {
+  MEAL: faBowlFood,
+  EVENT: faCalendar,
+  CHORE: faBroom,
+  ERRAND: faBasketShopping,
+  ACTIVITY: faPersonWalking,
+};
+
+export function getTypeIcon(type?: TaskType): IconDefinition | null {
+  if (!type) return null;
+  return typeIcons[type] ?? null;
 }

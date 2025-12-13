@@ -107,6 +107,18 @@ export const taskAPI = {
 
     return resp.data as Event[];
   },
+
+  setTaskStatus: async (task: Task, status: string): Task => {
+    const resp = await fetchJSON(`/api/tasks/${task.date}/${task.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return resp.data as Task;
+  },
 };
 export const authAPI = {
   login: async (password: string): any => {
