@@ -77,6 +77,7 @@ export default function App() {
         )}
       >
         <Route path="/" component={Home} />
+        <Route path="/today" component={Home} />
         <Route path="/login" component={Login} />
         <Route path="/nav/calendar" component={CalendarPage} />
         <Route path="/nav" component={NavPage} />

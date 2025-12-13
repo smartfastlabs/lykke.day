@@ -2,7 +2,7 @@
   "name": "Planned.Day",
   "short_name": "planned.day",
   "description": "Intentional daily living",
-  "start_url": "/today",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
