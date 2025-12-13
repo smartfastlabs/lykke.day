@@ -138,6 +138,10 @@ ignore_missing_imports = true
 module = "aiofiles.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "planned.sidecars.*"
+ignore_errors = true
+
 
 
 [tool.pytest.ini_options]

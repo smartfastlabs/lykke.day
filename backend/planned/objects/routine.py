@@ -2,7 +2,7 @@ from datetime import date, datetime, time
 from enum import Enum
 from typing import TYPE_CHECKING, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .base import BaseObject
 from .task import TaskCategory, TaskFrequency, TaskSchedule
@@ -24,11 +24,16 @@ class RoutineSchedule(BaseModel):
     weekdays: list[DayOfWeek] | None = None
 
 
+class RoutineTask(BaseModel):
+    task_definition_id: str
+    name: str | None = None
+    schedule: TaskSchedule | None = None
+
+
 class Routine(BaseObject):
     name: str
-    task_definition_id: str
 
     category: TaskCategory
     routine_schedule: RoutineSchedule
     description: str = ""
-    task_schedule: TaskSchedule | None = None
+    tasks: list[RoutineTask] = Field(default_factory=list)

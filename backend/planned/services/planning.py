@@ -28,8 +28,8 @@ def is_routine_active(schedule: objects.RoutineSchedule, date: datetime.date) ->
     return date.weekday() in schedule.weekdays
 
 
-def get_starting_task_status(routine: objects.Routine) -> TaskStatus:
-    if not routine.task_schedule or routine.task_schedule.available_time:
+def get_starting_task_status(schedule: objects.TaskSchedule | None) -> TaskStatus:
+    if not schedule or schedule.available_time:
         return TaskStatus.NOT_READY
 
     return TaskStatus.READY
@@ -41,19 +41,20 @@ class PlanningService(BaseService):
         for routine in await routine_repo.all():
             logger.info(routine)
             if is_routine_active(routine.routine_schedule, date):
-                task = objects.Task(
-                    name=f"Routine: {routine.name}",
-                    frequency=routine.routine_schedule.frequency,
-                    routine_id=routine.id,
-                    task_definition=await task_definition_repo.get(
-                        routine.task_definition_id,
-                    ),
-                    schedule=routine.task_schedule,
-                    scheduled_date=date,
-                    status=get_starting_task_status(routine),
-                    category=routine.category,
-                )
-                result.append(task)
+                for routine_task in routine.tasks:
+                    task = objects.Task(
+                        name=routine_task.name or f"ROUTINE: {routine.name}",
+                        frequency=routine.routine_schedule.frequency,
+                        routine_id=routine.id,
+                        task_definition=await task_definition_repo.get(
+                            routine_task.task_definition_id,
+                        ),
+                        schedule=routine_task.schedule,
+                        scheduled_date=date,
+                        status=get_starting_task_status(routine_task.schedule),
+                        category=routine.category,
+                    )
+                    result.append(task)
 
         return result
 

@@ -2,12 +2,16 @@
   "name": "AM Dog Walk",
   "description": "Walk the dog before 9am.",
   "category": "PET",
-  "task_definition_id": "walk-dog",
-  "task_schedule": {
-    "timing_type": "DEADLINE",
-    "available_time": "07:30",
-    "end_time": "09:00"
-  },
+  "tasks": [
+    {
+      "task_definition_id": "walk-dog",
+      "schedule": {
+        "timing_type": "DEADLINE",
+        "available_time": "07:30",
+        "end_time": "09:00"
+      }
+    }
+  ],
   "routine_schedule": {
     "frequency": "DAILY"
   }
