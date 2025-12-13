@@ -6,11 +6,11 @@ import TaskList from "../tasks/list";
 import DayView from "./day/view";
 
 export const Home: Component = () => {
-  const sheppard = useSheppardManager();
+  const { events, tasks, day } = useSheppardManager();
   return (
     <Page>
-      <Show when={sheppard.dayContext()}>
-        <DayView context={sheppard.dayContext()} />
+      <Show when={day()}>
+        <DayView day={day} events={events} tasks={tasks} />
       </Show>
     </Page>
   );

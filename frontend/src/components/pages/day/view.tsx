@@ -1,14 +1,8 @@
 import { createSignal, Component, For, Show } from "solid-js";
+import type { Accessor } from "solid-js";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { getCategoryIcon, getIcon, getTypeIcon } from "../../../utils/icons";
-import {
-  TaskStatus,
-  DayContext,
-  Day,
-  Task,
-  Event,
-  TaskSchedule,
-} from "types/api";
+import { TaskStatus, Day, Task, Event, TaskSchedule } from "types/api";
 import { useSheppardManager } from "../../../providers/sheppard";
 
 const formatTimeString = (timeStr: string): string => {
@@ -383,27 +377,30 @@ const sortEvents = (events: Event[]): Event[] => {
   });
 };
 
-const DayView: Component<{ context: DayContext }> = (props) => {
+interface DayViewProps {
+  day: Accessor<Day>;
+  events: Accessor<Event[]>;
+  tasks: Accessor<Task[]>;
+}
+
+const DayView: Component<DayViewProps> = (props) => {
   const hasContent = () =>
-    (props.context.events?.length ?? 0) > 0 ||
-    (props.context.tasks?.length ?? 0) > 0;
+    (props.events()?.length ?? 0) > 0 || (props.tasks()?.length ?? 0) > 0;
 
   const allDayEvents = () =>
-    sortEvents(props.context.events?.filter(isAllDayEvent) ?? []);
+    sortEvents(props.events()?.filter(isAllDayEvent) ?? []);
   const timedEvents = () =>
-    sortEvents(props.context.events?.filter((e) => !isAllDayEvent(e)) ?? []);
+    sortEvents(props.events()?.filter((e) => !isAllDayEvent(e)) ?? []);
 
-  const task = () => sortTasks(props.context.tasks ?? []);
+  const tasks = () => sortTasks(props.tasks() ?? []);
   const flexibleTasks = () =>
     sortTasks(
-      props.context.tasks?.filter(
-        (t) => t.schedule?.timing_type === "FLEXIBLE"
-      ) ?? []
+      props.tasks()?.filter((t) => t.schedule?.timing_type === "FLEXIBLE") ?? []
     );
 
   return (
     <div class="min-h-screen bg-white">
-      <DayHeader day={props.context.day} />
+      <DayHeader day={props.day()} />
 
       <Show when={hasContent()} fallback={<EmptyState />}>
         <main>
@@ -419,9 +416,9 @@ const DayView: Component<{ context: DayContext }> = (props) => {
           </Show>
 
           {/* Scheduled tasks */}
-          <Show when={task().length > 0}>
+          <Show when={tasks().length > 0}>
             <SectionHeader label="Tasks" />
-            <For each={task()}>{(task) => <TaskItem task={task} />}</For>
+            <For each={tasks()}>{(task) => <TaskItem task={task} />}</For>
           </Show>
         </main>
       </Show>
