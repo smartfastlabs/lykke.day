@@ -1,4 +1,4 @@
-import { Component, For, Show } from "solid-js";
+import { createSignal, Component, For, Show } from "solid-js";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { getCategoryIcon, getIcon, getTypeIcon } from "../../../utils/icons";
 import {
@@ -9,6 +9,7 @@ import {
   Event,
   TaskSchedule,
 } from "types/api";
+import { useSheppardManager } from "../../../providers/sheppard";
 
 const formatTimeString = (timeStr: string): string => {
   const [h, m] = timeStr.split(":");
@@ -95,10 +96,6 @@ const getStatusClasses = (status: TaskStatus): string => {
   }
 };
 
-// ============================================
-// Icons
-// ============================================
-
 const FaIcon: Component<{ icon: IconDefinition; class?: string }> = (props) => (
   <svg
     viewBox={`0 0 ${props.icon.icon[0]} ${props.icon.icon[1]}`}
@@ -107,10 +104,6 @@ const FaIcon: Component<{ icon: IconDefinition; class?: string }> = (props) => (
     <path d={props.icon.icon[4] as string} />
   </svg>
 );
-
-// ============================================
-// Sub-components
-// ============================================
 
 const DayHeader: Component<{ day: Day }> = (props) => {
   const date = () => new Date(props.day.date + "T12:00:00");
@@ -206,56 +199,129 @@ const TaskItem: Component<{ task: Task }> = (props) => {
     getCategoryIcon(props.task.category) ||
     getTypeIcon(props.task.task_definition?.type);
 
+  const { setTaskStatus } = useSheppardManager();
+
+  const [translateX, setTranslateX] = createSignal(0);
+  let startX = 0;
+  let startY = 0;
+  let isSwiping = false;
+
+  const handleTouchStart = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+    isSwiping = false;
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+
+    // Detect if user is swiping horizontally or vertically
+    if (!isSwiping) {
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+        isSwiping = true;
+      } else if (Math.abs(dy) > 10) {
+        // user is scrolling vertically — bail out
+        return;
+      }
+    }
+
+    if (isSwiping) {
+      e.preventDefault(); // only prevent default when actually swiping horizontally
+      setTranslateX(dx);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    console.log("touch end");
+    if (isSwiping) {
+      const x = translateX();
+      const threshold = 100;
+      if (x > threshold) {
+        setTaskStatus(props.task, "COMPLETE");
+      } else if (x < -threshold) {
+        setTaskStatus(props.task, "PUNTED");
+      }
+      setTranslateX(0);
+    }
+    isSwiping = false;
+  };
+
   return (
     <div
-      class={`group px-5 py-3.5 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${getStatusClasses(
-        props.task.status
-      )}`}
+      class="relative w-full overflow-hidden select-none"
+      style="touch-action: pan-y"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
-      <div class="flex items-center gap-4">
-        {/* Time column */}
-        <div class="w-14 flex-shrink-0 text-right">
-          <Show
-            when={time()?.primary}
-            fallback={<span class="text-xs text-gray-300">—</span>}
-          >
-            <span
-              class={`text-xs tabular-nums ${
-                time()?.primary === "flexible"
-                  ? "text-gray-400 italic"
-                  : "text-gray-500"
-              }`}
-            >
-              {time()?.primary}
+      <div class="absolute inset-0 bg-gray-100 flex justify-between items-center px-6 text-sm font-medium pointer-events-none">
+        <span class="text-green-600">✅ Complete Task</span>
+        <span class="text-red-600">🗑 Punt Task</span>
+      </div>
+
+      {/* Foreground Card */}
+      <div
+        class="relative bg-white p-3 transition-transform duration-150 active:scale-[0.97]"
+        style={{
+          transform: `translateX(${translateX()}px)`,
+          transition: translateX() === 0 ? "transform 0.2s ease-out" : "none",
+        }}
+        role="button"
+      >
+        <div
+          class={`group px-5 py-3.5 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${getStatusClasses(
+            props.task.status
+          )}`}
+        >
+          <div class="flex items-center gap-4">
+            {/* Time column */}
+            <div class="w-14 flex-shrink-0 text-right">
+              <Show
+                when={time()?.primary}
+                fallback={<span class="text-xs text-gray-300">—</span>}
+              >
+                <span
+                  class={`text-xs tabular-nums ${
+                    time()?.primary === "flexible"
+                      ? "text-gray-400 italic"
+                      : "text-gray-500"
+                  }`}
+                >
+                  {time()?.primary}
+                </span>
+              </Show>
+            </div>
+
+            {/* Category/Type icon */}
+            <span class="w-4 flex-shrink-0 flex items-center justify-center">
+              <Show when={icon()}>
+                <FaIcon icon={icon()!} />
+              </Show>
             </span>
-          </Show>
-        </div>
 
-        {/* Category/Type icon */}
-        <span class="w-4 flex-shrink-0 flex items-center justify-center">
-          <Show when={icon()}>
-            <FaIcon icon={icon()!} />
-          </Show>
-        </span>
+            {/* Task name */}
+            <div class="flex-1 min-w-0">
+              <span
+                class={`text-sm truncate block ${
+                  props.task.status === "COMPLETE"
+                    ? "line-through text-gray-400"
+                    : "text-gray-800"
+                }`}
+              >
+                {props.task.name.replace("Routine: ", "")}
+              </span>
+            </div>
 
-        {/* Task name */}
-        <div class="flex-1 min-w-0">
-          <span
-            class={`text-sm truncate block ${
-              props.task.status === "COMPLETE"
-                ? "line-through text-gray-400"
-                : "text-gray-800"
-            }`}
-          >
-            {props.task.name.replace("Routine: ", "")}
-          </span>
-        </div>
-
-        <Show when={props.task.status === "COMPLETE"}>
-          <div class="flex-shrink-0 w-4">
-            <FaIcon icon={getIcon("checkMark")} />
+            <Show when={props.task.status === "COMPLETE"}>
+              <div class="flex-shrink-0 w-4">
+                <FaIcon icon={getIcon("checkMark")} />
+              </div>
+            </Show>
           </div>
-        </Show>
+        </div>
       </div>
     </div>
   );
