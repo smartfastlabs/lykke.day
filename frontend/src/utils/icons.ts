@@ -27,6 +27,7 @@ import {
   faBed,
   faSun,
   faMoon,
+  faCalendar,
   faUmbrellaBeach,
   faMugHot,
   faPersonRunning,
@@ -40,7 +41,6 @@ import {
   faPaw,
   faHeartPulse,
   faBowlFood,
-  faCalendar,
   faBasketShopping,
   faPersonWalking,
   faCircle,
@@ -116,6 +116,7 @@ export const icons: Record<string, IconDefinition> = {
   focus: faStar,
   checkMark: faCheckSquare,
   square: faSquare,
+  calendar: faCalendar,
 };
 
 config.autoAddCss = false;

@@ -3,7 +3,7 @@ import { Show, Component } from "solid-js";
 import { useSheppardManager } from "../../providers/sheppard";
 import { home } from "solid-heroicons/outline";
 import TaskList from "../tasks/list";
-import DayView from "./day/view";
+import DayView from "../days/view";
 
 export const Home: Component = () => {
   const { events, tasks, day } = useSheppardManager();

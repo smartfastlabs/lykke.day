@@ -151,7 +151,7 @@ export const dayAPI = {
     return resp.data as Day;
   },
   getTomorrow: async (): DayContext => {
-    const resp = await fetchJSON("/api/days/tomorrow", {
+    const resp = await fetchJSON("/api/days/tomorrow/context", {
       method: "GET",
     });
 
@@ -166,7 +166,15 @@ export const dayAPI = {
   },
 
   getToday: async (): DayContext => {
-    const resp = await fetchJSON("/api/days/today", {
+    const resp = await fetchJSON("/api/days/today/context", {
+      method: "GET",
+    });
+
+    return resp.data as DayContext;
+  },
+
+  getContext: async (date: string): DayContext => {
+    const resp = await fetchJSON(`/api/days/${date}/context`, {
       method: "GET",
     });
 

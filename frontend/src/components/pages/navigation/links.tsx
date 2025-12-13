@@ -3,6 +3,7 @@ import { Component, For } from "solid-js";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
   faRightToBracket,
+  faCalendar,
   faGear,
   faCalendarDay,
   faCalendarPlus,
@@ -11,8 +12,8 @@ import {
   faMugHot,
 } from "@fortawesome/free-solid-svg-icons";
 
-import Page from "../shared/layout/page";
-import { alarmAPI } from "../../utils/api";
+import Page from "../../shared/layout/page";
+import { alarmAPI } from "../../../utils/api";
 
 interface NavItem {
   label: string;
@@ -24,8 +25,9 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Home", icon: faHouse, url: "/" },
   { label: "Notifications", icon: faBell, url: "/notifications" },
-  { label: "Today", icon: faCalendarDay, url: "/today" },
-  { label: "Tomorrow", icon: faCalendarPlus, url: "/tomorrow" },
+  { label: "Today", icon: faCalendarDay, url: "/day/today" },
+  { label: "Calendar", icon: faCalendar, url: "/nav/calendar" },
+  { label: "Tomorrow", icon: faCalendarPlus, url: "/day/tomorrow" },
   { label: "Settings", icon: faGear, url: "/settings" },
   { label: "Login", icon: faRightToBracket, url: "/login" },
   { label: "Alarm", icon: faMugHot, method: alarmAPI.stopAll },
