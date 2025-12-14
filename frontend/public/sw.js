@@ -28,38 +28,42 @@ self.addEventListener("notificationclick", function (event) {
 
   if (url) {
     event.waitUntil(
-      clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-        // If app is already open, focus it and send message
-        for (const client of clientList) {
-          if (client.url.includes(self.location.origin) && "focus" in client) {
-            client.focus();
-            client.postMessage({ type: "NAVIGATE", url });
-            return;
+      clients
+        .matchAll({ type: "window", includeUncontrolled: true })
+        .then((clientList) => {
+          // If app is already open, focus it and send message
+          for (const client of clientList) {
+            if (
+              client.url.includes(self.location.origin) &&
+              "focus" in client
+            ) {
+              client.focus();
+              client.postMessage({ type: "NAVIGATE", url });
+              return;
+            }
           }
-        }
-        // No window open, open a new one directly to the URL
-        return clients.openWindow(url);
-      })
+          // No window open, open a new one directly to the URL
+          return clients.openWindow(url);
+        })
     );
   }
 });
 
-const CACHE_NAME = 'app-cache-v1';
+const CACHE_NAME = "app-cache-v1";
 
-self.addEventListener('install', () => {
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener("fetch", (event) => {
   const { request } = event;
-  console.log("FETCH", event)
 
   // Only cache GET requests (non-modifying)
-  if (request.method !== 'GET') {
+  if (request.method !== "GET") {
     return;
   }
 
@@ -67,7 +71,7 @@ self.addEventListener('fetch', (event) => {
     fetch(request)
       .then((response) => {
         // Don't cache opaque responses or errors
-        if (!response.ok && response.type !== 'basic') {
+        if (!response.ok && response.type !== "basic") {
           return response;
         }
 

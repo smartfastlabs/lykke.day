@@ -1,8 +1,8 @@
-import PrintPage from "../../shared/layout/printPage";
+import PrintPage from "../../components/shared/layout/printPage";
 import { For, Component, createResource } from "solid-js";
-import TaskRow from "../../tasks/row";
-import EventRow from "../../events/row";
-import { eventAPI, planningAPI } from "../../../utils/api";
+import TaskRow from "../../components/tasks/row";
+import EventRow from "../../components/events/row";
+import { eventAPI, planningAPI } from "../../utils/api";
 
 export const DayPrint: Component = () => {
   const [tasks] = createResource<Any[]>(planningAPI.previewToday);

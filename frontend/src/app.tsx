@@ -7,11 +7,11 @@ import { onMount, onCleanup } from "solid-js";
 import { NotificationProvider } from "./providers/notifications";
 import { SheppardProvider } from "./providers/sheppard";
 
-import Home from "./components/pages/home";
-import Login from "./components/pages/login";
-import DayView from "./components/pages/day/view";
-import NavPage from "./components/pages/navigation/links";
-import CalendarPage from "./components/pages/navigation/calendar";
+import Home from "./pages/home";
+import Login from "./pages/login";
+import DayView from "./pages/day/view";
+import NavPage from "./pages/navigation/links";
+import CalendarPage from "./pages/navigation/calendar";
 
 import "./utils/icons";
 

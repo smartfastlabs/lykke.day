@@ -1,9 +1,9 @@
-import Page from "../../shared/layout/page";
+import Page from "../../components/shared/layout/page";
 import { Component, createResource } from "solid-js";
 
-import { useSheppardManager } from "../../../providers/sheppard";
+import { useSheppardManager } from "../../providers/sheppard";
 
-import DayPreview from "../../days/preview";
+import DayPreview from "../../components/days/preview";
 
 export const Today: Component = () => {
   const { dayContext } = useSheppardManager();

@@ -1,6 +1,6 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, For } from "solid-js";
-import Page from "../../shared/layout/page";
+import Page from "../../components/shared/layout/page";
 
 interface DayItem {
   label: string;

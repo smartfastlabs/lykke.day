@@ -23,7 +23,7 @@ export function SheppardProvider(props) {
     dayContextManager.mutate(ctx);
     dayManager.mutate(ctx.day);
     taskManager.mutate(ctx.tasks);
-    eventManager.mutate(ctx.event);
+    eventManager.mutate(ctx.events);
   });
 
   const updateTask = async (input: Any) => {

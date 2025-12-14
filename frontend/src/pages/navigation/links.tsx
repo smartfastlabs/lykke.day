@@ -12,8 +12,8 @@ import {
   faMugHot,
 } from "@fortawesome/free-solid-svg-icons";
 
-import Page from "../../shared/layout/page";
-import { alarmAPI } from "../../../utils/api";
+import Page from "../../components/shared/layout/page";
+import { alarmAPI } from "../../utils/api";
 
 interface NavItem {
   label: string;

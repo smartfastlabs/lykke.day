@@ -1,3 +1,4 @@
+import { Component } from "solid-js";
 import { config, library } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";

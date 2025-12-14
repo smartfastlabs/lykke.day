@@ -1,10 +1,9 @@
 import { createSignal } from "solid-js";
-import { authAPI } from "../../utils/api";
+import { authAPI } from "../utils/api";
 
 function arrayBufferToBase64(buffer) {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)));
 }
-
 
 export default function PushNotifications() {
   const [deviceName, setDeviceName] = createSignal("");
@@ -25,9 +24,9 @@ export default function PushNotifications() {
         registration.showNotification("asdOops!", {
           body: "You're already subscribed to push notifications.",
           icon: "/icons/192.png",
-          data: { url: "/tomorrow" }
+          data: { url: "/tomorrow" },
         });
-      })
+      });
     } else if ("serviceWorker" in navigator) {
       setIsLoading(true);
       console.log("Service Worker is supported");
@@ -39,7 +38,11 @@ export default function PushNotifications() {
               "BNWaFxSOKFUzGfVP5DOYhDSS8Nf2W9ifg4_3pNsfEzDih5CfspqP7-Ncr_9jAuwkd8jaHZPHdc0zIqHE-IPDoF8",
           })
           .then(async (subscription) => {
-            console.log("Push subscription:", subscription, subscription.getKey('p256dh'));
+            console.log(
+              "Push subscription:",
+              subscription,
+              subscription.getKey("p256dh")
+            );
             const response = await fetch("/api/push/subscribe", {
               method: "POST",
               headers: {
@@ -49,9 +52,9 @@ export default function PushNotifications() {
                 device_name: deviceName(),
                 endpoint: subscription.endpoint,
                 keys: {
-                  p256dh: arrayBufferToBase64(subscription.getKey('p256dh')),
-                  auth: arrayBufferToBase64(subscription.getKey('auth'))
-                }
+                  p256dh: arrayBufferToBase64(subscription.getKey("p256dh")),
+                  auth: arrayBufferToBase64(subscription.getKey("auth")),
+                },
               }),
             });
             console.log("Push subscription response:", response);
@@ -88,9 +91,7 @@ export default function PushNotifications() {
             />
           </div>
 
-          {error() && (
-            <p class="text-sm text-red-600 text-center">{error()}</p>
-          )}
+          {error() && <p class="text-sm text-red-600 text-center">{error()}</p>}
 
           <button
             type="submit"
