@@ -252,7 +252,11 @@ const DayView: Component<DayViewProps> = (props) => {
 
   const toggleStatus = (value: string) => {
     if (value === "ALL") {
-      setFilters("statuses", [...ALL_STATUSES]);
+      if (filters.statuses.length === ALL_STATUSES.length) {
+        setFilters("statuses", []);
+      } else {
+        setFilters("statuses", [...ALL_STATUSES]);
+      }
     } else {
       const current = filters.statuses;
       if (current.includes(value as TaskStatus)) {
@@ -270,7 +274,11 @@ const DayView: Component<DayViewProps> = (props) => {
 
   const toggleType = (value: string) => {
     if (value === "ALL") {
-      setFilters("types", [...ALL_TYPES]);
+      if (filters.types.length === ALL_TYPES.length) {
+        setFilters("types", []);
+      } else {
+        setFilters("types", [...ALL_TYPES]);
+      }
     } else {
       const current = filters.types;
       if (current.includes(value as TaskType)) {
@@ -288,7 +296,11 @@ const DayView: Component<DayViewProps> = (props) => {
 
   const toggleFrequencyGroup = (value: FrequencyGroup | "ALL") => {
     if (value === "ALL") {
-      setFilters("frequencyGroups", [...FREQUENCY_GROUPS]);
+      if (filters.frequencyGroups.length === FREQUENCY_GROUPS.length) {
+        setFilters("frequencyGroups", []);
+      } else {
+        setFilters("frequencyGroups", [...FREQUENCY_GROUPS]);
+      }
     } else {
       const current = filters.frequencyGroups;
       if (current.includes(value)) {
