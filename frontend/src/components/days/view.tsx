@@ -135,19 +135,6 @@ const TaskFilters: Component<{
 }> = (props) => {
   const [expanded, setExpanded] = createSignal(false);
 
-  const activeCount = () => {
-    const defaultStatuses = 1; // READY only
-    const defaultOthers =
-      ALL_CATEGORIES.length + ALL_TYPES.length + ALL_FREQUENCIES.length;
-    const current =
-      props.filters.statuses.length +
-      props.filters.categories.length +
-      props.filters.types.length +
-      props.filters.frequencies.length;
-    const diff = Math.abs(current - (defaultStatuses + defaultOthers));
-    return diff;
-  };
-
   return (
     <div class="border-b border-gray-100">
       {/* Toggle Button */}
@@ -171,18 +158,13 @@ const TaskFilters: Component<{
           </svg>
           <span class="text-xs uppercase tracking-wider">Filters</span>
         </div>
-        <Show when={activeCount() > 0}>
-          <span class="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">
-            {activeCount()} changed
-          </span>
-        </Show>
       </button>
 
       {/* Expanded Filters */}
       <Show when={expanded()}>
         <div class="px-5 pb-3 space-y-1 border-t border-gray-50">
           <FilterGroup label="Status">
-            <For each={ALL_STATUSES}>
+            <For each={["ALL", ...ALL_STATUSES]}>
               {(status) => (
                 <FilterChip
                   label={formatLabel(status)}
@@ -194,7 +176,7 @@ const TaskFilters: Component<{
           </FilterGroup>
 
           <FilterGroup label="Category">
-            <For each={ALL_CATEGORIES}>
+            <For each={["ALL", ...ALL_CATEGORIES]}>
               {(category) => (
                 <FilterChip
                   label={formatLabel(category)}
@@ -206,7 +188,7 @@ const TaskFilters: Component<{
           </FilterGroup>
 
           <FilterGroup label="Type">
-            <For each={ALL_TYPES}>
+            <For each={["ALL", ...ALL_TYPES]}>
               {(type) => (
                 <FilterChip
                   label={formatLabel(type)}
@@ -218,7 +200,7 @@ const TaskFilters: Component<{
           </FilterGroup>
 
           <FilterGroup label="Frequency">
-            <For each={ALL_FREQUENCIES}>
+            <For each={["ALL", ...ALL_FREQUENCIES]}>
               {(freq) => (
                 <FilterChip
                   label={formatLabel(freq)}
@@ -253,7 +235,7 @@ interface DayViewProps {
 const DayView: Component<DayViewProps> = (props) => {
   // Filter state with defaults
   const [filters, setFilters] = createStore({
-    statuses: ["READY"] as TaskStatus[],
+    statuses: [...ALL_STATUSES] as TaskStatus[],
     categories: [...ALL_CATEGORIES] as TaskCategory[],
     types: [...ALL_TYPES] as TaskType[],
     frequencies: [...ALL_FREQUENCIES] as TaskFrequency[],
@@ -268,6 +250,18 @@ const DayView: Component<DayViewProps> = (props) => {
       // Don't allow removing the last item
       if (current.length > 1) {
         setFilters(type, current.filter((v) => v !== value) as any);
+      }
+    } else if (value === "NONE") {
+      setFilters(type, []);
+    } else if (value === "ALL") {
+      if (type === "statuses") {
+        setFilters(type, ALL_STATUSES);
+      } else if (type === "categories") {
+        setFilters(type, ALL_CATEGORIES);
+      } else if (type === "frequencies") {
+        setFilters(type, ALL_FREQUENCIES);
+      } else if (type === "types") {
+        setFilters(type, ALL_TYPES);
       }
     } else {
       setFilters(type, [...current, value] as any);
