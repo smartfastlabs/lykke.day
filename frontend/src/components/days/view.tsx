@@ -12,22 +12,10 @@ import { Icon } from "../shared/icon";
 import TaskList from "../tasks/list";
 import { formatTimeString } from "../tasks/list";
 import EventList from "../events/list";
-import {
-  TaskStatus,
-  TaskCategory,
-  TaskType,
-  TaskFrequency,
-} from "../../types/api";
+import { TaskStatus, TaskType, TaskFrequency } from "../../types/api";
 
 // Constants
 const ALL_STATUSES: TaskStatus[] = ["READY", "COMPLETE", "NOT_READY", "PUNTED"];
-const ALL_CATEGORIES: TaskCategory[] = [
-  "HYGIENE",
-  "NUTRITION",
-  "HEALTH",
-  "PET",
-  "HOUSE",
-];
 const ALL_TYPES: TaskType[] = ["MEAL", "EVENT", "CHORE", "ERRAND", "ACTIVITY"];
 const ALL_FREQUENCIES: TaskFrequency[] = [
   "DAILY",
@@ -40,6 +28,23 @@ const ALL_FREQUENCIES: TaskFrequency[] = [
   "WEEKENDS",
   "CUSTOM_WEEKLY",
 ];
+
+// Frequency display groups for the simplified filter
+type FrequencyGroup = "ONCE" | "DAILY" | "WEEKLY" | "MONTHLY+";
+const FREQUENCY_GROUPS: FrequencyGroup[] = [
+  "ONCE",
+  "DAILY",
+  "WEEKLY",
+  "MONTHLY+",
+];
+
+// Map frequency groups to actual TaskFrequency values
+const frequencyGroupMap: Record<FrequencyGroup, TaskFrequency[]> = {
+  ONCE: ["ONCE"],
+  DAILY: ["DAILY", "WORK_DAYS", "WEEKENDS"],
+  WEEKLY: ["WEEKLY", "BI_WEEKLY", "CUSTOM_WEEKLY"],
+  "MONTHLY+": ["MONTHLY", "YEARLY"],
+};
 
 // Helper to format labels
 const formatLabel = (str: string) =>
@@ -124,14 +129,12 @@ const FilterGroup: Component<{
 const TaskFilters: Component<{
   filters: {
     statuses: TaskStatus[];
-    categories: TaskCategory[];
     types: TaskType[];
-    frequencies: TaskFrequency[];
+    frequencyGroups: FrequencyGroup[];
   };
-  onToggle: (
-    type: "statuses" | "categories" | "types" | "frequencies",
-    value: string
-  ) => void;
+  onToggleStatus: (value: string) => void;
+  onToggleType: (value: string) => void;
+  onToggleFrequencyGroup: (value: FrequencyGroup) => void;
 }> = (props) => {
   const [expanded, setExpanded] = createSignal(false);
 
@@ -168,20 +171,12 @@ const TaskFilters: Component<{
               {(status) => (
                 <FilterChip
                   label={formatLabel(status)}
-                  active={props.filters.statuses.includes(status)}
-                  onClick={() => props.onToggle("statuses", status)}
-                />
-              )}
-            </For>
-          </FilterGroup>
-
-          <FilterGroup label="Category">
-            <For each={["ALL", ...ALL_CATEGORIES]}>
-              {(category) => (
-                <FilterChip
-                  label={formatLabel(category)}
-                  active={props.filters.categories.includes(category)}
-                  onClick={() => props.onToggle("categories", category)}
+                  active={
+                    status === "ALL"
+                      ? props.filters.statuses.length === ALL_STATUSES.length
+                      : props.filters.statuses.includes(status as TaskStatus)
+                  }
+                  onClick={() => props.onToggleStatus(status)}
                 />
               )}
             </For>
@@ -192,20 +187,35 @@ const TaskFilters: Component<{
               {(type) => (
                 <FilterChip
                   label={formatLabel(type)}
-                  active={props.filters.types.includes(type)}
-                  onClick={() => props.onToggle("types", type)}
+                  active={
+                    type === "ALL"
+                      ? props.filters.types.length === ALL_TYPES.length
+                      : props.filters.types.includes(type as TaskType)
+                  }
+                  onClick={() => props.onToggleType(type)}
                 />
               )}
             </For>
           </FilterGroup>
 
           <FilterGroup label="Frequency">
-            <For each={["ALL", ...ALL_FREQUENCIES]}>
-              {(freq) => (
+            <For each={["ALL", ...FREQUENCY_GROUPS]}>
+              {(group) => (
                 <FilterChip
-                  label={formatLabel(freq)}
-                  active={props.filters.frequencies.includes(freq)}
-                  onClick={() => props.onToggle("frequencies", freq)}
+                  label={group === "ALL" ? "All" : group}
+                  active={
+                    group === "ALL"
+                      ? props.filters.frequencyGroups.length ===
+                        FREQUENCY_GROUPS.length
+                      : props.filters.frequencyGroups.includes(
+                          group as FrequencyGroup
+                        )
+                  }
+                  onClick={() =>
+                    props.onToggleFrequencyGroup(
+                      group as FrequencyGroup | "ALL"
+                    )
+                  }
                 />
               )}
             </For>
@@ -236,37 +246,72 @@ const DayView: Component<DayViewProps> = (props) => {
   // Filter state with defaults
   const [filters, setFilters] = createStore({
     statuses: [...ALL_STATUSES] as TaskStatus[],
-    categories: [...ALL_CATEGORIES] as TaskCategory[],
     types: [...ALL_TYPES] as TaskType[],
-    frequencies: [...ALL_FREQUENCIES] as TaskFrequency[],
+    frequencyGroups: [...FREQUENCY_GROUPS] as FrequencyGroup[],
   });
 
-  const toggleFilter = (
-    type: "statuses" | "categories" | "types" | "frequencies",
-    value: string
-  ) => {
-    const current = filters[type] as string[];
-    if (current.includes(value)) {
-      // Don't allow removing the last item
-      if (current.length > 1) {
-        setFilters(type, current.filter((v) => v !== value) as any);
-      }
-    } else if (value === "NONE") {
-      setFilters(type, []);
-    } else if (value === "ALL") {
-      if (type === "statuses") {
-        setFilters(type, ALL_STATUSES);
-      } else if (type === "categories") {
-        setFilters(type, ALL_CATEGORIES);
-      } else if (type === "frequencies") {
-        setFilters(type, ALL_FREQUENCIES);
-      } else if (type === "types") {
-        setFilters(type, ALL_TYPES);
-      }
+  const toggleStatus = (value: string) => {
+    if (value === "ALL") {
+      setFilters("statuses", [...ALL_STATUSES]);
     } else {
-      setFilters(type, [...current, value] as any);
+      const current = filters.statuses;
+      if (current.includes(value as TaskStatus)) {
+        if (current.length > 1) {
+          setFilters(
+            "statuses",
+            current.filter((v) => v !== value)
+          );
+        }
+      } else {
+        setFilters("statuses", [...current, value as TaskStatus]);
+      }
     }
   };
+
+  const toggleType = (value: string) => {
+    if (value === "ALL") {
+      setFilters("types", [...ALL_TYPES]);
+    } else {
+      const current = filters.types;
+      if (current.includes(value as TaskType)) {
+        if (current.length > 1) {
+          setFilters(
+            "types",
+            current.filter((v) => v !== value)
+          );
+        }
+      } else {
+        setFilters("types", [...current, value as TaskType]);
+      }
+    }
+  };
+
+  const toggleFrequencyGroup = (value: FrequencyGroup | "ALL") => {
+    if (value === "ALL") {
+      setFilters("frequencyGroups", [...FREQUENCY_GROUPS]);
+    } else {
+      const current = filters.frequencyGroups;
+      if (current.includes(value)) {
+        if (current.length > 1) {
+          setFilters(
+            "frequencyGroups",
+            current.filter((v) => v !== value)
+          );
+        }
+      } else {
+        setFilters("frequencyGroups", [...current, value]);
+      }
+    }
+  };
+
+  // Get all allowed frequencies based on selected groups
+  const allowedFrequencies = createMemo(() => {
+    const frequencies: TaskFrequency[] = [];
+    for (const group of filters.frequencyGroups) {
+      frequencies.push(...frequencyGroupMap[group]);
+    }
+    return frequencies;
+  });
 
   // Filtered tasks
   const filteredTasks = createMemo(() => {
@@ -274,15 +319,12 @@ const DayView: Component<DayViewProps> = (props) => {
 
     return props.tasks().filter((task) => {
       const statusMatch = filters.statuses.includes(task.status);
-      const categoryMatch = filters.categories.includes(task.category);
-      const frequencyMatch = filters.frequencies.includes(task.frequency);
-      // Adjust this based on where `type` lives in your Task model
-      // Assuming task.task_definition might have a type property
+      const frequencyMatch = allowedFrequencies().includes(task.frequency);
       const typeMatch =
         !task.task_definition?.type ||
         filters.types.includes(task.task_definition.type as TaskType);
 
-      return statusMatch && categoryMatch && frequencyMatch && typeMatch;
+      return statusMatch && frequencyMatch && typeMatch;
     });
   });
 
@@ -302,7 +344,12 @@ const DayView: Component<DayViewProps> = (props) => {
 
           <Show when={props.tasks()?.length}>
             <SectionHeader label="Tasks" />
-            <TaskFilters filters={filters} onToggle={toggleFilter} />
+            <TaskFilters
+              filters={filters}
+              onToggleStatus={toggleStatus}
+              onToggleType={toggleType}
+              onToggleFrequencyGroup={toggleFrequencyGroup}
+            />
             <Show
               when={filteredTasks().length > 0}
               fallback={
