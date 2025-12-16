@@ -1,4 +1,4 @@
-import { Component, For, Setter } from "solid-js";
+import { Component, For, Signal, Setter } from "solid-js";
 import {
   faEye,
   faListCheck,
@@ -12,18 +12,18 @@ import {
 import { Icon } from "../shared/icon";
 
 interface TabIndicatorProps {
-  activeTab: string;
+  activeTab: Signal<string>;
   setActiveTab: Setter<string>;
 }
 
 const tabs = [
   { icon: faEye, key: "home" },
   { icon: faClock, key: "doit" },
+  { icon: faSmile, key: "lykke" },
   { icon: faMessage, key: "sheppard" },
   { icon: faListCheck, key: "tasks" },
   { icon: faCalendarDay, key: "events" },
   { icon: faBowlFood, key: "food" },
-  { icon: faSmile, key: "lykke" },
   { icon: faHandsWash, key: "adls" },
 ];
 
@@ -39,7 +39,7 @@ const DayTabs: Component<TabIndicatorProps> = (props) => {
           >
             <Icon
               icon={tab.icon}
-              class={`w-4 h-4 ${props.activeTab === tab.key ? "fill-gray-900" : "fill-gray-300"}`}
+              class={`w-6 h-6 ${props.activeTab() === tab.key ? "fill-gray-900" : "fill-gray-300"}`}
             />
           </button>
         )}

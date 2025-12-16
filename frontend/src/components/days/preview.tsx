@@ -113,7 +113,6 @@ export const DayPreview: Component<PreviewProps> = (props) => {
   }
   return (
     <div class="flex flex-col min-h-full px-4 py-6">
-      <h1> {props.dayContext?.day.template_id}</h1>
       <div class="flex-1">
         <Show when={alarm()}>
           <div class="mb-6">

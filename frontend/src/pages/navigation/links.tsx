@@ -24,10 +24,9 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Home", icon: faHouse, url: "/" },
-  { label: "Notifications", icon: faBell, url: "/notifications" },
-  { label: "Today", icon: faCalendarDay, url: "/day/today" },
-  { label: "Calendar", icon: faCalendar, url: "/nav/calendar" },
   { label: "Tomorrow", icon: faCalendarPlus, url: "/day/tomorrow" },
+  { label: "Notifications", icon: faBell, url: "/notifications" },
+  { label: "Calendar", icon: faCalendar, url: "/nav/calendar" },
   { label: "Settings", icon: faGear, url: "/settings" },
   { label: "Login", icon: faRightToBracket, url: "/login" },
   { label: "Alarm", icon: faMugHot, method: alarmAPI.stopAll },

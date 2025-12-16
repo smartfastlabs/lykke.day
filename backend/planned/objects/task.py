@@ -48,6 +48,7 @@ class TaskStatus(str, Enum):
     NOT_READY = "NOT_READY"
     READY = "READY"
     PUNTED = "PUNTED"
+    NOT_STARTED = "NOT_STARTED"
 
 
 class TimingType(str, Enum):

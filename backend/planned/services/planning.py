@@ -28,13 +28,6 @@ def is_routine_active(schedule: objects.RoutineSchedule, date: datetime.date) ->
     return date.weekday() in schedule.weekdays
 
 
-def get_starting_task_status(schedule: objects.TaskSchedule | None) -> TaskStatus:
-    if not schedule or schedule.available_time:
-        return TaskStatus.NOT_READY
-
-    return TaskStatus.READY
-
-
 class PlanningService(BaseService):
     async def preview_tasks(self, date: datetime.date) -> list[Task]:
         result: list[Task] = []
@@ -51,7 +44,7 @@ class PlanningService(BaseService):
                         ),
                         schedule=routine_task.schedule,
                         scheduled_date=date,
-                        status=get_starting_task_status(routine_task.schedule),
+                        status=TaskStatus.NOT_STARTED,
                         category=routine.category,
                     )
                     result.append(task)

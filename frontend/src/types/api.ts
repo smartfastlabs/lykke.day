@@ -18,7 +18,7 @@ export type TaskFrequency =
   | "BI_WEEKLY"
   | "WORK_DAYS"
   | "WEEKENDS";
-export type TaskStatus = "COMPLETE" | "NOT_READY" | "READY" | "PUNTED";
+export type TaskStatus = "COMPLETE" | "NOT_READY" | "READY" | "PUNTED" | "NOT_STARTED";
 export type TaskType = "MEAL" | "EVENT" | "CHORE" | "ERRAND" | "ACTIVITY";
 export type TaskCategory = "HYGIENE" | "NUTRITION" | "HEALTH" | "PET" | "HOUSE";
 export type TimingType = "DEADLINE" | "FIXED_TIME" | "TIME_WINDOW" | "FLEXIBLE";
@@ -150,13 +150,17 @@ export interface PushSubscription {
 export interface Routine {
   id?: string;
   name: string;
-  task_definition_id: string;
   category: TaskCategory;
   routine_schedule: RoutineSchedule;
   description?: string;
-  task_schedule?: TaskSchedule | null;
+  tasks?: RoutineTask[];
 }
 export interface RoutineSchedule {
   frequency: TaskFrequency;
   weekdays?: DayOfWeek[] | null;
+}
+export interface RoutineTask {
+  task_definition_id: string;
+  name?: string | null;
+  schedule?: TaskSchedule | null;
 }
