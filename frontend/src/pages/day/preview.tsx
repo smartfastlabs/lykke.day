@@ -5,7 +5,7 @@ import { dayAPI } from "../../utils/api";
 
 import DayPreview from "../../components/days/preview";
 
-export const DayView: Component = () => {
+export const DayPreviewPage: Component = () => {
   const params = useParams();
   const [dayContext] = createResource(async () =>
     dayAPI.getContext(params.date)
@@ -23,4 +23,4 @@ export const DayView: Component = () => {
   );
 };
 
-export default DayView;
+export default DayPreviewPage;

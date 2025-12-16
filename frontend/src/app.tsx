@@ -9,7 +9,7 @@ import { SheppardProvider } from "./providers/sheppard";
 
 import Home from "./pages/home";
 import Login from "./pages/login";
-import DayView from "./pages/day/view";
+import DayView from "./pages/day/preview";
 import NavPage from "./pages/navigation/links";
 import CalendarPage from "./pages/navigation/calendar";
 
@@ -77,7 +77,6 @@ export default function App() {
         )}
       >
         <Route path="/" component={Home} />
-        <Route path="/today" component={Home} />
         <Route path="/login" component={Login} />
         <Route path="/nav/calendar" component={CalendarPage} />
         <Route path="/nav" component={NavPage} />

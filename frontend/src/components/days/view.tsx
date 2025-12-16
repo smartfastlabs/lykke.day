@@ -53,41 +53,6 @@ const formatLabel = (str: string) =>
     .replace(/_/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
-const DayHeader: Component<{ day: Day }> = (props) => {
-  const date = () => new Date(props.day.date + "T12:00:00");
-  const dayName = () => date().toLocaleDateString("en-US", { weekday: "long" });
-  const monthDay = () =>
-    date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
-
-  return (
-    <header class="px-5 py-5 border-b border-gray-200">
-      <div class="flex items-baseline justify-between">
-        <div>
-          <h1 class="text-2xl font-light tracking-tight text-gray-900">
-            {dayName()}
-          </h1>
-          <p class="text-sm text-gray-400 mt-0.5">{monthDay()}</p>
-        </div>
-        <Show when={props.day.template_id}>
-          <span class="text-xs uppercase tracking-wider text-gray-400">
-            {props.day.template_id}
-          </span>
-        </Show>
-      </div>
-
-      <Show when={props.day.alarm}>
-        <div class="mt-3 flex items-center gap-2 text-gray-500">
-          <Icon key="clock" />
-          <span class="text-xs">{formatTimeString(props.day.alarm!.time)}</span>
-          <span class="text-xs text-gray-400 lowercase">
-            · {props.day.alarm!.type.toLowerCase()}
-          </span>
-        </div>
-      </Show>
-    </header>
-  );
-};
-
 const EmptyState: Component = () => (
   <div class="px-5 py-16 text-center">
     <p class="text-sm text-gray-400">Nothing scheduled</p>
@@ -345,8 +310,6 @@ const DayView: Component<DayViewProps> = (props) => {
 
   return (
     <div class="min-h-screen bg-white">
-      <DayHeader day={props.day()} />
-
       <Show when={hasContent()} fallback={<EmptyState />}>
         <main>
           <Show when={props.events()?.length}>
