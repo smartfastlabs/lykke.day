@@ -14,9 +14,11 @@ wp = WebPush(
 
 async def send_notification(
     subscription: objects.PushSubscription,
-    content: str | dict,
+    content: str | dict | objects.NotificationPayload,
 ) -> None:
-    if isinstance(content, dict):
+    if isinstance(content, objects.NotificationPayload):
+        content = content.model_dump_json(exclude_none=True)
+    elif isinstance(content, dict):
         content = json.dumps(content)
 
     message: WebPushMessage = wp.get(
@@ -36,7 +38,6 @@ async def send_notification(
             data=message.encrypted,
             headers=message.headers,
         )
-
         if not response.ok:
             raise exceptions.PushNotificationError(
                 f"Failed to send push notification: {response.status} {response.reason}",

@@ -36,16 +36,12 @@ class CalendarService:
         if calendar.last_sync_at:
             lookback = calendar.last_sync_at - timedelta(minutes=30)
 
-        try:
-            if calendar.platform == "google":
-                calendar.last_sync_at = datetime.now(UTC)
-                return await self.sync_google(
-                    calendar,
-                    lookback=lookback,
-                )
-        except Exception as e:
-            logger.info(f"Error syncing calendar: {e}")
-            raise
+        if calendar.platform == "google":
+            calendar.last_sync_at = datetime.now(UTC)
+            return await self.sync_google(
+                calendar,
+                lookback=lookback,
+            )
 
         raise NotImplementedError(
             f"Sync not implemented for platform {calendar.platform}"
@@ -53,12 +49,15 @@ class CalendarService:
 
     async def sync_all(self) -> None:
         for calendar in await calendar_repo.all():
-            events, deleted_events = await self.sync(calendar)
-            for event in events:
-                await event_repo.put(event)
-            for event in deleted_events:
-                logger.info(f"DELETING EVENT: {event.name}")
-                await event_repo.delete(event)
+            try:
+                events, deleted_events = await self.sync(calendar)
+                for event in events:
+                    await event_repo.put(event)
+                for event in deleted_events:
+                    logger.info(f"DELETING EVENT: {event.name}")
+                    await event_repo.delete(event)
+            except Exception as e:
+                logger.exception(f"Error syncing calendar {calendar.name}: {e}")
 
 
 calendar_svc = CalendarService()
