@@ -1,5 +1,6 @@
 import pytest
 
+from planned.application.services import DayService, PlanningService
 from planned.infrastructure.repositories import (
     DayRepository,
     DayTemplateRepository,
@@ -9,7 +10,6 @@ from planned.infrastructure.repositories import (
     TaskDefinitionRepository,
     TaskRepository,
 )
-from planned.application.services import DayService, PlanningService
 
 
 @pytest.mark.asyncio

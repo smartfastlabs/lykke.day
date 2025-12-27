@@ -1,10 +1,10 @@
 import pytest
 from dobles import InstanceDouble
 
-from planned.core.exceptions import exceptions
 from planned.app import app
-from planned.presentation.middlewares.auth import AuthMiddleware
+from planned.core.exceptions import exceptions
 from planned.infrastructure.utils.dates import get_current_datetime
+from planned.presentation.middlewares.auth import AuthMiddleware
 
 
 @pytest.mark.asyncio

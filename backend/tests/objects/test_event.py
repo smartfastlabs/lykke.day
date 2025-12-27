@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, time
 from zoneinfo import ZoneInfo
 
 from dateutil.tz import tzoffset
@@ -14,9 +14,6 @@ def test_get_datetime():
         google_dt,
         google_tz,
     ) == datetime(2025, 12, 9, 10, 30).replace(tzinfo=ZoneInfo("America/Chicago"))
-
-
-from datetime import date, time
 
 
 def test_get_datetime_with_aware_datetime():
