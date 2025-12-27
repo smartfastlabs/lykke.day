@@ -43,3 +43,18 @@ class ServerError(BaseError):
 class TokenExpiredError(BaseError):
     status_code = 401
     _message = "token has expired"
+
+
+# Create a namespace object for backward compatibility
+class _ExceptionsNamespace:
+    BaseError = BaseError
+    NotFoundError = NotFoundError
+    PushNotificationError = PushNotificationError
+    BadRequestError = BadRequestError
+    AuthenticationError = AuthenticationError
+    AuthorizationError = AuthorizationError
+    ServerError = ServerError
+    TokenExpiredError = TokenExpiredError
+
+
+exceptions = _ExceptionsNamespace()

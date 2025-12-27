@@ -1,12 +1,13 @@
 import asyncio
 import time
+from typing import Any
 
 import numpy as np
-import pvcheetah
-import pvcobra
-import pvporcupine
+import pvcheetah  # type: ignore[import-untyped]
+import pvcobra  # type: ignore[import-untyped]
+import pvporcupine  # type: ignore[import-untyped]
 from loguru import logger
-from pvrecorder import PvRecorder
+from pvrecorder import PvRecorder  # type: ignore[import-untyped]
 
 from planned.core.config import settings
 
@@ -35,7 +36,7 @@ recorder = PvRecorder(
 )
 
 
-def transcribe_audio(frames, sample_rate):
+def transcribe_audio(frames: list[list[int]], sample_rate: int) -> str:
     """
     Transcribe recorded audio frames using Cheetah.
     """
@@ -66,23 +67,23 @@ def transcribe_audio(frames, sample_rate):
         partial, is_endpoint = cheetah.process(chunk)
         transcript += partial
 
-    final = cheetah.flush()
+    final: str = cheetah.flush()
     transcript += final
 
     return transcript.strip()
 
 
-def record_until_silence():
+def record_until_silence() -> list[list[int]]:
     """
     Record audio until silence is detected using Cobra VAD.
     """
     print("\nListening... (speak now)")
 
-    recorded_frames = []
-    silence_start = None
+    recorded_frames: list[list[int]] = []
+    silence_start: float | None = None
 
     # Buffer for Cobra (may have different frame length)
-    cobra_buffer = []
+    cobra_buffer: list[int] = []
 
     while True:
         frame = recorder.read()
@@ -108,10 +109,8 @@ def record_until_silence():
                 silence_start = None
                 print("*", end="", flush=True)
 
-    return recorded_frames
 
-
-async def _run_loop():
+async def _run_loop() -> None:
     try:
         recorder.start()
         print("Waiting for wake word...")
@@ -146,7 +145,7 @@ async def _run_loop():
         cobra.delete()
 
 
-async def run_async():
+async def run_async() -> None:
     while True:
         try:
             await _run_loop()
@@ -154,7 +153,7 @@ async def run_async():
             logger.exception(f"Error Listening: {e}")
 
 
-def run():
+def run() -> None:
     asyncio.run(run_async())
 
 
