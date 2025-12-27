@@ -184,8 +184,6 @@ def _load_calendar_events_sync(
             continue
         if event.other.get("status") == "cancelled":
             logger.info(f"It looks like the event `{event.summary}` has been cancelled")
-        else:
-            logger.info(f"Loaded event {event.id}: {event.summary}")
         try:
             # Get frequency, fetching parent event if this is a recurring instance
             frequency = get_event_frequency(event, gc, frequency_cache)
@@ -202,9 +200,12 @@ async def load_calendar_events(
     token: AuthToken,
 ) -> list[Event]:
     """Asynchronously load calendar events by running the sync operation in a thread pool."""
-    return await asyncio.to_thread(
-        _load_calendar_events_sync,
-        calendar,
-        lookback,
-        token,
-    )
+    try:
+        return await asyncio.to_thread(
+            _load_calendar_events_sync,
+            calendar,
+            lookback,
+            token,
+        )
+    except RefreshError:
+        raise exceptions.TokenExpiredError("User needs to re-authenticate")

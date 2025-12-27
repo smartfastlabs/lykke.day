@@ -165,6 +165,7 @@ def test_day_svc(test_day_ctx):
 def test_sheppard_svc(test_day_svc):
     return services.SheppardService(
         day_svc=test_day_svc,
+        push_subscriptions=[],
         mode="idle",
     )
 

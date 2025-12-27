@@ -1,9 +1,10 @@
-from datetime import date as dt_date, datetime, time
+from datetime import UTC, date as dt_date, datetime, time
 from enum import Enum
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from pydantic import BaseModel, Field
 
+from .action import Action
 from .base import BaseDateObject, BaseObject
 
 
@@ -49,6 +50,7 @@ class TaskStatus(str, Enum):
     READY = "READY"
     PUNTED = "PUNTED"
     NOT_STARTED = "NOT_STARTED"
+    PENDING = "PENDING"
 
 
 class TimingType(str, Enum):
@@ -93,6 +95,7 @@ class Task(BaseDateObject):
     schedule: TaskSchedule | None = None
     routine_id: str | None = None
     tags: list[TaskTag] = Field(default_factory=list)
+    actions: list[Action] = Field(default_factory=list)
 
     def _get_date(self) -> dt_date:
         return self.scheduled_date

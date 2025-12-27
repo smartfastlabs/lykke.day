@@ -2,10 +2,11 @@ from datetime import UTC, date as dt_date, datetime, time
 from zoneinfo import ZoneInfo
 
 from gcsa.event import Event as GoogleEvent
-from pydantic import Field, computed_field
+from pydantic import Field
 
 from planned import settings
 
+from .action import Action
 from .base import BaseDateObject
 from .person import Person
 from .task import TaskFrequency
@@ -43,6 +44,7 @@ class Event(BaseDateObject):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     people: list[Person] = Field(default_factory=list)
+    actions: list[Action] = Field(default_factory=list)
 
     def _get_datetime(self) -> datetime:
         return self.starts_at

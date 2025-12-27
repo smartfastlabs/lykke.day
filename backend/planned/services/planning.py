@@ -1,11 +1,20 @@
 import asyncio
 import datetime
 from contextlib import suppress
+from typing import Protocol, TypeVar
 
 from loguru import logger
 
 from planned import exceptions, objects
-from planned.objects import DayContext, DayTemplate, Task, TaskStatus
+from planned.objects import (
+    Action,
+    ActionType,
+    DayContext,
+    DayTemplate,
+    Event,
+    Task,
+    TaskStatus,
+)
 from planned.objects.user_settings import user_settings
 from planned.repositories import (
     day_repo,
@@ -26,6 +35,13 @@ def is_routine_active(schedule: objects.RoutineSchedule, date: datetime.date) ->
     if not schedule.weekdays:
         return True
     return date.weekday() in schedule.weekdays
+
+
+class Actionable(Protocol):
+    actions: list[Action]
+
+
+HasActionsType = TypeVar("HasActionsType", bound=Actionable)
 
 
 class PlanningService(BaseService):
@@ -105,6 +121,24 @@ class PlanningService(BaseService):
         )
 
         return result
+
+    async def save_action(
+        self,
+        obj: HasActionsType,
+        action: Action,
+    ) -> HasActionsType:
+        obj.actions.append(action)
+        action_type: TaskStatus = TaskStatus(action.type)
+        if isinstance(obj, Task):
+            if action_type in [TaskStatus.COMPLETE, TaskStatus.PUNTED]:
+                obj.status = action_type
+            await task_repo.put(obj)
+
+        elif isinstance(obj, Event):
+            await event_repo.put(obj)
+        else:
+            raise ValueError(f"Invalid object type: {type(obj)}")
+        return obj
 
 
 planning_svc = PlanningService()

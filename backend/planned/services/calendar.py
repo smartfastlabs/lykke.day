@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 
 from loguru import logger
 
+from planned import exceptions
 from planned.gateways import google
 from planned.objects import Calendar, Event
 from planned.repositories import auth_token_repo, calendar_repo, event_repo
@@ -56,6 +57,8 @@ class CalendarService:
                 for event in deleted_events:
                     logger.info(f"DELETING EVENT: {event.name}")
                     await event_repo.delete(event)
+            except exceptions.TokenExpiredError:
+                logger.info(f"Token expired for calendar {calendar.name}")
             except Exception as e:
                 logger.exception(f"Error syncing calendar {calendar.name}: {e}")
 

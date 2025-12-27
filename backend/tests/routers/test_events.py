@@ -25,5 +25,6 @@ async def test_get_today(test_client, test_date):
             "id": "google:family-thanksgiving-2025",
             "frequency": "YEARLY",
             "people": [],
+            "actions": [],
         }
     ]

@@ -182,16 +182,24 @@ class DayService(BaseService):
 
         result: list[objects.Task] = []
         for task in self.ctx.tasks:
-            if task.completed_at or not task.schedule:
+            if (
+                task.status
+                not in (
+                    objects.TaskStatus.PENDING,
+                    objects.TaskStatus.NOT_STARTED,
+                    objects.TaskStatus.READY,
+                )
+                or task.completed_at
+                or not task.schedule
+            ):
                 continue
 
             if task.schedule.available_time:
                 if task.schedule.available_time > now:
                     continue
 
-            elif task.schedule.start_time:
-                if cutoff_time < task.schedule.start_time:
-                    continue
+            elif task.schedule.start_time and cutoff_time < task.schedule.start_time:
+                continue
 
             if task.schedule.end_time and now > task.schedule.end_time:
                 continue

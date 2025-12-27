@@ -8,6 +8,8 @@ from langchain_core.runnables import Runnable
 from loguru import logger
 
 from planned import objects
+from planned.gateways import web_push
+from planned.repositories import push_subscription_repo, task_repo
 from planned.utils import templates, youtube
 from planned.utils.dates import get_current_date, get_current_datetime, get_current_time
 
@@ -44,13 +46,16 @@ class SheppardService(BaseService):
     day_svc: DayService
     mode: SheppardMode
     last_run: datetime.datetime | None = None
+    push_subscriptions: list[objects.PushSubscription] = []
 
     def __init__(
         self,
         day_svc: DayService,
+        push_subscriptions: list[objects.PushSubscription],
         mode: SheppardMode = "starting",
     ) -> None:
         self.mode = mode
+        self.push_subscriptions = push_subscriptions
         self.last_run = None
         self.day_svc = day_svc
         self.agent = create_agent(
@@ -62,7 +67,11 @@ class SheppardService(BaseService):
     @classmethod
     async def new(cls) -> "SheppardService":
         day_svc = await DayService.for_date(get_current_date())
-        return cls(day_svc=day_svc)
+        push_subscriptions = await push_subscription_repo.all()
+        return cls(
+            day_svc=day_svc,
+            push_subscriptions=push_subscriptions,
+        )
 
     async def run_loop(
         self,
@@ -81,6 +90,35 @@ class SheppardService(BaseService):
                 await self.day_svc.save()
 
         for task in await self.day_svc.get_upcomming_tasks():
+            if task.status != objects.TaskStatus.PENDING:
+                task.status = objects.TaskStatus.PENDING
+
+                if not any(
+                    action.type == objects.ActionType.NOTIFY for action in task.actions
+                ):
+                    for subscription in self.push_subscriptions:
+                        logger.info(f"Sending notification to {subscription.endpoint}")
+                        await web_push.send_notification(
+                            subscription=subscription,
+                            content=objects.NotificationPayload(
+                                title="Notifications Enabled!",
+                                body="TASK NOTIFICATION",
+                                # actions=[
+                                #     objects.NotificationAction(
+                                #         action="view",
+                                #         title="View Task",
+                                #         icon="🔍",
+                                #     ),
+                                # ],
+                            ),
+                        )
+                    task.actions.append(
+                        objects.Action(
+                            type=objects.ActionType.NOTIFY,
+                        ),
+                    )
+                # task = await task_repo.put(task)
+
             logger.info(f"UPCOMING TASK {task.name}")
 
         for event in await self.day_svc.get_upcomming_events():

@@ -12,4 +12,7 @@ async def load_sheppard_svc(
     date: datetime.date,
     day_svc: DayService = Depends(load_todays_day_svc),
 ) -> SheppardService:
-    return SheppardService(day_svc=day_svc)
+    return SheppardService(
+        day_svc=day_svc,
+        push_subscriptions=[],
+    )
