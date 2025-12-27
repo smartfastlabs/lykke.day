@@ -39,7 +39,7 @@ async def test_send_notification():
 
     session = InstanceDouble("aiohttp.ClientSession")
     expect(session).__aenter__().and_return(session)
-    allow(session).__aexit__
+    allow(session).__aexit__.and_return(None)
     expect(web_push.aiohttp).ClientSession().and_return(session)
 
     async def response():
