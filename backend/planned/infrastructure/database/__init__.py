@@ -1,5 +1,6 @@
 """Database connection and engine management."""
 
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from planned.core.config import settings
@@ -12,6 +13,7 @@ def get_engine() -> AsyncEngine:
     """Get or create the global async database engine."""
     global _engine
     if _engine is None:
+        logger.info("Creating async engine", settings.DATABASE_URL)
         _engine = create_async_engine(
             settings.DATABASE_URL,
             pool_pre_ping=True,
@@ -26,4 +28,3 @@ async def close_engine() -> None:
     if _engine is not None:
         await _engine.dispose()
         _engine = None
-

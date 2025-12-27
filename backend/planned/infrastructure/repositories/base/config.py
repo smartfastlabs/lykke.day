@@ -32,7 +32,7 @@ class BaseConfigRepository(BaseRepository[ConfigObjectType]):
         async with engine.connect() as conn:
             stmt = select(self.table).where(self.table.c.id == key)
             result = await conn.execute(stmt)
-            row = result.mapping().first()
+            row = result.mappings().first()
             
             if row is None:
                 raise exceptions.NotFoundError(

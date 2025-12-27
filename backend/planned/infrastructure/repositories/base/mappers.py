@@ -58,11 +58,27 @@ def row_to_entity(row: dict[str, Any], entity_class: type[BaseModel]) -> BaseMod
     # Convert row dict, handling JSONB fields that may be dicts/lists
     data: dict[str, Any] = {}
     
+    # Special handling for Day entity - convert id (date string) to date field
+    if entity_class.__name__ == "Day" and "id" in row and "date" not in row:
+        from datetime import datetime as dt
+        try:
+            # id is a date string like "2025-11-27", convert to date object
+            data["date"] = dt.strptime(row["id"], "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            # If conversion fails, try to parse as ISO format
+            try:
+                data["date"] = dt.fromisoformat(row["id"]).date()
+            except (ValueError, TypeError):
+                pass  # Will let Pydantic validation handle the error
+    
     # Remove 'date' field if present - it's database-only for querying
     # The entity will compute it from datetime fields
     row_without_date = {k: v for k, v in row.items() if k != "date"}
     
     for key, value in row_without_date.items():
+        if key == "id" and entity_class.__name__ == "Day":
+            # Skip id for Day, we've already converted it to date
+            continue
         if value is None:
             data[key] = None
         elif isinstance(value, (dict, list)):

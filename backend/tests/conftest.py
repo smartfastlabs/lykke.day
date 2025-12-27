@@ -4,6 +4,7 @@ import os
 from zoneinfo import ZoneInfo
 
 import pytest
+import pytest_asyncio
 from dobles import allow
 from fastapi.testclient import TestClient
 from freezegun import freeze_time
@@ -12,7 +13,7 @@ from planned import settings
 from planned.app import app
 from planned.application import services
 from planned.domain import entities as objects
-from planned.infrastructure.database import close_engine, get_engine
+from planned.infrastructure.database import get_engine
 from planned.infrastructure.utils.dates import get_current_date, get_current_datetime
 from planned.presentation.middlewares import middlewares
 
@@ -20,36 +21,21 @@ from planned.presentation.middlewares import middlewares
 @pytest.fixture(scope="session")
 def test_database_url():
     """Get test database URL - should be PostgreSQL for tests."""
-    # Default to a test database URL, can be overridden with TEST_DATABASE_URL env var
-    return os.getenv("TEST_DATABASE_URL", settings.DATABASE_URL.replace("/planned", "/planned_test"))
+    # Use DATABASE_URL from environment if set, otherwise use settings
+    # This allows the Makefile to set the test database URL
+    database_url = (
+        os.getenv("DATABASE_URL")
+        or os.getenv("TEST_DATABASE_URL")
+        or settings.DATABASE_URL
+    )
+    return database_url
 
 
-@pytest.fixture(scope="session", autouse=True)
-def setup_test_database(test_database_url):
-    """Set up test database with migrations."""
-    # Override DATABASE_URL for tests
-    original_url = settings.DATABASE_URL
-    settings.DATABASE_URL = test_database_url
-    
-    # Run migrations
-    from alembic.config import Config
-    from alembic import command
-    
-    alembic_cfg = Config("alembic.ini")
-    command.upgrade(alembic_cfg, "head")
-    
-    yield
-    
-    # Restore original URL and close engine after all tests
-    settings.DATABASE_URL = original_url
-    asyncio.run(close_engine())
-
-
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def clear_database():
     """Clear database between tests."""
     from sqlalchemy import text
-    
+
     # Truncate all tables for PostgreSQL
     engine = get_engine()
     async with engine.begin() as conn:
@@ -58,14 +44,34 @@ async def clear_database():
             text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
         )
         tables = [row[0] for row in result]
-        
+
         # Truncate all tables
         if tables:
             await conn.execute(
                 text(f"TRUNCATE TABLE {', '.join(tables)} RESTART IDENTITY CASCADE")
             )
-    
+
     yield
+
+
+@pytest_asyncio.fixture
+async def clear_repos():
+    """Clear all data from the database."""
+    from sqlalchemy import text
+
+    engine = get_engine()
+    async with engine.begin() as conn:
+        # Get all table names
+        result = await conn.execute(
+            text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+        )
+        tables = [row[0] for row in result]
+
+        # Truncate all tables
+        if tables:
+            await conn.execute(
+                text(f"TRUNCATE TABLE {', '.join(tables)} RESTART IDENTITY CASCADE")
+            )
 
 
 @pytest.fixture
@@ -251,6 +257,7 @@ def test_sheppard_svc(test_day_svc):
         GoogleCalendarGatewayAdapter,
         WebPushGatewayAdapter,
     )
+
     google_gateway = GoogleCalendarGatewayAdapter()
     web_push_gateway = WebPushGatewayAdapter()
 
