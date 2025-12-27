@@ -123,7 +123,7 @@ class DayService(BaseService):
     async def set_date(self, date: datetime.date) -> None:
         if self.date != date:
             self.date = date
-            self.ctx = await self.load_context(
+            self.ctx = await type(self).load_context(
                 date,
                 day_repo=self.day_repo,
                 day_template_repo=self.day_template_repo,

@@ -120,7 +120,7 @@ class SheppardService(BaseService):
                 ):
                     for subscription in self.push_subscriptions:
                         logger.info(f"Sending notification to {subscription.endpoint}")
-                        result = await web_push.send_notification(
+                        await web_push.send_notification(
                             subscription=subscription,
                             content=objects.NotificationPayload(
                                 title="Notifications Enabled!",
@@ -140,7 +140,7 @@ class SheppardService(BaseService):
                             type=objects.ActionType.NOTIFY,
                         ),
                     )
-                # task = await task_repo.put(task)
+                await self.task_repo.put(task)
 
             logger.info(f"UPCOMING TASK {task.name}")
 
@@ -204,7 +204,7 @@ class SheppardService(BaseService):
             wait_time: int = 30
             try:
                 logger.info("Syncing events...")
-                # await self.calendar_service.sync_all()
+                await self.calendar_service.sync_all()
             except Exception as e:
                 logger.exception(f"Error during sync: {e}")
                 wait_time = 10

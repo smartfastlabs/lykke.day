@@ -8,7 +8,13 @@ from fastapi import APIRouter, Depends
 
 from planned import exceptions
 from planned.objects import BaseObject, Day, DayContext, DayStatus, DayTemplate
-from planned.repositories import DayRepository, DayTemplateRepository
+from planned.repositories import (
+    DayRepository,
+    DayTemplateRepository,
+    EventRepository,
+    MessageRepository,
+    TaskRepository,
+)
 from planned.services import DayService, PlanningService
 from planned.utils.dates import get_current_date, get_tomorrows_date
 
@@ -35,11 +41,11 @@ async def schedule_today(
 async def get_context(
     date: datetime.date | Literal["today", "tomorrow"],
     planning_service: PlanningService = Depends(get_planning_service),
-    day_repo=Depends(get_day_repo),
-    day_template_repo=Depends(get_day_template_repo),
-    event_repo=Depends(get_event_repo),
-    message_repo=Depends(get_message_repo),
-    task_repo=Depends(get_task_repo),
+    day_repo: DayRepository = Depends(get_day_repo),
+    day_template_repo: DayTemplateRepository = Depends(get_day_template_repo),
+    event_repo: EventRepository = Depends(get_event_repo),
+    message_repo: MessageRepository = Depends(get_message_repo),
+    task_repo: TaskRepository = Depends(get_task_repo),
 ) -> DayContext:
     if isinstance(date, str):
         if date == "today":

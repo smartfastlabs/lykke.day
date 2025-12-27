@@ -7,8 +7,21 @@ with FastAPI's Depends() in route handlers.
 Services will depend on repositories, which are also injected via Depends().
 """
 
+from typing import Annotated
+
 from fastapi import Depends
 
+from planned.repositories import (
+    AuthTokenRepository,
+    CalendarRepository,
+    DayRepository,
+    DayTemplateRepository,
+    EventRepository,
+    MessageRepository,
+    RoutineRepository,
+    TaskDefinitionRepository,
+    TaskRepository,
+)
 from planned.routers.dependencies.repositories import (
     get_auth_token_repo,
     get_calendar_repo,
@@ -31,9 +44,9 @@ def get_auth_service() -> AuthService:
 
 
 def get_calendar_service(
-    auth_token_repo=Depends(get_auth_token_repo),
-    calendar_repo=Depends(get_calendar_repo),
-    event_repo=Depends(get_event_repo),
+    auth_token_repo: Annotated[AuthTokenRepository, Depends(get_auth_token_repo)],
+    calendar_repo: Annotated[CalendarRepository, Depends(get_calendar_repo)],
+    event_repo: Annotated[EventRepository, Depends(get_event_repo)],
 ) -> CalendarService:
     """Get an instance of CalendarService."""
     return CalendarService(
@@ -44,11 +57,11 @@ def get_calendar_service(
 
 
 async def get_day_service_for_current_date(
-    day_repo=Depends(get_day_repo),
-    day_template_repo=Depends(get_day_template_repo),
-    event_repo=Depends(get_event_repo),
-    message_repo=Depends(get_message_repo),
-    task_repo=Depends(get_task_repo),
+    day_repo: Annotated[DayRepository, Depends(get_day_repo)],
+    day_template_repo: Annotated[DayTemplateRepository, Depends(get_day_template_repo)],
+    event_repo: Annotated[EventRepository, Depends(get_event_repo)],
+    message_repo: Annotated[MessageRepository, Depends(get_message_repo)],
+    task_repo: Annotated[TaskRepository, Depends(get_task_repo)],
 ) -> DayService:
     """Get an instance of DayService for today's date."""
     return await DayService.for_date(
@@ -62,13 +75,15 @@ async def get_day_service_for_current_date(
 
 
 def get_planning_service(
-    day_repo=Depends(get_day_repo),
-    day_template_repo=Depends(get_day_template_repo),
-    event_repo=Depends(get_event_repo),
-    message_repo=Depends(get_message_repo),
-    routine_repo=Depends(get_routine_repo),
-    task_definition_repo=Depends(get_task_definition_repo),
-    task_repo=Depends(get_task_repo),
+    day_repo: Annotated[DayRepository, Depends(get_day_repo)],
+    day_template_repo: Annotated[DayTemplateRepository, Depends(get_day_template_repo)],
+    event_repo: Annotated[EventRepository, Depends(get_event_repo)],
+    message_repo: Annotated[MessageRepository, Depends(get_message_repo)],
+    routine_repo: Annotated[RoutineRepository, Depends(get_routine_repo)],
+    task_definition_repo: Annotated[
+        TaskDefinitionRepository, Depends(get_task_definition_repo)
+    ],
+    task_repo: Annotated[TaskRepository, Depends(get_task_repo)],
 ) -> PlanningService:
     """Get an instance of PlanningService."""
     return PlanningService(

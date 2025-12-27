@@ -1,6 +1,15 @@
 import datetime
+from typing import Annotated
+
 from fastapi import Depends
 
+from planned.repositories import (
+    DayRepository,
+    DayTemplateRepository,
+    EventRepository,
+    MessageRepository,
+    TaskRepository,
+)
 from planned.services import DayService
 from planned.utils.dates import get_current_date, get_tomorrows_date
 
@@ -15,11 +24,11 @@ from ..dependencies.repositories import (
 
 async def load_day_svc(
     date: datetime.date,
-    day_repo=Depends(get_day_repo),
-    day_template_repo=Depends(get_day_template_repo),
-    event_repo=Depends(get_event_repo),
-    message_repo=Depends(get_message_repo),
-    task_repo=Depends(get_task_repo),
+    day_repo: Annotated[DayRepository, Depends(get_day_repo)],
+    day_template_repo: Annotated[DayTemplateRepository, Depends(get_day_template_repo)],
+    event_repo: Annotated[EventRepository, Depends(get_event_repo)],
+    message_repo: Annotated[MessageRepository, Depends(get_message_repo)],
+    task_repo: Annotated[TaskRepository, Depends(get_task_repo)],
 ) -> DayService:
     """Load DayService for a specific date."""
     return await DayService.for_date(
@@ -33,11 +42,11 @@ async def load_day_svc(
 
 
 async def load_todays_day_svc(
-    day_repo=Depends(get_day_repo),
-    day_template_repo=Depends(get_day_template_repo),
-    event_repo=Depends(get_event_repo),
-    message_repo=Depends(get_message_repo),
-    task_repo=Depends(get_task_repo),
+    day_repo: Annotated[DayRepository, Depends(get_day_repo)],
+    day_template_repo: Annotated[DayTemplateRepository, Depends(get_day_template_repo)],
+    event_repo: Annotated[EventRepository, Depends(get_event_repo)],
+    message_repo: Annotated[MessageRepository, Depends(get_message_repo)],
+    task_repo: Annotated[TaskRepository, Depends(get_task_repo)],
 ) -> DayService:
     """Load DayService for today's date."""
     return await DayService.for_date(
@@ -51,11 +60,11 @@ async def load_todays_day_svc(
 
 
 async def load_tomorrows_day_svc(
-    day_repo=Depends(get_day_repo),
-    day_template_repo=Depends(get_day_template_repo),
-    event_repo=Depends(get_event_repo),
-    message_repo=Depends(get_message_repo),
-    task_repo=Depends(get_task_repo),
+    day_repo: Annotated[DayRepository, Depends(get_day_repo)],
+    day_template_repo: Annotated[DayTemplateRepository, Depends(get_day_template_repo)],
+    event_repo: Annotated[EventRepository, Depends(get_event_repo)],
+    message_repo: Annotated[MessageRepository, Depends(get_message_repo)],
+    task_repo: Annotated[TaskRepository, Depends(get_task_repo)],
 ) -> DayService:
     """Load DayService for tomorrow's date."""
     return await DayService.for_date(
