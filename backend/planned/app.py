@@ -9,11 +9,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from starlette.middleware.sessions import SessionMiddleware
 
-from planned import routers, settings
-from planned.middlewares.auth import AuthMiddleware
-from planned.services import SheppardService
-from planned.utils import youtube
-from planned.utils.dates import get_current_datetime
+from planned.core.config import settings
+from planned.presentation.api.routers import router
+from planned.presentation.middlewares.auth import AuthMiddleware
+from planned.application.services import SheppardService
+from planned.infrastructure.utils import youtube
+from planned.infrastructure.utils.dates import get_current_datetime
 
 logger.remove()
 logger.add(
@@ -75,7 +76,7 @@ else:
     )
 
 app.include_router(
-    routers.router,
+    router,
     prefix=settings.API_PREFIX,
 )
 

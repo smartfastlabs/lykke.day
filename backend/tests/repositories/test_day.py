@@ -1,6 +1,6 @@
 import pytest
 
-from planned.repositories import DayRepository
+from planned.infrastructure.repositories import DayRepository
 
 
 @pytest.fixture

@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import pytest
 
-from planned.repositories import EventRepository
+from planned.infrastructure.repositories import EventRepository
 
 
 @pytest.fixture

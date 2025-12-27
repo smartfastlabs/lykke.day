@@ -7,7 +7,7 @@ from pydantic import AnyHttpUrl
 from webpush import WebPushSubscription  # type: ignore
 
 from planned import objects
-from planned.gateways import web_push
+from planned.infrastructure.gateways import web_push
 
 
 @pytest.mark.vcr

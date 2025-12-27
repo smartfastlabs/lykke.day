@@ -9,9 +9,12 @@ from dobles import allow
 from fastapi.testclient import TestClient
 from freezegun import freeze_time
 
-from planned import middlewares, objects, services, settings
+from planned import settings
+from planned.domain import entities as objects
+from planned.application import services
+from planned.presentation.middlewares import middlewares
 from planned.app import app
-from planned.utils.dates import get_current_date, get_current_datetime
+from planned.infrastructure.utils.dates import get_current_date, get_current_datetime
 
 
 @pytest.fixture
@@ -158,7 +161,7 @@ def test_day_ctx(
 
 @pytest.fixture
 def test_day_svc(test_day_ctx):
-    from planned.repositories import (
+    from planned.infrastructure.repositories import (
         DayRepository,
         DayTemplateRepository,
         EventRepository,
@@ -184,7 +187,7 @@ def test_day_svc(test_day_ctx):
 
 @pytest.fixture
 def test_sheppard_svc(test_day_svc):
-    from planned.repositories import (
+    from planned.infrastructure.repositories import (
         AuthTokenRepository,
         CalendarRepository,
         DayRepository,
@@ -196,7 +199,7 @@ def test_sheppard_svc(test_day_svc):
         TaskDefinitionRepository,
         TaskRepository,
     )
-    from planned.services import CalendarService, PlanningService
+    from planned.application.services import CalendarService, PlanningService
 
     # Create repositories
     push_subscription_repo = PushSubscriptionRepository()

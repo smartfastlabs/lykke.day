@@ -1,7 +1,7 @@
 import equals
 import pytest
 
-from planned.utils.dates import get_current_date
+from planned.infrastructure.utils.dates import get_current_date
 
 
 @pytest.mark.asyncio

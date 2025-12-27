@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 from dateutil.tz import tzoffset
 
-from planned.objects.event import get_datetime
+from planned.domain.entities.event import get_datetime
 
 
 def test_get_datetime():
