@@ -1,13 +1,9 @@
 self.addEventListener("push", function (event) {
   console.log("Push event received:", event);
-  try {
-    data = event.data.json();
-  } catch {
-    data = {
-      title: "Planned Day",
-      body: event.data ? event.data.text() : "New notification",
-    };
-  }
+  data = {
+    title: "Plned Day",
+    body: "New notification",
+  };
   const options = {
     body: data.body,
     icon: "/icons/192.png", // Your PWA icon
@@ -19,7 +15,14 @@ self.addEventListener("push", function (event) {
     },
   };
 
-  event.waitUntil(self.registration.showNotification(data.title, options));
+  // event.waitUntil(self.registration.showNotification(data.title, options));
+  self.clients
+    .matchAll({ type: "window", includeUncontrolled: true })
+    .then((clientList) => {
+      for (const client of clientList) {
+        client.postMessage({ type: "message", data });
+      }
+    });
 });
 
 self.addEventListener("notificationclick", function (event) {

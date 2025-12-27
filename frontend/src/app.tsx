@@ -20,6 +20,7 @@ function NavigationHandler() {
 
   onMount(() => {
     const handleSWMessage = (event) => {
+      console.log("SW message received:", event);
       if (event.data?.type === "NAVIGATE" && event.data?.url) {
         navigate(event.data.url);
       }
@@ -48,9 +49,6 @@ function NavigationHandler() {
 
 export default function App() {
   onMount(() => {
-    // Skip auth check on login page to avoid redirect loop
-
-    // Register service worker
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")

@@ -15,7 +15,14 @@ import EventList from "../events/list";
 import { TaskStatus, TaskType, TaskFrequency } from "../../types/api";
 
 // Constants
-const ALL_STATUSES: TaskStatus[] = ["READY", "COMPLETE", "NOT_READY", "PUNTED"];
+const ALL_STATUSES: TaskStatus[] = [
+  "READY",
+  "COMPLETE",
+  "NOT_READY",
+  "PUNTED",
+  "NOT_STARTED",
+  "PENDING",
+];
 const ALL_TYPES: TaskType[] = ["MEAL", "EVENT", "CHORE", "ERRAND", "ACTIVITY"];
 const ALL_FREQUENCIES: TaskFrequency[] = [
   "DAILY",

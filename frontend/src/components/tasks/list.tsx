@@ -123,7 +123,7 @@ const TaskItem: Component<{ task: Task }> = (props) => {
       if (x > threshold) {
         setTaskStatus(props.task, "COMPLETE");
       } else if (x < -threshold) {
-        setTaskStatus(props.task, "PUNTED");
+        setTaskStatus(props.task, "PUNT");
       }
       setTranslateX(0);
     }

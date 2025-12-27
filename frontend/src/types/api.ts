@@ -5,6 +5,7 @@
 /* Do not modify it by hand - just update the pydantic models and then re-run the script
 */
 
+export type ActionType = "NOTIFY" | "PUNT" | "START" | "PAUSE" | "RESUME" | "DELETE" | "EDIT" | "VIEW";
 export type AlarmType = "GENTLE" | "FIRM" | "LOUD" | "SIREN";
 export type DayTag = "WEEKEND" | "VACATION" | "WORKDAY";
 export type DayStatus = "UNSCHEDULED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETE";
@@ -18,13 +19,21 @@ export type TaskFrequency =
   | "BI_WEEKLY"
   | "WORK_DAYS"
   | "WEEKENDS";
-export type TaskStatus = "COMPLETE" | "NOT_READY" | "READY" | "PUNTED" | "NOT_STARTED";
+export type TaskStatus = "COMPLETE" | "NOT_READY" | "READY" | "PUNTED" | "NOT_STARTED" | "PENDING";
 export type TaskType = "MEAL" | "EVENT" | "CHORE" | "ERRAND" | "ACTIVITY";
 export type TaskCategory = "HYGIENE" | "NUTRITION" | "HEALTH" | "PET" | "HOUSE";
 export type TimingType = "DEADLINE" | "FIXED_TIME" | "TIME_WINDOW" | "FLEXIBLE";
 export type TaskTag = "AVOIDANT" | "FORGETTABLE" | "IMPORTANT" | "URGENT" | "FUN";
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
+export interface Action {
+  id?: string;
+  type: ActionType;
+  data: {
+    [k: string]: unknown;
+  };
+  created_at?: string;
+}
 export interface Alarm {
   id?: string;
   name: string;
@@ -89,6 +98,7 @@ export interface Event {
   created_at?: string;
   updated_at?: string;
   people?: Person[];
+  actions?: Action[];
   date: string;
 }
 export interface Person {
@@ -110,6 +120,7 @@ export interface Task {
   schedule?: TaskSchedule | null;
   routine_id?: string | null;
   tags?: TaskTag[];
+  actions?: Action[];
   date: string;
 }
 export interface TaskDefinition {
@@ -138,9 +149,27 @@ export interface DayTemplate {
   alarm?: Alarm | null;
   icon?: string | null;
 }
+export interface NotificationAction {
+  id?: string;
+  action: string;
+  title: string;
+  icon?: string | null;
+}
+export interface NotificationPayload {
+  id?: string;
+  title: string;
+  body: string;
+  icon?: string | null;
+  badge?: string | null;
+  tag?: string | null;
+  actions?: NotificationAction[];
+  data?: {
+    [k: string]: unknown;
+  } | null;
+}
 export interface PushSubscription {
   id?: string;
-  device_name: string;
+  device_name?: string | null;
   endpoint: string;
   p256dh: string;
   auth: string;

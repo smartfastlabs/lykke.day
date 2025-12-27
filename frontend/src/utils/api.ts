@@ -109,9 +109,11 @@ export const taskAPI = {
   },
 
   setTaskStatus: async (task: Task, status: string): Task => {
-    const resp = await fetchJSON(`/api/tasks/${task.date}/${task.id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ status }),
+    const resp = await fetchJSON(`/api/tasks/${task.date}/${task.id}/actions`, {
+      method: "POST",
+      body: JSON.stringify({
+        type: status,
+      }),
       headers: {
         "Content-Type": "application/json",
       },
