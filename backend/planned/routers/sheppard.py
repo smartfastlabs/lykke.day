@@ -1,15 +1,6 @@
-from typing import TYPE_CHECKING
+from fastapi import APIRouter
 
-if TYPE_CHECKING:
-    from datetime import date
-
-from fastapi import APIRouter, Depends
-
-from planned.objects import DayContext, Task
-from planned.repositories import event_repo, task_repo
-from planned.services import DayService
 from planned.utils import youtube
-from planned.utils.dates import get_current_date
 
 router = APIRouter()
 

@@ -8,11 +8,11 @@ from blinker import Signal
 from planned import exceptions, objects
 from planned.objects.user_settings import user_settings
 from planned.repositories import (
-    day_repo,
-    day_template_repo,
-    event_repo,
-    message_repo,
-    task_repo,
+    DayRepository,
+    DayTemplateRepository,
+    EventRepository,
+    MessageRepository,
+    TaskRepository,
 )
 from planned.utils.dates import get_current_datetime, get_current_time
 from planned.utils.decorators import hybridmethod
@@ -45,27 +45,59 @@ class DayService(BaseService):
     ctx: objects.DayContext
     date: datetime.date
     signal_source: Signal
+    day_repo: DayRepository
+    day_template_repo: DayTemplateRepository
+    event_repo: EventRepository
+    message_repo: MessageRepository
+    task_repo: TaskRepository
 
     def __init__(
         self,
         ctx: objects.DayContext,
+        day_repo: DayRepository,
+        day_template_repo: DayTemplateRepository,
+        event_repo: EventRepository,
+        message_repo: MessageRepository,
+        task_repo: TaskRepository,
     ) -> None:
         self.ctx = ctx
         self.date = ctx.day.date
         self.signal_source = Signal()
+        self.day_repo = day_repo
+        self.day_template_repo = day_template_repo
+        self.event_repo = event_repo
+        self.message_repo = message_repo
+        self.task_repo = task_repo
 
-        for repo in (event_repo, message_repo, task_repo):
+        for repo in (self.event_repo, self.message_repo, self.task_repo):
             repo.signal_source.connect(self.on_change)
 
-    def __new__(cls, ctx: objects.DayContext) -> "DayService":
-        if ctx.day.date not in _SERVICE_CACHE:
-            instance = super().__new__(cls)
-            _SERVICE_CACHE[ctx.day.date] = instance
-        return _SERVICE_CACHE[ctx.day.date]
-
     @classmethod
-    async def for_date(cls, date: datetime.date) -> "DayService":
-        return cls(ctx=await cls.load_context(date))
+    async def for_date(
+        cls,
+        date: datetime.date,
+        day_repo: DayRepository,
+        day_template_repo: DayTemplateRepository,
+        event_repo: EventRepository,
+        message_repo: MessageRepository,
+        task_repo: TaskRepository,
+    ) -> "DayService":
+        ctx = await cls.load_context(
+            date,
+            day_repo=day_repo,
+            day_template_repo=day_template_repo,
+            event_repo=event_repo,
+            message_repo=message_repo,
+            task_repo=task_repo,
+        )
+        return cls(
+            ctx=ctx,
+            day_repo=day_repo,
+            day_template_repo=day_template_repo,
+            event_repo=event_repo,
+            message_repo=message_repo,
+            task_repo=task_repo,
+        )
 
     async def on_change(self, change: str, obj: T) -> None:
         if obj.date != self.date:
@@ -91,14 +123,40 @@ class DayService(BaseService):
     async def set_date(self, date: datetime.date) -> None:
         if self.date != date:
             self.date = date
-            self.ctx = await self.load_context()
+            self.ctx = await type(self).load_context(
+                date,
+                day_repo=self.day_repo,
+                day_template_repo=self.day_template_repo,
+                event_repo=self.event_repo,
+                message_repo=self.message_repo,
+                task_repo=self.task_repo,
+            )
 
     @hybridmethod
     async def load_context(
         self,
+        date: datetime.date | None = None,
+        day_repo: DayRepository | None = None,
+        day_template_repo: DayTemplateRepository | None = None,
+        event_repo: EventRepository | None = None,
+        message_repo: MessageRepository | None = None,
+        task_repo: TaskRepository | None = None,
     ) -> objects.DayContext:
+        # Use instance attributes if not provided
+        date = date or self.date
+        day_repo = day_repo or self.day_repo
+        day_template_repo = day_template_repo or self.day_template_repo
+        event_repo = event_repo or self.event_repo
+        message_repo = message_repo or self.message_repo
+        task_repo = task_repo or self.task_repo
+
         self.ctx = await type(self).load_context(
-            self.date,
+            date,
+            day_repo=day_repo,
+            day_template_repo=day_template_repo,
+            event_repo=event_repo,
+            message_repo=message_repo,
+            task_repo=task_repo,
         )
         return self.ctx
 
@@ -106,6 +164,11 @@ class DayService(BaseService):
     async def load_context_cls(
         cls,  # noqa: N805
         date: datetime.date,
+        day_repo: DayRepository,
+        day_template_repo: DayTemplateRepository,
+        event_repo: EventRepository,
+        message_repo: MessageRepository,
+        task_repo: TaskRepository,
     ) -> objects.DayContext:
         tasks: list[objects.Task] = []
         events: list[objects.Event] = []
@@ -120,7 +183,10 @@ class DayService(BaseService):
                 day_repo.get(str(date)),
             )
         except exceptions.NotFoundError:
-            day = await cls.base_day(date)
+            day = await cls.base_day(
+                date,
+                day_template_repo=day_template_repo,
+            )
 
         return objects.DayContext(
             day=day,
@@ -138,6 +204,7 @@ class DayService(BaseService):
     async def base_day(
         cls,
         date: datetime.date,
+        day_template_repo: DayTemplateRepository,
         template_id: str | None = None,
     ) -> objects.Day:
         if template_id is None:
@@ -153,21 +220,39 @@ class DayService(BaseService):
         )
 
     @classmethod
-    async def get_or_preview(cls, date: datetime.date) -> objects.Day:
+    async def get_or_preview(
+        cls,
+        date: datetime.date,
+        day_repo: DayRepository,
+        day_template_repo: DayTemplateRepository,
+    ) -> objects.Day:
         with suppress(exceptions.NotFoundError):
             return await day_repo.get(str(date))
 
-        return await cls.base_day(date)
+        return await cls.base_day(
+            date,
+            day_template_repo=day_template_repo,
+        )
 
     @classmethod
-    async def get_or_create(cls, date: datetime.date) -> objects.Day:
+    async def get_or_create(
+        cls,
+        date: datetime.date,
+        day_repo: DayRepository,
+        day_template_repo: DayTemplateRepository,
+    ) -> objects.Day:
         with suppress(exceptions.NotFoundError):
             return await day_repo.get(str(date))
 
-        return await day_repo.put(await cls.base_day(date))
+        return await day_repo.put(
+            await cls.base_day(
+                date,
+                day_template_repo=day_template_repo,
+            )
+        )
 
     async def save(self) -> None:
-        await day_repo.put(self.ctx.day)
+        await self.day_repo.put(self.ctx.day)
 
     async def get_upcomming_tasks(
         self,

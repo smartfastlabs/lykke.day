@@ -9,14 +9,21 @@ from loguru import logger
 
 from planned import objects
 from planned.gateways import web_push
-from planned.repositories import push_subscription_repo, task_repo
+from planned.repositories import (
+    DayRepository,
+    DayTemplateRepository,
+    EventRepository,
+    MessageRepository,
+    PushSubscriptionRepository,
+    TaskRepository,
+)
 from planned.utils import templates, youtube
 from planned.utils.dates import get_current_date, get_current_datetime, get_current_time
 
 from .base import BaseService
-from .calendar import calendar_svc
+from .calendar import CalendarService
 from .day import DayService
-from .planning import planning_svc
+from .planning import PlanningService
 
 
 def get_weather(city: str) -> str:
@@ -47,15 +54,39 @@ class SheppardService(BaseService):
     mode: SheppardMode
     last_run: datetime.datetime | None = None
     push_subscriptions: list[objects.PushSubscription] = []
+    push_subscription_repo: PushSubscriptionRepository
+    task_repo: TaskRepository
+    calendar_service: CalendarService
+    planning_service: PlanningService
+    day_repo: DayRepository
+    day_template_repo: DayTemplateRepository
+    event_repo: EventRepository
+    message_repo: MessageRepository
 
     def __init__(
         self,
         day_svc: DayService,
-        push_subscriptions: list[objects.PushSubscription],
+        push_subscription_repo: PushSubscriptionRepository,
+        task_repo: TaskRepository,
+        calendar_service: CalendarService,
+        planning_service: PlanningService,
+        day_repo: DayRepository,
+        day_template_repo: DayTemplateRepository,
+        event_repo: EventRepository,
+        message_repo: MessageRepository,
+        push_subscriptions: list[objects.PushSubscription] | None = None,
         mode: SheppardMode = "starting",
     ) -> None:
         self.mode = mode
-        self.push_subscriptions = push_subscriptions
+        self.push_subscription_repo = push_subscription_repo
+        self.task_repo = task_repo
+        self.calendar_service = calendar_service
+        self.planning_service = planning_service
+        self.day_repo = day_repo
+        self.day_template_repo = day_template_repo
+        self.event_repo = event_repo
+        self.message_repo = message_repo
+        self.push_subscriptions = push_subscriptions or []
         self.last_run = None
         self.day_svc = day_svc
         self.agent = create_agent(
@@ -65,12 +96,86 @@ class SheppardService(BaseService):
         )
 
     @classmethod
-    async def new(cls) -> "SheppardService":
-        day_svc = await DayService.for_date(get_current_date())
-        push_subscriptions = await push_subscription_repo.all()
+    async def new(
+        cls,
+        day_svc: DayService | None = None,
+        push_subscription_repo: PushSubscriptionRepository | None = None,
+        task_repo: TaskRepository | None = None,
+        calendar_service: CalendarService | None = None,
+        planning_service: PlanningService | None = None,
+        day_repo: DayRepository | None = None,
+        day_template_repo: DayTemplateRepository | None = None,
+        event_repo: EventRepository | None = None,
+        message_repo: MessageRepository | None = None,
+        push_subscriptions: list[objects.PushSubscription] | None = None,
+        mode: SheppardMode = "starting",
+    ) -> "SheppardService":
+        """Create a new instance of SheppardService with optional dependencies."""
+        from planned.utils.dates import get_current_date
+
+        # Create repositories if not provided
+        if push_subscription_repo is None:
+            push_subscription_repo = PushSubscriptionRepository()
+        if task_repo is None:
+            task_repo = TaskRepository()
+        if day_repo is None:
+            day_repo = DayRepository()
+        if day_template_repo is None:
+            day_template_repo = DayTemplateRepository()
+        if event_repo is None:
+            event_repo = EventRepository()
+        if message_repo is None:
+            message_repo = MessageRepository()
+
+        # Create services if not provided
+        if calendar_service is None:
+            from planned.repositories import AuthTokenRepository, CalendarRepository
+
+            calendar_service = CalendarService.new(
+                auth_token_repo=AuthTokenRepository(),
+                calendar_repo=CalendarRepository(),
+                event_repo=event_repo,
+            )
+        if planning_service is None:
+            from planned.repositories import RoutineRepository, TaskDefinitionRepository
+
+            planning_service = PlanningService.new(
+                day_repo=day_repo,
+                day_template_repo=day_template_repo,
+                event_repo=event_repo,
+                message_repo=message_repo,
+                routine_repo=RoutineRepository(),
+                task_definition_repo=TaskDefinitionRepository(),
+                task_repo=task_repo,
+            )
+
+        # Create day_svc if not provided
+        if day_svc is None:
+            day_svc = await DayService.for_date(
+                get_current_date(),
+                day_repo=day_repo,
+                day_template_repo=day_template_repo,
+                event_repo=event_repo,
+                message_repo=message_repo,
+                task_repo=task_repo,
+            )
+
+        # Load push subscriptions if not provided
+        if push_subscriptions is None:
+            push_subscriptions = await push_subscription_repo.all()
+
         return cls(
             day_svc=day_svc,
+            push_subscription_repo=push_subscription_repo,
+            task_repo=task_repo,
+            calendar_service=calendar_service,
+            planning_service=planning_service,
+            day_repo=day_repo,
+            day_template_repo=day_template_repo,
+            event_repo=event_repo,
+            message_repo=message_repo,
             push_subscriptions=push_subscriptions,
+            mode=mode,
         )
 
     async def run_loop(
@@ -98,7 +203,7 @@ class SheppardService(BaseService):
                 ):
                     for subscription in self.push_subscriptions:
                         logger.info(f"Sending notification to {subscription.endpoint}")
-                        result = await web_push.send_notification(
+                        await web_push.send_notification(
                             subscription=subscription,
                             content=objects.NotificationPayload(
                                 title="Notifications Enabled!",
@@ -118,7 +223,7 @@ class SheppardService(BaseService):
                             type=objects.ActionType.NOTIFY,
                         ),
                     )
-                # task = await task_repo.put(task)
+                await self.task_repo.put(task)
 
             logger.info(f"UPCOMING TASK {task.name}")
 
@@ -163,10 +268,17 @@ class SheppardService(BaseService):
         # If it is not already scheduled, schedule
         # Update the day service to the new date
         # send morning summary
-        self.day_svc = await DayService.for_date(get_current_date())
+        self.day_svc = await DayService.for_date(
+            get_current_date(),
+            day_repo=self.day_repo,
+            day_template_repo=self.day_template_repo,
+            event_repo=self.event_repo,
+            message_repo=self.message_repo,
+            task_repo=self.task_repo,
+        )
 
         if self.day_svc.ctx.day.status != objects.DayStatus.SCHEDULED:
-            await planning_svc.schedule(self.day_svc.date)
+            await self.planning_service.schedule(self.day_svc.date)
 
     async def run(self) -> None:
         logger.info("Starting Sheppard Service...")
@@ -175,7 +287,7 @@ class SheppardService(BaseService):
             wait_time: int = 30
             try:
                 logger.info("Syncing events...")
-                # await calendar_svc.sync_all()
+                await self.calendar_service.sync_all()
             except Exception as e:
                 logger.exception(f"Error during sync: {e}")
                 wait_time = 10

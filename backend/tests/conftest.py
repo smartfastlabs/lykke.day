@@ -158,13 +158,85 @@ def test_day_ctx(
 
 @pytest.fixture
 def test_day_svc(test_day_ctx):
-    return services.DayService(test_day_ctx)
+    from planned.repositories import (
+        DayRepository,
+        DayTemplateRepository,
+        EventRepository,
+        MessageRepository,
+        TaskRepository,
+    )
+
+    day_repo = DayRepository()
+    day_template_repo = DayTemplateRepository()
+    event_repo = EventRepository()
+    message_repo = MessageRepository()
+    task_repo = TaskRepository()
+
+    return services.DayService(
+        ctx=test_day_ctx,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        event_repo=event_repo,
+        message_repo=message_repo,
+        task_repo=task_repo,
+    )
 
 
 @pytest.fixture
 def test_sheppard_svc(test_day_svc):
+    from planned.repositories import (
+        AuthTokenRepository,
+        CalendarRepository,
+        DayRepository,
+        DayTemplateRepository,
+        EventRepository,
+        MessageRepository,
+        PushSubscriptionRepository,
+        RoutineRepository,
+        TaskDefinitionRepository,
+        TaskRepository,
+    )
+    from planned.services import CalendarService, PlanningService
+
+    # Create repositories
+    push_subscription_repo = PushSubscriptionRepository()
+    task_repo = TaskRepository()
+    day_repo = DayRepository()
+    day_template_repo = DayTemplateRepository()
+    event_repo = EventRepository()
+    message_repo = MessageRepository()
+    auth_token_repo = AuthTokenRepository()
+    calendar_repo = CalendarRepository()
+    routine_repo = RoutineRepository()
+    task_definition_repo = TaskDefinitionRepository()
+
+    # Create services
+    calendar_service = CalendarService(
+        auth_token_repo=auth_token_repo,
+        calendar_repo=calendar_repo,
+        event_repo=event_repo,
+    )
+
+    planning_service = PlanningService(
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        event_repo=event_repo,
+        message_repo=message_repo,
+        routine_repo=routine_repo,
+        task_definition_repo=task_definition_repo,
+        task_repo=task_repo,
+    )
+
     return services.SheppardService(
         day_svc=test_day_svc,
+        push_subscription_repo=push_subscription_repo,
+        task_repo=task_repo,
+        calendar_service=calendar_service,
+        planning_service=planning_service,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        event_repo=event_repo,
+        message_repo=message_repo,
         push_subscriptions=[],
         mode="idle",
     )

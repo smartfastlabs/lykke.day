@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Depends, Request, Response
 
 from planned import exceptions
-from planned.objects import BaseObject, Event
-from planned.repositories import event_repo
-from planned.services import auth_svc
+from planned.objects import BaseObject
+from planned.services import AuthService
 from planned.utils.dates import get_current_datetime
+
+from .dependencies.services import get_auth_service
 
 router = APIRouter()
 
@@ -20,11 +21,14 @@ class UpdatePasswordRequest(BaseObject):
 
 
 @router.post("/set-password")
-async def set_password(data: UpdatePasswordRequest) -> StatusResponse:
+async def set_password(
+    data: UpdatePasswordRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> StatusResponse:
     if data.new_password != data.confirm_new_password:
         raise exceptions.BadRequestError()
 
-    await auth_svc.set_password(
+    await auth_service.set_password(
         data.new_password,
     )
     return StatusResponse()
@@ -35,8 +39,13 @@ class LoginRequest(BaseObject):
 
 
 @router.put("/login")
-async def login(data: LoginRequest, request: Request, response: Response,) -> StatusResponse:
-    if not await auth_svc.confirm_password(
+async def login(
+    data: LoginRequest,
+    request: Request,
+    response: Response,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> StatusResponse:
+    if not await auth_service.confirm_password(
         data.password,
     ):
         raise exceptions.AuthenticationError(
