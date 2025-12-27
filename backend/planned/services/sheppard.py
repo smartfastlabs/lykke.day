@@ -9,14 +9,21 @@ from loguru import logger
 
 from planned import objects
 from planned.gateways import web_push
-from planned.repositories import push_subscription_repo, task_repo
+from planned.repositories import (
+    DayRepository,
+    DayTemplateRepository,
+    EventRepository,
+    MessageRepository,
+    PushSubscriptionRepository,
+    TaskRepository,
+)
 from planned.utils import templates, youtube
 from planned.utils.dates import get_current_date, get_current_datetime, get_current_time
 
 from .base import BaseService
-from .calendar import calendar_svc
+from .calendar import CalendarService
 from .day import DayService
-from .planning import planning_svc
+from .planning import PlanningService
 
 
 def get_weather(city: str) -> str:
@@ -47,30 +54,45 @@ class SheppardService(BaseService):
     mode: SheppardMode
     last_run: datetime.datetime | None = None
     push_subscriptions: list[objects.PushSubscription] = []
+    push_subscription_repo: PushSubscriptionRepository
+    task_repo: TaskRepository
+    calendar_service: CalendarService
+    planning_service: PlanningService
+    day_repo: DayRepository
+    day_template_repo: DayTemplateRepository
+    event_repo: EventRepository
+    message_repo: MessageRepository
 
     def __init__(
         self,
         day_svc: DayService,
-        push_subscriptions: list[objects.PushSubscription],
+        push_subscription_repo: PushSubscriptionRepository,
+        task_repo: TaskRepository,
+        calendar_service: CalendarService,
+        planning_service: PlanningService,
+        day_repo: DayRepository,
+        day_template_repo: DayTemplateRepository,
+        event_repo: EventRepository,
+        message_repo: MessageRepository,
+        push_subscriptions: list[objects.PushSubscription] | None = None,
         mode: SheppardMode = "starting",
     ) -> None:
         self.mode = mode
-        self.push_subscriptions = push_subscriptions
+        self.push_subscription_repo = push_subscription_repo
+        self.task_repo = task_repo
+        self.calendar_service = calendar_service
+        self.planning_service = planning_service
+        self.day_repo = day_repo
+        self.day_template_repo = day_template_repo
+        self.event_repo = event_repo
+        self.message_repo = message_repo
+        self.push_subscriptions = push_subscriptions or []
         self.last_run = None
         self.day_svc = day_svc
         self.agent = create_agent(
             model="claude-sonnet-4-5",
             tools=[get_weather],
             system_prompt="You are a helpful assistant",
-        )
-
-    @classmethod
-    async def new(cls) -> "SheppardService":
-        day_svc = await DayService.for_date(get_current_date())
-        push_subscriptions = await push_subscription_repo.all()
-        return cls(
-            day_svc=day_svc,
-            push_subscriptions=push_subscriptions,
         )
 
     async def run_loop(
@@ -163,10 +185,17 @@ class SheppardService(BaseService):
         # If it is not already scheduled, schedule
         # Update the day service to the new date
         # send morning summary
-        self.day_svc = await DayService.for_date(get_current_date())
+        self.day_svc = await DayService.for_date(
+            get_current_date(),
+            day_repo=self.day_repo,
+            day_template_repo=self.day_template_repo,
+            event_repo=self.event_repo,
+            message_repo=self.message_repo,
+            task_repo=self.task_repo,
+        )
 
         if self.day_svc.ctx.day.status != objects.DayStatus.SCHEDULED:
-            await planning_svc.schedule(self.day_svc.date)
+            await self.planning_service.schedule(self.day_svc.date)
 
     async def run(self) -> None:
         logger.info("Starting Sheppard Service...")
@@ -175,7 +204,7 @@ class SheppardService(BaseService):
             wait_time: int = 30
             try:
                 logger.info("Syncing events...")
-                # await calendar_svc.sync_all()
+                # await self.calendar_service.sync_all()
             except Exception as e:
                 logger.exception(f"Error during sync: {e}")
                 wait_time = 10

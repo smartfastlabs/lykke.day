@@ -2,13 +2,15 @@ import secrets
 from datetime import datetime, timedelta
 from typing import cast
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from googleapiclient.discovery import build
 
 from planned.gateways.google import get_flow
 from planned.objects import AuthToken, Calendar
-from planned.repositories import auth_token_repo, calendar_repo
+from planned.repositories import AuthTokenRepository, CalendarRepository
+
+from .dependencies.repositories import get_auth_token_repo, get_calendar_repo
 
 # Auth state storage (in memory for simplicity, use a database in production)
 oauth_states = {}
@@ -71,6 +73,8 @@ async def google_login_callback(
     request: Request,
     state: str,
     code: str,
+    auth_token_repo: AuthTokenRepository = Depends(get_auth_token_repo),
+    calendar_repo: CalendarRepository = Depends(get_calendar_repo),
 ) -> RedirectResponse:
     if not code or not verify_state(state, "login"):
         raise HTTPException(

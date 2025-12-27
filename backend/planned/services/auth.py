@@ -21,6 +21,10 @@ _PATH = os.path.abspath(
 class AuthService(BaseService):
     hash: str | None = None
 
+    def __init__(self) -> None:
+        """Initialize AuthService. No repository dependencies required."""
+        pass
+
     async def set_password(self, value: str) -> None:
         self.hash = pwd_context.hash(value)
         async with aiofiles.open(_PATH, mode="w") as f:
