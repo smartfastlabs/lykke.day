@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 from contextlib import suppress
-from typing import Protocol, TypeVar, cast
+from typing import Protocol, TypeVar
 
 from blinker import Signal
 
@@ -14,6 +14,7 @@ from planned.repositories import (
     MessageRepository,
     TaskRepository,
 )
+from planned.repositories.base.repository import ChangeEvent
 from planned.utils.dates import get_current_datetime, get_current_time
 from planned.utils.decorators import hybridmethod
 
@@ -69,8 +70,9 @@ class DayService(BaseService):
         self.message_repo = message_repo
         self.task_repo = task_repo
 
-        for repo in (self.event_repo, self.message_repo, self.task_repo):
-            repo.signal_source.connect(self.on_change)
+        self.event_repo.listen(self.on_event_change)
+        self.message_repo.listen(self.on_message_change)
+        self.task_repo.listen(self.on_task_change)
 
     @classmethod
     async def for_date(
@@ -99,26 +101,53 @@ class DayService(BaseService):
             task_repo=task_repo,
         )
 
-    async def on_change(self, change: str, obj: T) -> None:
+    async def on_event_change(
+        self, _sender: object | None = None, *, event: ChangeEvent[objects.Event]
+    ) -> None:
+        obj = event.value
+        change = event.type
+
         if obj.date != self.date:
             return
 
         if change == "delete":
-            if isinstance(obj, objects.Event):
-                self.ctx.events = [e for e in self.ctx.events if e.id != obj.id]
-            elif isinstance(obj, objects.Task):
-                self.ctx.tasks = [e for e in self.ctx.tasks if e.id != obj.id]
-            elif isinstance(obj, objects.Message):
-                self.ctx.messages = [e for e in self.ctx.messages if e.id != obj.id]
+            self.ctx.events = [e for e in self.ctx.events if e.id != obj.id]
         elif change in ("create", "update"):
-            if isinstance(obj, objects.Event):
-                replace(self.ctx.events, cast("objects.Event", obj))
-            elif isinstance(obj, objects.Task):
-                replace(self.ctx.tasks, cast("objects.Task", obj))
-            elif isinstance(obj, objects.Message):
-                replace(self.ctx.messages, cast("objects.Message", obj))
+            replace(self.ctx.events, obj)
 
-        await self.signal_source.send_async(change, obj=obj)
+        await self.signal_source.send_async("change", event=event)
+
+    async def on_message_change(
+        self, _sender: object | None = None, *, event: ChangeEvent[objects.Message]
+    ) -> None:
+        obj = event.value
+        change = event.type
+
+        if obj.date != self.date:
+            return
+
+        if change == "delete":
+            self.ctx.messages = [m for m in self.ctx.messages if m.id != obj.id]
+        elif change in ("create", "update"):
+            replace(self.ctx.messages, obj)
+
+        await self.signal_source.send_async("change", event=event)
+
+    async def on_task_change(
+        self, _sender: object | None = None, *, event: ChangeEvent[objects.Task]
+    ) -> None:
+        obj = event.value
+        change = event.type
+
+        if obj.date != self.date:
+            return
+
+        if change == "delete":
+            self.ctx.tasks = [t for t in self.ctx.tasks if t.id != obj.id]
+        elif change in ("create", "update"):
+            replace(self.ctx.tasks, obj)
+
+        await self.signal_source.send_async("change", event=event)
 
     async def set_date(self, date: datetime.date) -> None:
         if self.date != date:
