@@ -5,7 +5,6 @@ Each function returns an instance of a service, which can be used
 with FastAPI's Depends() in route handlers.
 """
 
-from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends
@@ -36,7 +35,6 @@ from ..repositories import (
 )
 
 
-@lru_cache()
 def get_auth_service() -> AuthService:
     """Get an instance of AuthService."""
     return AuthService()
