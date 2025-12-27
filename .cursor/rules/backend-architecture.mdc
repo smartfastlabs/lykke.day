@@ -1,0 +1,38 @@
+---
+globs: backend/*
+alwaysApply: false
+---
+
+This codebase follows a VERY strict architecture any changes that break any of the following rules won't be accepted.
+
+Here is a high level view of the different compoenents of the code base:
+
+1. Routers: These are fastapi routes, they must stay simple!
+   - They should all use objects.BaseModel as the child for their request object.
+   - They should contain no business logic:
+     - They can validate
+     - They can fetch data (e.g. for auth, validation, etc.)
+     - They can send that data to a service to run business logic
+2. Gateways: These are connectors to external APIs/Services
+   - These can be implemented in two ways:
+     - A class: helpful for session management
+     - A module with stateless functions
+   - They must use accept and return our own objects, not 3rd party objects
+3. Services: This is where all business logic lives
+
+   - You should never need to create a new service. If you think you should...ask me first.
+
+   Current Services:
+
+   1. AuthService: Handles all things authentication
+   2. CalendarService: Handles syncing calendars from 3rd party apis
+   3. PlanningService: Converts Routines into Tasks (i.e. schedules the task for a specific date when applicable).
+   4. SheppardService: Handles Intraday planning, noticications, conversations and everything that is realtime. This is where all realtime business logic should live.
+
+4. utils: Stateless helper functions
+   - Always check here before creating a new helper functions
+5. Scripts: Utility scripts not run as part of production
+6. Repositories:
+   - You should never need to create a new repository. If you think you should...ask me first.
+
+The structure of this code base is very important; if you're not sure please ask questions.

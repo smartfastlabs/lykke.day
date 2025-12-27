@@ -18,6 +18,16 @@ class SubscriptionRequest(objects.BaseObject):
     keys: Keys
 
 
+@router.get("/subscriptions")
+async def list_subscriptions() -> list[objects.PushSubscription]:
+    return await push_subscription_repo.all()
+
+
+@router.delete("/subscriptions/{subscription_id}")
+async def delete_subscription(subscription_id: str) -> None:
+    await push_subscription_repo.delete(subscription_id)
+
+
 @router.post("/subscribe")
 async def subscribe(
     background_tasks: BackgroundTasks,
