@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import Field
 
-from .base import BaseObject
+from .base import BaseConfigObject
 
 
 class ActionType(str, Enum):
@@ -19,7 +19,7 @@ class ActionType(str, Enum):
     VIEW = "VIEW"
 
 
-class Action(BaseObject):
+class Action(BaseConfigObject):
     type: ActionType
     data: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

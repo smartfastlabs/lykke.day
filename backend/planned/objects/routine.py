@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 from pydantic import BaseModel, Field
 
-from .base import BaseObject
+from .base import BaseConfigObject
 from .task import TaskCategory, TaskFrequency, TaskSchedule
 
 
@@ -30,7 +30,7 @@ class RoutineTask(BaseModel):
     schedule: TaskSchedule | None = None
 
 
-class Routine(BaseObject):
+class Routine(BaseConfigObject):
     name: str
 
     category: TaskCategory

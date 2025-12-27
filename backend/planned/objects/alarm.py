@@ -5,7 +5,7 @@ from pydantic import computed_field
 
 from planned.utils.strings import slugify
 
-from .base import BaseObject
+from .base import BaseConfigObject
 
 
 class AlarmType(str, Enum):
@@ -15,7 +15,7 @@ class AlarmType(str, Enum):
     SIREN = "SIREN"
 
 
-class Alarm(BaseObject):
+class Alarm(BaseConfigObject):
     name: str
     time: dt_time
     type: AlarmType

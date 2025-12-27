@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, date as dt_date, datetime, time
+from datetime import date as dt_date, datetime
 from typing import Any, Self
 from zoneinfo import ZoneInfo
 
@@ -9,7 +9,6 @@ from planned import settings
 
 
 class BaseObject(pydantic.BaseModel):
-    id: str = pydantic.Field(default_factory=lambda: str(uuid.uuid4()))
     model_config = pydantic.ConfigDict(
         from_attributes=True,
         populate_by_name=True,
@@ -20,7 +19,15 @@ class BaseObject(pydantic.BaseModel):
         return self.model_copy(update=kwargs)
 
 
-class BaseDateObject(BaseObject):
+class BaseEntityObject(BaseObject):
+    id: str = pydantic.Field(default_factory=lambda: str(uuid.uuid4()))
+
+
+class BaseConfigObject(BaseEntityObject):
+    pass
+
+
+class BaseDateObject(BaseEntityObject):
     @pydantic.computed_field  # mypy: ignore
     @property
     def date(self) -> dt_date:
@@ -33,3 +40,15 @@ class BaseDateObject(BaseObject):
 
     def _get_date(self) -> dt_date | None:
         return None
+
+
+class BaseValueObject(BaseObject):
+    pass
+
+
+class BaseRequestObject(BaseValueObject):
+    pass
+
+
+class BaseResponseObject(BaseValueObject):
+    pass

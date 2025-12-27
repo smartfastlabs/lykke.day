@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from .base import BaseObject
+from .base import BaseConfigObject
 
 
-class Calendar(BaseObject):
+class Calendar(BaseConfigObject):
     name: str
     auth_token_id: str
     platform_id: str

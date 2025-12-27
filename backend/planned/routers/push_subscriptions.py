@@ -2,6 +2,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends
 
 from planned import objects
 from planned.gateways import web_push
+from planned.objects import BaseRequestObject, BaseValueObject
 from planned.repositories import PushSubscriptionRepository
 
 from .dependencies.repositories import get_push_subscription_repo
@@ -9,12 +10,12 @@ from .dependencies.repositories import get_push_subscription_repo
 router = APIRouter()
 
 
-class Keys(objects.BaseObject):
+class Keys(BaseValueObject):
     p256dh: str
     auth: str
 
 
-class SubscriptionRequest(objects.BaseObject):
+class SubscriptionRequest(BaseRequestObject):
     device_name: str
     endpoint: str
     keys: Keys

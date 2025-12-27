@@ -6,9 +6,9 @@ import aiofiles
 import aiofiles.os
 from loguru import logger
 
-from planned.objects.base import BaseObject
+from planned.objects.base import BaseEntityObject
 
-T = TypeVar("T", bound=BaseObject)
+T = TypeVar("T", bound=BaseEntityObject)
 
 
 async def read_directory(directory: str, model: type[T]) -> list[T]:

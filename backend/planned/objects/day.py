@@ -4,13 +4,13 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 from .alarm import Alarm
-from .base import BaseObject
+from .base import BaseConfigObject
 from .event import Event
 from .message import Message
 from .task import Task
 
 
-class DayTemplate(BaseObject):
+class DayTemplate(BaseConfigObject):
     tasks: list[str] = Field(default_factory=list)
     alarm: Alarm | None = None
     icon: str | None = None
@@ -36,7 +36,7 @@ class DayMode(str, Enum):
     POST_DAY = "POST_DAY"
 
 
-class Day(BaseObject):
+class Day(BaseConfigObject):
     date: dt_date
     template_id: str = "default"
     tags: list[DayTag] = Field(default_factory=list)

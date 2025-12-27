@@ -1,7 +1,7 @@
-from .base import BaseObject
+from .base import BaseConfigObject
 
 
-class Person(BaseObject):
+class Person(BaseConfigObject):
     name: str | None = None
     email: str | None = None
     phone_number: str | None = None

@@ -5,14 +5,14 @@ from typing import Generic, TypeVar
 import aiofiles
 
 from planned import exceptions, settings
-from planned.objects.base import BaseObject
+from planned.objects.base import BaseConfigObject
 from planned.utils.json import read_directory
 
 from .repository import BaseRepository
 
 ConfigObjectType = TypeVar(
     "ConfigObjectType",
-    bound=BaseObject,
+    bound=BaseConfigObject,
 )
 
 

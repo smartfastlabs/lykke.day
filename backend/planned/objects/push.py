@@ -4,10 +4,10 @@ from uuid import UUID
 
 from pydantic import Field
 
-from .base import BaseObject
+from .base import BaseConfigObject
 
 
-class PushSubscription(BaseObject):
+class PushSubscription(BaseConfigObject):
     device_name: str | None = None
     endpoint: str
     p256dh: str
@@ -19,13 +19,13 @@ class PushSubscription(BaseObject):
     )
 
 
-class NotificationAction(BaseObject):
+class NotificationAction(BaseConfigObject):
     action: str
     title: str
     icon: str | None = None
 
 
-class NotificationPayload(BaseObject):
+class NotificationPayload(BaseConfigObject):
     title: str
     body: str
     icon: str | None = None

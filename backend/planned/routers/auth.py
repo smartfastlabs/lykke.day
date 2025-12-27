@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, Response
 
 from planned import exceptions
-from planned.objects import BaseObject
+from planned.objects import BaseRequestObject, BaseResponseObject
 from planned.services import AuthService
 from planned.utils.dates import get_current_datetime
 
@@ -10,11 +10,11 @@ from .dependencies.services import get_auth_service
 router = APIRouter()
 
 
-class StatusResponse(BaseObject):
+class StatusResponse(BaseResponseObject):
     ok: bool = True
 
 
-class UpdatePasswordRequest(BaseObject):
+class UpdatePasswordRequest(BaseRequestObject):
     new_password: str
     confirm_new_password: str
     old_password: str | None = None
@@ -34,7 +34,7 @@ async def set_password(
     return StatusResponse()
 
 
-class LoginRequest(BaseObject):
+class LoginRequest(BaseRequestObject):
     password: str
 
 

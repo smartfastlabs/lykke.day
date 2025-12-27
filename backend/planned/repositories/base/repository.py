@@ -1,4 +1,4 @@
-from typing import Generic, Literal, Protocol, TypeVar
+from typing import Any, Generic, Literal, Protocol, TypeVar
 
 import pydantic
 from blinker import Signal
@@ -25,14 +25,13 @@ class ChangeHandler(Protocol[ObjectType]):
 class BaseRepository(Generic[ObjectType]):
     signal_source: Signal
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: Any) -> None:
         """
         Initialize a class-level signal for each repository subclass.
         This ensures all instances of the same repository class share the same signal.
         """
         super().__init_subclass__(**kwargs)
         cls.signal_source = Signal()
-
 
     def listen(self, handler: ChangeHandler[ObjectType]) -> None:
         """

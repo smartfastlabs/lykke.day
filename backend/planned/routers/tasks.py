@@ -3,7 +3,7 @@ import uuid
 
 from fastapi import APIRouter, Depends
 
-from planned.objects import Action, BaseObject, Task
+from planned.objects import Action, Task
 from planned.repositories import TaskRepository
 from planned.services import PlanningService
 from planned.utils.dates import get_current_date

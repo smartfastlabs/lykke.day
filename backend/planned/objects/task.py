@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Optional
 from pydantic import BaseModel, Field
 
 from .action import Action
-from .base import BaseDateObject, BaseObject
+from .base import BaseConfigObject, BaseDateObject
 
 
 class TaskTag(str, Enum):
@@ -60,7 +60,7 @@ class TimingType(str, Enum):
     FLEXIBLE = "FLEXIBLE"
 
 
-class TaskDefinition(BaseObject):
+class TaskDefinition(BaseConfigObject):
     id: str
     name: str
     description: str

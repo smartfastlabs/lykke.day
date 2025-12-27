@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 from fastapi import APIRouter, Depends
 
 from planned import exceptions
-from planned.objects import BaseObject, Day, DayContext, DayStatus, DayTemplate
+from planned.objects import BaseRequestObject, Day, DayContext, DayStatus, DayTemplate
 from planned.repositories import (
     DayRepository,
     DayTemplateRepository,
@@ -69,7 +69,7 @@ async def get_context(
     return day_svc.ctx
 
 
-class UpdateDayRequest(BaseObject):
+class UpdateDayRequest(BaseRequestObject):
     status: DayStatus | None = None
     template_id: str | None = None
 
