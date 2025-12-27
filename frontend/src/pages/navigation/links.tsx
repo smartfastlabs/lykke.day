@@ -29,6 +29,7 @@ const navItems: NavItem[] = [
   { label: "Calendar", icon: faCalendar, url: "/nav/calendar" },
   { label: "Settings", icon: faGear, url: "/settings" },
   { label: "Login", icon: faRightToBracket, url: "/login" },
+  { label: "Notifications", icon: faBell, url: "/notifications" },
   { label: "Alarm", icon: faMugHot, method: alarmAPI.stopAll },
 ];
 

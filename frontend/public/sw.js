@@ -1,21 +1,19 @@
 self.addEventListener("push", function (event) {
   console.log("Push event received:", event);
-  data = {
-    title: "Plned Day",
-    body: "New notification",
-  };
+  data = event.data.json();
   const options = {
     body: data.body,
     icon: "/icons/192.png", // Your PWA icon
     vibrate: [200, 100, 200],
+    actions: data.actions,
     data: {
       dateOfArrival: Date.now(),
       primaryKey: 1,
-      data: data,
     },
   };
+  console.log("Showing notification:", data.title, options);
 
-  // event.waitUntil(self.registration.showNotification(data.title, options));
+  event.waitUntil(self.registration.showNotification(data.title, options));
   self.clients
     .matchAll({ type: "window", includeUncontrolled: true })
     .then((clientList) => {

@@ -12,6 +12,8 @@ import Login from "./pages/login";
 import DayView from "./pages/day/preview";
 import NavPage from "./pages/navigation/links";
 import CalendarPage from "./pages/navigation/calendar";
+import NotificationsPage from "./pages/notifications/index";
+import NotificationsSubscribePage from "./pages/notifications/subscribe";
 
 import "./utils/icons";
 
@@ -79,6 +81,11 @@ export default function App() {
         <Route path="/nav/calendar" component={CalendarPage} />
         <Route path="/nav" component={NavPage} />
         <Route path="/day/:date" component={DayView} />
+        <Route path="/notifications" component={NotificationsPage} />
+        <Route
+          path="/notifications/subscribe"
+          component={NotificationsSubscribePage}
+        />
       </Router>
     </SheppardProvider>
   );

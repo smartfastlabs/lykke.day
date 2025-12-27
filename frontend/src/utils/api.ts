@@ -1,7 +1,14 @@
 import { getRequestEvent } from "solid-js/web";
 
 import { globalNotifications } from "../providers/notifications";
-import { Event, Task, Day, DayContext, DayTemplate } from "../types/api";
+import {
+  Event,
+  Task,
+  Day,
+  DayContext,
+  DayTemplate,
+  PushSubscription,
+} from "../types/api";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -205,5 +212,20 @@ export const planningAPI = {
     });
 
     return resp.data as DayContext;
+  },
+};
+
+export const pushAPI = {
+  getSubscriptions: async (): Promise<PushSubscription[]> => {
+    const resp = await fetchJSON("/api/push/subscriptions", {
+      method: "GET",
+    });
+
+    return resp.data as PushSubscription[];
+  },
+  deleteSubscription: async (id: string): Promise<void> => {
+    await fetchJSON(`/api/push/subscriptions/${id}`, {
+      method: "DELETE",
+    });
   },
 };
