@@ -8,13 +8,15 @@ from planned import exceptions, settings
 from planned.objects.base import BaseObject
 from planned.utils.json import read_directory
 
+from .repository import BaseRepository
+
 ObjectType = TypeVar(
     "ObjectType",
     bound=BaseObject,
 )
 
 
-class BaseConfigRepository(Generic[ObjectType]):
+class BaseConfigRepository(BaseRepository, Generic[ObjectType]):
     Object: type[ObjectType]
     _prefix: str
 

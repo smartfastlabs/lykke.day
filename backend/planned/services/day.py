@@ -110,7 +110,7 @@ class DayService(BaseService):
                 self.ctx.tasks = [e for e in self.ctx.tasks if e.id != obj.id]
             elif isinstance(obj, objects.Message):
                 self.ctx.messages = [e for e in self.ctx.messages if e.id != obj.id]
-        elif change == "put":
+        elif change in ("create", "update"):
             if isinstance(obj, objects.Event):
                 replace(self.ctx.events, cast("objects.Event", obj))
             elif isinstance(obj, objects.Task):

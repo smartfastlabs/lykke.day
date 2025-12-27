@@ -10,11 +10,12 @@ from typing import Generic, TypeVar
 
 import aiofiles
 import aiofiles.os
-from blinker import Signal
 
 from planned import settings
 from planned.objects.base import BaseDateObject
 from planned.utils.json import read_directory
+
+from .repository import BaseRepository
 
 ObjectType = TypeVar(
     "ObjectType",
@@ -25,18 +26,13 @@ ObjectType = TypeVar(
 async def delete_dir(path: str) -> None:
     abs_path = os.path.abspath(path)
 
-    # swallow "doesn't exist" errors
     with contextlib.suppress(FileNotFoundError):
         await asyncio.to_thread(shutil.rmtree, abs_path)
 
 
-class BaseDateRepository(Generic[ObjectType]):
+class BaseDateRepository(BaseRepository, Generic[ObjectType]):
     Object: type[ObjectType]
     _prefix: str
-    signal_source: Signal
-
-    def __init__(self) -> None:
-        self.signal_source = Signal()
 
     def get_object(self, data: dict) -> ObjectType:
         return self.Object.model_validate(data, by_alias=False, by_name=True)
@@ -55,12 +51,15 @@ class BaseDateRepository(Generic[ObjectType]):
     async def put(self, obj: ObjectType) -> ObjectType:
         path = Path(self._get_file_path(obj.date, obj.id))
 
+        exists = await aiofiles.os.path.exists(path)
+
         await aiofiles.os.makedirs(path.parent, exist_ok=True)
 
         async with aiofiles.open(path, mode="w") as f:
             await f.write(self.to_json(obj))
 
-        await self.signal_source.send_async("put", obj=obj)
+        event_type = "update" if exists else "create"
+        await self.signal_source.send_async(event_type, obj=obj)
         return obj
 
     async def search(self, date: datetime.date) -> list[ObjectType]:
