@@ -25,6 +25,11 @@ class AuthService(BaseService):
         """Initialize AuthService. No repository dependencies required."""
         pass
 
+    @classmethod
+    def new(cls) -> "AuthService":
+        """Create a new instance of AuthService. No repositories needed."""
+        return cls()
+
     async def set_password(self, value: str) -> None:
         self.hash = pwd_context.hash(value)
         async with aiofiles.open(_PATH, mode="w") as f:

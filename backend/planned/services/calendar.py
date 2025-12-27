@@ -12,8 +12,10 @@ from planned.repositories import (
     EventRepository,
 )
 
+from .base import BaseService
 
-class CalendarService:
+
+class CalendarService(BaseService):
     auth_token_repo: AuthTokenRepository
     calendar_repo: CalendarRepository
     event_repo: EventRepository
@@ -28,6 +30,26 @@ class CalendarService:
         self.auth_token_repo = auth_token_repo
         self.calendar_repo = calendar_repo
         self.event_repo = event_repo
+
+    @classmethod
+    def new(
+        cls,
+        auth_token_repo: AuthTokenRepository | None = None,
+        calendar_repo: CalendarRepository | None = None,
+        event_repo: EventRepository | None = None,
+    ) -> "CalendarService":
+        """Create a new instance of CalendarService with optional repositories."""
+        if auth_token_repo is None:
+            auth_token_repo = AuthTokenRepository()
+        if calendar_repo is None:
+            calendar_repo = CalendarRepository()
+        if event_repo is None:
+            event_repo = EventRepository()
+        return cls(
+            auth_token_repo=auth_token_repo,
+            calendar_repo=calendar_repo,
+            event_repo=event_repo,
+        )
 
     async def sync_google(
         self,

@@ -74,6 +74,44 @@ class PlanningService(BaseService):
         self.task_repo = task_repo
         self.day_service = day_service
 
+    @classmethod
+    def new(
+        cls,
+        day_repo: DayRepository | None = None,
+        day_template_repo: DayTemplateRepository | None = None,
+        event_repo: EventRepository | None = None,
+        message_repo: MessageRepository | None = None,
+        routine_repo: RoutineRepository | None = None,
+        task_definition_repo: TaskDefinitionRepository | None = None,
+        task_repo: TaskRepository | None = None,
+        day_service: DayService | None = None,
+    ) -> "PlanningService":
+        """Create a new instance of PlanningService with optional repositories."""
+        if day_repo is None:
+            day_repo = DayRepository()
+        if day_template_repo is None:
+            day_template_repo = DayTemplateRepository()
+        if event_repo is None:
+            event_repo = EventRepository()
+        if message_repo is None:
+            message_repo = MessageRepository()
+        if routine_repo is None:
+            routine_repo = RoutineRepository()
+        if task_definition_repo is None:
+            task_definition_repo = TaskDefinitionRepository()
+        if task_repo is None:
+            task_repo = TaskRepository()
+        return cls(
+            day_repo=day_repo,
+            day_template_repo=day_template_repo,
+            event_repo=event_repo,
+            message_repo=message_repo,
+            routine_repo=routine_repo,
+            task_definition_repo=task_definition_repo,
+            task_repo=task_repo,
+            day_service=day_service,
+        )
+
     async def preview_tasks(self, date: datetime.date) -> list[Task]:
         result: list[Task] = []
         for routine in await self.routine_repo.all():
