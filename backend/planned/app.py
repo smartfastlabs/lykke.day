@@ -21,6 +21,10 @@ from planned.application.repositories import (
 )
 from planned.application.services import CalendarService, DayService, PlanningService, SheppardService
 from planned.core.config import settings
+from planned.infrastructure.gateways.adapters import (
+    GoogleCalendarGatewayAdapter,
+    WebPushGatewayAdapter,
+)
 from planned.infrastructure.repositories import (
     AuthTokenRepository,
     CalendarRepository,
@@ -58,11 +62,16 @@ async def create_sheppard_service() -> SheppardService:
     push_subscription_repo: PushSubscriptionRepositoryProtocol = PushSubscriptionRepository()
     task_repo: TaskRepositoryProtocol = TaskRepository()
 
+    # Create gateway adapters
+    google_gateway = GoogleCalendarGatewayAdapter()
+    web_push_gateway = WebPushGatewayAdapter()
+
     # Create services
     calendar_service = CalendarService(
         auth_token_repo=auth_token_repo,
         calendar_repo=calendar_repo,
         event_repo=event_repo,
+        google_gateway=google_gateway,
     )
 
     planning_service = PlanningService(
@@ -99,6 +108,7 @@ async def create_sheppard_service() -> SheppardService:
         day_template_repo=day_template_repo,
         event_repo=event_repo,
         message_repo=message_repo,
+        web_push_gateway=web_push_gateway,
         push_subscriptions=push_subscriptions,
         mode="starting",
     )

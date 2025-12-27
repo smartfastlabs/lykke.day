@@ -213,11 +213,20 @@ def test_sheppard_svc(test_day_svc):
     routine_repo = RoutineRepository()
     task_definition_repo = TaskDefinitionRepository()
 
+    # Create gateway adapters
+    from planned.infrastructure.gateways.adapters import (
+        GoogleCalendarGatewayAdapter,
+        WebPushGatewayAdapter,
+    )
+    google_gateway = GoogleCalendarGatewayAdapter()
+    web_push_gateway = WebPushGatewayAdapter()
+
     # Create services
     calendar_service = CalendarService(
         auth_token_repo=auth_token_repo,
         calendar_repo=calendar_repo,
         event_repo=event_repo,
+        google_gateway=google_gateway,
     )
 
     planning_service = PlanningService(
@@ -240,6 +249,7 @@ def test_sheppard_svc(test_day_svc):
         day_template_repo=day_template_repo,
         event_repo=event_repo,
         message_repo=message_repo,
+        web_push_gateway=web_push_gateway,
         push_subscriptions=[],
         mode="idle",
     )

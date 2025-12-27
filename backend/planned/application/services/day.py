@@ -14,7 +14,7 @@ from planned.application.repositories import (
 )
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
-from planned.infrastructure.repositories.base.repository import ChangeEvent
+from planned.application.repositories.base import ChangeEvent
 from planned.infrastructure.utils.user_settings import load_user_settings
 from planned.infrastructure.utils.dates import get_current_datetime, get_current_time
 from planned.infrastructure.utils.decorators import hybridmethod

@@ -12,6 +12,7 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
 )
 from planned.application.services import CalendarService, DayService, PlanningService, SheppardService
+from planned.infrastructure.gateways.adapters import WebPushGatewayAdapter
 from planned.infrastructure.utils.dates import get_current_date
 
 from ..dependencies.repositories import (
@@ -40,6 +41,7 @@ async def load_sheppard_svc(
 ) -> SheppardService:
     """Load SheppardService with all required dependencies."""
     push_subscriptions = await push_subscription_repo.all()
+    web_push_gateway = WebPushGatewayAdapter()
     
     return SheppardService(
         day_svc=day_svc,
@@ -51,5 +53,6 @@ async def load_sheppard_svc(
         day_template_repo=day_template_repo,
         event_repo=event_repo,
         message_repo=message_repo,
+        web_push_gateway=web_push_gateway,
         push_subscriptions=push_subscriptions,
     )

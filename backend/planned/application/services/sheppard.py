@@ -15,8 +15,8 @@ from planned.application.repositories import (
     PushSubscriptionRepositoryProtocol,
     TaskRepositoryProtocol,
 )
+from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from planned.domain import entities as objects
-from planned.infrastructure.gateways import web_push
 from planned.infrastructure.utils import templates, youtube
 from planned.infrastructure.utils.dates import get_current_date, get_current_datetime, get_current_time
 
@@ -62,6 +62,7 @@ class SheppardService(BaseService):
     day_template_repo: DayTemplateRepositoryProtocol
     event_repo: EventRepositoryProtocol
     message_repo: MessageRepositoryProtocol
+    web_push_gateway: WebPushGatewayProtocol
 
     def __init__(
         self,
@@ -74,6 +75,7 @@ class SheppardService(BaseService):
         day_template_repo: DayTemplateRepositoryProtocol,
         event_repo: EventRepositoryProtocol,
         message_repo: MessageRepositoryProtocol,
+        web_push_gateway: WebPushGatewayProtocol,
         push_subscriptions: list[objects.PushSubscription] | None = None,
         mode: SheppardMode = "starting",
     ) -> None:
@@ -86,6 +88,7 @@ class SheppardService(BaseService):
         self.day_template_repo = day_template_repo
         self.event_repo = event_repo
         self.message_repo = message_repo
+        self.web_push_gateway = web_push_gateway
         self.push_subscriptions = push_subscriptions or []
         self.last_run = None
         self.day_svc = day_svc
@@ -226,7 +229,7 @@ class SheppardService(BaseService):
                 f"Sending notification for {len(tasks)} task(s) to {subscription.endpoint}"
             )
             try:
-                await web_push.send_notification(
+                await self.web_push_gateway.send_notification(
                     subscription=subscription,
                     content=payload,
                 )
@@ -294,7 +297,7 @@ class SheppardService(BaseService):
                 f"Sending notification for {len(events)} event(s) to {subscription.endpoint}"
             )
             try:
-                await web_push.send_notification(
+                await self.web_push_gateway.send_notification(
                     subscription=subscription,
                     content=payload,
                 )

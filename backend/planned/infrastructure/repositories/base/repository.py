@@ -1,25 +1,10 @@
-from typing import Any, Generic, Literal, Protocol, TypeVar
+from typing import Any, Generic, TypeVar
 
-import pydantic
 from blinker import Signal
 
+from planned.application.repositories.base import ChangeEvent, ChangeHandler
+
 ObjectType = TypeVar("ObjectType")
-
-
-class ChangeEvent(pydantic.BaseModel, Generic[ObjectType]):
-    type: Literal["create", "update", "delete"]
-    value: ObjectType
-
-    model_config = pydantic.ConfigDict(
-        from_attributes=True,
-        populate_by_name=True,
-    )
-
-
-class ChangeHandler(Protocol[ObjectType]):
-    async def __call__(
-        self, _sender: object | None = None, *, event: ChangeEvent[ObjectType]
-    ) -> None: ...
 
 
 class BaseRepository(Generic[ObjectType]):

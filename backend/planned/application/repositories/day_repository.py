@@ -3,7 +3,7 @@
 from typing import Protocol
 
 from planned.domain.entities import Day
-from planned.infrastructure.repositories.base.repository import ChangeHandler
+from planned.application.repositories.base import ChangeHandler
 
 
 class DayRepositoryProtocol(Protocol):

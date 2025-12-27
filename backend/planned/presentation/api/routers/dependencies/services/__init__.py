@@ -21,6 +21,7 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
 )
 from planned.application.services import AuthService, CalendarService, DayService, PlanningService
+from planned.infrastructure.gateways.adapters import GoogleCalendarGatewayAdapter
 from planned.infrastructure.utils.dates import get_current_date
 from ..repositories import (
     get_auth_token_repo,
@@ -46,10 +47,12 @@ def get_calendar_service(
     event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
 ) -> CalendarService:
     """Get an instance of CalendarService."""
+    google_gateway = GoogleCalendarGatewayAdapter()
     return CalendarService(
         auth_token_repo=auth_token_repo,
         calendar_repo=calendar_repo,
         event_repo=event_repo,
+        google_gateway=google_gateway,
     )
 
 

@@ -4,7 +4,7 @@ import datetime
 from typing import Protocol
 
 from planned.domain.entities import Message
-from planned.infrastructure.repositories.base.repository import ChangeHandler
+from planned.application.repositories.base import ChangeHandler
 
 
 class MessageRepositoryProtocol(Protocol):

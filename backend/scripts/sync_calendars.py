@@ -1,6 +1,7 @@
 import asyncio
 
 from planned.application.services import CalendarService
+from planned.infrastructure.gateways.adapters import GoogleCalendarGatewayAdapter
 from planned.infrastructure.repositories import (
     AuthTokenRepository,
     CalendarRepository,
@@ -14,11 +15,15 @@ async def main():
     calendar_repo = CalendarRepository()  # type: ignore[type-abstract]
     event_repo = EventRepository()  # type: ignore[type-abstract]
 
+    # Create gateway adapter
+    google_gateway = GoogleCalendarGatewayAdapter()
+
     # Create service
     calendar_service = CalendarService(
         auth_token_repo=auth_token_repo,
         calendar_repo=calendar_repo,
         event_repo=event_repo,
+        google_gateway=google_gateway,
     )
 
     await calendar_service.sync_all()

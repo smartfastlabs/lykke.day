@@ -8,9 +8,9 @@ from planned.application.repositories import (
     CalendarRepositoryProtocol,
     EventRepositoryProtocol,
 )
+from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Calendar, Event
-from planned.infrastructure.gateways import google
 
 from .base import BaseService
 
@@ -19,6 +19,7 @@ class CalendarService(BaseService):
     auth_token_repo: AuthTokenRepositoryProtocol
     calendar_repo: CalendarRepositoryProtocol
     event_repo: EventRepositoryProtocol
+    google_gateway: GoogleCalendarGatewayProtocol
     running: bool = False
 
     def __init__(
@@ -26,10 +27,12 @@ class CalendarService(BaseService):
         auth_token_repo: AuthTokenRepositoryProtocol,
         calendar_repo: CalendarRepositoryProtocol,
         event_repo: EventRepositoryProtocol,
+        google_gateway: GoogleCalendarGatewayProtocol,
     ) -> None:
         self.auth_token_repo = auth_token_repo
         self.calendar_repo = calendar_repo
         self.event_repo = event_repo
+        self.google_gateway = google_gateway
 
 
     async def sync_google(
@@ -40,7 +43,7 @@ class CalendarService(BaseService):
         events, deleted_events = [], []
 
         token = await self.auth_token_repo.get(calendar.auth_token_id)
-        for event in await google.load_calendar_events(
+        for event in await self.google_gateway.load_calendar_events(
             calendar,
             lookback=lookback,
             token=token,

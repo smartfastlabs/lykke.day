@@ -17,7 +17,8 @@ from planned.infrastructure.repositories import (
     TaskDefinitionRepository,
     TaskRepository,
 )
-from planned.infrastructure.repositories.base.repository import BaseRepository, ChangeEvent
+from planned.application.repositories.base import ChangeEvent
+from planned.infrastructure.repositories.base.repository import BaseRepository
 from planned.infrastructure.utils import youtube
 
 router = APIRouter()

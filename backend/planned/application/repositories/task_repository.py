@@ -5,7 +5,7 @@ from collections.abc import Callable
 from typing import Protocol
 
 from planned.domain.entities import Task
-from planned.infrastructure.repositories.base.repository import ChangeHandler
+from planned.application.repositories.base import ChangeHandler
 
 
 class TaskRepositoryProtocol(Protocol):
