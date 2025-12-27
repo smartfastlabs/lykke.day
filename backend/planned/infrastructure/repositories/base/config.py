@@ -1,14 +1,13 @@
-import json
-import os
 from typing import Generic, TypeVar
 
-import aiofiles
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncEngine
 
-from planned.core.config import settings
 from planned.core.exceptions import exceptions
 from planned.domain.entities.base import BaseConfigObject
-from planned.infrastructure.utils.json import read_directory
+from planned.infrastructure.database import get_engine
 
+from .mappers import row_to_entity
 from .repository import BaseRepository
 
 ConfigObjectType = TypeVar(
@@ -18,31 +17,36 @@ ConfigObjectType = TypeVar(
 
 
 class BaseConfigRepository(BaseRepository[ConfigObjectType]):
+    """Base repository for config objects using async SQLAlchemy Core."""
+    
     Object: type[ConfigObjectType]
-    _prefix: str
-
-    def get_object(self, data: dict) -> ConfigObjectType:
-        return self.Object.model_validate(data, by_alias=False, by_name=True)
+    table: "Table"  # type: ignore[name-defined]  # noqa: F821
+    
+    def _get_engine(self) -> AsyncEngine:
+        """Get the database engine."""
+        return get_engine()
 
     async def get(self, key: str) -> ConfigObjectType:
-        path: str = self._get_file_path(key)
-        try:
-            async with aiofiles.open(path) as f:
-                contents = await f.read()
-        except FileNotFoundError:
-            raise exceptions.NotFoundError(
-                f"`{self.Object.__name__}` with key '{key}' not found. Path was '{path}'.",
-            )
-
-        data = json.loads(contents)
-        data["id"] = key
-        return self.get_object(data)
+        """Get an object by key."""
+        engine = self._get_engine()
+        async with engine.connect() as conn:
+            stmt = select(self.table).where(self.table.c.id == key)
+            result = await conn.execute(stmt)
+            row = result.mapping().first()
+            
+            if row is None:
+                raise exceptions.NotFoundError(
+                    f"`{self.Object.__name__}` with key '{key}' not found.",
+                )
+            
+            return row_to_entity(dict(row), self.Object)
 
     async def all(self) -> list[ConfigObjectType]:
-        return await read_directory(
-            f"{settings.DATA_PATH}/{self._prefix}",
-            self.Object,
-        )
-
-    def _get_file_path(self, key: str) -> str:
-        return os.path.abspath(f"{settings.DATA_PATH}/{self._prefix}/{key}.json")
+        """Get all objects."""
+        engine = self._get_engine()
+        async with engine.connect() as conn:
+            stmt = select(self.table)
+            result = await conn.execute(stmt)
+            rows = result.mappings().all()
+            
+            return [row_to_entity(dict(row), self.Object) for row in rows]

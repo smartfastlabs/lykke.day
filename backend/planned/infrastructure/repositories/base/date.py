@@ -1,20 +1,16 @@
-import asyncio
-import contextlib
 import datetime
-import json
-import os
-import shutil
 from collections.abc import Callable
-from pathlib import Path
 from typing import Literal, TypeVar
 
-import aiofiles
-import aiofiles.os
+from sqlalchemy import delete, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.ext.asyncio import AsyncEngine
 
-from planned.core.config import settings
+from planned.core.exceptions import exceptions
 from planned.domain.entities.base import BaseDateObject
-from planned.infrastructure.utils.json import read_directory
+from planned.infrastructure.database import get_engine
 
+from .mappers import entity_to_row, row_to_entity
 from .repository import BaseRepository, ChangeEvent
 
 DateObjectType = TypeVar(
@@ -23,58 +19,83 @@ DateObjectType = TypeVar(
 )
 
 
-async def delete_dir(path: str) -> None:
-    abs_path = os.path.abspath(path)
-
-    with contextlib.suppress(FileNotFoundError):
-        await asyncio.to_thread(shutil.rmtree, abs_path)
-
-
 class BaseDateRepository(BaseRepository[DateObjectType]):
+    """Base repository for date-scoped entities using async SQLAlchemy Core."""
+    
     Object: type[DateObjectType]
-    _prefix: str
-
-    def get_object(self, data: dict) -> DateObjectType:
-        return self.Object.model_validate(data, by_alias=False, by_name=True)
-
-    def to_json(self, obj: DateObjectType) -> str:
-        return obj.model_dump_json(indent=4, by_alias=False)
+    table: "Table"  # type: ignore[name-defined]  # noqa: F821
+    
+    def _get_engine(self) -> AsyncEngine:
+        """Get the database engine."""
+        return get_engine()
 
     async def get(self, date: datetime.date, key: str) -> DateObjectType:
-        async with aiofiles.open(self._get_file_path(date, key)) as f:
-            contents = await f.read()
-
-        data = json.loads(contents)
-        data["id"] = key
-        return self.get_object(data)
+        """Get an object by date and key."""
+        engine = self._get_engine()
+        async with engine.connect() as conn:
+            stmt = select(self.table).where(
+                self.table.c.date == date,
+                self.table.c.id == key,
+            )
+            result = await conn.execute(stmt)
+            row = result.mapping().first()
+            
+            if row is None:
+                raise exceptions.NotFoundError(
+                    f"`{self.Object.__name__}` with date '{date}' and key '{key}' not found.",
+                )
+            
+            return row_to_entity(dict(row), self.Object)
 
     async def put(self, obj: DateObjectType) -> DateObjectType:
-        path = Path(self._get_file_path(obj.date, obj.id))
-
-        exists = await aiofiles.os.path.exists(path)
-
-        await aiofiles.os.makedirs(path.parent, exist_ok=True)
-
-        async with aiofiles.open(path, mode="w") as f:
-            await f.write(self.to_json(obj))
-
+        """Save or update an object."""
+        engine = self._get_engine()
+        row = entity_to_row(obj, self.table.name)
+        
+        async with engine.begin() as conn:
+            # Check if object exists
+            stmt = select(self.table.c.id).where(
+                self.table.c.date == obj.date,
+                self.table.c.id == obj.id,
+            )
+            result = await conn.execute(stmt)
+            exists = result.first() is not None
+            
+            # Use PostgreSQL INSERT ... ON CONFLICT DO UPDATE
+            insert_stmt = pg_insert(self.table).values(**row)
+            update_dict = {k: v for k, v in row.items() if k not in ("id", "date")}
+            upsert_stmt = insert_stmt.on_conflict_do_update(
+                index_elements=["id"],
+                set_=update_dict,
+            )
+            await conn.execute(upsert_stmt)
+        
         event_type: Literal["create", "update"] = "update" if exists else "create"
         event = ChangeEvent[DateObjectType](type=event_type, value=obj)
         await self.signal_source.send_async("change", event=event)
         return obj
 
     async def search(self, date: datetime.date) -> list[DateObjectType]:
-        temp: list[DateObjectType] = await read_directory(
-            f"{settings.DATA_PATH}/dates/{date}/{self._prefix}",
-            self.Object,
-        )
-
-        return temp
+        """Search for objects on a specific date."""
+        engine = self._get_engine()
+        async with engine.connect() as conn:
+            stmt = select(self.table).where(self.table.c.date == date)
+            result = await conn.execute(stmt)
+            rows = result.mappings().all()
+            
+            return [row_to_entity(dict(row), self.Object) for row in rows]
 
     async def delete(self, obj: DateObjectType) -> None:
-        with contextlib.suppress(FileExistsError):
-            await aiofiles.os.remove(self._get_file_path(obj.date, obj.id))
-
+        """Delete an object."""
+        engine = self._get_engine()
+        
+        async with engine.begin() as conn:
+            stmt = delete(self.table).where(
+                self.table.c.date == obj.date,
+                self.table.c.id == obj.id,
+            )
+            await conn.execute(stmt)
+        
         event = ChangeEvent[DateObjectType](type="delete", value=obj)
         await self.signal_source.send_async("change", event=event)
 
@@ -83,33 +104,32 @@ class BaseDateRepository(BaseRepository[DateObjectType]):
         date: datetime.date | str,
         filter_by: Callable[[DateObjectType], bool] | None = None,
     ) -> None:
-        dir_path = os.path.abspath(
-            f"{settings.DATA_PATH}/dates/{date}/{self._prefix}",
-        )
-
+        """Delete all objects for a date, optionally filtering."""
+        if isinstance(date, str):
+            date = datetime.date.fromisoformat(date)
+        
+        engine = self._get_engine()
+        
         if filter_by is None:
-            await delete_dir(dir_path)
-            return
-
-        if not os.path.exists(dir_path):
-            return
-
-        async def maybe_delete(filepath: str) -> None:
-            async with aiofiles.open(filepath) as f:
-                data = json.loads(await f.read())
-            obj = self.get_object(data)
-            if filter_by(obj):
-                await aiofiles.os.remove(filepath)
-
-        await asyncio.gather(
-            *[
-                maybe_delete(os.path.join(dir_path, filename))
-                for filename in os.listdir(dir_path)
-                if os.path.isfile(os.path.join(dir_path, filename))
-            ]
-        )
-
-    def _get_file_path(self, date: datetime.date, key: str) -> str:
-        return os.path.abspath(
-            f"{settings.DATA_PATH}/dates/{date}/{self._prefix}/{key}.json"
-        )
+            # Delete all objects for the date
+            async with engine.begin() as conn:
+                stmt = delete(self.table).where(self.table.c.date == date)
+                await conn.execute(stmt)
+        else:
+            # Get all objects, filter, then delete matching ones
+            objects = await self.search(date)
+            objects_to_delete = [obj for obj in objects if filter_by(obj)]
+            
+            if objects_to_delete:
+                async with engine.begin() as conn:
+                    ids_to_delete = [obj.id for obj in objects_to_delete]
+                    stmt = delete(self.table).where(
+                        self.table.c.date == date,
+                        self.table.c.id.in_(ids_to_delete),
+                    )
+                    await conn.execute(stmt)
+                
+                # Send delete events for each deleted object
+                for obj in objects_to_delete:
+                    event = ChangeEvent[DateObjectType](type="delete", value=obj)
+                    await self.signal_source.send_async("change", event=event)

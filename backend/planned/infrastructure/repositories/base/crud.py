@@ -1,45 +1,57 @@
-import contextlib
-from pathlib import Path
 from typing import Literal
 
-import aiofiles
-import aiofiles.os
+from sqlalchemy import delete, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from planned.core.exceptions import exceptions
 
 from .config import BaseConfigRepository, ConfigObjectType
+from .mappers import entity_to_row
 from .repository import ChangeEvent
 
 
 class BaseCrudRepository(BaseConfigRepository[ConfigObjectType]):
-    def to_json(self, obj: ConfigObjectType) -> str:
-        return obj.model_dump_json(indent=4, by_alias=False)
+    """Base repository with CRUD operations using async SQLAlchemy Core."""
 
     async def put(self, obj: ConfigObjectType) -> ConfigObjectType:
-        path = Path(self._get_file_path(obj.id))
-
-        exists = await aiofiles.os.path.exists(path)
-
-        await aiofiles.os.makedirs(path.parent, exist_ok=True)
-
-        async with aiofiles.open(path, mode="w") as f:
-            await f.write(self.to_json(obj))
-
+        """Save or update an object."""
+        engine = self._get_engine()
+        row = entity_to_row(obj, self.table.name)
+        
+        async with engine.begin() as conn:
+            # Check if object exists
+            stmt = select(self.table.c.id).where(self.table.c.id == obj.id)
+            result = await conn.execute(stmt)
+            exists = result.first() is not None
+            
+            # Use PostgreSQL INSERT ... ON CONFLICT DO UPDATE
+            insert_stmt = pg_insert(self.table).values(**row)
+            update_dict = {k: v for k, v in row.items() if k != "id"}
+            upsert_stmt = insert_stmt.on_conflict_do_update(
+                index_elements=["id"],
+                set_=update_dict,
+            )
+            await conn.execute(upsert_stmt)
+        
         event_type: Literal["create", "update"] = "update" if exists else "create"
         event = ChangeEvent[ConfigObjectType](type=event_type, value=obj)
         await self.signal_source.send_async("change", event=event)
         return obj
 
     async def delete(self, key: str) -> None:
+        """Delete an object by key."""
+        engine = self._get_engine()
+        
+        # Get object before deleting for event
         try:
             obj = await self.get(key)
         except exceptions.NotFoundError:
-            with contextlib.suppress(FileNotFoundError):
-                await aiofiles.os.remove(self._get_file_path(key))
+            # If not found, nothing to delete
             return
-
-        with contextlib.suppress(FileNotFoundError):
-            await aiofiles.os.remove(self._get_file_path(key))
-
+        
+        async with engine.begin() as conn:
+            stmt = delete(self.table).where(self.table.c.id == key)
+            await conn.execute(stmt)
+        
         event = ChangeEvent[ConfigObjectType](type="delete", value=obj)
         await self.signal_source.send_async("change", event=event)

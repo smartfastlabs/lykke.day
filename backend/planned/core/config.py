@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     VAPID_PUBLIC_KEY: str = ""
     ENVIRONMENT: str = "development"
     DATA_PATH: str = "../data"
+    DATABASE_URL: str = "postgresql+psycopg://localhost/planned"
     SESSION_SECRET: str = ""
     ANTHROPIC_API_KEY: str = ""
     PRINTER_NAME: str = "HP_OfficeJet_Pro_9010_series"
