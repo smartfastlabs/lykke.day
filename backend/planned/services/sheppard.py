@@ -194,45 +194,196 @@ class SheppardService(BaseService):
                 youtube.play_audio("https://www.youtube.com/watch?v=Gcv7re2dEVg")
                 await self.day_svc.save()
 
+        # Collect tasks that need notifications
+        tasks_to_notify: list[objects.Task] = []
+        tasks_to_update: list[objects.Task] = []
+
         for task in await self.day_svc.get_upcomming_tasks():
             if task.status != objects.TaskStatus.PENDING:
                 task.status = objects.TaskStatus.PENDING
+                tasks_to_update.append(task)
 
+                # Check if this task needs a notification
                 if not any(
                     action.type == objects.ActionType.NOTIFY for action in task.actions
                 ):
-                    for subscription in self.push_subscriptions:
-                        logger.info(f"Sending notification to {subscription.endpoint}")
-                        await web_push.send_notification(
-                            subscription=subscription,
-                            content=objects.NotificationPayload(
-                                title="Notifications Enabled!",
-                                body="TASK NOTIFICATION",
-                                actions=[
-                                    objects.NotificationAction(
-                                        action="view",
-                                        title="View Task",
-                                        icon="🔍",
-                                    ),
-                                ],
-                            ),
-                        )
-
+                    tasks_to_notify.append(task)
                     task.actions.append(
                         objects.Action(
                             type=objects.ActionType.NOTIFY,
                         ),
                     )
-                await self.task_repo.put(task)
 
             logger.info(f"UPCOMING TASK {task.name}")
 
+        # Send notifications for all tasks that need them
+        if tasks_to_notify:
+            await self._notify_for_tasks(tasks_to_notify)
+
+        # Save all updated tasks
+        for task in tasks_to_update:
+            await self.task_repo.put(task)
+
+        # Collect events that need notifications
+        events_to_notify: list[objects.Event] = []
+
         for event in await self.day_svc.get_upcomming_events():
-            logger.info(f"UPCOMING EVENT{event.name}")
+            logger.info(f"UPCOMING EVENT {event.name}")
+
+            # Check if this event needs a notification
+            if not any(
+                action.type == objects.ActionType.NOTIFY for action in event.actions
+            ):
+                events_to_notify.append(event)
+                event.actions.append(
+                    objects.Action(
+                        type=objects.ActionType.NOTIFY,
+                    ),
+                )
+
+        # Send notifications for all events that need them
+        if events_to_notify:
+            await self._notify_for_events(events_to_notify)
+            # Save all events that were notified (they all got NOTIFY actions added)
+            for event in events_to_notify:
+                await self.event_repo.put(event)
 
         prompt = self.checkin_prompt()
 
         self.last_run = datetime.datetime.now()
+
+    def _build_notification_payload(
+        self,
+        tasks: list[objects.Task],
+    ) -> objects.NotificationPayload:
+        """Build a notification payload for one or more tasks."""
+        if len(tasks) == 1:
+            task = tasks[0]
+            title = task.name
+            body = f"Task ready: {task.name}"
+        else:
+            title = f"{len(tasks)} tasks ready"
+            body = f"You have {len(tasks)} tasks ready"
+
+        # Include task information in the data field
+        task_data = [
+            {
+                "id": task.id,
+                "name": task.name,
+                "status": task.status.value,
+                "category": task.category.value,
+            }
+            for task in tasks
+        ]
+
+        return objects.NotificationPayload(
+            title=title,
+            body=body,
+            actions=[
+                objects.NotificationAction(
+                    action="view",
+                    title="View Tasks",
+                    icon="🔍",
+                ),
+            ],
+            data={
+                "type": "tasks",
+                "task_ids": [task.id for task in tasks],
+                "tasks": task_data,
+            },
+        )
+
+    async def _notify_for_tasks(
+        self,
+        tasks: list[objects.Task],
+    ) -> None:
+        """Send notifications for the given tasks to all push subscriptions."""
+        if not tasks:
+            return
+
+        payload = self._build_notification_payload(tasks)
+
+        for subscription in self.push_subscriptions:
+            logger.info(
+                f"Sending notification for {len(tasks)} task(s) to {subscription.endpoint}"
+            )
+            try:
+                await web_push.send_notification(
+                    subscription=subscription,
+                    content=payload,
+                )
+            except Exception as e:
+                logger.exception(
+                    f"Failed to send notification to {subscription.endpoint}: {e}"
+                )
+
+    def _build_event_notification_payload(
+        self,
+        events: list[objects.Event],
+    ) -> objects.NotificationPayload:
+        """Build a notification payload for one or more events."""
+        if len(events) == 1:
+            event = events[0]
+            title = event.name
+            body = f"Event starting soon: {event.name}"
+        else:
+            title = f"{len(events)} events starting soon"
+            body = f"You have {len(events)} events starting soon"
+
+        # Include event information in the data field
+        event_data = [
+            {
+                "id": event.id,
+                "name": event.name,
+                "starts_at": event.starts_at.isoformat(),
+                "ends_at": event.ends_at.isoformat() if event.ends_at else None,
+                "calendar_id": event.calendar_id,
+                "platform_id": event.platform_id,
+                "status": event.status,
+            }
+            for event in events
+        ]
+
+        return objects.NotificationPayload(
+            title=title,
+            body=body,
+            actions=[
+                objects.NotificationAction(
+                    action="view",
+                    title="View Events",
+                    icon="📅",
+                ),
+            ],
+            data={
+                "type": "events",
+                "event_ids": [event.id for event in events],
+                "events": event_data,
+            },
+        )
+
+    async def _notify_for_events(
+        self,
+        events: list[objects.Event],
+    ) -> None:
+        """Send notifications for the given events to all push subscriptions."""
+        if not events:
+            return
+
+        payload = self._build_event_notification_payload(events)
+
+        for subscription in self.push_subscriptions:
+            logger.info(
+                f"Sending notification for {len(events)} event(s) to {subscription.endpoint}"
+            )
+            try:
+                await web_push.send_notification(
+                    subscription=subscription,
+                    content=payload,
+                )
+            except Exception as e:
+                logger.exception(
+                    f"Failed to send notification to {subscription.endpoint}: {e}"
+                )
 
     def _render_prompt(self, template_name: str, **kwargs: Any) -> str:
         return templates.render(
