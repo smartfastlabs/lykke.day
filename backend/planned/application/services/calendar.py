@@ -3,53 +3,34 @@ from datetime import UTC, datetime, timedelta
 
 from loguru import logger
 
-from planned.core.exceptions import exceptions
-from planned.infrastructure.gateways import google
-from planned.domain.entities import Calendar, Event
-from planned.infrastructure.repositories import (
-    AuthTokenRepository,
-    CalendarRepository,
-    EventRepository,
+from planned.application.repositories import (
+    AuthTokenRepositoryProtocol,
+    CalendarRepositoryProtocol,
+    EventRepositoryProtocol,
 )
+from planned.core.exceptions import exceptions
+from planned.domain.entities import Calendar, Event
+from planned.infrastructure.gateways import google
 
 from .base import BaseService
 
 
 class CalendarService(BaseService):
-    auth_token_repo: AuthTokenRepository
-    calendar_repo: CalendarRepository
-    event_repo: EventRepository
+    auth_token_repo: AuthTokenRepositoryProtocol
+    calendar_repo: CalendarRepositoryProtocol
+    event_repo: EventRepositoryProtocol
     running: bool = False
 
     def __init__(
         self,
-        auth_token_repo: AuthTokenRepository,
-        calendar_repo: CalendarRepository,
-        event_repo: EventRepository,
+        auth_token_repo: AuthTokenRepositoryProtocol,
+        calendar_repo: CalendarRepositoryProtocol,
+        event_repo: EventRepositoryProtocol,
     ) -> None:
         self.auth_token_repo = auth_token_repo
         self.calendar_repo = calendar_repo
         self.event_repo = event_repo
 
-    @classmethod
-    def new(
-        cls,
-        auth_token_repo: AuthTokenRepository | None = None,
-        calendar_repo: CalendarRepository | None = None,
-        event_repo: EventRepository | None = None,
-    ) -> "CalendarService":
-        """Create a new instance of CalendarService with optional repositories."""
-        if auth_token_repo is None:
-            auth_token_repo = AuthTokenRepository()
-        if calendar_repo is None:
-            calendar_repo = CalendarRepository()
-        if event_repo is None:
-            event_repo = EventRepository()
-        return cls(
-            auth_token_repo=auth_token_repo,
-            calendar_repo=calendar_repo,
-            event_repo=event_repo,
-        )
 
     async def sync_google(
         self,
@@ -100,6 +81,3 @@ class CalendarService(BaseService):
                 logger.info(f"Token expired for calendar {calendar.name}")
             except Exception as e:
                 logger.exception(f"Error syncing calendar {calendar.name}: {e}")
-
-
-calendar_svc = CalendarService.new()

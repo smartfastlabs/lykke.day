@@ -5,17 +5,17 @@ from typing import Protocol, TypeVar
 
 from blinker import Signal
 
+from planned.application.repositories import (
+    DayRepositoryProtocol,
+    DayTemplateRepositoryProtocol,
+    EventRepositoryProtocol,
+    MessageRepositoryProtocol,
+    TaskRepositoryProtocol,
+)
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
-from planned.domain.entities.user_settings import user_settings
-from planned.infrastructure.repositories import (
-    DayRepository,
-    DayTemplateRepository,
-    EventRepository,
-    MessageRepository,
-    TaskRepository,
-)
 from planned.infrastructure.repositories.base.repository import ChangeEvent
+from planned.infrastructure.utils.user_settings import load_user_settings
 from planned.infrastructure.utils.dates import get_current_datetime, get_current_time
 from planned.infrastructure.utils.decorators import hybridmethod
 
@@ -47,20 +47,20 @@ class DayService(BaseService):
     ctx: objects.DayContext
     date: datetime.date
     signal_source: Signal
-    day_repo: DayRepository
-    day_template_repo: DayTemplateRepository
-    event_repo: EventRepository
-    message_repo: MessageRepository
-    task_repo: TaskRepository
+    day_repo: DayRepositoryProtocol
+    day_template_repo: DayTemplateRepositoryProtocol
+    event_repo: EventRepositoryProtocol
+    message_repo: MessageRepositoryProtocol
+    task_repo: TaskRepositoryProtocol
 
     def __init__(
         self,
         ctx: objects.DayContext,
-        day_repo: DayRepository,
-        day_template_repo: DayTemplateRepository,
-        event_repo: EventRepository,
-        message_repo: MessageRepository,
-        task_repo: TaskRepository,
+        day_repo: DayRepositoryProtocol,
+        day_template_repo: DayTemplateRepositoryProtocol,
+        event_repo: EventRepositoryProtocol,
+        message_repo: MessageRepositoryProtocol,
+        task_repo: TaskRepositoryProtocol,
     ) -> None:
         self.ctx = ctx
         self.date = ctx.day.date
@@ -79,11 +79,11 @@ class DayService(BaseService):
     async def for_date(
         cls,
         date: datetime.date,
-        day_repo: DayRepository,
-        day_template_repo: DayTemplateRepository,
-        event_repo: EventRepository,
-        message_repo: MessageRepository,
-        task_repo: TaskRepository,
+        day_repo: DayRepositoryProtocol,
+        day_template_repo: DayTemplateRepositoryProtocol,
+        event_repo: EventRepositoryProtocol,
+        message_repo: MessageRepositoryProtocol,
+        task_repo: TaskRepositoryProtocol,
     ) -> "DayService":
         ctx = await cls.load_context(
             date,
@@ -166,11 +166,11 @@ class DayService(BaseService):
     async def load_context(
         self,
         date: datetime.date | None = None,
-        day_repo: DayRepository | None = None,
-        day_template_repo: DayTemplateRepository | None = None,
-        event_repo: EventRepository | None = None,
-        message_repo: MessageRepository | None = None,
-        task_repo: TaskRepository | None = None,
+        day_repo: DayRepositoryProtocol | None = None,
+        day_template_repo: DayTemplateRepositoryProtocol | None = None,
+        event_repo: EventRepositoryProtocol | None = None,
+        message_repo: MessageRepositoryProtocol | None = None,
+        task_repo: TaskRepositoryProtocol | None = None,
     ) -> objects.DayContext:
         # Use instance attributes if not provided
         date = date or self.date
@@ -194,11 +194,11 @@ class DayService(BaseService):
     async def load_context_cls(
         cls,  # noqa: N805
         date: datetime.date,
-        day_repo: DayRepository,
-        day_template_repo: DayTemplateRepository,
-        event_repo: EventRepository,
-        message_repo: MessageRepository,
-        task_repo: TaskRepository,
+        day_repo: DayRepositoryProtocol,
+        day_template_repo: DayTemplateRepositoryProtocol,
+        event_repo: EventRepositoryProtocol,
+        message_repo: MessageRepositoryProtocol,
+        task_repo: TaskRepositoryProtocol,
     ) -> objects.DayContext:
         tasks: list[objects.Task] = []
         events: list[objects.Event] = []
@@ -234,10 +234,11 @@ class DayService(BaseService):
     async def base_day(
         cls,
         date: datetime.date,
-        day_template_repo: DayTemplateRepository,
+        day_template_repo: DayTemplateRepositoryProtocol,
         template_id: str | None = None,
     ) -> objects.Day:
         if template_id is None:
+            user_settings = load_user_settings()
             template_id = user_settings.template_defaults[date.weekday()]
 
         template: objects.DayTemplate = await day_template_repo.get(template_id)
@@ -253,8 +254,8 @@ class DayService(BaseService):
     async def get_or_preview(
         cls,
         date: datetime.date,
-        day_repo: DayRepository,
-        day_template_repo: DayTemplateRepository,
+        day_repo: DayRepositoryProtocol,
+        day_template_repo: DayTemplateRepositoryProtocol,
     ) -> objects.Day:
         with suppress(exceptions.NotFoundError):
             return await day_repo.get(str(date))
@@ -268,8 +269,8 @@ class DayService(BaseService):
     async def get_or_create(
         cls,
         date: datetime.date,
-        day_repo: DayRepository,
-        day_template_repo: DayTemplateRepository,
+        day_repo: DayRepositoryProtocol,
+        day_template_repo: DayTemplateRepositoryProtocol,
     ) -> objects.Day:
         with suppress(exceptions.NotFoundError):
             return await day_repo.get(str(date))

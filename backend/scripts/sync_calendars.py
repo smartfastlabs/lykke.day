@@ -1,10 +1,13 @@
 import asyncio
 
-from planned.application.services import calendar_svc
+from planned.application.services import CalendarService
+from planned.core.di.providers import create_container
 
 
 async def main():
-    await calendar_svc.sync_all()
+    container = create_container()
+    calendar_service = container.get(CalendarService)
+    await calendar_service.sync_all()
 
 
 if __name__ == "__main__":

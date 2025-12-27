@@ -3,8 +3,6 @@ from enum import Enum
 
 from pydantic import computed_field
 
-from planned.infrastructure.utils.strings import slugify
-
 from .base import BaseConfigObject
 
 

@@ -7,16 +7,16 @@ from langchain.agents import create_agent
 from langchain_core.runnables import Runnable
 from loguru import logger
 
+from planned.application.repositories import (
+    DayRepositoryProtocol,
+    DayTemplateRepositoryProtocol,
+    EventRepositoryProtocol,
+    MessageRepositoryProtocol,
+    PushSubscriptionRepositoryProtocol,
+    TaskRepositoryProtocol,
+)
 from planned.domain import entities as objects
 from planned.infrastructure.gateways import web_push
-from planned.infrastructure.repositories import (
-    DayRepository,
-    DayTemplateRepository,
-    EventRepository,
-    MessageRepository,
-    PushSubscriptionRepository,
-    TaskRepository,
-)
 from planned.infrastructure.utils import templates, youtube
 from planned.infrastructure.utils.dates import get_current_date, get_current_datetime, get_current_time
 
@@ -54,26 +54,26 @@ class SheppardService(BaseService):
     mode: SheppardMode
     last_run: datetime.datetime | None = None
     push_subscriptions: list[objects.PushSubscription] = []
-    push_subscription_repo: PushSubscriptionRepository
-    task_repo: TaskRepository
+    push_subscription_repo: PushSubscriptionRepositoryProtocol
+    task_repo: TaskRepositoryProtocol
     calendar_service: CalendarService
     planning_service: PlanningService
-    day_repo: DayRepository
-    day_template_repo: DayTemplateRepository
-    event_repo: EventRepository
-    message_repo: MessageRepository
+    day_repo: DayRepositoryProtocol
+    day_template_repo: DayTemplateRepositoryProtocol
+    event_repo: EventRepositoryProtocol
+    message_repo: MessageRepositoryProtocol
 
     def __init__(
         self,
         day_svc: DayService,
-        push_subscription_repo: PushSubscriptionRepository,
-        task_repo: TaskRepository,
+        push_subscription_repo: PushSubscriptionRepositoryProtocol,
+        task_repo: TaskRepositoryProtocol,
         calendar_service: CalendarService,
         planning_service: PlanningService,
-        day_repo: DayRepository,
-        day_template_repo: DayTemplateRepository,
-        event_repo: EventRepository,
-        message_repo: MessageRepository,
+        day_repo: DayRepositoryProtocol,
+        day_template_repo: DayTemplateRepositoryProtocol,
+        event_repo: EventRepositoryProtocol,
+        message_repo: MessageRepositoryProtocol,
         push_subscriptions: list[objects.PushSubscription] | None = None,
         mode: SheppardMode = "starting",
     ) -> None:
@@ -95,88 +95,6 @@ class SheppardService(BaseService):
             system_prompt="You are a helpful assistant",
         )
 
-    @classmethod
-    async def new(
-        cls,
-        day_svc: DayService | None = None,
-        push_subscription_repo: PushSubscriptionRepository | None = None,
-        task_repo: TaskRepository | None = None,
-        calendar_service: CalendarService | None = None,
-        planning_service: PlanningService | None = None,
-        day_repo: DayRepository | None = None,
-        day_template_repo: DayTemplateRepository | None = None,
-        event_repo: EventRepository | None = None,
-        message_repo: MessageRepository | None = None,
-        push_subscriptions: list[objects.PushSubscription] | None = None,
-        mode: SheppardMode = "starting",
-    ) -> "SheppardService":
-        """Create a new instance of SheppardService with optional dependencies."""
-        from planned.infrastructure.utils.dates import get_current_date
-
-        # Create repositories if not provided
-        if push_subscription_repo is None:
-            push_subscription_repo = PushSubscriptionRepository()
-        if task_repo is None:
-            task_repo = TaskRepository()
-        if day_repo is None:
-            day_repo = DayRepository()
-        if day_template_repo is None:
-            day_template_repo = DayTemplateRepository()
-        if event_repo is None:
-            event_repo = EventRepository()
-        if message_repo is None:
-            message_repo = MessageRepository()
-
-        # Create services if not provided
-        if calendar_service is None:
-            from planned.infrastructure.repositories import AuthTokenRepository, CalendarRepository
-
-            calendar_service = CalendarService.new(
-                auth_token_repo=AuthTokenRepository(),
-                calendar_repo=CalendarRepository(),
-                event_repo=event_repo,
-            )
-        if planning_service is None:
-            from planned.infrastructure.repositories import RoutineRepository, TaskDefinitionRepository
-
-            planning_service = PlanningService.new(
-                day_repo=day_repo,
-                day_template_repo=day_template_repo,
-                event_repo=event_repo,
-                message_repo=message_repo,
-                routine_repo=RoutineRepository(),
-                task_definition_repo=TaskDefinitionRepository(),
-                task_repo=task_repo,
-            )
-
-        # Create day_svc if not provided
-        if day_svc is None:
-            day_svc = await DayService.for_date(
-                get_current_date(),
-                day_repo=day_repo,
-                day_template_repo=day_template_repo,
-                event_repo=event_repo,
-                message_repo=message_repo,
-                task_repo=task_repo,
-            )
-
-        # Load push subscriptions if not provided
-        if push_subscriptions is None:
-            push_subscriptions = await push_subscription_repo.all()
-
-        return cls(
-            day_svc=day_svc,
-            push_subscription_repo=push_subscription_repo,
-            task_repo=task_repo,
-            calendar_service=calendar_service,
-            planning_service=planning_service,
-            day_repo=day_repo,
-            day_template_repo=day_template_repo,
-            event_repo=event_repo,
-            message_repo=message_repo,
-            push_subscriptions=push_subscriptions,
-            mode=mode,
-        )
 
     async def run_loop(
         self,

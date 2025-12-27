@@ -9,7 +9,11 @@ test:
 typecheck:
 	poetry run mypy planned
 
-check: typecheck test
+check:
+	make typecheck
+	make test
 
+
+.PHONY: test-target
 test-target:
 	ENV_FILE=.env.test poetry run pytest tests --vcr-record=once -k '$(TARGET)' -s -v

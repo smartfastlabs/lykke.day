@@ -1,20 +1,14 @@
-[project]
+[tool.poetry]
 name = "planned"
+package-mode = false
 version = "0.1.0"
 description = ""
-authors = [{name = "Todd Sifleet", email = "todd.sifleet@gmail.com"}]
+authors = ["Todd Sifleet <todd.sifleet@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.13,<4.0"
-license = {text = "AGPL-3.0-or-later"}
-keywords = ["planning", "productivity", "day-planning"]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.13",
-    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
-    "Operating System :: OS Independent",
-]
+packages = [{include = "planned"}]
 
-[project.dependencies]
+[tool.poetry.dependencies]
+python = "^3.13"
 notion-client = "2.3.0"
 gcsa = "2.5.1"
 uvicorn = "^0.23.0"
@@ -63,12 +57,8 @@ types-passlib = "^1.7.7.20250602"
 pydantic-to-typescript = "^2.0.0"
 
 
-[tool.poetry]
-package-mode = false
-packages = [{include = "planned"}]
-
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 # Environment configurations

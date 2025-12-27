@@ -3,13 +3,13 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from planned.infrastructure.repositories import (
-    DayRepository,
-    DayTemplateRepository,
-    EventRepository,
-    MessageRepository,
-    PushSubscriptionRepository,
-    TaskRepository,
+from planned.application.repositories import (
+    DayRepositoryProtocol,
+    DayTemplateRepositoryProtocol,
+    EventRepositoryProtocol,
+    MessageRepositoryProtocol,
+    PushSubscriptionRepositoryProtocol,
+    TaskRepositoryProtocol,
 )
 from planned.application.services import CalendarService, DayService, PlanningService, SheppardService
 from planned.infrastructure.utils.dates import get_current_date
@@ -29,14 +29,14 @@ from .days import load_todays_day_svc
 async def load_sheppard_svc(
     date: datetime.date,
     day_svc: Annotated[DayService, Depends(load_todays_day_svc)],
-    push_subscription_repo: Annotated[PushSubscriptionRepository, Depends(get_push_subscription_repo)],
-    task_repo: Annotated[TaskRepository, Depends(get_task_repo)],
+    push_subscription_repo: Annotated[PushSubscriptionRepositoryProtocol, Depends(get_push_subscription_repo)],
+    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
     calendar_service: Annotated[CalendarService, Depends(get_calendar_service)],
     planning_service: Annotated[PlanningService, Depends(get_planning_service)],
-    day_repo: Annotated[DayRepository, Depends(get_day_repo)],
-    day_template_repo: Annotated[DayTemplateRepository, Depends(get_day_template_repo)],
-    event_repo: Annotated[EventRepository, Depends(get_event_repo)],
-    message_repo: Annotated[MessageRepository, Depends(get_message_repo)],
+    day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
+    day_template_repo: Annotated[DayTemplateRepositoryProtocol, Depends(get_day_template_repo)],
+    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
+    message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
 ) -> SheppardService:
     """Load SheppardService with all required dependencies."""
     push_subscriptions = await push_subscription_repo.all()

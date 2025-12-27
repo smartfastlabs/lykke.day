@@ -4,17 +4,16 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Never
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from starlette.middleware.sessions import SessionMiddleware
 
 from planned.core.config import settings
+from planned.core.di.providers import create_container, create_sheppard_service
+from planned.infrastructure.utils import youtube
 from planned.presentation.api.routers import router
 from planned.presentation.middlewares.auth import AuthMiddleware
-from planned.application.services import SheppardService
-from planned.infrastructure.utils import youtube
-from planned.infrastructure.utils.dates import get_current_datetime
 
 logger.remove()
 logger.add(
@@ -29,7 +28,12 @@ async def init_lifespan(app: FastAPI) -> AsyncIterator[Never]:
     """
     Lifespan context manager for FastAPI application.
     """
-    sheppard_svc = await SheppardService.new()
+    # Create and register DI container
+    container = create_container()
+    app.state.container = container
+
+    # Create SheppardService using DI container
+    sheppard_svc = await create_sheppard_service(container)
 
     task = asyncio.create_task(sheppard_svc.run())
     yield  # type: ignore

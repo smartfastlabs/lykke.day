@@ -10,6 +10,7 @@ from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import Flow
 from loguru import logger
 
+from planned.core.config import settings
 from planned.core.exceptions import exceptions
 from planned.domain.entities import AuthToken, Calendar, Event, TaskFrequency
 
@@ -187,7 +188,7 @@ def _load_calendar_events_sync(
         try:
             # Get frequency, fetching parent event if this is a recurring instance
             frequency = get_event_frequency(event, gc, frequency_cache)
-            events.append(Event.from_google(calendar.id, event, frequency))
+            events.append(Event.from_google(calendar.id, event, frequency, settings.TIMEZONE))
         except Exception as e:
             logger.info(f"Error converting event {event.id}: {e}")
             continue

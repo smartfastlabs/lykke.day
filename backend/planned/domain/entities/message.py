@@ -1,10 +1,7 @@
 from datetime import date as dt_date, datetime
 from typing import Literal
-from zoneinfo import ZoneInfo
 
 from pydantic import computed_field
-
-from planned.core.config import settings
 
 from .base import BaseDateObject
 
