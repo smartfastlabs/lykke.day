@@ -32,6 +32,11 @@ from .entities import (
 )
 from .value_objects import BaseRequestObject, BaseResponseObject, BaseValueObject
 
+# Rebuild DayContext after all entities are imported
+# Import here to avoid circular imports
+from .value_objects.day import DayContext as _DayContext
+_DayContext.model_rebuild()
+
 __all__ = [
     # Entities
     "Action",

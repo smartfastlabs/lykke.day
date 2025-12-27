@@ -1,22 +1,10 @@
 from datetime import UTC, datetime
-from enum import Enum
 from typing import Any
 
 from pydantic import Field
 
+from ..value_objects.action import ActionType
 from .base import BaseConfigObject
-
-
-class ActionType(str, Enum):
-    COMPLETE = "COMPLETE"
-    DELETE = "DELETE"
-    EDIT = "EDIT"
-    NOTIFY = "NOTIFY"
-    PAUSE = "PAUSE"
-    PUNT = "PUNT"
-    RESUME = "RESUME"
-    START = "START"
-    VIEW = "VIEW"
 
 
 class Action(BaseConfigObject):

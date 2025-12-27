@@ -17,19 +17,3 @@ class PushSubscription(BaseConfigObject):
         default_factory=lambda: datetime.now(UTC),
         alias="createdAt",
     )
-
-
-class NotificationAction(BaseConfigObject):
-    action: str
-    title: str
-    icon: str | None = None
-
-
-class NotificationPayload(BaseConfigObject):
-    title: str
-    body: str
-    icon: str | None = None
-    badge: str | None = None
-    tag: str | None = None
-    actions: list[NotificationAction] = Field(default_factory=list)
-    data: dict | None = None

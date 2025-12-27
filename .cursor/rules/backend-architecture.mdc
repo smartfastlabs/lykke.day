@@ -3,36 +3,87 @@ globs: backend/*
 alwaysApply: false
 ---
 
-This codebase follows a VERY strict architecture any changes that break any of the following rules won't be accepted.
+This codebase follows a VERY strict layered architecture (Clean Architecture/Hexagonal Architecture). Any changes that break any of the following rules won't be accepted.
 
-Here is a high level view of the different components of the code base:
+## Architecture Overview
 
-1. Routers: These are fastapi routes, they must stay simple!
-   - They should all use objects.BaseModel as the child for their request object.
-   - They should contain no business logic:
-     - They can validate
-     - They can fetch data (e.g. for auth, validation, etc.)
-     - They can send that data to a service to run business logic
-2. Gateways: These are connectors to external APIs/Services
-   - These can be implemented in two ways:
-     - A class: helpful for session management
-     - A module with stateless functions
-   - They must use accept and return our own objects, not 3rd party objects
-3. Services: This is where all business logic lives
+The codebase is organized into the following layers:
 
-   - You should never need to create a new service. If you think you should...ask me first.
+### 1. Domain Layer (`domain/`)
 
-   Current Services:
+- **Entities** (`domain/entities/`): Core business objects that represent the domain concepts
+- **Value Objects** (`domain/value_objects/`): Immutable value objects including `BaseRequestObject` and `BaseResponseObject`
+- This layer has no dependencies on other layers - it's the innermost layer
 
-   1. AuthService: Handles all things authentication
-   2. CalendarService: Handles syncing calendars from 3rd party apis
-   3. PlanningService: Converts Routines into Tasks (i.e. schedules the task for a specific date when applicable).
-   4. SheppardService: Handles Intraday planning, noticications, conversations and everything that is realtime. This is where all realtime business logic should live.
+### 2. Application Layer (`application/`)
 
-4. utils: Stateless helper functions
-   - Always check here before creating a new helper functions
-5. Scripts: Utility scripts not run as part of production
-6. Repositories:
-   - You should never need to create a new repository. If you think you should...ask me first.
+- **Gateways** (`application/gateways/`): Protocol definitions (interfaces) for external service integrations
+  - Protocols use Python's `Protocol` type to define interfaces
+  - Examples: `GoogleCalendarGatewayProtocol`, `WebPushGatewayProtocol`
+- **Repositories** (`application/repositories/`): Protocol definitions (interfaces) for data access
+  - Each repository has a corresponding `*RepositoryProtocol`
+  - Examples: `TaskRepositoryProtocol`, `DayRepositoryProtocol`
+- **Services** (`application/services/`): All business logic lives here
 
-The structure of this code base is very important; if you're not sure please ask questions.
+  - Services depend on repository and gateway protocols, not implementations
+  - You should never need to create a new service. If you think you should...ask me first.
+
+  Current Services:
+
+  1.  **AuthService**: Handles all things authentication
+  2.  **CalendarService**: Handles syncing calendars from 3rd party APIs
+  3.  **DayService**: Manages day-specific operations and state
+  4.  **PlanningService**: Converts Routines into Tasks (i.e. schedules the task for a specific date when applicable)
+  5.  **SheppardService**: Handles Intraday planning, notifications, conversations and everything that is realtime. This is where all realtime business logic should live.
+
+### 3. Infrastructure Layer (`infrastructure/`)
+
+- **Gateways** (`infrastructure/gateways/`): Implementations of gateway protocols
+  - Actual implementations that connect to external APIs/Services
+  - Use adapters (`infrastructure/gateways/adapters.py`) that implement the application protocols
+  - They must accept and return our own domain objects, not 3rd party objects
+  - Can be implemented as classes (for session management) or modules with stateless functions
+- **Repositories** (`infrastructure/repositories/`): Implementations of repository protocols
+  - Actual data access implementations (file-based, database, etc.)
+  - You should never need to create a new repository. If you think you should...ask me first.
+- **Utils** (`infrastructure/utils/`): Stateless helper functions
+  - Always check here before creating a new helper function
+- **Sidecars** (`infrastructure/sidecars/`): Background processes and listeners
+
+### 4. Presentation Layer (`presentation/`)
+
+- **Routers** (`presentation/api/routers/`): FastAPI route handlers
+  - Must stay simple! They should contain no business logic
+  - They can validate input
+  - They can fetch data (e.g. for auth, validation, etc.)
+  - They send that data to services to run business logic
+  - Request objects should extend `BaseRequestObject` from `domain/value_objects/base.py`
+  - Response objects should extend `BaseResponseObject` from `domain/value_objects/base.py`
+  - Use dependency injection via `presentation/api/routers/dependencies/` to get services and repositories
+- **Middlewares** (`presentation/middlewares/`): FastAPI middlewares for cross-cutting concerns (auth, etc.)
+
+### 5. Core Layer (`core/`)
+
+- **Config** (`core/config.py`): Application configuration
+- **Constants** (`core/constants.py`): Application constants
+- **Exceptions** (`core/exceptions.py`): Application exceptions
+
+### 6. Scripts (`scripts/`)
+
+- Utility scripts not run as part of production
+
+## Dependency Rules
+
+- **Domain** has no dependencies (it's the core)
+- **Application** depends only on **Domain**
+- **Infrastructure** depends on **Application** and **Domain** (implements the protocols)
+- **Presentation** depends on **Application**, **Domain**, and **Infrastructure** (uses services and repositories)
+- Services should depend on protocols (from application layer), not implementations (from infrastructure layer)
+
+## Important Notes
+
+The structure of this codebase is very important; if you're not sure please ask questions. The layered architecture ensures:
+
+- Business logic is independent of infrastructure details
+- Interfaces and implementations are clearly separated
+- The codebase remains testable and maintainable

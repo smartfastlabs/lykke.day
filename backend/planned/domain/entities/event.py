@@ -4,10 +4,10 @@ from zoneinfo import ZoneInfo
 from gcsa.event import Event as GoogleEvent
 from pydantic import Field
 
+from ..value_objects.task import TaskFrequency
 from .action import Action
 from .base import BaseDateObject
 from .person import Person
-from .task import TaskFrequency
 
 
 def get_datetime(
