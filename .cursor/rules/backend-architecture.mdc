@@ -5,7 +5,7 @@ alwaysApply: false
 
 This codebase follows a VERY strict architecture any changes that break any of the following rules won't be accepted.
 
-Here is a high level view of the different compoenents of the code base:
+Here is a high level view of the different components of the code base:
 
 1. Routers: These are fastapi routes, they must stay simple!
    - They should all use objects.BaseModel as the child for their request object.
