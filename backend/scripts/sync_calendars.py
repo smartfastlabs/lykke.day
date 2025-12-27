@@ -1,12 +1,26 @@
 import asyncio
 
 from planned.application.services import CalendarService
-from planned.core.di.providers import create_container
+from planned.infrastructure.repositories import (
+    AuthTokenRepository,
+    CalendarRepository,
+    EventRepository,
+)
 
 
 async def main():
-    container = create_container()
-    calendar_service = container.get(CalendarService)
+    # Create repositories
+    auth_token_repo = AuthTokenRepository()  # type: ignore[type-abstract]
+    calendar_repo = CalendarRepository()  # type: ignore[type-abstract]
+    event_repo = EventRepository()  # type: ignore[type-abstract]
+
+    # Create service
+    calendar_service = CalendarService(
+        auth_token_repo=auth_token_repo,
+        calendar_repo=calendar_repo,
+        event_repo=event_repo,
+    )
+
     await calendar_service.sync_all()
 
 
