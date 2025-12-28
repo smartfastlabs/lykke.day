@@ -1,23 +1,14 @@
 """Tests for transaction management."""
 
 import pytest
+import pytest_asyncio
 
 from planned.domain.entities import Day, DayStatus, Task, TaskStatus
 from planned.infrastructure.database.transaction import TransactionManager, get_transaction_connection
-from planned.infrastructure.repositories import DayRepository, TaskRepository
 from planned.infrastructure.utils.dates import get_current_datetime
 
-
-@pytest.fixture
-def day_repo(test_user):
-    from uuid import UUID
-    return DayRepository(user_uuid=UUID(test_user.id))
-
-
-@pytest.fixture
-def task_repo(test_user):
-    from uuid import UUID
-    return TaskRepository(user_uuid=UUID(test_user.id))
+# Fixtures from integration conftest are automatically available
+# No need for pytest_plugins - conftest files are auto-discovered
 
 
 @pytest.mark.asyncio

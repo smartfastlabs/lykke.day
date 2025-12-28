@@ -1,3 +1,5 @@
+"""E2E tests for AuthMiddleware."""
+
 import pytest
 from dobles import InstanceDouble
 
@@ -9,6 +11,7 @@ from planned.presentation.middlewares.auth import AuthMiddleware
 
 @pytest.mark.asyncio
 async def test_dispatch_success():
+    """Test successful middleware dispatch with valid session."""
     from uuid import uuid4
     obj = AuthMiddleware(app)
     url = InstanceDouble("starlette.datastructures.URL")
@@ -28,7 +31,6 @@ async def test_dispatch_success():
         nonlocal called
         called = True
         assert tmp is request
-
         return "called"
 
     assert await obj.dispatch(request, call_next) == "called"
@@ -37,6 +39,7 @@ async def test_dispatch_success():
 
 @pytest.mark.asyncio
 async def test_dispatch_not_logged_in():
+    """Test middleware raises AuthorizationError when not logged in."""
     obj = AuthMiddleware(app)
     url = InstanceDouble("starlette.datastructures.URL")
     url.path = "/some-url"
@@ -52,6 +55,7 @@ async def test_dispatch_not_logged_in():
 
 @pytest.mark.asyncio
 async def test_dispatch_no_session():
+    """Test middleware raises ServerError when session doesn't exist."""
     obj = AuthMiddleware(app)
     url = InstanceDouble("starlette.datastructures.URL")
     url.path = "/some-url"
@@ -66,6 +70,7 @@ async def test_dispatch_no_session():
 
 @pytest.mark.asyncio
 async def test_dispatch_invalid_session():
+    """Test middleware raises AuthorizationError with invalid session data."""
     obj = AuthMiddleware(app)
     url = InstanceDouble("starlette.datastructures.URL")
     url.path = "/some-url"
@@ -77,3 +82,4 @@ async def test_dispatch_invalid_session():
 
     with pytest.raises(exceptions.AuthorizationError):
         await obj.dispatch(request, None)
+
