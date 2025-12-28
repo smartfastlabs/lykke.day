@@ -10,7 +10,6 @@ from planned.core.exceptions import exceptions
 from planned.domain.entities.base import BaseDateObject
 from planned.infrastructure.database import get_engine
 
-from .mappers import entity_to_row, row_to_entity
 from .repository import BaseRepository, ChangeEvent
 
 DateObjectType = TypeVar(
@@ -21,10 +20,10 @@ DateObjectType = TypeVar(
 
 class BaseDateRepository(BaseRepository[DateObjectType]):
     """Base repository for date-scoped entities using async SQLAlchemy Core."""
-    
+
     Object: type[DateObjectType]
     table: "Table"  # type: ignore[name-defined]  # noqa: F821
-    
+
     def _get_engine(self) -> AsyncEngine:
         """Get the database engine."""
         return get_engine()
@@ -39,19 +38,19 @@ class BaseDateRepository(BaseRepository[DateObjectType]):
             )
             result = await conn.execute(stmt)
             row = result.mapping().first()
-            
+
             if row is None:
                 raise exceptions.NotFoundError(
                     f"`{self.Object.__name__}` with date '{date}' and key '{key}' not found.",
                 )
-            
-            return row_to_entity(dict(row), self.Object)
+
+            return type(self).row_to_entity(dict(row))  # type: ignore[misc]
 
     async def put(self, obj: DateObjectType) -> DateObjectType:
         """Save or update an object."""
         engine = self._get_engine()
-        row = entity_to_row(obj, self.table.name)
-        
+        row = type(self).entity_to_row(obj)  # type: ignore[misc]
+
         async with engine.begin() as conn:
             # Check if object exists
             stmt = select(self.table.c.id).where(
@@ -60,7 +59,7 @@ class BaseDateRepository(BaseRepository[DateObjectType]):
             )
             result = await conn.execute(stmt)
             exists = result.first() is not None
-            
+
             # Use PostgreSQL INSERT ... ON CONFLICT DO UPDATE
             insert_stmt = pg_insert(self.table).values(**row)
             update_dict = {k: v for k, v in row.items() if k not in ("id", "date")}
@@ -69,7 +68,7 @@ class BaseDateRepository(BaseRepository[DateObjectType]):
                 set_=update_dict,
             )
             await conn.execute(upsert_stmt)
-        
+
         event_type: Literal["create", "update"] = "update" if exists else "create"
         event = ChangeEvent[DateObjectType](type=event_type, value=obj)
         await self.signal_source.send_async("change", event=event)
@@ -82,20 +81,20 @@ class BaseDateRepository(BaseRepository[DateObjectType]):
             stmt = select(self.table).where(self.table.c.date == date)
             result = await conn.execute(stmt)
             rows = result.mappings().all()
-            
-            return [row_to_entity(dict(row), self.Object) for row in rows]
+
+            return [type(self).row_to_entity(dict(row)) for row in rows]  # type: ignore[misc]
 
     async def delete(self, obj: DateObjectType) -> None:
         """Delete an object."""
         engine = self._get_engine()
-        
+
         async with engine.begin() as conn:
             stmt = delete(self.table).where(
                 self.table.c.date == obj.date,
                 self.table.c.id == obj.id,
             )
             await conn.execute(stmt)
-        
+
         event = ChangeEvent[DateObjectType](type="delete", value=obj)
         await self.signal_source.send_async("change", event=event)
 
@@ -107,9 +106,9 @@ class BaseDateRepository(BaseRepository[DateObjectType]):
         """Delete all objects for a date, optionally filtering."""
         if isinstance(date, str):
             date = datetime.date.fromisoformat(date)
-        
+
         engine = self._get_engine()
-        
+
         if filter_by is None:
             # Delete all objects for the date
             async with engine.begin() as conn:
@@ -119,7 +118,7 @@ class BaseDateRepository(BaseRepository[DateObjectType]):
             # Get all objects, filter, then delete matching ones
             objects = await self.search(date)
             objects_to_delete = [obj for obj in objects if filter_by(obj)]
-            
+
             if objects_to_delete:
                 async with engine.begin() as conn:
                     ids_to_delete = [obj.id for obj in objects_to_delete]
@@ -128,7 +127,7 @@ class BaseDateRepository(BaseRepository[DateObjectType]):
                         self.table.c.id.in_(ids_to_delete),
                     )
                     await conn.execute(stmt)
-                
+
                 # Send delete events for each deleted object
                 for obj in objects_to_delete:
                     event = ChangeEvent[DateObjectType](type="delete", value=obj)

@@ -17,6 +17,9 @@ from planned.infrastructure.database import get_engine
 from planned.infrastructure.utils.dates import get_current_date, get_current_datetime
 from planned.presentation.middlewares import middlewares
 
+# Import test data loading fixture
+from tests.fixtures.load_test_data import load_test_data  # noqa: F401
+
 
 @pytest.fixture(scope="session")
 def test_database_url():

@@ -5,7 +5,7 @@ from planned.infrastructure.utils.dates import get_current_date
 
 
 @pytest.mark.asyncio
-async def test_get_today(test_client, test_date):
+async def test_get_today(test_client, test_date, load_test_data):
     result = test_client.get(
         "/events/today",
     )
