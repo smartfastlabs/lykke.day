@@ -31,10 +31,10 @@ class EventRepository(BaseDateRepository[Event]):
 
         # Handle JSONB fields
         if event.people:
-            row["people"] = [person.model_dump() for person in event.people]
+            row["people"] = [person.model_dump(mode="json") for person in event.people]
 
         if event.actions:
-            row["actions"] = [action.model_dump() for action in event.actions]
+            row["actions"] = [action.model_dump(mode="json") for action in event.actions]
 
         return row
 

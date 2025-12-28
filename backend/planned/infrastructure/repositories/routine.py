@@ -23,10 +23,10 @@ class RoutineRepository(BaseConfigRepository[Routine]):
 
         # Handle JSONB fields
         if routine.routine_schedule:
-            row["routine_schedule"] = routine.routine_schedule.model_dump()
+            row["routine_schedule"] = routine.routine_schedule.model_dump(mode="json")
 
         if routine.tasks:
-            row["tasks"] = [task.model_dump() for task in routine.tasks]
+            row["tasks"] = [task.model_dump(mode="json") for task in routine.tasks]
 
         return row
 

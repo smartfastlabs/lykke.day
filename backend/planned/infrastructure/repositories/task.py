@@ -27,16 +27,16 @@ class TaskRepository(BaseDateRepository[Task]):
         }
 
         # Handle JSONB fields - task_definition is required, others are optional
-        row["task_definition"] = task.task_definition.model_dump()
+        row["task_definition"] = task.task_definition.model_dump(mode="json")
 
         if task.schedule:
-            row["schedule"] = task.schedule.model_dump()
+            row["schedule"] = task.schedule.model_dump(mode="json")
 
         if task.tags:
             row["tags"] = [tag.value for tag in task.tags]
 
         if task.actions:
-            row["actions"] = [action.model_dump() for action in task.actions]
+            row["actions"] = [action.model_dump(mode="json") for action in task.actions]
 
         return row
 
