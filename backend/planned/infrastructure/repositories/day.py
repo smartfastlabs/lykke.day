@@ -1,5 +1,6 @@
 from datetime import date as dt_date
 from typing import Any
+from uuid import UUID
 
 from planned.domain.entities import Day
 
@@ -13,11 +14,16 @@ class DayRepository(BaseRepository[Day, BaseQuery]):
     table = days
     QueryClass = BaseQuery
 
+    def __init__(self, user_uuid: UUID) -> None:
+        """Initialize DayRepository with user scoping."""
+        super().__init__(user_uuid=user_uuid)
+
     @staticmethod
     def entity_to_row(day: Day) -> dict[str, Any]:
         """Convert a Day entity to a database row dict."""
         row: dict[str, Any] = {
             "id": str(day.date),
+            "user_uuid": day.user_uuid,
             "date": day.date,
             "template_id": day.template_id,
             "status": day.status.value,

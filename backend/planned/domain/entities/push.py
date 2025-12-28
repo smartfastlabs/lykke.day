@@ -8,6 +8,7 @@ from .base import BaseConfigObject
 
 
 class PushSubscription(BaseConfigObject):
+    user_uuid: UUID
     device_name: str | None = None
     endpoint: str
     p256dh: str

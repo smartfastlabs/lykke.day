@@ -28,9 +28,9 @@ from .entities import (
     TaskStatus,
     TaskType,
     TimingType,
-    UserSettings,
+    User,
 )
-from .value_objects import BaseRequestObject, BaseResponseObject, BaseValueObject
+from .value_objects import BaseRequestObject, BaseResponseObject, BaseValueObject, UserSetting
 
 # Rebuild DayContext after all entities are imported
 # Import here to avoid circular imports
@@ -67,7 +67,8 @@ __all__ = [
     "TaskStatus",
     "TaskType",
     "TimingType",
-    "UserSettings",
+    "User",
+    "UserSetting",
     # Value Objects
     "BaseRequestObject",
     "BaseResponseObject",

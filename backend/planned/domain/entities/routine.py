@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import Field
 
 from ..value_objects.routine import RoutineSchedule, RoutineTask
@@ -6,6 +8,7 @@ from .base import BaseConfigObject
 
 
 class Routine(BaseConfigObject):
+    user_uuid: UUID
     name: str
 
     category: TaskCategory

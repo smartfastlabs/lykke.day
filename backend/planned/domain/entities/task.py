@@ -1,4 +1,5 @@
 from datetime import date as dt_date, datetime
+from uuid import UUID
 
 from pydantic import Field
 
@@ -15,6 +16,7 @@ from .base import BaseDateObject
 
 
 class Task(BaseDateObject):
+    user_uuid: UUID
     scheduled_date: dt_date
     name: str
     status: TaskStatus

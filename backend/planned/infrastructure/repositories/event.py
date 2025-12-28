@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.sql import Select
 
@@ -13,6 +14,10 @@ class EventRepository(BaseRepository[Event, DateQuery]):
     Object = Event
     table = events
     QueryClass = DateQuery
+
+    def __init__(self, user_uuid: UUID) -> None:
+        """Initialize EventRepository with user scoping."""
+        super().__init__(user_uuid=user_uuid)
 
     def build_query(self, query: DateQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
@@ -29,6 +34,7 @@ class EventRepository(BaseRepository[Event, DateQuery]):
         """Convert an Event entity to a database row dict."""
         row: dict[str, Any] = {
             "id": event.id,
+            "user_uuid": event.user_uuid,
             "date": event.starts_at.date(),  # Extract date from starts_at for querying
             "name": event.name,
             "calendar_id": event.calendar_id,

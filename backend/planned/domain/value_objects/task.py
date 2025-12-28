@@ -1,5 +1,6 @@
 from datetime import time
 from enum import Enum
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -59,6 +60,7 @@ class TimingType(str, Enum):
 
 
 class TaskDefinition(BaseConfigObject):
+    user_uuid: UUID
     id: str
     name: str
     description: str

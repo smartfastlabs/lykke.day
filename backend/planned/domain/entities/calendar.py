@@ -1,9 +1,11 @@
 from datetime import datetime
+from uuid import UUID
 
 from .base import BaseConfigObject
 
 
 class Calendar(BaseConfigObject):
+    user_uuid: UUID
     name: str
     auth_token_id: str
     platform_id: str

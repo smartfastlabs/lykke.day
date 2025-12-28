@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 
 from planned.domain.entities import AuthToken
 
@@ -12,11 +13,16 @@ class AuthTokenRepository(BaseRepository[AuthToken, BaseQuery]):
     table = auth_tokens
     QueryClass = BaseQuery
 
+    def __init__(self, user_uuid: UUID) -> None:
+        """Initialize AuthTokenRepository with user scoping."""
+        super().__init__(user_uuid=user_uuid)
+
     @staticmethod
     def entity_to_row(auth_token: AuthToken) -> dict[str, Any]:
         """Convert an AuthToken entity to a database row dict."""
         row: dict[str, Any] = {
             "id": auth_token.id,
+            "user_uuid": auth_token.user_uuid,
             "platform": auth_token.platform,
             "token": auth_token.token,
             "refresh_token": auth_token.refresh_token,

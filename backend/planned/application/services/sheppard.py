@@ -346,6 +346,7 @@ class SheppardService(BaseService):
         # send morning summary
         self.day_svc = await DayService.for_date(
             get_current_date(),
+            user_uuid=self.planning_service.user_uuid,
             day_repo=self.day_repo,
             day_template_repo=self.day_template_repo,
             event_repo=self.event_repo,

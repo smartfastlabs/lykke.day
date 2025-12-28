@@ -27,6 +27,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         self.exclude_paths = exclude_paths or [
             "/auth/set-password",
             "/auth/login",
+            "/auth/register",
             "/health",
         ]
 
@@ -48,25 +49,37 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 "Session middleware not configured",
             )
 
-        # Get logged_in_at from session
+        # Check for user_uuid in session (primary check)
+        user_uuid = request.session.get("user_uuid")
+        
+        # Fallback to logged_in_at for backward compatibility during migration
         logged_in_at = request.session.get("logged_in_at")
-
-        # Check if logged_in_at exists
-        if not logged_in_at:
+        
+        # Check if user_uuid exists (preferred)
+        if user_uuid:
+            # Validate that user_uuid is a valid UUID string
+            try:
+                from uuid import UUID
+                UUID(user_uuid)  # Validate format
+            except (ValueError, TypeError):
+                raise exceptions.AuthorizationError(
+                    "Invalid session data. Please log in again.",
+                )
+        elif logged_in_at:
+            # Backward compatibility: validate logged_in_at
+            try:
+                if isinstance(logged_in_at, str):
+                    datetime.fromisoformat(logged_in_at)
+                else:
+                    raise exceptions.AuthorizationError("Invalid datetime format")
+            except (ValueError, TypeError) as e:
+                raise exceptions.AuthorizationError(
+                    "Invalid session data. Please log in again.",
+                ) from e
+        else:
+            # Neither user_uuid nor logged_in_at exists
             raise exceptions.AuthorizationError(
                 "Not authenticated. Please log in.",
             )
-
-        # Validate that logged_in_at is a valid datetime
-        try:
-            # If it's stored as a string (common in sessions), parse it
-            if isinstance(logged_in_at, str):
-                datetime.fromisoformat(logged_in_at)
-            else:
-                raise exceptions.AuthorizationError("Invalid datetime format")
-        except (ValueError, TypeError) as e:
-            raise exceptions.AuthorizationError(
-                "Invalid session data. Please log in again.",
-            ) from e
 
         return await call_next(request)

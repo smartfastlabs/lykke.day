@@ -10,10 +10,11 @@ from planned.application.repositories import (
     AuthTokenRepositoryProtocol,
     CalendarRepositoryProtocol,
 )
-from planned.domain.entities import AuthToken, Calendar
+from planned.domain.entities import AuthToken, Calendar, User
 from planned.infrastructure.gateways.google import get_flow
 
 from .dependencies.repositories import get_auth_token_repo, get_calendar_repo
+from .dependencies.user import get_current_user
 
 # Auth state storage (in memory for simplicity, use a database in production)
 oauth_states = {}
@@ -76,6 +77,7 @@ async def google_login_callback(
     request: Request,
     state: str,
     code: str,
+    user: Annotated[User, Depends(get_current_user)],
     auth_token_repo: Annotated[AuthTokenRepositoryProtocol, Depends(get_auth_token_repo)],
     calendar_repo: Annotated[CalendarRepositoryProtocol, Depends(get_calendar_repo)],
 ) -> RedirectResponse:
@@ -88,8 +90,11 @@ async def google_login_callback(
     flow = get_flow("login")
     flow.fetch_token(code=code)
 
+    from uuid import UUID
+    from uuid import UUID
     auth_token: AuthToken = await auth_token_repo.put(
         AuthToken(
+            user_uuid=UUID(user.id),
             client_id=flow.credentials.client_id,
             client_secret=flow.credentials.client_secret,
             expires_at=flow.credentials.expiry,
@@ -113,6 +118,7 @@ async def google_login_callback(
     for calendar in calendar_list.get("items", []):
         await calendar_repo.put(
             Calendar(
+                user_uuid=UUID(user.id),
                 name=calendar["summary"],
                 platform="google",
                 platform_id=calendar["id"],

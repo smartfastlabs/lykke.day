@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.sql import Select
 
@@ -13,6 +14,10 @@ class TaskRepository(BaseRepository[Task, DateQuery]):
     Object = Task
     table = tasks
     QueryClass = DateQuery
+
+    def __init__(self, user_uuid: UUID) -> None:
+        """Initialize TaskRepository with user scoping."""
+        super().__init__(user_uuid=user_uuid)
 
     def build_query(self, query: DateQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
@@ -29,6 +34,7 @@ class TaskRepository(BaseRepository[Task, DateQuery]):
         """Convert a Task entity to a database row dict."""
         row: dict[str, Any] = {
             "id": task.id,
+            "user_uuid": task.user_uuid,
             "date": task.scheduled_date,  # Extract date from scheduled_date for querying
             "scheduled_date": task.scheduled_date,
             "name": task.name,

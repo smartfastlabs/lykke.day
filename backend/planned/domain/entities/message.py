@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import Literal
-
+from uuid import UUID
 
 from .base import BaseDateObject
 
 
 class Message(BaseDateObject):
+    user_uuid: UUID
     author: Literal["system", "agent", "user"]
     sent_at: datetime
     content: str

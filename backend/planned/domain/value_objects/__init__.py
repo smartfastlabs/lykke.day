@@ -14,3 +14,4 @@ from .task import (
     TaskType,
     TimingType,
 )
+from .user import UserSetting

@@ -14,18 +14,25 @@ from planned.infrastructure.repositories import (
 
 @pytest.mark.asyncio
 @pytest.mark.skip
-async def test_schedule_today(test_date):
+async def test_schedule_today(test_date, test_user):
+    from uuid import UUID
+    from planned.infrastructure.repositories import UserRepository
+    
+    user_uuid = UUID(test_user.id)
     # Create repository instances
-    day_repo = DayRepository()
-    day_template_repo = DayTemplateRepository()
-    event_repo = EventRepository()
-    message_repo = MessageRepository()
-    routine_repo = RoutineRepository()
-    task_definition_repo = TaskDefinitionRepository()
-    task_repo = TaskRepository()
+    day_repo = DayRepository(user_uuid=user_uuid)
+    day_template_repo = DayTemplateRepository(user_uuid=user_uuid)
+    event_repo = EventRepository(user_uuid=user_uuid)
+    message_repo = MessageRepository(user_uuid=user_uuid)
+    routine_repo = RoutineRepository(user_uuid=user_uuid)
+    task_definition_repo = TaskDefinitionRepository(user_uuid=user_uuid)
+    task_repo = TaskRepository(user_uuid=user_uuid)
+    user_repo = UserRepository()
 
     # Create planning service with repositories
     planning_svc = PlanningService(
+        user_uuid=user_uuid,
+        user_repo=user_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
@@ -44,11 +51,13 @@ async def test_schedule_today(test_date):
 
     day_svc = await DayService.for_date(
         test_date,
+        user_uuid=user_uuid,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
         message_repo=message_repo,
         task_repo=task_repo,
+        user_repo=user_repo,
     )
 
     def sort_tasks(tasks):
@@ -60,18 +69,25 @@ async def test_schedule_today(test_date):
 
 @pytest.mark.asyncio
 @pytest.mark.skip
-async def test_schedule_tomorrow(test_date_tomorrow):
+async def test_schedule_tomorrow(test_date_tomorrow, test_user):
+    from uuid import UUID
+    from planned.infrastructure.repositories import UserRepository
+    
+    user_uuid = UUID(test_user.id)
     # Create repository instances
-    day_repo = DayRepository()
-    day_template_repo = DayTemplateRepository()
-    event_repo = EventRepository()
-    message_repo = MessageRepository()
-    routine_repo = RoutineRepository()
-    task_definition_repo = TaskDefinitionRepository()
-    task_repo = TaskRepository()
+    day_repo = DayRepository(user_uuid=user_uuid)
+    day_template_repo = DayTemplateRepository(user_uuid=user_uuid)
+    event_repo = EventRepository(user_uuid=user_uuid)
+    message_repo = MessageRepository(user_uuid=user_uuid)
+    routine_repo = RoutineRepository(user_uuid=user_uuid)
+    task_definition_repo = TaskDefinitionRepository(user_uuid=user_uuid)
+    task_repo = TaskRepository(user_uuid=user_uuid)
+    user_repo = UserRepository()
 
     # Create planning service with repositories
     planning_svc = PlanningService(
+        user_uuid=user_uuid,
+        user_repo=user_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,

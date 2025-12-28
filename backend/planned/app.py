@@ -20,8 +20,14 @@ from planned.application.repositories import (
     RoutineRepositoryProtocol,
     TaskDefinitionRepositoryProtocol,
     TaskRepositoryProtocol,
+    UserRepositoryProtocol,
 )
-from planned.application.services import CalendarService, DayService, PlanningService, SheppardService
+from planned.application.services import (
+    CalendarService,
+    DayService,
+    PlanningService,
+    SheppardService,
+)
 from planned.core.config import settings
 from planned.infrastructure.gateways.adapters import (
     GoogleCalendarGatewayAdapter,
@@ -53,16 +59,60 @@ logger.add(
 
 
 async def create_sheppard_service() -> SheppardService:
-    """Create and return a SheppardService instance with all dependencies."""
-    # Create repositories
-    auth_token_repo: AuthTokenRepositoryProtocol = cast(AuthTokenRepositoryProtocol, AuthTokenRepository())
-    calendar_repo: CalendarRepositoryProtocol = cast(CalendarRepositoryProtocol, CalendarRepository())
-    day_repo: DayRepositoryProtocol = cast(DayRepositoryProtocol, DayRepository())
-    day_template_repo: DayTemplateRepositoryProtocol = cast(DayTemplateRepositoryProtocol, DayTemplateRepository())
-    event_repo: EventRepositoryProtocol = cast(EventRepositoryProtocol, EventRepository())
-    message_repo: MessageRepositoryProtocol = cast(MessageRepositoryProtocol, MessageRepository())
-    push_subscription_repo: PushSubscriptionRepositoryProtocol = cast(PushSubscriptionRepositoryProtocol, PushSubscriptionRepository())
-    task_repo: TaskRepositoryProtocol = cast(TaskRepositoryProtocol, TaskRepository())
+    """Create and return a SheppardService instance with all dependencies.
+
+    Note: SheppardService is a background service that currently works with a single system user.
+    In the future, this should be refactored to iterate over all users or work per-user.
+    """
+    from uuid import UUID, uuid4
+
+    from planned.domain.entities import User
+    from planned.domain.value_objects.user import UserSetting
+    from planned.infrastructure.repositories import UserRepository
+
+    # Create or get system user for background services
+    user_repo = UserRepository()
+    system_user_email = "system@planned.day"
+    system_user = await user_repo.get_by_email(system_user_email)
+    if system_user is None:
+        # Create system user
+        system_user = User(
+            id=str(uuid4()),
+            email=system_user_email,
+            password_hash="",  # System user doesn't need password
+            settings=UserSetting(),
+        )
+        system_user = await user_repo.put(system_user)
+
+    system_user_uuid = UUID(system_user.id)
+
+    # Create repositories scoped to system user
+    auth_token_repo: AuthTokenRepositoryProtocol = cast(
+        "AuthTokenRepositoryProtocol", AuthTokenRepository(user_uuid=system_user_uuid)
+    )
+    calendar_repo: CalendarRepositoryProtocol = cast(
+        "CalendarRepositoryProtocol", CalendarRepository(user_uuid=system_user_uuid)
+    )
+    day_repo: DayRepositoryProtocol = cast(
+        "DayRepositoryProtocol", DayRepository(user_uuid=system_user_uuid)
+    )
+    day_template_repo: DayTemplateRepositoryProtocol = cast(
+        "DayTemplateRepositoryProtocol",
+        DayTemplateRepository(user_uuid=system_user_uuid),
+    )
+    event_repo: EventRepositoryProtocol = cast(
+        "EventRepositoryProtocol", EventRepository(user_uuid=system_user_uuid)
+    )
+    message_repo: MessageRepositoryProtocol = cast(
+        "MessageRepositoryProtocol", MessageRepository(user_uuid=system_user_uuid)
+    )
+    push_subscription_repo: PushSubscriptionRepositoryProtocol = cast(
+        "PushSubscriptionRepositoryProtocol",
+        PushSubscriptionRepository(user_uuid=system_user_uuid),
+    )
+    task_repo: TaskRepositoryProtocol = cast(
+        "TaskRepositoryProtocol", TaskRepository(user_uuid=system_user_uuid)
+    )
 
     # Create gateway adapters
     google_gateway = GoogleCalendarGatewayAdapter()
@@ -77,23 +127,32 @@ async def create_sheppard_service() -> SheppardService:
     )
 
     planning_service = PlanningService(
+        user_uuid=system_user_uuid,
+        user_repo=cast("UserRepositoryProtocol", user_repo),
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
         message_repo=message_repo,
-        routine_repo=cast(RoutineRepositoryProtocol, RoutineRepository()),
-        task_definition_repo=cast(TaskDefinitionRepositoryProtocol, TaskDefinitionRepository()),
+        routine_repo=cast(
+            "RoutineRepositoryProtocol", RoutineRepository(user_uuid=system_user_uuid)
+        ),
+        task_definition_repo=cast(
+            "TaskDefinitionRepositoryProtocol",
+            TaskDefinitionRepository(user_uuid=system_user_uuid),
+        ),
         task_repo=task_repo,
     )
 
     # Create day service for current date
     day_svc = await DayService.for_date(
         get_current_date(),
+        user_uuid=system_user_uuid,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
         message_repo=message_repo,
         task_repo=task_repo,
+        user_repo=cast("UserRepositoryProtocol", user_repo),
     )
 
     # Load push subscriptions

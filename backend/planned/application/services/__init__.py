@@ -1,4 +1,4 @@
-from .auth import AuthService, auth_svc
+from .auth import AuthService
 from .calendar import CalendarService
 from .day import DayService
 from .planning import PlanningService

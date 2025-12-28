@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.sql import Select
 
@@ -13,6 +14,10 @@ class MessageRepository(BaseRepository[Message, DateQuery]):
     Object = Message
     table = messages
     QueryClass = DateQuery
+
+    def __init__(self, user_uuid: UUID) -> None:
+        """Initialize MessageRepository with user scoping."""
+        super().__init__(user_uuid=user_uuid)
 
     def build_query(self, query: DateQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
@@ -29,6 +34,7 @@ class MessageRepository(BaseRepository[Message, DateQuery]):
         """Convert a Message entity to a database row dict."""
         row: dict[str, Any] = {
             "id": message.id,
+            "user_uuid": message.user_uuid,
             "date": message.sent_at.date(),  # Extract date from sent_at for querying
             "author": message.author,
             "sent_at": message.sent_at,

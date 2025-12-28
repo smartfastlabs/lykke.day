@@ -9,10 +9,11 @@ from planned.application.repositories import (
     EventRepositoryProtocol,
     MessageRepositoryProtocol,
     TaskRepositoryProtocol,
+    UserRepositoryProtocol,
 )
 from planned.application.services import DayService, PlanningService
 from planned.core.exceptions import exceptions
-from planned.domain.entities import Day, DayContext, DayStatus, DayTemplate
+from planned.domain.entities import Day, DayContext, DayStatus, DayTemplate, User
 from planned.domain.value_objects.base import BaseRequestObject
 from planned.infrastructure.utils.dates import get_current_date, get_tomorrows_date
 
@@ -24,6 +25,7 @@ from .dependencies.repositories import (
     get_task_repo,
 )
 from .dependencies.services import get_planning_service
+from .dependencies.user import get_current_user, get_user_repo
 
 router = APIRouter()
 
@@ -38,6 +40,8 @@ async def schedule_today(
 @router.get("/{date}/context")
 async def get_context(
     date: datetime.date | Literal["today", "tomorrow"],
+    user: Annotated[User, Depends(get_current_user)],
+    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
     planning_service: Annotated[PlanningService, Depends(get_planning_service)],
     day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
     day_template_repo: Annotated[DayTemplateRepositoryProtocol, Depends(get_day_template_repo)],
@@ -53,13 +57,16 @@ async def get_context(
         else:
             raise exceptions.BadRequestError("invalid date")
 
+    from uuid import UUID
     day_svc: DayService = await DayService.for_date(
         date,
+        user_uuid=UUID(user.id),
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
         message_repo=message_repo,
         task_repo=task_repo,
+        user_repo=user_repo,
     )
     if day_svc.ctx.day.status != DayStatus.SCHEDULED:
         return await planning_service.schedule(day_svc.ctx.day.date)
@@ -76,13 +83,18 @@ class UpdateDayRequest(BaseRequestObject):
 async def update_day(
     date: datetime.date,
     request: UpdateDayRequest,
+    user: Annotated[User, Depends(get_current_user)],
+    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
     day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
     day_template_repo: Annotated[DayTemplateRepositoryProtocol, Depends(get_day_template_repo)],
 ) -> Day:
+    from uuid import UUID
     day: Day = await DayService.get_or_preview(
         date,
+        user_uuid=UUID(user.id),
         day_repo=day_repo,
         day_template_repo=day_template_repo,
+        user_repo=user_repo,
     )
     if request.status is not None:
         day.status = request.status

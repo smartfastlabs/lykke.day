@@ -14,6 +14,7 @@ from .push_subscription_repository import PushSubscriptionRepositoryProtocol
 from .routine_repository import RoutineRepositoryProtocol
 from .task_definition_repository import TaskDefinitionRepositoryProtocol
 from .task_repository import TaskRepositoryProtocol
+from .user_repository import UserRepositoryProtocol
 
 __all__ = [
     "AuthTokenRepositoryProtocol",
@@ -26,5 +27,6 @@ __all__ = [
     "RoutineRepositoryProtocol",
     "TaskDefinitionRepositoryProtocol",
     "TaskRepositoryProtocol",
+    "UserRepositoryProtocol",
 ]
 

@@ -45,6 +45,8 @@ serve: docker-up
 	DATABASE_URL=postgresql+psycopg://planned:password@localhost:5432/planned_dev poetry run uvicorn planned.app:app --host 0.0.0.0 --port 8080 --reload
 
 test: docker-up
+	@echo "Running migrations on test database..."
+	@$(MAKE) migrate-test
 	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test ENV_FILE=.env.test poetry run pytest tests --vcr-record=once
 
 typecheck:
@@ -57,4 +59,6 @@ check:
 
 .PHONY: test-target
 test-target: docker-up
+	@echo "Running migrations on test database..."
+	@$(MAKE) migrate-test
 	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test ENV_FILE=.env.test poetry run pytest tests --vcr-record=once -vv -k '$(TARGET)' -s -v

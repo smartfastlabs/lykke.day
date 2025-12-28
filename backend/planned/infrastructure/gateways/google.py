@@ -187,7 +187,7 @@ def _load_calendar_events_sync(
         try:
             # Get frequency, fetching parent event if this is a recurring instance
             frequency = get_event_frequency(event, gc, frequency_cache)
-            events.append(Event.from_google(calendar.id, event, frequency, settings.TIMEZONE))
+            events.append(Event.from_google(calendar.user_uuid, calendar.id, event, frequency, settings.TIMEZONE))
         except Exception as e:
             logger.info(f"Error converting event {event.id}: {e}")
             continue

@@ -1,7 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from .base import BaseValueObject
 
 
-class UserSettings(BaseModel):
+class UserSetting(BaseValueObject):
     template_defaults: list[str] = Field(
         default_factory=lambda: ["default"] * 7,
     )
+

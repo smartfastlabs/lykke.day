@@ -9,8 +9,9 @@ from planned.infrastructure.repositories import EventRepository
 
 
 @pytest_asyncio.fixture
-async def test_event(test_date):
-    repo = EventRepository()
+async def test_event(test_date, test_user):
+    from uuid import UUID
+    repo = EventRepository(user_uuid=UUID(test_user.id))
 
     # Create event on test_date
     starts_at_today = datetime.datetime.combine(
@@ -19,6 +20,7 @@ async def test_event(test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     )
     event_today = objects.Event(
+        user_uuid=UUID(test_user.id),
         name="Test Event",
         frequency="ONCE",
         calendar_id="test-calendar",

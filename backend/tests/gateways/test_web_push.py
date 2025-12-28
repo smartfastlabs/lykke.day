@@ -12,8 +12,10 @@ from planned.infrastructure.gateways import web_push
 
 @pytest.mark.vcr
 @pytest.mark.asyncio
-async def test_send_notification():
+async def test_send_notification(test_user):
+    from uuid import UUID
     subscription = objects.PushSubscription(
+        user_uuid=UUID(test_user.id),
         device_name="Test Device",
         endpoint="https://example.com",
         p256dh="p256dh",

@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 
 from planned.domain.entities.routine import Routine
 
@@ -12,11 +13,16 @@ class RoutineRepository(BaseRepository[Routine, BaseQuery]):
     table = routines
     QueryClass = BaseQuery
 
+    def __init__(self, user_uuid: UUID) -> None:
+        """Initialize RoutineRepository with user scoping."""
+        super().__init__(user_uuid=user_uuid)
+
     @staticmethod
     def entity_to_row(routine: Routine) -> dict[str, Any]:
         """Convert a Routine entity to a database row dict."""
         row: dict[str, Any] = {
             "id": routine.id,
+            "user_uuid": routine.user_uuid,
             "name": routine.name,
             "category": routine.category.value,
             "description": routine.description,

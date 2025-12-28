@@ -1,10 +1,11 @@
-import os
-from contextlib import suppress
+from uuid import UUID
 
-import aiofiles
 from passlib.context import CryptContext
 
-from planned.core.config import settings
+from planned.application.repositories import UserRepositoryProtocol
+from planned.core.exceptions import exceptions
+from planned.domain.entities import User
+from planned.domain.value_objects.user import UserSetting
 
 from .base import BaseService
 
@@ -13,35 +14,89 @@ pwd_context = CryptContext(
     deprecated="auto",
 )
 
-_PATH = os.path.abspath(
-    f"{settings.DATA_PATH}/.password-hash",
-)
-
 
 class AuthService(BaseService):
-    hash: str | None = None
+    """AuthService for user management. NOT user-scoped."""
 
-    def __init__(self) -> None:
-        """Initialize AuthService. No repository dependencies required."""
-        pass
+    def __init__(self, user_repo: UserRepositoryProtocol) -> None:
+        """Initialize AuthService with UserRepository."""
+        self.user_repo = user_repo
 
     @classmethod
-    def new(cls) -> "AuthService":
-        """Create a new instance of AuthService. No repositories needed."""
-        return cls()
+    def new(cls, user_repo: UserRepositoryProtocol) -> "AuthService":
+        """Create a new instance of AuthService."""
+        return cls(user_repo=user_repo)
 
-    async def set_password(self, value: str) -> None:
-        self.hash = pwd_context.hash(value)
-        async with aiofiles.open(_PATH, mode="w") as f:
-            await f.write(self.hash)
+    async def create_user(self, email: str, password: str) -> User:
+        """Create a new user with hashed password.
+        
+        Args:
+            email: User's email address (must be unique)
+            password: Plain text password to hash
+            
+        Returns:
+            Created User entity
+            
+        Raises:
+            BadRequestError: If email already exists
+        """
+        # Check if user with this email already exists
+        existing_user = await self.user_repo.get_by_email(email)
+        if existing_user is not None:
+            raise exceptions.BadRequestError(f"User with email {email} already exists")
+        
+        # Hash password
+        password_hash = pwd_context.hash(password)
+        
+        # Create user with default settings
+        user = User(
+            email=email,
+            password_hash=password_hash,
+            settings=UserSetting(),  # Default settings
+        )
+        
+        # Save to database
+        return await self.user_repo.put(user)
 
-    async def confirm_password(self, value: str) -> bool:
-        if not self.hash:
-            with suppress(FileNotFoundError):
-                async with aiofiles.open(_PATH) as f:
-                    self.hash = await f.read()
+    async def get_user(self, user_uuid: UUID) -> User:
+        """Get user by UUID.
+        
+        Args:
+            user_uuid: User's UUID
+            
+        Returns:
+            User entity
+            
+        Raises:
+            NotFoundError: If user doesn't exist
+        """
+        return await self.user_repo.get(str(user_uuid))
 
-        return pwd_context.verify(value, self.hash)
+    async def authenticate_user(self, email: str, password: str) -> User | None:
+        """Authenticate user by email and password.
+        
+        Args:
+            email: User's email address
+            password: Plain text password to verify
+            
+        Returns:
+            User entity if authentication succeeds, None otherwise
+        """
+        user = await self.user_repo.get_by_email(email)
+        if user is None:
+            return None
+        
+        if pwd_context.verify(password, user.password_hash):
+            return user
+        
+        return None
 
-
-auth_svc = AuthService()
+    async def set_password(self, user: User, new_password: str) -> None:
+        """Update user's password.
+        
+        Args:
+            user: User entity to update
+            new_password: New plain text password to hash and set
+        """
+        user.password_hash = pwd_context.hash(new_password)
+        await self.user_repo.put(user)

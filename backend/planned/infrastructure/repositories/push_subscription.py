@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 
 from planned.domain.entities import PushSubscription
 
@@ -12,11 +13,16 @@ class PushSubscriptionRepository(BaseRepository[PushSubscription, BaseQuery]):
     table = push_subscriptions
     QueryClass = BaseQuery
 
+    def __init__(self, user_uuid: UUID) -> None:
+        """Initialize PushSubscriptionRepository with user scoping."""
+        super().__init__(user_uuid=user_uuid)
+
     @staticmethod
     def entity_to_row(push_subscription: PushSubscription) -> dict[str, Any]:
         """Convert a PushSubscription entity to a database row dict."""
         row: dict[str, Any] = {
             "id": push_subscription.id,
+            "user_uuid": push_subscription.user_uuid,
             "device_name": push_subscription.device_name,
             "endpoint": push_subscription.endpoint,
             "p256dh": push_subscription.p256dh,

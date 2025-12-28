@@ -1,4 +1,5 @@
 from datetime import UTC, date as dt_date, datetime, time
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from gcsa.event import Event as GoogleEvent
@@ -40,6 +41,7 @@ def get_datetime(
 
 
 class Event(BaseDateObject):
+    user_uuid: UUID
     name: str
     calendar_id: str
     platform_id: str
@@ -59,6 +61,7 @@ class Event(BaseDateObject):
     @classmethod
     def from_google(
         cls,
+        user_uuid: UUID,
         calendar_id: str,
         google_event: GoogleEvent,
         frequency: TaskFrequency,
@@ -67,12 +70,14 @@ class Event(BaseDateObject):
         """Create an Event from a Google Calendar event.
         
         Args:
+            user_uuid: User UUID for the event
             calendar_id: ID of the calendar
             google_event: Google Calendar event object
             frequency: Task frequency for the event
             target_timezone: Target timezone for datetime conversion
         """
         event = cls(
+            user_uuid=user_uuid,
             id=f"google:{google_event.id}",
             frequency=frequency,
             calendar_id=calendar_id,

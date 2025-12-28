@@ -15,7 +15,7 @@ from .person import Person
 from .push import PushSubscription
 from .routine import Routine
 from .task import Task
-from .user_settings import UserSettings
+from .user import User
 
 # Re-export value objects for backward compatibility
 from ..value_objects.action import ActionType

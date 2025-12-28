@@ -15,6 +15,7 @@ class AuthToken(BaseConfigObject):
         validate_by_name=True,
         # frozen=True,
     )
+    user_uuid: UUID
     platform: str
     token: str
     refresh_token: str | None = None

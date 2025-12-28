@@ -55,9 +55,11 @@ async def clear_database():
 
 
 @pytest_asyncio.fixture
-async def clear_repos():
-    """Clear all data from the database."""
+async def clear_repos(test_user):
+    """Clear all data from the database, then recreate user and day templates."""
     from sqlalchemy import text
+
+    from planned.infrastructure.repositories import UserRepository
 
     engine = get_engine()
     async with engine.begin() as conn:
@@ -73,55 +75,61 @@ async def clear_repos():
                 text(f"TRUNCATE TABLE {', '.join(tables)} RESTART IDENTITY CASCADE")
             )
 
+    # Recreate user after clearing (since clear_repos clears everything)
+    user_repo = UserRepository()
+    recreated_user = await user_repo.put(test_user)
 
-@pytest.fixture(autouse=True)
-def mock_user_settings():
-    """Mock load_user_settings to return a default UserSettings for all tests."""
-    from planned.domain.entities.user_settings import UserSettings
+    # Recreate day templates after clearing (they're needed for many operations)
+    await _setup_day_templates_for_user(recreated_user)
 
-    default_settings = UserSettings(
-        template_defaults=[
-            "default",
-            "default",
-            "default",
-            "default",
-            "default",
-            "weekend",
-            "weekend",
-        ]
+
+# Note: load_user_settings has been removed - services now use UserRepository
+# Tests should provide User entities with UserSetting values as needed
+
+
+@pytest_asyncio.fixture
+async def test_user():
+    """Create a test user for all tests."""
+    from uuid import uuid4
+
+    from planned.domain.entities import User
+    from planned.domain.value_objects.user import UserSetting
+    from planned.infrastructure.repositories import UserRepository
+
+    user_repo = UserRepository()
+    test_user = User(
+        id=str(uuid4()),
+        email="test@example.com",
+        password_hash="test_hash",
+        settings=UserSetting(
+            template_defaults=[
+                "default",
+                "default",
+                "default",
+                "default",
+                "default",
+                "weekend",
+                "weekend",
+            ],
+        ),
     )
-
-    # Patch in both places where it's imported and used
-    with (
-        patch(
-            "planned.infrastructure.utils.user_settings.load_user_settings",
-            return_value=default_settings,
-        ),
-        patch(
-            "planned.application.services.planning.load_user_settings",
-            return_value=default_settings,
-        ),
-        patch(
-            "planned.application.services.day.load_user_settings",
-            return_value=default_settings,
-        ),
-    ):
-        yield
+    return await user_repo.put(test_user)
 
 
-@pytest_asyncio.fixture(autouse=True)
-async def setup_day_templates():
-    """Create default and weekend day templates for tests."""
+async def _setup_day_templates_for_user(user):
+    """Helper function to create day templates for a user."""
     from datetime import time
+    from uuid import UUID
 
     from planned.domain.entities import Alarm, DayTemplate
     from planned.domain.value_objects.alarm import AlarmType
     from planned.infrastructure.repositories import DayTemplateRepository
 
-    repo = DayTemplateRepository()
+    repo = DayTemplateRepository(user_uuid=UUID(user.id))
 
     # Create default template
     default_template = DayTemplate(
+        user_uuid=UUID(user.id),
         id="default",
         tasks=[],
         alarm=Alarm(
@@ -134,6 +142,7 @@ async def setup_day_templates():
 
     # Create weekend template
     weekend_template = DayTemplate(
+        user_uuid=UUID(user.id),
         id="weekend",
         tasks=[],
         alarm=Alarm(
@@ -144,6 +153,11 @@ async def setup_day_templates():
     )
     await repo.put(weekend_template)
 
+
+@pytest_asyncio.fixture(autouse=True)
+async def setup_day_templates(test_user):
+    """Create default and weekend day templates for tests."""
+    await _setup_day_templates_for_user(test_user)
     yield
 
 
@@ -167,7 +181,7 @@ def test_date_tomorrow(test_date):
 
 
 @pytest.fixture
-def test_client():
+def test_client(clear_repos):
     # Make a request that sets up the session, then modify it
     with TestClient(app) as client:
         allow(middlewares.auth).mock_for_testing.and_return(True)
@@ -175,13 +189,15 @@ def test_client():
 
 
 @pytest.fixture
-def test_deleted_event(test_date_tomorrow):
+def test_deleted_event(test_date_tomorrow, test_user):
+    from uuid import UUID
     starts_at = datetime.datetime.combine(
         test_date_tomorrow,
         datetime.time(hour=2),
         tzinfo=ZoneInfo(settings.TIMEZONE),
     )
     return objects.Event(
+        user_uuid=UUID(test_user.id),
         name="Test Event",
         calendar_id="test-calendar",
         platform_id="test-id",
@@ -192,7 +208,8 @@ def test_deleted_event(test_date_tomorrow):
 
 
 @pytest.fixture
-def test_event(test_date_tomorrow):
+def test_event(test_date_tomorrow, test_user):
+    from uuid import UUID
     starts_at = datetime.datetime.combine(
         test_date_tomorrow,
         datetime.time(hour=2),
@@ -200,6 +217,7 @@ def test_event(test_date_tomorrow):
     )
 
     return objects.Event(
+        user_uuid=UUID(test_user.id),
         name="Test Event",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -211,7 +229,8 @@ def test_event(test_date_tomorrow):
 
 
 @pytest.fixture
-def test_event_today(test_date):
+def test_event_today(test_date, test_user):
+    from uuid import UUID
     starts_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=2),
@@ -219,6 +238,7 @@ def test_event_today(test_date):
     )
 
     return objects.Event(
+        user_uuid=UUID(test_user.id),
         name="Test Event",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -230,8 +250,10 @@ def test_event_today(test_date):
 
 
 @pytest.fixture
-def test_calendar(test_auth_token):
+def test_calendar(test_auth_token, test_user):
+    from uuid import UUID
     return objects.Calendar(
+        user_uuid=UUID(test_user.id),
         name="Test Calendar",
         auth_token_id=test_auth_token.id,
         platform="google",
@@ -240,8 +262,10 @@ def test_calendar(test_auth_token):
 
 
 @pytest.fixture
-def test_auth_token():
+def test_auth_token(test_user):
+    from uuid import UUID
     return objects.AuthToken(
+        user_uuid=UUID(test_user.id),
         platform="testing",
         platform_id="test-auth-token",
         token="token",
@@ -249,8 +273,10 @@ def test_auth_token():
 
 
 @pytest.fixture
-def test_day(test_date):
+def test_day(test_date, test_user):
+    from uuid import UUID
     return objects.Day(
+        user_uuid=UUID(test_user.id),
         date=test_date,
         status=objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
@@ -271,8 +297,10 @@ def test_day_ctx(
     )
 
 
-@pytest.fixture
-def test_day_svc(test_day_ctx):
+@pytest_asyncio.fixture
+async def test_day_svc(test_day_ctx, test_user):
+    from uuid import UUID
+
     from planned.infrastructure.repositories import (
         DayRepository,
         DayTemplateRepository,
@@ -281,11 +309,12 @@ def test_day_svc(test_day_ctx):
         TaskRepository,
     )
 
-    day_repo = DayRepository()
-    day_template_repo = DayTemplateRepository()
-    event_repo = EventRepository()
-    message_repo = MessageRepository()
-    task_repo = TaskRepository()
+    user_uuid = UUID(test_user.id)
+    day_repo = DayRepository(user_uuid=user_uuid)
+    day_template_repo = DayTemplateRepository(user_uuid=user_uuid)
+    event_repo = EventRepository(user_uuid=user_uuid)
+    message_repo = MessageRepository(user_uuid=user_uuid)
+    task_repo = TaskRepository(user_uuid=user_uuid)
 
     return services.DayService(
         ctx=test_day_ctx,
@@ -297,8 +326,10 @@ def test_day_svc(test_day_ctx):
     )
 
 
-@pytest.fixture
-def test_sheppard_svc(test_day_svc):
+@pytest_asyncio.fixture
+async def test_sheppard_svc(test_day_svc, test_user):
+    from uuid import UUID
+
     from planned.application.services import CalendarService, PlanningService
     from planned.infrastructure.repositories import (
         AuthTokenRepository,
@@ -311,19 +342,22 @@ def test_sheppard_svc(test_day_svc):
         RoutineRepository,
         TaskDefinitionRepository,
         TaskRepository,
+        UserRepository,
     )
 
+    user_uuid = UUID(test_user.id)
     # Create repositories
-    push_subscription_repo = PushSubscriptionRepository()
-    task_repo = TaskRepository()
-    day_repo = DayRepository()
-    day_template_repo = DayTemplateRepository()
-    event_repo = EventRepository()
-    message_repo = MessageRepository()
-    auth_token_repo = AuthTokenRepository()
-    calendar_repo = CalendarRepository()
-    routine_repo = RoutineRepository()
-    task_definition_repo = TaskDefinitionRepository()
+    push_subscription_repo = PushSubscriptionRepository(user_uuid=user_uuid)
+    task_repo = TaskRepository(user_uuid=user_uuid)
+    day_repo = DayRepository(user_uuid=user_uuid)
+    day_template_repo = DayTemplateRepository(user_uuid=user_uuid)
+    event_repo = EventRepository(user_uuid=user_uuid)
+    message_repo = MessageRepository(user_uuid=user_uuid)
+    auth_token_repo = AuthTokenRepository(user_uuid=user_uuid)
+    calendar_repo = CalendarRepository(user_uuid=user_uuid)
+    routine_repo = RoutineRepository(user_uuid=user_uuid)
+    task_definition_repo = TaskDefinitionRepository(user_uuid=user_uuid)
+    user_repo = UserRepository()
 
     # Create gateway adapters
     from planned.infrastructure.gateways.adapters import (
@@ -343,6 +377,8 @@ def test_sheppard_svc(test_day_svc):
     )
 
     planning_service = PlanningService(
+        user_uuid=user_uuid,
+        user_repo=user_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
@@ -369,14 +405,17 @@ def test_sheppard_svc(test_day_svc):
 
 
 @pytest.fixture
-def test_task_today(test_date):
+def test_task_today(test_date, test_user):
+    from uuid import UUID
     return objects.Task(
+        user_uuid=UUID(test_user.id),
         name="Test Task Today",
         status=objects.TaskStatus.READY,
         category=objects.TaskCategory.HOUSE,
         frequency=objects.TaskFrequency.DAILY,
         scheduled_date=test_date,
         task_definition=objects.TaskDefinition(
+            user_uuid=UUID(test_user.id),
             id="test-task",
             name="Test Task",
             description="you get the idea",

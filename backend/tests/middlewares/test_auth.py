@@ -9,12 +9,14 @@ from planned.presentation.middlewares.auth import AuthMiddleware
 
 @pytest.mark.asyncio
 async def test_dispatch_success():
+    from uuid import uuid4
     obj = AuthMiddleware(app)
     url = InstanceDouble("starlette.datastructures.URL")
     url.path = "/some-url"
     request = InstanceDouble(
         "fastapi.Request",
         session={
+            "user_uuid": str(uuid4()),
             "logged_in_at": str(get_current_datetime()),
         },
         url=url,

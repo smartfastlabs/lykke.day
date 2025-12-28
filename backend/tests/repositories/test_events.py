@@ -12,8 +12,10 @@ from planned.infrastructure.repositories.base import DateQuery
 
 
 @pytest_asyncio.fixture
-async def event_repo(test_date):
-    repo = EventRepository()
+async def event_repo(test_date, test_user):
+    from uuid import UUID
+
+    repo = EventRepository(user_uuid=UUID(test_user.id))
 
     # Create event on test_date
     starts_at_today = datetime.datetime.combine(
@@ -22,6 +24,7 @@ async def event_repo(test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     )
     event_today = objects.Event(
+        user_uuid=UUID(test_user.id),
         name="Test Event",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -40,6 +43,7 @@ async def event_repo(test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     )
     event_next = objects.Event(
+        user_uuid=UUID(test_user.id),
         name="Test Event",
         frequency="ONCE",
         calendar_id="test-calendar-2",
@@ -98,10 +102,25 @@ async def test_delete_by_date(test_date, event_repo):
 
 
 @pytest.mark.asyncio
-async def test_put(test_event, clear_repos, event_repo):
+async def test_put(test_event, test_user, clear_repos):
+    # clear_repos clears everything, so we need to ensure the user exists again
+    from uuid import UUID
+
+    from planned.infrastructure.repositories import UserRepository
+
+    user_repo = UserRepository()
+    # Re-create user after clear_repos (test_user fixture will be recreated, but we need to persist it)
+    recreated_user = await user_repo.put(test_user)
+
+    # Update test_event to use the recreated user's UUID
+    test_event.user_uuid = UUID(recreated_user.id)
+
+    # Create event_repo after user is recreated
+    event_repo = EventRepository(user_uuid=UUID(recreated_user.id))
+
     results = await event_repo.search_query(DateQuery(date=test_event.date))
 
-    assert len(results) == 1
+    assert len(results) == 0  # clear_repos cleared everything
 
     await event_repo.put(
         test_event,
@@ -109,4 +128,4 @@ async def test_put(test_event, clear_repos, event_repo):
 
     results = await event_repo.search_query(DateQuery(date=test_event.date))
 
-    assert len(results) == 2
+    assert len(results) == 1  # Now we have 1 event
