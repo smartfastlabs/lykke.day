@@ -3,7 +3,7 @@
 from uuid import uuid4
 
 import pytest
-from dobles import InstanceDouble
+from dobles import InstanceDouble, allow
 
 
 # Mocked repository fixtures
@@ -28,13 +28,17 @@ def mock_day_template_repo():
 @pytest.fixture
 def mock_event_repo():
     """Mocked EventRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.EventRepositoryProtocol")
+    repo = InstanceDouble("planned.application.repositories.EventRepositoryProtocol")
+    allow(repo).listen.and_return(None)
+    return repo
 
 
 @pytest.fixture
 def mock_task_repo():
     """Mocked TaskRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.TaskRepositoryProtocol")
+    repo = InstanceDouble("planned.application.repositories.TaskRepositoryProtocol")
+    allow(repo).listen.and_return(None)
+    return repo
 
 
 @pytest.fixture
@@ -52,7 +56,9 @@ def mock_auth_token_repo():
 @pytest.fixture
 def mock_message_repo():
     """Mocked MessageRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.MessageRepositoryProtocol")
+    repo = InstanceDouble("planned.application.repositories.MessageRepositoryProtocol")
+    allow(repo).listen.and_return(None)
+    return repo
 
 
 @pytest.fixture
@@ -84,6 +90,19 @@ def mock_google_gateway():
 def mock_web_push_gateway():
     """Mocked WebPushGatewayProtocol for unit tests."""
     return InstanceDouble("planned.application.gateways.web_push_protocol.WebPushGatewayProtocol")
+
+
+# Mocked service fixtures
+@pytest.fixture
+def mock_calendar_service():
+    """Mocked CalendarService for unit tests."""
+    return InstanceDouble("planned.application.services.CalendarService")
+
+
+@pytest.fixture
+def mock_planning_service():
+    """Mocked PlanningService for unit tests."""
+    return InstanceDouble("planned.application.services.PlanningService")
 
 
 # Test user UUID fixture
