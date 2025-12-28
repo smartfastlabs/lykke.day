@@ -2,7 +2,7 @@ import pytest
 from freezegun import freeze_time
 
 from planned import objects
-from planned.services import DayService
+from planned.application.services import DayService
 
 
 @pytest.mark.asyncio

@@ -3,7 +3,7 @@ import asyncio
 import pytest
 from dobles import expect
 
-from planned.services import CalendarService
+from planned.application.services import CalendarService
 
 
 @pytest.mark.asyncio

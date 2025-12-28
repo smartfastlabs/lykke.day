@@ -1,0 +1,43 @@
+"""Protocol for Google Calendar gateway."""
+
+from datetime import datetime
+from typing import TYPE_CHECKING, Protocol
+
+from planned.domain.entities import AuthToken, Calendar, Event
+
+if TYPE_CHECKING:
+    from google_auth_oauthlib.flow import Flow
+
+
+class GoogleCalendarGatewayProtocol(Protocol):
+    """Protocol defining the interface for Google Calendar gateways."""
+
+    async def load_calendar_events(
+        self,
+        calendar: Calendar,
+        lookback: datetime,
+        token: AuthToken,
+    ) -> list[Event]:
+        """Load calendar events from Google Calendar.
+
+        Args:
+            calendar: The calendar to load events from.
+            lookback: The datetime to look back from.
+            token: The authentication token.
+
+        Returns:
+            List of events from the calendar.
+        """
+        ...
+
+    def get_flow(self, flow_name: str) -> "Flow":
+        """Get OAuth flow for Google authentication.
+
+        Args:
+            flow_name: The name of the flow (e.g., 'login', 'calendar').
+
+        Returns:
+            The OAuth flow object.
+        """
+        ...
+

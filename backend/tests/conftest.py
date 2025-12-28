@@ -1,17 +1,150 @@
 import datetime
-import shutil
-import tempfile
-from uuid import uuid4
+import os
+from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 import pytest
+import pytest_asyncio
 from dobles import allow
 from fastapi.testclient import TestClient
 from freezegun import freeze_time
 
-from planned import middlewares, objects, services, settings
+from planned import settings
 from planned.app import app
-from planned.utils.dates import get_current_date, get_current_datetime
+from planned.application import services
+from planned.domain import entities as objects
+from planned.infrastructure.database import get_engine
+from planned.infrastructure.utils.dates import get_current_date, get_current_datetime
+from planned.presentation.middlewares import middlewares
+
+
+@pytest.fixture(scope="session")
+def test_database_url():
+    """Get test database URL - should be PostgreSQL for tests."""
+    # Use DATABASE_URL from environment if set, otherwise use settings
+    # This allows the Makefile to set the test database URL
+    database_url = (
+        os.getenv("DATABASE_URL")
+        or os.getenv("TEST_DATABASE_URL")
+        or settings.DATABASE_URL
+    )
+    return database_url
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def clear_database():
+    """Clear database between tests."""
+    from sqlalchemy import text
+
+    # Truncate all tables for PostgreSQL
+    engine = get_engine()
+    async with engine.begin() as conn:
+        # Get all table names
+        result = await conn.execute(
+            text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+        )
+        tables = [row[0] for row in result]
+
+        # Truncate all tables
+        if tables:
+            await conn.execute(
+                text(f"TRUNCATE TABLE {', '.join(tables)} RESTART IDENTITY CASCADE")
+            )
+
+    yield
+
+
+@pytest_asyncio.fixture
+async def clear_repos():
+    """Clear all data from the database."""
+    from sqlalchemy import text
+
+    engine = get_engine()
+    async with engine.begin() as conn:
+        # Get all table names
+        result = await conn.execute(
+            text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+        )
+        tables = [row[0] for row in result]
+
+        # Truncate all tables
+        if tables:
+            await conn.execute(
+                text(f"TRUNCATE TABLE {', '.join(tables)} RESTART IDENTITY CASCADE")
+            )
+
+
+@pytest.fixture(autouse=True)
+def mock_user_settings():
+    """Mock load_user_settings to return a default UserSettings for all tests."""
+    from planned.domain.entities.user_settings import UserSettings
+
+    default_settings = UserSettings(
+        template_defaults=[
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "weekend",
+            "weekend",
+        ]
+    )
+
+    # Patch in both places where it's imported and used
+    with (
+        patch(
+            "planned.infrastructure.utils.user_settings.load_user_settings",
+            return_value=default_settings,
+        ),
+        patch(
+            "planned.application.services.planning.load_user_settings",
+            return_value=default_settings,
+        ),
+        patch(
+            "planned.application.services.day.load_user_settings",
+            return_value=default_settings,
+        ),
+    ):
+        yield
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def setup_day_templates():
+    """Create default and weekend day templates for tests."""
+    from datetime import time
+
+    from planned.domain.entities import Alarm, DayTemplate
+    from planned.domain.value_objects.alarm import AlarmType
+    from planned.infrastructure.repositories import DayTemplateRepository
+
+    repo = DayTemplateRepository()
+
+    # Create default template
+    default_template = DayTemplate(
+        id="default",
+        tasks=[],
+        alarm=Alarm(
+            name="Default Alarm",
+            time=time(7, 15),
+            type=AlarmType.FIRM,
+        ),
+    )
+    await repo.put(default_template)
+
+    # Create weekend template
+    weekend_template = DayTemplate(
+        id="weekend",
+        tasks=[],
+        alarm=Alarm(
+            name="Weekend Alarm",
+            time=time(7, 15),
+            type=AlarmType.GENTLE,
+        ),
+    )
+    await repo.put(weekend_template)
+
+    yield
 
 
 @pytest.fixture
@@ -39,24 +172,6 @@ def test_client():
     with TestClient(app) as client:
         allow(middlewares.auth).mock_for_testing.and_return(True)
         yield client
-
-
-@pytest.fixture(autouse=True)
-def clear_repos():
-    old_value = settings.DATA_PATH
-    with tempfile.TemporaryDirectory() as temp_dir:
-        # Recursively copy *contents* of ./tests/data into temp_dir
-        shutil.copytree(
-            "./tests/data",
-            temp_dir,
-            dirs_exist_ok=True,  # allows temp_dir to already exist
-        )
-
-        try:
-            settings.DATA_PATH = temp_dir
-            yield
-        finally:
-            settings.DATA_PATH = old_value
 
 
 @pytest.fixture
@@ -158,7 +273,7 @@ def test_day_ctx(
 
 @pytest.fixture
 def test_day_svc(test_day_ctx):
-    from planned.repositories import (
+    from planned.infrastructure.repositories import (
         DayRepository,
         DayTemplateRepository,
         EventRepository,
@@ -184,7 +299,8 @@ def test_day_svc(test_day_ctx):
 
 @pytest.fixture
 def test_sheppard_svc(test_day_svc):
-    from planned.repositories import (
+    from planned.application.services import CalendarService, PlanningService
+    from planned.infrastructure.repositories import (
         AuthTokenRepository,
         CalendarRepository,
         DayRepository,
@@ -196,7 +312,6 @@ def test_sheppard_svc(test_day_svc):
         TaskDefinitionRepository,
         TaskRepository,
     )
-    from planned.services import CalendarService, PlanningService
 
     # Create repositories
     push_subscription_repo = PushSubscriptionRepository()
@@ -210,11 +325,21 @@ def test_sheppard_svc(test_day_svc):
     routine_repo = RoutineRepository()
     task_definition_repo = TaskDefinitionRepository()
 
+    # Create gateway adapters
+    from planned.infrastructure.gateways.adapters import (
+        GoogleCalendarGatewayAdapter,
+        WebPushGatewayAdapter,
+    )
+
+    google_gateway = GoogleCalendarGatewayAdapter()
+    web_push_gateway = WebPushGatewayAdapter()
+
     # Create services
     calendar_service = CalendarService(
         auth_token_repo=auth_token_repo,
         calendar_repo=calendar_repo,
         event_repo=event_repo,
+        google_gateway=google_gateway,
     )
 
     planning_service = PlanningService(
@@ -237,6 +362,7 @@ def test_sheppard_svc(test_day_svc):
         day_template_repo=day_template_repo,
         event_repo=event_repo,
         message_repo=message_repo,
+        web_push_gateway=web_push_gateway,
         push_subscriptions=[],
         mode="idle",
     )
