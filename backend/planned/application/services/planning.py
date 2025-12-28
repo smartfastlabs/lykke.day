@@ -132,18 +132,19 @@ class PlanningService(BaseService):
     async def unschedule(self, date: datetime.date) -> None:
         from planned.infrastructure.repositories.base import DateQuery
 
-        # Get all tasks for the date, filter for routine tasks, then delete them
-        tasks = await self.task_repo.search_query(DateQuery(date=date))
-        routine_tasks = [t for t in tasks if t.routine_id is not None]
-        if routine_tasks:
-            await asyncio.gather(*[self.task_repo.delete(task) for task in routine_tasks])
-        day = await DayService.get_or_create(
-            date,
-            day_repo=self.day_repo,
-            day_template_repo=self.day_template_repo,
-        )
-        day.status = objects.DayStatus.UNSCHEDULED
-        await self.day_repo.put(day)
+        async with self.transaction():
+            # Get all tasks for the date, filter for routine tasks, then delete them
+            tasks = await self.task_repo.search_query(DateQuery(date=date))
+            routine_tasks = [t for t in tasks if t.routine_id is not None]
+            if routine_tasks:
+                await asyncio.gather(*[self.task_repo.delete(task) for task in routine_tasks])
+            day = await DayService.get_or_create(
+                date,
+                day_repo=self.day_repo,
+                day_template_repo=self.day_template_repo,
+            )
+            day.status = objects.DayStatus.UNSCHEDULED
+            await self.day_repo.put(day)
 
     async def schedule(
         self,
@@ -152,19 +153,20 @@ class PlanningService(BaseService):
     ) -> objects.DayContext:
         from planned.infrastructure.repositories.base import DateQuery
 
-        await self.task_repo.delete_many(DateQuery(date=date))
+        async with self.transaction():
+            await self.task_repo.delete_many(DateQuery(date=date))
 
-        result: objects.DayContext = await self.preview(
-            date,
-            template_id=template_id,
-        )
-        result.day.status = objects.DayStatus.SCHEDULED
-        await asyncio.gather(
-            self.day_repo.put(result.day),
-            *[self.task_repo.put(task) for task in result.tasks],
-        )
+            result: objects.DayContext = await self.preview(
+                date,
+                template_id=template_id,
+            )
+            result.day.status = objects.DayStatus.SCHEDULED
+            await asyncio.gather(
+                self.day_repo.put(result.day),
+                *[self.task_repo.put(task) for task in result.tasks],
+            )
 
-        return result
+            return result
 
     async def save_action(
         self,

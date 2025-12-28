@@ -1,14 +1,19 @@
-from typing import Any, Generic, Literal, TypeVar
+from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncContextManager
 
 from blinker import Signal
 from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from sqlalchemy.sql import Select
 
 from planned.application.repositories.base import ChangeEvent, ChangeHandler
 from planned.core.exceptions import exceptions
 from planned.infrastructure.database import get_engine
+from planned.infrastructure.database.transaction import get_transaction_connection
 from planned.infrastructure.repositories.base.schema import BaseQuery
 
 ObjectType = TypeVar("ObjectType")
@@ -50,10 +55,38 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         """Get the database engine."""
         return get_engine()
 
+    @asynccontextmanager
+    async def _get_connection(self, for_write: bool = False):  # type: ignore[no-untyped-def]
+        """Get a database connection, reusing active transaction if available.
+
+        Args:
+            for_write: If True, begin a transaction if no active transaction exists.
+                       If False, use a read-only connection.
+
+        Yields:
+            A database connection.
+        """
+        # Check if there's an active transaction
+        active_conn = get_transaction_connection()
+        if active_conn is not None:
+            # Reuse the active transaction connection
+            yield active_conn
+            return
+
+        # No active transaction - create a new connection
+        engine = self._get_engine()
+        if for_write:
+            # For write operations, begin a transaction
+            async with engine.begin() as conn:
+                yield conn
+        else:
+            # For read operations, use a regular connection
+            async with engine.connect() as conn:
+                yield conn
+
     async def get(self, key: str) -> ObjectType:
         """Get an object by key."""
-        engine = self._get_engine()
-        async with engine.connect() as conn:
+        async with self._get_connection(for_write=False) as conn:
             stmt = select(self.table).where(self.table.c.id == key)
             result = await conn.execute(stmt)
             row = result.mappings().first()
@@ -105,8 +138,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         """Get a single object matching the query. Raises NotFoundError if none found."""
         query.limit = None  # Ensure we get all results, then take first
 
-        engine = self._get_engine()
-        async with engine.connect() as conn:
+        async with self._get_connection(for_write=False) as conn:
             stmt = self.build_query(query)
             result = await conn.execute(stmt)
             row = result.mappings().first()
@@ -122,8 +154,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         """Get a single object matching the query, or None if not found."""
         query.limit = None  # Ensure we get all results, then take first
 
-        engine = self._get_engine()
-        async with engine.connect() as conn:
+        async with self._get_connection(for_write=False) as conn:
             stmt = self.build_query(query)
             result = await conn.execute(stmt)
             row = result.mappings().first()
@@ -135,8 +166,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     async def search_query(self, query: QueryType) -> list[ObjectType]:
         """Search for objects based on the provided query object."""
-        engine = self._get_engine()
-        async with engine.connect() as conn:
+        async with self._get_connection(for_write=False) as conn:
             stmt = self.build_query(query)
             result = await conn.execute(stmt)
             rows = result.mappings().all()
@@ -145,8 +175,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     async def all(self) -> list[ObjectType]:
         """Get all objects."""
-        engine = self._get_engine()
-        async with engine.connect() as conn:
+        async with self._get_connection(for_write=False) as conn:
             stmt = select(self.table)
             result = await conn.execute(stmt)
             rows = result.mappings().all()
@@ -155,10 +184,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     async def put(self, obj: ObjectType) -> ObjectType:
         """Save or update an object."""
-        engine = self._get_engine()
         row = type(self).entity_to_row(obj)  # type: ignore[attr-defined]
 
-        async with engine.begin() as conn:
+        async with self._get_connection(for_write=True) as conn:
             # Check if object exists
             stmt = select(self.table.c.id).where(self.table.c.id == obj.id)  # type: ignore[attr-defined]
             result = await conn.execute(stmt)
@@ -188,10 +216,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         if not objs:
             return []
 
-        engine = self._get_engine()
         rows = [type(self).entity_to_row(obj) for obj in objs]  # type: ignore[attr-defined]
 
-        async with engine.begin() as conn:
+        async with self._get_connection(for_write=True) as conn:
             # Insert all rows - using executemany with VALUES
             for row in rows:
                 insert_stmt = pg_insert(self.table).values(**row)
@@ -218,8 +245,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             # No updates to apply, just fetch and return
             return await self.get(key)
 
-        engine = self._get_engine()
-        async with engine.begin() as conn:
+        async with self._get_connection(for_write=True) as conn:
             # Build update statement
             stmt = self.table.update().values(**updates).where(self.table.c.id == key)
 
@@ -231,8 +257,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     async def delete_many(self, query: QueryType) -> None:
         """Delete objects based on the provided query."""
-        engine = self._get_engine()
-        async with engine.begin() as conn:
+        async with self._get_connection(for_write=True) as conn:
             # Build the select query to get the where clause
             select_stmt = self.build_query(query)
             # Remove limit/offset/order_by from delete (only keep where clause)
@@ -255,8 +280,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     async def delete(self, key: str | ObjectType) -> None:
         """Delete an object by key or by object."""
-        engine = self._get_engine()
-
         # Handle both key (str) and object deletion
         if isinstance(key, str):
             # Get object before deleting for event
@@ -266,13 +289,13 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                 # If not found, nothing to delete
                 return
 
-            async with engine.begin() as conn:
+            async with self._get_connection(for_write=True) as conn:
                 stmt = delete(self.table).where(self.table.c.id == key)
                 await conn.execute(stmt)
         else:
             # key is actually the object
             obj = key
-            async with engine.begin() as conn:
+            async with self._get_connection(for_write=True) as conn:
                 stmt = delete(self.table).where(self.table.c.id == obj.id)  # type: ignore[attr-defined]
                 await conn.execute(stmt)
 

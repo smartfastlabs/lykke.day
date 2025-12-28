@@ -7,6 +7,7 @@ from langchain.agents import create_agent
 from langchain_core.runnables import Runnable
 from loguru import logger
 
+from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from planned.application.repositories import (
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
@@ -15,10 +16,13 @@ from planned.application.repositories import (
     PushSubscriptionRepositoryProtocol,
     TaskRepositoryProtocol,
 )
-from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from planned.domain import entities as objects
 from planned.infrastructure.utils import templates, youtube
-from planned.infrastructure.utils.dates import get_current_date, get_current_datetime, get_current_time
+from planned.infrastructure.utils.dates import (
+    get_current_date,
+    get_current_datetime,
+    get_current_time,
+)
 
 from .base import BaseService
 from .calendar import CalendarService
@@ -137,14 +141,6 @@ class SheppardService(BaseService):
 
             logger.info(f"UPCOMING TASK {task.name}")
 
-        # Send notifications for all tasks that need them
-        if tasks_to_notify:
-            await self._notify_for_tasks(tasks_to_notify)
-
-        # Save all updated tasks
-        for task in tasks_to_update:
-            await self.task_repo.put(task)
-
         # Collect events that need notifications
         events_to_notify: list[objects.Event] = []
 
@@ -162,12 +158,22 @@ class SheppardService(BaseService):
                     ),
                 )
 
-        # Send notifications for all events that need them
-        if events_to_notify:
-            await self._notify_for_events(events_to_notify)
+        # Wrap database operations in a transaction
+        async with self.transaction():
+            # Save all updated tasks
+            for task in tasks_to_update:
+                await self.task_repo.put(task)
+
             # Save all events that were notified (they all got NOTIFY actions added)
             for event in events_to_notify:
                 await self.event_repo.put(event)
+
+        # Send notifications after transaction commits
+        if tasks_to_notify:
+            await self._notify_for_tasks(tasks_to_notify)
+
+        if events_to_notify:
+            await self._notify_for_events(events_to_notify)
 
         prompt = self.checkin_prompt()
 
