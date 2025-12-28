@@ -23,6 +23,7 @@ from planned.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
     TaskSchedule,
+    TaskType,
     TimingType,
 )
 from planned.domain.value_objects.day import DayStatus as DayStatusVO
@@ -67,8 +68,14 @@ async def test_build_notification_payload_single_task(
         name="Test Task",
         status=TaskStatus.READY,
         scheduled_date=date,
-        task_definition=TaskDefinition(id="def-1", name="Task Def"),
-        category=TaskCategory.WORK,
+        task_definition=TaskDefinition(
+            user_uuid=test_user_uuid,
+            id="def-1",
+            name="Task Def",
+            description="Test task definition",
+            type=TaskType.CHORE,
+        ),
+        category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         date=date,
     )
@@ -132,8 +139,14 @@ async def test_build_notification_payload_multiple_tasks(
         name="Task 1",
         status=TaskStatus.READY,
         scheduled_date=date,
-        task_definition=TaskDefinition(id="def-1", name="Task Def"),
-        category=TaskCategory.WORK,
+        task_definition=TaskDefinition(
+            user_uuid=test_user_uuid,
+            id="def-1",
+            name="Task Def",
+            description="Test task definition",
+            type=TaskType.CHORE,
+        ),
+        category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         date=date,
     )
@@ -143,8 +156,14 @@ async def test_build_notification_payload_multiple_tasks(
         name="Task 2",
         status=TaskStatus.READY,
         scheduled_date=date,
-        task_definition=TaskDefinition(id="def-2", name="Task Def"),
-        category=TaskCategory.WORK,
+        task_definition=TaskDefinition(
+            user_uuid=test_user_uuid,
+            id="def-2",
+            name="Task Def",
+            description="Test task definition",
+            type=TaskType.CHORE,
+        ),
+        category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         date=date,
     )
@@ -272,8 +291,14 @@ async def test_notify_for_tasks(
         name="Test Task",
         status=TaskStatus.READY,
         scheduled_date=date,
-        task_definition=TaskDefinition(id="def-1", name="Task Def"),
-        category=TaskCategory.WORK,
+        task_definition=TaskDefinition(
+            user_uuid=test_user_uuid,
+            id="def-1",
+            name="Task Def",
+            description="Test task definition",
+            type=TaskType.CHORE,
+        ),
+        category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         date=date,
     )

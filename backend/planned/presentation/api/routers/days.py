@@ -32,32 +32,27 @@ router = APIRouter()
 
 @router.put("/today/schedule")
 async def schedule_today(
-    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
-) -> DayContext:
-    return await planning_service.schedule(get_current_date())
-
-
-@router.get("/{date}/context")
-async def get_context(
-    date: datetime.date | Literal["today", "tomorrow"],
     user: Annotated[User, Depends(get_current_user)],
-    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
     planning_service: Annotated[PlanningService, Depends(get_planning_service)],
-    day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
-    day_template_repo: Annotated[DayTemplateRepositoryProtocol, Depends(get_day_template_repo)],
-    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
-    message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
-    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
 ) -> DayContext:
-    if isinstance(date, str):
-        if date == "today":
-            date = get_current_date()
-        elif date == "tomorrow":
-            date = get_tomorrows_date()
-        else:
-            raise exceptions.BadRequestError("invalid date")
+    result = await planning_service.schedule(get_current_date())
+    return result
 
+
+async def _get_context_for_date(
+    date: datetime.date,
+    user: User,
+    user_repo: UserRepositoryProtocol,
+    planning_service: PlanningService,
+    day_repo: DayRepositoryProtocol,
+    day_template_repo: DayTemplateRepositoryProtocol,
+    event_repo: EventRepositoryProtocol,
+    message_repo: MessageRepositoryProtocol,
+    task_repo: TaskRepositoryProtocol,
+) -> DayContext:
+    """Helper function to get context for a specific date."""
     from uuid import UUID
+
     day_svc: DayService = await DayService.for_date(
         date,
         user_uuid=UUID(user.id),
@@ -74,6 +69,85 @@ async def get_context(
     return day_svc.ctx
 
 
+@router.get("/today/context")
+async def get_context_today(
+    user: Annotated[User, Depends(get_current_user)],
+    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
+    day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
+    day_template_repo: Annotated[
+        DayTemplateRepositoryProtocol, Depends(get_day_template_repo)
+    ],
+    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
+    message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
+    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
+) -> DayContext:
+    return await _get_context_for_date(
+        get_current_date(),
+        user,
+        user_repo,
+        planning_service,
+        day_repo,
+        day_template_repo,
+        event_repo,
+        message_repo,
+        task_repo,
+    )
+
+
+@router.get("/tomorrow/context")
+async def get_context_tomorrow(
+    user: Annotated[User, Depends(get_current_user)],
+    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
+    day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
+    day_template_repo: Annotated[
+        DayTemplateRepositoryProtocol, Depends(get_day_template_repo)
+    ],
+    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
+    message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
+    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
+) -> DayContext:
+    return await _get_context_for_date(
+        get_tomorrows_date(),
+        user,
+        user_repo,
+        planning_service,
+        day_repo,
+        day_template_repo,
+        event_repo,
+        message_repo,
+        task_repo,
+    )
+
+
+@router.get("/{date}/context")
+async def get_context(
+    date: datetime.date,
+    user: Annotated[User, Depends(get_current_user)],
+    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
+    day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
+    day_template_repo: Annotated[
+        DayTemplateRepositoryProtocol, Depends(get_day_template_repo)
+    ],
+    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
+    message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
+    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
+) -> DayContext:
+    return await _get_context_for_date(
+        date,
+        user,
+        user_repo,
+        planning_service,
+        day_repo,
+        day_template_repo,
+        event_repo,
+        message_repo,
+        task_repo,
+    )
+
+
 class UpdateDayRequest(BaseRequestObject):
     status: DayStatus | None = None
     template_id: str | None = None
@@ -86,9 +160,12 @@ async def update_day(
     user: Annotated[User, Depends(get_current_user)],
     user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
     day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
-    day_template_repo: Annotated[DayTemplateRepositoryProtocol, Depends(get_day_template_repo)],
+    day_template_repo: Annotated[
+        DayTemplateRepositoryProtocol, Depends(get_day_template_repo)
+    ],
 ) -> Day:
     from uuid import UUID
+
     day: Day = await DayService.get_or_preview(
         date,
         user_uuid=UUID(user.id),
@@ -105,6 +182,8 @@ async def update_day(
 
 @router.get("/templates")
 async def get_templates(
-    day_template_repo: Annotated[DayTemplateRepositoryProtocol, Depends(get_day_template_repo)],
+    day_template_repo: Annotated[
+        DayTemplateRepositoryProtocol, Depends(get_day_template_repo)
+    ],
 ) -> list[DayTemplate]:
     return await day_template_repo.all()

@@ -24,7 +24,7 @@ async def test_google_login_callback_missing_params(authenticated_client):
     response = client.get("/google/callback/login")
     
     # Should fail without state and code
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 @pytest.mark.asyncio

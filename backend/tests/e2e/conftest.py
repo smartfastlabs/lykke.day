@@ -71,22 +71,65 @@ def test_client():
 @pytest_asyncio.fixture
 async def authenticated_client(test_client):
     """Test client with authenticated session."""
-    from uuid import uuid4
+    from uuid import UUID, uuid4
 
     from planned.domain.entities import User
     from planned.domain.value_objects.user import UserSetting
-    from planned.infrastructure.repositories import UserRepository
+    from planned.infrastructure.repositories import (
+        DayTemplateRepository,
+        UserRepository,
+    )
     from planned.infrastructure.utils.dates import get_current_datetime
 
-    # Create a test user
+    # Create a test user with template defaults
     user_repo = UserRepository()
     user = User(
         id=str(uuid4()),
         email=f"test-{uuid4()}@example.com",
         password_hash="test_hash",
-        settings=UserSetting(),
+        settings=UserSetting(
+            template_defaults=[
+                "default",
+                "default",
+                "default",
+                "default",
+                "default",
+                "weekend",
+                "weekend",
+            ],
+        ),
     )
     user = await user_repo.put(user)
+
+    # Create DayTemplates for the test user
+    user_uuid = UUID(user.id)
+    day_template_repo = DayTemplateRepository(user_uuid=user_uuid)
+
+    # Create default template
+    default_template = DayTemplate(
+        user_uuid=user_uuid,
+        id="default",
+        tasks=[],
+        alarm=Alarm(
+            name="Default Alarm",
+            time=time(7, 15),
+            type=AlarmType.FIRM,
+        ),
+    )
+    await day_template_repo.put(default_template)
+
+    # Create weekend template
+    weekend_template = DayTemplate(
+        user_uuid=user_uuid,
+        id="weekend",
+        tasks=[],
+        alarm=Alarm(
+            name="Weekend Alarm",
+            time=time(7, 15),
+            type=AlarmType.GENTLE,
+        ),
+    )
+    await day_template_repo.put(weekend_template)
 
     # Set up session for authenticated requests
     # We need to set the password correctly for login

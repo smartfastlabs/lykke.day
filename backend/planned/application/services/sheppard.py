@@ -173,7 +173,6 @@ class SheppardService(BaseService):
         if events_to_notify:
             await self._notify_for_events(events_to_notify)
 
-        prompt = self.checkin_prompt()
 
         self.last_run = datetime.datetime.now()
 
@@ -319,10 +318,6 @@ class SheppardService(BaseService):
             **kwargs,
         )
 
-    def checkin_prompt(self) -> str:
-        return self._render_prompt(
-            "check-in.md",
-        )
 
     def morning_summary_prompt(self) -> str:
         return self._render_prompt(

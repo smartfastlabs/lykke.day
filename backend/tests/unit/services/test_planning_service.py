@@ -25,6 +25,7 @@ from planned.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
     TaskSchedule,
+    TaskType,
     TimingType,
 )
 from planned.domain.value_objects.routine import RoutineSchedule, RoutineTask, DayOfWeek
@@ -66,8 +67,11 @@ async def test_preview_tasks(
     )
     
     task_def = TaskDefinition(
+        user_uuid=test_user_uuid,
         id="def-1",
         name="Brush Teeth",
+        description="Brush teeth routine",
+        type=TaskType.CHORE,
     )
     
     allow(mock_routine_repo).all().and_return([routine])
@@ -287,8 +291,14 @@ async def test_unschedule_deletes_routine_tasks(
         name="Routine Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=TaskDefinition(id="def-1", name="Task Def"),
-        category=TaskCategory.WORK,
+        task_definition=TaskDefinition(
+            user_uuid=test_user_uuid,
+            id="def-1",
+            name="Task Def",
+            description="Test task definition",
+            type=TaskType.CHORE,
+        ),
+        category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         routine_id="routine-1",
         date=date,
@@ -300,8 +310,14 @@ async def test_unschedule_deletes_routine_tasks(
         name="Manual Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=TaskDefinition(id="def-2", name="Task Def"),
-        category=TaskCategory.WORK,
+        task_definition=TaskDefinition(
+            user_uuid=test_user_uuid,
+            id="def-2",
+            name="Task Def",
+            description="Test task definition",
+            type=TaskType.CHORE,
+        ),
+        category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         routine_id=None,
         date=date,
@@ -419,8 +435,14 @@ async def test_save_action_for_task(
         name="Test Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=TaskDefinition(id="def-1", name="Task Def"),
-        category=TaskCategory.WORK,
+        task_definition=TaskDefinition(
+            user_uuid=test_user_uuid,
+            id="def-1",
+            name="Task Def",
+            description="Test task definition",
+            type=TaskType.CHORE,
+        ),
+        category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         date=date,
     )

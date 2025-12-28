@@ -11,7 +11,7 @@ from planned.application.repositories.base import ChangeEvent
 from planned.application.services import DayService
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Day, DayContext, Event, Message, Task, DayStatus
-from planned.domain.value_objects.task import TaskStatus, TaskSchedule, TaskCategory, TaskFrequency, TaskDefinition
+from planned.domain.value_objects.task import TaskStatus, TaskSchedule, TaskCategory, TaskFrequency, TaskDefinition, TaskType
 
 
 def setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo):
@@ -358,8 +358,14 @@ async def test_on_task_change(
         name="Test Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=TaskDefinition(id="def-1", name="Task Def"),
-        category=TaskCategory.WORK,
+        task_definition=TaskDefinition(
+            user_uuid=test_user_uuid,
+            id="def-1",
+            name="Task Def",
+            description="Test task definition",
+            type=TaskType.CHORE,
+        ),
+        category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         date=date,
     )
@@ -557,8 +563,14 @@ async def test_get_upcomming_tasks(
         name="Upcoming Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=TaskDefinition(id="def-1", name="Task Def"),
-        category=TaskCategory.WORK,
+        task_definition=TaskDefinition(
+            user_uuid=test_user_uuid,
+            id="def-1",
+            name="Task Def",
+            description="Test task definition",
+            type=TaskType.CHORE,
+        ),
+        category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         schedule=TaskSchedule(start_time=future_time),
         date=date,
@@ -572,8 +584,14 @@ async def test_get_upcomming_tasks(
         name="Future Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=TaskDefinition(id="def-2", name="Task Def"),
-        category=TaskCategory.WORK,
+        task_definition=TaskDefinition(
+            user_uuid=test_user_uuid,
+            id="def-2",
+            name="Task Def",
+            description="Test task definition",
+            type=TaskType.CHORE,
+        ),
+        category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         schedule=TaskSchedule(start_time=far_future_time),
         date=date,
@@ -586,8 +604,14 @@ async def test_get_upcomming_tasks(
         name="Completed Task",
         status=TaskStatus.COMPLETE,
         scheduled_date=date,
-        task_definition=TaskDefinition(id="def-3", name="Task Def"),
-        category=TaskCategory.WORK,
+        task_definition=TaskDefinition(
+            user_uuid=test_user_uuid,
+            id="def-3",
+            name="Task Def",
+            description="Test task definition",
+            type=TaskType.CHORE,
+        ),
+        category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         schedule=TaskSchedule(start_time=future_time),
         date=date,
