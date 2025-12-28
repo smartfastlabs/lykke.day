@@ -7,7 +7,6 @@ docker-up:
 	@sleep 2
 	@cd .. && docker-compose exec -T postgres pg_isready -U planned || (echo "Waiting a bit more..." && sleep 3)
 	@echo "PostgreSQL is ready!"
-	@$(MAKE) init-db
 
 # Initialize databases and users (idempotent)
 init-db:
@@ -58,4 +57,4 @@ check:
 
 .PHONY: test-target
 test-target: docker-up
-	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test ENV_FILE=.env.test poetry run pytest tests --vcr-record=once -k '$(TARGET)' -s -v
+	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test ENV_FILE=.env.test poetry run pytest tests --vcr-record=once -vv -k '$(TARGET)' -s -v
