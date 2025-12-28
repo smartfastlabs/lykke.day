@@ -211,7 +211,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         if self.user_uuid is not None and hasattr(obj, "user_uuid"):
             # Set user_uuid on the entity if it's not already set or doesn't match
             if not hasattr(obj, "user_uuid") or obj.user_uuid != self.user_uuid:
-                setattr(obj, "user_uuid", self.user_uuid)
+                obj.user_uuid = self.user_uuid
 
         row = type(self).entity_to_row(obj)  # type: ignore[attr-defined]
 
@@ -259,7 +259,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         if self.user_uuid is not None:
             for obj in objs:
                 if hasattr(obj, "user_uuid"):
-                    setattr(obj, "user_uuid", self.user_uuid)
+                    obj.user_uuid = self.user_uuid
 
         rows = [type(self).entity_to_row(obj) for obj in objs]  # type: ignore[attr-defined]
 

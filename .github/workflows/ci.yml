@@ -13,8 +13,24 @@ jobs:
       run:
         working-directory: ./backend
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     env:
       ENV_FILE: .env.test
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/postgres
 
     steps:
       - name: Checkout repository and submodules
@@ -45,6 +61,9 @@ jobs:
 
       - name: Install project
         run: poetry install --no-interaction
+
+      - name: Run database migrations
+        run: poetry run alembic upgrade head
 
       - name: Run mypy
         run: poetry run mypy planned

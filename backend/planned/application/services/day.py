@@ -156,7 +156,7 @@ class DayService(BaseService):
             if user_uuid is None:
                 # Try to get from repository (repositories store user_uuid)
                 if hasattr(self.day_repo, "user_uuid"):
-                    user_uuid = getattr(self.day_repo, "user_uuid")
+                    user_uuid = self.day_repo.user_uuid
                 else:
                     raise ValueError("user_uuid required for set_date")
             self.ctx = await type(self).load_context_cls(
@@ -193,7 +193,7 @@ class DayService(BaseService):
         # Extract user_uuid from repository if not provided
         if user_uuid is None:
             if hasattr(self.day_repo, "user_uuid"):
-                user_uuid = getattr(self.day_repo, "user_uuid")
+                user_uuid = self.day_repo.user_uuid
             else:
                 raise ValueError("user_uuid required for load_context")
 
