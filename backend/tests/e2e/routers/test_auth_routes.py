@@ -13,8 +13,8 @@ async def test_register(test_client):
     password = "password123"
     
     response = test_client.post(
-        "/api/auth/register",
-        json={"email": email, "password": password},
+        "/auth/register",
+        json={"email": email, "password": password, "confirm_password": password},
     )
     
     assert response.status_code == 200
@@ -26,27 +26,20 @@ async def test_register(test_client):
 @pytest.mark.asyncio
 async def test_register_duplicate_email(test_client):
     """Test registering with duplicate email fails."""
+    from uuid import uuid4
     email = f"test-{uuid4()}@example.com"
     password = "password123"
     
     # Create user first via register endpoint
-    from uuid import uuid4
-    
     test_client.post(
-        "/api/auth/register",
-        json={"email": email, "password": password},
-    )
-    user = User(
-        id=str(uuid4()),
-        email=email,
-        password_hash=password_hash,
-        settings=UserSetting(),
+        "/auth/register",
+        json={"email": email, "password": password, "confirm_password": password},
     )
     
-    # Try to register again
+    # Try to register again with same email
     response = test_client.post(
-        "/api/auth/register",
-        json={"email": email, "password": password},
+        "/auth/register",
+        json={"email": email, "password": password, "confirm_password": password},
     )
     
     assert response.status_code == 400
@@ -55,7 +48,10 @@ async def test_register_duplicate_email(test_client):
 @pytest.mark.asyncio
 async def test_login(test_client):
     """Test user login."""
+    from uuid import uuid4
     from passlib.context import CryptContext
+    from planned.domain.entities import User
+    from planned.domain.value_objects.user import UserSetting
     from planned.infrastructure.repositories import UserRepository
     
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -65,8 +61,6 @@ async def test_login(test_client):
     password_hash = pwd_context.hash(password)
     
     # Create user with hashed password
-    from planned.domain.entities import User
-    from planned.domain.value_objects.user import UserSetting
     user = User(
         id=str(uuid4()),
         email=email,
@@ -75,8 +69,8 @@ async def test_login(test_client):
     )
     await user_repo.put(user)
     
-    response = test_client.post(
-        "/api/auth/login",
+    response = test_client.put(
+        "/auth/login",
         json={"email": email, "password": password},
     )
     
@@ -86,8 +80,10 @@ async def test_login(test_client):
 @pytest.mark.asyncio
 async def test_login_wrong_password(test_client):
     """Test login with wrong password fails."""
-    from passlib.context import CryptContext
     from uuid import uuid4
+    from passlib.context import CryptContext
+    from planned.domain.entities import User
+    from planned.domain.value_objects.user import UserSetting
     from planned.infrastructure.repositories import UserRepository
     
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -95,8 +91,6 @@ async def test_login_wrong_password(test_client):
     email = f"test-{uuid4()}@example.com"
     password_hash = pwd_context.hash("correct_password")
     
-    from planned.domain.entities import User
-    from planned.domain.value_objects.user import UserSetting
     user = User(
         id=str(uuid4()),
         email=email,
@@ -105,10 +99,10 @@ async def test_login_wrong_password(test_client):
     )
     await user_repo.put(user)
     
-    response = test_client.post(
-        "/api/auth/login",
+    response = test_client.put(
+        "/auth/login",
         json={"email": email, "password": "wrong_password"},
     )
     
-    assert response.status_code == 401
+    assert response.status_code == 403
 

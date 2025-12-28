@@ -104,16 +104,16 @@ async def test_put_update(task_repo, test_user, test_date):
     
     # Update the task
     task.name = "Updated Task"
-    task.status = TaskStatus.COMPLETED
+    task.status = TaskStatus.COMPLETE
     result = await task_repo.put(task)
     
     assert result.name == "Updated Task"
-    assert result.status == TaskStatus.COMPLETED
+    assert result.status == TaskStatus.COMPLETE
     
     # Verify it was saved
     retrieved = await task_repo.get(task.id)
     assert retrieved.name == "Updated Task"
-    assert retrieved.status == TaskStatus.COMPLETED
+    assert retrieved.status == TaskStatus.COMPLETE
 
 
 @pytest.mark.asyncio

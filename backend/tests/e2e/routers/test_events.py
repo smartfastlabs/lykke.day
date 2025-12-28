@@ -38,7 +38,7 @@ async def test_get_today(authenticated_client, test_date):
     )
     await event_repo.put(event)
     
-    response = client.get("/api/events/today")
+    response = client.get("/events/today")
     
     assert response.status_code == 200
     events = response.json()

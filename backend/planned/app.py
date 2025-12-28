@@ -4,8 +4,9 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Never, cast
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from loguru import logger
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -29,6 +30,7 @@ from planned.application.services import (
     SheppardService,
 )
 from planned.core.config import settings
+from planned.core.exceptions import exceptions
 from planned.infrastructure.gateways.adapters import (
     GoogleCalendarGatewayAdapter,
     WebPushGatewayAdapter,
@@ -231,6 +233,15 @@ app.include_router(
     router,
     prefix=settings.API_PREFIX,
 )
+
+
+@app.exception_handler(exceptions.BaseError)
+async def custom_exception_handler(request: Request, exc: exceptions.BaseError) -> JSONResponse:
+    """Handle custom application exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message},
+    )
 
 
 @app.get("/health")

@@ -7,9 +7,6 @@ from planned.domain.entities import Day, DayStatus, Task, TaskStatus
 from planned.infrastructure.database.transaction import TransactionManager, get_transaction_connection
 from planned.infrastructure.utils.dates import get_current_datetime
 
-# Fixtures from integration conftest are automatically available
-# No need for pytest_plugins - conftest files are auto-discovered
-
 
 @pytest.mark.asyncio
 async def test_transaction_commits_on_success(test_date, test_user, day_repo):

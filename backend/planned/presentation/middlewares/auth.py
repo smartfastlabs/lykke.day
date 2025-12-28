@@ -28,6 +28,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/auth/set-password",
             "/auth/login",
             "/auth/register",
+            "/api/auth/set-password",
+            "/api/auth/login",
+            "/api/auth/register",
             "/health",
         ]
 
