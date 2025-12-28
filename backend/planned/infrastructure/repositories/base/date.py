@@ -44,12 +44,12 @@ class BaseDateRepository(BaseRepository[DateObjectType]):
                     f"`{self.Object.__name__}` with date '{date}' and key '{key}' not found.",
                 )
 
-            return type(self).row_to_entity(dict(row))  # type: ignore[misc]
+            return type(self).row_to_entity(dict(row))  # type: ignore[attr-defined,no-any-return]
 
     async def put(self, obj: DateObjectType) -> DateObjectType:
         """Save or update an object."""
         engine = self._get_engine()
-        row = type(self).entity_to_row(obj)  # type: ignore[misc]
+        row = type(self).entity_to_row(obj)  # type: ignore[attr-defined]
 
         async with engine.begin() as conn:
             # Check if object exists
@@ -82,7 +82,7 @@ class BaseDateRepository(BaseRepository[DateObjectType]):
             result = await conn.execute(stmt)
             rows = result.mappings().all()
 
-            return [type(self).row_to_entity(dict(row)) for row in rows]  # type: ignore[misc]
+            return [type(self).row_to_entity(dict(row)) for row in rows]  # type: ignore[attr-defined]
 
     async def delete(self, obj: DateObjectType) -> None:
         """Delete an object."""

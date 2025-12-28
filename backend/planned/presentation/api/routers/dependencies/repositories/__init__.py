@@ -5,6 +5,8 @@ Each function returns a repository instance, which can be used
 with FastAPI's Depends() in route handlers.
 """
 
+from typing import cast
+
 from fastapi import Depends
 
 from planned.application.repositories import (
@@ -35,49 +37,49 @@ from planned.infrastructure.repositories import (
 
 def get_auth_token_repo() -> AuthTokenRepositoryProtocol:
     """Get an instance of AuthTokenRepository."""
-    return AuthTokenRepository()
+    return cast(AuthTokenRepositoryProtocol, AuthTokenRepository())
 
 
 def get_calendar_repo() -> CalendarRepositoryProtocol:
     """Get an instance of CalendarRepository."""
-    return CalendarRepository()
+    return cast(CalendarRepositoryProtocol, CalendarRepository())
 
 
 def get_day_repo() -> DayRepositoryProtocol:
     """Get an instance of DayRepository."""
-    return DayRepository()
+    return cast(DayRepositoryProtocol, DayRepository())
 
 
 def get_day_template_repo() -> DayTemplateRepositoryProtocol:
     """Get an instance of DayTemplateRepository."""
-    return DayTemplateRepository()
+    return cast(DayTemplateRepositoryProtocol, DayTemplateRepository())
 
 
 def get_event_repo() -> EventRepositoryProtocol:
     """Get an instance of EventRepository."""
-    return EventRepository()
+    return cast(EventRepositoryProtocol, EventRepository())
 
 
 def get_message_repo() -> MessageRepositoryProtocol:
     """Get an instance of MessageRepository."""
-    return MessageRepository()
+    return cast(MessageRepositoryProtocol, MessageRepository())
 
 
 def get_push_subscription_repo() -> PushSubscriptionRepositoryProtocol:
     """Get an instance of PushSubscriptionRepository."""
-    return PushSubscriptionRepository()
+    return cast(PushSubscriptionRepositoryProtocol, PushSubscriptionRepository())
 
 
 def get_routine_repo() -> RoutineRepositoryProtocol:
     """Get an instance of RoutineRepository."""
-    return RoutineRepository()
+    return cast(RoutineRepositoryProtocol, RoutineRepository())
 
 
 def get_task_repo() -> TaskRepositoryProtocol:
     """Get an instance of TaskRepository."""
-    return TaskRepository()
+    return cast(TaskRepositoryProtocol, TaskRepository())
 
 
 def get_task_definition_repo() -> TaskDefinitionRepositoryProtocol:
     """Get an instance of TaskDefinitionRepository."""
-    return TaskDefinitionRepository()
+    return cast(TaskDefinitionRepositoryProtocol, TaskDefinitionRepository())

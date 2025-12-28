@@ -38,7 +38,7 @@ class BaseConfigRepository(BaseRepository[ConfigObjectType]):
                     f"`{self.Object.__name__}` with key '{key}' not found.",
                 )
 
-            return type(self).row_to_entity(dict(row))  # type: ignore[misc]
+            return type(self).row_to_entity(dict(row))  # type: ignore[attr-defined,no-any-return]
 
     async def all(self) -> list[ConfigObjectType]:
         """Get all objects."""
@@ -48,4 +48,4 @@ class BaseConfigRepository(BaseRepository[ConfigObjectType]):
             result = await conn.execute(stmt)
             rows = result.mappings().all()
 
-            return [type(self).row_to_entity(dict(row)) for row in rows]  # type: ignore[misc]
+            return [type(self).row_to_entity(dict(row)) for row in rows]  # type: ignore[attr-defined]

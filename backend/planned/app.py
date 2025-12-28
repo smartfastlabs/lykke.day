@@ -2,7 +2,7 @@ import asyncio
 import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Never
+from typing import Never, cast
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,6 +17,8 @@ from planned.application.repositories import (
     EventRepositoryProtocol,
     MessageRepositoryProtocol,
     PushSubscriptionRepositoryProtocol,
+    RoutineRepositoryProtocol,
+    TaskDefinitionRepositoryProtocol,
     TaskRepositoryProtocol,
 )
 from planned.application.services import CalendarService, DayService, PlanningService, SheppardService
@@ -53,14 +55,14 @@ logger.add(
 async def create_sheppard_service() -> SheppardService:
     """Create and return a SheppardService instance with all dependencies."""
     # Create repositories
-    auth_token_repo: AuthTokenRepositoryProtocol = AuthTokenRepository()
-    calendar_repo: CalendarRepositoryProtocol = CalendarRepository()
-    day_repo: DayRepositoryProtocol = DayRepository()
-    day_template_repo: DayTemplateRepositoryProtocol = DayTemplateRepository()
-    event_repo: EventRepositoryProtocol = EventRepository()
-    message_repo: MessageRepositoryProtocol = MessageRepository()
-    push_subscription_repo: PushSubscriptionRepositoryProtocol = PushSubscriptionRepository()
-    task_repo: TaskRepositoryProtocol = TaskRepository()
+    auth_token_repo: AuthTokenRepositoryProtocol = cast(AuthTokenRepositoryProtocol, AuthTokenRepository())
+    calendar_repo: CalendarRepositoryProtocol = cast(CalendarRepositoryProtocol, CalendarRepository())
+    day_repo: DayRepositoryProtocol = cast(DayRepositoryProtocol, DayRepository())
+    day_template_repo: DayTemplateRepositoryProtocol = cast(DayTemplateRepositoryProtocol, DayTemplateRepository())
+    event_repo: EventRepositoryProtocol = cast(EventRepositoryProtocol, EventRepository())
+    message_repo: MessageRepositoryProtocol = cast(MessageRepositoryProtocol, MessageRepository())
+    push_subscription_repo: PushSubscriptionRepositoryProtocol = cast(PushSubscriptionRepositoryProtocol, PushSubscriptionRepository())
+    task_repo: TaskRepositoryProtocol = cast(TaskRepositoryProtocol, TaskRepository())
 
     # Create gateway adapters
     google_gateway = GoogleCalendarGatewayAdapter()
@@ -79,8 +81,8 @@ async def create_sheppard_service() -> SheppardService:
         day_template_repo=day_template_repo,
         event_repo=event_repo,
         message_repo=message_repo,
-        routine_repo=RoutineRepository(),
-        task_definition_repo=TaskDefinitionRepository(),
+        routine_repo=cast(RoutineRepositoryProtocol, RoutineRepository()),
+        task_definition_repo=cast(TaskDefinitionRepositoryProtocol, TaskDefinitionRepository()),
         task_repo=task_repo,
     )
 

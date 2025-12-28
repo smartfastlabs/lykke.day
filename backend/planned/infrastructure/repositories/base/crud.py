@@ -15,7 +15,7 @@ class BaseCrudRepository(BaseConfigRepository[ConfigObjectType]):
     async def put(self, obj: ConfigObjectType) -> ConfigObjectType:
         """Save or update an object."""
         engine = self._get_engine()
-        row = type(self).entity_to_row(obj)  # type: ignore[misc]
+        row = type(self).entity_to_row(obj)  # type: ignore[attr-defined]
 
         async with engine.begin() as conn:
             # Check if object exists

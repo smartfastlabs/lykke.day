@@ -12,24 +12,16 @@ from planned.application.repositories import (
     MessageRepositoryProtocol,
     TaskRepositoryProtocol,
 )
+from planned.application.repositories.base import ChangeEvent
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
-from planned.application.repositories.base import ChangeEvent
-from planned.infrastructure.utils.user_settings import load_user_settings
 from planned.infrastructure.utils.dates import get_current_datetime, get_current_time
 from planned.infrastructure.utils.decorators import hybridmethod
+from planned.infrastructure.utils.user_settings import load_user_settings
 
 from .base import BaseService
 
 T = TypeVar("T", bound=objects.BaseDateObject)
-
-
-class HasId[IdT](Protocol):
-    @property
-    def id(self) -> IdT: ...
-
-
-U = TypeVar("U", bound=HasId)
 
 
 def replace(lst: list[T], obj: T) -> None:
@@ -38,9 +30,6 @@ def replace(lst: list[T], obj: T) -> None:
             lst[i] = obj
             return
     lst.append(obj)
-
-
-_SERVICE_CACHE: dict[datetime.date, "DayService"] = {}
 
 
 class DayService(BaseService):
