@@ -77,22 +77,29 @@ class BasicCrudRepositoryProtocol(Protocol[T]):
 
 
 class DateScopedCrudRepositoryProtocol(Protocol[T]):
-    """Base protocol for date-scoped CRUD repositories (get by date+key, put, search, delete, listen)."""
+    """Base protocol for date-scoped CRUD repositories (get by key, put, search_query, delete, listen).
 
-    async def get(self, date: datetime.date, key: str) -> T:
-        """Get an object by date and key."""
+    Note: Date filtering should be done using query objects with date fields.
+    """
+
+    async def get(self, key: str) -> T:
+        """Get an object by key."""
         ...
 
     async def put(self, obj: T) -> T:
         """Save or update an object."""
         ...
 
-    async def search(self, date: datetime.date) -> list[T]:
-        """Search for objects on a specific date."""
+    async def search_query(self, query: object) -> list[T]:
+        """Search for objects based on a query object."""
         ...
 
     async def delete(self, obj: T) -> None:
         """Delete an object."""
+        ...
+
+    async def delete_many(self, query: object) -> None:
+        """Delete objects matching a query."""
         ...
 
     def listen(self, handler: ChangeHandler[T]) -> None:

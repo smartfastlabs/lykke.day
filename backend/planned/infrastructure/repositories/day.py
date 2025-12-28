@@ -3,14 +3,15 @@ from typing import Any
 
 from planned.domain.entities import Day
 
-from .base import BaseCrudRepository
+from .base import BaseQuery, BaseRepository
 from .base.schema import days
 from .base.utils import normalize_list_fields
 
 
-class DayRepository(BaseCrudRepository[Day]):
+class DayRepository(BaseRepository[Day, BaseQuery]):
     Object = Day
     table = days
+    QueryClass = BaseQuery
 
     @staticmethod
     def entity_to_row(day: Day) -> dict[str, Any]:

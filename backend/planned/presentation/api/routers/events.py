@@ -13,4 +13,6 @@ router = APIRouter()
 async def today(
     event_repo: EventRepository = Depends(get_event_repo),
 ) -> list[Event]:
-    return await event_repo.search(get_current_date())
+    from planned.infrastructure.repositories.base import DateQuery
+
+    return await event_repo.search_query(DateQuery(date=get_current_date()))

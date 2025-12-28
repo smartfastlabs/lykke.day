@@ -8,6 +8,7 @@ import pytest_asyncio
 from planned import settings
 from planned.domain import entities as objects
 from planned.infrastructure.repositories import EventRepository
+from planned.infrastructure.repositories.base import DateQuery
 
 
 @pytest_asyncio.fixture
@@ -54,51 +55,51 @@ async def event_repo(test_date):
 
 @pytest.mark.asyncio
 async def test_search(test_date, event_repo):
-    results = await event_repo.search(test_date)
+    results = await event_repo.search_query(DateQuery(date=test_date))
 
     assert len(results) == 1
 
 
 @pytest.mark.asyncio
 async def test_delete(test_date, event_repo):
-    results = await event_repo.search(test_date)
+    results = await event_repo.search_query(DateQuery(date=test_date))
     await event_repo.delete(results[0])
 
-    results = await event_repo.search(test_date)
+    results = await event_repo.search_query(DateQuery(date=test_date))
 
     assert len(results) == 0
 
 
 @pytest.mark.asyncio
 async def test_delete_missing_date(test_date, event_repo):
-    await event_repo.delete_by_date(test_date + timedelta(days=3))
+    await event_repo.delete_many(DateQuery(date=test_date + timedelta(days=3)))
 
-    results = await event_repo.search(test_date)
+    results = await event_repo.search_query(DateQuery(date=test_date))
 
     assert len(results) == 1
 
 
 @pytest.mark.asyncio
 async def test_delete_date(test_date, event_repo):
-    await event_repo.delete_by_date(test_date)
+    await event_repo.delete_many(DateQuery(date=test_date))
 
-    results = await event_repo.search(test_date)
+    results = await event_repo.search_query(DateQuery(date=test_date))
 
     assert len(results) == 0
 
 
 @pytest.mark.asyncio
 async def test_delete_by_date(test_date, event_repo):
-    await event_repo.delete_by_date(test_date)
+    await event_repo.delete_many(DateQuery(date=test_date))
 
-    results = await event_repo.search(test_date)
+    results = await event_repo.search_query(DateQuery(date=test_date))
 
     assert len(results) == 0
 
 
 @pytest.mark.asyncio
 async def test_put(test_event, clear_repos, event_repo):
-    results = await event_repo.search(test_event.date)
+    results = await event_repo.search_query(DateQuery(date=test_event.date))
 
     assert len(results) == 1
 
@@ -106,6 +107,6 @@ async def test_put(test_event, clear_repos, event_repo):
         test_event,
     )
 
-    results = await event_repo.search(test_event.date)
+    results = await event_repo.search_query(DateQuery(date=test_event.date))
 
     assert len(results) == 2

@@ -1,15 +1,28 @@
 from typing import Any
 
+from sqlalchemy.sql import Select
+
 from planned.domain.entities import Message
 
-from .base import BaseDateRepository
+from .base import BaseRepository, DateQuery
 from .base.schema import messages
 from .base.utils import normalize_list_fields
 
 
-class MessageRepository(BaseDateRepository[Message]):
+class MessageRepository(BaseRepository[Message, DateQuery]):
     Object = Message
     table = messages
+    QueryClass = DateQuery
+
+    def build_query(self, query: DateQuery) -> Select[tuple]:
+        """Build a SQLAlchemy Core select statement from a query object."""
+        stmt = super().build_query(query)
+
+        # Add date filtering if specified
+        if query.date is not None:
+            stmt = stmt.where(self.table.c.date == query.date)
+
+        return stmt
 
     @staticmethod
     def entity_to_row(message: Message) -> dict[str, Any]:

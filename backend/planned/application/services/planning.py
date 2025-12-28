@@ -119,19 +119,24 @@ class PlanningService(BaseService):
                 day_template_repo=self.day_template_repo,
             ),
         )
+        from planned.infrastructure.repositories.base import DateQuery
+
         result.tasks, result.events, result.messages = await asyncio.gather(
             self.preview_tasks(date),
-            self.event_repo.search(date),
-            self.message_repo.search(date),
+            self.event_repo.search_query(DateQuery(date=date)),
+            self.message_repo.search_query(DateQuery(date=date)),
         )
 
         return result
 
     async def unschedule(self, date: datetime.date) -> None:
-        await self.task_repo.delete_by_date(
-            date,
-            lambda t: t.routine_id is not None,
-        )
+        from planned.infrastructure.repositories.base import DateQuery
+
+        # Get all tasks for the date, filter for routine tasks, then delete them
+        tasks = await self.task_repo.search_query(DateQuery(date=date))
+        routine_tasks = [t for t in tasks if t.routine_id is not None]
+        if routine_tasks:
+            await asyncio.gather(*[self.task_repo.delete(task) for task in routine_tasks])
         day = await DayService.get_or_create(
             date,
             day_repo=self.day_repo,
@@ -145,7 +150,9 @@ class PlanningService(BaseService):
         date: datetime.date,
         template_id: str | None = None,
     ) -> objects.DayContext:
-        await self.task_repo.delete_by_date(date)
+        from planned.infrastructure.repositories.base import DateQuery
+
+        await self.task_repo.delete_many(DateQuery(date=date))
 
         result: objects.DayContext = await self.preview(
             date,

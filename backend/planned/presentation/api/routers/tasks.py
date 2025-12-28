@@ -3,9 +3,9 @@ import uuid
 
 from fastapi import APIRouter, Depends
 
+from planned.application.services import PlanningService
 from planned.domain.entities import Action, Task
 from planned.infrastructure.repositories import TaskRepository
-from planned.application.services import PlanningService
 from planned.infrastructure.utils.dates import get_current_date
 
 from .dependencies.repositories import get_task_repo
@@ -18,9 +18,9 @@ router = APIRouter()
 async def list_todays_tasks(
     task_repo: TaskRepository = Depends(get_task_repo),
 ) -> list[Task]:
-    return await task_repo.search(
-        get_current_date(),
-    )
+    from planned.infrastructure.repositories.base import DateQuery
+
+    return await task_repo.search_query(DateQuery(date=get_current_date()))
 
 
 @router.post("/{date}/{_id}/actions")
@@ -31,5 +31,5 @@ async def add_task_action(
     task_repo: TaskRepository = Depends(get_task_repo),
     planning_service: PlanningService = Depends(get_planning_service),
 ) -> Task:
-    task: Task = await task_repo.get(date, str(_id))
+    task: Task = await task_repo.get(str(_id))
     return await planning_service.save_action(task, action)

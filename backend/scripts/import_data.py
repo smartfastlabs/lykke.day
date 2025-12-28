@@ -174,7 +174,7 @@ async def upsert_config_object(
     repo: Any,
     obj: Any,
 ) -> None:
-    """Upsert a config object that uses BaseConfigRepository (which doesn't have put)."""
+    """Upsert a config object with custom JSONB serialization."""
     engine = get_engine()
     row = type(repo).entity_to_row(obj)  # type: ignore[misc]
     table = repo.table

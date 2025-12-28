@@ -2,14 +2,15 @@ from typing import Any
 
 from planned.domain.entities.routine import Routine
 
-from .base import BaseConfigRepository
+from .base import BaseQuery, BaseRepository
 from .base.schema import routines
 from .base.utils import normalize_list_fields
 
 
-class RoutineRepository(BaseConfigRepository[Routine]):
+class RoutineRepository(BaseRepository[Routine, BaseQuery]):
     Object = Routine
     table = routines
+    QueryClass = BaseQuery
 
     @staticmethod
     def entity_to_row(routine: Routine) -> dict[str, Any]:

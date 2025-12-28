@@ -1,15 +1,28 @@
 from typing import Any
 
+from sqlalchemy.sql import Select
+
 from planned.domain.entities import Event
 
-from .base import BaseDateRepository
+from .base import BaseRepository, DateQuery
 from .base.schema import events
 from .base.utils import normalize_list_fields
 
 
-class EventRepository(BaseDateRepository[Event]):
+class EventRepository(BaseRepository[Event, DateQuery]):
     Object = Event
     table = events
+    QueryClass = DateQuery
+
+    def build_query(self, query: DateQuery) -> Select[tuple]:
+        """Build a SQLAlchemy Core select statement from a query object."""
+        stmt = super().build_query(query)
+
+        # Add date filtering if specified
+        if query.date is not None:
+            stmt = stmt.where(self.table.c.date == query.date)
+
+        return stmt
 
     @staticmethod
     def entity_to_row(event: Event) -> dict[str, Any]:
@@ -34,7 +47,9 @@ class EventRepository(BaseDateRepository[Event]):
             row["people"] = [person.model_dump(mode="json") for person in event.people]
 
         if event.actions:
-            row["actions"] = [action.model_dump(mode="json") for action in event.actions]
+            row["actions"] = [
+                action.model_dump(mode="json") for action in event.actions
+            ]
 
         return row
 

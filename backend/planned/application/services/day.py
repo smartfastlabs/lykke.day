@@ -195,10 +195,12 @@ class DayService(BaseService):
         day: objects.Day
 
         try:
+            from planned.infrastructure.repositories.base import DateQuery
+
             tasks, events, messages, day = await asyncio.gather(
-                task_repo.search(date),
-                event_repo.search(date),
-                message_repo.search(date),
+                task_repo.search_query(DateQuery(date=date)),
+                event_repo.search_query(DateQuery(date=date)),
+                message_repo.search_query(DateQuery(date=date)),
                 day_repo.get(str(date)),
             )
         except exceptions.NotFoundError:

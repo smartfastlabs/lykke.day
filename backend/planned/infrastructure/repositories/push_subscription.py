@@ -2,14 +2,15 @@ from typing import Any
 
 from planned.domain.entities import PushSubscription
 
-from .base import BaseCrudRepository
+from .base import BaseQuery, BaseRepository
 from .base.schema import push_subscriptions
 from .base.utils import normalize_list_fields
 
 
-class PushSubscriptionRepository(BaseCrudRepository[PushSubscription]):
+class PushSubscriptionRepository(BaseRepository[PushSubscription, BaseQuery]):
     Object = PushSubscription
     table = push_subscriptions
+    QueryClass = BaseQuery
 
     @staticmethod
     def entity_to_row(push_subscription: PushSubscription) -> dict[str, Any]:

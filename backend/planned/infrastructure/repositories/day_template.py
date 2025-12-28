@@ -2,14 +2,15 @@ from typing import Any
 
 from planned.domain.entities import DayTemplate
 
-from .base.crud import BaseCrudRepository
+from .base import BaseQuery, BaseRepository
 from .base.schema import day_templates
 from .base.utils import normalize_list_fields
 
 
-class DayTemplateRepository(BaseCrudRepository[DayTemplate]):
+class DayTemplateRepository(BaseRepository[DayTemplate, BaseQuery]):
     Object = DayTemplate
     table = day_templates
+    QueryClass = BaseQuery
 
     @staticmethod
     def entity_to_row(template: DayTemplate) -> dict[str, Any]:

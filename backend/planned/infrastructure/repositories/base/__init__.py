@@ -1,11 +1,8 @@
-from .config import BaseConfigRepository
-from .crud import BaseCrudRepository
-from .date import BaseDateRepository
 from .repository import BaseRepository
+from .schema import BaseQuery, DateQuery
 
 __all__ = [
-    "BaseConfigRepository",
-    "BaseCrudRepository",
-    "BaseDateRepository",
+    "BaseQuery",
     "BaseRepository",
+    "DateQuery",
 ]

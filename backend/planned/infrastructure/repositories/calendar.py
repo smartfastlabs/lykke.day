@@ -2,14 +2,15 @@ from typing import Any
 
 from planned.domain.entities import Calendar
 
-from .base import BaseCrudRepository
+from .base import BaseQuery, BaseRepository
 from .base.schema import calendars
 from .base.utils import normalize_list_fields
 
 
-class CalendarRepository(BaseCrudRepository[Calendar]):
+class CalendarRepository(BaseRepository[Calendar, BaseQuery]):
     Object = Calendar
     table = calendars
+    QueryClass = BaseQuery
 
     @staticmethod
     def entity_to_row(calendar: Calendar) -> dict[str, Any]:

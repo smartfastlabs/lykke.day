@@ -53,7 +53,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     event_queue: asyncio.Queue[ChangeEvent[Any]] = asyncio.Queue()
 
     # Get all repository classes
-    repository_classes: list[type[BaseRepository[Any]]] = [
+    repository_classes: list[type[BaseRepository[Any, Any]]] = [
         AuthTokenRepository,
         CalendarRepository,
         DayRepository,

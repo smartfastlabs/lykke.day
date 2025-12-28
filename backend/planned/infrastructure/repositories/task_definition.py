@@ -2,14 +2,15 @@ from typing import Any
 
 from planned.domain.entities import TaskDefinition
 
-from .base import BaseConfigRepository
+from .base import BaseQuery, BaseRepository
 from .base.schema import task_definitions
 from .base.utils import normalize_list_fields
 
 
-class TaskDefinitionRepository(BaseConfigRepository[TaskDefinition]):
+class TaskDefinitionRepository(BaseRepository[TaskDefinition, BaseQuery]):
     Object = TaskDefinition
     table = task_definitions
+    QueryClass = BaseQuery
 
     @staticmethod
     def entity_to_row(task_definition: TaskDefinition) -> dict[str, Any]:

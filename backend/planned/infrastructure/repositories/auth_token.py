@@ -2,14 +2,15 @@ from typing import Any
 
 from planned.domain.entities import AuthToken
 
-from .base import BaseCrudRepository
+from .base import BaseQuery, BaseRepository
 from .base.schema import auth_tokens
 from .base.utils import normalize_list_fields
 
 
-class AuthTokenRepository(BaseCrudRepository[AuthToken]):
+class AuthTokenRepository(BaseRepository[AuthToken, BaseQuery]):
     Object = AuthToken
     table = auth_tokens
+    QueryClass = BaseQuery
 
     @staticmethod
     def entity_to_row(auth_token: AuthToken) -> dict[str, Any]:
