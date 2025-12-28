@@ -1,5 +1,6 @@
 import datetime as dt
 import uuid
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
@@ -16,7 +17,7 @@ router = APIRouter()
 
 @router.get("/today")
 async def list_todays_tasks(
-    task_repo: TaskRepositoryProtocol = Depends(get_task_repo),
+    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
 ) -> list[Task]:
     from planned.infrastructure.repositories.base import DateQuery
 
@@ -28,8 +29,8 @@ async def add_task_action(
     date: dt.date,
     _id: uuid.UUID,
     action: Action,
-    task_repo: TaskRepositoryProtocol = Depends(get_task_repo),
-    planning_service: PlanningService = Depends(get_planning_service),
+    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
 ) -> Task:
     task: Task = await task_repo.get(str(_id))
     return await planning_service.save_action(task, action)

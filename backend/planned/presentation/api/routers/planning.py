@@ -1,4 +1,5 @@
 import datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
@@ -15,35 +16,35 @@ router = APIRouter()
 
 @router.get("/routines")
 async def list_routines(
-    routine_repo: RoutineRepositoryProtocol = Depends(get_routine_repo),
+    routine_repo: Annotated[RoutineRepositoryProtocol, Depends(get_routine_repo)],
 ) -> list[Routine]:
     return await routine_repo.all()
 
 
 @router.put("/schedule/today")
 async def schedule_today(
-    planning_service: PlanningService = Depends(get_planning_service),
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
 ) -> DayContext:
     return await planning_service.schedule(get_current_date())
 
 
 @router.get("/preview/today")
 async def preview_today(
-    planning_service: PlanningService = Depends(get_planning_service),
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
 ) -> DayContext:
     return await planning_service.preview(get_current_date())
 
 
 @router.get("/tomorrow/preview")
 async def preview_tomorrow(
-    planning_service: PlanningService = Depends(get_planning_service),
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
 ) -> DayContext:
     return await planning_service.preview(get_tomorrows_date())
 
 
 @router.put("/tomorrow/schedule")
 async def schedule_tomorrow(
-    planning_service: PlanningService = Depends(get_planning_service),
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
 ) -> DayContext:
     return await planning_service.schedule(get_tomorrows_date())
 
@@ -51,7 +52,7 @@ async def schedule_tomorrow(
 @router.get("/date/{date}/preview")
 async def preview_date(
     date: datetime.date,
-    planning_service: PlanningService = Depends(get_planning_service),
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
 ) -> DayContext:
     return await planning_service.preview(date)
 
@@ -59,6 +60,6 @@ async def preview_date(
 @router.put("/date/{date}/schedule")
 async def schedule_date(
     date: datetime.date,
-    planning_service: PlanningService = Depends(get_planning_service),
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
 ) -> DayContext:
     return await planning_service.schedule(date)

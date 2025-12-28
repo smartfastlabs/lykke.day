@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 
 from planned.application.repositories import EventRepositoryProtocol
@@ -11,7 +13,7 @@ router = APIRouter()
 
 @router.get("/today")
 async def today(
-    event_repo: EventRepositoryProtocol = Depends(get_event_repo),
+    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
 ) -> list[Event]:
     from planned.infrastructure.repositories.base import DateQuery
 

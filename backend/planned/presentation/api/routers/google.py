@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime, timedelta
-from typing import cast
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
@@ -76,8 +76,8 @@ async def google_login_callback(
     request: Request,
     state: str,
     code: str,
-    auth_token_repo: AuthTokenRepositoryProtocol = Depends(get_auth_token_repo),
-    calendar_repo: CalendarRepositoryProtocol = Depends(get_calendar_repo),
+    auth_token_repo: Annotated[AuthTokenRepositoryProtocol, Depends(get_auth_token_repo)],
+    calendar_repo: Annotated[CalendarRepositoryProtocol, Depends(get_calendar_repo)],
 ) -> RedirectResponse:
     if not code or not verify_state(state, "login"):
         raise HTTPException(

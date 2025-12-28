@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, BackgroundTasks, Depends
 
 from planned.application.repositories import PushSubscriptionRepositoryProtocol
@@ -23,9 +25,9 @@ class SubscriptionRequest(BaseRequestObject):
 
 @router.get("/subscriptions")
 async def list_subscriptions(
-    push_subscription_repo: PushSubscriptionRepositoryProtocol = Depends(
+    push_subscription_repo: Annotated[PushSubscriptionRepositoryProtocol, Depends(
         get_push_subscription_repo
-    ),
+    )],
 ) -> list[objects.PushSubscription]:
     return await push_subscription_repo.all()
 
@@ -33,9 +35,9 @@ async def list_subscriptions(
 @router.delete("/subscriptions/{subscription_id}")
 async def delete_subscription(
     subscription_id: str,
-    push_subscription_repo: PushSubscriptionRepositoryProtocol = Depends(
+    push_subscription_repo: Annotated[PushSubscriptionRepositoryProtocol, Depends(
         get_push_subscription_repo
-    ),
+    )],
 ) -> None:
     await push_subscription_repo.delete(subscription_id)
 
@@ -44,9 +46,9 @@ async def delete_subscription(
 async def subscribe(
     background_tasks: BackgroundTasks,
     request: SubscriptionRequest,
-    push_subscription_repo: PushSubscriptionRepositoryProtocol = Depends(
+    push_subscription_repo: Annotated[PushSubscriptionRepositoryProtocol, Depends(
         get_push_subscription_repo
-    ),
+    )],
 ) -> objects.PushSubscription:
     result: objects.PushSubscription = await push_subscription_repo.put(
         objects.PushSubscription(

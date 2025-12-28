@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Request, Response
 
 from planned.core.exceptions import exceptions
@@ -23,7 +25,7 @@ class UpdatePasswordRequest(BaseRequestObject):
 @router.post("/set-password")
 async def set_password(
     data: UpdatePasswordRequest,
-    auth_service: AuthService = Depends(get_auth_service),
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> StatusResponse:
     if data.new_password != data.confirm_new_password:
         raise exceptions.BadRequestError()
@@ -43,7 +45,7 @@ async def login(
     data: LoginRequest,
     request: Request,
     response: Response,
-    auth_service: AuthService = Depends(get_auth_service),
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> StatusResponse:
     if not await auth_service.confirm_password(
         data.password,

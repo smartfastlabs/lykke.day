@@ -1,5 +1,5 @@
 import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends
 
@@ -30,7 +30,7 @@ router = APIRouter()
 
 @router.put("/today/schedule")
 async def schedule_today(
-    planning_service: PlanningService = Depends(get_planning_service),
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
 ) -> DayContext:
     return await planning_service.schedule(get_current_date())
 
@@ -38,12 +38,12 @@ async def schedule_today(
 @router.get("/{date}/context")
 async def get_context(
     date: datetime.date | Literal["today", "tomorrow"],
-    planning_service: PlanningService = Depends(get_planning_service),
-    day_repo: DayRepositoryProtocol = Depends(get_day_repo),
-    day_template_repo: DayTemplateRepositoryProtocol = Depends(get_day_template_repo),
-    event_repo: EventRepositoryProtocol = Depends(get_event_repo),
-    message_repo: MessageRepositoryProtocol = Depends(get_message_repo),
-    task_repo: TaskRepositoryProtocol = Depends(get_task_repo),
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
+    day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
+    day_template_repo: Annotated[DayTemplateRepositoryProtocol, Depends(get_day_template_repo)],
+    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
+    message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
+    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
 ) -> DayContext:
     if isinstance(date, str):
         if date == "today":
@@ -76,8 +76,8 @@ class UpdateDayRequest(BaseRequestObject):
 async def update_day(
     date: datetime.date,
     request: UpdateDayRequest,
-    day_repo: DayRepositoryProtocol = Depends(get_day_repo),
-    day_template_repo: DayTemplateRepositoryProtocol = Depends(get_day_template_repo),
+    day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
+    day_template_repo: Annotated[DayTemplateRepositoryProtocol, Depends(get_day_template_repo)],
 ) -> Day:
     day: Day = await DayService.get_or_preview(
         date,
@@ -93,6 +93,6 @@ async def update_day(
 
 @router.get("/templates")
 async def get_templates(
-    day_template_repo: DayTemplateRepositoryProtocol = Depends(get_day_template_repo),
+    day_template_repo: Annotated[DayTemplateRepositoryProtocol, Depends(get_day_template_repo)],
 ) -> list[DayTemplate]:
     return await day_template_repo.all()
