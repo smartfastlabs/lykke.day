@@ -1,7 +1,6 @@
 import asyncio
 import re
 from datetime import UTC, date, datetime, timedelta
-from enum import Enum
 
 from gcsa.event import Event as GoogleEvent
 from gcsa.google_calendar import GoogleCalendar

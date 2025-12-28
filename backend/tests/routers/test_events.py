@@ -6,7 +6,6 @@ import pytest_asyncio
 
 from planned import objects, settings
 from planned.infrastructure.repositories import EventRepository
-from planned.infrastructure.utils.dates import get_current_date
 
 
 @pytest_asyncio.fixture

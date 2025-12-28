@@ -1,8 +1,5 @@
 import datetime
-from typing import TYPE_CHECKING, Literal
-
-if TYPE_CHECKING:
-    from datetime import date
+from typing import Literal
 
 from fastapi import APIRouter, Depends
 

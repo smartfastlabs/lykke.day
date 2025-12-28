@@ -9,9 +9,7 @@ from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
 from planned.domain.entities import (
     Action,
-    ActionType,
     DayContext,
-    DayTemplate,
     Event,
     Task,
     TaskStatus,
@@ -26,7 +24,6 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
 )
 from planned.infrastructure.utils.user_settings import load_user_settings
-from planned.infrastructure.utils.dates import get_current_date
 
 from .base import BaseService
 from .day import DayService

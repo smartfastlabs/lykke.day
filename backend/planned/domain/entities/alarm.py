@@ -1,6 +1,5 @@
 from datetime import time as dt_time
 
-from pydantic import computed_field
 
 from ..value_objects.alarm import AlarmType
 from .base import BaseConfigObject

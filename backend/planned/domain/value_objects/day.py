@@ -1,11 +1,9 @@
-from datetime import date as dt_date, datetime
 from enum import Enum
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
-    from ..entities.alarm import Alarm
     from ..entities.event import Event
     from ..entities.message import Message
     from ..entities.task import Task

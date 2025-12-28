@@ -1,4 +1,4 @@
-from datetime import date, datetime, time
+from datetime import date as dt_date, datetime
 from zoneinfo import ZoneInfo
 
 from dateutil.tz import tzoffset
@@ -47,15 +47,17 @@ def test_get_datetime_with_naive_datetime():
 
 def test_get_datetime_with_date_start_of_day():
     """Date should become midnight in target timezone."""
-    d = date(2025, 12, 9)
+    d = dt_date(2025, 12, 9)
     result = get_datetime(d, "America/New_York", TARGET_TIMEZONE, use_start_of_day=True)
     assert result == datetime(2025, 12, 9, 0, 0, 0, tzinfo=ZoneInfo("America/Chicago"))
 
 
 def test_get_datetime_with_date_end_of_day():
     """Date should become 23:59:59 in target timezone."""
-    d = date(2025, 12, 9)
-    result = get_datetime(d, "America/New_York", TARGET_TIMEZONE, use_start_of_day=False)
+    d = dt_date(2025, 12, 9)
+    result = get_datetime(
+        d, "America/New_York", TARGET_TIMEZONE, use_start_of_day=False
+    )
     assert result == datetime(
         2025, 12, 9, 23, 59, 59, tzinfo=ZoneInfo("America/Chicago")
     )

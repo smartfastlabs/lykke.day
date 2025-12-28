@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-from textwrap import dedent
 from typing import Any, Literal
 
 from langchain.agents import create_agent
@@ -20,7 +19,6 @@ from planned.domain import entities as objects
 from planned.infrastructure.utils import templates, youtube
 from planned.infrastructure.utils.dates import (
     get_current_date,
-    get_current_datetime,
     get_current_time,
 )
 

@@ -1,6 +1,5 @@
 """Base types for repository change events and common repository protocol mixins."""
 
-import datetime
 from typing import Generic, Literal, Protocol, TypeVar
 
 import pydantic
@@ -49,7 +48,7 @@ class SimpleReadRepositoryProtocol(Protocol[T]):
 
 
 class CrudRepositoryProtocol(Protocol[T]):
-    """Base protocol for CRUD repositories (get, put, all)."""
+    """Base protocol for CRUD repositories (get, put, all, delete)."""
 
     async def get(self, key: str) -> T:
         """Get an object by key."""
@@ -61,6 +60,10 @@ class CrudRepositoryProtocol(Protocol[T]):
 
     async def all(self) -> list[T]:
         """Get all objects."""
+        ...
+
+    async def delete(self, key: str | T) -> None:
+        """Delete an object by key or by object."""
         ...
 
 
@@ -121,4 +124,3 @@ class SimpleDateScopedRepositoryProtocol(Protocol[T]):
     def listen(self, handler: ChangeHandler[T]) -> None:
         """Register a change handler for repository events."""
         ...
-

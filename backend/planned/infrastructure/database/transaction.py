@@ -1,6 +1,7 @@
 """Transaction management using context variables."""
 
-from contextvars import ContextVar
+from collections.abc import Coroutine
+from contextvars import ContextVar, Token
 from typing import TYPE_CHECKING
 
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -8,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from .utils import get_engine
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncContextManager
+    from contextlib import AbstractAsyncContextManager as AsyncContextManager
 
 # Context variable to store the active transaction connection
 _transaction_connection: ContextVar[AsyncConnection | None] = ContextVar(
@@ -43,7 +44,7 @@ class TransactionManager:
     def __init__(self) -> None:
         """Initialize the transaction manager."""
         self._connection: AsyncConnection | None = None
-        self._token = None
+        self._token: Token[AsyncConnection | None] | None = None
         self._is_nested = False
 
     async def __aenter__(self) -> AsyncConnection:
@@ -94,13 +95,16 @@ class TransactionManager:
                 await self._connection.rollback()
         finally:
             # Reset the context variable
-            if self._token is not None:
-                _transaction_connection.reset(self._token)
+            # At this point, we know self._token is not None because
+            # we only reach here if self._is_nested is False, which means
+            # we created a new transaction and set self._token in __aenter__
+            assert self._token is not None
+            _transaction_connection.reset(self._token)
 
             # Close the connection
             await self._connection.close()
             self._connection = None
 
-    def __await__(self) -> "AsyncContextManager[AsyncConnection]":
+    def __await__(self) -> Coroutine[None, None, AsyncConnection]:
         """Make the transaction manager awaitable for use in async context managers."""
-        return self.__aenter__().__await__()
+        return self.__aenter__()

@@ -1,9 +1,6 @@
 import pytest
 from freezegun import freeze_time
 
-from planned import objects
-from planned.application.services import DayService
-
 
 @pytest.mark.asyncio
 async def test_get_upcomming_events(test_day_svc, test_event_today):

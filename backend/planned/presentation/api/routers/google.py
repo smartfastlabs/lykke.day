@@ -6,9 +6,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from googleapiclient.discovery import build
 
-from planned.infrastructure.gateways.google import get_flow
+from planned.application.repositories import (
+    AuthTokenRepositoryProtocol,
+    CalendarRepositoryProtocol,
+)
 from planned.domain.entities import AuthToken, Calendar
-from planned.infrastructure.repositories import AuthTokenRepository, CalendarRepository
+from planned.infrastructure.gateways.google import get_flow
 
 from .dependencies.repositories import get_auth_token_repo, get_calendar_repo
 
@@ -73,8 +76,8 @@ async def google_login_callback(
     request: Request,
     state: str,
     code: str,
-    auth_token_repo: AuthTokenRepository = Depends(get_auth_token_repo),
-    calendar_repo: CalendarRepository = Depends(get_calendar_repo),
+    auth_token_repo: AuthTokenRepositoryProtocol = Depends(get_auth_token_repo),
+    calendar_repo: CalendarRepositoryProtocol = Depends(get_calendar_repo),
 ) -> RedirectResponse:
     if not code or not verify_state(state, "login"):
         raise HTTPException(

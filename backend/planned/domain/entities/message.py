@@ -1,7 +1,6 @@
-from datetime import date as dt_date, datetime
+from datetime import datetime
 from typing import Literal
 
-from pydantic import computed_field
 
 from .base import BaseDateObject
 

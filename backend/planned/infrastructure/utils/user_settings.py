@@ -1,6 +1,5 @@
 """Utility functions for loading user settings."""
 
-import json
 from pathlib import Path
 
 from planned.core.config import settings

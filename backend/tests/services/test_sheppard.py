@@ -3,8 +3,6 @@ import asyncio
 import pytest
 from dobles import expect
 
-from planned.application.services import CalendarService
-
 
 @pytest.mark.asyncio
 async def test_run(test_sheppard_svc):

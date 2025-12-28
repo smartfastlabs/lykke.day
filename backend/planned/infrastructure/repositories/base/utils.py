@@ -1,6 +1,6 @@
 """Utility functions for repository operations."""
 
-from typing import Any, get_args, get_origin
+from typing import Any, get_origin
 
 import pydantic
 

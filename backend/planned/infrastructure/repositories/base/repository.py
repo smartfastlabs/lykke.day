@@ -2,12 +2,12 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncContextManager
+    pass
 
 from blinker import Signal
 from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.sql import Select
 
 from planned.application.repositories.base import ChangeEvent, ChangeHandler

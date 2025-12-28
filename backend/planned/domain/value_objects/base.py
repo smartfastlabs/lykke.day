@@ -1,4 +1,3 @@
-import pydantic
 
 from planned.domain.entities.base import BaseObject
 

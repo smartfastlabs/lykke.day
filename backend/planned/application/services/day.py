@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 from contextlib import suppress
-from typing import Protocol, TypeVar
+from typing import TypeVar
 
 from blinker import Signal
 

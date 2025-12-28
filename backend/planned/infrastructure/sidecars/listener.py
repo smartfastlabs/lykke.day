@@ -1,6 +1,5 @@
 import asyncio
 import time
-from typing import Any
 
 import numpy as np
 import pvcheetah  # type: ignore[import-untyped]

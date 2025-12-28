@@ -1,9 +1,9 @@
 from fastapi import APIRouter, BackgroundTasks, Depends
 
+from planned.application.repositories import PushSubscriptionRepositoryProtocol
 from planned.domain import entities as objects
-from planned.infrastructure.gateways import web_push
 from planned.domain.value_objects.base import BaseRequestObject, BaseValueObject
-from planned.infrastructure.repositories import PushSubscriptionRepository
+from planned.infrastructure.gateways import web_push
 
 from .dependencies.repositories import get_push_subscription_repo
 
@@ -23,7 +23,7 @@ class SubscriptionRequest(BaseRequestObject):
 
 @router.get("/subscriptions")
 async def list_subscriptions(
-    push_subscription_repo: PushSubscriptionRepository = Depends(
+    push_subscription_repo: PushSubscriptionRepositoryProtocol = Depends(
         get_push_subscription_repo
     ),
 ) -> list[objects.PushSubscription]:
@@ -33,7 +33,7 @@ async def list_subscriptions(
 @router.delete("/subscriptions/{subscription_id}")
 async def delete_subscription(
     subscription_id: str,
-    push_subscription_repo: PushSubscriptionRepository = Depends(
+    push_subscription_repo: PushSubscriptionRepositoryProtocol = Depends(
         get_push_subscription_repo
     ),
 ) -> None:
@@ -44,7 +44,7 @@ async def delete_subscription(
 async def subscribe(
     background_tasks: BackgroundTasks,
     request: SubscriptionRequest,
-    push_subscription_repo: PushSubscriptionRepository = Depends(
+    push_subscription_repo: PushSubscriptionRepositoryProtocol = Depends(
         get_push_subscription_repo
     ),
 ) -> objects.PushSubscription:

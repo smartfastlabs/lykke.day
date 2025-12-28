@@ -2,9 +2,9 @@ import datetime
 
 from fastapi import APIRouter, Depends
 
-from planned.domain.entities import DayContext, Routine
-from planned.infrastructure.repositories import RoutineRepository
+from planned.application.repositories import RoutineRepositoryProtocol
 from planned.application.services import PlanningService
+from planned.domain.entities import DayContext, Routine
 from planned.infrastructure.utils.dates import get_current_date, get_tomorrows_date
 
 from .dependencies.repositories import get_routine_repo
@@ -15,7 +15,7 @@ router = APIRouter()
 
 @router.get("/routines")
 async def list_routines(
-    routine_repo: RoutineRepository = Depends(get_routine_repo),
+    routine_repo: RoutineRepositoryProtocol = Depends(get_routine_repo),
 ) -> list[Routine]:
     return await routine_repo.all()
 

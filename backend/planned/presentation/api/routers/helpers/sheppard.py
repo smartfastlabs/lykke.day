@@ -13,7 +13,6 @@ from planned.application.repositories import (
 )
 from planned.application.services import CalendarService, DayService, PlanningService, SheppardService
 from planned.infrastructure.gateways.adapters import WebPushGatewayAdapter
-from planned.infrastructure.utils.dates import get_current_date
 
 from ..dependencies.repositories import (
     get_day_repo,
