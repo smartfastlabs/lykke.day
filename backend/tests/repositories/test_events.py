@@ -1,13 +1,55 @@
+import datetime
 from datetime import timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
+import pytest_asyncio
 
+from planned import settings
+from planned.domain import entities as objects
 from planned.infrastructure.repositories import EventRepository
 
 
-@pytest.fixture
-def event_repo():
-    return EventRepository()
+@pytest_asyncio.fixture
+async def event_repo(test_date):
+    repo = EventRepository()
+
+    # Create event on test_date
+    starts_at_today = datetime.datetime.combine(
+        test_date,
+        datetime.time(hour=2),
+        tzinfo=ZoneInfo(settings.TIMEZONE),
+    )
+    event_today = objects.Event(
+        name="Test Event",
+        frequency="ONCE",
+        calendar_id="test-calendar",
+        platform_id="test-id",
+        platform="testing",
+        status="status",
+        starts_at=starts_at_today,
+    )
+    await repo.put(event_today)
+
+    # Create event on test_date + 1 day
+    test_date_next = test_date + timedelta(days=1)
+    starts_at_next = datetime.datetime.combine(
+        test_date_next,
+        datetime.time(hour=2),
+        tzinfo=ZoneInfo(settings.TIMEZONE),
+    )
+    event_next = objects.Event(
+        name="Test Event",
+        frequency="ONCE",
+        calendar_id="test-calendar-2",
+        platform_id="test-id-2",
+        platform="testing",
+        status="status",
+        starts_at=starts_at_next,
+    )
+    await repo.put(event_next)
+
+    return repo
 
 
 @pytest.mark.asyncio
@@ -56,10 +98,14 @@ async def test_delete_by_date(test_date, event_repo):
 
 @pytest.mark.asyncio
 async def test_put(test_event, clear_repos, event_repo):
+    results = await event_repo.search(test_event.date)
+
+    assert len(results) == 1
+
     await event_repo.put(
         test_event,
     )
 
     results = await event_repo.search(test_event.date)
 
-    assert len(results) == 1
+    assert len(results) == 2

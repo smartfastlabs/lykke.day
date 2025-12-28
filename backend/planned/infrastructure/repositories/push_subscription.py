@@ -4,6 +4,7 @@ from planned.domain.entities import PushSubscription
 
 from .base import BaseCrudRepository
 from .base.schema import push_subscriptions
+from .base.utils import normalize_list_fields
 
 
 class PushSubscriptionRepository(BaseCrudRepository[PushSubscription]):
@@ -28,4 +29,6 @@ class PushSubscriptionRepository(BaseCrudRepository[PushSubscription]):
     @staticmethod
     def row_to_entity(row: dict[str, Any]) -> PushSubscription:
         """Convert a database row dict to a PushSubscription entity."""
-        return PushSubscription.model_validate(row, from_attributes=True)
+        # Normalize None values to [] for list-typed fields
+        data = normalize_list_fields(row, PushSubscription)
+        return PushSubscription.model_validate(data, from_attributes=True)

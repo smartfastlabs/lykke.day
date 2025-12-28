@@ -4,6 +4,7 @@ from planned.domain.entities import Calendar
 
 from .base import BaseCrudRepository
 from .base.schema import calendars
+from .base.utils import normalize_list_fields
 
 
 class CalendarRepository(BaseCrudRepository[Calendar]):
@@ -27,4 +28,6 @@ class CalendarRepository(BaseCrudRepository[Calendar]):
     @staticmethod
     def row_to_entity(row: dict[str, Any]) -> Calendar:
         """Convert a database row dict to a Calendar entity."""
-        return Calendar.model_validate(row, from_attributes=True)
+        # Normalize None values to [] for list-typed fields
+        data = normalize_list_fields(row, Calendar)
+        return Calendar.model_validate(data, from_attributes=True)

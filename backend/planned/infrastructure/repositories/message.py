@@ -4,6 +4,7 @@ from planned.domain.entities import Message
 
 from .base import BaseDateRepository
 from .base.schema import messages
+from .base.utils import normalize_list_fields
 
 
 class MessageRepository(BaseDateRepository[Message]):
@@ -30,5 +31,8 @@ class MessageRepository(BaseDateRepository[Message]):
         # Remove 'date' field - it's database-only for querying
         # The entity computes date from sent_at
         data = {k: v for k, v in row.items() if k != "date"}
+
+        # Normalize None values to [] for list-typed fields
+        data = normalize_list_fields(data, Message)
 
         return Message.model_validate(data, from_attributes=True)

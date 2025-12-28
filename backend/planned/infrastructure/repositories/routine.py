@@ -4,6 +4,7 @@ from planned.domain.entities.routine import Routine
 
 from .base import BaseConfigRepository
 from .base.schema import routines
+from .base.utils import normalize_list_fields
 
 
 class RoutineRepository(BaseConfigRepository[Routine]):
@@ -32,4 +33,6 @@ class RoutineRepository(BaseConfigRepository[Routine]):
     @staticmethod
     def row_to_entity(row: dict[str, Any]) -> Routine:
         """Convert a database row dict to a Routine entity."""
-        return Routine.model_validate(row, from_attributes=True)
+        # Normalize None values to [] for list-typed fields
+        data = normalize_list_fields(row, Routine)
+        return Routine.model_validate(data, from_attributes=True)

@@ -4,6 +4,7 @@ from planned.domain.entities import AuthToken
 
 from .base import BaseCrudRepository
 from .base.schema import auth_tokens
+from .base.utils import normalize_list_fields
 
 
 class AuthTokenRepository(BaseCrudRepository[AuthToken]):
@@ -35,4 +36,6 @@ class AuthTokenRepository(BaseCrudRepository[AuthToken]):
     @staticmethod
     def row_to_entity(row: dict[str, Any]) -> AuthToken:
         """Convert a database row dict to an AuthToken entity."""
-        return AuthToken.model_validate(row, from_attributes=True)
+        # Normalize None values to [] for list-typed fields
+        data = normalize_list_fields(row, AuthToken)
+        return AuthToken.model_validate(data, from_attributes=True)

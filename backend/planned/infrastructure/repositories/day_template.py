@@ -2,11 +2,12 @@ from typing import Any
 
 from planned.domain.entities import DayTemplate
 
-from .base import BaseConfigRepository
+from .base.crud import BaseCrudRepository
 from .base.schema import day_templates
+from .base.utils import normalize_list_fields
 
 
-class DayTemplateRepository(BaseConfigRepository[DayTemplate]):
+class DayTemplateRepository(BaseCrudRepository[DayTemplate]):
     Object = DayTemplate
     table = day_templates
 
@@ -21,11 +22,13 @@ class DayTemplateRepository(BaseConfigRepository[DayTemplate]):
 
         # Handle JSONB fields
         if template.alarm:
-            row["alarm"] = template.alarm.model_dump()
+            row["alarm"] = template.alarm.model_dump(mode="json")
 
         return row
 
     @staticmethod
     def row_to_entity(row: dict[str, Any]) -> DayTemplate:
         """Convert a database row dict to a DayTemplate entity."""
-        return DayTemplate.model_validate(row, from_attributes=True)
+        # Normalize None values to [] for list-typed fields
+        data = normalize_list_fields(row, DayTemplate)
+        return DayTemplate.model_validate(data, from_attributes=True)

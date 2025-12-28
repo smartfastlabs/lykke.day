@@ -1,6 +1,6 @@
-import asyncio
 import datetime
 import os
+from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -16,9 +16,6 @@ from planned.domain import entities as objects
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.utils.dates import get_current_date, get_current_datetime
 from planned.presentation.middlewares import middlewares
-
-# Import test data loading fixture
-from tests.fixtures.load_test_data import load_test_data  # noqa: F401
 
 
 @pytest.fixture(scope="session")
@@ -75,6 +72,79 @@ async def clear_repos():
             await conn.execute(
                 text(f"TRUNCATE TABLE {', '.join(tables)} RESTART IDENTITY CASCADE")
             )
+
+
+@pytest.fixture(autouse=True)
+def mock_user_settings():
+    """Mock load_user_settings to return a default UserSettings for all tests."""
+    from planned.domain.entities.user_settings import UserSettings
+
+    default_settings = UserSettings(
+        template_defaults=[
+            "default",
+            "default",
+            "default",
+            "default",
+            "default",
+            "weekend",
+            "weekend",
+        ]
+    )
+
+    # Patch in both places where it's imported and used
+    with (
+        patch(
+            "planned.infrastructure.utils.user_settings.load_user_settings",
+            return_value=default_settings,
+        ),
+        patch(
+            "planned.application.services.planning.load_user_settings",
+            return_value=default_settings,
+        ),
+        patch(
+            "planned.application.services.day.load_user_settings",
+            return_value=default_settings,
+        ),
+    ):
+        yield
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def setup_day_templates():
+    """Create default and weekend day templates for tests."""
+    from datetime import time
+
+    from planned.domain.entities import Alarm, DayTemplate
+    from planned.domain.value_objects.alarm import AlarmType
+    from planned.infrastructure.repositories import DayTemplateRepository
+
+    repo = DayTemplateRepository()
+
+    # Create default template
+    default_template = DayTemplate(
+        id="default",
+        tasks=[],
+        alarm=Alarm(
+            name="Default Alarm",
+            time=time(7, 15),
+            type=AlarmType.FIRM,
+        ),
+    )
+    await repo.put(default_template)
+
+    # Create weekend template
+    weekend_template = DayTemplate(
+        id="weekend",
+        tasks=[],
+        alarm=Alarm(
+            name="Weekend Alarm",
+            time=time(7, 15),
+            type=AlarmType.GENTLE,
+        ),
+    )
+    await repo.put(weekend_template)
+
+    yield
 
 
 @pytest.fixture

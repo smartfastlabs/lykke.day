@@ -5,6 +5,7 @@ from planned.domain.entities import Day
 
 from .base import BaseCrudRepository
 from .base.schema import days
+from .base.utils import normalize_list_fields
 
 
 class DayRepository(BaseCrudRepository[Day]):
@@ -27,7 +28,7 @@ class DayRepository(BaseCrudRepository[Day]):
             row["tags"] = [tag.value for tag in day.tags]
 
         if day.alarm:
-            row["alarm"] = day.alarm.model_dump()
+            row["alarm"] = day.alarm.model_dump(mode="json")
 
         return row
 
@@ -54,5 +55,8 @@ class DayRepository(BaseCrudRepository[Day]):
 
         # Remove id since Day uses date as the identifier (id is computed from date)
         data.pop("id", None)
+
+        # Normalize None values to [] for list-typed fields
+        data = normalize_list_fields(data, Day)
 
         return Day.model_validate(data, from_attributes=True)

@@ -4,6 +4,7 @@ from planned.domain.entities import TaskDefinition
 
 from .base import BaseConfigRepository
 from .base.schema import task_definitions
+from .base.utils import normalize_list_fields
 
 
 class TaskDefinitionRepository(BaseConfigRepository[TaskDefinition]):
@@ -25,4 +26,6 @@ class TaskDefinitionRepository(BaseConfigRepository[TaskDefinition]):
     @staticmethod
     def row_to_entity(row: dict[str, Any]) -> TaskDefinition:
         """Convert a database row dict to a TaskDefinition entity."""
-        return TaskDefinition.model_validate(row, from_attributes=True)
+        # Normalize None values to [] for list-typed fields
+        data = normalize_list_fields(row, TaskDefinition)
+        return TaskDefinition.model_validate(data, from_attributes=True)

@@ -4,6 +4,7 @@ from planned.domain.entities import Task
 
 from .base import BaseDateRepository
 from .base.schema import tasks
+from .base.utils import normalize_list_fields
 
 
 class TaskRepository(BaseDateRepository[Task]):
@@ -45,5 +46,8 @@ class TaskRepository(BaseDateRepository[Task]):
         # Remove 'date' field - it's database-only for querying
         # The entity computes date from scheduled_date
         data = {k: v for k, v in row.items() if k != "date"}
+
+        # Normalize None values to [] for list-typed fields
+        data = normalize_list_fields(data, Task)
 
         return Task.model_validate(data, from_attributes=True)
