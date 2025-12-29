@@ -5,10 +5,10 @@ from uuid import UUID
 from google.oauth2.credentials import Credentials
 from pydantic import ConfigDict, Field
 
-from .base import BaseObject
+from .base import BaseEntityObject
 
 
-class AuthToken(BaseObject):
+class AuthToken(BaseEntityObject):
     model_config = ConfigDict(
         populate_by_name=True,
         validate_by_alias=False,

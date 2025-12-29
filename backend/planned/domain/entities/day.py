@@ -6,10 +6,10 @@ from pydantic import Field, model_validator
 
 from ..value_objects.day import DayStatus, DayTag
 from .alarm import Alarm
-from .base import BaseObject
+from .base import BaseEntityObject
 
 
-class DayTemplate(BaseObject):
+class DayTemplate(BaseEntityObject):
     uuid: UUID = Field(default_factory=uuid.uuid4)
     user_uuid: UUID
     slug: str
@@ -40,7 +40,7 @@ class DayTemplate(BaseObject):
         return self
 
 
-class Day(BaseObject):
+class Day(BaseEntityObject):
     uuid: UUID = Field(default_factory=uuid.uuid4)
     user_uuid: UUID
     date: dt_date

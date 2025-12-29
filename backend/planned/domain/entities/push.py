@@ -4,10 +4,10 @@ from uuid import UUID
 
 from pydantic import Field
 
-from .base import BaseObject
+from .base import BaseEntityObject
 
 
-class PushSubscription(BaseObject):
+class PushSubscription(BaseEntityObject):
     uuid: UUID = Field(default_factory=uuid.uuid4)
     user_uuid: UUID
     device_name: str | None = None

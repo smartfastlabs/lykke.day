@@ -10,12 +10,13 @@ from sqlalchemy.sql import Select
 
 from planned.common.repository_handler import ChangeHandler
 from planned.core.exceptions import exceptions
+from planned.domain.entities.base import BaseEntityObject
 from planned.domain.value_objects.query import BaseQuery
 from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.database.transaction import get_transaction_connection
 
-ObjectType = TypeVar("ObjectType")
+ObjectType = TypeVar("ObjectType", bound=BaseEntityObject)
 QueryType = TypeVar("QueryType", bound=BaseQuery)
 
 
@@ -195,7 +196,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         async with self._get_connection(for_write=True) as conn:
             # Check if object exists
             # All entities have uuid attribute (from BaseEntityObject)
-            obj_uuid = getattr(obj, "uuid")
+            obj_uuid = obj.uuid
             stmt = select(self.table.c.uuid).where(self.table.c.uuid == obj_uuid)
             result = await conn.execute(stmt)
             exists = result.first() is not None
@@ -305,7 +306,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             obj = key
             async with self._get_connection(for_write=True) as conn:
                 # All entities have uuid attribute (from BaseEntityObject)
-                obj_uuid = getattr(obj, "uuid")
+                obj_uuid = obj.uuid
                 stmt = delete(self.table).where(self.table.c.uuid == obj_uuid)
                 await conn.execute(stmt)
 
@@ -313,7 +314,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         await self.signal_source.send_async("change", event=event)
 
 
-class UserScopedBaseRepository(BaseRepository[ObjectType, QueryType], Generic[ObjectType, QueryType]):
+class UserScopedBaseRepository(
+    BaseRepository[ObjectType, QueryType], Generic[ObjectType, QueryType]
+):
     """Base repository that requires user scoping.
 
     This repository ensures all operations are scoped to a specific user.
@@ -336,6 +339,7 @@ class UserScopedBaseRepository(BaseRepository[ObjectType, QueryType], Generic[Ob
     async def get(self, key: UUID) -> ObjectType:
         """Get an object by uuid, filtered by user_uuid."""
         async with self._get_connection(for_write=False) as conn:
+            # Build base statement from parent
             stmt = select(self.table).where(self.table.c.uuid == key)
 
             # Add user_uuid filtering
@@ -354,43 +358,19 @@ class UserScopedBaseRepository(BaseRepository[ObjectType, QueryType], Generic[Ob
 
     def build_query(self, query: QueryType) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object with user filtering."""
-        stmt: Select[tuple] = select(self.table)
+        # Call super to build the base query
+        stmt = super().build_query(query)
 
         # Add user_uuid filtering (must be first to ensure proper isolation)
         if hasattr(self.table.c, "user_uuid"):
             stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
-
-        if query.limit is not None:
-            stmt = stmt.limit(query.limit)
-
-        if query.offset:
-            stmt = stmt.offset(query.offset)
-
-        # Handle date filtering if table has created_at column
-        if hasattr(self.table.c, "created_at"):
-            if query.created_before:
-                stmt = stmt.where(self.table.c.created_at < query.created_before)
-
-            if query.created_after:
-                stmt = stmt.where(self.table.c.created_at > query.created_after)
-
-        # Handle ordering
-        if query.order_by:
-            col = getattr(self.table.c, query.order_by, None)
-            if col is not None:
-                if query.order_by_desc:
-                    stmt = stmt.order_by(col.desc())
-                else:
-                    stmt = stmt.order_by(col)
-        else:
-            # Default ordering by uuid
-            stmt = stmt.order_by(self.table.c.uuid)
 
         return stmt
 
     async def all(self) -> list[ObjectType]:
         """Get all objects, filtered by user_uuid."""
         async with self._get_connection(for_write=False) as conn:
+            # Build base statement from parent
             stmt = select(self.table)
 
             # Add user_uuid filtering
@@ -416,7 +396,7 @@ class UserScopedBaseRepository(BaseRepository[ObjectType, QueryType], Generic[Ob
 
         async with self._get_connection(for_write=True) as conn:
             # Check if object exists (with user filtering)
-            obj_uuid = getattr(obj, "uuid")
+            obj_uuid = obj.uuid
             stmt = select(self.table.c.uuid).where(self.table.c.uuid == obj_uuid)
             if hasattr(self.table.c, "user_uuid"):
                 stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
@@ -512,7 +492,7 @@ class UserScopedBaseRepository(BaseRepository[ObjectType, QueryType], Generic[Ob
             obj = key
             async with self._get_connection(for_write=True) as conn:
                 # All entities have uuid attribute (from BaseEntityObject)
-                obj_uuid = getattr(obj, "uuid")
+                obj_uuid = obj.uuid
                 stmt = delete(self.table).where(self.table.c.uuid == obj_uuid)
                 # Add user_uuid filtering
                 if hasattr(self.table.c, "user_uuid"):

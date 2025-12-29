@@ -8,7 +8,7 @@ from pydantic import Field, computed_field
 
 from ..value_objects.task import TaskFrequency
 from .action import Action
-from .base import BaseObject
+from .base import BaseEntityObject
 from .person import Person
 
 
@@ -19,7 +19,7 @@ def get_datetime(
     use_start_of_day: bool = True,
 ) -> datetime:
     """Convert a date or datetime to a datetime in the target timezone.
-    
+
     Args:
         value: Date or datetime to convert
         source_timezone: Timezone of the source value (if naive datetime or date)
@@ -41,7 +41,7 @@ def get_datetime(
     )
 
 
-class Event(BaseObject):
+class Event(BaseEntityObject):
     uuid: UUID = Field(default_factory=uuid.uuid4)
     user_uuid: UUID
     name: str
@@ -72,12 +72,6 @@ class Event(BaseObject):
         # Fallback: assume UTC for naive datetimes
         return dt.date()
 
-    def model_post_init(self, __context__=None) -> None:  # type: ignore
-        # Generate UUID5 based on platform and platform_id for deterministic IDs
-        namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
-        name = f"{self.platform}:{self.platform_id}"
-        self.uuid = uuid.uuid5(namespace, name)
-
     @classmethod
     def from_google(
         cls,
@@ -88,7 +82,7 @@ class Event(BaseObject):
         target_timezone: str,
     ) -> "Event":
         """Create an Event from a Google Calendar event.
-        
+
         Args:
             user_uuid: User UUID for the event
             calendar_uuid: UUID of the calendar

@@ -4,10 +4,10 @@ from uuid import UUID
 
 from pydantic import Field
 
-from .base import BaseObject
+from .base import BaseEntityObject
 
 
-class Calendar(BaseObject):
+class Calendar(BaseEntityObject):
     uuid: UUID = Field(default_factory=uuid.uuid4)
     user_uuid: UUID
     name: str
