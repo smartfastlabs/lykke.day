@@ -9,7 +9,7 @@ from planned.core.exceptions import exceptions
 from planned.domain.entities import Day, DayStatus, Task, TaskStatus
 from planned.domain.value_objects.task import TaskCategory, TaskDefinition, TaskFrequency, TaskType
 from planned.infrastructure.database.transaction import TransactionManager, get_transaction_connection
-from planned.infrastructure.repositories.base import DateQuery
+from planned.infrastructure.repositories.base.schema import DateQuery
 from planned.infrastructure.utils.dates import get_current_datetime
 
 

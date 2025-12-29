@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.sql import Select
 
-from planned.application.repositories.base import ChangeEvent, ChangeHandler
+from planned.core.events import ChangeEvent, ChangeHandler
 from planned.core.exceptions import exceptions
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.database.transaction import get_transaction_connection

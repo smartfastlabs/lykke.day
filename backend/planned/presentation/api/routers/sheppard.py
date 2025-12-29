@@ -6,8 +6,8 @@ from uuid import UUID
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from loguru import logger
 
-from planned.application.repositories.base import ChangeEvent
 from planned.application.services import SheppardManager
+from planned.core.events import ChangeEvent
 from planned.core.exceptions import exceptions
 from planned.infrastructure.repositories import (
     AuthTokenRepository,
@@ -79,7 +79,9 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         return
 
     # Get SheppardManager from app state
-    manager: SheppardManager | None = getattr(websocket.app.state, "sheppard_manager", None)
+    manager: SheppardManager | None = getattr(
+        websocket.app.state, "sheppard_manager", None
+    )
     if manager is None:
         logger.error("SheppardManager is not available")
         await websocket.close(code=1011, reason="Service unavailable")
@@ -120,7 +122,11 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         # Check if the event value has a user_uuid attribute
         event_value = event.value
         if hasattr(event_value, "user_uuid"):
-            event_user_uuid = UUID(event_value.user_uuid) if isinstance(event_value.user_uuid, str) else event_value.user_uuid
+            event_user_uuid = (
+                UUID(event_value.user_uuid)
+                if isinstance(event_value.user_uuid, str)
+                else event_value.user_uuid
+            )
             if event_user_uuid == user_uuid:
                 await event_queue.put(event)
 

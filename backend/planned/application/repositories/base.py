@@ -1,38 +1,10 @@
-"""Base types for repository change events and common repository protocol mixins."""
+"""Base types for repository protocol mixins."""
 
-from typing import Generic, Literal, Protocol, TypeVar
+from typing import Protocol, TypeVar
 
-import pydantic
+from planned.core.events import ChangeEvent, ChangeHandler
 
-ObjectType = TypeVar("ObjectType")
 T = TypeVar("T")
-
-
-class ChangeEvent(pydantic.BaseModel, Generic[ObjectType]):
-    """Represents a change event for a repository object."""
-
-    type: Literal["create", "update", "delete"]
-    value: ObjectType
-
-    model_config = pydantic.ConfigDict(
-        from_attributes=True,
-        populate_by_name=True,
-    )
-
-
-class ChangeHandler(Protocol[ObjectType]):
-    """Protocol for handling repository change events."""
-
-    async def __call__(
-        self, _sender: object | None = None, *, event: ChangeEvent[ObjectType]
-    ) -> None:
-        """Handle a change event.
-
-        Args:
-            _sender: The sender of the event (optional).
-            event: The change event containing the type and value.
-        """
-        ...
 
 
 class SimpleReadRepositoryProtocol(Protocol[T]):

@@ -18,12 +18,12 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
     UserRepositoryProtocol,
 )
-from planned.application.repositories.base import ChangeEvent, ChangeHandler
 from planned.application.services import (
     CalendarService,
     DayService,
     PlanningService,
 )
+from planned.core.events import ChangeEvent, ChangeHandler
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Alarm, DayTemplate, User
 from planned.domain.value_objects.alarm import AlarmType

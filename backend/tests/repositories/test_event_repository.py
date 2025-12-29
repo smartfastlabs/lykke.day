@@ -9,7 +9,7 @@ import pytest_asyncio
 from planned import settings
 from planned.domain import entities as objects
 from planned.infrastructure.repositories import EventRepository, UserRepository
-from planned.infrastructure.repositories.base import DateQuery
+from planned.infrastructure.repositories.base.schema import DateQuery
 
 
 @pytest_asyncio.fixture

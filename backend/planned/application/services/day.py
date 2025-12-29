@@ -14,10 +14,10 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
     UserRepositoryProtocol,
 )
-from planned.application.repositories.base import ChangeEvent
+from planned.core.events import ChangeEvent
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
-from planned.infrastructure.repositories.base import DateQuery
+from planned.infrastructure.repositories.base.schema import DateQuery
 from planned.infrastructure.utils.dates import get_current_datetime, get_current_time
 from planned.infrastructure.utils.decorators import hybridmethod
 

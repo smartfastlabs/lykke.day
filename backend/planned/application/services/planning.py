@@ -25,7 +25,7 @@ from planned.domain.entities import (
     Task,
     TaskStatus,
 )
-from planned.infrastructure.repositories.base import DateQuery
+from planned.infrastructure.repositories.base.schema import DateQuery
 
 from .base import BaseService
 from .day import DayService

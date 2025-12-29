@@ -8,8 +8,8 @@ from uuid import UUID, uuid4
 import pytest
 from dobles import allow
 
-from planned.application.repositories.base import ChangeEvent
 from planned.application.services import DayService
+from planned.core.events import ChangeEvent
 from planned.core.exceptions import exceptions
 from planned.domain.entities import (
     Day,

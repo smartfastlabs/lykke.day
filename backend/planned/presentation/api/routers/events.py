@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from planned.application.repositories import EventRepositoryProtocol
 from planned.domain.entities import Event
-from planned.infrastructure.repositories.base import DateQuery
+from planned.infrastructure.repositories.base.schema import DateQuery
 from planned.infrastructure.utils.dates import get_current_date
 
 from .dependencies.repositories import get_event_repo
