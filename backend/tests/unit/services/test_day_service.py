@@ -196,7 +196,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     )
 
     allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
-    allow(mock_user_repo).get(str(test_user_uuid)).and_return(user)
+    allow(mock_user_repo).get(test_user_uuid).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
 
     result = await DayService.get_or_preview(
@@ -245,7 +245,7 @@ async def test_get_or_create_creates_and_saves_day(
     )
 
     allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
-    allow(mock_user_repo).get(str(test_user_uuid)).and_return(user)
+    allow(mock_user_repo).get(test_user_uuid).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template_slug).and_return(template)
     allow(mock_day_repo).put.and_return(created_day)
 

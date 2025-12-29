@@ -31,5 +31,3 @@ class Task(BaseDateObject):
 
     def _get_date(self) -> dt_date:
         return self.scheduled_date
-        return self.scheduled_date
-        return self.scheduled_date

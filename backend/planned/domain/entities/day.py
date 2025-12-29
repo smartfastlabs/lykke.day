@@ -35,8 +35,8 @@ class DayTemplate(BaseObject):
         This ensures that DayTemplates with the same slug and user_uuid always have
         the same UUID, making lookups stable and deterministic.
         """
-        if self.uuid is None:
-            self.uuid = self.uuid_from_slug_and_user(self.slug, self.user_uuid)
+        # Always regenerate UUID for determinism (overrides default_factory)
+        self.uuid = self.uuid_from_slug_and_user(self.slug, self.user_uuid)
         return self
 
 

@@ -59,5 +59,3 @@ class BaseDateObject(BaseEntityObject):
 
     def _get_date(self) -> dt_date | None:
         return None
-        return None
-        return None

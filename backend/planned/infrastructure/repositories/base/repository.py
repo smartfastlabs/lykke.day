@@ -228,7 +228,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
         async with self._get_connection(for_write=True) as conn:
             # Check if object exists (with user filtering if scoped)
-            stmt = select(self.table.c.uuid).where(self.table.c.uuid == obj.uuid)
+            # All entities have uuid attribute (from BaseEntityObject)
+            obj_uuid = getattr(obj, "uuid")
+            stmt = select(self.table.c.uuid).where(self.table.c.uuid == obj_uuid)
             if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
                 stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
             result = await conn.execute(stmt)
@@ -364,7 +366,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             # key is actually the object
             obj = key
             async with self._get_connection(for_write=True) as conn:
-                stmt = delete(self.table).where(self.table.c.uuid == obj.uuid)
+                # All entities have uuid attribute (from BaseEntityObject)
+                obj_uuid = getattr(obj, "uuid")
+                stmt = delete(self.table).where(self.table.c.uuid == obj_uuid)
                 # Add user_uuid filtering if scoped
                 if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
                     stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
