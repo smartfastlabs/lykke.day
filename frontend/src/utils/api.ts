@@ -37,21 +37,21 @@ async function fetchJSON(
   console.log("Fetching URL:", url, "with options:", options);
   const response = await fetch(url, options);
   const body = await response.json();
-  
+
   // Handle 401 Unauthorized - redirect to login
   if (response.status === 401) {
     globalNotifications.add("Not Logged In", "error");
     // Only redirect if not already on login page to avoid infinite redirects
-    if (window.location.pathname !== "/login") {
-      window.location.href = "/login";
+    if (["/login", "/register"].includes(window.location.pathname)) {
+      console.log(
+        "Already on login or register page, not redirecting",
+        window.location.pathname
+      );
+      return Promise.reject(new Error("Unauthorized"));
     }
-    return {
-      data: body,
-      status: response.status,
-      ok: response.ok,
-    };
+    window.location.href = "/login";
   }
-  
+
   if (!response.ok && !options.suppressError) {
     globalNotifications.add(`Error fetching data: ${body.detail}`, "error");
   }
@@ -145,10 +145,10 @@ export const taskAPI = {
   },
 };
 export const authAPI = {
-  login: async (password: string): any => {
+  login: async (email: string, password: string): any => {
     const resp = await fetchJSON("/api/auth/login", {
       method: "PUT",
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ email, password }),
       headers: {
         "Content-Type": "application/json",
       },

@@ -1,14 +1,16 @@
-import { Router, useNavigate, Route } from "@solidjs/router";
+import { Router, useNavigate, Route, useLocation } from "@solidjs/router";
 import { Title, Meta, MetaProvider } from "@solidjs/meta";
 import { Component, Suspense } from "solid-js";
 import "./index.css";
 
-import { onMount, onCleanup } from "solid-js";
+import { onMount, onCleanup, createEffect } from "solid-js";
 import { NotificationProvider } from "./providers/notifications";
 import { SheppardProvider } from "./providers/sheppard";
+import { authAPI } from "./utils/api";
 
 import Home from "./pages/home";
 import Login from "./pages/login";
+import Register from "./pages/register";
 import DayView from "./pages/day/preview";
 import NavPage from "./pages/navigation/links";
 import CalendarPage from "./pages/navigation/calendar";
@@ -19,6 +21,7 @@ import "./utils/icons";
 
 function NavigationHandler() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   onMount(() => {
     const handleSWMessage = (event) => {
@@ -33,17 +36,29 @@ function NavigationHandler() {
     onCleanup(() => {
       navigator.serviceWorker?.removeEventListener("message", handleSWMessage);
     });
+  });
 
-    if (window.location.pathname !== "/login") {
-      const sessionCookie = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("logged_in_at="));
-
-      if (!sessionCookie) {
-        navigate("/login");
-        return;
-      }
+  // Check authentication on every route change
+  createEffect(() => {
+    const pathname = location.pathname;
+    // Allow access to login and register pages without authentication
+    if (pathname === "/login" || pathname === "/register") {
+      return;
     }
+
+    // Check authentication asynchronously
+    authAPI
+      .me()
+      .then((resp) => {
+        // If the response is not ok (401 or other error), redirect to login
+        if (!resp.ok || resp.status === 401) {
+          navigate("/login");
+        }
+      })
+      .catch(() => {
+        // On any error, redirect to login
+        navigate("/login");
+      });
   });
 
   return null;
@@ -78,6 +93,7 @@ export default function App() {
       >
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
         <Route path="/nav/calendar" component={CalendarPage} />
         <Route path="/nav" component={NavPage} />
         <Route path="/day/:date" component={DayView} />

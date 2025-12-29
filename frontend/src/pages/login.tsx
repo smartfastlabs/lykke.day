@@ -3,6 +3,7 @@ import Page from "../components/shared/layout/page";
 import { authAPI } from "../utils/api";
 
 export default function Login() {
+  const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [error, setError] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
@@ -10,6 +11,11 @@ export default function Login() {
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     setError("");
+
+    if (!email()) {
+      setError("Email required");
+      return;
+    }
 
     if (!password()) {
       setError("Password required");
@@ -19,7 +25,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await authAPI.login(password());
+      await authAPI.login(email(), password());
     } catch {
       setError("Authentication failed");
     } finally {
@@ -36,6 +42,21 @@ export default function Login() {
           </h1>
 
           <form onSubmit={handleSubmit} class="space-y-6">
+            <div>
+              <label for="email" class="sr-only">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="Email"
+                value={email()}
+                onInput={(e) => setEmail(e.currentTarget.value)}
+                class="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow"
+                autocomplete="email"
+              />
+            </div>
+
             <div>
               <label for="password" class="sr-only">
                 Password
