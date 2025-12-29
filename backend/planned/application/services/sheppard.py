@@ -5,7 +5,6 @@ from typing import Any, Literal
 from langchain.agents import create_agent
 from langchain_core.runnables import Runnable
 from loguru import logger
-
 from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from planned.application.repositories import (
     DayRepositoryProtocol,
@@ -207,7 +206,7 @@ class SheppardService(BaseService):
             ],
             data={
                 "type": "tasks",
-                "task_ids": [task.id for task in tasks],
+                "task_uuids": [task.uuid for task in tasks],
                 "tasks": task_data,
             },
         )

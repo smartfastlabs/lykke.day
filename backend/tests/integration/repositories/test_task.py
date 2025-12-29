@@ -1,7 +1,7 @@
 """Integration tests for TaskRepository."""
 
 import datetime
-from uuid import uuid4
+from uuid import uuid4, uuid5
 
 import pytest
 
@@ -20,11 +20,16 @@ from planned.domain.value_objects.task import (
 from planned.infrastructure.repositories import TaskRepository
 
 
-def _create_task_definition(user_uuid, task_id="test-task"):
+def _create_task_definition(user_uuid, task_uuid=None):
     """Helper to create a task definition."""
+    if task_uuid is None:
+        task_uuid = uuid4()
+    else:
+        task_uuid = uuid5(user_uuid, task_uuid)
+
     return TaskDefinition(
         user_uuid=user_uuid,
-        id=task_id,
+        uuid=task_uuid,
         name="Test Task",
         description="Test description",
         type=TaskType.ACTIVITY,
@@ -255,4 +260,3 @@ async def test_task_with_schedule(task_repo, test_user, test_date):
     assert result.schedule is not None
     assert result.schedule.start_time == datetime.time(10, 0)
     assert result.schedule.end_time == datetime.time(12, 0)
-
