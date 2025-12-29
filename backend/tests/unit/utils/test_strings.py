@@ -1,6 +1,5 @@
 """Unit tests for strings utility functions."""
 
-import pytest
 
 from planned.infrastructure.utils.strings import slugify
 

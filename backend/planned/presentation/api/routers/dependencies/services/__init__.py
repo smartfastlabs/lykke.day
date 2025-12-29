@@ -8,7 +8,6 @@ with FastAPI's Depends() in route handlers.
 from typing import Annotated
 
 from fastapi import Depends, Request
-from loguru import logger
 
 from planned.application.repositories import (
     AuthTokenRepositoryProtocol,

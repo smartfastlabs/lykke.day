@@ -1,15 +1,14 @@
 """Unit tests for SheppardService."""
 
 import datetime
-from datetime import UTC, timedelta
-from uuid import UUID, uuid4
+from datetime import UTC
+from uuid import uuid4
 
 import pytest
 from dobles import allow
 
 from planned.application.services import DayService, SheppardService
 from planned.domain.entities import (
-    Alarm,
     Day,
     DayContext,
     DayStatus,
@@ -19,14 +18,10 @@ from planned.domain.entities import (
     TaskDefinition,
     TaskStatus,
 )
-from planned.domain.value_objects.day import DayStatus as DayStatusVO
-from planned.domain.value_objects.push import NotificationPayload
 from planned.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
-    TaskSchedule,
     TaskType,
-    TimingType,
 )
 
 

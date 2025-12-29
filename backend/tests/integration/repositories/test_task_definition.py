@@ -1,9 +1,7 @@
 """Integration tests for TaskDefinitionRepository."""
 
-from uuid import UUID
 
 import pytest
-import pytest_asyncio
 
 from planned.core.exceptions import exceptions
 from planned.domain.value_objects.task import TaskDefinition, TaskType

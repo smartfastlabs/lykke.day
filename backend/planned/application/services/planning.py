@@ -5,7 +5,6 @@ from typing import Protocol, TypeVar
 from uuid import UUID
 
 from loguru import logger
-
 from planned.application.repositories import (
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
@@ -18,13 +17,7 @@ from planned.application.repositories import (
 )
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
-from planned.domain.entities import (
-    Action,
-    DayContext,
-    Event,
-    Task,
-    TaskStatus,
-)
+from planned.domain.entities import Action, DayContext, Event, Task, TaskStatus
 from planned.domain.value_objects.query import DateQuery
 
 from .base import BaseService

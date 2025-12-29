@@ -5,10 +5,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from loguru import logger
-
 from planned.application.services import SheppardManager
-from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.core.exceptions import exceptions
+from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.repositories import (
     AuthTokenRepository,
     CalendarRepository,

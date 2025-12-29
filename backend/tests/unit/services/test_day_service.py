@@ -3,24 +3,20 @@
 import datetime
 from datetime import UTC, timedelta
 from unittest.mock import patch
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from dobles import allow
-
 from planned.application.services import DayService
 from planned.core.exceptions import exceptions
-from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.domain.entities import (
     Day,
     DayContext,
     DayStatus,
     Event,
-    Message,
     Task,
     User,
 )
-from planned.domain.value_objects.day import DayStatus as DayStatusVO
 from planned.domain.value_objects.task import (
     TaskCategory,
     TaskDefinition,

@@ -1,12 +1,9 @@
 """E2E tests for days router endpoints."""
 
 import datetime
-from zoneinfo import ZoneInfo
 
 import pytest
 
-from planned.core.config import settings
-from planned.domain.value_objects.day import DayStatus
 
 
 @pytest.mark.asyncio

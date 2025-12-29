@@ -1,19 +1,18 @@
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
+from typing import Any, Generic, Literal, TypeVar
 from uuid import UUID
 
 from blinker import Signal
+from planned.common.repository_handler import ChangeHandler
+from planned.core.exceptions import exceptions
+from planned.domain.value_objects.query import BaseQuery
+from planned.domain.value_objects.repository_event import RepositoryEvent
+from planned.infrastructure.database import get_engine
+from planned.infrastructure.database.transaction import get_transaction_connection
 from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.sql import Select
-
-from planned.common.repository_handler import ChangeHandler
-from planned.domain.value_objects.repository_event import RepositoryEvent
-from planned.core.exceptions import exceptions
-from planned.domain.value_objects.query import BaseQuery
-from planned.infrastructure.database import get_engine
-from planned.infrastructure.database.transaction import get_transaction_connection
 
 ObjectType = TypeVar("ObjectType")
 QueryType = TypeVar("QueryType", bound=BaseQuery)

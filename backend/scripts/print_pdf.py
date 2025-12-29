@@ -2,7 +2,7 @@ import asyncio
 import tempfile
 from asyncio.subprocess import create_subprocess_exec
 
-from playwright.async_api import async_playwright, expect
+from playwright.async_api import async_playwright
 
 APP_URL = "http://localhost:3000/day/print"
 PRINTER_NAME = "HP_OfficeJet_Pro_9010_series"

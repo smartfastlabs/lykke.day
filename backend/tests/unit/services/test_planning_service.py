@@ -2,7 +2,7 @@
 
 import datetime
 from datetime import UTC
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from dobles import allow
@@ -26,10 +26,8 @@ from planned.domain.value_objects.routine import DayOfWeek, RoutineSchedule, Rou
 from planned.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
-    TaskSchedule,
     TaskStatus,
     TaskType,
-    TimingType,
 )
 from planned.domain.value_objects.user import UserSetting
 

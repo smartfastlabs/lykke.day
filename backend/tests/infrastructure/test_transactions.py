@@ -1,9 +1,7 @@
 """Tests for transaction management."""
 
-from uuid import UUID
 
 import pytest
-import pytest_asyncio
 
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Day, DayStatus, Task, TaskStatus

@@ -1,14 +1,12 @@
 """Unit tests for JSON utility functions."""
 
 import json
-import os
 import tempfile
 from pathlib import Path
 
 import pytest
 
 from planned.domain.entities import User
-from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.utils.json import read_directory
 
 

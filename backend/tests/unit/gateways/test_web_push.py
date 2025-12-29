@@ -1,12 +1,7 @@
 """Unit tests for WebPushGateway using dobles."""
 
-from types import SimpleNamespace
-from uuid import UUID
 
-import equals
 import pytest
-from dobles import InstanceDouble, allow, expect
-from pydantic import AnyHttpUrl
 
 from planned.domain.entities import PushSubscription
 

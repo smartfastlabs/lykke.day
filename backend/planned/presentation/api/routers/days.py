@@ -1,5 +1,5 @@
 import datetime
-from typing import Annotated, Literal
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
@@ -12,7 +12,6 @@ from planned.application.repositories import (
     UserRepositoryProtocol,
 )
 from planned.application.services import DayService, PlanningService
-from planned.core.exceptions import exceptions
 from planned.domain.entities import Day, DayContext, DayStatus, DayTemplate, User
 from planned.domain.value_objects.base import BaseRequestObject
 from planned.infrastructure.utils.dates import get_current_date, get_tomorrows_date

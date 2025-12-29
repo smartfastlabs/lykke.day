@@ -1,10 +1,8 @@
 """Integration tests for DayTemplateRepository."""
 
 from datetime import time
-from uuid import UUID
 
 import pytest
-import pytest_asyncio
 
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Alarm, DayTemplate

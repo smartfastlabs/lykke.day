@@ -4,10 +4,9 @@ import datetime
 from uuid import uuid4
 
 import pytest
-import pytest_asyncio
-
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Task
+from planned.domain.value_objects.query import DateQuery
 from planned.domain.value_objects.task import (
     TaskCategory,
     TaskDefinition,
@@ -18,7 +17,6 @@ from planned.domain.value_objects.task import (
     TimingType,
 )
 from planned.infrastructure.repositories import TaskRepository
-from planned.domain.value_objects.query import DateQuery
 
 
 def _create_task_definition(user_uuid, task_id="test-task"):

@@ -2,17 +2,9 @@
 
 from __future__ import annotations
 
-from sqlalchemy import (
-    Column,
-    Date,
-    DateTime,
-    Index,
-    MetaData,
-    String,
-    Table,
-    Text,
-)
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
+from sqlalchemy import Column, Date, DateTime, Index, MetaData, String, Table, Text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 metadata = MetaData()
 

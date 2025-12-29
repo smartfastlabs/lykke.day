@@ -1,13 +1,10 @@
 """Integration tests for DayRepository."""
 
-from uuid import UUID
 
 import pytest
-import pytest_asyncio
 
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Day, DayStatus
-from planned.domain.value_objects.query import DateQuery
 from planned.infrastructure.utils.dates import get_current_datetime
 
 

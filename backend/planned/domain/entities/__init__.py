@@ -17,6 +17,46 @@ from .routine import Routine
 from .task import Task
 from .user import User
 
+__all__ = [
+    "Action",
+    "Alarm",
+    "AuthToken",
+    "BaseConfigObject",
+    "BaseDateObject",
+    "BaseEntityObject",
+    "BaseObject",
+    "Calendar",
+    "Day",
+    "DayTemplate",
+    "Event",
+    "Message",
+    "Person",
+    "PushSubscription",
+    "Routine",
+    "Task",
+    "User",
+    # Re-export value objects for backward compatibility
+    "ActionType",
+    "AlarmType",
+    "DayContext",
+    "DayMode",
+    "DayStatus",
+    "DayTag",
+    "NotificationAction",
+    "NotificationPayload",
+    "DayOfWeek",
+    "RoutineSchedule",
+    "RoutineTask",
+    "TaskCategory",
+    "TaskDefinition",
+    "TaskFrequency",
+    "TaskSchedule",
+    "TaskStatus",
+    "TaskTag",
+    "TaskType",
+    "TimingType",
+]
+
 # Re-export value objects for backward compatibility
 from ..value_objects.action import ActionType
 from ..value_objects.alarm import AlarmType

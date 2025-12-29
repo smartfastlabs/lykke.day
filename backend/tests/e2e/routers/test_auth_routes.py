@@ -3,7 +3,6 @@
 from uuid import uuid4
 
 import pytest
-import pytest_asyncio
 from passlib.context import CryptContext
 
 from planned.domain.entities import User

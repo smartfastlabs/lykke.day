@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from .utils import get_engine
 
 if TYPE_CHECKING:
-    from contextlib import AbstractAsyncContextManager as AsyncContextManager
+    pass
 
 # Context variable to store the active transaction connection
 _transaction_connection: ContextVar[AsyncConnection | None] = ContextVar(

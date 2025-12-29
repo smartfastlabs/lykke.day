@@ -9,3 +9,17 @@ from .routine import RoutineRepository
 from .task import TaskRepository
 from .task_definition import TaskDefinitionRepository
 from .user import UserRepository
+
+__all__ = [
+    "AuthTokenRepository",
+    "CalendarRepository",
+    "DayRepository",
+    "DayTemplateRepository",
+    "EventRepository",
+    "MessageRepository",
+    "PushSubscriptionRepository",
+    "RoutineRepository",
+    "TaskDefinitionRepository",
+    "TaskRepository",
+    "UserRepository",
+]

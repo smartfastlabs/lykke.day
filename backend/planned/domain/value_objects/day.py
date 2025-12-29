@@ -40,10 +40,6 @@ class DayContext(BaseModel):
 def _rebuild_day_context() -> None:
     """Rebuild DayContext model after all entity classes are defined."""
     # These imports are here to rebuild the model after all entities are defined
-    from ..entities.day import Day
-    from ..entities.event import Event
-    from ..entities.message import Message
-    from ..entities.task import Task
 
     DayContext.model_rebuild()
 

@@ -1,7 +1,7 @@
 """Fixtures for e2e tests - full API tests with test client."""
 
 from datetime import time
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from dobles import allow
