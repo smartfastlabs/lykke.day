@@ -190,7 +190,7 @@ def _load_calendar_events_sync(
             events.append(
                 Event.from_google(
                     calendar.user_uuid,
-                    str(calendar.uuid),
+                    calendar.uuid,
                     event,
                     frequency,
                     settings.TIMEZONE,

@@ -2,7 +2,7 @@
 
 import datetime
 from datetime import UTC
-from uuid import uuid4
+from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
 
 import pytest
 from dobles import allow
@@ -217,7 +217,7 @@ async def test_build_event_notification_payload(
         user_uuid=test_user_uuid,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid="cal-1",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-1",
         platform="test",
         status="confirmed",

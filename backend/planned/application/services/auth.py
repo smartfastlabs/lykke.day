@@ -91,7 +91,7 @@ class AuthService(BaseService):
         Raises:
             NotFoundError: If user doesn't exist
         """
-        return await self.user_repo.get(str(user_uuid))
+        return await self.user_repo.get(user_uuid)
 
     async def authenticate_user(self, email: str, password: str) -> User | None:
         """Authenticate user by email and password.

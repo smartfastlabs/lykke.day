@@ -31,5 +31,5 @@ async def add_task_action(
     task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
     planning_service: Annotated[PlanningService, Depends(get_planning_service)],
 ) -> Task:
-    task: Task = await task_repo.get(str(_id))
+    task: Task = await task_repo.get(_id)
     return await planning_service.save_action(task, action)

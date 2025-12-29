@@ -1,7 +1,7 @@
 """E2E tests for events router endpoints."""
 
 import datetime
-from uuid import uuid4
+from uuid import uuid4, uuid5, NAMESPACE_DNS
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -28,7 +28,7 @@ async def test_get_today(authenticated_client, test_date):
         user_uuid=user.uuid,
         name="Test Event",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-id",
         platform="testing",
         status="confirmed",

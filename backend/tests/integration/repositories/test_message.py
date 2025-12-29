@@ -40,7 +40,7 @@ async def test_get(message_repo, test_user, test_date):
 async def test_get_not_found(message_repo):
     """Test getting a non-existent message raises NotFoundError."""
     with pytest.raises(exceptions.NotFoundError):
-        await message_repo.get(str(uuid4()))
+        await message_repo.get(uuid4())
 
 
 @pytest.mark.asyncio

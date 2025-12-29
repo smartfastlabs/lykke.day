@@ -35,7 +35,7 @@ async def test_get(routine_repo, test_user):
 async def test_get_not_found(routine_repo):
     """Test getting a non-existent routine raises NotFoundError."""
     with pytest.raises(exceptions.NotFoundError):
-        await routine_repo.get(str(uuid4()))
+        await routine_repo.get(uuid4())
 
 
 @pytest.mark.asyncio

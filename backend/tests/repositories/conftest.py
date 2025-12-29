@@ -1,7 +1,7 @@
 """Fixtures for repository tests."""
 
 import datetime
-from uuid import uuid4
+from uuid import UUID, uuid4, uuid5, NAMESPACE_DNS
 from zoneinfo import ZoneInfo
 
 import pytest_asyncio
@@ -38,7 +38,7 @@ async def test_event(test_user, test_date):
         user_uuid=test_user.uuid,
         name="Test Event",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-id",
         platform="testing",
         status="status",

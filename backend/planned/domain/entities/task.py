@@ -25,7 +25,7 @@ class Task(BaseDateObject):
     frequency: TaskFrequency
     completed_at: datetime | None = None
     schedule: TaskSchedule | None = None
-    routine_uuid: str | None = None
+    routine_uuid: UUID | None = None
     tags: list[TaskTag] = Field(default_factory=list)
     actions: list[Action] = Field(default_factory=list)
 

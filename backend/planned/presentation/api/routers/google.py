@@ -120,7 +120,7 @@ async def google_login_callback(
                 name=calendar["summary"],
                 platform="google",
                 platform_id=calendar["id"],
-                auth_token_uuid=str(auth_token.uuid),
+                auth_token_uuid=auth_token.uuid,
             ),
         )
 

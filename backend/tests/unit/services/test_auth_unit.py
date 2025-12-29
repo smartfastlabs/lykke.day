@@ -82,7 +82,7 @@ async def test_get_user(mock_user_repo):
         settings=UserSetting(),
     )
 
-    allow(mock_user_repo).get(str(user_uuid)).and_return(expected_user)
+    allow(mock_user_repo).get(user_uuid).and_return(expected_user)
 
     service = AuthService(user_repo=mock_user_repo)
     result = await service.get_user(user_uuid)

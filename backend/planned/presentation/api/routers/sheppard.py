@@ -72,7 +72,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     # Get user to verify it exists
     user_repo = UserRepository()
     try:
-        await user_repo.get(str(user_uuid))
+        await user_repo.get(user_uuid)
     except exceptions.NotFoundError:
         await websocket.close(code=1008, reason="User not found")
         return

@@ -37,7 +37,7 @@ async def test_transaction_commits_on_success(test_date, test_user, day_repo):
 
     # After transaction commits, the day should be retrievable
     day_uuid = Day.uuid_from_date_and_user(test_date, test_user.uuid)
-    result = await day_repo.get(str(day_uuid))
+    result = await day_repo.get(day_uuid)
     assert result.status == DayStatus.SCHEDULED
 
 
@@ -61,7 +61,7 @@ async def test_transaction_rolls_back_on_exception(test_date, test_user, day_rep
     # After rollback, the day should not be in the database
     day_uuid = Day.uuid_from_date_and_user(test_date, test_user.uuid)
     with pytest.raises(exceptions.NotFoundError):
-        await day_repo.get(str(day_uuid))
+        await day_repo.get(day_uuid)
 
 
 @pytest.mark.asyncio
@@ -80,7 +80,7 @@ async def test_repository_works_without_transaction(test_date, test_user, day_re
     await day_repo.put(day)
 
     day_uuid = Day.uuid_from_date_and_user(test_date, test_user.uuid)
-    result = await day_repo.get(str(day_uuid))
+    result = await day_repo.get(day_uuid)
     assert result.status == DayStatus.SCHEDULED
 
 

@@ -16,7 +16,7 @@ async def test_get(user_repo, create_test_user):
     user = await create_test_user()
 
     # Get it back
-    result = await user_repo.get(str(user.uuid))
+    result = await user_repo.get(user.uuid)
 
     assert result.uuid == user.uuid
     assert result.email == user.email
@@ -27,7 +27,7 @@ async def test_get(user_repo, create_test_user):
 async def test_get_not_found(user_repo):
     """Test getting a non-existent user raises NotFoundError."""
     with pytest.raises(exceptions.NotFoundError):
-        await user_repo.get(str(uuid4()))
+        await user_repo.get(uuid4())
 
 
 @pytest.mark.asyncio
@@ -60,7 +60,7 @@ async def test_put_update(user_repo, create_test_user):
     assert result.email == user.email
 
     # Verify it was saved
-    retrieved = await user_repo.get(str(user.uuid))
+    retrieved = await user_repo.get(user.uuid)
     assert retrieved.email == user.email
 
 
@@ -107,8 +107,8 @@ async def test_user_isolation(user_repo, create_test_user):
     user2 = await create_test_user(email=f"user2-{uuid4()}@example.com")
 
     # Each user should be retrievable independently
-    retrieved1 = await user_repo.get(str(user1.uuid))
-    retrieved2 = await user_repo.get(str(user2.uuid))
+    retrieved1 = await user_repo.get(user1.uuid)
+    retrieved2 = await user_repo.get(user2.uuid)
 
     assert retrieved1.uuid == user1.uuid
     assert retrieved1.email == user1.email
@@ -121,7 +121,15 @@ async def test_user_isolation(user_repo, create_test_user):
 async def test_user_with_custom_settings(user_repo):
     """Test creating a user with custom settings."""
     settings = UserSetting(
-        template_defaults=["custom", "custom", "custom", "custom", "custom", "custom", "custom"],
+        template_defaults=[
+            "custom",
+            "custom",
+            "custom",
+            "custom",
+            "custom",
+            "custom",
+            "custom",
+        ],
     )
     user = User(
         uuid=uuid4(),
@@ -136,6 +144,5 @@ async def test_user_with_custom_settings(user_repo):
     assert result.settings.template_defaults == ["custom"] * 7
 
     # Verify persistence
-    retrieved = await user_repo.get(str(user.uuid))
+    retrieved = await user_repo.get(user.uuid)
     assert retrieved.settings.template_defaults == ["custom"] * 7
-

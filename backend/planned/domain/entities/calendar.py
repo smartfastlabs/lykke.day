@@ -11,7 +11,7 @@ class Calendar(BaseObject):
     uuid: UUID = Field(default_factory=uuid.uuid4)
     user_uuid: UUID
     name: str
-    auth_token_uuid: str
+    auth_token_uuid: UUID
     platform_id: str
     platform: str
     last_sync_at: datetime | None = None

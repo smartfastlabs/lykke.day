@@ -3,7 +3,7 @@
 import datetime
 from datetime import UTC, timedelta
 from unittest.mock import patch
-from uuid import uuid4
+from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
 
 import pytest
 from dobles import allow
@@ -448,7 +448,7 @@ async def test_get_upcomming_events(
         user_uuid=test_user_uuid,
         name="Upcoming Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid="cal-1",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-1",
         platform="test",
         status="confirmed",
@@ -462,7 +462,7 @@ async def test_get_upcomming_events(
         user_uuid=test_user_uuid,
         name="Future Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid="cal-1",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-2",
         platform="test",
         status="confirmed",
@@ -476,7 +476,7 @@ async def test_get_upcomming_events(
         user_uuid=test_user_uuid,
         name="Cancelled Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid="cal-1",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-3",
         platform="test",
         status="cancelled",
@@ -490,7 +490,7 @@ async def test_get_upcomming_events(
         user_uuid=test_user_uuid,
         name="Ongoing Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid="cal-1",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-4",
         platform="test",
         status="confirmed",

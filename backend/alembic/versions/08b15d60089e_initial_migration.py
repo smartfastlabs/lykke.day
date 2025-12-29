@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 8a9519606949
+Revision ID: 08b15d60089e
 Revises: 
-Create Date: 2025-12-29 08:15:36.468613
+Create Date: 2025-12-29 10:34:53.378747
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '8a9519606949'
+revision: str = '08b15d60089e'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -40,7 +40,7 @@ def upgrade() -> None:
     sa.Column('uuid', sa.UUID(), nullable=False),
     sa.Column('user_uuid', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('auth_token_uuid', sa.String(), nullable=False),
+    sa.Column('auth_token_uuid', sa.UUID(), nullable=False),
     sa.Column('platform_id', sa.String(), nullable=False),
     sa.Column('platform', sa.String(), nullable=False),
     sa.Column('last_sync_at', sa.DateTime(), nullable=True),
@@ -76,7 +76,7 @@ def upgrade() -> None:
     sa.Column('user_uuid', sa.UUID(), nullable=False),
     sa.Column('date', sa.Date(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('calendar_uuid', sa.String(), nullable=False),
+    sa.Column('calendar_uuid', sa.UUID(), nullable=False),
     sa.Column('platform_id', sa.String(), nullable=False),
     sa.Column('platform', sa.String(), nullable=False),
     sa.Column('status', sa.String(), nullable=False),
@@ -147,7 +147,7 @@ def upgrade() -> None:
     sa.Column('frequency', sa.String(), nullable=False),
     sa.Column('completed_at', sa.DateTime(), nullable=True),
     sa.Column('schedule', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('routine_uuid', sa.String(), nullable=True),
+    sa.Column('routine_uuid', sa.UUID(), nullable=True),
     sa.Column('tags', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('actions', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.PrimaryKeyConstraint('uuid')

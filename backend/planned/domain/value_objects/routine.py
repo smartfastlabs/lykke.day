@@ -1,4 +1,5 @@
 from enum import Enum
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -21,7 +22,6 @@ class RoutineSchedule(BaseModel):
 
 
 class RoutineTask(BaseModel):
-    task_definition_id: str
+    task_definition_uuid: UUID
     name: str | None = None
     schedule: TaskSchedule | None = None
-

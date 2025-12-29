@@ -27,12 +27,6 @@ class AuthToken(BaseObject):
     expires_at: datetime | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
-    def model_post_init(self, __context__=None) -> None:  # type: ignore
-        # Generate UUID5 based on platform and user_uuid for deterministic IDs
-        namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
-        name = f"{self.platform}:{self.user_uuid}"
-        self.uuid = uuid.uuid5(namespace, name)
-
     def google_credentials(self) -> Credentials:
         """
         Returns the credentials for Google API.

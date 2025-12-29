@@ -32,7 +32,7 @@ async def test_get(push_subscription_repo, test_user):
 async def test_get_not_found(push_subscription_repo):
     """Test getting a non-existent push subscription raises NotFoundError."""
     with pytest.raises(exceptions.NotFoundError):
-        await push_subscription_repo.get(str(uuid4()))
+        await push_subscription_repo.get(uuid4())
 
 
 @pytest.mark.asyncio

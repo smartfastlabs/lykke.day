@@ -94,11 +94,8 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             async with engine.connect() as conn:
                 yield conn
 
-    async def get(self, key: str | UUID) -> ObjectType:
+    async def get(self, key: UUID) -> ObjectType:
         """Get an object by uuid."""
-        # Convert string to UUID if needed
-        if isinstance(key, str):
-            key = UUID(key)
         async with self._get_connection(for_write=False) as conn:
             stmt = select(self.table).where(self.table.c.uuid == key)
 
@@ -285,7 +282,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     async def apply_updates(
         self,
-        key: str | UUID,
+        key: UUID,
         **updates: Any,
     ) -> ObjectType:
         """Apply partial updates to an object identified by uuid.
@@ -300,10 +297,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         if not updates:
             # No updates to apply, just fetch and return
             return await self.get(key)
-
-        # Convert string to UUID if needed
-        if isinstance(key, str):
-            key = UUID(key)
 
         async with self._get_connection(for_write=True) as conn:
             # Build update statement
@@ -342,13 +335,10 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         # Then delete it by key
         await self.delete(obj)
 
-    async def delete(self, key: str | UUID | ObjectType) -> None:
+    async def delete(self, key: UUID | ObjectType) -> None:
         """Delete an object by uuid or by object."""
-        # Handle both key (str/UUID) and object deletion
-        if isinstance(key, (str, UUID)):
-            # Convert string to UUID if needed
-            if isinstance(key, str):
-                key = UUID(key)
+        # Handle both key (UUID) and object deletion
+        if isinstance(key, UUID):
             # Get object before deleting for event
             try:
                 obj = await self.get(key)

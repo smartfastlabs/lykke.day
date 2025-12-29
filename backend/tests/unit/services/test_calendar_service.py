@@ -20,7 +20,7 @@ async def test_sync_google(
     calendar = Calendar(
         user_uuid=UUID(str(uuid4())),
         name="Test Calendar",
-        auth_token_uuid="token-id",
+        auth_token_uuid=uuid4(),
         platform="google",
         platform_id="platform-id",
     )
@@ -28,7 +28,7 @@ async def test_sync_google(
     lookback = datetime.datetime.now(UTC) - timedelta(days=2)
 
     token = AuthToken(
-        id="token-id",
+        uuid=calendar.auth_token_uuid,
         user_uuid=calendar.user_uuid,
         platform="google",
         token="token",
@@ -39,7 +39,7 @@ async def test_sync_google(
         user_uuid=calendar.user_uuid,
         name="Event 1",
         frequency="ONCE",
-        calendar_uuid=str(calendar.uuid),
+        calendar_uuid=calendar.uuid,
         platform_id="event-id-1",
         platform="google",
         status="confirmed",
@@ -50,14 +50,14 @@ async def test_sync_google(
         user_uuid=calendar.user_uuid,
         name="Event 2",
         frequency="ONCE",
-        calendar_uuid=str(calendar.uuid),
+        calendar_uuid=calendar.uuid,
         platform_id="event-id-2",
         platform="google",
         status="cancelled",
         starts_at=datetime.datetime.now(UTC),
     )
 
-    allow(mock_auth_token_repo).get("token-id").and_return(token)
+    allow(mock_auth_token_repo).get(token.uuid).and_return(token)
     allow(mock_google_gateway).load_calendar_events(
         calendar,
         lookback=lookback,
@@ -89,31 +89,30 @@ async def test_sync(
     calendar = Calendar(
         user_uuid=UUID(str(uuid4())),
         name="Test Calendar",
-        auth_token_uuid="token-id",
+        auth_token_uuid=uuid4(),
         platform="google",
         platform_id="platform-id",
     )
 
     token = AuthToken(
-        id="token-id",
+        uuid=calendar.auth_token_uuid,
         user_uuid=calendar.user_uuid,
         platform="google",
         token="token",
     )
 
     event = Event(
-        id=str(uuid4()),
         user_uuid=calendar.user_uuid,
         name="Event",
         frequency="ONCE",
-        calendar_uuid=str(calendar.uuid),
+        calendar_uuid=calendar.uuid,
         platform_id="event-id",
         platform="google",
         status="confirmed",
         starts_at=datetime.datetime.now(UTC),
     )
 
-    allow(mock_auth_token_repo).get("token-id").and_return(token)
+    allow(mock_auth_token_repo).get(token.uuid).and_return(token)
     allow(mock_google_gateway).load_calendar_events.and_return([event])
     allow(mock_event_repo).put.and_return(event)
 
@@ -138,14 +137,14 @@ async def test_sync_all(
     calendar1 = Calendar(
         user_uuid=UUID(str(uuid4())),
         name="Calendar 1",
-        auth_token_uuid="token-id-1",
+        auth_token_uuid=uuid4(),
         platform="google",
         platform_id="platform-id-1",
     )
     calendar2 = Calendar(
         user_uuid=UUID(str(uuid4())),
         name="Calendar 2",
-        auth_token_uuid="token-id-2",
+        auth_token_uuid=uuid4(),
         platform="google",
         platform_id="platform-id-2",
     )

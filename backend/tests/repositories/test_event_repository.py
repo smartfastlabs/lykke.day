@@ -1,5 +1,6 @@
 import datetime
 from datetime import timedelta
+from uuid import uuid5, NAMESPACE_DNS
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -25,7 +26,7 @@ async def event_repo(test_date, test_user):
         user_uuid=test_user.uuid,
         name="Test Event",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-id",
         platform="testing",
         status="status",
@@ -44,7 +45,7 @@ async def event_repo(test_date, test_user):
         user_uuid=test_user.uuid,
         name="Test Event",
         frequency="ONCE",
-        calendar_uuid="test-calendar-2",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar-2"),
         platform_id="test-id-2",
         platform="testing",
         status="status",

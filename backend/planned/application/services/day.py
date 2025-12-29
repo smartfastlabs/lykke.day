@@ -235,7 +235,7 @@ class DayService(BaseService):
                 task_repo.search_query(DateQuery(date=date)),
                 event_repo.search_query(DateQuery(date=date)),
                 message_repo.search_query(DateQuery(date=date)),
-                day_repo.get(str(day_uuid)),
+                day_repo.get(day_uuid),
             )
         except exceptions.NotFoundError:
             day = await cls.base_day(
@@ -269,12 +269,12 @@ class DayService(BaseService):
         if template_uuid is None:
             if user_repo is None:
                 raise ValueError("user_repo required when template_uuid is None")
-            user = await user_repo.get(str(user_uuid))
+            user = await user_repo.get(user_uuid)
             # template_defaults stores slugs
             template_slug = user.settings.template_defaults[date.weekday()]
             template = await day_template_repo.get_by_slug(template_slug)
         else:
-            template = await day_template_repo.get(str(template_uuid))
+            template = await day_template_repo.get(template_uuid)
 
         return objects.Day(
             user_uuid=user_uuid,
@@ -295,7 +295,7 @@ class DayService(BaseService):
     ) -> objects.Day:
         with suppress(exceptions.NotFoundError):
             day_uuid = objects.Day.uuid_from_date_and_user(date, user_uuid)
-            return await day_repo.get(str(day_uuid))
+            return await day_repo.get(day_uuid)
 
         return await cls.base_day(
             date,
@@ -315,7 +315,7 @@ class DayService(BaseService):
     ) -> objects.Day:
         with suppress(exceptions.NotFoundError):
             day_uuid = objects.Day.uuid_from_date_and_user(date, user_uuid)
-            return await day_repo.get(str(day_uuid))
+            return await day_repo.get(day_uuid)
 
         return await day_repo.put(
             await cls.base_day(

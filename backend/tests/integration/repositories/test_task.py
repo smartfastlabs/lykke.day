@@ -62,7 +62,7 @@ async def test_get(task_repo, test_user, test_date):
 async def test_get_not_found(task_repo):
     """Test getting a non-existent task raises NotFoundError."""
     with pytest.raises(exceptions.NotFoundError):
-        await task_repo.get(str(uuid4()))
+        await task_repo.get(uuid4())
 
 
 @pytest.mark.asyncio

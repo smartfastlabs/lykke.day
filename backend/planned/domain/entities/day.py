@@ -50,6 +50,16 @@ class Day(BaseObject):
     status: DayStatus = DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
 
+    @model_validator(mode="after")
+    def generate_uuid(self) -> "Day":
+        """Generate deterministic UUID5 based on date and user_uuid.
+
+        This ensures that Days with the same date and user_uuid always have
+        the same UUID, making lookups stable and deterministic.
+        """
+        self.uuid = self.uuid_from_date_and_user(self.date, self.user_uuid)
+        return self
+
     @classmethod
     def uuid_from_date_and_user(cls, date: dt_date, user_uuid: UUID) -> UUID:
         """Generate deterministic UUID5 from date and user_uuid.
@@ -60,14 +70,3 @@ class Day(BaseObject):
         namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
         name = f"{user_uuid}:{date.isoformat()}"
         return uuid.uuid5(namespace, name)
-
-    @model_validator(mode="after")
-    def generate_uuid(self) -> "Day":
-        """Generate deterministic UUID5 based on date and user_uuid.
-
-        This ensures that Days with the same date and user_uuid always have
-        the same UUID, making lookups stable and deterministic.
-        """
-        self.uuid = self.uuid_from_date_and_user(self.date, self.user_uuid)
-        return self
-        return self

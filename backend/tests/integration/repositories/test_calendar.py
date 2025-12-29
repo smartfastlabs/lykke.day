@@ -42,7 +42,7 @@ async def test_get(calendar_repo, test_user, auth_token_repo):
 async def test_get_not_found(calendar_repo):
     """Test getting a non-existent calendar raises NotFoundError."""
     with pytest.raises(exceptions.NotFoundError):
-        await calendar_repo.get(str(uuid4()))
+        await calendar_repo.get(uuid4())
 
 
 @pytest.mark.asyncio

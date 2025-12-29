@@ -1,7 +1,7 @@
 """Integration tests for EventRepository."""
 
 import datetime
-from uuid import uuid4
+from uuid import UUID, uuid4, uuid5, NAMESPACE_DNS
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -26,7 +26,7 @@ async def test_get(event_repo, test_user, test_date):
         user_uuid=test_user.uuid,
         name="Test Event",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -45,7 +45,7 @@ async def test_get(event_repo, test_user, test_date):
 async def test_get_not_found(event_repo):
     """Test getting a non-existent event raises NotFoundError."""
     with pytest.raises(exceptions.NotFoundError):
-        await event_repo.get(str(uuid4()))
+        await event_repo.get(uuid4())
 
 
 @pytest.mark.asyncio
@@ -61,7 +61,7 @@ async def test_put(event_repo, test_user, test_date):
         user_uuid=test_user.uuid,
         name="New Event",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -88,7 +88,7 @@ async def test_put_update(event_repo, test_user, test_date):
         user_uuid=test_user.uuid,
         name="Original Event",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -126,7 +126,7 @@ async def test_all(event_repo, test_user, test_date, test_date_tomorrow):
         user_uuid=test_user.uuid,
         name="Event 1",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-1",
         platform="testing",
         status="confirmed",
@@ -137,7 +137,7 @@ async def test_all(event_repo, test_user, test_date, test_date_tomorrow):
         user_uuid=test_user.uuid,
         name="Event 2",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-2",
         platform="testing",
         status="confirmed",
@@ -172,7 +172,7 @@ async def test_search_query(event_repo, test_user, test_date, test_date_tomorrow
         user_uuid=test_user.uuid,
         name="Event Today",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-1",
         platform="testing",
         status="confirmed",
@@ -183,7 +183,7 @@ async def test_search_query(event_repo, test_user, test_date, test_date_tomorrow
         user_uuid=test_user.uuid,
         name="Event Tomorrow",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-2",
         platform="testing",
         status="confirmed",
@@ -213,7 +213,7 @@ async def test_delete(event_repo, test_user, test_date):
         user_uuid=test_user.uuid,
         name="Event to Delete",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -253,7 +253,7 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
         user_uuid=test_user.uuid,
         name="Event 1",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-1",
         platform="testing",
         status="confirmed",
@@ -264,7 +264,7 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
         user_uuid=test_user.uuid,
         name="Event 2",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-2",
         platform="testing",
         status="confirmed",
@@ -275,7 +275,7 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
         user_uuid=test_user.uuid,
         name="Event 3",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-3",
         platform="testing",
         status="confirmed",
@@ -313,7 +313,7 @@ async def test_user_isolation(event_repo, test_user, create_test_user, test_date
         user_uuid=test_user.uuid,
         name="User1 Event",
         frequency="ONCE",
-        calendar_uuid="test-calendar",
+        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",

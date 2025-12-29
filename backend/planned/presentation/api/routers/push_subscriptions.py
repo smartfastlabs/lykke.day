@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends
 
@@ -41,7 +42,7 @@ async def delete_subscription(
         get_push_subscription_repo
     )],
 ) -> None:
-    await push_subscription_repo.delete(subscription_id)
+    await push_subscription_repo.delete(UUID(subscription_id))
 
 
 @router.post("/subscribe")

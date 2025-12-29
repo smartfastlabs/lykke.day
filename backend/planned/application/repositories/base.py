@@ -1,6 +1,7 @@
 """Base types for repository protocol mixins."""
 
 from typing import Protocol, TypeVar
+from uuid import UUID
 
 from planned.common.repository_handler import ChangeHandler
 
@@ -10,7 +11,7 @@ T = TypeVar("T")
 class SimpleReadRepositoryProtocol(Protocol[T]):
     """Base protocol for simple read-only repositories (get by key, get all)."""
 
-    async def get(self, key: str) -> T:
+    async def get(self, key: UUID) -> T:
         """Get an object by key."""
         ...
 
@@ -22,7 +23,7 @@ class SimpleReadRepositoryProtocol(Protocol[T]):
 class CrudRepositoryProtocol(Protocol[T]):
     """Base protocol for CRUD repositories (get, put, all, delete)."""
 
-    async def get(self, key: str) -> T:
+    async def get(self, key: UUID) -> T:
         """Get an object by key."""
         ...
 
@@ -34,7 +35,7 @@ class CrudRepositoryProtocol(Protocol[T]):
         """Get all objects."""
         ...
 
-    async def delete(self, key: str | T) -> None:
+    async def delete(self, key: UUID | T) -> None:
         """Delete an object by key or by object."""
         ...
 
@@ -42,7 +43,7 @@ class CrudRepositoryProtocol(Protocol[T]):
 class BasicCrudRepositoryProtocol(Protocol[T]):
     """Base protocol for basic CRUD repositories (get, put without all)."""
 
-    async def get(self, key: str) -> T:
+    async def get(self, key: UUID) -> T:
         """Get an object by key."""
         ...
 
@@ -57,7 +58,7 @@ class DateScopedCrudRepositoryProtocol(Protocol[T]):
     Note: Date filtering should be done using query objects with date fields.
     """
 
-    async def get(self, key: str) -> T:
+    async def get(self, key: UUID) -> T:
         """Get an object by key."""
         ...
 
@@ -85,7 +86,7 @@ class DateScopedCrudRepositoryProtocol(Protocol[T]):
 class SimpleDateScopedRepositoryProtocol(Protocol[T]):
     """Base protocol for simple date-scoped repositories (get by key, put, listen)."""
 
-    async def get(self, key: str) -> T:
+    async def get(self, key: UUID) -> T:
         """Get an object by key."""
         ...
 

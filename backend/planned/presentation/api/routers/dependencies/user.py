@@ -57,7 +57,7 @@ async def get_current_user(
         )
     
     try:
-        user = await user_repo.get(str(user_uuid))
+        user = await user_repo.get(user_uuid)
     except exceptions.NotFoundError:
         raise exceptions.AuthorizationError(
             "User not found. Please log in again.",

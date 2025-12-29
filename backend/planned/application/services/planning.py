@@ -81,13 +81,13 @@ class PlanningService(BaseService):
             if is_routine_active(routine.routine_schedule, date):
                 for routine_task in routine.tasks:
                     task_def = await self.task_definition_repo.get(
-                        routine_task.task_definition_id,
+                        routine_task.task_definition_uuid,
                     )
                     task = objects.Task(
                         user_uuid=self.user_uuid,
                         name=routine_task.name or f"ROUTINE: {routine.name}",
                         frequency=routine.routine_schedule.frequency,
-                        routine_uuid=str(routine.uuid),
+                        routine_uuid=routine.uuid,
                         task_definition=task_def,
                         schedule=routine_task.schedule,
                         scheduled_date=date,
@@ -106,7 +106,7 @@ class PlanningService(BaseService):
         if template_uuid is None:
             with suppress(exceptions.NotFoundError):
                 day_uuid = objects.Day.uuid_from_date_and_user(date, self.user_uuid)
-                existing_day = await self.day_repo.get(str(day_uuid))
+                existing_day = await self.day_repo.get(day_uuid)
                 template_uuid = existing_day.template_uuid
 
         # template_uuid will be None here, so base_day will look up by slug from template_defaults
