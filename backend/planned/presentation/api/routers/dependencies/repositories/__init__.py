@@ -43,7 +43,10 @@ def get_auth_token_repo(
 ) -> AuthTokenRepositoryProtocol:
     """Get a user-scoped instance of AuthTokenRepository."""
     from uuid import UUID
-    return cast("AuthTokenRepositoryProtocol", AuthTokenRepository(user_uuid=UUID(user.id)))
+
+    return cast(
+        "AuthTokenRepositoryProtocol", AuthTokenRepository(user_uuid=UUID(user.id))
+    )
 
 
 def get_calendar_repo(
@@ -51,7 +54,10 @@ def get_calendar_repo(
 ) -> CalendarRepositoryProtocol:
     """Get a user-scoped instance of CalendarRepository."""
     from uuid import UUID
-    return cast("CalendarRepositoryProtocol", CalendarRepository(user_uuid=UUID(user.id)))
+
+    return cast(
+        "CalendarRepositoryProtocol", CalendarRepository(user_uuid=UUID(user.id))
+    )
 
 
 def get_day_repo(
@@ -59,6 +65,7 @@ def get_day_repo(
 ) -> DayRepositoryProtocol:
     """Get a user-scoped instance of DayRepository."""
     from uuid import UUID
+
     return cast("DayRepositoryProtocol", DayRepository(user_uuid=UUID(user.id)))
 
 
@@ -67,7 +74,10 @@ def get_day_template_repo(
 ) -> DayTemplateRepositoryProtocol:
     """Get a user-scoped instance of DayTemplateRepository."""
     from uuid import UUID
-    return cast("DayTemplateRepositoryProtocol", DayTemplateRepository(user_uuid=UUID(user.id)))
+
+    return cast(
+        "DayTemplateRepositoryProtocol", DayTemplateRepository(user_uuid=UUID(user.id))
+    )
 
 
 def get_event_repo(
@@ -75,6 +85,7 @@ def get_event_repo(
 ) -> EventRepositoryProtocol:
     """Get a user-scoped instance of EventRepository."""
     from uuid import UUID
+
     return cast("EventRepositoryProtocol", EventRepository(user_uuid=UUID(user.id)))
 
 
@@ -83,6 +94,7 @@ def get_message_repo(
 ) -> MessageRepositoryProtocol:
     """Get a user-scoped instance of MessageRepository."""
     from uuid import UUID
+
     return cast("MessageRepositoryProtocol", MessageRepository(user_uuid=UUID(user.id)))
 
 
@@ -91,7 +103,11 @@ def get_push_subscription_repo(
 ) -> PushSubscriptionRepositoryProtocol:
     """Get a user-scoped instance of PushSubscriptionRepository."""
     from uuid import UUID
-    return cast("PushSubscriptionRepositoryProtocol", PushSubscriptionRepository(user_uuid=UUID(user.id)))
+
+    return cast(
+        "PushSubscriptionRepositoryProtocol",
+        PushSubscriptionRepository(user_uuid=UUID(user.id)),
+    )
 
 
 def get_routine_repo(
@@ -99,6 +115,7 @@ def get_routine_repo(
 ) -> RoutineRepositoryProtocol:
     """Get a user-scoped instance of RoutineRepository."""
     from uuid import UUID
+
     return cast("RoutineRepositoryProtocol", RoutineRepository(user_uuid=UUID(user.id)))
 
 
@@ -107,6 +124,7 @@ def get_task_repo(
 ) -> TaskRepositoryProtocol:
     """Get a user-scoped instance of TaskRepository."""
     from uuid import UUID
+
     return cast("TaskRepositoryProtocol", TaskRepository(user_uuid=UUID(user.id)))
 
 
@@ -115,4 +133,8 @@ def get_task_definition_repo(
 ) -> TaskDefinitionRepositoryProtocol:
     """Get a user-scoped instance of TaskDefinitionRepository."""
     from uuid import UUID
-    return cast("TaskDefinitionRepositoryProtocol", TaskDefinitionRepository(user_uuid=UUID(user.id)))
+
+    return cast(
+        "TaskDefinitionRepositoryProtocol",
+        TaskDefinitionRepository(user_uuid=UUID(user.id)),
+    )
