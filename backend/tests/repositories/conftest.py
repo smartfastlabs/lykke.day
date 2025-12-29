@@ -1,11 +1,11 @@
 """Fixtures for repository tests."""
 
 import datetime
+from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 import pytest
 import pytest_asyncio
-from uuid import UUID, uuid4
 
 from planned import settings
 from planned.domain import entities as objects
@@ -29,8 +29,6 @@ async def test_user():
 @pytest_asyncio.fixture
 async def test_event(test_user, test_date):
     """Create a test event."""
-    from uuid import UUID
-    
     starts_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=2),

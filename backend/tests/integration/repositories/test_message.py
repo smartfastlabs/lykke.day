@@ -1,6 +1,7 @@
 """Integration tests for MessageRepository."""
 
 import datetime
+from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -9,14 +10,13 @@ import pytest_asyncio
 from planned.core.config import settings
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Message
+from planned.infrastructure.repositories import MessageRepository
 from planned.infrastructure.repositories.base.schema import DateQuery
 
 
 @pytest.mark.asyncio
 async def test_get(message_repo, test_user, test_date):
     """Test getting a message by ID."""
-    from uuid import uuid4, UUID
-    
     sent_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -40,8 +40,6 @@ async def test_get(message_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_get_not_found(message_repo):
     """Test getting a non-existent message raises NotFoundError."""
-    from uuid import uuid4
-    
     with pytest.raises(exceptions.NotFoundError):
         await message_repo.get(str(uuid4()))
 
@@ -49,8 +47,6 @@ async def test_get_not_found(message_repo):
 @pytest.mark.asyncio
 async def test_put(message_repo, test_user, test_date):
     """Test creating a new message."""
-    from uuid import uuid4, UUID
-    
     sent_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -73,8 +69,6 @@ async def test_put(message_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_search_query(message_repo, test_user, test_date, test_date_tomorrow):
     """Test searching messages with DateQuery."""
-    from uuid import uuid4, UUID
-    
     sent_at1 = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -113,8 +107,6 @@ async def test_search_query(message_repo, test_user, test_date, test_date_tomorr
 @pytest.mark.asyncio
 async def test_user_isolation(message_repo, test_user, create_test_user, test_date):
     """Test that different users' messages are properly isolated."""
-    from uuid import uuid4, UUID
-    
     sent_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -132,7 +124,6 @@ async def test_user_isolation(message_repo, test_user, create_test_user, test_da
     
     # Create another user
     user2 = await create_test_user()
-    from planned.infrastructure.repositories import MessageRepository
     message_repo2 = MessageRepository(user_uuid=UUID(user2.id))
     
     # User2 should not see user1's message

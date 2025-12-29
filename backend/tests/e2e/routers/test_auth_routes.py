@@ -1,14 +1,19 @@
 """E2E tests for auth router endpoints."""
 
+from uuid import uuid4
+
 import pytest
 import pytest_asyncio
+from passlib.context import CryptContext
+
+from planned.domain.entities import User
+from planned.domain.value_objects.user import UserSetting
+from planned.infrastructure.repositories import UserRepository
 
 
 @pytest.mark.asyncio
 async def test_register(test_client):
     """Test user registration."""
-    from uuid import uuid4
-    
     email = f"test-{uuid4()}@example.com"
     password = "password123"
     
@@ -26,7 +31,6 @@ async def test_register(test_client):
 @pytest.mark.asyncio
 async def test_register_duplicate_email(test_client):
     """Test registering with duplicate email fails."""
-    from uuid import uuid4
     email = f"test-{uuid4()}@example.com"
     password = "password123"
     
@@ -48,12 +52,6 @@ async def test_register_duplicate_email(test_client):
 @pytest.mark.asyncio
 async def test_login(test_client):
     """Test user login."""
-    from uuid import uuid4
-    from passlib.context import CryptContext
-    from planned.domain.entities import User
-    from planned.domain.value_objects.user import UserSetting
-    from planned.infrastructure.repositories import UserRepository
-    
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     user_repo = UserRepository()
     email = f"test-{uuid4()}@example.com"
@@ -80,12 +78,6 @@ async def test_login(test_client):
 @pytest.mark.asyncio
 async def test_login_wrong_password(test_client):
     """Test login with wrong password fails."""
-    from uuid import uuid4
-    from passlib.context import CryptContext
-    from planned.domain.entities import User
-    from planned.domain.value_objects.user import UserSetting
-    from planned.infrastructure.repositories import UserRepository
-    
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     user_repo = UserRepository()
     email = f"test-{uuid4()}@example.com"

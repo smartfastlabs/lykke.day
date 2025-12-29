@@ -1,5 +1,7 @@
 """Integration tests for AuthService with real UserRepository."""
 
+from uuid import uuid4
+
 import pytest
 import pytest_asyncio
 from passlib.context import CryptContext
@@ -14,7 +16,6 @@ async def test_create_user(user_repo):
     """Test creating a new user with real repository."""
     service = AuthService(user_repo=user_repo)
     
-    from uuid import uuid4
     email = f"test-{uuid4()}@example.com"
     password = "password123"
     
@@ -30,7 +31,6 @@ async def test_authenticate_user_success(user_repo):
     """Test successful authentication with real repository."""
     service = AuthService(user_repo=user_repo)
     
-    from uuid import uuid4
     email = f"test-{uuid4()}@example.com"
     password = "password123"
     
@@ -49,7 +49,6 @@ async def test_authenticate_user_wrong_password(user_repo):
     """Test authentication with wrong password."""
     service = AuthService(user_repo=user_repo)
     
-    from uuid import uuid4
     email = f"test-{uuid4()}@example.com"
     
     # Create user

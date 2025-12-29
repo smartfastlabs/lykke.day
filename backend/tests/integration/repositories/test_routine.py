@@ -1,20 +1,20 @@
 """Integration tests for RoutineRepository."""
 
+from uuid import UUID, uuid4
+
 import pytest
 import pytest_asyncio
 
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Routine
+from planned.infrastructure.repositories import RoutineRepository
+from planned.domain.value_objects.routine import RoutineSchedule
+from planned.domain.value_objects.task import TaskCategory, TaskFrequency
 
 
 @pytest.mark.asyncio
 async def test_get(routine_repo, test_user):
     """Test getting a routine by ID."""
-    from uuid import UUID, uuid4
-    
-    from planned.domain.value_objects.routine import RoutineSchedule
-    from planned.domain.value_objects.task import TaskCategory, TaskFrequency
-    
     routine = Routine(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -35,8 +35,6 @@ async def test_get(routine_repo, test_user):
 @pytest.mark.asyncio
 async def test_get_not_found(routine_repo):
     """Test getting a non-existent routine raises NotFoundError."""
-    from uuid import uuid4
-    
     with pytest.raises(exceptions.NotFoundError):
         await routine_repo.get(str(uuid4()))
 
@@ -44,11 +42,6 @@ async def test_get_not_found(routine_repo):
 @pytest.mark.asyncio
 async def test_put(routine_repo, test_user):
     """Test creating a new routine."""
-    from uuid import UUID, uuid4
-    
-    from planned.domain.value_objects.routine import RoutineSchedule
-    from planned.domain.value_objects.task import TaskCategory, TaskFrequency
-    
     routine = Routine(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -68,11 +61,6 @@ async def test_put(routine_repo, test_user):
 @pytest.mark.asyncio
 async def test_all(routine_repo, test_user):
     """Test getting all routines."""
-    from uuid import UUID, uuid4
-    
-    from planned.domain.value_objects.routine import RoutineSchedule
-    from planned.domain.value_objects.task import TaskCategory, TaskFrequency
-    
     routine1 = Routine(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -104,11 +92,6 @@ async def test_all(routine_repo, test_user):
 @pytest.mark.asyncio
 async def test_user_isolation(routine_repo, test_user, create_test_user):
     """Test that different users' routines are properly isolated."""
-    from uuid import UUID, uuid4
-    
-    from planned.domain.value_objects.routine import RoutineSchedule
-    from planned.domain.value_objects.task import TaskCategory, TaskFrequency
-    
     routine = Routine(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -122,7 +105,6 @@ async def test_user_isolation(routine_repo, test_user, create_test_user):
     
     # Create another user
     user2 = await create_test_user()
-    from planned.infrastructure.repositories import RoutineRepository
     routine_repo2 = RoutineRepository(user_uuid=UUID(user2.id))
     
     # User2 should not see user1's routine

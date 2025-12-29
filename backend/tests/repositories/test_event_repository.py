@@ -1,5 +1,6 @@
 import datetime
 from datetime import timedelta
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -7,14 +8,12 @@ import pytest_asyncio
 
 from planned import settings
 from planned.domain import entities as objects
-from planned.infrastructure.repositories import EventRepository
+from planned.infrastructure.repositories import EventRepository, UserRepository
 from planned.infrastructure.repositories.base import DateQuery
 
 
 @pytest_asyncio.fixture
 async def event_repo(test_date, test_user):
-    from uuid import UUID
-
     repo = EventRepository(user_uuid=UUID(test_user.id))
 
     # Create event on test_date
@@ -104,10 +103,6 @@ async def test_delete_by_date(test_date, event_repo):
 @pytest.mark.asyncio
 async def test_put(test_event, test_user, clear_repos):
     # clear_repos clears everything, so we need to ensure the user exists again
-    from uuid import UUID
-
-    from planned.infrastructure.repositories import UserRepository
-
     user_repo = UserRepository()
     # Re-create user after clear_repos (test_user fixture will be recreated, but we need to persist it)
     recreated_user = await user_repo.put(test_user)

@@ -1,12 +1,15 @@
 """E2E tests for events router endpoints."""
 
 import datetime
+from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 import pytest
 import pytest_asyncio
 
 from planned.core.config import settings
+from planned.domain.entities import Event
+from planned.infrastructure.repositories import EventRepository
 
 
 @pytest.mark.asyncio
@@ -15,10 +18,6 @@ async def test_get_today(authenticated_client, test_date):
     client, user = await authenticated_client()
     
     # Create an event for today
-    from uuid import UUID, uuid4
-    from planned.domain.entities import Event
-    from planned.infrastructure.repositories import EventRepository
-    
     event_repo = EventRepository(user_uuid=UUID(user.id))
     starts_at = datetime.datetime.combine(
         test_date,

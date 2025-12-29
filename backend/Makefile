@@ -28,8 +28,7 @@ migrate-dev:
 	DATABASE_URL=postgresql+psycopg://planned:password@localhost:5432/planned_dev poetry run alembic upgrade head
 
 migrate-test:
-	@DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test poetry run alembic upgrade head || \
-	(DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test poetry run alembic stamp head || true)
+	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test poetry run alembic upgrade head
 
 migrate-create:
 	@if [ -z "$(MSG)" ]; then \

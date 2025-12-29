@@ -1,5 +1,6 @@
 """Fixtures for integration tests - uses real database with per-test user isolation."""
 
+from datetime import time
 from uuid import UUID, uuid4
 
 import pytest
@@ -64,8 +65,6 @@ async def test_user(create_test_user):
 
 async def _setup_day_templates_for_user(user: User) -> None:
     """Helper function to create default day templates for a user."""
-    from datetime import time
-    
     repo = DayTemplateRepository(user_uuid=UUID(user.id))
     
     # Create default template

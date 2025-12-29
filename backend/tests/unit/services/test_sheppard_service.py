@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 import pytest
 from dobles import allow
 
-from planned.application.services import SheppardService
+from planned.application.services import DayService, SheppardService
 from planned.domain.entities import (
     Alarm,
     Day,
@@ -51,8 +51,6 @@ async def test_build_notification_payload_single_task(
         status=DayStatus.UNSCHEDULED,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-
-    from planned.application.services import DayService
 
     day_svc = DayService(
         ctx=ctx,
@@ -123,8 +121,6 @@ async def test_build_notification_payload_multiple_tasks(
         status=DayStatus.UNSCHEDULED,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-
-    from planned.application.services import DayService
 
     day_svc = DayService(
         ctx=ctx,
@@ -211,8 +207,6 @@ async def test_build_event_notification_payload(
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
-    from planned.application.services import DayService
-
     day_svc = DayService(
         ctx=ctx,
         day_repo=mock_day_repo,
@@ -277,8 +271,6 @@ async def test_notify_for_tasks(
         status=DayStatus.UNSCHEDULED,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-
-    from planned.application.services import DayService
 
     day_svc = DayService(
         ctx=ctx,
@@ -359,8 +351,6 @@ async def test_notify_for_tasks_empty_list(
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
-    from planned.application.services import DayService
-
     day_svc = DayService(
         ctx=ctx,
         day_repo=mock_day_repo,
@@ -408,8 +398,6 @@ async def test_stop_sets_mode_to_stopping(
         status=DayStatus.UNSCHEDULED,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-
-    from planned.application.services import DayService
 
     day_svc = DayService(
         ctx=ctx,
@@ -461,8 +449,6 @@ async def test_is_running_property(
         status=DayStatus.UNSCHEDULED,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-
-    from planned.application.services import DayService
 
     day_svc = DayService(
         ctx=ctx,

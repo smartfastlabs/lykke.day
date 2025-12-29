@@ -1,5 +1,7 @@
 """Integration tests for DayRepository."""
 
+from uuid import UUID
+
 import pytest
 import pytest_asyncio
 
@@ -12,8 +14,6 @@ from planned.infrastructure.utils.dates import get_current_datetime
 @pytest.mark.asyncio
 async def test_get(day_repo, test_user, test_date):
     """Test getting a day by date."""
-    from uuid import UUID
-    
     day = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,
@@ -40,8 +40,6 @@ async def test_get_not_found(day_repo, test_date):
 @pytest.mark.asyncio
 async def test_put(day_repo, test_user, test_date):
     """Test creating a new day."""
-    from uuid import UUID
-    
     day = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,
@@ -59,8 +57,6 @@ async def test_put(day_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_put_update(day_repo, test_user, test_date):
     """Test updating an existing day."""
-    from uuid import UUID
-    
     day = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,
@@ -85,8 +81,6 @@ async def test_put_update(day_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_all(day_repo, test_user, test_date, test_date_tomorrow):
     """Test getting all days."""
-    from uuid import UUID
-    
     day1 = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,
@@ -113,8 +107,6 @@ async def test_all(day_repo, test_user, test_date, test_date_tomorrow):
 @pytest.mark.asyncio
 async def test_search_query(day_repo, test_user, test_date, test_date_tomorrow):
     """Test searching days with DateQuery."""
-    from uuid import UUID
-    
     day1 = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,
@@ -143,8 +135,6 @@ async def test_search_query(day_repo, test_user, test_date, test_date_tomorrow):
 @pytest.mark.asyncio
 async def test_user_isolation(day_repo, test_user, create_test_user, test_date):
     """Test that different users' days are properly isolated."""
-    from uuid import UUID
-    
     # Create day for test_user
     day1 = Day(
         user_uuid=UUID(test_user.id),
@@ -171,8 +161,6 @@ async def test_user_isolation(day_repo, test_user, create_test_user, test_date):
 @pytest.mark.asyncio
 async def test_delete(day_repo, test_user, test_date):
     """Test deleting a day."""
-    from uuid import UUID
-    
     day = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,

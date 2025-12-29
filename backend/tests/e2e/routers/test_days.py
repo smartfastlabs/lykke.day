@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from planned.core.config import settings
+from planned.domain.value_objects.day import DayStatus
 
 
 @pytest.mark.asyncio
@@ -78,7 +79,6 @@ async def test_get_context_invalid_date_string(authenticated_client):
 async def test_update_day(authenticated_client, test_date):
     """Test updating a day."""
     client, user = await authenticated_client()
-    from planned.domain.value_objects.day import DayStatus
 
     # First schedule the day
     client.put("/days/today/schedule")

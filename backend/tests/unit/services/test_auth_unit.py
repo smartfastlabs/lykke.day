@@ -1,5 +1,7 @@
 """Unit tests for AuthService."""
 
+from uuid import UUID, uuid4
+
 import pytest
 from dobles import allow
 from passlib.context import CryptContext
@@ -15,8 +17,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 @pytest.mark.asyncio
 async def test_create_user(mock_user_repo):
     """Test creating a new user."""
-    from uuid import uuid4
-    
     email = "test@example.com"
     password = "password123"
     
@@ -45,8 +45,6 @@ async def test_create_user(mock_user_repo):
 @pytest.mark.asyncio
 async def test_create_user_duplicate_email(mock_user_repo):
     """Test creating a user with duplicate email raises BadRequestError."""
-    from uuid import uuid4
-    
     email = "existing@example.com"
     existing_user = User(
         id=str(uuid4()),
@@ -67,8 +65,6 @@ async def test_create_user_duplicate_email(mock_user_repo):
 @pytest.mark.asyncio
 async def test_get_user(mock_user_repo):
     """Test getting a user by UUID."""
-    from uuid import uuid4, UUID
-    
     user_id = str(uuid4())
     expected_user = User(
         id=user_id,
@@ -89,8 +85,6 @@ async def test_get_user(mock_user_repo):
 @pytest.mark.asyncio
 async def test_authenticate_user_success(mock_user_repo):
     """Test successful user authentication."""
-    from uuid import uuid4
-    
     email = "test@example.com"
     password = "password123"
     password_hash = pwd_context.hash(password)
@@ -114,8 +108,6 @@ async def test_authenticate_user_success(mock_user_repo):
 @pytest.mark.asyncio
 async def test_authenticate_user_wrong_password(mock_user_repo):
     """Test authentication with wrong password returns None."""
-    from uuid import uuid4
-    
     email = "test@example.com"
     password_hash = pwd_context.hash("correct_password")
     
@@ -150,8 +142,6 @@ async def test_authenticate_user_not_found(mock_user_repo):
 @pytest.mark.asyncio
 async def test_set_password(mock_user_repo):
     """Test setting a new password for a user."""
-    from uuid import uuid4
-    
     user = User(
         id=str(uuid4()),
         email="test@example.com",

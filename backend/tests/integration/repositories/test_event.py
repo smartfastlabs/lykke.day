@@ -2,6 +2,7 @@
 
 import datetime
 from datetime import timedelta
+from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -10,14 +11,13 @@ import pytest_asyncio
 from planned.core.config import settings
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Event
+from planned.infrastructure.repositories import EventRepository
 from planned.infrastructure.repositories.base.schema import DateQuery
 
 
 @pytest.mark.asyncio
 async def test_get(event_repo, test_user, test_date):
     """Test getting an event by ID."""
-    from uuid import uuid4, UUID
-    
     starts_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -46,8 +46,6 @@ async def test_get(event_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_get_not_found(event_repo):
     """Test getting a non-existent event raises NotFoundError."""
-    from uuid import uuid4
-    
     with pytest.raises(exceptions.NotFoundError):
         await event_repo.get(str(uuid4()))
 
@@ -55,8 +53,6 @@ async def test_get_not_found(event_repo):
 @pytest.mark.asyncio
 async def test_put(event_repo, test_user, test_date):
     """Test creating a new event."""
-    from uuid import uuid4, UUID
-    
     starts_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -84,8 +80,6 @@ async def test_put(event_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_put_update(event_repo, test_user, test_date):
     """Test updating an existing event."""
-    from uuid import uuid4, UUID
-    
     starts_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -118,8 +112,6 @@ async def test_put_update(event_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_all(event_repo, test_user, test_date, test_date_tomorrow):
     """Test getting all events."""
-    from uuid import uuid4, UUID
-    
     starts_at1 = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -166,8 +158,6 @@ async def test_all(event_repo, test_user, test_date, test_date_tomorrow):
 @pytest.mark.asyncio
 async def test_search_query(event_repo, test_user, test_date, test_date_tomorrow):
     """Test searching events with DateQuery."""
-    from uuid import uuid4, UUID
-    
     starts_at1 = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -215,8 +205,6 @@ async def test_search_query(event_repo, test_user, test_date, test_date_tomorrow
 @pytest.mark.asyncio
 async def test_delete(event_repo, test_user, test_date):
     """Test deleting an event."""
-    from uuid import uuid4, UUID
-    
     starts_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -246,8 +234,6 @@ async def test_delete(event_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow):
     """Test deleting multiple events by date."""
-    from uuid import uuid4, UUID
-    
     starts_at1 = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -317,8 +303,6 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
 @pytest.mark.asyncio
 async def test_user_isolation(event_repo, test_user, create_test_user, test_date):
     """Test that different users' events are properly isolated."""
-    from uuid import uuid4, UUID
-    
     starts_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -341,7 +325,6 @@ async def test_user_isolation(event_repo, test_user, create_test_user, test_date
     
     # Create another user
     user2 = await create_test_user()
-    from planned.infrastructure.repositories import EventRepository
     event_repo2 = EventRepository(user_uuid=UUID(user2.id))
     
     # User2 should not see user1's event

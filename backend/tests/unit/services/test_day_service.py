@@ -2,6 +2,7 @@
 
 import datetime
 from datetime import UTC, timedelta
+from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -10,7 +11,16 @@ from dobles import allow
 from planned.application.repositories.base import ChangeEvent
 from planned.application.services import DayService
 from planned.core.exceptions import exceptions
-from planned.domain.entities import Day, DayContext, DayStatus, Event, Message, Task
+from planned.domain.entities import (
+    Day,
+    DayContext,
+    DayStatus,
+    Event,
+    Message,
+    Task,
+    User,
+)
+from planned.domain.value_objects.day import DayStatus as DayStatusVO
 from planned.domain.value_objects.task import (
     TaskCategory,
     TaskDefinition,
@@ -20,6 +30,7 @@ from planned.domain.value_objects.task import (
     TaskType,
     TimingType,
 )
+from planned.domain.value_objects.user import UserSetting
 
 
 def setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo):
@@ -39,8 +50,6 @@ async def test_set_date_changes_date_and_reloads_context(
     test_user_uuid,
 ):
     """Test that set_date changes the date and reloads context."""
-    from planned.domain.value_objects.day import DayStatus
-
     old_date = datetime.date(2024, 1, 1)
     new_date = datetime.date(2024, 1, 2)
 
@@ -164,9 +173,6 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     test_user_uuid,
 ):
     """Test get_or_preview creates base day if not found."""
-    from planned.domain.entities import User
-    from planned.domain.value_objects.user import UserSetting
-
     date = datetime.date(2024, 1, 1)
     template_id = "default"
 
@@ -208,9 +214,6 @@ async def test_get_or_create_creates_and_saves_day(
     test_user_uuid,
 ):
     """Test get_or_create creates and saves day if not found."""
-    from planned.domain.entities import User
-    from planned.domain.value_objects.user import UserSetting
-
     date = datetime.date(2024, 1, 1)
     template_id = "default"
 
@@ -389,8 +392,6 @@ async def test_get_upcomming_tasks(
     )
 
     # Mock current time
-    from unittest.mock import patch
-
     with (
         patch(
             "planned.infrastructure.utils.dates.get_current_time",
@@ -498,8 +499,6 @@ async def test_get_upcomming_events(
         message_repo=mock_message_repo,
         task_repo=mock_task_repo,
     )
-
-    from unittest.mock import patch
 
     with patch(
         "planned.infrastructure.utils.dates.get_current_datetime", return_value=now

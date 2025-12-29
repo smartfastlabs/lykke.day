@@ -1,17 +1,18 @@
 """Integration tests for AuthTokenRepository."""
 
+from uuid import UUID, uuid4
+
 import pytest
 import pytest_asyncio
 
 from planned.core.exceptions import exceptions
 from planned.domain.entities import AuthToken
+from planned.infrastructure.repositories import AuthTokenRepository
 
 
 @pytest.mark.asyncio
 async def test_get(auth_token_repo, test_user):
     """Test getting an auth token by ID."""
-    from uuid import UUID, uuid4
-    
     auth_token = AuthToken(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -31,8 +32,6 @@ async def test_get(auth_token_repo, test_user):
 @pytest.mark.asyncio
 async def test_get_not_found(auth_token_repo):
     """Test getting a non-existent auth token raises NotFoundError."""
-    from uuid import uuid4
-    
     with pytest.raises(exceptions.NotFoundError):
         await auth_token_repo.get(str(uuid4()))
 
@@ -40,8 +39,6 @@ async def test_get_not_found(auth_token_repo):
 @pytest.mark.asyncio
 async def test_put(auth_token_repo, test_user):
     """Test creating a new auth token."""
-    from uuid import UUID, uuid4
-    
     auth_token = AuthToken(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -58,8 +55,6 @@ async def test_put(auth_token_repo, test_user):
 @pytest.mark.asyncio
 async def test_all(auth_token_repo, test_user):
     """Test getting all auth tokens."""
-    from uuid import UUID, uuid4
-    
     token1 = AuthToken(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -85,8 +80,6 @@ async def test_all(auth_token_repo, test_user):
 @pytest.mark.asyncio
 async def test_user_isolation(auth_token_repo, test_user, create_test_user):
     """Test that different users' auth tokens are properly isolated."""
-    from uuid import UUID, uuid4
-    
     token = AuthToken(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -97,7 +90,6 @@ async def test_user_isolation(auth_token_repo, test_user, create_test_user):
     
     # Create another user
     user2 = await create_test_user()
-    from planned.infrastructure.repositories import AuthTokenRepository
     auth_token_repo2 = AuthTokenRepository(user_uuid=UUID(user2.id))
     
     # User2 should not see user1's token

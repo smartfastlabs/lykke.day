@@ -1,5 +1,7 @@
 """E2E tests for AuthMiddleware."""
 
+from uuid import uuid4
+
 import pytest
 from dobles import InstanceDouble
 
@@ -12,7 +14,6 @@ from planned.presentation.middlewares.auth import AuthMiddleware
 @pytest.mark.asyncio
 async def test_dispatch_success():
     """Test successful middleware dispatch with valid session."""
-    from uuid import uuid4
     obj = AuthMiddleware(app)
     url = InstanceDouble("starlette.datastructures.URL")
     url.path = "/some-url"

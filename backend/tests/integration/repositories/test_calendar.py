@@ -1,19 +1,19 @@
 """Integration tests for CalendarRepository."""
 
+from uuid import UUID, uuid4
+
 import pytest
 import pytest_asyncio
 
 from planned.core.exceptions import exceptions
 from planned.domain.entities import AuthToken, Calendar
+from planned.infrastructure.repositories import CalendarRepository
 
 
 @pytest.mark.asyncio
 async def test_get(calendar_repo, test_user, auth_token_repo):
     """Test getting a calendar by ID."""
-    from uuid import UUID, uuid4
-    
     # Create an auth token first (calendar depends on it)
-    from planned.domain.entities import AuthToken
     auth_token = AuthToken(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -49,9 +49,6 @@ async def test_get_not_found(calendar_repo):
 @pytest.mark.asyncio
 async def test_put(calendar_repo, test_user, auth_token_repo):
     """Test creating a new calendar."""
-    from uuid import UUID, uuid4
-    from planned.domain.entities import AuthToken
-    
     auth_token = await auth_token_repo.put(AuthToken(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -76,8 +73,6 @@ async def test_put(calendar_repo, test_user, auth_token_repo):
 @pytest.mark.asyncio
 async def test_all(calendar_repo, test_user, auth_token_repo):
     """Test getting all calendars."""
-    from uuid import UUID, uuid4
-    
     auth_token = await auth_token_repo.put(AuthToken(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -112,8 +107,6 @@ async def test_all(calendar_repo, test_user, auth_token_repo):
 @pytest.mark.asyncio
 async def test_user_isolation(calendar_repo, test_user, create_test_user, auth_token_repo):
     """Test that different users' calendars are properly isolated."""
-    from uuid import UUID, uuid4
-    
     auth_token = await auth_token_repo.put(AuthToken(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -132,7 +125,6 @@ async def test_user_isolation(calendar_repo, test_user, create_test_user, auth_t
     
     # Create another user
     user2 = await create_test_user()
-    from planned.infrastructure.repositories import CalendarRepository
     calendar_repo2 = CalendarRepository(user_uuid=UUID(user2.id))
     
     # User2 should not see user1's calendar

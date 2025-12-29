@@ -1,6 +1,7 @@
 """Unit tests for WebPushGateway using dobles."""
 
 from types import SimpleNamespace
+from uuid import UUID
 
 import equals
 import pytest
@@ -13,8 +14,6 @@ from planned.domain.entities import PushSubscription
 @pytest.mark.asyncio
 async def test_send_notification(mock_web_push_gateway, test_user_uuid):
     """Test sending a push notification."""
-    from uuid import UUID
-    
     subscription = PushSubscription(
         user_uuid=test_user_uuid,
         device_name="Test Device",

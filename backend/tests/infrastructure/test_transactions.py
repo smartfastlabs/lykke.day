@@ -1,17 +1,21 @@
 """Tests for transaction management."""
 
+from uuid import UUID
+
 import pytest
 import pytest_asyncio
 
+from planned.core.exceptions import exceptions
 from planned.domain.entities import Day, DayStatus, Task, TaskStatus
+from planned.domain.value_objects.task import TaskCategory, TaskDefinition, TaskFrequency, TaskType
 from planned.infrastructure.database.transaction import TransactionManager, get_transaction_connection
+from planned.infrastructure.repositories.base import DateQuery
 from planned.infrastructure.utils.dates import get_current_datetime
 
 
 @pytest.mark.asyncio
 async def test_transaction_commits_on_success(test_date, test_user, day_repo):
     """Test that a transaction commits successfully when no exception occurs."""
-    from uuid import UUID
     day = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,
@@ -30,7 +34,6 @@ async def test_transaction_commits_on_success(test_date, test_user, day_repo):
 @pytest.mark.asyncio
 async def test_transaction_rolls_back_on_exception(test_date, test_user, day_repo):
     """Test that a transaction rolls back when an exception occurs."""
-    from uuid import UUID
     day = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,
@@ -44,8 +47,6 @@ async def test_transaction_rolls_back_on_exception(test_date, test_user, day_rep
             raise ValueError("Test exception")
 
     # After rollback, the day should not be in the database
-    from planned.core.exceptions import exceptions
-
     with pytest.raises(exceptions.NotFoundError):
         await day_repo.get(str(test_date))
 
@@ -53,7 +54,6 @@ async def test_transaction_rolls_back_on_exception(test_date, test_user, day_rep
 @pytest.mark.asyncio
 async def test_repository_works_without_transaction(test_date, test_user, day_repo):
     """Test that repositories work correctly without an active transaction."""
-    from uuid import UUID
     day = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,
@@ -71,7 +71,6 @@ async def test_repository_works_without_transaction(test_date, test_user, day_re
 @pytest.mark.asyncio
 async def test_read_operations_see_uncommitted_changes(test_date, test_user, day_repo):
     """Test that read operations within a transaction see uncommitted changes."""
-    from uuid import UUID
     day = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,
@@ -103,10 +102,6 @@ async def test_read_operations_see_uncommitted_changes(test_date, test_user, day
 @pytest.mark.asyncio
 async def test_multiple_operations_in_single_transaction(test_date, test_user, day_repo, task_repo):
     """Test that multiple operations in a single transaction are atomic."""
-    from uuid import UUID
-    from planned.domain.value_objects.task import TaskDefinition, TaskType
-    from planned.domain.entities import TaskCategory, TaskFrequency
-    
     day = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,
@@ -139,8 +134,6 @@ async def test_multiple_operations_in_single_transaction(test_date, test_user, d
     assert result_day.status == DayStatus.SCHEDULED
 
     # Find the task
-    from planned.infrastructure.repositories.base import DateQuery
-
     tasks = await task_repo.search_query(DateQuery(date=test_date))
     assert len(tasks) == 1
     assert tasks[0].name == "Test Task"
@@ -149,7 +142,6 @@ async def test_multiple_operations_in_single_transaction(test_date, test_user, d
 @pytest.mark.asyncio
 async def test_nested_transactions_reuse_connection(test_date, test_user, day_repo):
     """Test that nested transactions reuse the same connection."""
-    from uuid import UUID
     day1 = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,
@@ -189,7 +181,6 @@ async def test_transaction_connection_is_none_outside_transaction():
 @pytest.mark.asyncio
 async def test_transaction_rollback_on_nested_exception(test_date, test_user, day_repo):
     """Test that an exception in a nested transaction rolls back the entire transaction."""
-    from uuid import UUID
     day = Day(
         user_uuid=UUID(test_user.id),
         date=test_date,
@@ -208,8 +199,6 @@ async def test_transaction_rollback_on_nested_exception(test_date, test_user, da
                 raise ValueError("Nested exception")
 
     # After rollback, nothing should be persisted
-    from planned.core.exceptions import exceptions
-
     with pytest.raises(exceptions.NotFoundError):
         await day_repo.get(str(test_date))
 

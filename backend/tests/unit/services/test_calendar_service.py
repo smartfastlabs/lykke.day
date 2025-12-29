@@ -1,22 +1,20 @@
 """Unit tests for CalendarService."""
 
 import datetime
-from datetime import timedelta
-from uuid import uuid4, UUID
+from datetime import UTC, timedelta
+from uuid import UUID, uuid4
 
 import pytest
 from dobles import allow
 
 from planned.application.services import CalendarService
 from planned.core.exceptions import exceptions
-from planned.domain.entities import Calendar, Event
+from planned.domain.entities import AuthToken, Calendar, Event
 
 
 @pytest.mark.asyncio
 async def test_sync_google(mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway):
     """Test syncing Google calendar."""
-    from datetime import UTC
-    
     calendar = Calendar(
         user_uuid=UUID(str(uuid4())),
         name="Test Calendar",
@@ -27,7 +25,6 @@ async def test_sync_google(mock_auth_token_repo, mock_calendar_repo, mock_event_
     
     lookback = datetime.datetime.now(UTC) - timedelta(days=2)
     
-    from planned.domain.entities import AuthToken
     token = AuthToken(
         id="token-id",
         user_uuid=calendar.user_uuid,
@@ -85,8 +82,6 @@ async def test_sync_google(mock_auth_token_repo, mock_calendar_repo, mock_event_
 @pytest.mark.asyncio
 async def test_sync(mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway):
     """Test syncing a calendar."""
-    from datetime import UTC
-    
     calendar = Calendar(
         user_uuid=UUID(str(uuid4())),
         name="Test Calendar",
@@ -95,7 +90,6 @@ async def test_sync(mock_auth_token_repo, mock_calendar_repo, mock_event_repo, m
         platform_id="platform-id",
     )
     
-    from planned.domain.entities import AuthToken
     token = AuthToken(
         id="token-id",
         user_uuid=calendar.user_uuid,
@@ -135,8 +129,6 @@ async def test_sync(mock_auth_token_repo, mock_calendar_repo, mock_event_repo, m
 @pytest.mark.asyncio
 async def test_sync_all(mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway):
     """Test syncing all calendars."""
-    from datetime import UTC
-    
     calendar1 = Calendar(
         user_uuid=UUID(str(uuid4())),
         name="Calendar 1",

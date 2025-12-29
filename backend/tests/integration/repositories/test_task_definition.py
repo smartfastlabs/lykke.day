@@ -1,17 +1,18 @@
 """Integration tests for TaskDefinitionRepository."""
 
+from uuid import UUID
+
 import pytest
 import pytest_asyncio
 
 from planned.core.exceptions import exceptions
 from planned.domain.value_objects.task import TaskDefinition, TaskType
+from planned.infrastructure.repositories import TaskDefinitionRepository
 
 
 @pytest.mark.asyncio
 async def test_get(task_definition_repo, test_user):
     """Test getting a task definition by ID."""
-    from uuid import UUID
-    
     task_def = TaskDefinition(
         user_uuid=UUID(test_user.id),
         id="test-task",
@@ -37,8 +38,6 @@ async def test_get_not_found(task_definition_repo):
 @pytest.mark.asyncio
 async def test_put(task_definition_repo, test_user):
     """Test creating a new task definition."""
-    from uuid import UUID
-    
     task_def = TaskDefinition(
         user_uuid=UUID(test_user.id),
         id="new-task",
@@ -56,8 +55,6 @@ async def test_put(task_definition_repo, test_user):
 @pytest.mark.asyncio
 async def test_all(task_definition_repo, test_user):
     """Test getting all task definitions."""
-    from uuid import UUID
-    
     task_def1 = TaskDefinition(
         user_uuid=UUID(test_user.id),
         id="task1",
@@ -85,8 +82,6 @@ async def test_all(task_definition_repo, test_user):
 @pytest.mark.asyncio
 async def test_user_isolation(task_definition_repo, test_user, create_test_user):
     """Test that different users' task definitions are properly isolated."""
-    from uuid import UUID
-    
     task_def = TaskDefinition(
         user_uuid=UUID(test_user.id),
         id="user1-task",
@@ -98,7 +93,6 @@ async def test_user_isolation(task_definition_repo, test_user, create_test_user)
     
     # Create another user
     user2 = await create_test_user()
-    from planned.infrastructure.repositories import TaskDefinitionRepository
     task_definition_repo2 = TaskDefinitionRepository(user_uuid=UUID(user2.id))
     
     # User2 should not see user1's task definition

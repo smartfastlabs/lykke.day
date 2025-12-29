@@ -1,10 +1,15 @@
 """Integration tests for TaskRepository."""
 
+import datetime
+from uuid import UUID, uuid4
+
 import pytest
 import pytest_asyncio
 
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Task
+from planned.infrastructure.repositories import TaskRepository
+from planned.infrastructure.repositories.base.schema import DateQuery
 from planned.domain.value_objects.task import (
     TaskCategory,
     TaskDefinition,
@@ -14,12 +19,10 @@ from planned.domain.value_objects.task import (
     TaskType,
     TimingType,
 )
-from planned.infrastructure.repositories.base.schema import DateQuery
 
 
 def _create_task_definition(user_uuid, task_id="test-task"):
     """Helper to create a task definition."""
-    from uuid import UUID
     return TaskDefinition(
         user_uuid=UUID(user_uuid),
         id=task_id,
@@ -32,8 +35,6 @@ def _create_task_definition(user_uuid, task_id="test-task"):
 @pytest.mark.asyncio
 async def test_get(task_repo, test_user, test_date):
     """Test getting a task by ID."""
-    from uuid import uuid4, UUID
-    
     task = Task(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -56,8 +57,6 @@ async def test_get(task_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_get_not_found(task_repo):
     """Test getting a non-existent task raises NotFoundError."""
-    from uuid import uuid4
-    
     with pytest.raises(exceptions.NotFoundError):
         await task_repo.get(str(uuid4()))
 
@@ -65,8 +64,6 @@ async def test_get_not_found(task_repo):
 @pytest.mark.asyncio
 async def test_put(task_repo, test_user, test_date):
     """Test creating a new task."""
-    from uuid import uuid4, UUID
-    
     task = Task(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -88,8 +85,6 @@ async def test_put(task_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_put_update(task_repo, test_user, test_date):
     """Test updating an existing task."""
-    from uuid import uuid4, UUID
-    
     task = Task(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -119,8 +114,6 @@ async def test_put_update(task_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_all(task_repo, test_user, test_date, test_date_tomorrow):
     """Test getting all tasks."""
-    from uuid import uuid4, UUID
-    
     task1 = Task(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -154,8 +147,6 @@ async def test_all(task_repo, test_user, test_date, test_date_tomorrow):
 @pytest.mark.asyncio
 async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow):
     """Test searching tasks with DateQuery."""
-    from uuid import uuid4, UUID
-    
     task1 = Task(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -190,8 +181,6 @@ async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow)
 @pytest.mark.asyncio
 async def test_delete(task_repo, test_user, test_date):
     """Test deleting a task."""
-    from uuid import uuid4, UUID
-    
     task = Task(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -215,8 +204,6 @@ async def test_delete(task_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_user_isolation(task_repo, test_user, create_test_user, test_date):
     """Test that different users' tasks are properly isolated."""
-    from uuid import uuid4, UUID
-    
     # Create task for test_user
     task = Task(
         id=str(uuid4()),
@@ -232,7 +219,6 @@ async def test_user_isolation(task_repo, test_user, create_test_user, test_date)
     
     # Create another user
     user2 = await create_test_user()
-    from planned.infrastructure.repositories import TaskRepository
     task_repo2 = TaskRepository(user_uuid=UUID(user2.id))
     
     # User2 should not see user1's task
@@ -247,9 +233,6 @@ async def test_user_isolation(task_repo, test_user, create_test_user, test_date)
 @pytest.mark.asyncio
 async def test_task_with_schedule(task_repo, test_user, test_date):
     """Test creating a task with a schedule."""
-    from uuid import uuid4, UUID
-    import datetime
-    
     schedule = TaskSchedule(
         timing_type=TimingType.DEADLINE,
         start_time=datetime.time(10, 0),

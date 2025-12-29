@@ -1,17 +1,18 @@
 """Integration tests for PushSubscriptionRepository."""
 
+from uuid import UUID, uuid4
+
 import pytest
 import pytest_asyncio
 
 from planned.core.exceptions import exceptions
 from planned.domain.entities import PushSubscription
+from planned.infrastructure.repositories import PushSubscriptionRepository
 
 
 @pytest.mark.asyncio
 async def test_get(push_subscription_repo, test_user):
     """Test getting a push subscription by ID."""
-    from uuid import uuid4, UUID
-    
     subscription = PushSubscription(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -31,8 +32,6 @@ async def test_get(push_subscription_repo, test_user):
 @pytest.mark.asyncio
 async def test_get_not_found(push_subscription_repo):
     """Test getting a non-existent push subscription raises NotFoundError."""
-    from uuid import uuid4
-    
     with pytest.raises(exceptions.NotFoundError):
         await push_subscription_repo.get(str(uuid4()))
 
@@ -40,8 +39,6 @@ async def test_get_not_found(push_subscription_repo):
 @pytest.mark.asyncio
 async def test_put(push_subscription_repo, test_user):
     """Test creating a new push subscription."""
-    from uuid import uuid4, UUID
-    
     subscription = PushSubscription(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -60,8 +57,6 @@ async def test_put(push_subscription_repo, test_user):
 @pytest.mark.asyncio
 async def test_all(push_subscription_repo, test_user):
     """Test getting all push subscriptions."""
-    from uuid import uuid4, UUID
-    
     sub1 = PushSubscription(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -91,8 +86,6 @@ async def test_all(push_subscription_repo, test_user):
 @pytest.mark.asyncio
 async def test_user_isolation(push_subscription_repo, test_user, create_test_user):
     """Test that different users' push subscriptions are properly isolated."""
-    from uuid import uuid4, UUID
-    
     subscription = PushSubscription(
         id=str(uuid4()),
         user_uuid=UUID(test_user.id),
@@ -105,7 +98,6 @@ async def test_user_isolation(push_subscription_repo, test_user, create_test_use
     
     # Create another user
     user2 = await create_test_user()
-    from planned.infrastructure.repositories import PushSubscriptionRepository
     push_subscription_repo2 = PushSubscriptionRepository(user_uuid=UUID(user2.id))
     
     # User2 should not see user1's subscription

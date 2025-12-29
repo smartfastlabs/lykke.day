@@ -1,16 +1,21 @@
 """Fixtures for e2e tests - full API tests with test client."""
 
 from datetime import time
+from uuid import UUID, uuid4
 
 import pytest
 from dobles import allow
 from fastapi.testclient import TestClient
+from passlib.context import CryptContext
 
 from planned.app import app
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Alarm, DayTemplate, User
 from planned.domain.value_objects.alarm import AlarmType
 from planned.domain.value_objects.user import UserSetting
+from planned.infrastructure.database.utils import reset_engine
 from planned.infrastructure.repositories import DayTemplateRepository, UserRepository
+from planned.presentation.api.routers.dependencies.user import get_current_user
 from planned.presentation.middlewares import middlewares
 
 
@@ -20,8 +25,6 @@ def setup_system_user_day_template():
 
     async def _setup():
         """Create DayTemplate for system user."""
-
-        from uuid import UUID, uuid4
 
         user_repo = UserRepository()
         system_user_email = "system@planned.day"
@@ -41,8 +44,6 @@ def setup_system_user_day_template():
         day_template_repo = DayTemplateRepository(user_uuid=system_user_uuid)
 
         # Check if default template exists, create if not
-        from planned.core.exceptions import NotFoundError
-
         try:
             await day_template_repo.get("default")
         except NotFoundError:
@@ -82,12 +83,6 @@ def authenticated_client(test_client, setup_system_user_day_template, request):
 
     async def _authenticated_client():
         """Return authenticated test client and user."""
-        from passlib.context import CryptContext
-
-        from planned.infrastructure.database.utils import reset_engine
-        from planned.infrastructure.repositories import UserRepository
-        from planned.presentation.api.routers.dependencies.user import get_current_user
-
         # Use setup_system_user_day_template to create user and default template
         await reset_engine()
         user = await setup_system_user_day_template()

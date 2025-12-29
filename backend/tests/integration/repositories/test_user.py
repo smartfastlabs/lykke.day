@@ -1,5 +1,7 @@
 """Integration tests for UserRepository."""
 
+from uuid import uuid4
+
 import pytest
 import pytest_asyncio
 
@@ -25,8 +27,6 @@ async def test_get(user_repo, create_test_user):
 @pytest.mark.asyncio
 async def test_get_not_found(user_repo):
     """Test getting a non-existent user raises NotFoundError."""
-    from uuid import uuid4
-    
     with pytest.raises(exceptions.NotFoundError):
         await user_repo.get(str(uuid4()))
 
@@ -34,8 +34,6 @@ async def test_get_not_found(user_repo):
 @pytest.mark.asyncio
 async def test_put(user_repo):
     """Test creating a new user."""
-    from uuid import uuid4
-    
     user = User(
         id=str(uuid4()),
         email=f"test-{uuid4()}@example.com",
@@ -56,7 +54,6 @@ async def test_put_update(user_repo, create_test_user):
     user = await create_test_user()
     
     # Update the user with a new unique email
-    from uuid import uuid4
     user.email = f"updated-{uuid4()}@example.com"
     result = await user_repo.put(user)
     
@@ -70,7 +67,6 @@ async def test_put_update(user_repo, create_test_user):
 @pytest.mark.asyncio
 async def test_get_by_email(user_repo, create_test_user):
     """Test getting a user by email."""
-    from uuid import uuid4
     email = f"specific-{uuid4()}@example.com"
     user = await create_test_user(email=email)
     
@@ -107,8 +103,6 @@ async def test_all(user_repo, create_test_user):
 @pytest.mark.asyncio
 async def test_user_isolation(user_repo, create_test_user):
     """Test that different users are properly isolated."""
-    from uuid import uuid4
-    
     user1 = await create_test_user(email=f"user1-{uuid4()}@example.com")
     user2 = await create_test_user(email=f"user2-{uuid4()}@example.com")
     
@@ -126,8 +120,6 @@ async def test_user_isolation(user_repo, create_test_user):
 @pytest.mark.asyncio
 async def test_user_with_custom_settings(user_repo):
     """Test creating a user with custom settings."""
-    from uuid import uuid4
-    
     settings = UserSetting(
         template_defaults=["custom", "custom", "custom", "custom", "custom", "custom", "custom"],
     )
