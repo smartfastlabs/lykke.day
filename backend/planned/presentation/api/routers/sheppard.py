@@ -1,10 +1,13 @@
 import asyncio
 import contextlib
-from typing import Any
+from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from loguru import logger
 
+from planned.application.repositories.base import ChangeEvent
+from planned.core.exceptions import exceptions
 from planned.infrastructure.repositories import (
     AuthTokenRepository,
     CalendarRepository,
@@ -16,10 +19,13 @@ from planned.infrastructure.repositories import (
     RoutineRepository,
     TaskDefinitionRepository,
     TaskRepository,
+    UserRepository,
 )
-from planned.application.repositories.base import ChangeEvent
-from planned.infrastructure.repositories.base.repository import BaseRepository
 from planned.infrastructure.utils import youtube
+
+if TYPE_CHECKING:
+    from planned.application.services import SheppardManager
+    from planned.infrastructure.repositories.base.repository import BaseRepository
 
 router = APIRouter()
 
@@ -44,15 +50,61 @@ async def start_alarm() -> None:
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket) -> None:
     """
-    WebSocket endpoint that streams all ChangeEvents from every repository class.
+    WebSocket endpoint that streams ChangeEvents from the logged-in user's repositories.
     """
     await websocket.accept()
     logger.info("WebSocket client connected")
+
+    # Get user from session
+    session = getattr(websocket, "session", {})
+    user_uuid_str = session.get("user_uuid")
+
+    if not user_uuid_str:
+        logged_in_at = session.get("logged_in_at")
+        if not logged_in_at:
+            await websocket.close(code=1008, reason="Not authenticated")
+            return
+        raise exceptions.AuthorizationError("Session invalid. Please log in again.")
+
+    try:
+        user_uuid = UUID(user_uuid_str)
+    except (ValueError, TypeError):
+        await websocket.close(code=1008, reason="Invalid session data")
+        return
+
+    # Get user to verify it exists
+    user_repo = UserRepository()
+    try:
+        await user_repo.get(str(user_uuid))
+    except exceptions.NotFoundError:
+        await websocket.close(code=1008, reason="User not found")
+        return
+
+    # Get SheppardManager from app state
+    from planned.application.services import SheppardManager
+
+    manager: SheppardManager | None = getattr(websocket.app.state, "sheppard_manager", None)
+    if manager is None:
+        logger.error("SheppardManager is not available")
+        await websocket.close(code=1011, reason="Service unavailable")
+        return
+
+    # Ensure sheppard service exists for the user (starting it if necessary)
+    try:
+        await manager.ensure_service_for_user(user_uuid)
+    except RuntimeError as e:
+        logger.error(f"Failed to ensure SheppardService for user {user_uuid}: {e}")
+        await websocket.close(code=1011, reason="Service unavailable")
+        return
+
+    logger.info(f"WebSocket connected for user {user_uuid}")
 
     # Queue to collect events from all repositories
     event_queue: asyncio.Queue[ChangeEvent[Any]] = asyncio.Queue()
 
     # Get all repository classes
+    from planned.infrastructure.repositories.base.repository import BaseRepository
+
     repository_classes: list[type[BaseRepository[Any, Any]]] = [
         AuthTokenRepository,
         CalendarRepository,
@@ -66,11 +118,22 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         TaskRepository,
     ]
 
-    # Handler function to add events to the queue
+    # Handler function to add events to the queue, filtered by user
     async def event_handler(
         _sender: object | None = None, *, event: ChangeEvent[Any]
     ) -> None:
-        await event_queue.put(event)
+        # Filter events to only those for the logged-in user
+        # Check if the event value has a user_uuid attribute
+        event_value = event.value
+        if hasattr(event_value, "user_uuid"):
+            event_user_uuid = UUID(event_value.user_uuid) if isinstance(event_value.user_uuid, str) else event_value.user_uuid
+            if event_user_uuid == user_uuid:
+                await event_queue.put(event)
+        elif hasattr(event_value, "user_id"):
+            # Some entities might use user_id instead of user_uuid
+            event_user_uuid = UUID(event_value.user_id) if isinstance(event_value.user_id, str) else event_value.user_id
+            if event_user_uuid == user_uuid:
+                await event_queue.put(event)
 
     # Subscribe to all repository signals
     for repo_class in repository_classes:

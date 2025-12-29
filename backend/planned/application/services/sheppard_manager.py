@@ -42,6 +42,8 @@ class SheppardManager:
             EventRepositoryProtocol,
             MessageRepositoryProtocol,
             PushSubscriptionRepositoryProtocol,
+            RoutineRepositoryProtocol,
+            TaskDefinitionRepositoryProtocol,
             TaskRepositoryProtocol,
             UserRepositoryProtocol,
         )
@@ -295,4 +297,40 @@ class SheppardManager:
             await self._stop_service_for_user(user_uuid)
 
         logger.info("SheppardManager stopped")
+
+    def get_service_for_user(self, user_uuid: UUID) -> SheppardService | None:
+        """Get the SheppardService instance for a specific user.
+        
+        Args:
+            user_uuid: The UUID of the user to get the service for.
+            
+        Returns:
+            The SheppardService instance for the user, or None if it doesn't exist.
+        """
+        if user_uuid in self._services:
+            service, _ = self._services[user_uuid]
+            return service
+        return None
+
+    async def ensure_service_for_user(self, user_uuid: UUID) -> SheppardService:
+        """Ensure a SheppardService exists for a user, starting it if necessary.
+        
+        Args:
+            user_uuid: The UUID of the user to ensure a service for.
+            
+        Returns:
+            The SheppardService instance for the user.
+            
+        Raises:
+            RuntimeError: If the service cannot be started.
+        """
+        service = self.get_service_for_user(user_uuid)
+        if service is None:
+            await self._start_service_for_user(user_uuid)
+            service = self.get_service_for_user(user_uuid)
+            if service is None:
+                raise RuntimeError(
+                    f"Failed to start SheppardService for user {user_uuid}"
+                )
+        return service
 

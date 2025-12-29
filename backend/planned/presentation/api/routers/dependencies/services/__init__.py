@@ -7,7 +7,8 @@ with FastAPI's Depends() in route handlers.
 
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
+from loguru import logger
 
 from planned.application.repositories import (
     AuthTokenRepositoryProtocol,
@@ -21,7 +22,7 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
     UserRepositoryProtocol,
 )
-from planned.application.services import AuthService, CalendarService, DayService, PlanningService
+from planned.application.services import AuthService, CalendarService, DayService, PlanningService, SheppardManager, SheppardService
 from planned.domain.entities import User
 from planned.infrastructure.gateways.adapters import GoogleCalendarGatewayAdapter
 from planned.infrastructure.utils.dates import get_current_date
@@ -108,3 +109,40 @@ async def get_day_service_for_current_date(
         task_repo=task_repo,
         user_repo=user_repo,
     )
+
+
+async def get_sheppard_service(
+    request: Request,
+    user: Annotated[User, Depends(get_current_user)],
+) -> SheppardService:
+    """Get the SheppardService instance for the logged-in user.
+    
+    Args:
+        request: FastAPI request object (to access app state)
+        user: Current user (from dependency)
+        
+    Returns:
+        SheppardService instance for the user
+        
+    Raises:
+        RuntimeError: If SheppardManager is not available or service doesn't exist
+    """
+    from uuid import UUID
+    from planned.core.exceptions import exceptions
+    
+    # Get SheppardManager from app state
+    manager: SheppardManager | None = getattr(request.app.state, "sheppard_manager", None)
+    if manager is None:
+        raise exceptions.ServerError(
+            "SheppardManager is not available. The service may not be initialized."
+        )
+    
+    user_uuid = UUID(user.id)
+    try:
+        service = await manager.ensure_service_for_user(user_uuid)
+    except RuntimeError as e:
+        raise exceptions.ServerError(
+            f"SheppardService is not available for user {user_uuid}: {e}"
+        ) from e
+
+    return service

@@ -42,6 +42,8 @@ async def init_lifespan(app: FastAPI) -> AsyncIterator[Never]:
         # Create and start SheppardManager (skip during testing)
         manager = SheppardManager()
         await manager.start()
+        # Store manager in app state for dependency injection
+        app.state.sheppard_manager = manager
 
     yield  # type: ignore
 
