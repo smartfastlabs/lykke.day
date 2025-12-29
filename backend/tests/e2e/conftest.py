@@ -20,28 +20,24 @@ from planned.presentation.middlewares import middlewares
 
 
 @pytest.fixture
-def setup_system_user_day_template():
-    """Fixture that returns a function to create DayTemplate for system user."""
+def setup_test_user_day_template():
+    """Fixture that returns a function to create a test user with DayTemplate."""
 
     async def _setup():
-        """Create DayTemplate for system user."""
+        """Create a test user with default DayTemplate."""
 
         user_repo = UserRepository()
-        system_user_email = "system@planned.day"
-        system_user = await user_repo.get_by_email(system_user_email)
+        test_user_email = f"test_{uuid4()}@planned.day"
+        test_user = User(
+            id=str(uuid4()),
+            email=test_user_email,
+            password_hash="",
+            settings=UserSetting(),
+        )
+        test_user = await user_repo.put(test_user)
 
-        if system_user is None:
-            # Create system user if it doesn't exist
-            system_user = User(
-                id=str(uuid4()),
-                email=system_user_email,
-                password_hash="",
-                settings=UserSetting(),
-            )
-            system_user = await user_repo.put(system_user)
-
-        system_user_uuid = UUID(system_user.id)
-        day_template_repo = DayTemplateRepository(user_uuid=system_user_uuid)
+        test_user_uuid = UUID(test_user.id)
+        day_template_repo = DayTemplateRepository(user_uuid=test_user_uuid)
 
         # Check if default template exists, create if not
         try:
@@ -49,7 +45,7 @@ def setup_system_user_day_template():
         except NotFoundError:
             # Template doesn't exist, create it
             default_template = DayTemplate(
-                user_uuid=system_user_uuid,
+                user_uuid=test_user_uuid,
                 id="default",
                 tasks=[],
                 alarm=Alarm(
@@ -59,7 +55,7 @@ def setup_system_user_day_template():
                 ),
             )
             await day_template_repo.put(default_template)
-        return system_user
+        return test_user
 
     return _setup
 
@@ -72,7 +68,7 @@ def test_client():
 
 
 @pytest.fixture
-def authenticated_client(test_client, setup_system_user_day_template, request):
+def authenticated_client(test_client, setup_test_user_day_template, request):
     """Test client with authenticated session."""
 
     # Register cleanup finalizer
@@ -83,9 +79,9 @@ def authenticated_client(test_client, setup_system_user_day_template, request):
 
     async def _authenticated_client():
         """Return authenticated test client and user."""
-        # Use setup_system_user_day_template to create user and default template
+        # Use setup_test_user_day_template to create user and default template
         await reset_engine()
-        user = await setup_system_user_day_template()
+        user = await setup_test_user_day_template()
 
         # Set up session for authenticated requests
         # We need to set the password correctly for login
