@@ -37,6 +37,21 @@ async function fetchJSON(
   console.log("Fetching URL:", url, "with options:", options);
   const response = await fetch(url, options);
   const body = await response.json();
+  
+  // Handle 401 Unauthorized - redirect to login
+  if (response.status === 401) {
+    globalNotifications.add("Not Logged In", "error");
+    // Only redirect if not already on login page to avoid infinite redirects
+    if (window.location.pathname !== "/login") {
+      window.location.href = "/login";
+    }
+    return {
+      data: body,
+      status: response.status,
+      ok: response.ok,
+    };
+  }
+  
   if (!response.ok && !options.suppressError) {
     globalNotifications.add(`Error fetching data: ${body.detail}`, "error");
   }
