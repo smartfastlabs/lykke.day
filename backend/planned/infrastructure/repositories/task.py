@@ -33,7 +33,7 @@ class TaskRepository(BaseRepository[Task, DateQuery]):
     def entity_to_row(task: Task) -> dict[str, Any]:
         """Convert a Task entity to a database row dict."""
         row: dict[str, Any] = {
-            "id": task.id,
+            "uuid": task.uuid,
             "user_uuid": task.user_uuid,
             "date": task.scheduled_date,  # Extract date from scheduled_date for querying
             "scheduled_date": task.scheduled_date,

@@ -33,7 +33,7 @@ class EventRepository(BaseRepository[Event, DateQuery]):
     def entity_to_row(event: Event) -> dict[str, Any]:
         """Convert an Event entity to a database row dict."""
         row: dict[str, Any] = {
-            "id": event.id,
+            "uuid": event.uuid,
             "user_uuid": event.user_uuid,
             "date": event.starts_at.date(),  # Extract date from starts_at for querying
             "name": event.name,

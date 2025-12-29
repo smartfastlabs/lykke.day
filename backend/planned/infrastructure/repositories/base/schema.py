@@ -12,7 +12,7 @@ metadata = MetaData()
 users = Table(
     "users",
     metadata,
-    Column("id", PGUUID, primary_key=True),
+    Column("uuid", PGUUID, primary_key=True),
     Column("username", String, nullable=False),
     Column("email", String, nullable=False),
     Column("phone_number", String, nullable=True),
@@ -27,7 +27,7 @@ users = Table(
 auth_tokens = Table(
     "auth_tokens",
     metadata,
-    Column("id", String, primary_key=True),
+    Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
     Column("platform", String, nullable=False),
     Column("token", Text, nullable=False),
@@ -37,7 +37,6 @@ auth_tokens = Table(
     Column("client_secret", Text),
     Column("scopes", JSONB),
     Column("expires_at", DateTime),
-    Column("uuid", PGUUID),
     Column("created_at", DateTime, nullable=False),
     Index("idx_auth_tokens_user_uuid", "user_uuid"),
 )
@@ -46,7 +45,7 @@ auth_tokens = Table(
 calendars = Table(
     "calendars",
     metadata,
-    Column("id", String, primary_key=True),
+    Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
     Column("name", String, nullable=False),
     Column("auth_token_id", String, nullable=False),
@@ -60,7 +59,7 @@ calendars = Table(
 day_templates = Table(
     "day_templates",
     metadata,
-    Column("id", String, primary_key=True),
+    Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
     Column("tasks", JSONB),  # list[str]
     Column("alarm", JSONB),  # Alarm | None
@@ -72,7 +71,7 @@ day_templates = Table(
 days = Table(
     "days",
     metadata,
-    Column("id", String, primary_key=True),  # date as string
+    Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
     Column("date", Date, nullable=False),
     Column("template_id", String, nullable=False),
@@ -88,7 +87,7 @@ days = Table(
 events = Table(
     "events",
     metadata,
-    Column("id", String, primary_key=True),
+    Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
     Column("date", Date, nullable=False),  # extracted from starts_at for querying
     Column("name", String, nullable=False),
@@ -112,7 +111,7 @@ events = Table(
 messages = Table(
     "messages",
     metadata,
-    Column("id", String, primary_key=True),
+    Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
     Column("date", Date, nullable=False),  # extracted from sent_at for querying
     Column("author", String, nullable=False),  # Literal["system", "agent", "user"]
@@ -127,13 +126,12 @@ messages = Table(
 push_subscriptions = Table(
     "push_subscriptions",
     metadata,
-    Column("id", String, primary_key=True),
+    Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
     Column("device_name", String),
     Column("endpoint", String, nullable=False),
     Column("p256dh", String, nullable=False),
     Column("auth", String, nullable=False),
-    Column("uuid", PGUUID),
     Column("created_at", DateTime, nullable=False),
     Index("idx_push_subscriptions_user_uuid", "user_uuid"),
 )
@@ -142,7 +140,7 @@ push_subscriptions = Table(
 routines = Table(
     "routines",
     metadata,
-    Column("id", String, primary_key=True),
+    Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
     Column("name", String, nullable=False),
     Column("category", String, nullable=False),  # TaskCategory enum as string
@@ -156,7 +154,7 @@ routines = Table(
 task_definitions = Table(
     "task_definitions",
     metadata,
-    Column("id", String, primary_key=True),
+    Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
     Column("name", String, nullable=False),
     Column("description", String, nullable=False),
@@ -168,7 +166,7 @@ task_definitions = Table(
 tasks = Table(
     "tasks",
     metadata,
-    Column("id", String, primary_key=True),
+    Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
     Column("date", Date, nullable=False),  # extracted from scheduled_date for querying
     Column("scheduled_date", Date, nullable=False),

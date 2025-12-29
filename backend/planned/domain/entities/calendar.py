@@ -1,10 +1,14 @@
+import uuid
 from datetime import datetime
 from uuid import UUID
 
-from .base import BaseConfigObject
+from pydantic import Field
+
+from .base import BaseObject
 
 
-class Calendar(BaseConfigObject):
+class Calendar(BaseObject):
+    uuid: UUID = Field(default_factory=uuid.uuid4)
     user_uuid: UUID
     name: str
     auth_token_id: str
@@ -13,4 +17,7 @@ class Calendar(BaseConfigObject):
     last_sync_at: datetime | None = None
 
     def model_post_init(self, __context__=None) -> None:  # type: ignore
-        self.id = f"{self.platform}:{self.platform_id}"
+        # Generate UUID5 based on platform and platform_id for deterministic IDs
+        namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
+        name = f"{self.platform}:{self.platform_id}"
+        self.uuid = uuid.uuid5(namespace, name)

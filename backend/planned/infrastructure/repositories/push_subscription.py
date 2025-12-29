@@ -21,13 +21,12 @@ class PushSubscriptionRepository(BaseRepository[PushSubscription, BaseQuery]):
     def entity_to_row(push_subscription: PushSubscription) -> dict[str, Any]:
         """Convert a PushSubscription entity to a database row dict."""
         row: dict[str, Any] = {
-            "id": push_subscription.id,
+            "uuid": push_subscription.uuid,
             "user_uuid": push_subscription.user_uuid,
             "device_name": push_subscription.device_name,
             "endpoint": push_subscription.endpoint,
             "p256dh": push_subscription.p256dh,
             "auth": push_subscription.auth,
-            "uuid": push_subscription.uuid,
             "created_at": push_subscription.created_at,
         }
 

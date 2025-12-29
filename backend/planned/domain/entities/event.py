@@ -1,13 +1,14 @@
+import uuid
 from datetime import UTC, date as dt_date, datetime, time
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from gcsa.event import Event as GoogleEvent
-from pydantic import Field
+from pydantic import Field, computed_field
 
 from ..value_objects.task import TaskFrequency
 from .action import Action
-from .base import BaseDateObject
+from .base import BaseObject
 from .person import Person
 
 
@@ -40,7 +41,8 @@ def get_datetime(
     )
 
 
-class Event(BaseDateObject):
+class Event(BaseObject):
+    uuid: UUID = Field(default_factory=uuid.uuid4)
     user_uuid: UUID
     name: str
     calendar_id: str
@@ -54,9 +56,27 @@ class Event(BaseDateObject):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     people: list[Person] = Field(default_factory=list)
     actions: list[Action] = Field(default_factory=list)
+    timezone: str | None = Field(default=None, exclude=True)
 
-    def _get_datetime(self) -> datetime:
-        return self.starts_at
+    @computed_field  # mypy: ignore
+    @property
+    def date(self) -> dt_date:
+        """Get the date for this event."""
+        dt = self.starts_at
+        tz = self.timezone
+        if tz:
+            return dt.astimezone(ZoneInfo(tz)).date()
+        # If no timezone set and datetime is timezone-aware, use its timezone
+        if dt.tzinfo:
+            return dt.date()
+        # Fallback: assume UTC for naive datetimes
+        return dt.date()
+
+    def model_post_init(self, __context__=None) -> None:  # type: ignore
+        # Generate UUID5 based on platform and platform_id for deterministic IDs
+        namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
+        name = f"{self.platform}:{self.platform_id}"
+        self.uuid = uuid.uuid5(namespace, name)
 
     @classmethod
     def from_google(
@@ -78,7 +98,6 @@ class Event(BaseDateObject):
         """
         event = cls(
             user_uuid=user_uuid,
-            id=f"google:{google_event.id}",
             frequency=frequency,
             calendar_id=calendar_id,
             status=google_event.other.get("status", "NA"),

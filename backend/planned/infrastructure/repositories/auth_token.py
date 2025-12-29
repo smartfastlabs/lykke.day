@@ -21,7 +21,7 @@ class AuthTokenRepository(BaseRepository[AuthToken, BaseQuery]):
     def entity_to_row(auth_token: AuthToken) -> dict[str, Any]:
         """Convert an AuthToken entity to a database row dict."""
         row: dict[str, Any] = {
-            "id": auth_token.id,
+            "uuid": auth_token.uuid,
             "user_uuid": auth_token.user_uuid,
             "platform": auth_token.platform,
             "token": auth_token.token,
@@ -30,7 +30,6 @@ class AuthTokenRepository(BaseRepository[AuthToken, BaseQuery]):
             "client_id": auth_token.client_id,
             "client_secret": auth_token.client_secret,
             "expires_at": auth_token.expires_at,
-            "uuid": auth_token.uuid,
             "created_at": auth_token.created_at,
         }
 

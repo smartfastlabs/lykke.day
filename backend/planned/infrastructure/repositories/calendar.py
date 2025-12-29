@@ -1,6 +1,10 @@
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.sql import select
+
+from planned.core.exceptions import exceptions
 from planned.domain.entities import Calendar
 
 from .base import BaseQuery, BaseRepository
@@ -17,11 +21,12 @@ class CalendarRepository(BaseRepository[Calendar, BaseQuery]):
         """Initialize CalendarRepository with user scoping."""
         super().__init__(user_uuid=user_uuid)
 
+
     @staticmethod
     def entity_to_row(calendar: Calendar) -> dict[str, Any]:
         """Convert a Calendar entity to a database row dict."""
         row: dict[str, Any] = {
-            "id": calendar.id,
+            "uuid": calendar.uuid,
             "user_uuid": calendar.user_uuid,
             "name": calendar.name,
             "auth_token_id": calendar.auth_token_id,

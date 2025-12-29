@@ -4,17 +4,23 @@ from uuid import UUID
 
 from pydantic import Field
 
-from .base import BaseConfigObject
+from .base import BaseObject
 
 
-class PushSubscription(BaseConfigObject):
+class PushSubscription(BaseObject):
+    uuid: UUID = Field(default_factory=uuid.uuid4)
     user_uuid: UUID
     device_name: str | None = None
     endpoint: str
     p256dh: str
     auth: str
-    uuid: UUID = Field(default_factory=uuid.uuid4)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         alias="createdAt",
     )
+
+    def model_post_init(self, __context__=None) -> None:  # type: ignore
+        # Generate UUID5 based on endpoint and user_uuid for deterministic IDs
+        namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
+        name = f"{self.endpoint}:{self.user_uuid}"
+        self.uuid = uuid.uuid5(namespace, name)

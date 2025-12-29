@@ -5,16 +5,17 @@ from uuid import UUID
 from google.oauth2.credentials import Credentials
 from pydantic import ConfigDict, Field
 
-from .base import BaseConfigObject
+from .base import BaseObject
 
 
-class AuthToken(BaseConfigObject):
+class AuthToken(BaseObject):
     model_config = ConfigDict(
         populate_by_name=True,
         validate_by_alias=False,
         validate_by_name=True,
         # frozen=True,
     )
+    uuid: UUID = Field(default_factory=uuid.uuid4)
     user_uuid: UUID
     platform: str
     token: str
@@ -24,8 +25,13 @@ class AuthToken(BaseConfigObject):
     client_secret: str | None = None
     scopes: list | None = None
     expires_at: datetime | None = None
-    uuid: UUID = Field(default_factory=uuid.uuid4)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    def model_post_init(self, __context__=None) -> None:  # type: ignore
+        # Generate UUID5 based on platform and user_uuid for deterministic IDs
+        namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
+        name = f"{self.platform}:{self.user_uuid}"
+        self.uuid = uuid.uuid5(namespace, name)
 
     def google_credentials(self) -> Credentials:
         """

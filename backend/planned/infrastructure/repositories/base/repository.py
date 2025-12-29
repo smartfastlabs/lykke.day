@@ -3,16 +3,17 @@ from typing import Any, Generic, Literal, TypeVar
 from uuid import UUID
 
 from blinker import Signal
+from sqlalchemy import delete, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.sql import Select
+
 from planned.common.repository_handler import ChangeHandler
 from planned.core.exceptions import exceptions
 from planned.domain.value_objects.query import BaseQuery
 from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.database.transaction import get_transaction_connection
-from sqlalchemy import delete, select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlalchemy.sql import Select
 
 ObjectType = TypeVar("ObjectType")
 QueryType = TypeVar("QueryType", bound=BaseQuery)
@@ -93,10 +94,13 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             async with engine.connect() as conn:
                 yield conn
 
-    async def get(self, key: str) -> ObjectType:
-        """Get an object by key."""
+    async def get(self, key: str | UUID) -> ObjectType:
+        """Get an object by uuid."""
+        # Convert string to UUID if needed
+        if isinstance(key, str):
+            key = UUID(key)
         async with self._get_connection(for_write=False) as conn:
-            stmt = select(self.table).where(self.table.c.id == key)
+            stmt = select(self.table).where(self.table.c.uuid == key)
 
             # Add user_uuid filtering if scoped
             if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
@@ -107,7 +111,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
             if row is None:
                 raise exceptions.NotFoundError(
-                    f"`{self.Object.__name__}` with key '{key}' not found.",
+                    f"{self.Object.__name__} with uuid {key} not found"
                 )
 
             return type(self).row_to_entity(dict(row))  # type: ignore[attr-defined,no-any-return]
@@ -146,9 +150,8 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                 else:
                     stmt = stmt.order_by(col)
         else:
-            # Default ordering by id if available
-            if hasattr(self.table.c, "id"):
-                stmt = stmt.order_by(self.table.c.id)
+            # Default ordering by uuid
+            stmt = stmt.order_by(self.table.c.uuid)
 
         return stmt
 
@@ -225,7 +228,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
         async with self._get_connection(for_write=True) as conn:
             # Check if object exists (with user filtering if scoped)
-            stmt = select(self.table.c.id).where(self.table.c.id == obj.id)  # type: ignore[attr-defined]
+            stmt = select(self.table.c.uuid).where(self.table.c.uuid == obj.uuid)
             if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
                 stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
             result = await conn.execute(stmt)
@@ -233,9 +236,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
             # Use PostgreSQL INSERT ... ON CONFLICT DO UPDATE
             insert_stmt = pg_insert(self.table).values(**row)
-            # Exclude only id from update
-            update_dict = {k: v for k, v in row.items() if k != "id"}
-            index_elements = ["id"]
+            # Exclude only uuid from update
+            update_dict = {k: v for k, v in row.items() if k != "uuid"}
+            index_elements = ["uuid"]
             upsert_stmt = insert_stmt.on_conflict_do_update(
                 index_elements=index_elements,
                 set_=update_dict,
@@ -280,13 +283,13 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     async def apply_updates(
         self,
-        key: str,
+        key: str | UUID,
         **updates: Any,
     ) -> ObjectType:
-        """Apply partial updates to an object identified by key.
+        """Apply partial updates to an object identified by uuid.
 
         Args:
-            key: The key (id) of the object to update
+            key: The uuid of the object to update
             **updates: Dictionary of field updates to apply
 
         Returns:
@@ -296,9 +299,13 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             # No updates to apply, just fetch and return
             return await self.get(key)
 
+        # Convert string to UUID if needed
+        if isinstance(key, str):
+            key = UUID(key)
+
         async with self._get_connection(for_write=True) as conn:
             # Build update statement
-            stmt = self.table.update().values(**updates).where(self.table.c.id == key)
+            stmt = self.table.update().values(**updates).where(self.table.c.uuid == key)
 
             # Add user_uuid filtering if scoped
             if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
@@ -333,10 +340,13 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         # Then delete it by key
         await self.delete(obj)
 
-    async def delete(self, key: str | ObjectType) -> None:
-        """Delete an object by key or by object."""
-        # Handle both key (str) and object deletion
-        if isinstance(key, str):
+    async def delete(self, key: str | UUID | ObjectType) -> None:
+        """Delete an object by uuid or by object."""
+        # Handle both key (str/UUID) and object deletion
+        if isinstance(key, (str, UUID)):
+            # Convert string to UUID if needed
+            if isinstance(key, str):
+                key = UUID(key)
             # Get object before deleting for event
             try:
                 obj = await self.get(key)
@@ -345,7 +355,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                 return
 
             async with self._get_connection(for_write=True) as conn:
-                stmt = delete(self.table).where(self.table.c.id == key)
+                stmt = delete(self.table).where(self.table.c.uuid == key)
                 # Add user_uuid filtering if scoped
                 if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
                     stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
@@ -354,7 +364,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             # key is actually the object
             obj = key
             async with self._get_connection(for_write=True) as conn:
-                stmt = delete(self.table).where(self.table.c.id == obj.id)  # type: ignore[attr-defined]
+                stmt = delete(self.table).where(self.table.c.uuid == obj.uuid)
                 # Add user_uuid filtering if scoped
                 if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
                     stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)

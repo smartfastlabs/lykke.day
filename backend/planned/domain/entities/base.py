@@ -1,6 +1,6 @@
-import uuid
 from datetime import date as dt_date, datetime
 from typing import Any, Self
+from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 import pydantic
@@ -18,7 +18,7 @@ class BaseObject(pydantic.BaseModel):
 
 
 class BaseEntityObject(BaseObject):
-    id: str = pydantic.Field(default_factory=lambda: str(uuid.uuid4()))
+    uuid: UUID = pydantic.Field(default_factory=lambda: str(uuid4()))
 
 
 class BaseConfigObject(BaseEntityObject):
@@ -27,17 +27,18 @@ class BaseConfigObject(BaseEntityObject):
 
 class BaseDateObject(BaseEntityObject):
     """Base class for entities that have a date associated with them.
-    
+
     Entities can either implement _get_date() to return a date directly,
     or implement _get_datetime() and provide a timezone to convert to date.
     """
+
     timezone: str | None = pydantic.Field(default=None, exclude=True)
-    
+
     @pydantic.computed_field  # mypy: ignore
     @property
     def date(self) -> dt_date:
         """Get the date for this entity.
-        
+
         If _get_date() is implemented, it takes precedence.
         Otherwise, uses _get_datetime() with the configured timezone.
         """
@@ -58,4 +59,3 @@ class BaseDateObject(BaseEntityObject):
 
     def _get_date(self) -> dt_date | None:
         return None
-
