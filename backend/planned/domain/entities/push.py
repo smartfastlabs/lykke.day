@@ -21,6 +21,8 @@ class PushSubscription(BaseEntityObject):
 
     def model_post_init(self, __context__=None) -> None:  # type: ignore
         # Generate UUID5 based on endpoint and user_uuid for deterministic IDs
-        namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
-        name = f"{self.endpoint}:{self.user_uuid}"
-        self.uuid = uuid.uuid5(namespace, name)
+        # Only set if uuid was not explicitly provided
+        if "uuid" not in self.model_fields_set:
+            namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
+            name = f"{self.endpoint}:{self.user_uuid}"
+            self.uuid = uuid.uuid5(namespace, name)

@@ -18,6 +18,8 @@ class Calendar(BaseEntityObject):
 
     def model_post_init(self, __context__=None) -> None:  # type: ignore
         # Generate UUID5 based on platform and platform_id for deterministic IDs
-        namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
-        name = f"{self.platform}:{self.platform_id}"
-        self.uuid = uuid.uuid5(namespace, name)
+        # Only set if uuid was not explicitly provided
+        if "uuid" not in self.model_fields_set:
+            namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
+            name = f"{self.platform}:{self.platform_id}"
+            self.uuid = uuid.uuid5(namespace, name)
