@@ -35,7 +35,7 @@ async def test_event(test_user, test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     )
     return objects.Event(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Test Event",
         frequency="ONCE",
         calendar_id="test-calendar",

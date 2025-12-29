@@ -24,7 +24,7 @@ async def test_get(message_repo, test_user, test_date):
     )
     message = Message(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         author="system",
         content="Test message",
         sent_at=sent_at,
@@ -54,7 +54,7 @@ async def test_put(message_repo, test_user, test_date):
     )
     message = Message(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         author="user",
         content="New message",
         sent_at=sent_at,
@@ -82,14 +82,14 @@ async def test_search_query(message_repo, test_user, test_date, test_date_tomorr
     
     message1 = Message(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         author="system",
         content="Message Today",
         sent_at=sent_at1,
     )
     message2 = Message(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         author="user",
         content="Message Tomorrow",
         sent_at=sent_at2,
@@ -115,7 +115,7 @@ async def test_user_isolation(message_repo, test_user, create_test_user, test_da
     
     message = Message(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         author="system",
         content="User1 Message",
         sent_at=sent_at,
@@ -124,7 +124,7 @@ async def test_user_isolation(message_repo, test_user, create_test_user, test_da
     
     # Create another user
     user2 = await create_test_user()
-    message_repo2 = MessageRepository(user_uuid=UUID(user2.id))
+    message_repo2 = MessageRepository(user_uuid=user2.uuid)
     
     # User2 should not see user1's message
     with pytest.raises(exceptions.NotFoundError):

@@ -15,7 +15,7 @@ async def test_get(auth_token_repo, test_user):
     """Test getting an auth token by ID."""
     auth_token = AuthToken(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         platform="google",
         token="test_token",
         refresh_token="refresh_token",
@@ -41,7 +41,7 @@ async def test_put(auth_token_repo, test_user):
     """Test creating a new auth token."""
     auth_token = AuthToken(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         platform="google",
         token="new_token",
     )
@@ -57,13 +57,13 @@ async def test_all(auth_token_repo, test_user):
     """Test getting all auth tokens."""
     token1 = AuthToken(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         platform="google",
         token="token1",
     )
     token2 = AuthToken(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         platform="notion",
         token="token2",
     )
@@ -82,7 +82,7 @@ async def test_user_isolation(auth_token_repo, test_user, create_test_user):
     """Test that different users' auth tokens are properly isolated."""
     token = AuthToken(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         platform="google",
         token="user1_token",
     )
@@ -90,7 +90,7 @@ async def test_user_isolation(auth_token_repo, test_user, create_test_user):
     
     # Create another user
     user2 = await create_test_user()
-    auth_token_repo2 = AuthTokenRepository(user_uuid=UUID(user2.id))
+    auth_token_repo2 = AuthTokenRepository(user_uuid=user2.uuid)
     
     # User2 should not see user1's token
     with pytest.raises(exceptions.NotFoundError):

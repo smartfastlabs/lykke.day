@@ -16,7 +16,7 @@ async def test_get(calendar_repo, test_user, auth_token_repo):
     # Create an auth token first (calendar depends on it)
     auth_token = AuthToken(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         platform="google",
         token="test_token",
         refresh_token="refresh_token",
@@ -24,7 +24,7 @@ async def test_get(calendar_repo, test_user, auth_token_repo):
     auth_token = await auth_token_repo.put(auth_token)
     
     calendar = Calendar(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Test Calendar",
         auth_token_id=auth_token.id,
         platform="google",
@@ -36,7 +36,7 @@ async def test_get(calendar_repo, test_user, auth_token_repo):
     
     assert result.id == calendar.id
     assert result.name == "Test Calendar"
-    assert result.user_uuid == UUID(test_user.id)
+    assert result.user_uuid == test_user.uuid
 
 
 @pytest.mark.asyncio
@@ -51,13 +51,13 @@ async def test_put(calendar_repo, test_user, auth_token_repo):
     """Test creating a new calendar."""
     auth_token = await auth_token_repo.put(AuthToken(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         platform="google",
         token="test_token",
     ))
     
     calendar = Calendar(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="New Calendar",
         auth_token_id=auth_token.id,
         platform="google",
@@ -75,20 +75,20 @@ async def test_all(calendar_repo, test_user, auth_token_repo):
     """Test getting all calendars."""
     auth_token = await auth_token_repo.put(AuthToken(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         platform="google",
         token="test_token",
     ))
     
     calendar1 = Calendar(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Calendar 1",
         auth_token_id=auth_token.id,
         platform="google",
         platform_id="platform-id-1",
     )
     calendar2 = Calendar(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Calendar 2",
         auth_token_id=auth_token.id,
         platform="google",
@@ -109,13 +109,13 @@ async def test_user_isolation(calendar_repo, test_user, create_test_user, auth_t
     """Test that different users' calendars are properly isolated."""
     auth_token = await auth_token_repo.put(AuthToken(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         platform="google",
         token="test_token",
     ))
     
     calendar = Calendar(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="User1 Calendar",
         auth_token_id=auth_token.id,
         platform="google",
@@ -125,7 +125,7 @@ async def test_user_isolation(calendar_repo, test_user, create_test_user, auth_t
     
     # Create another user
     user2 = await create_test_user()
-    calendar_repo2 = CalendarRepository(user_uuid=UUID(user2.id))
+    calendar_repo2 = CalendarRepository(user_uuid=user2.uuid)
     
     # User2 should not see user1's calendar
     with pytest.raises(exceptions.NotFoundError):

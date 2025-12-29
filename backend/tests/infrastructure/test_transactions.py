@@ -17,7 +17,7 @@ from planned.infrastructure.utils.dates import get_current_datetime
 async def test_transaction_commits_on_success(test_date, test_user, day_repo):
     """Test that a transaction commits successfully when no exception occurs."""
     day = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
@@ -35,7 +35,7 @@ async def test_transaction_commits_on_success(test_date, test_user, day_repo):
 async def test_transaction_rolls_back_on_exception(test_date, test_user, day_repo):
     """Test that a transaction rolls back when an exception occurs."""
     day = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
@@ -55,7 +55,7 @@ async def test_transaction_rolls_back_on_exception(test_date, test_user, day_rep
 async def test_repository_works_without_transaction(test_date, test_user, day_repo):
     """Test that repositories work correctly without an active transaction."""
     day = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
@@ -72,7 +72,7 @@ async def test_repository_works_without_transaction(test_date, test_user, day_re
 async def test_read_operations_see_uncommitted_changes(test_date, test_user, day_repo):
     """Test that read operations within a transaction see uncommitted changes."""
     day = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
@@ -103,21 +103,21 @@ async def test_read_operations_see_uncommitted_changes(test_date, test_user, day
 async def test_multiple_operations_in_single_transaction(test_date, test_user, day_repo, task_repo):
     """Test that multiple operations in a single transaction are atomic."""
     day = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
     )
 
     task = Task(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Test Task",
         status=TaskStatus.NOT_STARTED,
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
         task_definition=TaskDefinition(
-            user_uuid=UUID(test_user.id),
+            user_uuid=test_user.uuid,
             id="test-task",
             name="Test Task",
             description="Test",
@@ -143,7 +143,7 @@ async def test_multiple_operations_in_single_transaction(test_date, test_user, d
 async def test_nested_transactions_reuse_connection(test_date, test_user, day_repo):
     """Test that nested transactions reuse the same connection."""
     day1 = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
@@ -182,7 +182,7 @@ async def test_transaction_connection_is_none_outside_transaction():
 async def test_transaction_rollback_on_nested_exception(test_date, test_user, day_repo):
     """Test that an exception in a nested transaction rolls back the entire transaction."""
     day = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),

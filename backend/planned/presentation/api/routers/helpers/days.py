@@ -1,6 +1,5 @@
 import datetime
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import Depends
 
@@ -37,7 +36,7 @@ async def load_day_svc(
     """Load DayService for a specific date."""
     return await DayService.for_date(
         date,
-        user_uuid=UUID(user.id),
+        user_uuid=user.uuid,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
@@ -57,7 +56,7 @@ async def load_todays_day_svc(
     """Load DayService for today's date."""
     return await DayService.for_date(
         get_current_date(),
-        user_uuid=UUID(user.id),
+        user_uuid=user.uuid,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
@@ -77,7 +76,7 @@ async def load_tomorrows_day_svc(
     """Load DayService for tomorrow's date."""
     return await DayService.for_date(
         get_tomorrows_date(),
-        user_uuid=UUID(user.id),
+        user_uuid=user.uuid,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,

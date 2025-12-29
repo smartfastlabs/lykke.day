@@ -15,7 +15,7 @@ from planned.infrastructure.utils.dates import get_current_datetime
 async def test_get(day_repo, test_user, test_date):
     """Test getting a day by date."""
     day = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
@@ -27,7 +27,7 @@ async def test_get(day_repo, test_user, test_date):
     
     assert result.date == test_date
     assert result.status == DayStatus.SCHEDULED
-    assert result.user_uuid == UUID(test_user.id)
+    assert result.user_uuid == test_user.uuid
 
 
 @pytest.mark.asyncio
@@ -41,7 +41,7 @@ async def test_get_not_found(day_repo, test_date):
 async def test_put(day_repo, test_user, test_date):
     """Test creating a new day."""
     day = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.UNSCHEDULED,
         template_id="default",
@@ -51,14 +51,14 @@ async def test_put(day_repo, test_user, test_date):
     
     assert result.date == test_date
     assert result.status == DayStatus.UNSCHEDULED
-    assert result.user_uuid == UUID(test_user.id)
+    assert result.user_uuid == test_user.uuid
 
 
 @pytest.mark.asyncio
 async def test_put_update(day_repo, test_user, test_date):
     """Test updating an existing day."""
     day = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.UNSCHEDULED,
         template_id="default",
@@ -82,14 +82,14 @@ async def test_put_update(day_repo, test_user, test_date):
 async def test_all(day_repo, test_user, test_date, test_date_tomorrow):
     """Test getting all days."""
     day1 = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
         template_id="default",
     )
     day2 = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date_tomorrow,
         status=DayStatus.UNSCHEDULED,
         template_id="default",
@@ -108,14 +108,14 @@ async def test_all(day_repo, test_user, test_date, test_date_tomorrow):
 async def test_search_query(day_repo, test_user, test_date, test_date_tomorrow):
     """Test searching days with DateQuery."""
     day1 = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
         template_id="default",
     )
     day2 = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date_tomorrow,
         status=DayStatus.UNSCHEDULED,
         template_id="default",
@@ -137,7 +137,7 @@ async def test_user_isolation(day_repo, test_user, create_test_user, test_date):
     """Test that different users' days are properly isolated."""
     # Create day for test_user
     day1 = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
@@ -147,7 +147,7 @@ async def test_user_isolation(day_repo, test_user, create_test_user, test_date):
     
     # Create another user
     user2 = await create_test_user()
-    day_repo2 = day_repo.__class__(user_uuid=UUID(user2.id))
+    day_repo2 = day_repo.__class__(user_uuid=user2.uuid)
     
     # User2 should not see user1's day
     with pytest.raises(exceptions.NotFoundError):
@@ -155,14 +155,14 @@ async def test_user_isolation(day_repo, test_user, create_test_user, test_date):
     
     # User1 should still see their day
     result = await day_repo.get(str(test_date))
-    assert result.user_uuid == UUID(test_user.id)
+    assert result.user_uuid == test_user.uuid
 
 
 @pytest.mark.asyncio
 async def test_delete(day_repo, test_user, test_date):
     """Test deleting a day."""
     day = Day(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),

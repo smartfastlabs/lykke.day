@@ -65,20 +65,20 @@ async def test_create_user_duplicate_email(mock_user_repo):
 @pytest.mark.asyncio
 async def test_get_user(mock_user_repo):
     """Test getting a user by UUID."""
-    user_id = str(uuid4())
+    user_uuid = str(uuid4())
     expected_user = User(
-        id=user_id,
+        id=user_uuid,
         email="test@example.com",
         password_hash="hash",
         settings=UserSetting(),
     )
 
-    allow(mock_user_repo).get(user_id).and_return(expected_user)
+    allow(mock_user_repo).get(user_uuid).and_return(expected_user)
 
     service = AuthService(user_repo=mock_user_repo)
-    result = await service.get_user(UUID(user_id))
+    result = await service.get_user(UUID(user_uuid))
 
-    assert result.id == user_id
+    assert result.id == user_uuid
     assert result.email == "test@example.com"
 
 

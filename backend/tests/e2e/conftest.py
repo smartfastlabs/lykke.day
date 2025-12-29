@@ -36,7 +36,7 @@ def setup_test_user_day_template():
         )
         test_user = await user_repo.put(test_user)
 
-        test_user_uuid = UUID(test_user.id)
+        test_user_uuid = test_user.uuid
         day_template_repo = DayTemplateRepository(user_uuid=test_user_uuid)
 
         # Check if default template exists, create if not

@@ -37,13 +37,13 @@ async def test_get(task_repo, test_user, test_date):
     """Test getting a task by ID."""
     task = Task(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Test Task",
         status=TaskStatus.READY,
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id),
+        task_definition=_create_task_definition(test_user.uuid),
     )
     await task_repo.put(task)
     
@@ -51,7 +51,7 @@ async def test_get(task_repo, test_user, test_date):
     
     assert result.id == task.id
     assert result.name == "Test Task"
-    assert result.user_uuid == UUID(test_user.id)
+    assert result.user_uuid == test_user.uuid
 
 
 @pytest.mark.asyncio
@@ -66,19 +66,19 @@ async def test_put(task_repo, test_user, test_date):
     """Test creating a new task."""
     task = Task(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="New Task",
         status=TaskStatus.NOT_STARTED,
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id),
+        task_definition=_create_task_definition(test_user.uuid),
     )
     
     result = await task_repo.put(task)
     
     assert result.name == "New Task"
-    assert result.user_uuid == UUID(test_user.id)
+    assert result.user_uuid == test_user.uuid
     assert result.scheduled_date == test_date
 
 
@@ -87,13 +87,13 @@ async def test_put_update(task_repo, test_user, test_date):
     """Test updating an existing task."""
     task = Task(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Original Task",
         status=TaskStatus.NOT_STARTED,
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id),
+        task_definition=_create_task_definition(test_user.uuid),
     )
     await task_repo.put(task)
     
@@ -116,23 +116,23 @@ async def test_all(task_repo, test_user, test_date, test_date_tomorrow):
     """Test getting all tasks."""
     task1 = Task(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Task 1",
         status=TaskStatus.NOT_STARTED,
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id, "task1"),
+        task_definition=_create_task_definition(test_user.uuid, "task1"),
     )
     task2 = Task(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Task 2",
         status=TaskStatus.READY,
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date_tomorrow,
-        task_definition=_create_task_definition(test_user.id, "task2"),
+        task_definition=_create_task_definition(test_user.uuid, "task2"),
     )
     await task_repo.put(task1)
     await task_repo.put(task2)
@@ -149,23 +149,23 @@ async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow)
     """Test searching tasks with DateQuery."""
     task1 = Task(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Task Today",
         status=TaskStatus.NOT_STARTED,
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id, "task1"),
+        task_definition=_create_task_definition(test_user.uuid, "task1"),
     )
     task2 = Task(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Task Tomorrow",
         status=TaskStatus.READY,
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date_tomorrow,
-        task_definition=_create_task_definition(test_user.id, "task2"),
+        task_definition=_create_task_definition(test_user.uuid, "task2"),
     )
     await task_repo.put(task1)
     await task_repo.put(task2)
@@ -183,13 +183,13 @@ async def test_delete(task_repo, test_user, test_date):
     """Test deleting a task."""
     task = Task(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Task to Delete",
         status=TaskStatus.NOT_STARTED,
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id),
+        task_definition=_create_task_definition(test_user.uuid),
     )
     await task_repo.put(task)
     
@@ -207,19 +207,19 @@ async def test_user_isolation(task_repo, test_user, create_test_user, test_date)
     # Create task for test_user
     task = Task(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="User1 Task",
         status=TaskStatus.NOT_STARTED,
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id),
+        task_definition=_create_task_definition(test_user.uuid),
     )
     await task_repo.put(task)
     
     # Create another user
     user2 = await create_test_user()
-    task_repo2 = TaskRepository(user_uuid=UUID(user2.id))
+    task_repo2 = TaskRepository(user_uuid=user2.uuid)
     
     # User2 should not see user1's task
     with pytest.raises(exceptions.NotFoundError):
@@ -227,7 +227,7 @@ async def test_user_isolation(task_repo, test_user, create_test_user, test_date)
     
     # User1 should still see their task
     result = await task_repo.get(task.id)
-    assert result.user_uuid == UUID(test_user.id)
+    assert result.user_uuid == test_user.uuid
 
 
 @pytest.mark.asyncio
@@ -241,13 +241,13 @@ async def test_task_with_schedule(task_repo, test_user, test_date):
     
     task = Task(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Scheduled Task",
         status=TaskStatus.READY,
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id),
+        task_definition=_create_task_definition(test_user.uuid),
         schedule=schedule,
     )
     

@@ -74,9 +74,8 @@ def get_planning_service(
     task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
 ) -> PlanningService:
     """Get a user-scoped instance of PlanningService."""
-    from uuid import UUID
     return PlanningService(
-        user_uuid=UUID(user.id),
+        user_uuid=user.uuid,
         user_repo=user_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
@@ -98,10 +97,9 @@ async def get_day_service_for_current_date(
     task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
 ) -> DayService:
     """Get a user-scoped instance of DayService for today's date."""
-    from uuid import UUID
     return await DayService.for_date(
         get_current_date(),
-        user_uuid=UUID(user.id),
+        user_uuid=user.uuid,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
@@ -127,7 +125,6 @@ async def get_sheppard_service(
     Raises:
         RuntimeError: If SheppardManager is not available or service doesn't exist
     """
-    from uuid import UUID
     from planned.core.exceptions import exceptions
     
     # Get SheppardManager from app state
@@ -137,7 +134,7 @@ async def get_sheppard_service(
             "SheppardManager is not available. The service may not be initialized."
         )
     
-    user_uuid = UUID(user.id)
+    user_uuid = user.uuid
     try:
         service = await manager.ensure_service_for_user(user_uuid)
     except RuntimeError as e:

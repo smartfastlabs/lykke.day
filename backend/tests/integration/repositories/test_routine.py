@@ -17,7 +17,7 @@ async def test_get(routine_repo, test_user):
     """Test getting a routine by ID."""
     routine = Routine(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Test Routine",
         category=TaskCategory.HOUSE,
         description="Test description",
@@ -44,7 +44,7 @@ async def test_put(routine_repo, test_user):
     """Test creating a new routine."""
     routine = Routine(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="New Routine",
         category=TaskCategory.HOUSE,
         description="New description",
@@ -63,7 +63,7 @@ async def test_all(routine_repo, test_user):
     """Test getting all routines."""
     routine1 = Routine(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Routine 1",
         category=TaskCategory.HOUSE,
         description="Description 1",
@@ -72,7 +72,7 @@ async def test_all(routine_repo, test_user):
     )
     routine2 = Routine(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Routine 2",
         category=TaskCategory.HOUSE,
         description="Description 2",
@@ -94,7 +94,7 @@ async def test_user_isolation(routine_repo, test_user, create_test_user):
     """Test that different users' routines are properly isolated."""
     routine = Routine(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="User1 Routine",
         category=TaskCategory.HOUSE,
         description="Description",
@@ -105,7 +105,7 @@ async def test_user_isolation(routine_repo, test_user, create_test_user):
     
     # Create another user
     user2 = await create_test_user()
-    routine_repo2 = RoutineRepository(user_uuid=UUID(user2.id))
+    routine_repo2 = RoutineRepository(user_uuid=user2.uuid)
     
     # User2 should not see user1's routine
     with pytest.raises(exceptions.NotFoundError):

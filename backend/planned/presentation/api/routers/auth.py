@@ -2,10 +2,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
 
+from planned.application.services import AuthService
 from planned.core.exceptions import exceptions
 from planned.domain.entities import User
 from planned.domain.value_objects.base import BaseRequestObject, BaseResponseObject
-from planned.application.services import AuthService
 from planned.infrastructure.utils.dates import get_current_datetime
 
 from .dependencies.services import get_auth_service
@@ -51,21 +51,21 @@ async def register(
     # Validate password confirmation
     if data.password != data.confirm_password:
         raise exceptions.BadRequestError("Passwords do not match")
-    
+
     # Basic email validation
     if not data.email or "@" not in data.email:
         raise exceptions.BadRequestError("Invalid email format")
-    
+
     # Create user
     user = await auth_service.create_user(data.email, data.password)
-    
+
     # Automatically log in the new user
     now: str = str(get_current_datetime())
     response.set_cookie(key="logged_in_at", value=now, httponly=False, max_age=60*60*24*90)
     request.session["logged_in_at"] = now
-    request.session["user_uuid"] = str(user.id)
-    
-    return UserResponse(id=user.id, email=user.email)
+    request.session["user_uuid"] = str(user.uuid)
+
+    return UserResponse(id=str(user.uuid), email=user.email)
 
 
 @router.post("/set-password")
@@ -91,7 +91,7 @@ async def login(
 ) -> UserResponse:
     """Login with email and password."""
     user = await auth_service.authenticate_user(data.email, data.password)
-    
+
     if user is None:
         raise exceptions.AuthenticationError("Invalid email or password")
 
@@ -99,6 +99,6 @@ async def login(
     now: str = str(get_current_datetime())
     response.set_cookie(key="logged_in_at", value=now, httponly=False, max_age=60*60*24*90)
     request.session["logged_in_at"] = now
-    request.session["user_uuid"] = str(user.id)
-    
-    return UserResponse(id=user.id, email=user.email)
+    request.session["user_uuid"] = str(user.uuid)
+
+    return UserResponse(id=str(user.uuid), email=user.email)

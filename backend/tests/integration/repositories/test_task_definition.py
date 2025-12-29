@@ -14,7 +14,7 @@ from planned.infrastructure.repositories import TaskDefinitionRepository
 async def test_get(task_definition_repo, test_user):
     """Test getting a task definition by ID."""
     task_def = TaskDefinition(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         id="test-task",
         name="Test Task",
         description="Test description",
@@ -39,7 +39,7 @@ async def test_get_not_found(task_definition_repo):
 async def test_put(task_definition_repo, test_user):
     """Test creating a new task definition."""
     task_def = TaskDefinition(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         id="new-task",
         name="New Task",
         description="New description",
@@ -56,14 +56,14 @@ async def test_put(task_definition_repo, test_user):
 async def test_all(task_definition_repo, test_user):
     """Test getting all task definitions."""
     task_def1 = TaskDefinition(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         id="task1",
         name="Task 1",
         description="Description 1",
         type=TaskType.ACTIVITY,
     )
     task_def2 = TaskDefinition(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         id="task2",
         name="Task 2",
         description="Description 2",
@@ -83,7 +83,7 @@ async def test_all(task_definition_repo, test_user):
 async def test_user_isolation(task_definition_repo, test_user, create_test_user):
     """Test that different users' task definitions are properly isolated."""
     task_def = TaskDefinition(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         id="user1-task",
         name="User1 Task",
         description="Description",
@@ -93,7 +93,7 @@ async def test_user_isolation(task_definition_repo, test_user, create_test_user)
     
     # Create another user
     user2 = await create_test_user()
-    task_definition_repo2 = TaskDefinitionRepository(user_uuid=UUID(user2.id))
+    task_definition_repo2 = TaskDefinitionRepository(user_uuid=user2.uuid)
     
     # User2 should not see user1's task definition
     with pytest.raises(exceptions.NotFoundError):

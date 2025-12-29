@@ -15,7 +15,7 @@ async def test_get(push_subscription_repo, test_user):
     """Test getting a push subscription by ID."""
     subscription = PushSubscription(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         device_name="Test Device",
         endpoint="https://example.com/push",
         p256dh="p256dh_key",
@@ -41,7 +41,7 @@ async def test_put(push_subscription_repo, test_user):
     """Test creating a new push subscription."""
     subscription = PushSubscription(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         device_name="New Device",
         endpoint="https://example.com/push",
         p256dh="p256dh_key",
@@ -59,7 +59,7 @@ async def test_all(push_subscription_repo, test_user):
     """Test getting all push subscriptions."""
     sub1 = PushSubscription(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         device_name="Device 1",
         endpoint="https://example.com/push1",
         p256dh="p256dh_key1",
@@ -67,7 +67,7 @@ async def test_all(push_subscription_repo, test_user):
     )
     sub2 = PushSubscription(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         device_name="Device 2",
         endpoint="https://example.com/push2",
         p256dh="p256dh_key2",
@@ -88,7 +88,7 @@ async def test_user_isolation(push_subscription_repo, test_user, create_test_use
     """Test that different users' push subscriptions are properly isolated."""
     subscription = PushSubscription(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         device_name="User1 Device",
         endpoint="https://example.com/push",
         p256dh="p256dh_key",
@@ -98,7 +98,7 @@ async def test_user_isolation(push_subscription_repo, test_user, create_test_use
     
     # Create another user
     user2 = await create_test_user()
-    push_subscription_repo2 = PushSubscriptionRepository(user_uuid=UUID(user2.id))
+    push_subscription_repo2 = PushSubscriptionRepository(user_uuid=user2.uuid)
     
     # User2 should not see user1's subscription
     with pytest.raises(exceptions.NotFoundError):

@@ -18,7 +18,7 @@ async def test_get(day_template_repo, test_user, setup_day_templates):
     result = await day_template_repo.get("default")
     
     assert result.id == "default"
-    assert result.user_uuid == UUID(test_user.id)
+    assert result.user_uuid == test_user.uuid
 
 
 @pytest.mark.asyncio
@@ -32,7 +32,7 @@ async def test_get_not_found(day_template_repo):
 async def test_put(day_template_repo, test_user):
     """Test creating a new day template."""
     template = DayTemplate(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         id="custom",
         tasks=[],
         alarm=Alarm(
@@ -63,7 +63,7 @@ async def test_user_isolation(day_template_repo, test_user, create_test_user, se
     """Test that different users' day templates are properly isolated."""
     # Create another user
     user2 = await create_test_user()
-    day_template_repo2 = DayTemplateRepository(user_uuid=UUID(user2.id))
+    day_template_repo2 = DayTemplateRepository(user_uuid=user2.uuid)
     
     # User2 should not see user1's templates
     with pytest.raises(exceptions.NotFoundError):
@@ -71,5 +71,5 @@ async def test_user_isolation(day_template_repo, test_user, create_test_user, se
     
     # User1 should still see their templates
     result = await day_template_repo.get("default")
-    assert result.user_uuid == UUID(test_user.id)
+    assert result.user_uuid == test_user.uuid
 

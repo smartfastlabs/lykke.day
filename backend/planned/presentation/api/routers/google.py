@@ -90,11 +90,9 @@ async def google_login_callback(
     flow = get_flow("login")
     flow.fetch_token(code=code)
 
-    from uuid import UUID
-    from uuid import UUID
     auth_token: AuthToken = await auth_token_repo.put(
         AuthToken(
-            user_uuid=UUID(user.id),
+            user_uuid=user.uuid,
             client_id=flow.credentials.client_id,
             client_secret=flow.credentials.client_secret,
             expires_at=flow.credentials.expiry,
@@ -118,7 +116,7 @@ async def google_login_callback(
     for calendar in calendar_list.get("items", []):
         await calendar_repo.put(
             Calendar(
-                user_uuid=UUID(user.id),
+                user_uuid=user.uuid,
                 name=calendar["summary"],
                 platform="google",
                 platform_id=calendar["id"],

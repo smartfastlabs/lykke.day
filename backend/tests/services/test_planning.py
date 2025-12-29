@@ -19,7 +19,7 @@ async def test_schedule_today(test_date, test_user):
 
     from planned.infrastructure.repositories import UserRepository
 
-    user_uuid = UUID(test_user.id)
+    user_uuid = test_user.uuid
     # Create repository instances
     day_repo = DayRepository(user_uuid=user_uuid)
     day_template_repo = DayTemplateRepository(user_uuid=user_uuid)
@@ -75,7 +75,7 @@ async def test_schedule_tomorrow(test_date_tomorrow, test_user):
 
     from planned.infrastructure.repositories import UserRepository
 
-    user_uuid = UUID(test_user.id)
+    user_uuid = test_user.uuid
     # Create repository instances
     day_repo = DayRepository(user_uuid=user_uuid)
     day_template_repo = DayTemplateRepository(user_uuid=user_uuid)

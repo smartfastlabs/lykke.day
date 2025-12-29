@@ -129,11 +129,6 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
             event_user_uuid = UUID(event_value.user_uuid) if isinstance(event_value.user_uuid, str) else event_value.user_uuid
             if event_user_uuid == user_uuid:
                 await event_queue.put(event)
-        elif hasattr(event_value, "user_id"):
-            # Some entities might use user_id instead of user_uuid
-            event_user_uuid = UUID(event_value.user_id) if isinstance(event_value.user_id, str) else event_value.user_id
-            if event_user_uuid == user_uuid:
-                await event_queue.put(event)
 
     # Subscribe to all repository signals
     for repo_class in repository_classes:

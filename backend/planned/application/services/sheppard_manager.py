@@ -6,7 +6,6 @@ from loguru import logger
 
 from planned.application.repositories.base import ChangeEvent, ChangeHandler
 from planned.domain.entities import User
-from planned.infrastructure.repositories import UserRepository
 
 from .sheppard import SheppardService
 
@@ -20,6 +19,8 @@ class SheppardManager:
 
     def __init__(self) -> None:
         """Initialize the SheppardManager."""
+        from planned.infrastructure.repositories import UserRepository
+
         self._services: dict[UUID, tuple[SheppardService, asyncio.Task]] = {}
         self._user_repo = UserRepository()
         self._is_running = False
@@ -34,6 +35,8 @@ class SheppardManager:
         Returns:
             A configured SheppardService instance for the user.
         """
+        from datetime import time
+
         from planned.application.repositories import (
             AuthTokenRepositoryProtocol,
             CalendarRepositoryProtocol,
@@ -72,7 +75,6 @@ class SheppardManager:
             TaskRepository,
         )
         from planned.infrastructure.utils.dates import get_current_date
-        from datetime import time
 
         # Create repositories scoped to user
         auth_token_repo: AuthTokenRepositoryProtocol = cast(
@@ -189,7 +191,7 @@ class SheppardManager:
             event: The change event containing the user and event type.
         """
         user = event.value
-        user_uuid = UUID(user.id)
+        user_uuid = user.uuid
 
         if event.type == "create":
             await self._start_service_for_user(user_uuid)
@@ -268,7 +270,7 @@ class SheppardManager:
             users = await self._user_repo.all()
             logger.info(f"Found {len(users)} existing users, starting services...")
             for user in users:
-                user_uuid = UUID(user.id)
+                user_uuid = user.uuid
                 await self._start_service_for_user(user_uuid)
             logger.info(
                 f"SheppardManager started with {len(self._services)} service(s)"
@@ -286,6 +288,8 @@ class SheppardManager:
 
         # Disconnect from UserRepository events
         if self._event_handler is not None:
+            from planned.infrastructure.repositories import UserRepository
+
             UserRepository.signal_source.disconnect(self._event_handler)
             self._event_handler = None
             logger.info("SheppardManager disconnected from UserRepository events")

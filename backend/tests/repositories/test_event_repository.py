@@ -14,7 +14,7 @@ from planned.infrastructure.repositories.base import DateQuery
 
 @pytest_asyncio.fixture
 async def event_repo(test_date, test_user):
-    repo = EventRepository(user_uuid=UUID(test_user.id))
+    repo = EventRepository(user_uuid=test_user.uuid)
 
     # Create event on test_date
     starts_at_today = datetime.datetime.combine(
@@ -23,7 +23,7 @@ async def event_repo(test_date, test_user):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     )
     event_today = objects.Event(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Test Event",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -42,7 +42,7 @@ async def event_repo(test_date, test_user):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     )
     event_next = objects.Event(
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Test Event",
         frequency="ONCE",
         calendar_id="test-calendar-2",
@@ -108,10 +108,10 @@ async def test_put(test_event, test_user, clear_repos):
     recreated_user = await user_repo.put(test_user)
 
     # Update test_event to use the recreated user's UUID
-    test_event.user_uuid = UUID(recreated_user.id)
+    test_event.user_uuid = recreated_user.uuid
 
     # Create event_repo after user is recreated
-    event_repo = EventRepository(user_uuid=UUID(recreated_user.id))
+    event_repo = EventRepository(user_uuid=recreated_user.uuid)
 
     results = await event_repo.search_query(DateQuery(date=test_event.date))
 

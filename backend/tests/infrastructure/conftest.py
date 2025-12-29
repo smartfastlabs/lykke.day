@@ -26,11 +26,11 @@ async def test_user():
 @pytest_asyncio.fixture
 async def day_repo(test_user):
     """DayRepository scoped to test_user."""
-    return DayRepository(user_uuid=UUID(test_user.id))
+    return DayRepository(user_uuid=test_user.uuid)
 
 
 @pytest_asyncio.fixture
 async def task_repo(test_user):
     """TaskRepository scoped to test_user."""
-    return TaskRepository(user_uuid=UUID(test_user.id))
+    return TaskRepository(user_uuid=test_user.uuid)
 

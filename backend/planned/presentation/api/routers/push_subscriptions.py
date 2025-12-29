@@ -1,5 +1,4 @@
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends
 
@@ -56,7 +55,7 @@ async def subscribe(
 ) -> objects.PushSubscription:
     result: objects.PushSubscription = await push_subscription_repo.put(
         objects.PushSubscription(
-            user_uuid=UUID(user.id),
+            user_uuid=user.uuid,
             device_name=request.device_name,
             endpoint=request.endpoint,
             p256dh=request.keys.p256dh,

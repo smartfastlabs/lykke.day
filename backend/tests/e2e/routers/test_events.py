@@ -18,7 +18,7 @@ async def test_get_today(authenticated_client, test_date):
     client, user = await authenticated_client()
     
     # Create an event for today
-    event_repo = EventRepository(user_uuid=UUID(user.id))
+    event_repo = EventRepository(user_uuid=user.uuid)
     starts_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
@@ -26,7 +26,7 @@ async def test_get_today(authenticated_client, test_date):
     )
     event = Event(
         id=str(uuid4()),
-        user_uuid=UUID(user.id),
+        user_uuid=user.uuid,
         name="Test Event",
         frequency="ONCE",
         calendar_id="test-calendar",

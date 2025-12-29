@@ -25,7 +25,7 @@ async def test_get(event_repo, test_user, test_date):
     )
     event = Event(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Test Event",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -40,7 +40,7 @@ async def test_get(event_repo, test_user, test_date):
     
     assert result.id == event.id
     assert result.name == "Test Event"
-    assert result.user_uuid == UUID(test_user.id)
+    assert result.user_uuid == test_user.uuid
 
 
 @pytest.mark.asyncio
@@ -60,7 +60,7 @@ async def test_put(event_repo, test_user, test_date):
     )
     event = Event(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="New Event",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -73,7 +73,7 @@ async def test_put(event_repo, test_user, test_date):
     result = await event_repo.put(event)
     
     assert result.name == "New Event"
-    assert result.user_uuid == UUID(test_user.id)
+    assert result.user_uuid == test_user.uuid
     assert result.date == test_date
 
 
@@ -87,7 +87,7 @@ async def test_put_update(event_repo, test_user, test_date):
     )
     event = Event(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Original Event",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -125,7 +125,7 @@ async def test_all(event_repo, test_user, test_date, test_date_tomorrow):
     
     event1 = Event(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Event 1",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -136,7 +136,7 @@ async def test_all(event_repo, test_user, test_date, test_date_tomorrow):
     )
     event2 = Event(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Event 2",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -171,7 +171,7 @@ async def test_search_query(event_repo, test_user, test_date, test_date_tomorrow
     
     event1 = Event(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Event Today",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -182,7 +182,7 @@ async def test_search_query(event_repo, test_user, test_date, test_date_tomorrow
     )
     event2 = Event(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Event Tomorrow",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -212,7 +212,7 @@ async def test_delete(event_repo, test_user, test_date):
     )
     event = Event(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Event to Delete",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -252,7 +252,7 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
     
     event1 = Event(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Event 1",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -263,7 +263,7 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
     )
     event2 = Event(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Event 2",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -274,7 +274,7 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
     )
     event3 = Event(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="Event 3",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -312,7 +312,7 @@ async def test_user_isolation(event_repo, test_user, create_test_user, test_date
     # Create event for test_user
     event = Event(
         id=str(uuid4()),
-        user_uuid=UUID(test_user.id),
+        user_uuid=test_user.uuid,
         name="User1 Event",
         frequency="ONCE",
         calendar_id="test-calendar",
@@ -325,7 +325,7 @@ async def test_user_isolation(event_repo, test_user, create_test_user, test_date
     
     # Create another user
     user2 = await create_test_user()
-    event_repo2 = EventRepository(user_uuid=UUID(user2.id))
+    event_repo2 = EventRepository(user_uuid=user2.uuid)
     
     # User2 should not see user1's event
     with pytest.raises(exceptions.NotFoundError):
@@ -333,5 +333,5 @@ async def test_user_isolation(event_repo, test_user, create_test_user, test_date
     
     # User1 should still see their event
     result = await event_repo.get(event.id)
-    assert result.user_uuid == UUID(test_user.id)
+    assert result.user_uuid == test_user.uuid
 

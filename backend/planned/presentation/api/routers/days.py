@@ -51,11 +51,9 @@ async def _get_context_for_date(
     task_repo: TaskRepositoryProtocol,
 ) -> DayContext:
     """Helper function to get context for a specific date."""
-    from uuid import UUID
-
     day_svc: DayService = await DayService.for_date(
         date,
-        user_uuid=UUID(user.id),
+        user_uuid=user.uuid,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
@@ -164,11 +162,9 @@ async def update_day(
         DayTemplateRepositoryProtocol, Depends(get_day_template_repo)
     ],
 ) -> Day:
-    from uuid import UUID
-
     day: Day = await DayService.get_or_preview(
         date,
-        user_uuid=UUID(user.id),
+        user_uuid=user.uuid,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
