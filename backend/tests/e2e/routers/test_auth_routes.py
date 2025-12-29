@@ -30,7 +30,7 @@ async def test_register(test_client):
     assert response.status_code == 200
     data = response.json()
     assert data["email"] == email
-    assert "id" in data
+    assert "uuid" in data
 
 
 @pytest.mark.asyncio
@@ -55,7 +55,7 @@ async def test_register_with_phone_number(test_client):
     assert response.status_code == 200
     data = response.json()
     assert data["email"] == email
-    assert "id" in data
+    assert "uuid" in data
 
 
 @pytest.mark.asyncio

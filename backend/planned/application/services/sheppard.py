@@ -187,7 +187,7 @@ class SheppardService(BaseService):
         # Include task information in the data field
         task_data = [
             {
-                "id": str(task.uuid),
+                "uuid": task.uuid,
                 "name": task.name,
                 "status": task.status.value,
                 "category": task.category.value,
@@ -207,7 +207,7 @@ class SheppardService(BaseService):
             ],
             data={
                 "type": "tasks",
-                "task_ids": [str(task.uuid) for task in tasks],
+                "task_ids": [task.id for task in tasks],
                 "tasks": task_data,
             },
         )
@@ -252,7 +252,7 @@ class SheppardService(BaseService):
         # Include event information in the data field
         event_data = [
             {
-                "id": str(event.uuid),
+                "uuid": event.uuid,
                 "name": event.name,
                 "starts_at": event.starts_at.isoformat(),
                 "ends_at": event.ends_at.isoformat() if event.ends_at else None,
@@ -275,7 +275,7 @@ class SheppardService(BaseService):
             ],
             data={
                 "type": "events",
-                "event_ids": [str(event.uuid) for event in events],
+                "event_ids": [event.id for event in events],
                 "events": event_data,
             },
         )

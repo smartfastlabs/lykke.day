@@ -5,7 +5,6 @@ import datetime
 import pytest
 
 
-
 @pytest.mark.asyncio
 async def test_schedule_today(authenticated_client, test_date):
     """Test scheduling today."""
@@ -102,8 +101,8 @@ async def test_update_day_template(authenticated_client, test_date):
     # Get a template UUID first
     templates_response = client.get("/days/templates")
     templates = templates_response.json()
-    template_uuid = templates[0]["id"] if templates else None
-    
+    template_uuid = templates[0]["uuid"] if templates else None
+
     # Update the template
     response = client.patch(
         f"/days/{test_date.isoformat()}",
