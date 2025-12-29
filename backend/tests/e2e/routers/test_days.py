@@ -4,7 +4,6 @@ import datetime
 from zoneinfo import ZoneInfo
 
 import pytest
-import pytest_asyncio
 
 from planned.core.config import settings
 
@@ -126,4 +125,3 @@ async def test_get_templates(authenticated_client):
     assert isinstance(data, list)
     # Should have at least the default template
     assert len(data) > 0
-

@@ -8,6 +8,15 @@ from planned.core.config import settings
 # Global async engine instance
 _engine: AsyncEngine | None = None
 
+async def reset_engine() -> AsyncEngine:
+    """Reset the global async database engine."""
+    global _engine
+    if _engine is not None:
+        await _engine.dispose()
+        _engine = None
+
+    return get_engine()
+
 
 def get_engine() -> AsyncEngine:
     """Get or create the global async database engine."""

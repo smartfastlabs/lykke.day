@@ -73,6 +73,7 @@ def test_client():
 @pytest.fixture
 def authenticated_client(test_client, setup_system_user_day_template, request):
     """Test client with authenticated session."""
+
     # Register cleanup finalizer
     def cleanup():
         app.dependency_overrides.clear()
@@ -83,10 +84,12 @@ def authenticated_client(test_client, setup_system_user_day_template, request):
         """Return authenticated test client and user."""
         from passlib.context import CryptContext
 
+        from planned.infrastructure.database.utils import reset_engine
         from planned.infrastructure.repositories import UserRepository
         from planned.presentation.api.routers.dependencies.user import get_current_user
 
         # Use setup_system_user_day_template to create user and default template
+        await reset_engine()
         user = await setup_system_user_day_template()
 
         # Set up session for authenticated requests
