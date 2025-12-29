@@ -116,6 +116,29 @@ async def create_sheppard_service() -> SheppardService:
         "TaskRepositoryProtocol", TaskRepository(user_uuid=system_user_uuid)
     )
 
+    # Ensure default DayTemplate exists for system user
+    from datetime import time
+
+    from planned.core.exceptions import NotFoundError
+    from planned.domain.entities import Alarm, DayTemplate
+    from planned.domain.value_objects.alarm import AlarmType
+
+    try:
+        await day_template_repo.get("default")
+    except NotFoundError:
+        # Template doesn't exist, create it
+        default_template = DayTemplate(
+            user_uuid=system_user_uuid,
+            id="default",
+            tasks=[],
+            alarm=Alarm(
+                name="Default Alarm",
+                time=time(7, 15),
+                type=AlarmType.FIRM,
+            ),
+        )
+        await day_template_repo.put(default_template)
+
     # Create gateway adapters
     google_gateway = GoogleCalendarGatewayAdapter()
     web_push_gateway = WebPushGatewayAdapter()
