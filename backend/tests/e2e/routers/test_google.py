@@ -4,6 +4,7 @@ import pytest
 
 
 @pytest.mark.asyncio
+@pytest.mark.skip("depends on .credentials.json file")
 async def test_google_login_redirect(authenticated_client):
     """Test Google login redirects to authorization URL."""
     client, user = await authenticated_client()
@@ -38,4 +39,3 @@ async def test_google_login_callback_invalid_state(authenticated_client):
 
     # Should fail with invalid state
     assert response.status_code == 400
-

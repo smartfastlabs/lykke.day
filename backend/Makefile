@@ -39,8 +39,6 @@ migrate-create:
 
 # Application targets
 serve: docker-up
-	@echo "Running migrations on dev database..."
-	@$(MAKE) migrate-dev
 	DATABASE_URL=postgresql+psycopg://planned:password@localhost:5432/planned_dev poetry run uvicorn planned.app:app --host 0.0.0.0 --port 8080 --reload
 
 test: docker-up
