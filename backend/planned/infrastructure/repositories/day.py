@@ -24,7 +24,7 @@ class DayRepository(BaseRepository[Day, BaseQuery]):
             "uuid": day.uuid,
             "user_uuid": day.user_uuid,
             "date": day.date,
-            "template_id": day.template_id,
+            "template_uuid": day.template_uuid,
             "status": day.status.value,
             "scheduled_at": day.scheduled_at,
         }

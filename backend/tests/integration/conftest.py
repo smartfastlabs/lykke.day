@@ -33,7 +33,6 @@ async def create_test_user():
 
         username = kwargs.pop("username", f"testuser_{uuid4().hex[:8]}")
         user = User(
-            id=str(uuid4()),
             username=username,
             email=email,
             password_hash="test_hash",
@@ -68,10 +67,10 @@ async def _setup_day_templates_for_user(user: User) -> None:
     """Helper function to create default day templates for a user."""
     repo = DayTemplateRepository(user_uuid=user.uuid)
     
-    # Create default template
+    # Create default template (UUID will be auto-generated from slug + user_uuid)
     default_template = DayTemplate(
         user_uuid=user.uuid,
-        id="default",
+        slug="default",
         tasks=[],
         alarm=Alarm(
             name="Default Alarm",
@@ -81,10 +80,10 @@ async def _setup_day_templates_for_user(user: User) -> None:
     )
     await repo.put(default_template)
     
-    # Create weekend template
+    # Create weekend template (UUID will be auto-generated from slug + user_uuid)
     weekend_template = DayTemplate(
         user_uuid=user.uuid,
-        id="weekend",
+        slug="weekend",
         tasks=[],
         alarm=Alarm(
             name="Weekend Alarm",

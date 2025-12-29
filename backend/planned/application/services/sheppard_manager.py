@@ -100,12 +100,12 @@ class SheppardManager:
 
         # Ensure default DayTemplate exists for user
         try:
-            await day_template_repo.get("default")
+            await day_template_repo.get_by_slug("default")
         except NotFoundError:
             # Template doesn't exist, create it
             default_template = DayTemplate(
                 user_uuid=user_uuid,
-                id="default",
+                slug="default",
                 tasks=[],
                 alarm=Alarm(
                     name="Default Alarm",

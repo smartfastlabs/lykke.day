@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 3865389fa926
+Revision ID: 4efc06071515
 Revises: 
-Create Date: 2025-12-29 07:25:20.917697
+Create Date: 2025-12-29 08:00:55.915255
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '3865389fa926'
+revision: str = '4efc06071515'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -50,17 +50,19 @@ def upgrade() -> None:
     op.create_table('day_templates',
     sa.Column('uuid', sa.UUID(), nullable=False),
     sa.Column('user_uuid', sa.UUID(), nullable=False),
+    sa.Column('slug', sa.String(), nullable=False),
     sa.Column('tasks', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('alarm', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('icon', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('uuid')
     )
+    op.create_index('idx_day_templates_user_slug', 'day_templates', ['user_uuid', 'slug'], unique=True)
     op.create_index('idx_day_templates_user_uuid', 'day_templates', ['user_uuid'], unique=False)
     op.create_table('days',
     sa.Column('uuid', sa.UUID(), nullable=False),
     sa.Column('user_uuid', sa.UUID(), nullable=False),
     sa.Column('date', sa.Date(), nullable=False),
-    sa.Column('template_id', sa.String(), nullable=False),
+    sa.Column('template_uuid', sa.UUID(), nullable=False),
     sa.Column('tags', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('alarm', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('status', sa.String(), nullable=False),
@@ -194,6 +196,7 @@ def downgrade() -> None:
     op.drop_index('idx_days_date', table_name='days')
     op.drop_table('days')
     op.drop_index('idx_day_templates_user_uuid', table_name='day_templates')
+    op.drop_index('idx_day_templates_user_slug', table_name='day_templates')
     op.drop_table('day_templates')
     op.drop_index('idx_calendars_user_uuid', table_name='calendars')
     op.drop_table('calendars')

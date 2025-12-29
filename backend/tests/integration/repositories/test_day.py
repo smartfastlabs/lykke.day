@@ -1,6 +1,8 @@
 """Integration tests for DayRepository."""
 
 
+from uuid import UUID
+
 import pytest
 
 from planned.core.exceptions import exceptions
@@ -9,14 +11,18 @@ from planned.infrastructure.utils.dates import get_current_datetime
 
 
 @pytest.mark.asyncio
-async def test_get(day_repo, test_user, test_date):
+async def test_get(day_repo, day_template_repo, test_user, test_date, setup_day_templates):
     """Test getting a day by date."""
+    await setup_day_templates
+    templates = await day_template_repo.all()
+    default_template_uuid = templates[0].uuid if templates else UUID('00000000-0000-0000-0000-000000000000')
+    
     day = Day(
         user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
-        template_id="default",
+        template_uuid=default_template_uuid,
     )
     await day_repo.put(day)
     
@@ -35,13 +41,17 @@ async def test_get_not_found(day_repo, test_date):
 
 
 @pytest.mark.asyncio
-async def test_put(day_repo, test_user, test_date):
+async def test_put(day_repo, day_template_repo, test_user, test_date, setup_day_templates):
     """Test creating a new day."""
+    await setup_day_templates
+    templates = await day_template_repo.all()
+    default_template_uuid = templates[0].uuid if templates else UUID('00000000-0000-0000-0000-000000000000')
+    
     day = Day(
         user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.UNSCHEDULED,
-        template_id="default",
+        template_uuid=default_template_uuid,
     )
     
     result = await day_repo.put(day)
@@ -52,13 +62,17 @@ async def test_put(day_repo, test_user, test_date):
 
 
 @pytest.mark.asyncio
-async def test_put_update(day_repo, test_user, test_date):
+async def test_put_update(day_repo, day_template_repo, test_user, test_date, setup_day_templates):
     """Test updating an existing day."""
+    await setup_day_templates
+    templates = await day_template_repo.all()
+    default_template_uuid = templates[0].uuid if templates else UUID('00000000-0000-0000-0000-000000000000')
+    
     day = Day(
         user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.UNSCHEDULED,
-        template_id="default",
+        template_uuid=default_template_uuid,
     )
     await day_repo.put(day)
     
@@ -76,20 +90,24 @@ async def test_put_update(day_repo, test_user, test_date):
 
 
 @pytest.mark.asyncio
-async def test_all(day_repo, test_user, test_date, test_date_tomorrow):
+async def test_all(day_repo, day_template_repo, test_user, test_date, test_date_tomorrow, setup_day_templates):
     """Test getting all days."""
+    await setup_day_templates
+    templates = await day_template_repo.all()
+    default_template_uuid = templates[0].uuid if templates else UUID('00000000-0000-0000-0000-000000000000')
+    
     day1 = Day(
         user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
-        template_id="default",
+        template_uuid=default_template_uuid,
     )
     day2 = Day(
         user_uuid=test_user.uuid,
         date=test_date_tomorrow,
         status=DayStatus.UNSCHEDULED,
-        template_id="default",
+        template_uuid=default_template_uuid,
     )
     await day_repo.put(day1)
     await day_repo.put(day2)
@@ -102,20 +120,24 @@ async def test_all(day_repo, test_user, test_date, test_date_tomorrow):
 
 
 @pytest.mark.asyncio
-async def test_search_query(day_repo, test_user, test_date, test_date_tomorrow):
+async def test_search_query(day_repo, day_template_repo, test_user, test_date, test_date_tomorrow, setup_day_templates):
     """Test searching days with DateQuery."""
+    await setup_day_templates
+    templates = await day_template_repo.all()
+    default_template_uuid = templates[0].uuid if templates else UUID('00000000-0000-0000-0000-000000000000')
+    
     day1 = Day(
         user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
-        template_id="default",
+        template_uuid=default_template_uuid,
     )
     day2 = Day(
         user_uuid=test_user.uuid,
         date=test_date_tomorrow,
         status=DayStatus.UNSCHEDULED,
-        template_id="default",
+        template_uuid=default_template_uuid,
     )
     await day_repo.put(day1)
     await day_repo.put(day2)
@@ -130,15 +152,19 @@ async def test_search_query(day_repo, test_user, test_date, test_date_tomorrow):
 
 
 @pytest.mark.asyncio
-async def test_user_isolation(day_repo, test_user, create_test_user, test_date):
+async def test_user_isolation(day_repo, day_template_repo, test_user, create_test_user, test_date, setup_day_templates):
     """Test that different users' days are properly isolated."""
+    await setup_day_templates
+    templates = await day_template_repo.all()
+    default_template_uuid = templates[0].uuid if templates else UUID('00000000-0000-0000-0000-000000000000')
+    
     # Create day for test_user
     day1 = Day(
         user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
-        template_id="default",
+        template_uuid=default_template_uuid,
     )
     await day_repo.put(day1)
     
@@ -156,14 +182,18 @@ async def test_user_isolation(day_repo, test_user, create_test_user, test_date):
 
 
 @pytest.mark.asyncio
-async def test_delete(day_repo, test_user, test_date):
+async def test_delete(day_repo, day_template_repo, test_user, test_date, setup_day_templates):
     """Test deleting a day."""
+    await setup_day_templates
+    templates = await day_template_repo.all()
+    default_template_uuid = templates[0].uuid if templates else UUID('00000000-0000-0000-0000-000000000000')
+    
     day = Day(
         user_uuid=test_user.uuid,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
-        template_id="default",
+        template_uuid=default_template_uuid,
     )
     await day_repo.put(day)
     

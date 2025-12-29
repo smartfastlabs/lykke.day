@@ -228,11 +228,12 @@ class DayService(BaseService):
         day: objects.Day
 
         try:
+            day_uuid = objects.Day.uuid_from_date_and_user(date, user_uuid)
             tasks, events, messages, day = await asyncio.gather(
                 task_repo.search_query(DateQuery(date=date)),
                 event_repo.search_query(DateQuery(date=date)),
                 message_repo.search_query(DateQuery(date=date)),
-                day_repo.get(str(date)),
+                day_repo.get(day_uuid),
             )
         except exceptions.NotFoundError:
             day = await cls.base_day(
@@ -261,21 +262,23 @@ class DayService(BaseService):
         user_uuid: UUID,
         day_template_repo: DayTemplateRepositoryProtocol,
         user_repo: UserRepositoryProtocol | None = None,
-        template_id: str | None = None,
+        template_uuid: UUID | None = None,
     ) -> objects.Day:
-        if template_id is None:
+        if template_uuid is None:
             if user_repo is None:
-                raise ValueError("user_repo required when template_id is None")
+                raise ValueError("user_repo required when template_uuid is None")
             user = await user_repo.get(str(user_uuid))
-            template_id = user.settings.template_defaults[date.weekday()]
-
-        template: objects.DayTemplate = await day_template_repo.get(template_id)
+            # template_defaults stores slugs
+            template_slug = user.settings.template_defaults[date.weekday()]
+            template: objects.DayTemplate = await day_template_repo.get_by_slug(template_slug)
+        else:
+            template: objects.DayTemplate = await day_template_repo.get(template_uuid)
 
         return objects.Day(
             user_uuid=user_uuid,
             date=date,
             status=objects.DayStatus.UNSCHEDULED,
-            template_id=template.id,
+            template_uuid=template.uuid,
             alarm=template.alarm,
         )
 
@@ -289,7 +292,8 @@ class DayService(BaseService):
         user_repo: UserRepositoryProtocol | None = None,
     ) -> objects.Day:
         with suppress(exceptions.NotFoundError):
-            return await day_repo.get(str(date))
+            day_uuid = objects.Day.uuid_from_date_and_user(date, user_uuid)
+            return await day_repo.get(day_uuid)
 
         return await cls.base_day(
             date,
@@ -308,7 +312,8 @@ class DayService(BaseService):
         user_repo: UserRepositoryProtocol | None = None,
     ) -> objects.Day:
         with suppress(exceptions.NotFoundError):
-            return await day_repo.get(str(date))
+            day_uuid = objects.Day.uuid_from_date_and_user(date, user_uuid)
+            return await day_repo.get(day_uuid)
 
         return await day_repo.put(
             await cls.base_day(

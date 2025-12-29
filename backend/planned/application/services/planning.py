@@ -5,6 +5,7 @@ from typing import Protocol, TypeVar
 from uuid import UUID
 
 from loguru import logger
+
 from planned.application.repositories import (
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
@@ -73,7 +74,6 @@ class PlanningService(BaseService):
         self.task_repo = task_repo
         self.day_service = day_service
 
-
     async def preview_tasks(self, date: datetime.date) -> list[Task]:
         result: list[Task] = []
         for routine in await self.routine_repo.all():
@@ -101,24 +101,22 @@ class PlanningService(BaseService):
     async def preview(
         self,
         date: datetime.date,
-        template_id: str | None = None,
+        template_uuid: UUID | None = None,
     ) -> DayContext:
-        if template_id is None:
+        if template_uuid is None:
             with suppress(exceptions.NotFoundError):
-                existing_day = await self.day_repo.get(str(date))
-                template_id = existing_day.template_id
+                day_uuid = objects.Day.uuid_from_date_and_user(date, self.user_uuid)
+                existing_day = await self.day_repo.get(day_uuid)
+                template_uuid = existing_day.template_uuid
 
-        if template_id is None:
-            # Get user settings from database
-            user = await self.user_repo.get(str(self.user_uuid))
-            template_id = user.settings.template_defaults[date.weekday()]
-
+        # template_uuid will be None here, so base_day will look up by slug from template_defaults
         result: DayContext = DayContext(
             day=await DayService.base_day(
                 date,
                 user_uuid=self.user_uuid,
-                template_id=template_id,
+                template_uuid=template_uuid,
                 day_template_repo=self.day_template_repo,
+                user_repo=self.user_repo,
             ),
         )
 
@@ -136,7 +134,9 @@ class PlanningService(BaseService):
             tasks = await self.task_repo.search_query(DateQuery(date=date))
             routine_tasks = [t for t in tasks if t.routine_id is not None]
             if routine_tasks:
-                await asyncio.gather(*[self.task_repo.delete(task) for task in routine_tasks])
+                await asyncio.gather(
+                    *[self.task_repo.delete(task) for task in routine_tasks]
+                )
             day = await DayService.get_or_create(
                 date,
                 user_uuid=self.user_uuid,
@@ -150,14 +150,14 @@ class PlanningService(BaseService):
     async def schedule(
         self,
         date: datetime.date,
-        template_id: str | None = None,
+        template_uuid: UUID | None = None,
     ) -> objects.DayContext:
         async with self.transaction():
             await self.task_repo.delete_many(DateQuery(date=date))
 
             result: objects.DayContext = await self.preview(
                 date,
-                template_id=template_id,
+                template_uuid=template_uuid,
             )
             result.day.status = objects.DayStatus.SCHEDULED
             await asyncio.gather(

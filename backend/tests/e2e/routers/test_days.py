@@ -99,15 +99,20 @@ async def test_update_day_template(authenticated_client, test_date):
     # First schedule the day
     client.put("/days/today/schedule")
 
+    # Get a template UUID first
+    templates_response = client.get("/days/templates")
+    templates = templates_response.json()
+    template_uuid = templates[0]["id"] if templates else None
+    
     # Update the template
     response = client.patch(
         f"/days/{test_date.isoformat()}",
-        json={"template_id": "gym"},
+        json={"template_uuid": template_uuid},
     )
 
     assert response.status_code == 200
     data = response.json()
-    assert data["template_id"] == "gym"
+    assert data["template_uuid"] == template_uuid
 
 
 @pytest.mark.asyncio

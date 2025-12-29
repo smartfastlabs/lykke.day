@@ -7,16 +7,10 @@ from uuid import uuid4
 
 import pytest
 from dobles import allow
+
 from planned.application.services import DayService
 from planned.core.exceptions import exceptions
-from planned.domain.entities import (
-    Day,
-    DayContext,
-    DayStatus,
-    Event,
-    Task,
-    User,
-)
+from planned.domain.entities import Day, DayContext, DayStatus, DayTemplate, Event, Task, User
 from planned.domain.value_objects.task import (
     TaskCategory,
     TaskDefinition,
@@ -212,33 +206,35 @@ async def test_get_or_create_creates_and_saves_day(
 ):
     """Test get_or_create creates and saves day if not found."""
     date = datetime.date(2024, 1, 1)
-    template_id = "default"
+    from uuid import uuid4
+
+    template_uuid = uuid4()
+    template_slug = "default"
 
     user = User(
         id=str(test_user_uuid),
         username="testuser",
         email="test@example.com",
         password_hash="hash",
-        settings=UserSetting(template_defaults=[template_id] * 7),
+        settings=UserSetting(template_defaults=[template_slug] * 7),
     )
 
-    template = Day(
-        id=template_id,
+    template = DayTemplate(
+        uuid=template_uuid,
+        slug=template_slug,
         user_uuid=test_user_uuid,
-        date=date,
-        status=DayStatus.UNSCHEDULED,
     )
 
     created_day = Day(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
+        template_uuid=template_uuid,
     )
 
     allow(mock_day_repo).get(str(date)).and_raise(exceptions.NotFoundError("Not found"))
     allow(mock_user_repo).get(str(test_user_uuid)).and_return(user)
-    allow(mock_day_template_repo).get(template_id).and_return(template)
+    allow(mock_day_template_repo).get(template_uuid).and_return(template)
     allow(mock_day_repo).put.and_return(created_day)
 
     result = await DayService.get_or_create(

@@ -61,10 +61,12 @@ day_templates = Table(
     metadata,
     Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
+    Column("slug", String, nullable=False),
     Column("tasks", JSONB),  # list[str]
     Column("alarm", JSONB),  # Alarm | None
     Column("icon", String),
     Index("idx_day_templates_user_uuid", "user_uuid"),
+    Index("idx_day_templates_user_slug", "user_uuid", "slug", unique=True),
 )
 
 # Days
@@ -74,7 +76,7 @@ days = Table(
     Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
     Column("date", Date, nullable=False),
-    Column("template_id", String, nullable=False),
+    Column("template_uuid", PGUUID, nullable=False),
     Column("tags", JSONB),  # list[DayTag]
     Column("alarm", JSONB),  # Alarm | None
     Column("status", String, nullable=False),  # DayStatus enum as string

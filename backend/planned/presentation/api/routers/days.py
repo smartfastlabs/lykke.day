@@ -1,5 +1,6 @@
 import datetime
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
@@ -147,7 +148,7 @@ async def get_context(
 
 class UpdateDayRequest(BaseRequestObject):
     status: DayStatus | None = None
-    template_id: str | None = None
+    template_uuid: UUID | None = None
 
 
 @router.patch("/{date}")
@@ -170,8 +171,8 @@ async def update_day(
     )
     if request.status is not None:
         day.status = request.status
-    if request.template_id is not None:
-        day.template_id = request.template_id
+    if request.template_uuid is not None:
+        day.template_uuid = request.template_uuid
     return await day_repo.put(day)
 
 

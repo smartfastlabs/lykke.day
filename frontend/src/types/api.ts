@@ -73,7 +73,7 @@ export interface Calendar {
 export interface Day {
   id?: string;
   date: string;
-  template_id?: string;
+  template_uuid?: string;
   tags?: DayTag[];
   alarm?: Alarm | null;
   status?: DayStatus;

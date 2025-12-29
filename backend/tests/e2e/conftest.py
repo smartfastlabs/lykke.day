@@ -29,7 +29,6 @@ def setup_test_user_day_template():
         user_repo = UserRepository()
         test_user_email = f"test_{uuid4()}@planned.day"
         test_user = User(
-            id=str(uuid4()),
             username=f"testuser_{uuid4().hex[:8]}",
             email=test_user_email,
             password_hash="",
@@ -40,22 +39,17 @@ def setup_test_user_day_template():
         test_user_uuid = test_user.uuid
         day_template_repo = DayTemplateRepository(user_uuid=test_user_uuid)
 
-        # Check if default template exists, create if not
-        try:
-            await day_template_repo.get("default")
-        except NotFoundError:
-            # Template doesn't exist, create it
-            default_template = DayTemplate(
-                user_uuid=test_user_uuid,
-                id="default",
-                tasks=[],
-                alarm=Alarm(
-                    name="Default Alarm",
-                    time=time(7, 15),
-                    type=AlarmType.FIRM,
-                ),
-            )
-            await day_template_repo.put(default_template)
+        # Create default template (UUID will be auto-generated)
+        default_template = DayTemplate(
+            user_uuid=test_user_uuid,
+            tasks=[],
+            alarm=Alarm(
+                name="Default Alarm",
+                time=time(7, 15),
+                type=AlarmType.FIRM,
+            ),
+        )
+        await day_template_repo.put(default_template)
         return test_user
 
     return _setup

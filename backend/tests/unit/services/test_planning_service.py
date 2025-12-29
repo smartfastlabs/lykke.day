@@ -162,18 +162,18 @@ async def test_preview_creates_day_context(
 ):
     """Test preview creates a DayContext with tasks, events, and messages."""
     date = datetime.date(2024, 1, 1)
-    template_id = "default"
+    template_uuid = uuid4()
 
     user = User(
         id=str(test_user_uuid),
         username="testuser",
         email="test@example.com",
         password_hash="hash",
-        settings=UserSetting(template_defaults=[template_id] * 7),
+        settings=UserSetting(template_defaults=[str(template_uuid)] * 7),
     )
 
     template = DayTemplate(
-        id=template_id,
+        uuid=template_uuid,
         user_uuid=test_user_uuid,
     )
 
@@ -192,7 +192,7 @@ async def test_preview_creates_day_context(
 
     allow(mock_day_repo).get(str(date)).and_raise(exceptions.NotFoundError("Not found"))
     allow(mock_user_repo).get(str(test_user_uuid)).and_return(user)
-    allow(mock_day_template_repo).get(template_id).and_return(template)
+    allow(mock_day_template_repo).get(template_uuid).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([event])
     allow(mock_message_repo).search_query.and_return([])
@@ -266,7 +266,7 @@ async def test_preview_uses_existing_day_template(
 
     result = await service.preview(date)
 
-    assert result.day.template_id == existing_template_id
+    assert result.day.template_uuid == existing_template_uuid
 
 
 @pytest.mark.asyncio
@@ -333,7 +333,7 @@ async def test_unschedule_deletes_routine_tasks(
     allow(mock_day_repo).get(str(date)).and_return(day)
     allow(mock_day_repo).put.and_return(day)
     allow(mock_day_template_repo).get.and_return(
-        DayTemplate(id="default", user_uuid=test_user_uuid)
+        DayTemplate(uuid=uuid4(), user_uuid=test_user_uuid)
     )
 
     service = PlanningService(
@@ -369,25 +369,25 @@ async def test_schedule_creates_tasks_and_sets_status(
 ):
     """Test schedule creates tasks and sets day status to SCHEDULED."""
     date = datetime.date(2024, 1, 1)
-    template_id = "default"
+    template_uuid = uuid4()
 
     user = User(
         id=str(test_user_uuid),
         username="testuser",
         email="test@example.com",
         password_hash="hash",
-        settings=UserSetting(template_defaults=[template_id] * 7),
+        settings=UserSetting(template_defaults=[str(template_uuid)] * 7),
     )
 
     template = DayTemplate(
-        id=template_id,
+        uuid=template_uuid,
         user_uuid=test_user_uuid,
     )
 
     allow(mock_task_repo).delete_many.and_return(None)
     allow(mock_day_repo).get(str(date)).and_raise(exceptions.NotFoundError("Not found"))
     allow(mock_user_repo).get(str(test_user_uuid)).and_return(user)
-    allow(mock_day_template_repo).get(template_id).and_return(template)
+    allow(mock_day_template_repo).get(template_uuid).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
@@ -519,4 +519,5 @@ async def test_save_action_for_event(
 
     assert len(result.actions) == 1
     assert result.actions[0].type == ActionType.NOTIFY
-
+    assert len(result.actions) == 1
+    assert result.actions[0].type == ActionType.NOTIFY

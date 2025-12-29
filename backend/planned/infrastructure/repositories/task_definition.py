@@ -21,7 +21,7 @@ class TaskDefinitionRepository(BaseRepository[TaskDefinition, BaseQuery]):
     def entity_to_row(task_definition: TaskDefinition) -> dict[str, Any]:
         """Convert a TaskDefinition entity to a database row dict."""
         row: dict[str, Any] = {
-            "id": task_definition.id,
+            "uuid": task_definition.uuid,
             "user_uuid": task_definition.user_uuid,
             "name": task_definition.name,
             "description": task_definition.description,

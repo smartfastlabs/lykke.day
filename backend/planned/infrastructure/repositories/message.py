@@ -33,7 +33,7 @@ class MessageRepository(BaseRepository[Message, DateQuery]):
     def entity_to_row(message: Message) -> dict[str, Any]:
         """Convert a Message entity to a database row dict."""
         row: dict[str, Any] = {
-            "id": message.id,
+            "uuid": message.uuid,
             "user_uuid": message.user_uuid,
             "date": message.sent_at.date(),  # Extract date from sent_at for querying
             "author": message.author,

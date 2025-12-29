@@ -18,7 +18,7 @@ class BaseObject(pydantic.BaseModel):
 
 
 class BaseEntityObject(BaseObject):
-    uuid: UUID = pydantic.Field(default_factory=lambda: str(uuid4()))
+    uuid: UUID = pydantic.Field(default_factory=uuid4)
 
 
 class BaseConfigObject(BaseEntityObject):
@@ -58,4 +58,6 @@ class BaseDateObject(BaseEntityObject):
         raise NotImplementedError
 
     def _get_date(self) -> dt_date | None:
+        return None
+        return None
         return None

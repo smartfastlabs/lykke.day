@@ -11,19 +11,19 @@ from planned.infrastructure.repositories import DayTemplateRepository
 
 
 @pytest.mark.asyncio
-async def test_get(day_template_repo, test_user, setup_day_templates):
-    """Test getting a day template by ID."""
-    result = await day_template_repo.get("default")
+async def test_get_by_slug(day_template_repo, test_user, setup_day_templates):
+    """Test getting a day template by slug."""
+    result = await day_template_repo.get_by_slug("default")
     
-    assert result.id == "default"
+    assert result.slug == "default"
     assert result.user_uuid == test_user.uuid
 
 
 @pytest.mark.asyncio
-async def test_get_not_found(day_template_repo):
+async def test_get_by_slug_not_found(day_template_repo):
     """Test getting a non-existent day template raises NotFoundError."""
     with pytest.raises(exceptions.NotFoundError):
-        await day_template_repo.get("nonexistent")
+        await day_template_repo.get_by_slug("nonexistent")
 
 
 @pytest.mark.asyncio
@@ -31,7 +31,7 @@ async def test_put(day_template_repo, test_user):
     """Test creating a new day template."""
     template = DayTemplate(
         user_uuid=test_user.uuid,
-        id="custom",
+        slug="custom",
         tasks=[],
         alarm=Alarm(
             name="Custom Alarm",
@@ -42,7 +42,7 @@ async def test_put(day_template_repo, test_user):
     
     result = await day_template_repo.put(template)
     
-    assert result.id == "custom"
+    assert result.slug == "custom"
     assert result.alarm.name == "Custom Alarm"
 
 
@@ -51,9 +51,9 @@ async def test_all(day_template_repo, test_user, setup_day_templates):
     """Test getting all day templates."""
     all_templates = await day_template_repo.all()
     
-    template_ids = [t.id for t in all_templates]
-    assert "default" in template_ids
-    assert "weekend" in template_ids
+    template_slugs = [t.slug for t in all_templates]
+    assert "default" in template_slugs
+    assert "weekend" in template_slugs
 
 
 @pytest.mark.asyncio
@@ -65,9 +65,9 @@ async def test_user_isolation(day_template_repo, test_user, create_test_user, se
     
     # User2 should not see user1's templates
     with pytest.raises(exceptions.NotFoundError):
-        await day_template_repo2.get("default")
+        await day_template_repo2.get_by_slug("default")
     
     # User1 should still see their templates
-    result = await day_template_repo.get("default")
+    result = await day_template_repo.get_by_slug("default")
     assert result.user_uuid == test_user.uuid
 

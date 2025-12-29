@@ -21,7 +21,7 @@ class RoutineRepository(BaseRepository[Routine, BaseQuery]):
     def entity_to_row(routine: Routine) -> dict[str, Any]:
         """Convert a Routine entity to a database row dict."""
         row: dict[str, Any] = {
-            "id": routine.id,
+            "uuid": routine.uuid,
             "user_uuid": routine.user_uuid,
             "name": routine.name,
             "category": routine.category.value,

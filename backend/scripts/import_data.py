@@ -139,9 +139,9 @@ async def import_day_templates(data_path: Path) -> int:
     for json_file in day_templates_dir.glob("*.json"):
         try:
             data = load_json_file(json_file)
-            # Use filename without extension as the ID
-            template_id = json_file.stem
-            data["id"] = template_id
+            # Use filename without extension as the slug
+            template_slug = json_file.stem
+            data["slug"] = template_slug
 
             # Handle legacy "routines" field - map to "tasks"
             if "routines" in data and "tasks" not in data:
@@ -150,7 +150,7 @@ async def import_day_templates(data_path: Path) -> int:
             day_template = DayTemplate.model_validate(data, from_attributes=True)
             await repo.put(day_template)
             count += 1
-            logger.info(f"Imported day template: {day_template.id}")
+            logger.info(f"Imported day template: {day_template.slug}")
         except Exception as e:
             logger.error(f"Error importing day template from {json_file}: {e}")
 
