@@ -5,12 +5,12 @@ from sqlalchemy.sql import Select
 
 from planned.domain.entities import Message
 
-from .base import BaseRepository, DateQuery
+from .base import DateQuery, UserScopedBaseRepository
 from .base.schema import messages
 from .base.utils import normalize_list_fields
 
 
-class MessageRepository(BaseRepository[Message, DateQuery]):
+class MessageRepository(UserScopedBaseRepository[Message, DateQuery]):
     Object = Message
     table = messages
     QueryClass = DateQuery

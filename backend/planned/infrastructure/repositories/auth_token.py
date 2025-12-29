@@ -9,12 +9,18 @@ from .base.utils import normalize_list_fields
 
 
 class AuthTokenRepository(BaseRepository[AuthToken, BaseQuery]):
+    """AuthTokenRepository is NOT user-scoped - it can be used for any user's auth tokens."""
+
     Object = AuthToken
     table = auth_tokens
     QueryClass = BaseQuery
 
-    def __init__(self, user_uuid: UUID) -> None:
-        """Initialize AuthTokenRepository with user scoping."""
+    def __init__(self, user_uuid: UUID | None = None) -> None:
+        """Initialize AuthTokenRepository with optional user scoping.
+
+        Args:
+            user_uuid: Optional user UUID. If provided, queries will be filtered by this user UUID.
+        """
         super().__init__(user_uuid=user_uuid)
 
     @staticmethod

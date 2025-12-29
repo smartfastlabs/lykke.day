@@ -7,12 +7,12 @@ from sqlalchemy.sql import select
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Calendar
 
-from .base import BaseQuery, BaseRepository
+from .base import BaseQuery, UserScopedBaseRepository
 from .base.schema import calendars
 from .base.utils import normalize_list_fields
 
 
-class CalendarRepository(BaseRepository[Calendar, BaseQuery]):
+class CalendarRepository(UserScopedBaseRepository[Calendar, BaseQuery]):
     Object = Calendar
     table = calendars
     QueryClass = BaseQuery

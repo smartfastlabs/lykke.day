@@ -3,12 +3,12 @@ from uuid import UUID
 
 from planned.domain.entities import TaskDefinition
 
-from .base import BaseQuery, BaseRepository
+from .base import BaseQuery, UserScopedBaseRepository
 from .base.schema import task_definitions
 from .base.utils import normalize_list_fields
 
 
-class TaskDefinitionRepository(BaseRepository[TaskDefinition, BaseQuery]):
+class TaskDefinitionRepository(UserScopedBaseRepository[TaskDefinition, BaseQuery]):
     Object = TaskDefinition
     table = task_definitions
     QueryClass = BaseQuery

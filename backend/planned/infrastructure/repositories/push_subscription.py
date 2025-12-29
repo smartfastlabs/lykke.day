@@ -3,12 +3,12 @@ from uuid import UUID
 
 from planned.domain.entities import PushSubscription
 
-from .base import BaseQuery, BaseRepository
+from .base import BaseQuery, UserScopedBaseRepository
 from .base.schema import push_subscriptions
 from .base.utils import normalize_list_fields
 
 
-class PushSubscriptionRepository(BaseRepository[PushSubscription, BaseQuery]):
+class PushSubscriptionRepository(UserScopedBaseRepository[PushSubscription, BaseQuery]):
     Object = PushSubscription
     table = push_subscriptions
     QueryClass = BaseQuery

@@ -3,12 +3,12 @@ from uuid import UUID
 
 from planned.domain.entities import Day
 
-from .base import BaseQuery, BaseRepository
+from .base import BaseQuery, UserScopedBaseRepository
 from .base.schema import days
 from .base.utils import normalize_list_fields
 
 
-class DayRepository(BaseRepository[Day, BaseQuery]):
+class DayRepository(UserScopedBaseRepository[Day, BaseQuery]):
     Object = Day
     table = days
     QueryClass = BaseQuery

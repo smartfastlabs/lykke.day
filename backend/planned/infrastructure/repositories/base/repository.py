@@ -28,7 +28,8 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     Child repositories should set QueryClass class attribute to specify their custom query type.
 
-    If user_uuid is provided, all queries are automatically filtered by that user.
+    Note: This repository is NOT user-scoped. For user-scoped repositories, use UserScopedBaseRepository.
+    If user_uuid is provided, it may be used for optional filtering, but it's not required.
     """
 
     signal_source: Signal
@@ -366,3 +367,23 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
         event = RepositoryEvent[ObjectType](type="delete", value=obj)
         await self.signal_source.send_async("change", event=event)
+
+
+class UserScopedBaseRepository(BaseRepository[ObjectType, QueryType], Generic[ObjectType, QueryType]):
+    """Base repository that requires user scoping.
+
+    This repository ensures all operations are scoped to a specific user.
+    All queries are automatically filtered by the provided user_uuid.
+
+    Type parameters:
+        ObjectType: The entity type this repository manages
+        QueryType: The query type for filtering/searching (must be a subclass of BaseQuery)
+    """
+
+    def __init__(self, user_uuid: UUID) -> None:
+        """Initialize repository with required user scoping.
+
+        Args:
+            user_uuid: Required user UUID. All queries will be filtered by this user UUID.
+        """
+        super().__init__(user_uuid=user_uuid)

@@ -5,12 +5,12 @@ from sqlalchemy.sql import Select
 
 from planned.domain.entities import Task
 
-from .base import BaseRepository, DateQuery
+from .base import DateQuery, UserScopedBaseRepository
 from .base.schema import tasks
 from .base.utils import normalize_list_fields
 
 
-class TaskRepository(BaseRepository[Task, DateQuery]):
+class TaskRepository(UserScopedBaseRepository[Task, DateQuery]):
     Object = Task
     table = tasks
     QueryClass = DateQuery

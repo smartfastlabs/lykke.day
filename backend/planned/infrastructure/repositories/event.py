@@ -5,12 +5,12 @@ from sqlalchemy.sql import Select
 
 from planned.domain.entities import Event
 
-from .base import BaseRepository, DateQuery
+from .base import DateQuery, UserScopedBaseRepository
 from .base.schema import events
 from .base.utils import normalize_list_fields
 
 
-class EventRepository(BaseRepository[Event, DateQuery]):
+class EventRepository(UserScopedBaseRepository[Event, DateQuery]):
     Object = Event
     table = events
     QueryClass = DateQuery

@@ -3,12 +3,12 @@ from uuid import UUID
 
 from planned.domain.entities.routine import Routine
 
-from .base import BaseQuery, BaseRepository
+from .base import BaseQuery, UserScopedBaseRepository
 from .base.schema import routines
 from .base.utils import normalize_list_fields
 
 
-class RoutineRepository(BaseRepository[Routine, BaseQuery]):
+class RoutineRepository(UserScopedBaseRepository[Routine, BaseQuery]):
     Object = Routine
     table = routines
     QueryClass = BaseQuery

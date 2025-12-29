@@ -6,12 +6,12 @@ from sqlalchemy import select
 from planned.core.exceptions import exceptions
 from planned.domain.entities import DayTemplate
 
-from .base import BaseQuery, BaseRepository
+from .base import BaseQuery, UserScopedBaseRepository
 from .base.schema import day_templates
 from .base.utils import normalize_list_fields
 
 
-class DayTemplateRepository(BaseRepository[DayTemplate, BaseQuery]):
+class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, BaseQuery]):
     Object = DayTemplate
     table = day_templates
     QueryClass = BaseQuery
