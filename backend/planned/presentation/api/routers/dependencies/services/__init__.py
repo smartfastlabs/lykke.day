@@ -23,6 +23,7 @@ from planned.application.repositories import (
     UserRepositoryProtocol,
 )
 from planned.application.services import AuthService, CalendarService, DayService, PlanningService, SheppardManager, SheppardService
+from planned.core.exceptions import exceptions
 from planned.domain.entities import User
 from planned.infrastructure.gateways.adapters import GoogleCalendarGatewayAdapter
 from planned.infrastructure.utils.dates import get_current_date
@@ -125,8 +126,6 @@ async def get_sheppard_service(
     Raises:
         RuntimeError: If SheppardManager is not available or service doesn't exist
     """
-    from planned.core.exceptions import exceptions
-    
     # Get SheppardManager from app state
     manager: SheppardManager | None = getattr(request.app.state, "sheppard_manager", None)
     if manager is None:

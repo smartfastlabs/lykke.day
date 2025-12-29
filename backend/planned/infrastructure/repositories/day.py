@@ -1,4 +1,4 @@
-from datetime import date as dt_date
+from datetime import date as dt_date, datetime as dt
 from typing import Any
 from uuid import UUID
 
@@ -54,8 +54,6 @@ class DayRepository(BaseRepository[Day, BaseQuery]):
                 data["date"] = dt_date.fromisoformat(data["id"])
             except (ValueError, TypeError):
                 try:
-                    from datetime import datetime as dt
-
                     data["date"] = dt.strptime(data["id"], "%Y-%m-%d").date()
                 except (ValueError, TypeError):
                     raise ValueError(f"Could not parse date from id: {data['id']}")

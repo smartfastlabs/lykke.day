@@ -1,12 +1,13 @@
 import asyncio
 import contextlib
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from loguru import logger
 
 from planned.application.repositories.base import ChangeEvent
+from planned.application.services import SheppardManager
 from planned.core.exceptions import exceptions
 from planned.infrastructure.repositories import (
     AuthTokenRepository,
@@ -21,11 +22,8 @@ from planned.infrastructure.repositories import (
     TaskRepository,
     UserRepository,
 )
+from planned.infrastructure.repositories.base.repository import BaseRepository
 from planned.infrastructure.utils import youtube
-
-if TYPE_CHECKING:
-    from planned.application.services import SheppardManager
-    from planned.infrastructure.repositories.base.repository import BaseRepository
 
 router = APIRouter()
 
@@ -81,8 +79,6 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         return
 
     # Get SheppardManager from app state
-    from planned.application.services import SheppardManager
-
     manager: SheppardManager | None = getattr(websocket.app.state, "sheppard_manager", None)
     if manager is None:
         logger.error("SheppardManager is not available")
@@ -103,8 +99,6 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     event_queue: asyncio.Queue[ChangeEvent[Any]] = asyncio.Queue()
 
     # Get all repository classes
-    from planned.infrastructure.repositories.base.repository import BaseRepository
-
     repository_classes: list[type[BaseRepository[Any, Any]]] = [
         AuthTokenRepository,
         CalendarRepository,

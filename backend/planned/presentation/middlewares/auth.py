@@ -1,5 +1,6 @@
 from collections.abc import Awaitable, Callable
 from datetime import datetime
+from uuid import UUID
 
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -62,7 +63,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if user_uuid:
             # Validate that user_uuid is a valid UUID string
             try:
-                from uuid import UUID
                 UUID(user_uuid)  # Validate format
             except (ValueError, TypeError):
                 raise exceptions.AuthorizationError(

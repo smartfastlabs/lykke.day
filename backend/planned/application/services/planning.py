@@ -25,6 +25,7 @@ from planned.domain.entities import (
     Task,
     TaskStatus,
 )
+from planned.infrastructure.repositories.base import DateQuery
 
 from .base import BaseService
 from .day import DayService
@@ -127,7 +128,6 @@ class PlanningService(BaseService):
                 day_template_repo=self.day_template_repo,
             ),
         )
-        from planned.infrastructure.repositories.base import DateQuery
 
         result.tasks, result.events, result.messages = await asyncio.gather(
             self.preview_tasks(date),
@@ -138,8 +138,6 @@ class PlanningService(BaseService):
         return result
 
     async def unschedule(self, date: datetime.date) -> None:
-        from planned.infrastructure.repositories.base import DateQuery
-
         async with self.transaction():
             # Get all tasks for the date, filter for routine tasks, then delete them
             tasks = await self.task_repo.search_query(DateQuery(date=date))
@@ -161,8 +159,6 @@ class PlanningService(BaseService):
         date: datetime.date,
         template_id: str | None = None,
     ) -> objects.DayContext:
-        from planned.infrastructure.repositories.base import DateQuery
-
         async with self.transaction():
             await self.task_repo.delete_many(DateQuery(date=date))
 

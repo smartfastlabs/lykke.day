@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 @pytest.mark.asyncio
 async def test_generate_pdf_from_page():
     """Test generate_pdf_from_page creates PDF."""
+    # TODO: Move import to top if circular import can be resolved
     from planned.infrastructure.utils.printing import generate_pdf_from_page
     
     url = "https://example.com/test"
@@ -41,6 +42,7 @@ async def test_generate_pdf_from_page():
 @pytest.mark.asyncio
 async def test_generate_pdf_from_page_with_custom_path():
     """Test generate_pdf_from_page with custom PDF path."""
+    # TODO: Move import to top if circular import can be resolved
     from planned.infrastructure.utils.printing import generate_pdf_from_page
     
     url = "https://example.com/test"
@@ -74,6 +76,7 @@ async def test_generate_pdf_from_page_with_custom_path():
 @pytest.mark.asyncio
 async def test_send_pdf_to_printer():
     """Test send_pdf_to_printer sends PDF to printer."""
+    # TODO: Move import to top if circular import can be resolved
     from planned.infrastructure.utils.printing import send_pdf_to_printer
     
     pdf_path = "/tmp/test.pdf"
@@ -95,6 +98,7 @@ async def test_send_pdf_to_printer():
 @pytest.mark.asyncio
 async def test_send_pdf_to_printer_no_delete():
     """Test send_pdf_to_printer without deleting PDF."""
+    # TODO: Move import to top if circular import can be resolved
     from planned.infrastructure.utils.printing import send_pdf_to_printer
     
     pdf_path = "/tmp/test.pdf"

@@ -1,6 +1,7 @@
 """User dependency for API routes."""
 
 from typing import Annotated, cast
+from uuid import UUID
 
 from fastapi import Depends, Request
 
@@ -48,7 +49,6 @@ async def get_current_user(
         )
     
     # Convert string to UUID and get user
-    from uuid import UUID
     try:
         user_uuid = UUID(user_uuid_str)
     except (ValueError, TypeError):

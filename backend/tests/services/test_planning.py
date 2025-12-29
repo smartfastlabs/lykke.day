@@ -15,6 +15,7 @@ from planned.infrastructure.repositories import (
 @pytest.mark.asyncio
 @pytest.mark.skip
 async def test_schedule_today(test_date, test_user):
+    # TODO: Move imports to top if circular import can be resolved
     from uuid import UUID
 
     from planned.infrastructure.repositories import UserRepository
@@ -71,6 +72,7 @@ async def test_schedule_today(test_date, test_user):
 @pytest.mark.asyncio
 @pytest.mark.skip
 async def test_schedule_tomorrow(test_date_tomorrow, test_user):
+    # TODO: Move imports to top if circular import can be resolved
     from uuid import UUID
 
     from planned.infrastructure.repositories import UserRepository

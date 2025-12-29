@@ -19,6 +19,7 @@ class SheppardManager:
 
     def __init__(self) -> None:
         """Initialize the SheppardManager."""
+        # TODO: Move import to top if circular import can be resolved
         from planned.infrastructure.repositories import UserRepository
 
         self._services: dict[UUID, tuple[SheppardService, asyncio.Task]] = {}
@@ -35,6 +36,7 @@ class SheppardManager:
         Returns:
             A configured SheppardService instance for the user.
         """
+        # TODO: Move imports to top if circular imports can be resolved
         from datetime import time
 
         from planned.application.repositories import (
@@ -288,6 +290,7 @@ class SheppardManager:
 
         # Disconnect from UserRepository events
         if self._event_handler is not None:
+            # TODO: Move import to top if circular import can be resolved
             from planned.infrastructure.repositories import UserRepository
 
             UserRepository.signal_source.disconnect(self._event_handler)

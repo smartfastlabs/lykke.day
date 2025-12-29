@@ -17,6 +17,7 @@ from planned.application.repositories import (
 from planned.application.repositories.base import ChangeEvent
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
+from planned.infrastructure.repositories.base import DateQuery
 from planned.infrastructure.utils.dates import get_current_datetime, get_current_time
 from planned.infrastructure.utils.decorators import hybridmethod
 
@@ -227,8 +228,6 @@ class DayService(BaseService):
         day: objects.Day
 
         try:
-            from planned.infrastructure.repositories.base import DateQuery
-
             tasks, events, messages, day = await asyncio.gather(
                 task_repo.search_query(DateQuery(date=date)),
                 event_repo.search_query(DateQuery(date=date)),

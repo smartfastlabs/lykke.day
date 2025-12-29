@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 from planned.application.repositories import TaskRepositoryProtocol
 from planned.application.services import PlanningService
 from planned.domain.entities import Action, Task
+from planned.infrastructure.repositories.base import DateQuery
 from planned.infrastructure.utils.dates import get_current_date
 
 from .dependencies.repositories import get_task_repo
@@ -19,8 +20,6 @@ router = APIRouter()
 async def list_todays_tasks(
     task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
 ) -> list[Task]:
-    from planned.infrastructure.repositories.base import DateQuery
-
     return await task_repo.search_query(DateQuery(date=get_current_date()))
 
 

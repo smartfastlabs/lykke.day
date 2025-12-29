@@ -1,8 +1,12 @@
+import json
+from datetime import UTC, datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import select
 
 from planned.domain.entities import User
+from planned.domain.value_objects.user import UserSetting
 
 from .base import BaseQuery, BaseRepository
 from .base.schema import users
@@ -34,8 +38,6 @@ class UserRepository(BaseRepository[User, BaseQuery]):
     @staticmethod
     def entity_to_row(user: User) -> dict[str, Any]:
         """Convert a User entity to a database row dict."""
-        from datetime import UTC, datetime
-        
         row: dict[str, Any] = {
             "id": user.id,
             "email": user.email,
@@ -46,7 +48,6 @@ class UserRepository(BaseRepository[User, BaseQuery]):
         if user.settings:
             row["settings"] = user.settings.model_dump(mode="json")
         else:
-            from planned.domain.value_objects.user import UserSetting
             row["settings"] = UserSetting().model_dump(mode="json")
         
         # Set timestamps
@@ -63,10 +64,6 @@ class UserRepository(BaseRepository[User, BaseQuery]):
     @staticmethod
     def row_to_entity(row: dict[str, Any]) -> User:
         """Convert a database row dict to a User entity."""
-        from uuid import UUID
-        
-        from planned.domain.value_objects.user import UserSetting
-        
         data = dict(row)
         
         # Convert UUID to string if needed
@@ -78,7 +75,6 @@ class UserRepository(BaseRepository[User, BaseQuery]):
             if isinstance(data["settings"], dict):
                 data["settings"] = UserSetting(**data["settings"])
             elif isinstance(data["settings"], str):
-                import json
                 data["settings"] = UserSetting(**json.loads(data["settings"]))
         else:
             data["settings"] = UserSetting()
