@@ -47,14 +47,15 @@ class TokenExpiredError(BaseError):
 
 # Create a namespace object for backward compatibility
 class _ExceptionsNamespace:
-    BaseError = BaseError
-    NotFoundError = NotFoundError
-    PushNotificationError = PushNotificationError
-    BadRequestError = BadRequestError
-    AuthenticationError = AuthenticationError
-    AuthorizationError = AuthorizationError
-    ServerError = ServerError
-    TokenExpiredError = TokenExpiredError
+    def __init__(self) -> None:
+        self.BaseError: type[BaseError] = BaseError
+        self.NotFoundError: type[NotFoundError] = NotFoundError
+        self.PushNotificationError: type[PushNotificationError] = PushNotificationError
+        self.BadRequestError: type[BadRequestError] = BadRequestError
+        self.AuthenticationError: type[AuthenticationError] = AuthenticationError
+        self.AuthorizationError: type[AuthorizationError] = AuthorizationError
+        self.ServerError: type[ServerError] = ServerError
+        self.TokenExpiredError: type[TokenExpiredError] = TokenExpiredError
 
 
 exceptions = _ExceptionsNamespace()

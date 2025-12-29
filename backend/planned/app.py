@@ -30,7 +30,7 @@ from planned.application.services import (
     SheppardService,
 )
 from planned.core.config import settings
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import BaseError, exceptions
 from planned.infrastructure.gateways.adapters import (
     GoogleCalendarGatewayAdapter,
     WebPushGatewayAdapter,
@@ -235,8 +235,8 @@ app.include_router(
 )
 
 
-@app.exception_handler(exceptions.BaseError)
-async def custom_exception_handler(request: Request, exc: exceptions.BaseError) -> JSONResponse:
+@app.exception_handler(BaseError)
+async def custom_exception_handler(request: Request, exc: BaseError) -> JSONResponse:
     """Handle custom application exceptions."""
     return JSONResponse(
         status_code=exc.status_code,
