@@ -163,7 +163,7 @@ async def test_get_or_preview_returns_existing_day(
         day_template_repo=mock_day_template_repo,
     )
 
-    assert result.id == day.id
+    assert result.uuid == day.uuid
 
 
 @pytest.mark.asyncio
@@ -178,7 +178,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     template_id = "default"
 
     user = User(
-        id=str(test_user_uuid),
+        uuid=test_user_uuid,
         username="testuser",
         email="test@example.com",
         password_hash="hash",
@@ -221,7 +221,7 @@ async def test_get_or_create_creates_and_saves_day(
     template_slug = "default"
 
     user = User(
-        id=str(test_user_uuid),
+        uuid=test_user_uuid,
         username="testuser",
         email="test@example.com",
         password_hash="hash",
@@ -321,7 +321,7 @@ async def test_get_upcomming_tasks(
 
     # Task that should be included (within window)
     task1 = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Upcoming Task",
         status=TaskStatus.NOT_STARTED,
@@ -344,7 +344,7 @@ async def test_get_upcomming_tasks(
     # Task that should be excluded (too far in future)
     far_future_time = (now + timedelta(hours=2)).time()
     task2 = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Future Task",
         status=TaskStatus.NOT_STARTED,
@@ -367,7 +367,7 @@ async def test_get_upcomming_tasks(
 
     # Task that should be excluded (already completed)
     task3 = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Completed Task",
         status=TaskStatus.COMPLETE,
@@ -412,7 +412,7 @@ async def test_get_upcomming_tasks(
 
     # Should only include task1 (within window and not completed)
     assert len(result) == 1
-    assert result[0].id == task1.id
+    assert result[0].uuid == task1.uuid
 
 
 @pytest.mark.asyncio
@@ -441,7 +441,7 @@ async def test_get_upcomming_events(
 
     # Event that should be included (within window)
     event1 = Event(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Upcoming Event",
         frequency=TaskFrequency.ONCE,
@@ -455,7 +455,7 @@ async def test_get_upcomming_events(
 
     # Event that should be excluded (too far in future)
     event2 = Event(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Future Event",
         frequency=TaskFrequency.ONCE,
@@ -469,7 +469,7 @@ async def test_get_upcomming_events(
 
     # Event that should be excluded (cancelled)
     event3 = Event(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Cancelled Event",
         frequency=TaskFrequency.ONCE,
@@ -483,7 +483,7 @@ async def test_get_upcomming_events(
 
     # Event that should be included (ongoing - started in past but not ended)
     event4 = Event(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Ongoing Event",
         frequency=TaskFrequency.ONCE,
@@ -516,7 +516,7 @@ async def test_get_upcomming_events(
 
     # Should include event1 and event4 (within window and not cancelled)
     assert len(result) == 2
-    assert any(e.id == event1.id for e in result)
-    assert any(e.id == event4.id for e in result)
-    assert any(e.id == event4.id for e in result)
+    assert any(e.uuid == event1.uuid for e in result)
+    assert any(e.uuid == event4.uuid for e in result)
+    assert any(e.uuid == event4.uuid for e in result)
 

@@ -26,7 +26,7 @@ async def test_create_user(mock_user_repo):
     # Mock put to return the created user
     username = "testuser"
     expected_user = User(
-        id=str(uuid4()),
+        uuid=uuid4(),
         username=username,
         email=email,
         password_hash=pwd_context.hash(password),
@@ -35,10 +35,12 @@ async def test_create_user(mock_user_repo):
     allow(mock_user_repo).put.and_return(expected_user)
 
     service = AuthService(user_repo=mock_user_repo)
-    result = await service.create_user(username=username, email=email, password=password)
+    result = await service.create_user(
+        username=username, email=email, password=password
+    )
 
     assert result.email == email
-    assert result.id == expected_user.id
+    assert result.uuid == expected_user.uuid
     # Verify password was hashed (not plain text)
     assert result.password_hash != password
     assert pwd_context.verify(password, result.password_hash)
@@ -50,7 +52,7 @@ async def test_create_user_duplicate_email(mock_user_repo):
     email = "existing@example.com"
     username = "testuser"
     existing_user = User(
-        id=str(uuid4()),
+        uuid=uuid4(),
         username=username,
         email=email,
         password_hash="hash",
@@ -63,27 +65,29 @@ async def test_create_user_duplicate_email(mock_user_repo):
     service = AuthService(user_repo=mock_user_repo)
 
     with pytest.raises(exceptions.BadRequestError):
-        await service.create_user(username="otheruser", email=email, password="password123")
+        await service.create_user(
+            username="otheruser", email=email, password="password123"
+        )
 
 
 @pytest.mark.asyncio
 async def test_get_user(mock_user_repo):
     """Test getting a user by UUID."""
-    user_uuid = str(uuid4())
+    user_uuid = uuid4()
     expected_user = User(
-        id=user_uuid,
+        uuid=user_uuid,
         username="testuser",
         email="test@example.com",
         password_hash="hash",
         settings=UserSetting(),
     )
 
-    allow(mock_user_repo).get(user_uuid).and_return(expected_user)
+    allow(mock_user_repo).get(str(user_uuid)).and_return(expected_user)
 
     service = AuthService(user_repo=mock_user_repo)
-    result = await service.get_user(UUID(user_uuid))
+    result = await service.get_user(user_uuid)
 
-    assert result.id == user_uuid
+    assert result.uuid == user_uuid
     assert result.email == "test@example.com"
 
 
@@ -95,7 +99,7 @@ async def test_authenticate_user_success(mock_user_repo):
     password_hash = pwd_context.hash(password)
 
     user = User(
-        id=str(uuid4()),
+        uuid=uuid4(),
         username="testuser",
         email=email,
         password_hash=password_hash,
@@ -118,7 +122,7 @@ async def test_authenticate_user_wrong_password(mock_user_repo):
     password_hash = pwd_context.hash("correct_password")
 
     user = User(
-        id=str(uuid4()),
+        uuid=uuid4(),
         username="testuser",
         email=email,
         password_hash=password_hash,
@@ -150,7 +154,7 @@ async def test_authenticate_user_not_found(mock_user_repo):
 async def test_set_password(mock_user_repo):
     """Test setting a new password for a user."""
     user = User(
-        id=str(uuid4()),
+        uuid=uuid4(),
         username="testuser",
         email="test@example.com",
         password_hash="old_hash",

@@ -24,7 +24,7 @@ async def test_get_today(authenticated_client, test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     )
     event = Event(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=user.uuid,
         name="Test Event",
         frequency="ONCE",

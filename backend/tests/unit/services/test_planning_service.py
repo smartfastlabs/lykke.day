@@ -48,7 +48,7 @@ async def test_preview_tasks(
     date = datetime.date(2024, 1, 1)  # Monday
 
     routine = Routine(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Morning Routine",
         routine_schedule=RoutineSchedule(
@@ -91,7 +91,7 @@ async def test_preview_tasks(
 
     assert len(result) == 1
     assert result[0].name == "Brush Teeth"
-    assert result[0].routine_id == routine.id
+    assert result[0].routine_uuid == routine.uuid
     assert result[0].status == TaskStatus.NOT_STARTED
 
 
@@ -112,7 +112,7 @@ async def test_preview_tasks_filters_inactive_routines(
 
     # Routine active on Tuesday (weekday 1)
     routine = Routine(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Tuesday Routine",
         routine_schedule=RoutineSchedule(
@@ -165,7 +165,7 @@ async def test_preview_creates_day_context(
     template_uuid = uuid4()
 
     user = User(
-        id=str(test_user_uuid),
+        uuid=test_user_uuid,
         username="testuser",
         email="test@example.com",
         password_hash="hash",
@@ -178,7 +178,7 @@ async def test_preview_creates_day_context(
     )
 
     event = Event(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
@@ -215,7 +215,7 @@ async def test_preview_creates_day_context(
     assert result.day.user_uuid == test_user_uuid
     assert result.day.date == date
     assert len(result.events) == 1
-    assert result.events[0].id == event.id
+    assert result.events[0].uuid == event.uuid
 
 
 @pytest.mark.asyncio
@@ -285,8 +285,9 @@ async def test_unschedule_deletes_routine_tasks(
     """Test unschedule deletes routine tasks and sets day to UNSCHEDULED."""
     date = datetime.date(2024, 1, 1)
 
+    routine_uuid = uuid4()
     routine_task = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Routine Task",
         status=TaskStatus.NOT_STARTED,
@@ -300,12 +301,12 @@ async def test_unschedule_deletes_routine_tasks(
         ),
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        routine_uuid="routine-1",
+        routine_uuid=str(routine_uuid),
         date=date,
     )
 
     non_routine_task = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Manual Task",
         status=TaskStatus.NOT_STARTED,
@@ -373,7 +374,7 @@ async def test_schedule_creates_tasks_and_sets_status(
     template_uuid = uuid4()
 
     user = User(
-        id=str(test_user_uuid),
+        uuid=test_user_uuid,
         username="testuser",
         email="test@example.com",
         password_hash="hash",
@@ -436,7 +437,7 @@ async def test_save_action_for_task(
 
     date = datetime.date(2024, 1, 1)
     task = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Test Task",
         status=TaskStatus.NOT_STARTED,
@@ -493,7 +494,7 @@ async def test_save_action_for_event(
 
     date = datetime.date(2024, 1, 1)
     event = Event(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Test Event",
         frequency=TaskFrequency.ONCE,

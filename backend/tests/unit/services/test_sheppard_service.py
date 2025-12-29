@@ -53,7 +53,7 @@ async def test_build_notification_payload_single_task(
     )
 
     task = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Test Task",
         status=TaskStatus.READY,
@@ -88,7 +88,7 @@ async def test_build_notification_payload_single_task(
     assert payload.title == "Test Task"
     assert "Test Task" in payload.body
     assert len(payload.data["tasks"]) == 1
-    assert payload.data["tasks"][0]["id"] == task.id
+    assert payload.data["tasks"][0]["uuid"] == str(task.uuid)
 
 
 @pytest.mark.asyncio
@@ -125,7 +125,7 @@ async def test_build_notification_payload_multiple_tasks(
     )
 
     task1 = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Task 1",
         status=TaskStatus.READY,
@@ -142,7 +142,7 @@ async def test_build_notification_payload_multiple_tasks(
         date=date,
     )
     task2 = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Task 2",
         status=TaskStatus.READY,
@@ -212,7 +212,7 @@ async def test_build_event_notification_payload(
     )
 
     event = Event(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
@@ -242,7 +242,7 @@ async def test_build_event_notification_payload(
     assert payload.title == "Test Event"
     assert "starting soon" in payload.body
     assert len(payload.data["events"]) == 1
-    assert payload.data["events"][0]["id"] == event.id
+    assert payload.data["events"][0]["uuid"] == str(event.uuid)
 
 
 @pytest.mark.asyncio
@@ -279,7 +279,7 @@ async def test_notify_for_tasks(
     )
 
     task = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         name="Test Task",
         status=TaskStatus.READY,
@@ -297,7 +297,7 @@ async def test_notify_for_tasks(
     )
 
     subscription = PushSubscription(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user_uuid,
         endpoint="https://example.com/push",
         p256dh="key",

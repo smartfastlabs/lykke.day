@@ -4,6 +4,7 @@ import datetime
 from uuid import uuid4
 
 import pytest
+
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Task
 from planned.domain.value_objects.query import DateQuery
@@ -34,7 +35,7 @@ def _create_task_definition(user_uuid, task_id="test-task"):
 async def test_get(task_repo, test_user, test_date):
     """Test getting a task by ID."""
     task = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         name="Test Task",
         status=TaskStatus.READY,
@@ -45,9 +46,9 @@ async def test_get(task_repo, test_user, test_date):
     )
     await task_repo.put(task)
 
-    result = await task_repo.get(task.id)
+    result = await task_repo.get(task.uuid)
 
-    assert result.id == task.id
+    assert result.uuid == task.uuid
     assert result.name == "Test Task"
     assert result.user_uuid == test_user.uuid
 
@@ -63,7 +64,7 @@ async def test_get_not_found(task_repo):
 async def test_put(task_repo, test_user, test_date):
     """Test creating a new task."""
     task = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         name="New Task",
         status=TaskStatus.NOT_STARTED,
@@ -84,7 +85,7 @@ async def test_put(task_repo, test_user, test_date):
 async def test_put_update(task_repo, test_user, test_date):
     """Test updating an existing task."""
     task = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         name="Original Task",
         status=TaskStatus.NOT_STARTED,
@@ -104,7 +105,7 @@ async def test_put_update(task_repo, test_user, test_date):
     assert result.status == TaskStatus.COMPLETE
 
     # Verify it was saved
-    retrieved = await task_repo.get(task.id)
+    retrieved = await task_repo.get(task.uuid)
     assert retrieved.name == "Updated Task"
     assert retrieved.status == TaskStatus.COMPLETE
 
@@ -113,7 +114,7 @@ async def test_put_update(task_repo, test_user, test_date):
 async def test_all(task_repo, test_user, test_date, test_date_tomorrow):
     """Test getting all tasks."""
     task1 = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         name="Task 1",
         status=TaskStatus.NOT_STARTED,
@@ -123,7 +124,7 @@ async def test_all(task_repo, test_user, test_date, test_date_tomorrow):
         task_definition=_create_task_definition(test_user.uuid, "task1"),
     )
     task2 = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         name="Task 2",
         status=TaskStatus.READY,
@@ -137,16 +138,16 @@ async def test_all(task_repo, test_user, test_date, test_date_tomorrow):
 
     all_tasks = await task_repo.all()
 
-    task_ids = [t.id for t in all_tasks]
-    assert task1.id in task_ids
-    assert task2.id in task_ids
+    task_uuids = [t.uuid for t in all_tasks]
+    assert task1.uuid in task_uuids
+    assert task2.uuid in task_uuids
 
 
 @pytest.mark.asyncio
 async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow):
     """Test searching tasks with DateQuery."""
     task1 = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         name="Task Today",
         status=TaskStatus.NOT_STARTED,
@@ -156,7 +157,7 @@ async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow)
         task_definition=_create_task_definition(test_user.uuid, "task1"),
     )
     task2 = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         name="Task Tomorrow",
         status=TaskStatus.READY,
@@ -180,7 +181,7 @@ async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow)
 async def test_delete(task_repo, test_user, test_date):
     """Test deleting a task."""
     task = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         name="Task to Delete",
         status=TaskStatus.NOT_STARTED,
@@ -196,7 +197,7 @@ async def test_delete(task_repo, test_user, test_date):
 
     # Should not be found
     with pytest.raises(exceptions.NotFoundError):
-        await task_repo.get(task.id)
+        await task_repo.get(task.uuid)
 
 
 @pytest.mark.asyncio
@@ -204,7 +205,7 @@ async def test_user_isolation(task_repo, test_user, create_test_user, test_date)
     """Test that different users' tasks are properly isolated."""
     # Create task for test_user
     task = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         name="User1 Task",
         status=TaskStatus.NOT_STARTED,
@@ -221,10 +222,10 @@ async def test_user_isolation(task_repo, test_user, create_test_user, test_date)
 
     # User2 should not see user1's task
     with pytest.raises(exceptions.NotFoundError):
-        await task_repo2.get(task.id)
+        await task_repo2.get(task.uuid)
 
     # User1 should still see their task
-    result = await task_repo.get(task.id)
+    result = await task_repo.get(task.uuid)
     assert result.user_uuid == test_user.uuid
 
 
@@ -238,7 +239,7 @@ async def test_task_with_schedule(task_repo, test_user, test_date):
     )
 
     task = Task(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         name="Scheduled Task",
         status=TaskStatus.READY,

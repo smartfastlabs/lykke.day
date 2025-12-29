@@ -22,7 +22,7 @@ async def test_get(message_repo, test_user, test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     )
     message = Message(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         author="system",
         content="Test message",
@@ -30,9 +30,9 @@ async def test_get(message_repo, test_user, test_date):
     )
     await message_repo.put(message)
     
-    result = await message_repo.get(message.id)
+    result = await message_repo.get(message.uuid)
     
-    assert result.id == message.id
+    assert result.uuid == message.uuid
     assert result.content == "Test message"
 
 
@@ -52,7 +52,7 @@ async def test_put(message_repo, test_user, test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     )
     message = Message(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         author="user",
         content="New message",
@@ -80,14 +80,14 @@ async def test_search_query(message_repo, test_user, test_date, test_date_tomorr
     )
     
     message1 = Message(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         author="system",
         content="Message Today",
         sent_at=sent_at1,
     )
     message2 = Message(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         author="user",
         content="Message Tomorrow",
@@ -113,7 +113,7 @@ async def test_user_isolation(message_repo, test_user, create_test_user, test_da
     )
     
     message = Message(
-        id=str(uuid4()),
+        uuid=uuid4(),
         user_uuid=test_user.uuid,
         author="system",
         content="User1 Message",
@@ -127,5 +127,5 @@ async def test_user_isolation(message_repo, test_user, create_test_user, test_da
     
     # User2 should not see user1's message
     with pytest.raises(exceptions.NotFoundError):
-        await message_repo2.get(message.id)
+        await message_repo2.get(message.uuid)
 
