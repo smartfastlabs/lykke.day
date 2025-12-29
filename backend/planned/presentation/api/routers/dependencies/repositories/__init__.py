@@ -41,9 +41,9 @@ from ..user import get_current_user
 def get_auth_token_repo(
     user: Annotated[User, Depends(get_current_user)],
 ) -> AuthTokenRepositoryProtocol:
-    """Get a user-scoped instance of AuthTokenRepository."""
+    """Get an instance of AuthTokenRepository (not user-scoped)."""
     return cast(
-        "AuthTokenRepositoryProtocol", AuthTokenRepository(user_uuid=user.uuid)
+        "AuthTokenRepositoryProtocol", AuthTokenRepository()
     )
 
 

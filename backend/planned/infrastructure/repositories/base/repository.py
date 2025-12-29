@@ -29,7 +29,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
     Child repositories should set QueryClass class attribute to specify their custom query type.
 
     Note: This repository is NOT user-scoped. For user-scoped repositories, use UserScopedBaseRepository.
-    If user_uuid is provided, it may be used for optional filtering, but it's not required.
     """
 
     signal_source: Signal
@@ -37,14 +36,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
     table: "Table"  # type: ignore[name-defined]  # noqa: F821
     QueryClass: type[QueryType]
 
-    def __init__(self, user_uuid: UUID | None = None) -> None:
-        """Initialize repository with optional user scoping.
-
-        Args:
-            user_uuid: If provided, all queries will be filtered by this user UUID.
-                      If None, no user filtering is applied (for repositories like UserRepository).
-        """
-        self.user_uuid = user_uuid
+    def __init__(self) -> None:
+        """Initialize repository without user scoping."""
+        pass
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """
@@ -100,10 +94,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         async with self._get_connection(for_write=False) as conn:
             stmt = select(self.table).where(self.table.c.uuid == key)
 
-            # Add user_uuid filtering if scoped
-            if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
-                stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
-
             result = await conn.execute(stmt)
             row = result.mappings().first()
 
@@ -120,10 +110,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         Subclasses can override this to add custom filtering logic.
         """
         stmt: Select[tuple] = select(self.table)
-
-        # Add user_uuid filtering if scoped (must be first to ensure proper isolation)
-        if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
-            stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
 
         if query.limit is not None:
             stmt = stmt.limit(query.limit)
@@ -197,10 +183,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         async with self._get_connection(for_write=False) as conn:
             stmt = select(self.table)
 
-            # Add user_uuid filtering if scoped
-            if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
-                stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
-
             result = await conn.execute(stmt)
             rows = result.mappings().all()
 
@@ -208,29 +190,13 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     async def put(self, obj: ObjectType) -> ObjectType:
         """Save or update an object."""
-        # Ensure user_uuid is set on entity if repository is user-scoped
-        if self.user_uuid is not None and hasattr(obj, "user_uuid"):
-            # Set user_uuid on the entity if it's not already set or doesn't match
-            if not hasattr(obj, "user_uuid") or obj.user_uuid != self.user_uuid:
-                obj.user_uuid = self.user_uuid
-
         row = type(self).entity_to_row(obj)  # type: ignore[attr-defined]
 
-        # Ensure user_uuid is in the row if repository is user-scoped
-        if (
-            self.user_uuid is not None
-            and "user_uuid" not in row
-            and hasattr(self.table.c, "user_uuid")
-        ):
-            row["user_uuid"] = self.user_uuid
-
         async with self._get_connection(for_write=True) as conn:
-            # Check if object exists (with user filtering if scoped)
+            # Check if object exists
             # All entities have uuid attribute (from BaseEntityObject)
             obj_uuid = getattr(obj, "uuid")
             stmt = select(self.table.c.uuid).where(self.table.c.uuid == obj_uuid)
-            if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
-                stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
             result = await conn.execute(stmt)
             exists = result.first() is not None
 
@@ -258,19 +224,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         if not objs:
             return []
 
-        # Ensure user_uuid is set on all entities if repository is user-scoped
-        if self.user_uuid is not None:
-            for obj in objs:
-                if hasattr(obj, "user_uuid"):
-                    obj.user_uuid = self.user_uuid
-
         rows = [type(self).entity_to_row(obj) for obj in objs]  # type: ignore[attr-defined]
-
-        # Ensure user_uuid is in all rows if repository is user-scoped
-        if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
-            for row in rows:
-                if "user_uuid" not in row:
-                    row["user_uuid"] = self.user_uuid
 
         async with self._get_connection(for_write=True) as conn:
             # Insert all rows - using executemany with VALUES
@@ -302,10 +256,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         async with self._get_connection(for_write=True) as conn:
             # Build update statement
             stmt = self.table.update().values(**updates).where(self.table.c.uuid == key)
-
-            # Add user_uuid filtering if scoped
-            if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
-                stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
 
             # Execute update
             await conn.execute(stmt)
@@ -349,9 +299,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
             async with self._get_connection(for_write=True) as conn:
                 stmt = delete(self.table).where(self.table.c.uuid == key)
-                # Add user_uuid filtering if scoped
-                if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
-                    stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
                 await conn.execute(stmt)
         else:
             # key is actually the object
@@ -360,9 +307,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                 # All entities have uuid attribute (from BaseEntityObject)
                 obj_uuid = getattr(obj, "uuid")
                 stmt = delete(self.table).where(self.table.c.uuid == obj_uuid)
-                # Add user_uuid filtering if scoped
-                if self.user_uuid is not None and hasattr(self.table.c, "user_uuid"):
-                    stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
                 await conn.execute(stmt)
 
         event = RepositoryEvent[ObjectType](type="delete", value=obj)
@@ -386,4 +330,194 @@ class UserScopedBaseRepository(BaseRepository[ObjectType, QueryType], Generic[Ob
         Args:
             user_uuid: Required user UUID. All queries will be filtered by this user UUID.
         """
-        super().__init__(user_uuid=user_uuid)
+        super().__init__()
+        self.user_uuid = user_uuid
+
+    async def get(self, key: UUID) -> ObjectType:
+        """Get an object by uuid, filtered by user_uuid."""
+        async with self._get_connection(for_write=False) as conn:
+            stmt = select(self.table).where(self.table.c.uuid == key)
+
+            # Add user_uuid filtering
+            if hasattr(self.table.c, "user_uuid"):
+                stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+
+            result = await conn.execute(stmt)
+            row = result.mappings().first()
+
+            if row is None:
+                raise exceptions.NotFoundError(
+                    f"{self.Object.__name__} with uuid {key} not found"
+                )
+
+            return type(self).row_to_entity(dict(row))  # type: ignore[attr-defined,no-any-return]
+
+    def build_query(self, query: QueryType) -> Select[tuple]:
+        """Build a SQLAlchemy Core select statement from a query object with user filtering."""
+        stmt: Select[tuple] = select(self.table)
+
+        # Add user_uuid filtering (must be first to ensure proper isolation)
+        if hasattr(self.table.c, "user_uuid"):
+            stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+
+        if query.limit is not None:
+            stmt = stmt.limit(query.limit)
+
+        if query.offset:
+            stmt = stmt.offset(query.offset)
+
+        # Handle date filtering if table has created_at column
+        if hasattr(self.table.c, "created_at"):
+            if query.created_before:
+                stmt = stmt.where(self.table.c.created_at < query.created_before)
+
+            if query.created_after:
+                stmt = stmt.where(self.table.c.created_at > query.created_after)
+
+        # Handle ordering
+        if query.order_by:
+            col = getattr(self.table.c, query.order_by, None)
+            if col is not None:
+                if query.order_by_desc:
+                    stmt = stmt.order_by(col.desc())
+                else:
+                    stmt = stmt.order_by(col)
+        else:
+            # Default ordering by uuid
+            stmt = stmt.order_by(self.table.c.uuid)
+
+        return stmt
+
+    async def all(self) -> list[ObjectType]:
+        """Get all objects, filtered by user_uuid."""
+        async with self._get_connection(for_write=False) as conn:
+            stmt = select(self.table)
+
+            # Add user_uuid filtering
+            if hasattr(self.table.c, "user_uuid"):
+                stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+
+            result = await conn.execute(stmt)
+            rows = result.mappings().all()
+
+            return [type(self).row_to_entity(dict(row)) for row in rows]  # type: ignore[attr-defined]
+
+    async def put(self, obj: ObjectType) -> ObjectType:
+        """Save or update an object, ensuring user_uuid is set and filtered."""
+        # Ensure user_uuid is set on entity
+        if hasattr(obj, "user_uuid"):
+            obj.user_uuid = self.user_uuid
+
+        row = type(self).entity_to_row(obj)  # type: ignore[attr-defined]
+
+        # Ensure user_uuid is in the row
+        if "user_uuid" not in row and hasattr(self.table.c, "user_uuid"):
+            row["user_uuid"] = self.user_uuid
+
+        async with self._get_connection(for_write=True) as conn:
+            # Check if object exists (with user filtering)
+            obj_uuid = getattr(obj, "uuid")
+            stmt = select(self.table.c.uuid).where(self.table.c.uuid == obj_uuid)
+            if hasattr(self.table.c, "user_uuid"):
+                stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+            result = await conn.execute(stmt)
+            exists = result.first() is not None
+
+            # Use PostgreSQL INSERT ... ON CONFLICT DO UPDATE
+            insert_stmt = pg_insert(self.table).values(**row)
+            # Exclude only uuid from update
+            update_dict = {k: v for k, v in row.items() if k != "uuid"}
+            index_elements = ["uuid"]
+            upsert_stmt = insert_stmt.on_conflict_do_update(
+                index_elements=index_elements,
+                set_=update_dict,
+            )
+            await conn.execute(upsert_stmt)
+
+        event_type: Literal["create", "update"] = "update" if exists else "create"
+        event = RepositoryEvent[ObjectType](type=event_type, value=obj)
+        await self.signal_source.send_async("change", event=event)
+        return obj
+
+    async def insert_many(self, *objs: ObjectType) -> list[ObjectType]:
+        """Insert multiple objects in a single transaction, ensuring user_uuid is set."""
+        if not objs:
+            return []
+
+        # Ensure user_uuid is set on all entities
+        for obj in objs:
+            if hasattr(obj, "user_uuid"):
+                obj.user_uuid = self.user_uuid
+
+        rows = [type(self).entity_to_row(obj) for obj in objs]  # type: ignore[attr-defined]
+
+        # Ensure user_uuid is in all rows
+        if hasattr(self.table.c, "user_uuid"):
+            for row in rows:
+                if "user_uuid" not in row:
+                    row["user_uuid"] = self.user_uuid
+
+        async with self._get_connection(for_write=True) as conn:
+            # Insert all rows - using executemany with VALUES
+            for row in rows:
+                insert_stmt = pg_insert(self.table).values(**row)
+                await conn.execute(insert_stmt)
+
+        # Return the objects (they should now have persisted data)
+        return list(objs)
+
+    async def apply_updates(
+        self,
+        key: UUID,
+        **updates: Any,
+    ) -> ObjectType:
+        """Apply partial updates to an object identified by uuid, filtered by user_uuid."""
+        if not updates:
+            # No updates to apply, just fetch and return
+            return await self.get(key)
+
+        async with self._get_connection(for_write=True) as conn:
+            # Build update statement
+            stmt = self.table.update().values(**updates).where(self.table.c.uuid == key)
+
+            # Add user_uuid filtering
+            if hasattr(self.table.c, "user_uuid"):
+                stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+
+            # Execute update
+            await conn.execute(stmt)
+
+        # Fetch and return updated object
+        return await self.get(key)
+
+    async def delete(self, key: UUID | ObjectType) -> None:
+        """Delete an object by uuid or by object, filtered by user_uuid."""
+        # Handle both key (UUID) and object deletion
+        if isinstance(key, UUID):
+            # Get object before deleting for event
+            try:
+                obj = await self.get(key)
+            except exceptions.NotFoundError:
+                # If not found, nothing to delete
+                return
+
+            async with self._get_connection(for_write=True) as conn:
+                stmt = delete(self.table).where(self.table.c.uuid == key)
+                # Add user_uuid filtering
+                if hasattr(self.table.c, "user_uuid"):
+                    stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+                await conn.execute(stmt)
+        else:
+            # key is actually the object
+            obj = key
+            async with self._get_connection(for_write=True) as conn:
+                # All entities have uuid attribute (from BaseEntityObject)
+                obj_uuid = getattr(obj, "uuid")
+                stmt = delete(self.table).where(self.table.c.uuid == obj_uuid)
+                # Add user_uuid filtering
+                if hasattr(self.table.c, "user_uuid"):
+                    stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+                await conn.execute(stmt)
+
+        event = RepositoryEvent[ObjectType](type="delete", value=obj)
+        await self.signal_source.send_async("change", event=event)

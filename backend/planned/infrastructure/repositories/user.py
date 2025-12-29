@@ -19,8 +19,8 @@ class UserRepository(BaseRepository[User, BaseQuery]):
     QueryClass = BaseQuery
 
     def __init__(self) -> None:
-        """Initialize UserRepository without user_uuid (not user-scoped)."""
-        super().__init__(user_uuid=None)  # Pass None to disable user scoping
+        """Initialize UserRepository without user scoping."""
+        super().__init__()
 
     async def get_by_email(self, email: str) -> User | None:
         """Get a user by email address."""

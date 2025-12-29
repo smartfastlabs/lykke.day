@@ -89,9 +89,9 @@ async def test_user_isolation(auth_token_repo, test_user, create_test_user):
     
     # Create another user
     user2 = await create_test_user()
-    auth_token_repo2 = AuthTokenRepository(user_uuid=user2.uuid)
+    auth_token_repo2 = AuthTokenRepository()
     
-    # User2 should not see user1's token
-    with pytest.raises(exceptions.NotFoundError):
-        await auth_token_repo2.get(token.uuid)
+    # AuthTokenRepository is not user-scoped, so user2 can see user1's token
+    retrieved_token = await auth_token_repo2.get(token.uuid)
+    assert retrieved_token.uuid == token.uuid
 

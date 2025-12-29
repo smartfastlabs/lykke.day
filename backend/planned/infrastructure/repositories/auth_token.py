@@ -1,5 +1,4 @@
 from typing import Any
-from uuid import UUID
 
 from planned.domain.entities import AuthToken
 
@@ -15,13 +14,9 @@ class AuthTokenRepository(BaseRepository[AuthToken, BaseQuery]):
     table = auth_tokens
     QueryClass = BaseQuery
 
-    def __init__(self, user_uuid: UUID | None = None) -> None:
-        """Initialize AuthTokenRepository with optional user scoping.
-
-        Args:
-            user_uuid: Optional user UUID. If provided, queries will be filtered by this user UUID.
-        """
-        super().__init__(user_uuid=user_uuid)
+    def __init__(self) -> None:
+        """Initialize AuthTokenRepository without user scoping."""
+        super().__init__()
 
     @staticmethod
     def entity_to_row(auth_token: AuthToken) -> dict[str, Any]:

@@ -141,8 +141,8 @@ async def calendar_repo(test_user):
 
 @pytest_asyncio.fixture
 async def auth_token_repo(test_user):
-    """AuthTokenRepository scoped to test_user."""
-    return AuthTokenRepository(user_uuid=test_user.uuid)
+    """AuthTokenRepository (not user-scoped)."""
+    return AuthTokenRepository()
 
 
 @pytest_asyncio.fixture

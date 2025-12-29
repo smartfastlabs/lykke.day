@@ -72,7 +72,7 @@ class SheppardManager:
         """
         # Create repositories scoped to user
         auth_token_repo: AuthTokenRepositoryProtocol = cast(
-            "AuthTokenRepositoryProtocol", AuthTokenRepository(user_uuid=user_uuid)
+            "AuthTokenRepositoryProtocol", AuthTokenRepository()
         )
         calendar_repo: CalendarRepositoryProtocol = cast(
             "CalendarRepositoryProtocol", CalendarRepository(user_uuid=user_uuid)
