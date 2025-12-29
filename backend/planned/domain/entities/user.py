@@ -14,7 +14,7 @@ class User(BaseEntityObject):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime | None = None
 
-    @computed_field  # type: ignore
+    @computed_field
     @property
     def uuid(self) -> UUID:
         """Return the user's ID as a UUID."""

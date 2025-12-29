@@ -1,5 +1,6 @@
+from planned.domain.value_objects.query import BaseQuery, DateQuery
+
 from .repository import BaseRepository
-from .schema import BaseQuery, DateQuery
 
 __all__ = [
     "BaseQuery",

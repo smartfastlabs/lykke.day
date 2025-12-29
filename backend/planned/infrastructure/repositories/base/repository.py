@@ -10,9 +10,9 @@ from sqlalchemy.sql import Select
 
 from planned.core.events import ChangeEvent, ChangeHandler
 from planned.core.exceptions import exceptions
+from planned.domain.value_objects.query import BaseQuery
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.database.transaction import get_transaction_connection
-from planned.infrastructure.repositories.base.schema import BaseQuery
 
 ObjectType = TypeVar("ObjectType")
 QueryType = TypeVar("QueryType", bound=BaseQuery)

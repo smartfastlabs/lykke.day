@@ -11,7 +11,7 @@ from planned.core.config import settings
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Message
 from planned.infrastructure.repositories import MessageRepository
-from planned.infrastructure.repositories.base.schema import DateQuery
+from planned.domain.value_objects.query import DateQuery
 
 
 @pytest.mark.asyncio

@@ -7,7 +7,7 @@ import pytest_asyncio
 
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Day, DayStatus
-from planned.infrastructure.repositories.base.schema import DateQuery
+from planned.domain.value_objects.query import DateQuery
 from planned.infrastructure.utils.dates import get_current_datetime
 
 

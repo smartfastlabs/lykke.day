@@ -18,7 +18,7 @@ from planned.domain.value_objects.task import (
     TimingType,
 )
 from planned.infrastructure.repositories import TaskRepository
-from planned.infrastructure.repositories.base.schema import DateQuery
+from planned.domain.value_objects.query import DateQuery
 
 
 def _create_task_definition(user_uuid, task_id="test-task"):
