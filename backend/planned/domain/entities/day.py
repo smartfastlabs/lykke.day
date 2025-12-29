@@ -20,7 +20,7 @@ class DayTemplate(BaseObject):
     @classmethod
     def uuid_from_slug_and_user(cls, slug: str, user_uuid: UUID) -> UUID:
         """Generate deterministic UUID5 from slug and user_uuid.
-        
+
         This can be used to generate the UUID for looking up a DayTemplate by slug
         without creating a DayTemplate instance.
         """
@@ -31,11 +31,12 @@ class DayTemplate(BaseObject):
     @model_validator(mode="after")
     def generate_uuid(self) -> "DayTemplate":
         """Generate deterministic UUID5 based on slug and user_uuid.
-        
+
         This ensures that DayTemplates with the same slug and user_uuid always have
         the same UUID, making lookups stable and deterministic.
         """
-        self.uuid = self.uuid_from_slug_and_user(self.slug, self.user_uuid)
+        if self.uuid is None:
+            self.uuid = self.uuid_from_slug_and_user(self.slug, self.user_uuid)
         return self
 
 
@@ -52,7 +53,7 @@ class Day(BaseObject):
     @classmethod
     def uuid_from_date_and_user(cls, date: dt_date, user_uuid: UUID) -> UUID:
         """Generate deterministic UUID5 from date and user_uuid.
-        
+
         This can be used to generate the UUID for looking up a Day by date
         without creating a Day instance.
         """
@@ -63,9 +64,10 @@ class Day(BaseObject):
     @model_validator(mode="after")
     def generate_uuid(self) -> "Day":
         """Generate deterministic UUID5 based on date and user_uuid.
-        
+
         This ensures that Days with the same date and user_uuid always have
         the same UUID, making lookups stable and deterministic.
         """
         self.uuid = self.uuid_from_date_and_user(self.date, self.user_uuid)
+        return self
         return self

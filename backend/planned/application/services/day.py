@@ -270,7 +270,9 @@ class DayService(BaseService):
             user = await user_repo.get(str(user_uuid))
             # template_defaults stores slugs
             template_slug = user.settings.template_defaults[date.weekday()]
-            template: objects.DayTemplate = await day_template_repo.get_by_slug(template_slug)
+            template: objects.DayTemplate = await day_template_repo.get_by_slug(
+                template_slug
+            )
         else:
             template: objects.DayTemplate = await day_template_repo.get(template_uuid)
 

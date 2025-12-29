@@ -69,7 +69,7 @@ async def test_set_date_changes_date_and_reloads_context(
     old_ctx = DayContext(day=old_day, tasks=[], events=[], messages=[])
 
     # Mock new context loading
-    allow(mock_day_repo).get(str(new_date)).and_return(new_day)
+    allow(mock_day_repo).get(new_day.uuid).and_return(new_day)
     allow(mock_task_repo).search_query.and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
@@ -111,16 +111,18 @@ async def test_set_date_with_user_uuid(
         user_uuid=test_user_uuid,
         date=old_date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=uuid4(),
     )
     new_day = Day(
         user_uuid=test_user_uuid,
         date=new_date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=uuid4(),
     )
 
     old_ctx = DayContext(day=old_day, tasks=[], events=[], messages=[])
 
-    allow(mock_day_repo).get(str(new_date)).and_return(new_day)
+    allow(mock_day_repo).get(new_day.uuid).and_return(new_day)
     allow(mock_task_repo).search_query.and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
@@ -152,9 +154,10 @@ async def test_get_or_preview_returns_existing_day(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=uuid4(),
     )
 
-    allow(mock_day_repo).get(str(date)).and_return(day)
+    allow(mock_day_repo).get(day.uuid).and_return(day)
 
     result = await DayService.get_or_preview(
         date,
@@ -188,13 +191,13 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     template_uuid = uuid4()
     template = DayTemplate(
         uuid=template_uuid,
-        slug=template_id,
+        slug=str(template_id),
         user_uuid=test_user_uuid,
     )
 
-    allow(mock_day_repo).get(str(date)).and_raise(exceptions.NotFoundError("Not found"))
+    allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
     allow(mock_user_repo).get(str(test_user_uuid)).and_return(user)
-    allow(mock_day_template_repo).get_by_slug(template_id).and_return(template)
+    allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
 
     result = await DayService.get_or_preview(
         date,
@@ -241,9 +244,9 @@ async def test_get_or_create_creates_and_saves_day(
         template_uuid=template_uuid,
     )
 
-    allow(mock_day_repo).get(str(date)).and_raise(exceptions.NotFoundError("Not found"))
+    allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
     allow(mock_user_repo).get(str(test_user_uuid)).and_return(user)
-    allow(mock_day_template_repo).get(template_uuid).and_return(template)
+    allow(mock_day_template_repo).get_by_slug(template_slug).and_return(template)
     allow(mock_day_repo).put.and_return(created_day)
 
     result = await DayService.get_or_create(
@@ -519,4 +522,3 @@ async def test_get_upcomming_events(
     assert any(e.uuid == event1.uuid for e in result)
     assert any(e.uuid == event4.uuid for e in result)
     assert any(e.uuid == event4.uuid for e in result)
-

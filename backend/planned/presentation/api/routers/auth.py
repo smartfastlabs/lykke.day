@@ -20,7 +20,7 @@ class StatusResponse(BaseResponseObject):
 
 
 class UserResponse(BaseResponseObject):
-    id: str
+    uuid: str
     email: str
 
 
@@ -80,7 +80,7 @@ async def register(
     request.session["logged_in_at"] = now
     request.session["user_uuid"] = str(user.uuid)
 
-    return UserResponse(id=str(user.uuid), email=user.email)
+    return UserResponse(uuid=str(user.uuid), email=user.email)
 
 
 @router.post("/set-password")
@@ -120,4 +120,4 @@ async def login(
     request.session["logged_in_at"] = now
     request.session["user_uuid"] = str(user.uuid)
 
-    return UserResponse(id=str(user.uuid), email=user.email)
+    return UserResponse(uuid=str(user.uuid), email=user.email)

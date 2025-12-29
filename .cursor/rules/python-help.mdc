@@ -1,0 +1,6 @@
+---
+globs: *.py
+alwaysApply: false
+---
+
+To run things in the correct environment use `poetry run ...` e.g. `poetry run alembic upgrade head`

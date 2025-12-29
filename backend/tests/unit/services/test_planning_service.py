@@ -91,7 +91,7 @@ async def test_preview_tasks(
 
     assert len(result) == 1
     assert result[0].name == "Brush Teeth"
-    assert result[0].routine_uuid == routine.uuid
+    assert result[0].routine_uuid == str(routine.uuid)
     assert result[0].status == TaskStatus.NOT_STARTED
 
 
@@ -169,10 +169,11 @@ async def test_preview_creates_day_context(
         username="testuser",
         email="test@example.com",
         password_hash="hash",
-        settings=UserSetting(template_defaults=[str(template_uuid)] * 7),
+        settings=UserSetting(template_defaults=["default"] * 7),
     )
 
     template = DayTemplate(
+        slug="default",
         uuid=template_uuid,
         user_uuid=test_user_uuid,
     )
@@ -190,9 +191,9 @@ async def test_preview_creates_day_context(
         date=date,
     )
 
-    allow(mock_day_repo).get(str(date)).and_raise(exceptions.NotFoundError("Not found"))
+    allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
     allow(mock_user_repo).get(str(test_user_uuid)).and_return(user)
-    allow(mock_day_template_repo).get(template_uuid).and_return(template)
+    allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([event])
     allow(mock_message_repo).search_query.and_return([])
@@ -247,7 +248,7 @@ async def test_preview_uses_existing_day_template(
         user_uuid=test_user_uuid,
     )
 
-    allow(mock_day_repo).get(str(date)).and_return(existing_day)
+    allow(mock_day_repo).get(existing_day.uuid).and_return(existing_day)
     allow(mock_day_template_repo).get(existing_template_uuid).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([])
@@ -328,14 +329,15 @@ async def test_unschedule_deletes_routine_tasks(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.SCHEDULED,
+        template_uuid=uuid4(),
     )
 
     allow(mock_task_repo).search_query.and_return([routine_task, non_routine_task])
     allow(mock_task_repo).delete.and_return(None)
-    allow(mock_day_repo).get(str(date)).and_return(day)
+    allow(mock_day_repo).get(day.uuid).and_return(day)
     allow(mock_day_repo).put.and_return(day)
     allow(mock_day_template_repo).get.and_return(
-        DayTemplate(uuid=uuid4(), user_uuid=test_user_uuid)
+        DayTemplate(slug="default", uuid=uuid4(), user_uuid=test_user_uuid)
     )
 
     service = PlanningService(
@@ -378,18 +380,19 @@ async def test_schedule_creates_tasks_and_sets_status(
         username="testuser",
         email="test@example.com",
         password_hash="hash",
-        settings=UserSetting(template_defaults=[str(template_uuid)] * 7),
+        settings=UserSetting(template_defaults=["default"] * 7),
     )
 
     template = DayTemplate(
+        slug="default",
         uuid=template_uuid,
         user_uuid=test_user_uuid,
     )
 
     allow(mock_task_repo).delete_many.and_return(None)
-    allow(mock_day_repo).get(str(date)).and_raise(exceptions.NotFoundError("Not found"))
+    allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
     allow(mock_user_repo).get(str(test_user_uuid)).and_return(user)
-    allow(mock_day_template_repo).get(template_uuid).and_return(template)
+    allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])

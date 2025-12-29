@@ -40,6 +40,7 @@ async def test_build_notification_payload_single_task(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -88,7 +89,7 @@ async def test_build_notification_payload_single_task(
     assert payload.title == "Test Task"
     assert "Test Task" in payload.body
     assert len(payload.data["tasks"]) == 1
-    assert payload.data["tasks"][0]["uuid"] == str(task.uuid)
+    assert payload.data["tasks"][0]["uuid"] == task.uuid
 
 
 @pytest.mark.asyncio
@@ -242,7 +243,7 @@ async def test_build_event_notification_payload(
     assert payload.title == "Test Event"
     assert "starting soon" in payload.body
     assert len(payload.data["events"]) == 1
-    assert payload.data["events"][0]["uuid"] == str(event.uuid)
+    assert payload.data["events"][0]["uuid"] == event.uuid
 
 
 @pytest.mark.asyncio

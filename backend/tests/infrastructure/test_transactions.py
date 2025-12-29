@@ -36,7 +36,8 @@ async def test_transaction_commits_on_success(test_date, test_user, day_repo):
         await day_repo.put(day)
 
     # After transaction commits, the day should be retrievable
-    result = await day_repo.get(str(test_date))
+    day_uuid = Day.uuid_from_date_and_user(test_date, test_user.uuid)
+    result = await day_repo.get(str(day_uuid))
     assert result.status == DayStatus.SCHEDULED
 
 
@@ -58,8 +59,9 @@ async def test_transaction_rolls_back_on_exception(test_date, test_user, day_rep
             raise ValueError("Test exception")
 
     # After rollback, the day should not be in the database
+    day_uuid = Day.uuid_from_date_and_user(test_date, test_user.uuid)
     with pytest.raises(exceptions.NotFoundError):
-        await day_repo.get(str(test_date))
+        await day_repo.get(str(day_uuid))
 
 
 @pytest.mark.asyncio
@@ -77,7 +79,8 @@ async def test_repository_works_without_transaction(test_date, test_user, day_re
     # No transaction - should create its own connection
     await day_repo.put(day)
 
-    result = await day_repo.get(str(test_date))
+    day_uuid = Day.uuid_from_date_and_user(test_date, test_user.uuid)
+    result = await day_repo.get(str(day_uuid))
     assert result.status == DayStatus.SCHEDULED
 
 
@@ -98,7 +101,7 @@ async def test_read_operations_see_uncommitted_changes(test_date, test_user, day
         await day_repo.put(day)
 
         # Read it back - should see the uncommitted change
-        result = await day_repo.get(str(test_date))
+        result = await day_repo.get(day.uuid)
         assert result.status == DayStatus.SCHEDULED
 
         # Update it
@@ -106,11 +109,11 @@ async def test_read_operations_see_uncommitted_changes(test_date, test_user, day
         await day_repo.put(day)
 
         # Read it again - should see the updated uncommitted change
-        result = await day_repo.get(str(test_date))
+        result = await day_repo.get(day.uuid)
         assert result.status == DayStatus.UNSCHEDULED
 
     # After commit, the final state should be persisted
-    result = await day_repo.get(str(test_date))
+    result = await day_repo.get(day.uuid)
     assert result.status == DayStatus.UNSCHEDULED
 
 
@@ -149,7 +152,7 @@ async def test_multiple_operations_in_single_transaction(
         await task_repo.put(task)
 
     # Both should be committed
-    result_day = await day_repo.get(str(test_date))
+    result_day = await day_repo.get(day.uuid)
     assert result_day.status == DayStatus.SCHEDULED
 
     # Find the task
@@ -188,7 +191,7 @@ async def test_nested_transactions_reuse_connection(test_date, test_user, day_re
             await day_repo.put(day1)
 
     # After commit, the final state should be persisted
-    result = await day_repo.get(str(test_date))
+    result = await day_repo.get(day1.uuid)
     assert result.status == DayStatus.UNSCHEDULED
 
 
@@ -223,4 +226,4 @@ async def test_transaction_rollback_on_nested_exception(test_date, test_user, da
 
     # After rollback, nothing should be persisted
     with pytest.raises(exceptions.NotFoundError):
-        await day_repo.get(str(test_date))
+        await day_repo.get(day.uuid)

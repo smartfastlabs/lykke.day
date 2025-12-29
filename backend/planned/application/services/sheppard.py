@@ -274,7 +274,7 @@ class SheppardService(BaseService):
             ],
             data={
                 "type": "events",
-                "event_ids": [event.id for event in events],
+                "event_uuids": [event.uuid for event in events],
                 "events": event_data,
             },
         )

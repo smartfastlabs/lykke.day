@@ -87,7 +87,7 @@ class PlanningService(BaseService):
                         user_uuid=self.user_uuid,
                         name=routine_task.name or f"ROUTINE: {routine.name}",
                         frequency=routine.routine_schedule.frequency,
-                        routine_id=str(routine.uuid),
+                        routine_uuid=str(routine.uuid),
                         task_definition=task_def,
                         schedule=routine_task.schedule,
                         scheduled_date=date,

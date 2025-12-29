@@ -61,7 +61,6 @@ class TimingType(str, Enum):
 
 class TaskDefinition(BaseConfigObject):
     user_uuid: UUID
-    id: str
     name: str
     description: str
     type: TaskType
@@ -82,4 +81,3 @@ class TaskSchedule(BaseModel):
             if foo is not None:
                 return True
         return False
-

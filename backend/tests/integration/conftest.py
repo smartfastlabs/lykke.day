@@ -3,6 +3,7 @@
 from datetime import time
 from uuid import uuid4
 
+import pytest
 import pytest_asyncio
 
 from planned.domain.entities import Alarm, DayTemplate, User
@@ -26,6 +27,7 @@ from planned.infrastructure.repositories import (
 @pytest_asyncio.fixture
 async def create_test_user():
     """Factory to create unique test users."""
+
     async def _create_user(email: str | None = None, **kwargs) -> User:
         """Create a test user with unique email."""
         if email is None:
@@ -41,7 +43,7 @@ async def create_test_user():
         )
         user_repo = UserRepository()
         return await user_repo.put(user)
-    
+
     return _create_user
 
 
@@ -66,7 +68,7 @@ async def test_user(create_test_user):
 async def _setup_day_templates_for_user(user: User) -> None:
     """Helper function to create default day templates for a user."""
     repo = DayTemplateRepository(user_uuid=user.uuid)
-    
+
     # Create default template (UUID will be auto-generated from slug + user_uuid)
     default_template = DayTemplate(
         user_uuid=user.uuid,
@@ -79,7 +81,7 @@ async def _setup_day_templates_for_user(user: User) -> None:
         ),
     )
     await repo.put(default_template)
-    
+
     # Create weekend template (UUID will be auto-generated from slug + user_uuid)
     weekend_template = DayTemplate(
         user_uuid=user.uuid,
@@ -94,10 +96,10 @@ async def _setup_day_templates_for_user(user: User) -> None:
     await repo.put(weekend_template)
 
 
-@pytest_asyncio.fixture
-async def setup_day_templates(test_user):
+@pytest.fixture
+def setup_day_templates(test_user):
     """Create default and weekend day templates for tests."""
-    await _setup_day_templates_for_user(test_user)
+    return _setup_day_templates_for_user(test_user)
 
 
 # Repository fixtures - all scoped to test_user
@@ -165,4 +167,3 @@ async def routine_repo(test_user):
 async def task_definition_repo(test_user):
     """TaskDefinitionRepository scoped to test_user."""
     return TaskDefinitionRepository(user_uuid=test_user.uuid)
-
