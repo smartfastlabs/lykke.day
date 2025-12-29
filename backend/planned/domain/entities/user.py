@@ -8,7 +8,9 @@ from .base import BaseEntityObject
 
 
 class User(BaseEntityObject):
+    username: str
     email: str
+    phone_number: str | None = None
     password_hash: str
     settings: UserSetting = Field(default_factory=UserSetting)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -19,4 +21,3 @@ class User(BaseEntityObject):
     def uuid(self) -> UUID:
         """Return the user's ID as a UUID."""
         return UUID(self.id)
-

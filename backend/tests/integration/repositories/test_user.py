@@ -35,6 +35,7 @@ async def test_put(user_repo):
     """Test creating a new user."""
     user = User(
         id=str(uuid4()),
+        username=f"testuser_{uuid4().hex[:8]}",
         email=f"test-{uuid4()}@example.com",
         password_hash="hashed_password",
         settings=UserSetting(),
@@ -124,6 +125,7 @@ async def test_user_with_custom_settings(user_repo):
     )
     user = User(
         id=str(uuid4()),
+        username=f"testuser_{uuid4().hex[:8]}",
         email=f"test-{uuid4()}@example.com",
         password_hash="hash",
         settings=settings,

@@ -15,6 +15,7 @@ async def test_user():
     user_repo = UserRepository()
     user = User(
         id=str(uuid4()),
+        username=f"testuser_{uuid4().hex[:8]}",
         email=f"test-{uuid4()}@example.com",
         password_hash="test_hash",
         settings=UserSetting(),

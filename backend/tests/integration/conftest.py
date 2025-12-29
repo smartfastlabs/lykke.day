@@ -30,9 +30,11 @@ async def create_test_user():
         """Create a test user with unique email."""
         if email is None:
             email = f"test-{uuid4()}@example.com"
-        
+
+        username = kwargs.pop("username", f"testuser_{uuid4().hex[:8]}")
         user = User(
             id=str(uuid4()),
+            username=username,
             email=email,
             password_hash="test_hash",
             settings=kwargs.pop("settings", UserSetting()),

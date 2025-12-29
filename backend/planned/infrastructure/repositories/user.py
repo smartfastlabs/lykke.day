@@ -40,7 +40,9 @@ class UserRepository(BaseRepository[User, BaseQuery]):
         """Convert a User entity to a database row dict."""
         row: dict[str, Any] = {
             "id": user.id,
+            "username": user.username,
             "email": user.email,
+            "phone_number": user.phone_number,
             "password_hash": user.password_hash,
         }
         

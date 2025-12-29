@@ -18,6 +18,7 @@ async def test_read_directory_single_file():
         user_uuid = "test-user-123"
         user_data = {
             "id": user_uuid,
+            "username": "testuser123",
             "email": "test@example.com",
             "password_hash": "hash",
             "settings": {},
@@ -43,6 +44,7 @@ async def test_read_directory_multiple_files():
             user_uuid = f"test-user-{i}"
             user_data = {
                 "id": user_uuid,
+                "username": f"testuser{i}",
                 "email": f"test{i}@example.com",
                 "password_hash": "hash",
                 "settings": {},
@@ -75,6 +77,7 @@ async def test_read_directory_ignores_non_json():
         user_uuid = "test-user"
         user_data = {
             "id": user_uuid,
+            "username": "testuser",
             "email": "test@example.com",
             "password_hash": "hash",
             "settings": {},
@@ -102,6 +105,7 @@ async def test_read_directory_ignores_directories():
         user_uuid = "test-user"
         user_data = {
             "id": user_uuid,
+            "username": "testuser",
             "email": "test@example.com",
             "password_hash": "hash",
             "settings": {},

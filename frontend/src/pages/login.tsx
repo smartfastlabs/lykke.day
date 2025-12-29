@@ -62,6 +62,16 @@ export default function Login() {
             >
               {isLoading() ? "Signing in..." : "Continue"}
             </button>
+
+            <p class="text-sm text-center text-neutral-600">
+              Don't have an account?{" "}
+              <a
+                href="/register"
+                class="text-neutral-900 font-medium hover:underline"
+              >
+                Create one
+              </a>
+            </p>
           </form>
         </div>
       </div>

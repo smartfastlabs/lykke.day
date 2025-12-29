@@ -1,65 +1,89 @@
 # Add Feature Workflow
 
-## Pre-Implementation Checklist
+## How This Works
 
-- [ ] Understand the feature requirements
-- [ ] Check existing similar features for patterns
-- [ ] Identify affected components (backend/frontend/both)
-- [ ] Check for existing tests to understand testing patterns
+This is an INTERACTIVE workflow. You MUST stop at each checkpoint and wait for explicit approval before proceeding. Do NOT continue to the next phase until the user says "approved", "looks good", "continue", or similar.
 
-## Implementation Steps
+## Phase 1: Feature Understanding
 
-### Backend (if applicable)
+Ask clarifying questions about:
 
-1. **Domain Layer**
+- What problem does this solve?
+- Who uses it?
+- What's the happy path?
+- What are edge cases?
 
-   - Create/update domain entities in `planned/domain/entities/`
-   - Create/update value objects in `planned/domain/value_objects/`
-   - Follow existing naming conventions
+Output a brief feature summary for confirmation.
 
-2. **Application Layer**
+🛑 **CHECKPOINT: Wait for user to confirm understanding is correct.**
 
-   - Create/update repositories in `planned/application/repositories/`
-   - Create/update services in `planned/application/services/`
-   - Create/update gateways if external integrations needed
+## Phase 2: Data Model Design
 
-3. **Infrastructure Layer**
+Propose:
 
-   - Implement repository implementations in `planned/infrastructure/repositories/`
-   - Add database migrations if schema changes needed
+- New/modified entities (with fields and types)
+- New/modified value objects
+- Database schema changes (if any)
+- Relationships between entities
 
-4. **Presentation Layer**
+Format as a simple diagram or structured list. Do NOT write any code yet.
 
-   - Add API routes in `planned/presentation/api/routers/`
-   - Follow existing router patterns
-   - Add proper authentication/authorization
+🛑 **CHECKPOINT: Wait for user approval of data model.**
 
-5. **Testing**
-   - Add tests in `tests/` mirroring the structure
-   - Ensure coverage matches project standards
-   - Test both success and error cases
+## Phase 3: Service Layer Design
 
-### Frontend (if applicable)
+Propose:
 
-1. **Types**
+- Service methods needed (name, inputs, outputs)
+- Business logic summary for each
+- Error cases to handle
 
-   - Update TypeScript types in `frontend/src/types/`
-   - Run `generate_ts_types.py` if backend types changed
+Format as method signatures with docstrings. Do NOT implement yet.
 
-2. **Components**
+🛑 **CHECKPOINT: Wait for user approval of service design.**
 
-   - Create/update components in `frontend/src/components/`
-   - Follow existing component patterns
-   - Ensure responsive design
+## Phase 4: Repository Layer Design
 
-3. **Pages/Routes**
-   - Add pages in `frontend/src/pages/` if new routes needed
-   - Update navigation if needed
+Propose:
 
-## Post-Implementation Checklist
+- Repository methods needed
+- Query patterns
+- Any new database operations
 
-- [ ] All tests pass (`make test` or `poetry run pytest`)
-- [ ] Type checking passes (`poetry run mypy planned`)
-- [ ] Code follows existing patterns and conventions
-- [ ] No linter errors
-- [ ] Documentation updated if needed
+🛑 **CHECKPOINT: Wait for user approval.**
+
+## Phase 5: API Design (if applicable)
+
+Propose:
+
+- Endpoints (method, path, request/response shapes)
+- Authentication requirements
+
+🛑 **CHECKPOINT: Wait for user approval.**
+
+## Phase 6: Frontend Design (if applicable)
+
+Propose:
+
+- Components needed (new or modified)
+- State management approach
+- UI flow
+
+🛑 **CHECKPOINT: Wait for user approval.**
+
+## Phase 7: Implementation
+
+Only NOW write the actual code, following the approved designs.
+Implement in order:
+
+1. Domain entities/value objects
+2. Repository interfaces
+3. Repository implementations
+4. Services
+5. API routes
+6. Frontend types (run generate_ts_types.py)
+7. Frontend components
+
+## Phase 8: Testing
+
+Add tests for all new functionality.

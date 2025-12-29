@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from sqlalchemy import Column, Date, DateTime, Index, MetaData, String, Table, Text
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 metadata = MetaData()
 
@@ -14,7 +13,9 @@ users = Table(
     "users",
     metadata,
     Column("id", PGUUID, primary_key=True),
+    Column("username", String, nullable=False),
     Column("email", String, nullable=False),
+    Column("phone_number", String, nullable=True),
     Column("password_hash", Text, nullable=False),
     Column("settings", JSONB),  # UserSetting as JSONB
     Column("created_at", DateTime, nullable=False),

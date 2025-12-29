@@ -2,6 +2,30 @@ import re
 import unicodedata
 
 
+def normalize_email(email: str) -> str:
+    """
+    Normalize an email address by converting to lowercase and stripping whitespace.
+
+    Example: "  User@Example.COM  " -> "user@example.com"
+    """
+    return email.strip().lower()
+
+
+def normalize_phone_number(phone_number: str) -> str:
+    """
+    Normalize a phone number by removing formatting characters.
+
+    Example: "(555) 123-4567" -> "5551234567"
+    Example: "+1 (555) 123-4567" -> "+15551234567"
+    """
+    # Remove all non-digit characters except leading +
+    normalized = re.sub(r"[^\d+]", "", phone_number)
+    # If it doesn't start with +, remove any + characters that might be in the middle
+    if not normalized.startswith("+"):
+        normalized = re.sub(r"[^\d]", "", normalized)
+    return normalized
+
+
 def slugify(text: str) -> str:
     """
     Convert a string to a URL-friendly slug.
