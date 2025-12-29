@@ -20,7 +20,7 @@ async def test_sync_google(
     calendar = Calendar(
         user_uuid=UUID(str(uuid4())),
         name="Test Calendar",
-        auth_token_id="token-id",
+        auth_token_uuid="token-id",
         platform="google",
         platform_id="platform-id",
     )
@@ -39,7 +39,7 @@ async def test_sync_google(
         user_uuid=calendar.user_uuid,
         name="Event 1",
         frequency="ONCE",
-        calendar_id=calendar.id,
+        calendar_uuid=str(calendar.uuid),
         platform_id="event-id-1",
         platform="google",
         status="confirmed",
@@ -50,7 +50,7 @@ async def test_sync_google(
         user_uuid=calendar.user_uuid,
         name="Event 2",
         frequency="ONCE",
-        calendar_id=calendar.id,
+        calendar_uuid=str(calendar.uuid),
         platform_id="event-id-2",
         platform="google",
         status="cancelled",
@@ -89,7 +89,7 @@ async def test_sync(
     calendar = Calendar(
         user_uuid=UUID(str(uuid4())),
         name="Test Calendar",
-        auth_token_id="token-id",
+        auth_token_uuid="token-id",
         platform="google",
         platform_id="platform-id",
     )
@@ -106,7 +106,7 @@ async def test_sync(
         user_uuid=calendar.user_uuid,
         name="Event",
         frequency="ONCE",
-        calendar_id=calendar.id,
+        calendar_uuid=str(calendar.uuid),
         platform_id="event-id",
         platform="google",
         status="confirmed",
@@ -138,14 +138,14 @@ async def test_sync_all(
     calendar1 = Calendar(
         user_uuid=UUID(str(uuid4())),
         name="Calendar 1",
-        auth_token_id="token-id-1",
+        auth_token_uuid="token-id-1",
         platform="google",
         platform_id="platform-id-1",
     )
     calendar2 = Calendar(
         user_uuid=UUID(str(uuid4())),
         name="Calendar 2",
-        auth_token_id="token-id-2",
+        auth_token_uuid="token-id-2",
         platform="google",
         platform_id="platform-id-2",
     )

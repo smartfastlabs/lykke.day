@@ -29,7 +29,7 @@ class CalendarRepository(BaseRepository[Calendar, BaseQuery]):
             "uuid": calendar.uuid,
             "user_uuid": calendar.user_uuid,
             "name": calendar.name,
-            "auth_token_id": calendar.auth_token_id,
+            "auth_token_uuid": calendar.auth_token_uuid,
             "platform_id": calendar.platform_id,
             "platform": calendar.platform,
             "last_sync_at": calendar.last_sync_at,

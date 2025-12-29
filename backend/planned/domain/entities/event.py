@@ -45,7 +45,7 @@ class Event(BaseObject):
     uuid: UUID = Field(default_factory=uuid.uuid4)
     user_uuid: UUID
     name: str
-    calendar_id: str
+    calendar_uuid: str
     platform_id: str
     platform: str
     status: str
@@ -82,7 +82,7 @@ class Event(BaseObject):
     def from_google(
         cls,
         user_uuid: UUID,
-        calendar_id: str,
+        calendar_uuid: str,
         google_event: GoogleEvent,
         frequency: TaskFrequency,
         target_timezone: str,
@@ -91,7 +91,7 @@ class Event(BaseObject):
         
         Args:
             user_uuid: User UUID for the event
-            calendar_id: ID of the calendar
+            calendar_uuid: UUID of the calendar
             google_event: Google Calendar event object
             frequency: Task frequency for the event
             target_timezone: Target timezone for datetime conversion
@@ -99,7 +99,7 @@ class Event(BaseObject):
         event = cls(
             user_uuid=user_uuid,
             frequency=frequency,
-            calendar_id=calendar_id,
+            calendar_uuid=calendar_uuid,
             status=google_event.other.get("status", "NA"),
             name=google_event.summary,
             starts_at=get_datetime(

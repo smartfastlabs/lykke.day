@@ -42,7 +42,7 @@ class TaskRepository(BaseRepository[Task, DateQuery]):
             "category": task.category.value,
             "frequency": task.frequency.value,
             "completed_at": task.completed_at,
-            "routine_id": task.routine_id,
+            "routine_uuid": task.routine_uuid,
         }
 
         # Handle JSONB fields - task_definition is required, others are optional

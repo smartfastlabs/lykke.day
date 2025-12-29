@@ -25,9 +25,11 @@ class Task(BaseDateObject):
     frequency: TaskFrequency
     completed_at: datetime | None = None
     schedule: TaskSchedule | None = None
-    routine_id: str | None = None
+    routine_uuid: str | None = None
     tags: list[TaskTag] = Field(default_factory=list)
     actions: list[Action] = Field(default_factory=list)
 
     def _get_date(self) -> dt_date:
+        return self.scheduled_date
+        return self.scheduled_date
         return self.scheduled_date

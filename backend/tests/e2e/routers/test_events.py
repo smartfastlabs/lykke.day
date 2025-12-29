@@ -28,7 +28,7 @@ async def test_get_today(authenticated_client, test_date):
         user_uuid=user.uuid,
         name="Test Event",
         frequency="ONCE",
-        calendar_id="test-calendar",
+        calendar_uuid="test-calendar",
         platform_id="test-id",
         platform="testing",
         status="confirmed",

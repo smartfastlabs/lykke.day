@@ -48,7 +48,7 @@ calendars = Table(
     Column("uuid", PGUUID, primary_key=True),
     Column("user_uuid", PGUUID, nullable=False),
     Column("name", String, nullable=False),
-    Column("auth_token_id", String, nullable=False),
+    Column("auth_token_uuid", String, nullable=False),
     Column("platform_id", String, nullable=False),
     Column("platform", String, nullable=False),
     Column("last_sync_at", DateTime),
@@ -93,7 +93,7 @@ events = Table(
     Column("user_uuid", PGUUID, nullable=False),
     Column("date", Date, nullable=False),  # extracted from starts_at for querying
     Column("name", String, nullable=False),
-    Column("calendar_id", String, nullable=False),
+    Column("calendar_uuid", String, nullable=False),
     Column("platform_id", String, nullable=False),
     Column("platform", String, nullable=False),
     Column("status", String, nullable=False),
@@ -105,7 +105,7 @@ events = Table(
     Column("people", JSONB),  # list[Person]
     Column("actions", JSONB),  # list[Action]
     Index("idx_events_date", "date"),
-    Index("idx_events_calendar_id", "calendar_id"),
+    Index("idx_events_calendar_uuid", "calendar_uuid"),
     Index("idx_events_user_uuid", "user_uuid"),
 )
 
@@ -179,10 +179,10 @@ tasks = Table(
     Column("frequency", String, nullable=False),  # TaskFrequency enum as string
     Column("completed_at", DateTime),
     Column("schedule", JSONB),  # TaskSchedule | None
-    Column("routine_id", String),
+    Column("routine_uuid", String),
     Column("tags", JSONB),  # list[TaskTag]
     Column("actions", JSONB),  # list[Action]
     Index("idx_tasks_date", "date"),
-    Index("idx_tasks_routine_id", "routine_id"),
+    Index("idx_tasks_routine_uuid", "routine_uuid"),
     Index("idx_tasks_user_uuid", "user_uuid"),
 )

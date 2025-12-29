@@ -25,15 +25,15 @@ async def test_get(calendar_repo, test_user, auth_token_repo):
     calendar = Calendar(
         user_uuid=test_user.uuid,
         name="Test Calendar",
-        auth_token_id=auth_token.id,
+        auth_token_uuid=str(auth_token.uuid),
         platform="google",
         platform_id="test-platform-id",
     )
     await calendar_repo.put(calendar)
     
-    result = await calendar_repo.get(calendar.id)
+    result = await calendar_repo.get(calendar.uuid)
     
-    assert result.id == calendar.id
+    assert result.uuid == calendar.uuid
     assert result.name == "Test Calendar"
     assert result.user_uuid == test_user.uuid
 
@@ -42,7 +42,7 @@ async def test_get(calendar_repo, test_user, auth_token_repo):
 async def test_get_not_found(calendar_repo):
     """Test getting a non-existent calendar raises NotFoundError."""
     with pytest.raises(exceptions.NotFoundError):
-        await calendar_repo.get("google:nonexistent")
+        await calendar_repo.get(str(uuid4()))
 
 
 @pytest.mark.asyncio
@@ -58,7 +58,7 @@ async def test_put(calendar_repo, test_user, auth_token_repo):
     calendar = Calendar(
         user_uuid=test_user.uuid,
         name="New Calendar",
-        auth_token_id=auth_token.id,
+        auth_token_uuid=str(auth_token.uuid),
         platform="google",
         platform_id="new-platform-id",
     )
@@ -82,14 +82,14 @@ async def test_all(calendar_repo, test_user, auth_token_repo):
     calendar1 = Calendar(
         user_uuid=test_user.uuid,
         name="Calendar 1",
-        auth_token_id=auth_token.id,
+        auth_token_uuid=str(auth_token.uuid),
         platform="google",
         platform_id="platform-id-1",
     )
     calendar2 = Calendar(
         user_uuid=test_user.uuid,
         name="Calendar 2",
-        auth_token_id=auth_token.id,
+        auth_token_uuid=str(auth_token.uuid),
         platform="google",
         platform_id="platform-id-2",
     )
@@ -98,9 +98,9 @@ async def test_all(calendar_repo, test_user, auth_token_repo):
     
     all_calendars = await calendar_repo.all()
     
-    calendar_ids = [c.id for c in all_calendars]
-    assert calendar1.id in calendar_ids
-    assert calendar2.id in calendar_ids
+    calendar_uuids = [c.uuid for c in all_calendars]
+    assert calendar1.uuid in calendar_uuids
+    assert calendar2.uuid in calendar_uuids
 
 
 @pytest.mark.asyncio
@@ -116,7 +116,7 @@ async def test_user_isolation(calendar_repo, test_user, create_test_user, auth_t
     calendar = Calendar(
         user_uuid=test_user.uuid,
         name="User1 Calendar",
-        auth_token_id=auth_token.id,
+        auth_token_uuid=str(auth_token.uuid),
         platform="google",
         platform_id="platform-id",
     )
@@ -128,5 +128,5 @@ async def test_user_isolation(calendar_repo, test_user, create_test_user, auth_t
     
     # User2 should not see user1's calendar
     with pytest.raises(exceptions.NotFoundError):
-        await calendar_repo2.get(calendar.id)
+        await calendar_repo2.get(calendar.uuid)
 

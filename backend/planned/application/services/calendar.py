@@ -41,7 +41,7 @@ class CalendarService(BaseService):
     ) -> tuple[list[Event], list[Event]]:
         events, deleted_events = [], []
 
-        token = await self.auth_token_repo.get(calendar.auth_token_id)
+        token = await self.auth_token_repo.get(calendar.auth_token_uuid)
         for event in await self.google_gateway.load_calendar_events(
             calendar,
             lookback=lookback,

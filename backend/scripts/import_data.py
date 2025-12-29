@@ -87,7 +87,7 @@ async def import_calendars(data_path: Path) -> int:
             calendar = Calendar.model_validate(data, from_attributes=True)
             await repo.put(calendar)
             count += 1
-            logger.info(f"Imported calendar: {calendar.id}")
+            logger.info(f"Imported calendar: {calendar.uuid}")
         except Exception as e:
             logger.error(f"Error importing calendar from {json_file}: {e}")
 
@@ -119,7 +119,7 @@ async def import_push_subscriptions(data_path: Path) -> int:
             )
             await repo.put(push_subscription)
             count += 1
-            logger.info(f"Imported push subscription: {push_subscription.id}")
+            logger.info(f"Imported push subscription: {push_subscription.uuid}")
         except Exception as e:
             logger.error(f"Error importing push subscription from {json_file}: {e}")
 
@@ -189,9 +189,9 @@ async def upsert_config_object(
     async with engine.begin() as conn:
         # Use PostgreSQL INSERT ... ON CONFLICT DO UPDATE
         insert_stmt = pg_insert(table).values(**row)
-        update_dict = {k: v for k, v in row.items() if k != "id"}
+        update_dict = {k: v for k, v in row.items() if k != "uuid"}
         upsert_stmt = insert_stmt.on_conflict_do_update(
-            index_elements=["id"],
+            index_elements=["uuid"],
             set_=update_dict,
         )
         await conn.execute(upsert_stmt)
@@ -217,7 +217,7 @@ async def import_task_definitions(data_path: Path) -> int:
             task_definition = TaskDefinition.model_validate(data, from_attributes=True)
             await upsert_config_object(repo, task_definition)
             count += 1
-            logger.info(f"Imported task definition: {task_definition.id}")
+            logger.info(f"Imported task definition: {task_definition.uuid}")
         except Exception as e:
             logger.error(f"Error importing task definition from {json_file}: {e}")
 
@@ -244,7 +244,7 @@ async def import_routines(data_path: Path) -> int:
             routine = Routine.model_validate(data, from_attributes=True)
             await upsert_config_object(repo, routine)
             count += 1
-            logger.info(f"Imported routine: {routine.id}")
+            logger.info(f"Imported routine: {routine.uuid}")
         except Exception as e:
             logger.error(f"Error importing routine from {json_file}: {e}")
 

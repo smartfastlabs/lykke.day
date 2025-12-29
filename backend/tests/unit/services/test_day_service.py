@@ -10,7 +10,15 @@ from dobles import allow
 
 from planned.application.services import DayService
 from planned.core.exceptions import exceptions
-from planned.domain.entities import Day, DayContext, DayStatus, DayTemplate, Event, Task, User
+from planned.domain.entities import (
+    Day,
+    DayContext,
+    DayStatus,
+    DayTemplate,
+    Event,
+    Task,
+    User,
+)
 from planned.domain.value_objects.task import (
     TaskCategory,
     TaskDefinition,

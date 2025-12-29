@@ -87,7 +87,7 @@ class PlanningService(BaseService):
                         user_uuid=self.user_uuid,
                         name=routine_task.name or f"ROUTINE: {routine.name}",
                         frequency=routine.routine_schedule.frequency,
-                        routine_id=routine.id,
+                        routine_id=str(routine.uuid),
                         task_definition=task_def,
                         schedule=routine_task.schedule,
                         scheduled_date=date,
@@ -132,7 +132,7 @@ class PlanningService(BaseService):
         async with self.transaction():
             # Get all tasks for the date, filter for routine tasks, then delete them
             tasks = await self.task_repo.search_query(DateQuery(date=date))
-            routine_tasks = [t for t in tasks if t.routine_id is not None]
+            routine_tasks = [t for t in tasks if t.routine_uuid is not None]
             if routine_tasks:
                 await asyncio.gather(
                     *[self.task_repo.delete(task) for task in routine_tasks]

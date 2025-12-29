@@ -17,10 +17,7 @@ from planned.application.repositories import (
 )
 from planned.domain import entities as objects
 from planned.infrastructure.utils import templates, youtube
-from planned.infrastructure.utils.dates import (
-    get_current_date,
-    get_current_time,
-)
+from planned.infrastructure.utils.dates import get_current_date, get_current_time
 
 from .base import BaseService
 from .calendar import CalendarService
@@ -100,7 +97,6 @@ class SheppardService(BaseService):
             system_prompt="You are a helpful assistant",
         )
 
-
     async def run_loop(
         self,
     ) -> None:
@@ -173,7 +169,6 @@ class SheppardService(BaseService):
         if events_to_notify:
             await self._notify_for_events(events_to_notify)
 
-
         self.last_run = datetime.datetime.now()
 
     def _build_notification_payload(
@@ -192,7 +187,7 @@ class SheppardService(BaseService):
         # Include task information in the data field
         task_data = [
             {
-                "id": task.id,
+                "id": str(task.uuid),
                 "name": task.name,
                 "status": task.status.value,
                 "category": task.category.value,
@@ -212,7 +207,7 @@ class SheppardService(BaseService):
             ],
             data={
                 "type": "tasks",
-                "task_ids": [task.id for task in tasks],
+                "task_ids": [str(task.uuid) for task in tasks],
                 "tasks": task_data,
             },
         )
@@ -257,7 +252,7 @@ class SheppardService(BaseService):
         # Include event information in the data field
         event_data = [
             {
-                "id": event.id,
+                "id": str(event.uuid),
                 "name": event.name,
                 "starts_at": event.starts_at.isoformat(),
                 "ends_at": event.ends_at.isoformat() if event.ends_at else None,
@@ -280,7 +275,7 @@ class SheppardService(BaseService):
             ],
             data={
                 "type": "events",
-                "event_ids": [event.id for event in events],
+                "event_ids": [str(event.uuid) for event in events],
                 "events": event_data,
             },
         )
@@ -317,7 +312,6 @@ class SheppardService(BaseService):
             events=self.day_svc.ctx.events,
             **kwargs,
         )
-
 
     def morning_summary_prompt(self) -> str:
         return self._render_prompt(

@@ -104,7 +104,7 @@ async def google_login_callback(
         ),
     )
 
-    request.session["auth_token_id"] = str(auth_token.id)
+    request.session["auth_token_id"] = str(auth_token.uuid)
 
     service = build(
         "calendar",
@@ -120,7 +120,7 @@ async def google_login_callback(
                 name=calendar["summary"],
                 platform="google",
                 platform_id=calendar["id"],
-                auth_token_id=auth_token.id,
+                auth_token_uuid=str(auth_token.uuid),
             ),
         )
 

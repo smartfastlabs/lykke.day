@@ -28,7 +28,7 @@ T = TypeVar("T", bound=objects.BaseDateObject)
 
 def replace(lst: list[T], obj: T) -> None:
     for i, item in enumerate(lst):
-        if item.id == obj.id:
+        if item.uuid == obj.uuid:
             lst[i] = obj
             return
     lst.append(obj)
@@ -107,7 +107,7 @@ class DayService(BaseService):
             return
 
         if change == "delete":
-            self.ctx.events = [e for e in self.ctx.events if e.id != obj.id]
+            self.ctx.events = [e for e in self.ctx.events if e.uuid != obj.uuid]
         elif change in ("create", "update"):
             replace(self.ctx.events, obj)
 
@@ -123,7 +123,7 @@ class DayService(BaseService):
             return
 
         if change == "delete":
-            self.ctx.messages = [m for m in self.ctx.messages if m.id != obj.id]
+            self.ctx.messages = [m for m in self.ctx.messages if m.uuid != obj.uuid]
         elif change in ("create", "update"):
             replace(self.ctx.messages, obj)
 
@@ -139,7 +139,7 @@ class DayService(BaseService):
             return
 
         if change == "delete":
-            self.ctx.tasks = [t for t in self.ctx.tasks if t.id != obj.id]
+            self.ctx.tasks = [t for t in self.ctx.tasks if t.uuid != obj.uuid]
         elif change in ("create", "update"):
             replace(self.ctx.tasks, obj)
 

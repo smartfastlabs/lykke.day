@@ -25,7 +25,7 @@ async def event_repo(test_date, test_user):
         user_uuid=test_user.uuid,
         name="Test Event",
         frequency="ONCE",
-        calendar_id="test-calendar",
+        calendar_uuid="test-calendar",
         platform_id="test-id",
         platform="testing",
         status="status",

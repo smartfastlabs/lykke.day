@@ -216,7 +216,7 @@ async def test_build_event_notification_payload(
         user_uuid=test_user_uuid,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
-        calendar_id="cal-1",
+        calendar_uuid="cal-1",
         platform_id="event-1",
         platform="test",
         status="confirmed",

@@ -189,7 +189,11 @@ def _load_calendar_events_sync(
             frequency = get_event_frequency(event, gc, frequency_cache)
             events.append(
                 Event.from_google(
-                    calendar.user_uuid, calendar.id, event, frequency, settings.TIMEZONE
+                    calendar.user_uuid,
+                    str(calendar.uuid),
+                    event,
+                    frequency,
+                    settings.TIMEZONE,
                 )
             )
         except Exception as e:

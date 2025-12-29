@@ -182,7 +182,7 @@ async def test_preview_creates_day_context(
         user_uuid=test_user_uuid,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
-        calendar_id="cal-1",
+        calendar_uuid="cal-1",
         platform_id="event-1",
         platform="test",
         status="confirmed",
@@ -299,7 +299,7 @@ async def test_unschedule_deletes_routine_tasks(
         ),
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        routine_id="routine-1",
+        routine_uuid="routine-1",
         date=date,
     )
 
@@ -318,7 +318,7 @@ async def test_unschedule_deletes_routine_tasks(
         ),
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        routine_id=None,
+        routine_uuid=None,
         date=date,
     )
 
@@ -491,7 +491,7 @@ async def test_save_action_for_event(
         user_uuid=test_user_uuid,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
-        calendar_id="cal-1",
+        calendar_uuid="cal-1",
         platform_id="event-1",
         platform="test",
         status="confirmed",
