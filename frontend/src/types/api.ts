@@ -88,7 +88,7 @@ export interface DayContext {
 export interface Event {
   id?: string;
   name: string;
-  calendar_id: string;
+  calendar_uuid: string;
   platform_id: string;
   platform: string;
   status: string;

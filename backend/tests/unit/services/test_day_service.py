@@ -50,16 +50,19 @@ async def test_set_date_changes_date_and_reloads_context(
     """Test that set_date changes the date and reloads context."""
     old_date = datetime.date(2024, 1, 1)
     new_date = datetime.date(2024, 1, 2)
+    template_uuid = uuid4()
 
     old_day = Day(
         user_uuid=test_user_uuid,
         date=old_date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=template_uuid,
     )
     new_day = Day(
         user_uuid=test_user_uuid,
         date=new_date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=template_uuid,
     )
 
     # Mock old context
@@ -182,16 +185,16 @@ async def test_get_or_preview_creates_base_day_if_not_found(
         settings=UserSetting(template_defaults=[template_id] * 7),
     )
 
-    template = Day(
-        id=template_id,
+    template_uuid = uuid4()
+    template = DayTemplate(
+        uuid=template_uuid,
+        slug=template_id,
         user_uuid=test_user_uuid,
-        date=date,
-        status=DayStatus.UNSCHEDULED,
     )
 
     allow(mock_day_repo).get(str(date)).and_raise(exceptions.NotFoundError("Not found"))
     allow(mock_user_repo).get(str(test_user_uuid)).and_return(user)
-    allow(mock_day_template_repo).get(template_id).and_return(template)
+    allow(mock_day_template_repo).get_by_slug(template_id).and_return(template)
 
     result = await DayService.get_or_preview(
         date,
@@ -214,8 +217,6 @@ async def test_get_or_create_creates_and_saves_day(
 ):
     """Test get_or_create creates and saves day if not found."""
     date = datetime.date(2024, 1, 1)
-    from uuid import uuid4
-
     template_uuid = uuid4()
     template_slug = "default"
 
@@ -268,10 +269,12 @@ async def test_save(
 ):
     """Test save persists the day."""
     date = datetime.date(2024, 1, 1)
+    template_uuid = uuid4()
     day = Day(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=template_uuid,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -307,11 +310,13 @@ async def test_get_upcomming_tasks(
     now = datetime.datetime.now(UTC)
     current_time = now.time()
     future_time = (now + timedelta(minutes=15)).time()
+    template_uuid = uuid4()
 
     day = Day(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=template_uuid,
     )
 
     # Task that should be included (within window)
@@ -425,11 +430,13 @@ async def test_get_upcomming_events(
     future_time = now + timedelta(minutes=15)
     far_future = now + timedelta(hours=2)
     past_time = now - timedelta(hours=1)
+    template_uuid = uuid4()
 
     day = Day(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=template_uuid,
     )
 
     # Event that should be included (within window)
@@ -438,7 +445,7 @@ async def test_get_upcomming_events(
         user_uuid=test_user_uuid,
         name="Upcoming Event",
         frequency=TaskFrequency.ONCE,
-        calendar_id="cal-1",
+        calendar_uuid="cal-1",
         platform_id="event-1",
         platform="test",
         status="confirmed",
@@ -452,7 +459,7 @@ async def test_get_upcomming_events(
         user_uuid=test_user_uuid,
         name="Future Event",
         frequency=TaskFrequency.ONCE,
-        calendar_id="cal-1",
+        calendar_uuid="cal-1",
         platform_id="event-2",
         platform="test",
         status="confirmed",
@@ -466,7 +473,7 @@ async def test_get_upcomming_events(
         user_uuid=test_user_uuid,
         name="Cancelled Event",
         frequency=TaskFrequency.ONCE,
-        calendar_id="cal-1",
+        calendar_uuid="cal-1",
         platform_id="event-3",
         platform="test",
         status="cancelled",
@@ -480,7 +487,7 @@ async def test_get_upcomming_events(
         user_uuid=test_user_uuid,
         name="Ongoing Event",
         frequency=TaskFrequency.ONCE,
-        calendar_id="cal-1",
+        calendar_uuid="cal-1",
         platform_id="event-4",
         platform="test",
         status="confirmed",
@@ -511,3 +518,5 @@ async def test_get_upcomming_events(
     assert len(result) == 2
     assert any(e.id == event1.id for e in result)
     assert any(e.id == event4.id for e in result)
+    assert any(e.id == event4.id for e in result)
+

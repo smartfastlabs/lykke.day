@@ -42,6 +42,7 @@ def setup_test_user_day_template():
         # Create default template (UUID will be auto-generated)
         default_template = DayTemplate(
             user_uuid=test_user_uuid,
+            slug="default",
             tasks=[],
             alarm=Alarm(
                 name="Default Alarm",

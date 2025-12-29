@@ -37,7 +37,7 @@ class EventRepository(BaseRepository[Event, DateQuery]):
             "user_uuid": event.user_uuid,
             "date": event.starts_at.date(),  # Extract date from starts_at for querying
             "name": event.name,
-            "calendar_id": event.calendar_id,
+            "calendar_uuid": event.calendar_uuid,
             "platform_id": event.platform_id,
             "platform": event.platform,
             "status": event.status,

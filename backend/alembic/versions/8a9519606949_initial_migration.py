@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 4efc06071515
+Revision ID: 8a9519606949
 Revises: 
-Create Date: 2025-12-29 08:00:55.915255
+Create Date: 2025-12-29 08:15:36.468613
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '4efc06071515'
+revision: str = '8a9519606949'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -40,7 +40,7 @@ def upgrade() -> None:
     sa.Column('uuid', sa.UUID(), nullable=False),
     sa.Column('user_uuid', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('auth_token_id', sa.String(), nullable=False),
+    sa.Column('auth_token_uuid', sa.String(), nullable=False),
     sa.Column('platform_id', sa.String(), nullable=False),
     sa.Column('platform', sa.String(), nullable=False),
     sa.Column('last_sync_at', sa.DateTime(), nullable=True),
@@ -76,7 +76,7 @@ def upgrade() -> None:
     sa.Column('user_uuid', sa.UUID(), nullable=False),
     sa.Column('date', sa.Date(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('calendar_id', sa.String(), nullable=False),
+    sa.Column('calendar_uuid', sa.String(), nullable=False),
     sa.Column('platform_id', sa.String(), nullable=False),
     sa.Column('platform', sa.String(), nullable=False),
     sa.Column('status', sa.String(), nullable=False),
@@ -89,7 +89,7 @@ def upgrade() -> None:
     sa.Column('actions', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.PrimaryKeyConstraint('uuid')
     )
-    op.create_index('idx_events_calendar_id', 'events', ['calendar_id'], unique=False)
+    op.create_index('idx_events_calendar_uuid', 'events', ['calendar_uuid'], unique=False)
     op.create_index('idx_events_date', 'events', ['date'], unique=False)
     op.create_index('idx_events_user_uuid', 'events', ['user_uuid'], unique=False)
     op.create_table('messages',
@@ -147,13 +147,13 @@ def upgrade() -> None:
     sa.Column('frequency', sa.String(), nullable=False),
     sa.Column('completed_at', sa.DateTime(), nullable=True),
     sa.Column('schedule', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('routine_id', sa.String(), nullable=True),
+    sa.Column('routine_uuid', sa.String(), nullable=True),
     sa.Column('tags', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('actions', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.PrimaryKeyConstraint('uuid')
     )
     op.create_index('idx_tasks_date', 'tasks', ['date'], unique=False)
-    op.create_index('idx_tasks_routine_id', 'tasks', ['routine_id'], unique=False)
+    op.create_index('idx_tasks_routine_uuid', 'tasks', ['routine_uuid'], unique=False)
     op.create_index('idx_tasks_user_uuid', 'tasks', ['user_uuid'], unique=False)
     op.create_table('users',
     sa.Column('uuid', sa.UUID(), nullable=False),
@@ -176,7 +176,7 @@ def downgrade() -> None:
     op.drop_index('idx_users_email', table_name='users')
     op.drop_table('users')
     op.drop_index('idx_tasks_user_uuid', table_name='tasks')
-    op.drop_index('idx_tasks_routine_id', table_name='tasks')
+    op.drop_index('idx_tasks_routine_uuid', table_name='tasks')
     op.drop_index('idx_tasks_date', table_name='tasks')
     op.drop_table('tasks')
     op.drop_index('idx_task_definitions_user_uuid', table_name='task_definitions')
@@ -190,7 +190,7 @@ def downgrade() -> None:
     op.drop_table('messages')
     op.drop_index('idx_events_user_uuid', table_name='events')
     op.drop_index('idx_events_date', table_name='events')
-    op.drop_index('idx_events_calendar_id', table_name='events')
+    op.drop_index('idx_events_calendar_uuid', table_name='events')
     op.drop_table('events')
     op.drop_index('idx_days_user_uuid', table_name='days')
     op.drop_index('idx_days_date', table_name='days')

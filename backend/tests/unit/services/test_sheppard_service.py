@@ -18,11 +18,7 @@ from planned.domain.entities import (
     TaskDefinition,
     TaskStatus,
 )
-from planned.domain.value_objects.task import (
-    TaskCategory,
-    TaskFrequency,
-    TaskType,
-)
+from planned.domain.value_objects.task import TaskCategory, TaskFrequency, TaskType
 
 
 @pytest.mark.asyncio
@@ -110,10 +106,12 @@ async def test_build_notification_payload_multiple_tasks(
 ):
     """Test _build_notification_payload for multiple tasks."""
     date = datetime.date(2024, 1, 1)
+    template_uuid = uuid4()
     day = Day(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=template_uuid,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -195,10 +193,12 @@ async def test_build_event_notification_payload(
 ):
     """Test _build_event_notification_payload."""
     date = datetime.date(2024, 1, 1)
+    template_uuid = uuid4()
     day = Day(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=template_uuid,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -260,10 +260,12 @@ async def test_notify_for_tasks(
 ):
     """Test _notify_for_tasks sends notifications."""
     date = datetime.date(2024, 1, 1)
+    template_uuid = uuid4()
     day = Day(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=template_uuid,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -339,10 +341,12 @@ async def test_notify_for_tasks_empty_list(
 ):
     """Test _notify_for_tasks handles empty task list."""
     date = datetime.date(2024, 1, 1)
+    template_uuid = uuid4()
     day = Day(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=template_uuid,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -387,10 +391,12 @@ async def test_stop_sets_mode_to_stopping(
 ):
     """Test stop sets mode to stopping."""
     date = datetime.date(2024, 1, 1)
+    template_uuid = uuid4()
     day = Day(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=template_uuid,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -438,10 +444,12 @@ async def test_is_running_property(
 ):
     """Test is_running property returns correct value."""
     date = datetime.date(2024, 1, 1)
+    template_uuid = uuid4()
     day = Day(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.UNSCHEDULED,
+        template_uuid=template_uuid,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 

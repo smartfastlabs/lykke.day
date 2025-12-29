@@ -232,22 +232,23 @@ async def test_preview_uses_existing_day_template(
 ):
     """Test preview uses template from existing day if available."""
     date = datetime.date(2024, 1, 1)
-    existing_template_id = "custom"
+    existing_template_uuid = uuid4()
 
     existing_day = Day(
         user_uuid=test_user_uuid,
         date=date,
         status=DayStatus.SCHEDULED,
-        template_id=existing_template_id,
+        template_uuid=existing_template_uuid,
     )
 
     template = DayTemplate(
-        id=existing_template_id,
+        uuid=existing_template_uuid,
+        slug="custom",
         user_uuid=test_user_uuid,
     )
 
     allow(mock_day_repo).get(str(date)).and_return(existing_day)
-    allow(mock_day_template_repo).get(existing_template_id).and_return(template)
+    allow(mock_day_template_repo).get(existing_template_uuid).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
@@ -392,7 +393,12 @@ async def test_schedule_creates_tasks_and_sets_status(
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
     allow(mock_day_repo).put.and_return(
-        Day(user_uuid=test_user_uuid, date=date, status=DayStatus.SCHEDULED)
+        Day(
+            user_uuid=test_user_uuid,
+            date=date,
+            status=DayStatus.SCHEDULED,
+            template_uuid=template_uuid,
+        )
     )
     allow(mock_task_repo).put.and_return(None)
 

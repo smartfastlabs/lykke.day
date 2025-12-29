@@ -256,7 +256,7 @@ class SheppardService(BaseService):
                 "name": event.name,
                 "starts_at": event.starts_at.isoformat(),
                 "ends_at": event.ends_at.isoformat() if event.ends_at else None,
-                "calendar_id": event.calendar_id,
+                "calendar_uuid": event.calendar_uuid,
                 "platform_id": event.platform_id,
                 "status": event.status,
             }
