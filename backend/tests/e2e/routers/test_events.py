@@ -12,7 +12,7 @@ from planned.core.config import settings
 @pytest.mark.asyncio
 async def test_get_today(authenticated_client, test_date):
     """Test getting today's events."""
-    client, user = authenticated_client
+    client, user = await authenticated_client()
     
     # Create an event for today
     from uuid import UUID, uuid4

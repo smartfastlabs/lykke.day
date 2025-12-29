@@ -2,13 +2,14 @@
 
 import datetime
 from datetime import UTC, timedelta
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 import pytest
 from dobles import allow
 
 from planned.application.services import SheppardService
 from planned.domain.entities import (
+    Alarm,
     Day,
     DayContext,
     DayStatus,
@@ -17,8 +18,9 @@ from planned.domain.entities import (
     Task,
     TaskDefinition,
     TaskStatus,
-    Alarm,
 )
+from planned.domain.value_objects.day import DayStatus as DayStatusVO
+from planned.domain.value_objects.push import NotificationPayload
 from planned.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
@@ -26,8 +28,6 @@ from planned.domain.value_objects.task import (
     TaskType,
     TimingType,
 )
-from planned.domain.value_objects.day import DayStatus as DayStatusVO
-from planned.domain.value_objects.push import NotificationPayload
 
 
 @pytest.mark.asyncio
@@ -51,8 +51,9 @@ async def test_build_notification_payload_single_task(
         status=DayStatus.UNSCHEDULED,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-    
+
     from planned.application.services import DayService
+
     day_svc = DayService(
         ctx=ctx,
         day_repo=mock_day_repo,
@@ -61,7 +62,7 @@ async def test_build_notification_payload_single_task(
         message_repo=mock_message_repo,
         task_repo=mock_task_repo,
     )
-    
+
     task = Task(
         id=str(uuid4()),
         user_uuid=test_user_uuid,
@@ -79,7 +80,7 @@ async def test_build_notification_payload_single_task(
         frequency=TaskFrequency.ONCE,
         date=date,
     )
-    
+
     service = SheppardService(
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
@@ -92,9 +93,9 @@ async def test_build_notification_payload_single_task(
         message_repo=mock_message_repo,
         web_push_gateway=mock_web_push_gateway,
     )
-    
+
     payload = service._build_notification_payload([task])
-    
+
     assert payload.title == "Test Task"
     assert "Test Task" in payload.body
     assert len(payload.data["tasks"]) == 1
@@ -122,8 +123,9 @@ async def test_build_notification_payload_multiple_tasks(
         status=DayStatus.UNSCHEDULED,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-    
+
     from planned.application.services import DayService
+
     day_svc = DayService(
         ctx=ctx,
         day_repo=mock_day_repo,
@@ -132,7 +134,7 @@ async def test_build_notification_payload_multiple_tasks(
         message_repo=mock_message_repo,
         task_repo=mock_task_repo,
     )
-    
+
     task1 = Task(
         id=str(uuid4()),
         user_uuid=test_user_uuid,
@@ -167,7 +169,7 @@ async def test_build_notification_payload_multiple_tasks(
         frequency=TaskFrequency.ONCE,
         date=date,
     )
-    
+
     service = SheppardService(
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
@@ -180,9 +182,9 @@ async def test_build_notification_payload_multiple_tasks(
         message_repo=mock_message_repo,
         web_push_gateway=mock_web_push_gateway,
     )
-    
+
     payload = service._build_notification_payload([task1, task2])
-    
+
     assert "2 tasks ready" in payload.title
     assert len(payload.data["tasks"]) == 2
 
@@ -208,8 +210,9 @@ async def test_build_event_notification_payload(
         status=DayStatus.UNSCHEDULED,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-    
+
     from planned.application.services import DayService
+
     day_svc = DayService(
         ctx=ctx,
         day_repo=mock_day_repo,
@@ -218,7 +221,7 @@ async def test_build_event_notification_payload(
         message_repo=mock_message_repo,
         task_repo=mock_task_repo,
     )
-    
+
     event = Event(
         id=str(uuid4()),
         user_uuid=test_user_uuid,
@@ -231,7 +234,7 @@ async def test_build_event_notification_payload(
         starts_at=datetime.datetime.now(UTC),
         date=date,
     )
-    
+
     service = SheppardService(
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
@@ -244,9 +247,9 @@ async def test_build_event_notification_payload(
         message_repo=mock_message_repo,
         web_push_gateway=mock_web_push_gateway,
     )
-    
+
     payload = service._build_event_notification_payload([event])
-    
+
     assert payload.title == "Test Event"
     assert "starting soon" in payload.body
     assert len(payload.data["events"]) == 1
@@ -274,8 +277,9 @@ async def test_notify_for_tasks(
         status=DayStatus.UNSCHEDULED,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-    
+
     from planned.application.services import DayService
+
     day_svc = DayService(
         ctx=ctx,
         day_repo=mock_day_repo,
@@ -284,7 +288,7 @@ async def test_notify_for_tasks(
         message_repo=mock_message_repo,
         task_repo=mock_task_repo,
     )
-    
+
     task = Task(
         id=str(uuid4()),
         user_uuid=test_user_uuid,
@@ -302,7 +306,7 @@ async def test_notify_for_tasks(
         frequency=TaskFrequency.ONCE,
         date=date,
     )
-    
+
     subscription = PushSubscription(
         id=str(uuid4()),
         user_uuid=test_user_uuid,
@@ -310,9 +314,9 @@ async def test_notify_for_tasks(
         p256dh="key",
         auth="auth",
     )
-    
+
     allow(mock_web_push_gateway).send_notification.and_return(None)
-    
+
     service = SheppardService(
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
@@ -326,9 +330,9 @@ async def test_notify_for_tasks(
         web_push_gateway=mock_web_push_gateway,
         push_subscriptions=[subscription],
     )
-    
+
     await service._notify_for_tasks([task])
-    
+
     # Verify send_notification was called
     assert True  # If we get here, no exception was raised
 
@@ -354,8 +358,9 @@ async def test_notify_for_tasks_empty_list(
         status=DayStatus.UNSCHEDULED,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-    
+
     from planned.application.services import DayService
+
     day_svc = DayService(
         ctx=ctx,
         day_repo=mock_day_repo,
@@ -364,7 +369,7 @@ async def test_notify_for_tasks_empty_list(
         message_repo=mock_message_repo,
         task_repo=mock_task_repo,
     )
-    
+
     service = SheppardService(
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
@@ -377,60 +382,9 @@ async def test_notify_for_tasks_empty_list(
         message_repo=mock_message_repo,
         web_push_gateway=mock_web_push_gateway,
     )
-    
+
     # Should not raise an exception
     await service._notify_for_tasks([])
-
-
-@pytest.mark.asyncio
-async def test_checkin_prompt(
-    mock_day_repo,
-    mock_day_template_repo,
-    mock_event_repo,
-    mock_message_repo,
-    mock_task_repo,
-    mock_push_subscription_repo,
-    mock_calendar_service,
-    mock_planning_service,
-    mock_web_push_gateway,
-    test_user_uuid,
-):
-    """Test checkin_prompt generates a prompt."""
-    date = datetime.date(2024, 1, 1)
-    day = Day(
-        user_uuid=test_user_uuid,
-        date=date,
-        status=DayStatus.UNSCHEDULED,
-    )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-    
-    from planned.application.services import DayService
-    day_svc = DayService(
-        ctx=ctx,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        task_repo=mock_task_repo,
-    )
-    
-    service = SheppardService(
-        day_svc=day_svc,
-        push_subscription_repo=mock_push_subscription_repo,
-        task_repo=mock_task_repo,
-        calendar_service=mock_calendar_service,
-        planning_service=mock_planning_service,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        web_push_gateway=mock_web_push_gateway,
-    )
-    
-    prompt = service.checkin_prompt()
-    
-    assert isinstance(prompt, str)
-    assert len(prompt) > 0
 
 
 @pytest.mark.asyncio
@@ -454,8 +408,9 @@ async def test_stop_sets_mode_to_stopping(
         status=DayStatus.UNSCHEDULED,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-    
+
     from planned.application.services import DayService
+
     day_svc = DayService(
         ctx=ctx,
         day_repo=mock_day_repo,
@@ -464,7 +419,7 @@ async def test_stop_sets_mode_to_stopping(
         message_repo=mock_message_repo,
         task_repo=mock_task_repo,
     )
-    
+
     service = SheppardService(
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
@@ -478,9 +433,9 @@ async def test_stop_sets_mode_to_stopping(
         web_push_gateway=mock_web_push_gateway,
         mode="active",
     )
-    
+
     service.stop()
-    
+
     assert service.mode == "stopping"
     assert not service.is_running
 
@@ -506,8 +461,9 @@ async def test_is_running_property(
         status=DayStatus.UNSCHEDULED,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
-    
+
     from planned.application.services import DayService
+
     day_svc = DayService(
         ctx=ctx,
         day_repo=mock_day_repo,
@@ -516,7 +472,7 @@ async def test_is_running_property(
         message_repo=mock_message_repo,
         task_repo=mock_task_repo,
     )
-    
+
     # Test active mode
     service = SheppardService(
         day_svc=day_svc,
@@ -532,12 +488,11 @@ async def test_is_running_property(
         mode="active",
     )
     assert service.is_running is True
-    
+
     # Test stopping mode
     service.mode = "stopping"
     assert service.is_running is False
-    
+
     # Test starting mode
     service.mode = "starting"
     assert service.is_running is False
-

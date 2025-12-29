@@ -7,7 +7,7 @@ import pytest_asyncio
 @pytest.mark.asyncio
 async def test_prompts_endpoint(authenticated_client):
     """Test prompts endpoint."""
-    client, user = authenticated_client
+    client, user = await authenticated_client()
     
     response = client.put("/sheppard/prompts/test-prompt")
     
@@ -19,7 +19,7 @@ async def test_prompts_endpoint(authenticated_client):
 @pytest.mark.asyncio
 async def test_stop_alarm(authenticated_client):
     """Test stopping alarm."""
-    client, user = authenticated_client
+    client, user = await authenticated_client()
     
     response = client.put("/sheppard/stop-alarm")
     
@@ -29,7 +29,7 @@ async def test_stop_alarm(authenticated_client):
 @pytest.mark.asyncio
 async def test_start_alarm(authenticated_client):
     """Test starting alarm."""
-    client, user = authenticated_client
+    client, user = await authenticated_client()
     
     response = client.get("/sheppard/start-alarm")
     

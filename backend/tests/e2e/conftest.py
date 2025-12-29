@@ -3,7 +3,6 @@
 from datetime import time
 
 import pytest
-import pytest_asyncio
 from dobles import allow
 from fastapi.testclient import TestClient
 
@@ -15,13 +14,15 @@ from planned.infrastructure.repositories import DayTemplateRepository, UserRepos
 from planned.presentation.middlewares import middlewares
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture
 def setup_system_user_day_template():
-    """Create DayTemplate for system user before any e2e tests run."""
-    import asyncio
-    from uuid import UUID, uuid4
+    """Fixture that returns a function to create DayTemplate for system user."""
 
     async def _setup():
+        """Create DayTemplate for system user."""
+
+        from uuid import UUID, uuid4
+
         user_repo = UserRepository()
         system_user_email = "system@planned.day"
         system_user = await user_repo.get_by_email(system_user_email)
@@ -41,6 +42,7 @@ def setup_system_user_day_template():
 
         # Check if default template exists, create if not
         from planned.core.exceptions import NotFoundError
+
         try:
             await day_template_repo.get("default")
         except NotFoundError:
@@ -56,9 +58,9 @@ def setup_system_user_day_template():
                 ),
             )
             await day_template_repo.put(default_template)
+        return system_user
 
-    # Run the async setup synchronously
-    asyncio.run(_setup())
+    return _setup
 
 
 @pytest.fixture
@@ -68,100 +70,53 @@ def test_client():
         yield client
 
 
-@pytest_asyncio.fixture
-async def authenticated_client(test_client):
+@pytest.fixture
+def authenticated_client(test_client, setup_system_user_day_template, request):
     """Test client with authenticated session."""
-    from uuid import UUID, uuid4
+    # Register cleanup finalizer
+    def cleanup():
+        app.dependency_overrides.clear()
 
-    from planned.domain.entities import User
-    from planned.domain.value_objects.user import UserSetting
-    from planned.infrastructure.repositories import (
-        DayTemplateRepository,
-        UserRepository,
-    )
-    from planned.infrastructure.utils.dates import get_current_datetime
+    request.addfinalizer(cleanup)
 
-    # Create a test user with template defaults
-    user_repo = UserRepository()
-    user = User(
-        id=str(uuid4()),
-        email=f"test-{uuid4()}@example.com",
-        password_hash="test_hash",
-        settings=UserSetting(
-            template_defaults=[
-                "default",
-                "default",
-                "default",
-                "default",
-                "default",
-                "weekend",
-                "weekend",
-            ],
-        ),
-    )
-    user = await user_repo.put(user)
+    async def _authenticated_client():
+        """Return authenticated test client and user."""
+        from passlib.context import CryptContext
 
-    # Create DayTemplates for the test user
-    user_uuid = UUID(user.id)
-    day_template_repo = DayTemplateRepository(user_uuid=user_uuid)
+        from planned.infrastructure.repositories import UserRepository
+        from planned.presentation.api.routers.dependencies.user import get_current_user
 
-    # Create default template
-    default_template = DayTemplate(
-        user_uuid=user_uuid,
-        id="default",
-        tasks=[],
-        alarm=Alarm(
-            name="Default Alarm",
-            time=time(7, 15),
-            type=AlarmType.FIRM,
-        ),
-    )
-    await day_template_repo.put(default_template)
+        # Use setup_system_user_day_template to create user and default template
+        user = await setup_system_user_day_template()
 
-    # Create weekend template
-    weekend_template = DayTemplate(
-        user_uuid=user_uuid,
-        id="weekend",
-        tasks=[],
-        alarm=Alarm(
-            name="Weekend Alarm",
-            time=time(7, 15),
-            type=AlarmType.GENTLE,
-        ),
-    )
-    await day_template_repo.put(weekend_template)
+        # Set up session for authenticated requests
+        # We need to set the password correctly for login
+        user_repo = UserRepository()
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        user.password_hash = pwd_context.hash("test_password")
+        user = await user_repo.put(user)
 
-    # Set up session for authenticated requests
-    # We need to set the password correctly for login
-    from passlib.context import CryptContext
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    user.password_hash = pwd_context.hash("test_password")
-    user = await user_repo.put(user)
+        # Login to set up the session
+        response = test_client.put(
+            "/auth/login",
+            json={"email": user.email, "password": "test_password"},
+        )
+        assert response.status_code == 200, f"Login failed: {response.text}"
 
-    # Login to set up the session
-    response = test_client.put(
-        "/auth/login",
-        json={"email": user.email, "password": "test_password"},
-    )
-    assert response.status_code == 200, f"Login failed: {response.text}"
+        # Mock the middleware to bypass auth checks
+        allow(middlewares.auth).mock_for_testing.and_return(True)
 
-    # Mock the middleware to bypass auth checks
-    allow(middlewares.auth).mock_for_testing.and_return(True)
+        # Override get_current_user dependency to return our test user
+        # This is needed because get_current_user checks the session directly,
+        # and TestClient doesn't preserve sessions reliably
+        app.dependency_overrides[get_current_user] = lambda: user
 
-    # Override get_current_user dependency to return our test user
-    # This is needed because get_current_user checks the session directly,
-    # and TestClient doesn't preserve sessions reliably
-    from planned.presentation.api.routers.dependencies.user import get_current_user
-    app.dependency_overrides[get_current_user] = lambda: user
+        return test_client, user
 
-    yield test_client, user
-
-    # Clean up dependency override
-    app.dependency_overrides.clear()
+    return _authenticated_client
 
 
 @pytest.fixture
 def mock_auth_middleware():
     """Mock auth middleware to bypass authentication."""
     allow(middlewares.auth).mock_for_testing.and_return(True)
-

@@ -12,7 +12,7 @@ from planned.core.config import settings
 @pytest.mark.asyncio
 async def test_schedule_today(authenticated_client, test_date):
     """Test scheduling today."""
-    client, user = authenticated_client
+    client, user = await authenticated_client()
 
     response = client.put("/days/today/schedule")
 
@@ -25,7 +25,7 @@ async def test_schedule_today(authenticated_client, test_date):
 @pytest.mark.asyncio
 async def test_get_context_today(authenticated_client, test_date):
     """Test getting context for today."""
-    client, user = authenticated_client
+    client, user = await authenticated_client()
 
     response = client.get("/days/today/context")
 
@@ -41,7 +41,7 @@ async def test_get_context_today(authenticated_client, test_date):
 @pytest.mark.asyncio
 async def test_get_context_tomorrow(authenticated_client, test_date_tomorrow):
     """Test getting context for tomorrow."""
-    client, user = authenticated_client
+    client, user = await authenticated_client()
 
     response = client.get("/days/tomorrow/context")
 
@@ -54,7 +54,7 @@ async def test_get_context_tomorrow(authenticated_client, test_date_tomorrow):
 @pytest.mark.asyncio
 async def test_get_context_specific_date(authenticated_client):
     """Test getting context for a specific date."""
-    client, user = authenticated_client
+    client, user = await authenticated_client()
 
     date = datetime.date(2024, 6, 15)
     response = client.get(f"/days/{date.isoformat()}/context")
@@ -68,7 +68,7 @@ async def test_get_context_specific_date(authenticated_client):
 @pytest.mark.asyncio
 async def test_get_context_invalid_date_string(authenticated_client):
     """Test getting context with invalid date string."""
-    client, user = authenticated_client
+    client, user = await authenticated_client()
 
     response = client.get("/days/invalid-date/context")
 
@@ -78,9 +78,8 @@ async def test_get_context_invalid_date_string(authenticated_client):
 @pytest.mark.asyncio
 async def test_update_day(authenticated_client, test_date):
     """Test updating a day."""
+    client, user = await authenticated_client()
     from planned.domain.value_objects.day import DayStatus
-
-    client, user = authenticated_client
 
     # First schedule the day
     client.put("/days/today/schedule")
@@ -99,7 +98,7 @@ async def test_update_day(authenticated_client, test_date):
 @pytest.mark.asyncio
 async def test_update_day_template(authenticated_client, test_date):
     """Test updating a day's template."""
-    client, user = authenticated_client
+    client, user = await authenticated_client()
 
     # First schedule the day
     client.put("/days/today/schedule")
@@ -118,7 +117,7 @@ async def test_update_day_template(authenticated_client, test_date):
 @pytest.mark.asyncio
 async def test_get_templates(authenticated_client):
     """Test getting day templates."""
-    client, user = authenticated_client
+    client, user = await authenticated_client()
 
     response = client.get("/days/templates")
 
