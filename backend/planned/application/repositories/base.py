@@ -2,7 +2,8 @@
 
 from typing import Protocol, TypeVar
 
-from planned.core.events import ChangeEvent, ChangeHandler
+from planned.common.repository_handler import ChangeHandler
+from planned.domain.value_objects.repository_event import RepositoryEvent
 
 T = TypeVar("T")
 

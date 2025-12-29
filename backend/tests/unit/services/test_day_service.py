@@ -9,8 +9,8 @@ import pytest
 from dobles import allow
 
 from planned.application.services import DayService
-from planned.core.events import ChangeEvent
 from planned.core.exceptions import exceptions
+from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.domain.entities import (
     Day,
     DayContext,

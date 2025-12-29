@@ -18,15 +18,12 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
     UserRepositoryProtocol,
 )
-from planned.application.services import (
-    CalendarService,
-    DayService,
-    PlanningService,
-)
-from planned.core.events import ChangeEvent, ChangeHandler
+from planned.application.services import CalendarService, DayService, PlanningService
+from planned.common.repository_handler import ChangeHandler
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Alarm, DayTemplate, User
 from planned.domain.value_objects.alarm import AlarmType
+from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.gateways.adapters import (
     GoogleCalendarGatewayAdapter,
     WebPushGatewayAdapter,
@@ -179,7 +176,7 @@ class SheppardManager:
         )
 
     async def _handle_user_event(
-        self, _sender: object | None = None, *, event: ChangeEvent[User]
+        self, _sender: object | None = None, *, event: RepositoryEvent[User]
     ) -> None:
         """Handle user creation/deletion events.
 

@@ -14,10 +14,10 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
     UserRepositoryProtocol,
 )
-from planned.core.events import ChangeEvent
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
 from planned.domain.value_objects.query import DateQuery
+from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.utils.dates import get_current_datetime, get_current_time
 from planned.infrastructure.utils.decorators import hybridmethod
 
@@ -98,7 +98,7 @@ class DayService(BaseService):
         )
 
     async def on_event_change(
-        self, _sender: object | None = None, *, event: ChangeEvent[objects.Event]
+        self, _sender: object | None = None, *, event: RepositoryEvent[objects.Event]
     ) -> None:
         obj = event.value
         change = event.type
@@ -114,7 +114,7 @@ class DayService(BaseService):
         await self.signal_source.send_async("change", event=event)
 
     async def on_message_change(
-        self, _sender: object | None = None, *, event: ChangeEvent[objects.Message]
+        self, _sender: object | None = None, *, event: RepositoryEvent[objects.Message]
     ) -> None:
         obj = event.value
         change = event.type
@@ -130,7 +130,7 @@ class DayService(BaseService):
         await self.signal_source.send_async("change", event=event)
 
     async def on_task_change(
-        self, _sender: object | None = None, *, event: ChangeEvent[objects.Task]
+        self, _sender: object | None = None, *, event: RepositoryEvent[objects.Task]
     ) -> None:
         obj = event.value
         change = event.type

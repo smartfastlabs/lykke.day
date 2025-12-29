@@ -4,6 +4,7 @@ from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .day import DayContext, DayMode, DayStatus, DayTag
 from .push import NotificationAction, NotificationPayload
 from .query import BaseQuery, DateQuery
+from .repository_event import RepositoryEvent
 from .routine import DayOfWeek, RoutineSchedule, RoutineTask
 from .task import (
     TaskCategory,

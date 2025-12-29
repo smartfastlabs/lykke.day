@@ -8,7 +8,8 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.sql import Select
 
-from planned.core.events import ChangeEvent, ChangeHandler
+from planned.common.repository_handler import ChangeHandler
+from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.core.exceptions import exceptions
 from planned.domain.value_objects.query import BaseQuery
 from planned.infrastructure.database import get_engine
@@ -54,9 +55,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     def listen(self, handler: ChangeHandler[ObjectType]) -> None:
         """
-        Connect a handler to receive ChangeEvent[ObjectType] notifications.
+        Connect a handler to receive RepositoryEvent[ObjectType] notifications.
 
-        The handler should accept (sender, *, event: ChangeEvent[ObjectType]) as parameters.
+        The handler should accept (sender, *, event: RepositoryEvent[ObjectType]) as parameters.
         """
         type(self).signal_source.connect(handler)
 
@@ -243,7 +244,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             await conn.execute(upsert_stmt)
 
         event_type: Literal["create", "update"] = "update" if exists else "create"
-        event = ChangeEvent[ObjectType](type=event_type, value=obj)
+        event = RepositoryEvent[ObjectType](type=event_type, value=obj)
         await self.signal_source.send_async("change", event=event)
         return obj
 
@@ -360,5 +361,5 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                     stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
                 await conn.execute(stmt)
 
-        event = ChangeEvent[ObjectType](type="delete", value=obj)
+        event = RepositoryEvent[ObjectType](type="delete", value=obj)
         await self.signal_source.send_async("change", event=event)

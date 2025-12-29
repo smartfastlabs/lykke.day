@@ -7,7 +7,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from loguru import logger
 
 from planned.application.services import SheppardManager
-from planned.core.events import ChangeEvent
+from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.core.exceptions import exceptions
 from planned.infrastructure.repositories import (
     AuthTokenRepository,
@@ -48,7 +48,7 @@ async def start_alarm() -> None:
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket) -> None:
     """
-    WebSocket endpoint that streams ChangeEvents from the logged-in user's repositories.
+    WebSocket endpoint that streams RepositoryEvents from the logged-in user's repositories.
     """
     await websocket.accept()
     logger.info("WebSocket client connected")
@@ -98,7 +98,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     logger.info(f"WebSocket connected for user {user_uuid}")
 
     # Queue to collect events from all repositories
-    event_queue: asyncio.Queue[ChangeEvent[Any]] = asyncio.Queue()
+    event_queue: asyncio.Queue[RepositoryEvent[Any]] = asyncio.Queue()
 
     # Get all repository classes
     repository_classes: list[type[BaseRepository[Any, Any]]] = [
@@ -116,7 +116,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
     # Handler function to add events to the queue, filtered by user
     async def event_handler(
-        _sender: object | None = None, *, event: ChangeEvent[Any]
+        _sender: object | None = None, *, event: RepositoryEvent[Any]
     ) -> None:
         # Filter events to only those for the logged-in user
         # Check if the event value has a user_uuid attribute
