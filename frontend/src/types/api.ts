@@ -5,7 +5,7 @@
 /* Do not modify it by hand - just update the pydantic models and then re-run the script
 */
 
-export type ActionType = "NOTIFY" | "PUNT" | "START" | "PAUSE" | "RESUME" | "DELETE" | "EDIT" | "VIEW";
+export type ActionType = "COMPLETE" | "DELETE" | "EDIT" | "NOTIFY" | "PAUSE" | "PUNT" | "RESUME" | "START" | "VIEW";
 export type AlarmType = "GENTLE" | "FIRM" | "LOUD" | "SIREN";
 export type DayTag = "WEEKEND" | "VACATION" | "WORKDAY";
 export type DayStatus = "UNSCHEDULED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETE";
@@ -27,15 +27,15 @@ export type TaskTag = "AVOIDANT" | "FORGETTABLE" | "IMPORTANT" | "URGENT" | "FUN
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface Action {
-  id?: string;
+  uuid?: string;
   type: ActionType;
-  data: {
+  data?: {
     [k: string]: unknown;
   };
   created_at?: string;
 }
 export interface Alarm {
-  id?: string;
+  uuid?: string;
   name: string;
   time: string;
   type: AlarmType;
@@ -43,7 +43,8 @@ export interface Alarm {
   triggered_at?: string | null;
 }
 export interface AuthToken {
-  id?: string;
+  uuid?: string;
+  user_uuid: string;
   platform: string;
   token: string;
   refresh_token?: string | null;
@@ -52,28 +53,45 @@ export interface AuthToken {
   client_secret?: string | null;
   scopes?: unknown[] | null;
   expires_at?: string | null;
-  uuid?: string;
   created_at?: string;
 }
+export interface BaseConfigObject {
+  uuid?: string;
+}
+/**
+ * Base class for entities that have a date associated with them.
+ *
+ * Entities can either implement _get_date() to return a date directly,
+ * or implement _get_datetime() and provide a timezone to convert to date.
+ */
 export interface BaseDateObject {
-  id?: string;
+  uuid?: string;
+  /**
+   * Get the date for this entity.
+   *
+   * If _get_date() is implemented, it takes precedence.
+   * Otherwise, uses _get_datetime() with the configured timezone.
+   */
   date: string;
 }
-export interface BaseObject {
-  id?: string;
+export interface BaseEntityObject {
+  uuid?: string;
 }
+export interface BaseObject {}
 export interface Calendar {
-  id?: string;
+  uuid?: string;
+  user_uuid: string;
   name: string;
-  auth_token_id: string;
+  auth_token_uuid: string;
   platform_id: string;
   platform: string;
   last_sync_at?: string | null;
 }
 export interface Day {
-  id?: string;
+  uuid?: string;
+  user_uuid: string;
   date: string;
-  template_uuid?: string;
+  template_uuid: string;
   tags?: DayTag[];
   alarm?: Alarm | null;
   status?: DayStatus;
@@ -86,7 +104,8 @@ export interface DayContext {
   messages?: Message[];
 }
 export interface Event {
-  id?: string;
+  uuid?: string;
+  user_uuid: string;
   name: string;
   calendar_uuid: string;
   platform_id: string;
@@ -99,17 +118,21 @@ export interface Event {
   updated_at?: string;
   people?: Person[];
   actions?: Action[];
+  /**
+   * Get the date for this event.
+   */
   date: string;
 }
 export interface Person {
-  id?: string;
+  uuid?: string;
   name?: string | null;
   email?: string | null;
   phone_number?: string | null;
   relationship?: string | null;
 }
 export interface Task {
-  id?: string;
+  uuid?: string;
+  user_uuid: string;
   scheduled_date: string;
   name: string;
   status: TaskStatus;
@@ -118,13 +141,20 @@ export interface Task {
   frequency: TaskFrequency;
   completed_at?: string | null;
   schedule?: TaskSchedule | null;
-  routine_id?: string | null;
+  routine_uuid?: string | null;
   tags?: TaskTag[];
   actions?: Action[];
+  /**
+   * Get the date for this entity.
+   *
+   * If _get_date() is implemented, it takes precedence.
+   * Otherwise, uses _get_datetime() with the configured timezone.
+   */
   date: string;
 }
 export interface TaskDefinition {
-  id: string;
+  uuid?: string;
+  user_uuid: string;
   name: string;
   description: string;
   type: TaskType;
@@ -136,27 +166,36 @@ export interface TaskSchedule {
   timing_type: TimingType;
 }
 export interface Message {
-  id?: string;
+  uuid?: string;
+  user_uuid: string;
   author: "system" | "agent" | "user";
   sent_at: string;
   content: string;
   read_at?: string | null;
+  /**
+   * Get the date for this entity.
+   *
+   * If _get_date() is implemented, it takes precedence.
+   * Otherwise, uses _get_datetime() with the configured timezone.
+   */
   date: string;
 }
 export interface DayTemplate {
-  id?: string;
+  uuid?: string;
+  user_uuid: string;
+  slug: string;
   tasks?: string[];
   alarm?: Alarm | null;
   icon?: string | null;
 }
 export interface NotificationAction {
-  id?: string;
+  uuid?: string;
   action: string;
   title: string;
   icon?: string | null;
 }
 export interface NotificationPayload {
-  id?: string;
+  uuid?: string;
   title: string;
   body: string;
   icon?: string | null;
@@ -168,16 +207,17 @@ export interface NotificationPayload {
   } | null;
 }
 export interface PushSubscription {
-  id?: string;
+  uuid?: string;
+  user_uuid: string;
   device_name?: string | null;
   endpoint: string;
   p256dh: string;
   auth: string;
-  uuid?: string;
   createdAt?: string;
 }
 export interface Routine {
-  id?: string;
+  uuid?: string;
+  user_uuid: string;
   name: string;
   category: TaskCategory;
   routine_schedule: RoutineSchedule;
@@ -189,7 +229,20 @@ export interface RoutineSchedule {
   weekdays?: DayOfWeek[] | null;
 }
 export interface RoutineTask {
-  task_definition_id: string;
+  task_definition_uuid: string;
   name?: string | null;
   schedule?: TaskSchedule | null;
+}
+export interface User {
+  uuid?: string;
+  username: string;
+  email: string;
+  phone_number?: string | null;
+  password_hash: string;
+  settings?: UserSetting;
+  created_at?: string;
+  updated_at?: string | null;
+}
+export interface UserSetting {
+  template_defaults?: string[];
 }
