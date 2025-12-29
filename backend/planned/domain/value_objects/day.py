@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
+    from ..entities.day import Day
     from ..entities.event import Event
     from ..entities.message import Message
     from ..entities.task import Task
-    from ..entities.day import Day
 
 
 class DayTag(str, Enum):
@@ -39,12 +39,11 @@ class DayContext(BaseModel):
 
 def _rebuild_day_context() -> None:
     """Rebuild DayContext model after all entity classes are defined."""
-    # TODO: Move imports to top if circular import can be resolved
     # These imports are here to rebuild the model after all entities are defined
-    from ..entities.day import Day  # noqa: F401
-    from ..entities.event import Event  # noqa: F401
-    from ..entities.message import Message  # noqa: F401
-    from ..entities.task import Task  # noqa: F401
-    
+    from ..entities.day import Day
+    from ..entities.event import Event
+    from ..entities.message import Message
+    from ..entities.task import Task
+
     DayContext.model_rebuild()
 

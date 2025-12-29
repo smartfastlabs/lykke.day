@@ -1,3 +1,5 @@
+from uuid import UUID
+
 import pytest
 
 from planned.application.services import DayService, PlanningService
@@ -9,17 +11,13 @@ from planned.infrastructure.repositories import (
     RoutineRepository,
     TaskDefinitionRepository,
     TaskRepository,
+    UserRepository,
 )
 
 
 @pytest.mark.asyncio
 @pytest.mark.skip
 async def test_schedule_today(test_date, test_user):
-    # TODO: Move imports to top if circular import can be resolved
-    from uuid import UUID
-
-    from planned.infrastructure.repositories import UserRepository
-
     user_uuid = test_user.uuid
     # Create repository instances
     day_repo = DayRepository(user_uuid=user_uuid)
@@ -72,10 +70,6 @@ async def test_schedule_today(test_date, test_user):
 @pytest.mark.asyncio
 @pytest.mark.skip
 async def test_schedule_tomorrow(test_date_tomorrow, test_user):
-    # TODO: Move imports to top if circular import can be resolved
-    from uuid import UUID
-
-    from planned.infrastructure.repositories import UserRepository
 
     user_uuid = test_user.uuid
     # Create repository instances

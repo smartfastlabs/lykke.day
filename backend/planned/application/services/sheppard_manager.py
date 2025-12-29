@@ -1,11 +1,50 @@
 import asyncio
+from datetime import time
 from typing import cast
 from uuid import UUID
 
 from loguru import logger
 
+from planned.application.repositories import (
+    AuthTokenRepositoryProtocol,
+    CalendarRepositoryProtocol,
+    DayRepositoryProtocol,
+    DayTemplateRepositoryProtocol,
+    EventRepositoryProtocol,
+    MessageRepositoryProtocol,
+    PushSubscriptionRepositoryProtocol,
+    RoutineRepositoryProtocol,
+    TaskDefinitionRepositoryProtocol,
+    TaskRepositoryProtocol,
+    UserRepositoryProtocol,
+)
 from planned.application.repositories.base import ChangeEvent, ChangeHandler
-from planned.domain.entities import User
+from planned.application.services import (
+    CalendarService,
+    DayService,
+    PlanningService,
+)
+from planned.core.exceptions import NotFoundError
+from planned.domain.entities import Alarm, DayTemplate, User
+from planned.domain.value_objects.alarm import AlarmType
+from planned.infrastructure.gateways.adapters import (
+    GoogleCalendarGatewayAdapter,
+    WebPushGatewayAdapter,
+)
+from planned.infrastructure.repositories import (
+    AuthTokenRepository,
+    CalendarRepository,
+    DayRepository,
+    DayTemplateRepository,
+    EventRepository,
+    MessageRepository,
+    PushSubscriptionRepository,
+    RoutineRepository,
+    TaskDefinitionRepository,
+    TaskRepository,
+    UserRepository,
+)
+from planned.infrastructure.utils.dates import get_current_date
 
 from .sheppard import SheppardService
 
@@ -19,8 +58,6 @@ class SheppardManager:
 
     def __init__(self) -> None:
         """Initialize the SheppardManager."""
-        # TODO: Move import to top if circular import can be resolved
-        from planned.infrastructure.repositories import UserRepository
 
         self._services: dict[UUID, tuple[SheppardService, asyncio.Task]] = {}
         self._user_repo = UserRepository()
@@ -36,48 +73,6 @@ class SheppardManager:
         Returns:
             A configured SheppardService instance for the user.
         """
-        # TODO: Move imports to top if circular imports can be resolved
-        from datetime import time
-
-        from planned.application.repositories import (
-            AuthTokenRepositoryProtocol,
-            CalendarRepositoryProtocol,
-            DayRepositoryProtocol,
-            DayTemplateRepositoryProtocol,
-            EventRepositoryProtocol,
-            MessageRepositoryProtocol,
-            PushSubscriptionRepositoryProtocol,
-            RoutineRepositoryProtocol,
-            TaskDefinitionRepositoryProtocol,
-            TaskRepositoryProtocol,
-            UserRepositoryProtocol,
-        )
-        from planned.application.services import (
-            CalendarService,
-            DayService,
-            PlanningService,
-        )
-        from planned.core.exceptions import NotFoundError
-        from planned.domain.entities import Alarm, DayTemplate
-        from planned.domain.value_objects.alarm import AlarmType
-        from planned.infrastructure.gateways.adapters import (
-            GoogleCalendarGatewayAdapter,
-            WebPushGatewayAdapter,
-        )
-        from planned.infrastructure.repositories import (
-            AuthTokenRepository,
-            CalendarRepository,
-            DayRepository,
-            DayTemplateRepository,
-            EventRepository,
-            MessageRepository,
-            PushSubscriptionRepository,
-            RoutineRepository,
-            TaskDefinitionRepository,
-            TaskRepository,
-        )
-        from planned.infrastructure.utils.dates import get_current_date
-
         # Create repositories scoped to user
         auth_token_repo: AuthTokenRepositoryProtocol = cast(
             "AuthTokenRepositoryProtocol", AuthTokenRepository(user_uuid=user_uuid)
@@ -230,9 +225,7 @@ class SheppardManager:
             user_uuid: The UUID of the user to stop the service for.
         """
         if user_uuid not in self._services:
-            logger.warning(
-                f"No SheppardService found for user {user_uuid}, skipping"
-            )
+            logger.warning(f"No SheppardService found for user {user_uuid}, skipping")
             return
 
         try:
@@ -307,10 +300,10 @@ class SheppardManager:
 
     def get_service_for_user(self, user_uuid: UUID) -> SheppardService | None:
         """Get the SheppardService instance for a specific user.
-        
+
         Args:
             user_uuid: The UUID of the user to get the service for.
-            
+
         Returns:
             The SheppardService instance for the user, or None if it doesn't exist.
         """
@@ -321,13 +314,13 @@ class SheppardManager:
 
     async def ensure_service_for_user(self, user_uuid: UUID) -> SheppardService:
         """Ensure a SheppardService exists for a user, starting it if necessary.
-        
+
         Args:
             user_uuid: The UUID of the user to ensure a service for.
-            
+
         Returns:
             The SheppardService instance for the user.
-            
+
         Raises:
             RuntimeError: If the service cannot be started.
         """
@@ -340,4 +333,3 @@ class SheppardManager:
                     f"Failed to start SheppardService for user {user_uuid}"
                 )
         return service
-
