@@ -424,8 +424,11 @@ async def test_get_upcomming_events(
 ):
     """Test get_upcomming_events returns events within look_ahead window."""
     date = datetime.date(2025, 11, 27)
-    # Use frozen datetime from fixture
-    now = test_datetime_noon
+    # Use frozen datetime from fixture - get_current_datetime() will return the frozen time
+    # which is 2025-11-27 18:00:00 UTC (12:00:00-6:00)
+    from planned.infrastructure.utils.dates import get_current_datetime
+
+    now = get_current_datetime()
     future_time = now + timedelta(minutes=15)
     far_future = now + timedelta(hours=2)
     past_time = now - timedelta(hours=1)
@@ -676,6 +679,10 @@ async def test_on_message_change_create(
         user_uuid=test_user_uuid,
         content="New message",
         date=date,
+        author="user",
+        sent_at=datetime.datetime.combine(
+            date, datetime.time(12, 0), tzinfo=datetime.UTC
+        ),
     )
 
     from planned.domain.value_objects.repository_event import RepositoryEvent

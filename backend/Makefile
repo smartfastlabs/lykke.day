@@ -51,9 +51,7 @@ check:
 	make typecheck
 	make test
 
-
-.PHONY: test-target
 test-target: docker-up
-	@echo "Running migrations on test database..."
-	@$(MAKE) migrate-test
-	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test ENV_FILE=.env.test poetry run pytest tests --vcr-record=once -vv -k '$(TARGET)' -s -v
+	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test \
+	ENV_FILE=.env.test \
+	poetry run pytest $(if $(findstring /,$(TARGET)),$(TARGET),tests -k '$(TARGET)') --vcr-record=once -vv -s

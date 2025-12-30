@@ -274,14 +274,18 @@ class DayService(BaseService):
             # template_defaults stores slugs
             template_slug = user.settings.template_defaults[date.weekday()]
             template = await day_template_repo.get_by_slug(template_slug)
+            # Use template.uuid when looking up by slug
+            final_template_uuid = template.uuid
         else:
             template = await day_template_repo.get(template_uuid)
+            # Use the passed template_uuid directly to preserve it
+            final_template_uuid = template_uuid
 
         return objects.Day(
             user_uuid=user_uuid,
             date=date,
             status=objects.DayStatus.UNSCHEDULED,
-            template_uuid=template.uuid,
+            template_uuid=final_template_uuid,
             alarm=template.alarm,
         )
 
@@ -384,12 +388,20 @@ class DayService(BaseService):
             if event.status == "cancelled":
                 continue
 
-            if event.starts_at < now:
-                if event.ends_at and event.ends_at < now:
-                    continue
-            elif event.starts_at - now > look_ahead:
+            # If event has already ended, skip it
+            if event.ends_at and event.ends_at < now:
                 continue
 
+            # If event is ongoing (started but not ended), include it
+            if event.starts_at <= now:
+                result.append(event)
+                continue
+
+            # If event hasn't started yet and is too far in the future, skip it
+            if (event.starts_at - now) > look_ahead:
+                continue
+
+            # Event will start within look_ahead window
             result.append(event)
 
         return result

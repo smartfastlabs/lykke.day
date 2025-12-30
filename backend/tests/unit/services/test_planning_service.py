@@ -704,6 +704,8 @@ async def test_save_action_for_invalid_object(
         user_uuid=test_user_uuid,
         content="Test",
         date=date,
+        author="user",
+        sent_at=datetime.datetime.now(datetime.UTC),
     )
 
     action = Action(type=ActionType.COMPLETE)

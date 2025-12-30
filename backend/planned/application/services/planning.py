@@ -171,13 +171,14 @@ class PlanningService(BaseService):
         obj: HasActionsType,
         action: Action,
     ) -> HasActionsType:
-        obj.actions.append(action)
         if isinstance(obj, Task):
+            obj.actions.append(action)
             if action.type in [TaskStatus.COMPLETE, TaskStatus.PUNT]:
                 obj.status = TaskStatus(action.type)
             await self.task_repo.put(obj)
 
         elif isinstance(obj, Event):
+            obj.actions.append(action)
             await self.event_repo.put(obj)
         else:
             raise ValueError(f"Invalid object type: {type(obj)}")
