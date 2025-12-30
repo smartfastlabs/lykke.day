@@ -1,8 +1,12 @@
 """Users table definition."""
 
+import uuid
+
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import Column, DateTime, String
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
 
@@ -26,4 +30,3 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     settings = Column(JSONB)  # UserSetting as JSONB
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=True)
-

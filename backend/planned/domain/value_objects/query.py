@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date as dt_date, datetime
 from typing import Generic, TypeVar
+from uuid import UUID
 
 import pydantic
 
@@ -30,6 +31,25 @@ class DateQuery(BaseQuery):
     """Query class for entities with a date column."""
 
     date: dt_date | None = None
+
+
+class UserQuery(BaseQuery):
+    """Query class for User entities."""
+
+    email: str | None = None
+
+
+class DayTemplateQuery(BaseQuery):
+    """Query class for DayTemplate entities."""
+
+    slug: str | None = None
+
+
+class AuthTokenQuery(BaseQuery):
+    """Query class for AuthToken entities."""
+
+    user_uuid: UUID | None = None
+    platform: str | None = None
 
 
 T = TypeVar("T", bound=BaseQuery)

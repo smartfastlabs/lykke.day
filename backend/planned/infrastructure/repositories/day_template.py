@@ -1,24 +1,32 @@
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy.sql import Select
 
-from planned.core.exceptions import exceptions
 from planned.domain.entities import DayTemplate
-
-from .base import BaseQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import day_templates_tbl
+
+from .base import DayTemplateQuery, UserScopedBaseRepository
 from .base.utils import normalize_list_fields
 
 
-class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, BaseQuery]):
+class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, DayTemplateQuery]):
     Object = DayTemplate
     table = day_templates_tbl
-    QueryClass = BaseQuery
+    QueryClass = DayTemplateQuery
 
     def __init__(self, user_uuid: UUID) -> None:
         """Initialize DayTemplateRepository with user scoping."""
         super().__init__(user_uuid=user_uuid)
+
+    def build_query(self, query: DayTemplateQuery) -> Select[tuple]:
+        """Build a SQLAlchemy Core select statement from a query object."""
+        stmt = super().build_query(query)
+
+        if query.slug is not None:
+            stmt = stmt.where(self.table.c.slug == query.slug)
+
+        return stmt
 
     @staticmethod
     def entity_to_row(template: DayTemplate) -> dict[str, Any]:
@@ -46,21 +54,4 @@ class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, BaseQuery]):
 
     async def get_by_slug(self, slug: str) -> DayTemplate:
         """Get a DayTemplate by slug (must be scoped to a user)."""
-        if self.user_uuid is None:
-            raise ValueError("get_by_slug requires user_uuid scoping")
-
-        async with self._get_connection(for_write=False) as conn:
-            stmt = select(self.table).where(
-                self.table.c.slug == slug,
-                self.table.c.user_uuid == self.user_uuid,
-            )
-
-            result = await conn.execute(stmt)
-            row = result.mappings().first()
-
-            if row is None:
-                raise exceptions.NotFoundError(
-                    f"DayTemplate with slug '{slug}' not found for user {self.user_uuid}"
-                )
-
-            return type(self).row_to_entity(dict(row))
+        return await self.get_one(DayTemplateQuery(slug=slug))
