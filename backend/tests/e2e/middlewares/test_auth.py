@@ -21,7 +21,6 @@ async def test_dispatch_success():
         "fastapi.Request",
         session={
             "user_uuid": str(uuid4()),
-            "logged_in_at": str(get_current_datetime()),
         },
         url=url,
     )
@@ -77,10 +76,8 @@ async def test_dispatch_invalid_session():
     url.path = "/some-url"
     request = InstanceDouble(
         "fastapi.Request",
-        session={"logged_in_at": "Bob Barker"},
         url=url,
     )
 
     with pytest.raises(exceptions.AuthorizationError):
         await obj.dispatch(request, None)
-

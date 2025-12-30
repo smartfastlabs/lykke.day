@@ -5,6 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from loguru import logger
+
 from planned.application.services import SheppardManager
 from planned.core.exceptions import exceptions
 from planned.domain.value_objects.repository_event import RepositoryEvent
@@ -55,13 +56,6 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     # Get user from session
     session = getattr(websocket, "session", {})
     user_uuid_str = session.get("user_uuid")
-
-    if not user_uuid_str:
-        logged_in_at = session.get("logged_in_at")
-        if not logged_in_at:
-            await websocket.close(code=1008, reason="Not authenticated")
-            return
-        raise exceptions.AuthorizationError("Session invalid. Please log in again.")
 
     try:
         user_uuid = UUID(user_uuid_str)

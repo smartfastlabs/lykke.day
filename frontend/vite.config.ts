@@ -17,12 +17,12 @@ export default defineConfig({
         key: keyPath,
       },
     }),
-    allowedHosts: ["master-bedroom.local"],
+    allowedHosts: ["master-bedroom.local", "localhost:5173"],
     proxy: {
       "/api": {
         target: "http://localhost:8080",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
+        changeOrigin: false,
+        rewrite: (path) => path.replace(/^\/api/, "").replace(/\/?$/, "/"),
       },
     },
   },

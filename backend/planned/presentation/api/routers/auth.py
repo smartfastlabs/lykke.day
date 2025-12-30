@@ -66,12 +66,6 @@ async def register(
         phone_number=data.phone_number,
     )
 
-    # Automatically log in the new user
-    now: str = str(get_current_datetime())
-    response.set_cookie(
-        key="logged_in_at", value=now, httponly=False, max_age=60 * 60 * 24 * 90
-    )
-    request.session["logged_in_at"] = now
     request.session["user_uuid"] = str(user.uuid)
 
     return UserResponse(uuid=str(user.uuid), email=user.email)
@@ -106,12 +100,6 @@ async def login(
     if user is None:
         raise exceptions.AuthenticationError("Invalid email or password")
 
-    # Store session data
-    now: str = str(get_current_datetime())
-    response.set_cookie(
-        key="logged_in_at", value=now, httponly=False, max_age=60 * 60 * 24 * 90
-    )
-    request.session["logged_in_at"] = now
     request.session["user_uuid"] = str(user.uuid)
 
     return UserResponse(uuid=str(user.uuid), email=user.email)

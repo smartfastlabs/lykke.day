@@ -15,7 +15,6 @@ def mock_for_testing() -> bool:
 class AuthMiddleware(BaseHTTPMiddleware):
     """
     Middleware that checks if the user is authenticated by verifying
-    the presence of a valid 'logged_in_at' datetime in the session.
     """
 
     def __init__(
@@ -53,13 +52,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 "Session middleware not configured",
             )
 
-        # Check for user_uuid in session (primary check)
         user_uuid = request.session.get("user_uuid")
-        
-        # Fallback to logged_in_at for backward compatibility during migration
-        logged_in_at = request.session.get("logged_in_at")
-        
-        # Check if user_uuid exists (preferred)
         if user_uuid:
             # Validate that user_uuid is a valid UUID string
             try:
@@ -68,19 +61,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 raise exceptions.AuthorizationError(
                     "Invalid session data. Please log in again.",
                 )
-        elif logged_in_at:
-            # Backward compatibility: validate logged_in_at
-            try:
-                if isinstance(logged_in_at, str):
-                    datetime.fromisoformat(logged_in_at)
-                else:
-                    raise exceptions.AuthorizationError("Invalid datetime format")
-            except (ValueError, TypeError) as e:
-                raise exceptions.AuthorizationError(
-                    "Invalid session data. Please log in again.",
-                ) from e
         else:
-            # Neither user_uuid nor logged_in_at exists
             raise exceptions.AuthorizationError(
                 "Not authenticated. Please log in.",
             )

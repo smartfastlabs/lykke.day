@@ -22,14 +22,13 @@ def is_testing() -> bool:
     """Check if the application is running in a test environment."""
     return "pytest" in sys.modules or os.getenv("ENV_FILE", "").endswith(".test")
 
+
 logger.remove()
 logger.add(
     sys.stdout,
     colorize=True,
     format="<green>{time}</green> <level>{message}</level>",
 )
-
-
 
 
 @asynccontextmanager

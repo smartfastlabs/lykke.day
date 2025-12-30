@@ -64,7 +64,7 @@ async function fetchJSON(
 
 function putMethod(type: string) {
   return async function (item: any) {
-    const url = item.uuid ? `/api/v1/${type}/${item.uuid}` : `/api/v1/${type}`;
+    const url = item.uuid ? `/api/${type}/${item.uuid}` : `/api/${type}`;
     return fetchJSON(url, {
       method: "PUT",
       body: JSON.stringify(item),
@@ -77,7 +77,7 @@ function putMethod(type: string) {
 
 function postMethod(type: string) {
   return async function (item: any) {
-    const url = item.uuid ? `/api/v1/${type}/${item.uuid}` : `/api/v1/${type}`;
+    const url = item.uuid ? `/api/${type}/${item.uuid}` : `/api/${type}`;
     return fetchJSON(url, {
       method: "POST",
       body: JSON.stringify(item),
@@ -90,7 +90,7 @@ function postMethod(type: string) {
 
 function deleteMethod(type: string) {
   return async function (uuid: string) {
-    return fetchJSON(`/api/v1/${type}/${uuid}`, {
+    return fetchJSON(`/api/${type}/${uuid}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -101,14 +101,14 @@ function deleteMethod(type: string) {
 
 export function readOnly(type: string) {
   return {
-    get: (u: string) => fetchJSON(`/api/v1/${type}/${u}`),
+    get: (u: string) => fetchJSON(`/api/${type}/${u}`),
     search: postMethod(`${type}/search`),
   };
 }
 
 export function genericCrud(type) {
   return {
-    get: (u: string) => fetchJSON(`/api/v1/${type}/${u}`),
+    get: (u: string) => fetchJSON(`/api/${type}/${u}`),
     search: postMethod(`${type}/search`),
     delete: deleteMethod(type),
     update: putMethod(type),
