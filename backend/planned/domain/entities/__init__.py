@@ -1,12 +1,7 @@
 from .action import Action
 from .alarm import Alarm
 from .auth_token import AuthToken
-from .base import (
-    BaseConfigObject,
-    BaseDateObject,
-    BaseEntityObject,
-    BaseObject,
-)
+from .base import BaseConfigObject, BaseDateObject, BaseEntityObject, BaseObject
 from .calendar import Calendar
 from .day import Day, DayTemplate
 from .event import Event
@@ -15,6 +10,7 @@ from .person import Person
 from .push import PushSubscription
 from .routine import Routine
 from .task import Task
+from .task_definition import TaskDefinition
 from .user import User
 
 __all__ = [
@@ -34,6 +30,7 @@ __all__ = [
     "PushSubscription",
     "Routine",
     "Task",
+    "TaskDefinition",
     "User",
     # Re-export value objects for backward compatibility
     "ActionType",
@@ -48,7 +45,6 @@ __all__ = [
     "RoutineSchedule",
     "RoutineTask",
     "TaskCategory",
-    "TaskDefinition",
     "TaskFrequency",
     "TaskSchedule",
     "TaskStatus",
@@ -65,7 +61,6 @@ from ..value_objects.push import NotificationAction, NotificationPayload
 from ..value_objects.routine import DayOfWeek, RoutineSchedule, RoutineTask
 from ..value_objects.task import (
     TaskCategory,
-    TaskDefinition,
     TaskFrequency,
     TaskSchedule,
     TaskStatus,

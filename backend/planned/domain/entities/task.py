@@ -5,7 +5,6 @@ from pydantic import Field
 
 from ..value_objects.task import (
     TaskCategory,
-    TaskDefinition,
     TaskFrequency,
     TaskSchedule,
     TaskStatus,
@@ -13,6 +12,7 @@ from ..value_objects.task import (
 )
 from .action import Action
 from .base import BaseDateObject
+from .task_definition import TaskDefinition
 
 
 class Task(BaseDateObject):

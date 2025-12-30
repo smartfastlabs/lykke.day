@@ -8,7 +8,6 @@ from .repository_event import RepositoryEvent
 from .routine import DayOfWeek, RoutineSchedule, RoutineTask
 from .task import (
     TaskCategory,
-    TaskDefinition,
     TaskFrequency,
     TaskSchedule,
     TaskStatus,
@@ -37,7 +36,6 @@ __all__ = [
     "RoutineSchedule",
     "RoutineTask",
     "TaskCategory",
-    "TaskDefinition",
     "TaskFrequency",
     "TaskSchedule",
     "TaskStatus",

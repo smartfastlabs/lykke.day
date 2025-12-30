@@ -5,11 +5,10 @@ from uuid import uuid4
 import pytest
 
 from planned.core.exceptions import exceptions
-from planned.domain.entities import Day, DayStatus, Task, TaskStatus
+from planned.domain.entities import Day, DayStatus, Task, TaskDefinition, TaskStatus
 from planned.domain.value_objects.query import DateQuery
 from planned.domain.value_objects.task import (
     TaskCategory,
-    TaskDefinition,
     TaskFrequency,
     TaskType,
 )

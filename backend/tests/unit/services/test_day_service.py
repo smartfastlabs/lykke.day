@@ -17,11 +17,11 @@ from planned.domain.entities import (
     DayTemplate,
     Event,
     Task,
+    TaskDefinition,
     User,
 )
 from planned.domain.value_objects.task import (
     TaskCategory,
-    TaskDefinition,
     TaskFrequency,
     TaskSchedule,
     TaskStatus,

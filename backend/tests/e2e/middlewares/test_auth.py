@@ -77,6 +77,9 @@ async def test_dispatch_invalid_session():
     request = InstanceDouble(
         "fastapi.Request",
         url=url,
+        session={
+            "user_uuid": "invalid",
+        },
     )
 
     with pytest.raises(exceptions.AuthorizationError):

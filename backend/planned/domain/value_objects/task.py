@@ -1,10 +1,7 @@
 from datetime import time
 from enum import Enum
-from uuid import UUID
 
 from pydantic import BaseModel
-
-from ..entities.base import BaseConfigObject
 
 
 class TaskTag(str, Enum):
@@ -57,13 +54,6 @@ class TimingType(str, Enum):
     FIXED_TIME = "FIXED_TIME"
     TIME_WINDOW = "TIME_WINDOW"
     FLEXIBLE = "FLEXIBLE"
-
-
-class TaskDefinition(BaseConfigObject):
-    user_uuid: UUID
-    name: str
-    description: str
-    type: TaskType
 
 
 class TaskSchedule(BaseModel):

@@ -5,7 +5,8 @@ from uuid import uuid4
 import pytest
 
 from planned.core.exceptions import exceptions
-from planned.domain.value_objects.task import TaskDefinition, TaskType
+from planned.domain.entities import TaskDefinition
+from planned.domain.value_objects.task import TaskType
 from planned.infrastructure.repositories import TaskDefinitionRepository
 
 

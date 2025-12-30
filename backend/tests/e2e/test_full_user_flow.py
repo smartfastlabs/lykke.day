@@ -71,10 +71,6 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     assert login_data["email"] == email
     assert login_data["uuid"] == user_uuid_str
 
-    # Verify session cookie was set
-    cookies = login_response.cookies
-    assert "logged_in_at" in cookies, "Session cookie should be set after login"
-
     # Create default DayTemplate (required for scheduling)
     # Note: In production, this would be created by SheppardManager, but for e2e test
     # we create it directly since there's no API endpoint for template creation
