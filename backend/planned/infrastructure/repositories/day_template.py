@@ -7,13 +7,13 @@ from planned.core.exceptions import exceptions
 from planned.domain.entities import DayTemplate
 
 from .base import BaseQuery, UserScopedBaseRepository
-from .base.schema import day_templates
+from planned.infrastructure.database.tables import day_templates_tbl
 from .base.utils import normalize_list_fields
 
 
 class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, BaseQuery]):
     Object = DayTemplate
-    table = day_templates
+    table = day_templates_tbl
     QueryClass = BaseQuery
 
     def __init__(self, user_uuid: UUID) -> None:

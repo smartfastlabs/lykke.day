@@ -8,13 +8,13 @@ from planned.core.exceptions import exceptions
 from planned.domain.entities import Calendar
 
 from .base import BaseQuery, UserScopedBaseRepository
-from .base.schema import calendars
+from planned.infrastructure.database.tables import calendars_tbl
 from .base.utils import normalize_list_fields
 
 
 class CalendarRepository(UserScopedBaseRepository[Calendar, BaseQuery]):
     Object = Calendar
-    table = calendars
+    table = calendars_tbl
     QueryClass = BaseQuery
 
     def __init__(self, user_uuid: UUID) -> None:

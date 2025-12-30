@@ -4,13 +4,13 @@ from uuid import UUID
 from planned.domain.entities import Day
 
 from .base import BaseQuery, UserScopedBaseRepository
-from .base.schema import days
+from planned.infrastructure.database.tables import days_tbl
 from .base.utils import normalize_list_fields
 
 
 class DayRepository(UserScopedBaseRepository[Day, BaseQuery]):
     Object = Day
-    table = days
+    table = days_tbl
     QueryClass = BaseQuery
 
     def __init__(self, user_uuid: UUID) -> None:

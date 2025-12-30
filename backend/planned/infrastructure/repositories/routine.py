@@ -4,13 +4,13 @@ from uuid import UUID
 from planned.domain.entities.routine import Routine
 
 from .base import BaseQuery, UserScopedBaseRepository
-from .base.schema import routines
+from planned.infrastructure.database.tables import routines_tbl
 from .base.utils import normalize_list_fields
 
 
 class RoutineRepository(UserScopedBaseRepository[Routine, BaseQuery]):
     Object = Routine
-    table = routines
+    table = routines_tbl
     QueryClass = BaseQuery
 
     def __init__(self, user_uuid: UUID) -> None:

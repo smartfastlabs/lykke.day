@@ -8,14 +8,14 @@ from planned.domain.entities import User
 from planned.domain.value_objects.user import UserSetting
 
 from .base import BaseQuery, BaseRepository
-from .base.schema import users
+from planned.infrastructure.database.tables import users_tbl
 
 
 class UserRepository(BaseRepository[User, BaseQuery]):
     """UserRepository is NOT user-scoped - it's used for user management."""
 
     Object = User
-    table = users
+    table = users_tbl
     QueryClass = BaseQuery
 
     def __init__(self) -> None:

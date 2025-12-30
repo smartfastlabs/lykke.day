@@ -4,13 +4,13 @@ from uuid import UUID
 from planned.domain.entities import PushSubscription
 
 from .base import BaseQuery, UserScopedBaseRepository
-from .base.schema import push_subscriptions
+from planned.infrastructure.database.tables import push_subscriptions_tbl
 from .base.utils import normalize_list_fields
 
 
 class PushSubscriptionRepository(UserScopedBaseRepository[PushSubscription, BaseQuery]):
     Object = PushSubscription
-    table = push_subscriptions
+    table = push_subscriptions_tbl
     QueryClass = BaseQuery
 
     def __init__(self, user_uuid: UUID) -> None:

@@ -2,15 +2,15 @@ from typing import Any
 from uuid import UUID
 
 from planned.domain.entities import TaskDefinition
+from planned.infrastructure.database.tables import task_definitions_tbl
 
 from .base import BaseQuery, UserScopedBaseRepository
-from .base.schema import task_definitions
 from .base.utils import normalize_list_fields
 
 
 class TaskDefinitionRepository(UserScopedBaseRepository[TaskDefinition, BaseQuery]):
     Object = TaskDefinition
-    table = task_definitions
+    table = task_definitions_tbl
     QueryClass = BaseQuery
 
     def __init__(self, user_uuid: UUID) -> None:

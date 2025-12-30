@@ -6,13 +6,13 @@ from sqlalchemy.sql import Select
 from planned.domain.entities import Event
 
 from .base import DateQuery, UserScopedBaseRepository
-from .base.schema import events
+from planned.infrastructure.database.tables import events_tbl
 from .base.utils import normalize_list_fields
 
 
 class EventRepository(UserScopedBaseRepository[Event, DateQuery]):
     Object = Event
-    table = events
+    table = events_tbl
     QueryClass = DateQuery
 
     def __init__(self, user_uuid: UUID) -> None:

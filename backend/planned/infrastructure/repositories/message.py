@@ -6,13 +6,13 @@ from sqlalchemy.sql import Select
 from planned.domain.entities import Message
 
 from .base import DateQuery, UserScopedBaseRepository
-from .base.schema import messages
+from planned.infrastructure.database.tables import messages_tbl
 from .base.utils import normalize_list_fields
 
 
 class MessageRepository(UserScopedBaseRepository[Message, DateQuery]):
     Object = Message
-    table = messages
+    table = messages_tbl
     QueryClass = DateQuery
 
     def __init__(self, user_uuid: UUID) -> None:

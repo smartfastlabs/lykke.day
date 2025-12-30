@@ -3,7 +3,7 @@ from typing import Any
 from planned.domain.entities import AuthToken
 
 from .base import BaseQuery, BaseRepository
-from .base.schema import auth_tokens
+from planned.infrastructure.database.tables import auth_tokens_tbl
 from .base.utils import normalize_list_fields
 
 
@@ -11,7 +11,7 @@ class AuthTokenRepository(BaseRepository[AuthToken, BaseQuery]):
     """AuthTokenRepository is NOT user-scoped - it can be used for any user's auth tokens."""
 
     Object = AuthToken
-    table = auth_tokens
+    table = auth_tokens_tbl
     QueryClass = BaseQuery
 
     def __init__(self) -> None:

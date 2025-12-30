@@ -6,13 +6,13 @@ from sqlalchemy.sql import Select
 from planned.domain.entities import Task
 
 from .base import DateQuery, UserScopedBaseRepository
-from .base.schema import tasks
+from planned.infrastructure.database.tables import tasks_tbl
 from .base.utils import normalize_list_fields
 
 
 class TaskRepository(UserScopedBaseRepository[Task, DateQuery]):
     Object = Task
-    table = tasks
+    table = tasks_tbl
     QueryClass = DateQuery
 
     def __init__(self, user_uuid: UUID) -> None:

@@ -7,7 +7,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from planned.core.config import settings
-from planned.infrastructure.repositories.base.schema import metadata
+from planned.infrastructure.database.tables import metadata
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
