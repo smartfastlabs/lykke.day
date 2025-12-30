@@ -32,7 +32,6 @@ async function fetchJSON(
   options: object = { suppressError: false }
 ): any {
   options.headers = getHeaders(options.headers);
-  console.log(options);
 
   console.log("Fetching URL:", url, "with options:", options);
   const response = await fetch(url, options);
@@ -100,10 +99,20 @@ function deleteMethod(type: string) {
   };
 }
 
+export function readOnly(type: string) {
+  return {
+    get: (u: string) => fetchJSON(`/api/v1/${type}/${u}`),
+    search: postMethod(`${type}/search`),
+  };
+}
+
 export function genericCrud(type) {
   return {
     get: (u: string) => fetchJSON(`/api/v1/${type}/${u}`),
     search: postMethod(`${type}/search`),
+    delete: deleteMethod(type),
+    update: putMethod(type),
+    create: postMethod(type),
   };
 }
 
@@ -262,5 +271,22 @@ export const pushAPI = {
     await fetchJSON(`/api/push/subscriptions/${id}`, {
       method: "DELETE",
     });
+  },
+};
+
+export const dayTemplateAPI = {
+  ...genericCrud("day-templates"),
+
+  getAll: async (): Promise<DayTemplate[]> => {
+    const resp = await fetchJSON("/api/day-templates/", {
+      method: "GET",
+    });
+
+    // Handle paginated response - extract items array
+    if (resp.data && resp.data.items) {
+      return resp.data.items as DayTemplate[];
+    }
+    // Fallback to direct array if not paginated
+    return resp.data as DayTemplate[];
   },
 };
