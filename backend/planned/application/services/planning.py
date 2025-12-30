@@ -171,10 +171,12 @@ class PlanningService(BaseService):
         obj: HasActionsType,
         action: Action,
     ) -> HasActionsType:
+        from planned.domain.value_objects.action import ActionType
+
         if isinstance(obj, Task):
             obj.actions.append(action)
-            if action.type in [TaskStatus.COMPLETE, TaskStatus.PUNT]:
-                obj.status = TaskStatus(action.type)
+            if action.type in [ActionType.COMPLETE, ActionType.PUNT]:
+                obj.status = TaskStatus(action.type.value)
             await self.task_repo.put(obj)
 
         elif isinstance(obj, Event):
