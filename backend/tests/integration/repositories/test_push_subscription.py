@@ -13,7 +13,7 @@ from planned.infrastructure.repositories import PushSubscriptionRepository
 async def test_get(push_subscription_repo, test_user):
     """Test getting a push subscription by ID."""
     subscription = PushSubscription(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         device_name="Test Device",
         endpoint="https://example.com/push",
@@ -39,7 +39,7 @@ async def test_get_not_found(push_subscription_repo):
 async def test_put(push_subscription_repo, test_user):
     """Test creating a new push subscription."""
     subscription = PushSubscription(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         device_name="New Device",
         endpoint="https://example.com/push",
@@ -57,7 +57,7 @@ async def test_put(push_subscription_repo, test_user):
 async def test_all(push_subscription_repo, test_user):
     """Test getting all push subscriptions."""
     sub1 = PushSubscription(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         device_name="Device 1",
         endpoint="https://example.com/push1",
@@ -65,7 +65,7 @@ async def test_all(push_subscription_repo, test_user):
         auth="auth_key1",
     )
     sub2 = PushSubscription(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         device_name="Device 2",
         endpoint="https://example.com/push2",
@@ -86,7 +86,7 @@ async def test_all(push_subscription_repo, test_user):
 async def test_user_isolation(push_subscription_repo, test_user, create_test_user):
     """Test that different users' push subscriptions are properly isolated."""
     subscription = PushSubscription(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         device_name="User1 Device",
         endpoint="https://example.com/push",

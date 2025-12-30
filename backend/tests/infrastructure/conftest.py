@@ -14,7 +14,7 @@ async def test_user():
     """Create a unique user for each test."""
     user_repo = UserRepository()
     user = User(
-        uuid=uuid4(),
+        id=uuid4(),
         email=f"test-{uuid4()}@example.com",
         hashed_password="test_hash",
         settings=UserSetting(),

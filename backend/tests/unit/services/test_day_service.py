@@ -176,25 +176,25 @@ async def test_get_or_preview_creates_base_day_if_not_found(
 ):
     """Test get_or_preview creates base day if not found."""
     date = datetime.date(2024, 1, 1)
-    template_id = "default"
+    template_slug = "default"
 
     user = User(
-        uuid=test_user_id,
+        id=test_user_id,
         email="test@example.com",
         hashed_password="hash",
-        settings=UserSetting(template_defaults=[template_id] * 7),
+        settings=UserSetting(template_defaults=[template_slug] * 7),
     )
 
     template_id = uuid4()
     template = DayTemplate(
-        uuid=template_id,
-        slug=str(template_id),
+        id=template_id,
+        slug=template_slug,
         user_id=test_user_id,
     )
 
     allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
     allow(mock_user_repo).get(test_user_id).and_return(user)
-    allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
+    allow(mock_day_template_repo).get_by_slug(template_slug).and_return(template)
 
     result = await DayService.get_or_preview(
         date,
@@ -221,14 +221,14 @@ async def test_get_or_create_creates_and_saves_day(
     template_slug = "default"
 
     user = User(
-        uuid=test_user_id,
+        id=test_user_id,
         email="test@example.com",
         hashed_password="hash",
         settings=UserSetting(template_defaults=[template_slug] * 7),
     )
 
     template = DayTemplate(
-        uuid=template_id,
+        id=template_id,
         slug=template_slug,
         user_id=test_user_id,
     )
@@ -322,7 +322,7 @@ async def test_get_upcomming_tasks_123(
 
     # Task that should be included (within window)
     task1 = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Upcoming Task",
         status=TaskStatus.NOT_STARTED,
@@ -338,13 +338,12 @@ async def test_get_upcomming_tasks_123(
         schedule=TaskSchedule(
             start_time=future_time, timing_type=TimingType.FIXED_TIME
         ),
-        date=date,
     )
 
     # Task that should be excluded (too far in future)
     far_future_time = (now + timedelta(hours=2)).time()
     task2 = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Future Task",
         status=TaskStatus.NOT_STARTED,
@@ -361,12 +360,11 @@ async def test_get_upcomming_tasks_123(
             start_time=far_future_time,
             timing_type=TimingType.FIXED_TIME,
         ),
-        date=date,
     )
 
     # Task that should be excluded (already completed)
     task3 = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Completed Task",
         status=TaskStatus.COMPLETE,
@@ -382,7 +380,6 @@ async def test_get_upcomming_tasks_123(
         schedule=TaskSchedule(
             start_time=future_time, timing_type=TimingType.FIXED_TIME
         ),
-        date=date,
     )
 
     ctx = DayContext(
@@ -440,7 +437,7 @@ async def test_get_upcomming_events(
 
     # Event that should be included (within window)
     event1 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Upcoming Event",
         frequency=TaskFrequency.ONCE,
@@ -449,12 +446,11 @@ async def test_get_upcomming_events(
         platform="test",
         status="confirmed",
         starts_at=future_time,
-        date=date,
     )
 
     # Event that should be excluded (too far in future)
     event2 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Future Event",
         frequency=TaskFrequency.ONCE,
@@ -463,12 +459,11 @@ async def test_get_upcomming_events(
         platform="test",
         status="confirmed",
         starts_at=far_future,
-        date=date,
     )
 
     # Event that should be excluded (cancelled)
     event3 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Cancelled Event",
         frequency=TaskFrequency.ONCE,
@@ -477,12 +472,11 @@ async def test_get_upcomming_events(
         platform="test",
         status="cancelled",
         starts_at=future_time,
-        date=date,
     )
 
     # Event that should be included (ongoing - started in past but not ended)
     event4 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Ongoing Event",
         frequency=TaskFrequency.ONCE,
@@ -492,7 +486,6 @@ async def test_get_upcomming_events(
         status="confirmed",
         starts_at=past_time,
         ends_at=future_time,
-        date=date,
     )
 
     ctx = DayContext(
@@ -549,7 +542,7 @@ async def test_on_event_change_create(
     )
 
     new_event = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="New Event",
         frequency=TaskFrequency.ONCE,
@@ -558,7 +551,6 @@ async def test_on_event_change_create(
         platform="test",
         status="confirmed",
         starts_at=test_datetime_noon,
-        date=date,
     )
 
     from planned.domain.value_objects.repository_event import RepositoryEvent
@@ -585,7 +577,7 @@ async def test_on_event_change_delete(
     """Test on_event_change handles delete events."""
     date = datetime.date(2025, 11, 27)
     event1 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Event 1",
         frequency=TaskFrequency.ONCE,
@@ -594,10 +586,9 @@ async def test_on_event_change_delete(
         platform="test",
         status="confirmed",
         starts_at=test_datetime_noon,
-        date=date,
     )
     event2 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Event 2",
         frequency=TaskFrequency.ONCE,
@@ -606,7 +597,6 @@ async def test_on_event_change_delete(
         platform="test",
         status="confirmed",
         starts_at=test_datetime_noon,
-        date=date,
     )
 
     day = Day(
@@ -672,10 +662,9 @@ async def test_on_message_change_create(
     )
 
     new_message = Message(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         content="New message",
-        date=date,
         author="user",
         sent_at=datetime.datetime.combine(
             date, datetime.time(12, 0), tzinfo=datetime.UTC
@@ -705,7 +694,7 @@ async def test_on_task_change_update(
     """Test on_task_change handles update events."""
     date = datetime.date(2024, 1, 1)
     original_task = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Original Task",
         status=TaskStatus.NOT_STARTED,
@@ -718,7 +707,6 @@ async def test_on_task_change_update(
         ),
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        date=date,
     )
 
     day = Day(
@@ -741,7 +729,7 @@ async def test_on_task_change_update(
     )
 
     updated_task = Task(
-        uuid=original_task.id,
+        id=original_task.id,
         user_id=test_user_id,
         name="Updated Task",
         status=TaskStatus.COMPLETE,
@@ -749,7 +737,6 @@ async def test_on_task_change_update(
         task_definition=original_task.task_definition,
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        date=date,
     )
 
     from planned.domain.value_objects.repository_event import RepositoryEvent
@@ -815,7 +802,7 @@ async def test_base_day_with_template_id(
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
     template = DayTemplate(
-        uuid=template_id,
+        id=template_id,
         slug="custom",
         user_id=test_user_id,
     )
@@ -910,7 +897,7 @@ async def test_get_upcomming_tasks_with_available_time(
 
     # Task with available_time in past (should be included)
     task1 = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Available Task",
         status=TaskStatus.NOT_STARTED,
@@ -927,12 +914,11 @@ async def test_get_upcomming_tasks_with_available_time(
             available_time=past_available_time,
             timing_type=TimingType.FLEXIBLE,
         ),
-        date=date,
     )
 
     # Task with available_time in future (should be excluded)
     task2 = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Future Available Task",
         status=TaskStatus.NOT_STARTED,
@@ -949,7 +935,6 @@ async def test_get_upcomming_tasks_with_available_time(
             available_time=future_available_time,
             timing_type=TimingType.FLEXIBLE,
         ),
-        date=date,
     )
 
     ctx = DayContext(day=day, tasks=[task1, task2], events=[], messages=[])
@@ -996,7 +981,7 @@ async def test_get_upcomming_tasks_with_end_time(
 
     # Task with end_time in past (should be excluded)
     task1 = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Past End Time Task",
         status=TaskStatus.NOT_STARTED,
@@ -1014,12 +999,11 @@ async def test_get_upcomming_tasks_with_end_time(
             end_time=past_end_time,
             timing_type=TimingType.FIXED_TIME,
         ),
-        date=date,
     )
 
     # Task with end_time in future (should be included)
     task2 = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Valid Task",
         status=TaskStatus.NOT_STARTED,
@@ -1037,7 +1021,6 @@ async def test_get_upcomming_tasks_with_end_time(
             end_time=(now + timedelta(hours=1)).time(),
             timing_type=TimingType.FIXED_TIME,
         ),
-        date=date,
     )
 
     ctx = DayContext(day=day, tasks=[task1, task2], events=[], messages=[])
@@ -1083,7 +1066,7 @@ async def test_get_upcomming_tasks_excludes_completed_at(
 
     # Task with completed_at (should be excluded even if status is PENDING)
     task1 = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Completed Task",
         status=TaskStatus.PENDING,
@@ -1101,12 +1084,11 @@ async def test_get_upcomming_tasks_excludes_completed_at(
             start_time=future_time,
             timing_type=TimingType.FIXED_TIME,
         ),
-        date=date,
     )
 
     # Task without completed_at (should be included)
     task2 = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Valid Task",
         status=TaskStatus.PENDING,
@@ -1123,7 +1105,6 @@ async def test_get_upcomming_tasks_excludes_completed_at(
             start_time=future_time,
             timing_type=TimingType.FIXED_TIME,
         ),
-        date=date,
     )
 
     ctx = DayContext(day=day, tasks=[task1, task2], events=[], messages=[])

@@ -278,7 +278,7 @@ async def test_sync_google_no_events(
     lookback = test_datetime_noon - timedelta(days=2)
 
     token = AuthToken(
-        uuid=calendar.auth_token_id,
+        id=calendar.auth_token_id,
         user_id=calendar.user_id,
         platform="google",
         token="token",
@@ -329,13 +329,13 @@ async def test_sync_all_successful_syncs(
     )
 
     token1 = AuthToken(
-        uuid=calendar1.auth_token_id,
+        id=calendar1.auth_token_id,
         user_id=calendar1.user_id,
         platform="google",
         token="token1",
     )
     token2 = AuthToken(
-        uuid=calendar2.auth_token_id,
+        id=calendar2.auth_token_id,
         user_id=calendar2.user_id,
         platform="google",
         token="token2",

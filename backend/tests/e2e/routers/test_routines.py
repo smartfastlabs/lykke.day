@@ -18,7 +18,7 @@ async def test_list_routines(authenticated_client):
     # Create a routine via repository (since router is read-only)
     routine_repo = RoutineRepository(user_id=user.id)
     routine = Routine(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=user.id,
         name="Test Routine",
         category=TaskCategory.HOUSE,
@@ -49,7 +49,7 @@ async def test_get_routine(authenticated_client):
     # Create a routine via repository
     routine_repo = RoutineRepository(user_id=user.id)
     routine = Routine(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=user.id,
         name="Get Test Routine",
         category=TaskCategory.HOUSE,
@@ -108,7 +108,7 @@ async def test_update_routine_not_allowed(authenticated_client):
     # Create a routine via repository
     routine_repo = RoutineRepository(user_id=user.id)
     routine = Routine(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=user.id,
         name="Test Routine",
         category=TaskCategory.HOUSE,
@@ -141,7 +141,7 @@ async def test_delete_routine_not_allowed(authenticated_client):
     # Create a routine via repository
     routine_repo = RoutineRepository(user_id=user.id)
     routine = Routine(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=user.id,
         name="Test Routine",
         category=TaskCategory.HOUSE,
@@ -166,7 +166,7 @@ async def test_list_routines_pagination(authenticated_client):
     routine_repo = RoutineRepository(user_id=user.id)
     for i in range(3):
         routine = Routine(
-            uuid=uuid4(),
+            id=uuid4(),
             user_id=user.id,
             name=f"Pagination Test {i}",
             category=TaskCategory.HOUSE,

@@ -1,15 +1,14 @@
 import datetime
 from datetime import UTC, timedelta
-from uuid import uuid5, NAMESPACE_DNS
+from uuid import NAMESPACE_DNS, uuid5
 from zoneinfo import ZoneInfo
 
 import pytest
 import pytest_asyncio
-
 from planned import settings
 from planned.domain import entities as objects
-from planned.infrastructure.repositories import EventRepository, UserRepository
 from planned.domain.value_objects.query import DateQuery
+from planned.infrastructure.repositories import EventRepository, UserRepository
 
 
 @pytest_asyncio.fixture

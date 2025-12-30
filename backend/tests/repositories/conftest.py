@@ -2,11 +2,10 @@
 
 import datetime
 from datetime import UTC
-from uuid import UUID, uuid4, uuid5, NAMESPACE_DNS
+from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
 from zoneinfo import ZoneInfo
 
 import pytest_asyncio
-
 from planned import settings
 from planned.domain import entities as objects
 from planned.domain.value_objects.user import UserSetting
@@ -18,7 +17,7 @@ async def test_user():
     """Create a unique user for each test."""
     user_repo = UserRepository()
     user = objects.User(
-        uuid=uuid4(),
+        id=uuid4(),
         email=f"test-{uuid4()}@example.com",
         hashed_password="test_hash",
         settings=UserSetting(),
@@ -44,7 +43,6 @@ async def test_event(test_user, test_date):
         platform="testing",
         status="status",
         starts_at=starts_at,
-        date=test_date,
     )
 
 

@@ -54,7 +54,7 @@ async def test_build_notification_payload_single_task(
     )
 
     task = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Test Task",
         status=TaskStatus.READY,
@@ -67,7 +67,6 @@ async def test_build_notification_payload_single_task(
         ),
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        date=date,
     )
 
     service = SheppardService(
@@ -125,7 +124,7 @@ async def test_build_notification_payload_multiple_tasks(
     )
 
     task1 = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Task 1",
         status=TaskStatus.READY,
@@ -138,10 +137,9 @@ async def test_build_notification_payload_multiple_tasks(
         ),
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        date=date,
     )
     task2 = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Task 2",
         status=TaskStatus.READY,
@@ -154,7 +152,6 @@ async def test_build_notification_payload_multiple_tasks(
         ),
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        date=date,
     )
 
     service = SheppardService(
@@ -211,7 +208,7 @@ async def test_build_event_notification_payload(
     )
 
     event = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
@@ -220,7 +217,6 @@ async def test_build_event_notification_payload(
         platform="test",
         status="confirmed",
         starts_at=test_datetime_noon,
-        date=date,
     )
 
     service = SheppardService(
@@ -278,7 +274,7 @@ async def test_notify_for_tasks(
     )
 
     task = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Test Task",
         status=TaskStatus.READY,
@@ -291,11 +287,10 @@ async def test_notify_for_tasks(
         ),
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        date=date,
     )
 
     subscription = PushSubscription(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         endpoint="https://example.com/push",
         p256dh="key",
@@ -686,7 +681,7 @@ async def test_notify_for_events(
     )
 
     event = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
@@ -695,11 +690,10 @@ async def test_notify_for_events(
         platform="test",
         status="confirmed",
         starts_at=test_datetime_noon,
-        date=date,
     )
 
     subscription = PushSubscription(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         endpoint="https://example.com/push",
         p256dh="key",

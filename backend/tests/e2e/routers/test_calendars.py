@@ -3,7 +3,6 @@
 from uuid import uuid4
 
 import pytest
-
 from planned.domain.entities import AuthToken, Calendar
 from planned.infrastructure.repositories import AuthTokenRepository, CalendarRepository
 
@@ -16,7 +15,7 @@ async def test_list_calendars(authenticated_client):
     # Create an auth token first (calendar depends on it)
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=user.id,
         platform="google",
         token="test_token",
@@ -56,7 +55,7 @@ async def test_get_calendar(authenticated_client):
     # Create an auth token first
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=user.id,
         platform="google",
         token="test_token",
@@ -104,7 +103,7 @@ async def test_create_calendar(authenticated_client):
     # Create an auth token first
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=user.id,
         platform="google",
         token="test_token",
@@ -138,7 +137,7 @@ async def test_update_calendar(authenticated_client):
     # Create an auth token first
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=user.id,
         platform="google",
         token="test_token",
@@ -182,7 +181,7 @@ async def test_update_calendar_not_found(authenticated_client):
     # Create an auth token first
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=user.id,
         platform="google",
         token="test_token",
@@ -211,7 +210,7 @@ async def test_delete_calendar(authenticated_client):
     # Create an auth token first
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=user.id,
         platform="google",
         token="test_token",
@@ -260,7 +259,7 @@ async def test_list_calendars_pagination(authenticated_client):
     # Create an auth token first
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=user.id,
         platform="google",
         token="test_token",

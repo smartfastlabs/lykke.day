@@ -15,7 +15,7 @@ from planned.domain.value_objects.task import TaskCategory, TaskFrequency
 async def test_get(routine_repo, test_user):
     """Test getting a routine by ID."""
     routine = Routine(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Test Routine",
         category=TaskCategory.HOUSE,
@@ -42,7 +42,7 @@ async def test_get_not_found(routine_repo):
 async def test_put(routine_repo, test_user):
     """Test creating a new routine."""
     routine = Routine(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="New Routine",
         category=TaskCategory.HOUSE,
@@ -61,7 +61,7 @@ async def test_put(routine_repo, test_user):
 async def test_all(routine_repo, test_user):
     """Test getting all routines."""
     routine1 = Routine(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Routine 1",
         category=TaskCategory.HOUSE,
@@ -70,7 +70,7 @@ async def test_all(routine_repo, test_user):
         tasks=[],
     )
     routine2 = Routine(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Routine 2",
         category=TaskCategory.HOUSE,
@@ -92,7 +92,7 @@ async def test_all(routine_repo, test_user):
 async def test_user_isolation(routine_repo, test_user, create_test_user):
     """Test that different users' routines are properly isolated."""
     routine = Routine(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="User1 Routine",
         category=TaskCategory.HOUSE,

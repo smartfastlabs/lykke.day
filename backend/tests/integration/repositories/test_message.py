@@ -23,7 +23,7 @@ async def test_get(message_repo, test_user, test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
     message = Message(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         author="system",
         content="Test message",
@@ -53,7 +53,7 @@ async def test_put(message_repo, test_user, test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
     message = Message(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         author="user",
         content="New message",
@@ -81,14 +81,14 @@ async def test_search_query(message_repo, test_user, test_date, test_date_tomorr
     ).astimezone(UTC)
     
     message1 = Message(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         author="system",
         content="Message Today",
         sent_at=sent_at1,
     )
     message2 = Message(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         author="user",
         content="Message Tomorrow",
@@ -114,7 +114,7 @@ async def test_user_isolation(message_repo, test_user, create_test_user, test_da
     ).astimezone(UTC)
     
     message = Message(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         author="system",
         content="User1 Message",

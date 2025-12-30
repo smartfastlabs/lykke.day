@@ -1,9 +1,26 @@
 """Fixtures for unit tests - uses mocked dependencies via dobles."""
 
+from contextlib import asynccontextmanager
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
 from dobles import InstanceDouble, allow
+
+
+@asynccontextmanager
+async def mock_transaction():
+    """Mock transaction manager that does nothing."""
+    yield MagicMock()
+
+
+@pytest.fixture(autouse=True)
+def mock_transaction_manager(monkeypatch):
+    """Mock TransactionManager to avoid database connections in unit tests."""
+    monkeypatch.setattr(
+        "planned.application.services.base.TransactionManager",
+        lambda: mock_transaction(),
+    )
 
 
 # Mocked repository fixtures

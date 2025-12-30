@@ -14,7 +14,7 @@ async def test_get(calendar_repo, test_user, auth_token_repo):
     """Test getting a calendar by ID."""
     # Create an auth token first (calendar depends on it)
     auth_token = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         platform="google",
         token="test_token",
@@ -49,7 +49,7 @@ async def test_get_not_found(calendar_repo):
 async def test_put(calendar_repo, test_user, auth_token_repo):
     """Test creating a new calendar."""
     auth_token = await auth_token_repo.put(AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         platform="google",
         token="test_token",
@@ -73,7 +73,7 @@ async def test_put(calendar_repo, test_user, auth_token_repo):
 async def test_all(calendar_repo, test_user, auth_token_repo):
     """Test getting all calendars."""
     auth_token = await auth_token_repo.put(AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         platform="google",
         token="test_token",
@@ -107,7 +107,7 @@ async def test_all(calendar_repo, test_user, auth_token_repo):
 async def test_user_isolation(calendar_repo, test_user, create_test_user, auth_token_repo):
     """Test that different users' calendars are properly isolated."""
     auth_token = await auth_token_repo.put(AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         platform="google",
         token="test_token",

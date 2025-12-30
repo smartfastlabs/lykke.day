@@ -93,7 +93,7 @@ async def test_login(test_client):
 
     # Create user with hashed password
     user = User(
-        uuid=uuid4(),
+        id=uuid4(),
         email=email,
         hashed_password=hashed_password,
         settings=UserSetting(),
@@ -117,7 +117,7 @@ async def test_login_wrong_password(test_client):
     hashed_password = pwd_context.hash("correct_password")
 
     user = User(
-        uuid=uuid4(),
+        id=uuid4(),
         email=email,
         hashed_password=hashed_password,
         settings=UserSetting(),

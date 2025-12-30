@@ -23,7 +23,7 @@ async def test_get(event_repo, test_user, test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
     event = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Test Event",
         frequency="ONCE",
@@ -58,7 +58,7 @@ async def test_put(event_repo, test_user, test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
     event = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="New Event",
         frequency="ONCE",
@@ -85,7 +85,7 @@ async def test_put_update(event_repo, test_user, test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
     event = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Original Event",
         frequency="ONCE",
@@ -123,7 +123,7 @@ async def test_all(event_repo, test_user, test_date, test_date_tomorrow):
     ).astimezone(UTC)
     
     event1 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Event 1",
         frequency="ONCE",
@@ -134,7 +134,7 @@ async def test_all(event_repo, test_user, test_date, test_date_tomorrow):
         starts_at=starts_at1,
     )
     event2 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Event 2",
         frequency="ONCE",
@@ -169,7 +169,7 @@ async def test_search_query(event_repo, test_user, test_date, test_date_tomorrow
     ).astimezone(UTC)
     
     event1 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Event Today",
         frequency="ONCE",
@@ -180,7 +180,7 @@ async def test_search_query(event_repo, test_user, test_date, test_date_tomorrow
         starts_at=starts_at1,
     )
     event2 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Event Tomorrow",
         frequency="ONCE",
@@ -210,7 +210,7 @@ async def test_delete(event_repo, test_user, test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
     event = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Event to Delete",
         frequency="ONCE",
@@ -250,7 +250,7 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
     ).astimezone(UTC)
     
     event1 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Event 1",
         frequency="ONCE",
@@ -261,7 +261,7 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
         starts_at=starts_at1,
     )
     event2 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Event 2",
         frequency="ONCE",
@@ -272,7 +272,7 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
         starts_at=starts_at2,
     )
     event3 = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="Event 3",
         frequency="ONCE",
@@ -310,7 +310,7 @@ async def test_user_isolation(event_repo, test_user, create_test_user, test_date
     
     # Create event for test_user
     event = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         name="User1 Event",
         frequency="ONCE",

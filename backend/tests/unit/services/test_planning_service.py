@@ -112,7 +112,7 @@ async def test_preview_tasks_filters_inactive_routines(
 
     # Routine active on Tuesday (weekday 1)
     routine = Routine(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Tuesday Routine",
         routine_schedule=RoutineSchedule(
@@ -166,7 +166,7 @@ async def test_preview_creates_day_context(
     template_id = uuid4()
 
     user = User(
-        uuid=test_user_id,
+        id=test_user_id,
         email="test@example.com",
         hashed_password="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
@@ -174,12 +174,12 @@ async def test_preview_creates_day_context(
 
     template = DayTemplate(
         slug="default",
-        uuid=template_id,
+        id=template_id,
         user_id=test_user_id,
     )
 
     event = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
@@ -188,7 +188,6 @@ async def test_preview_creates_day_context(
         platform="test",
         status="confirmed",
         starts_at=test_datetime_noon,
-        date=date,
     )
 
     allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
@@ -243,7 +242,7 @@ async def test_preview_uses_existing_day_template(
     )
 
     template = DayTemplate(
-        uuid=existing_template_id,
+        id=existing_template_id,
         slug="custom",
         user_id=test_user_id,
     )
@@ -288,7 +287,7 @@ async def test_unschedule_deletes_routine_tasks(
 
     routine_id = uuid4()
     routine_task = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Routine Task",
         status=TaskStatus.NOT_STARTED,
@@ -302,11 +301,10 @@ async def test_unschedule_deletes_routine_tasks(
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         routine_id=routine_id,
-        date=date,
     )
 
     non_routine_task = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Manual Task",
         status=TaskStatus.NOT_STARTED,
@@ -320,7 +318,6 @@ async def test_unschedule_deletes_routine_tasks(
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
         routine_id=None,
-        date=date,
     )
 
     day = Day(
@@ -335,7 +332,7 @@ async def test_unschedule_deletes_routine_tasks(
     allow(mock_day_repo).get(day.id).and_return(day)
     allow(mock_day_repo).put.and_return(day)
     allow(mock_day_template_repo).get.and_return(
-        DayTemplate(slug="default", uuid=uuid4(), user_id=test_user_id)
+        DayTemplate(slug="default", id=uuid4(), user_id=test_user_id)
     )
 
     service = PlanningService(
@@ -374,7 +371,7 @@ async def test_schedule_creates_tasks_and_sets_status(
     template_id = uuid4()
 
     user = User(
-        uuid=test_user_id,
+        id=test_user_id,
         email="test@example.com",
         hashed_password="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
@@ -382,7 +379,7 @@ async def test_schedule_creates_tasks_and_sets_status(
 
     template = DayTemplate(
         slug="default",
-        uuid=template_id,
+        id=template_id,
         user_id=test_user_id,
     )
 
@@ -437,7 +434,7 @@ async def test_save_action_for_task(
 
     date = datetime.date(2024, 1, 1)
     task = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Test Task",
         status=TaskStatus.NOT_STARTED,
@@ -450,7 +447,6 @@ async def test_save_action_for_task(
         ),
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        date=date,
     )
 
     action = Action(type=ActionType.COMPLETE)
@@ -493,7 +489,7 @@ async def test_save_action_for_event(
 
     date = datetime.date(2024, 1, 1)
     event = Event(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
@@ -502,7 +498,6 @@ async def test_save_action_for_event(
         platform="test",
         status="confirmed",
         starts_at=test_datetime_noon,
-        date=date,
     )
 
     action = Action(type=ActionType.NOTIFY)
@@ -544,7 +539,7 @@ async def test_preview_with_template_id(
     template_id = uuid4()
 
     template = DayTemplate(
-        uuid=template_id,
+        id=template_id,
         slug="custom",
         user_id=test_user_id,
     )
@@ -588,7 +583,7 @@ async def test_schedule_with_template_id(
     template_id = uuid4()
 
     template = DayTemplate(
-        uuid=template_id,
+        id=template_id,
         slug="custom",
         user_id=test_user_id,
     )
@@ -641,7 +636,7 @@ async def test_save_action_for_task_punt(
     """Test save_action updates task status to PUNT."""
     date = datetime.date(2024, 1, 1)
     task = Task(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         name="Test Task",
         status=TaskStatus.NOT_STARTED,
@@ -654,7 +649,6 @@ async def test_save_action_for_task_punt(
         ),
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        date=date,
     )
 
     action = Action(type=ActionType.PUNT)
@@ -697,10 +691,9 @@ async def test_save_action_for_invalid_object(
 
     date = datetime.date(2024, 1, 1)
     invalid_obj = Message(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user_id,
         content="Test",
-        date=date,
         author="user",
         sent_at=datetime.datetime.now(datetime.UTC),
     )

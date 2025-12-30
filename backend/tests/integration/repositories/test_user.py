@@ -34,7 +34,7 @@ async def test_get_not_found(user_repo):
 async def test_put(user_repo):
     """Test creating a new user."""
     user = User(
-        uuid=uuid4(),
+        id=uuid4(),
         email=f"test-{uuid4()}@example.com",
         hashed_password="hashed_password",
         settings=UserSetting(),
@@ -131,7 +131,7 @@ async def test_user_with_custom_settings(user_repo):
         ],
     )
     user = User(
-        uuid=uuid4(),
+        id=uuid4(),
         email=f"test-{uuid4()}@example.com",
         hashed_password="hash",
         settings=settings,

@@ -13,7 +13,7 @@ from planned.infrastructure.repositories import AuthTokenRepository
 async def test_get(auth_token_repo, test_user):
     """Test getting an auth token by ID."""
     auth_token = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         platform="google",
         token="test_token",
@@ -39,7 +39,7 @@ async def test_get_not_found(auth_token_repo):
 async def test_put(auth_token_repo, test_user):
     """Test creating a new auth token."""
     auth_token = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         platform="google",
         token="new_token",
@@ -55,13 +55,13 @@ async def test_put(auth_token_repo, test_user):
 async def test_all(auth_token_repo, test_user):
     """Test getting all auth tokens."""
     token1 = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         platform="google",
         token="token1",
     )
     token2 = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         platform="notion",
         token="token2",
@@ -80,7 +80,7 @@ async def test_all(auth_token_repo, test_user):
 async def test_user_isolation(auth_token_repo, test_user, create_test_user):
     """Test that different users' auth tokens are properly isolated."""
     token = AuthToken(
-        uuid=uuid4(),
+        id=uuid4(),
         user_id=test_user.id,
         platform="google",
         token="user1_token",
