@@ -1,12 +1,9 @@
 import { createSignal } from "solid-js";
-import { useNavigate } from "@solidjs/router";
 import Page from "../components/shared/layout/page";
 import { authAPI } from "../utils/api";
 
 export default function Register() {
-  const navigate = useNavigate();
   const [email, setEmail] = createSignal("");
-  const [phoneNumber, setPhoneNumber] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [error, setError] = createSignal("");
@@ -34,15 +31,12 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      await authAPI.register(
-        email().trim(),
-        password(),
-        phoneNumber().trim() || null
-      );
+      await authAPI.register(email().trim(), password());
+      // After successful registration, log the user in
+      await authAPI.login(email().trim(), password());
       window.location.href = "/";
     } catch (err: any) {
       setError(err?.message || "Registration failed");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -69,21 +63,6 @@ export default function Register() {
                 class="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow"
                 autocomplete="email"
                 required
-              />
-            </div>
-
-            <div>
-              <label for="phoneNumber" class="sr-only">
-                Phone Number (Optional)
-              </label>
-              <input
-                id="phoneNumber"
-                type="tel"
-                placeholder="Phone Number (Optional)"
-                value={phoneNumber()}
-                onInput={(e) => setPhoneNumber(e.currentTarget.value)}
-                class="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow"
-                autocomplete="tel"
               />
             </div>
 

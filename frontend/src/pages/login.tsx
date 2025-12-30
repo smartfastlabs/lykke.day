@@ -26,10 +26,10 @@ export default function Login() {
 
     try {
       await authAPI.login(email(), password());
-    } catch {
-      setError("Authentication failed");
-    } finally {
       window.location.href = "/";
+    } catch (err: any) {
+      setError(err?.message || "Authentication failed");
+      setIsLoading(false);
     }
   };
 

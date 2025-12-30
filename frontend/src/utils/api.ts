@@ -155,36 +155,57 @@ export const taskAPI = {
   },
 };
 export const authAPI = {
-  login: async (email: string, password: string): any => {
-    const resp = await fetchJSON("/api/auth/login", {
-      method: "PUT",
-      body: JSON.stringify({ email, password }),
+  login: async (email: string, password: string): Promise<void> => {
+    // FastAPI Users uses form-urlencoded for login with OAuth2 spec
+    // where "username" is the email field
+    const formData = new URLSearchParams();
+    formData.append("username", email);
+    formData.append("password", password);
+
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      body: formData,
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
       },
+      credentials: "include",
     });
 
-    return resp.data;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || "Login failed");
+    }
+    // 204 No Content on success - cookie is set automatically
   },
-  register: async (
-    email: string,
-    password: string,
-    phoneNumber?: string | null
-  ): any => {
+
+  register: async (email: string, password: string): Promise<any> => {
     const resp = await fetchJSON("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({
         email,
         password,
-        confirm_password: password,
-        phone_number: phoneNumber || null,
       }),
       headers: {
         "Content-Type": "application/json",
       },
     });
 
+    if (!resp.ok) {
+      throw new Error(resp.data?.detail || "Registration failed");
+    }
+
     return resp.data;
+  },
+
+  logout: async (): Promise<void> => {
+    const response = await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error("Logout failed");
+    }
   },
 };
 
