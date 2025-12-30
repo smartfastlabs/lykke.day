@@ -38,11 +38,10 @@ async def test_full_user_flow_e2e(test_client: TestClient):
         json={
             "email": email,
             "password": password,
-            "confirm_password": password,
         },
     )
 
-    assert register_response.status_code == 200, (
+    assert register_response.status_code == 201, (
         f"Registration failed: {register_response.text}"
     )
     register_data = register_response.json()
@@ -58,17 +57,17 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     assert user_from_db.hashed_password is not None, "Password hash should be set"
     assert str(user_from_db.id) == user_id_str
 
-    # Step 2: Login as the user (using a fresh client to simulate real scenario)
-    # Note: TestClient should preserve cookies/session from registration
-    login_response = test_client.put(
+    # Step 2: Login as the user (using fastapi-users login endpoint)
+    # fastapi-users uses form data for login, not JSON
+    login_response = test_client.post(
         "/auth/login",
-        json={"email": email, "password": password},
+        data={"username": email, "password": password},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
 
-    assert login_response.status_code == 200, f"Login failed: {login_response.text}"
-    login_data = login_response.json()
-    assert login_data["email"] == email
-    assert login_data["id"] == user_id_str
+    assert login_response.status_code == 204, f"Login failed: {login_response.text}"
+    # Check that auth cookie is set
+    assert "planned_auth" in test_client.cookies
 
     # Create default DayTemplate (required for scheduling)
     # Note: In production, this would be created by SheppardManager, but for e2e test

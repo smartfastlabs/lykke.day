@@ -1,50 +1,40 @@
 """User dependency for API routes."""
 
-from typing import Annotated, cast
-from uuid import UUID
+from datetime import datetime
+from typing import Annotated, Any, cast
 
-from fastapi import Depends, Request
-from planned.application.repositories import UserRepositoryProtocol
-from planned.core.exceptions import exceptions
-from planned.domain.entities import User
-from planned.infrastructure.repositories import UserRepository
-
-
-def get_user_repo() -> UserRepositoryProtocol:
-    """Get an instance of UserRepository (not user-scoped)."""
-    return cast("UserRepositoryProtocol", UserRepository())
+from fastapi import Depends
+from planned.domain.entities import User as UserEntity
+from planned.domain.value_objects.user import UserSetting
+from planned.infrastructure.auth import current_active_user
+from planned.infrastructure.database.tables import User as UserDB
 
 
 async def get_current_user(
-    request: Request,
-    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
-) -> User:
-    """Get the current user from the session.
+    user: Annotated[UserDB, Depends(current_active_user)],
+) -> UserEntity:
+    """Get the current user from fastapi-users and convert to domain entity.
 
     Args:
-        request: FastAPI request object
-        user_repo: UserRepository dependency (injected)
+        user: SQLAlchemy User model from fastapi-users
 
     Returns:
-        User entity
-
-    Raises:
-        AuthorizationError: If user is not authenticated
+        User domain entity
     """
-    # Get user_id from session
-    user_id_str = request.session.get("user_id")
-    try:
-        user_id = UUID(user_id_str)
-    except (ValueError, TypeError):
-        raise exceptions.AuthorizationError(
-            "Invalid session data. Please log in again.",
-        )
+    # Parse settings from JSONB
+    settings_data = cast("dict[str, Any] | None", user.settings)
+    settings = UserSetting(**settings_data) if settings_data else UserSetting()
 
-    try:
-        user = await user_repo.get(user_id)
-    except exceptions.NotFoundError:
-        raise exceptions.AuthorizationError(
-            "User not found. Please log in again.",
-        )
-
-    return user
+    # Convert SQLAlchemy model to domain entity
+    return UserEntity(
+        id=user.id,
+        email=user.email,
+        phone_number=cast("str | None", user.phone_number),
+        hashed_password=user.hashed_password,
+        is_active=user.is_active,
+        is_superuser=user.is_superuser,
+        is_verified=user.is_verified,
+        settings=settings,
+        created_at=cast("datetime", user.created_at),
+        updated_at=cast("datetime | None", user.updated_at),
+    )

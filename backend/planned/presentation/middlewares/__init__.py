@@ -1,12 +1,3 @@
-from . import auth
-from .auth import AuthMiddleware
+"""Middlewares module - currently empty after fastapi-users migration."""
 
-# Create a namespace for backward compatibility
-class _MiddlewaresNamespace:
-    AuthMiddleware = AuthMiddleware
-    auth = auth
-
-
-middlewares = _MiddlewaresNamespace()
-
-__all__ = ["AuthMiddleware", "middlewares", "auth"]
+__all__: list[str] = []

@@ -2,7 +2,7 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, cast
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from googleapiclient.discovery import build
 
@@ -74,7 +74,6 @@ def verify_state(
 
 @router.get("/callback/login")
 async def google_login_callback(
-    request: Request,
     state: str,
     code: str,
     user: Annotated[User, Depends(get_current_user)],
@@ -103,8 +102,6 @@ async def google_login_callback(
             token_uri=flow.credentials.token_uri,
         ),
     )
-
-    request.session["auth_token_id"] = str(auth_token.id)
 
     service = build(
         "calendar",

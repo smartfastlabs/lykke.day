@@ -25,7 +25,8 @@ from .dependencies.repositories import (
     get_task_repo,
 )
 from .dependencies.services import get_planning_service
-from .dependencies.user import get_current_user, get_user_repo
+from .dependencies.repositories import get_user_repo
+from .dependencies.user import get_current_user
 
 router = APIRouter()
 

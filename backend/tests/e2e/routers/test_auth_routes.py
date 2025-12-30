@@ -1,17 +1,13 @@
-"""E2E tests for auth router endpoints."""
+"""E2E tests for auth router endpoints using fastapi-users."""
 
 from uuid import uuid4
 
 import pytest
-from passlib.context import CryptContext
-from planned.domain.entities import User
-from planned.domain.value_objects.user import UserSetting
-from planned.infrastructure.repositories import UserRepository
 
 
 @pytest.mark.asyncio
 async def test_register(test_client):
-    """Test user registration."""
+    """Test user registration via fastapi-users."""
     email = f"test-{uuid4()}@example.com"
     password = "password123"
 
@@ -20,34 +16,10 @@ async def test_register(test_client):
         json={
             "email": email,
             "password": password,
-            "confirm_password": password,
         },
     )
 
-    assert response.status_code == 200
-    data = response.json()
-    assert data["email"] == email
-    assert "id" in data
-
-
-@pytest.mark.asyncio
-async def test_register_with_phone_number(test_client):
-    """Test user registration with phone number."""
-    email = f"test-{uuid4()}@example.com"
-    password = "password123"
-    phone_number = "+1234567890"
-
-    response = test_client.post(
-        "/auth/register",
-        json={
-            "email": email,
-            "phone_number": phone_number,
-            "password": password,
-            "confirm_password": password,
-        },
-    )
-
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["email"] == email
     assert "id" in data
@@ -59,13 +31,12 @@ async def test_register_duplicate_email(test_client):
     email = f"test-{uuid4()}@example.com"
     password = "password123"
 
-    # Create user first via register endpoint
+    # Register first user
     test_client.post(
         "/auth/register",
         json={
             "email": email,
             "password": password,
-            "confirm_password": password,
         },
     )
 
@@ -75,7 +46,6 @@ async def test_register_duplicate_email(test_client):
         json={
             "email": email,
             "password": password,
-            "confirm_password": password,
         },
     )
 
@@ -84,49 +54,68 @@ async def test_register_duplicate_email(test_client):
 
 @pytest.mark.asyncio
 async def test_login(test_client):
-    """Test user login."""
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    user_repo = UserRepository()
+    """Test user login via fastapi-users."""
     email = f"test-{uuid4()}@example.com"
     password = "password123"
-    hashed_password = pwd_context.hash(password)
 
-    # Create user with hashed password
-    user = User(
-        id=uuid4(),
-        email=email,
-        hashed_password=hashed_password,
-        settings=UserSetting(),
-    )
-    await user_repo.put(user)
-
-    response = test_client.put(
-        "/auth/login",
+    # Register user first
+    test_client.post(
+        "/auth/register",
         json={"email": email, "password": password},
     )
 
-    assert response.status_code == 200
+    # Login
+    response = test_client.post(
+        "/auth/login",
+        data={"username": email, "password": password},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+
+    assert response.status_code == 204
+    # Check that auth cookie is set
+    assert "planned_auth" in response.cookies
 
 
 @pytest.mark.asyncio
 async def test_login_wrong_password(test_client):
     """Test login with wrong password fails."""
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    user_repo = UserRepository()
     email = f"test-{uuid4()}@example.com"
-    hashed_password = pwd_context.hash("correct_password")
+    password = "correct_password"
 
-    user = User(
-        id=uuid4(),
-        email=email,
-        hashed_password=hashed_password,
-        settings=UserSetting(),
+    # Register user
+    test_client.post(
+        "/auth/register",
+        json={"email": email, "password": password},
     )
-    await user_repo.put(user)
 
-    response = test_client.put(
+    # Try wrong password
+    response = test_client.post(
         "/auth/login",
-        json={"email": email, "password": "wrong_password"},
+        data={"username": email, "password": "wrong_password"},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_logout(test_client):
+    """Test user logout."""
+    email = f"test-{uuid4()}@example.com"
+    password = "password123"
+
+    # Register and login
+    test_client.post(
+        "/auth/register",
+        json={"email": email, "password": password},
+    )
+    test_client.post(
+        "/auth/login",
+        data={"username": email, "password": password},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+
+    # Logout
+    response = test_client.post("/auth/logout")
+
+    assert response.status_code == 204

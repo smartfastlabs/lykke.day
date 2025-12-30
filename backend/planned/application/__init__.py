@@ -1,5 +1,4 @@
 from .services import (
-    AuthService,
     CalendarService,
     DayService,
     PlanningService,
@@ -7,10 +6,8 @@ from .services import (
 )
 
 __all__ = [
-    "AuthService",
     "CalendarService",
     "DayService",
     "PlanningService",
     "SheppardService",
 ]
-

@@ -21,7 +21,7 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
     UserRepositoryProtocol,
 )
-from planned.application.services import AuthService, CalendarService, DayService, PlanningService, SheppardManager, SheppardService
+from planned.application.services import CalendarService, DayService, PlanningService, SheppardManager, SheppardService
 from planned.core.exceptions import exceptions
 from planned.domain.entities import User
 from planned.infrastructure.gateways.adapters import GoogleCalendarGatewayAdapter
@@ -36,15 +36,9 @@ from ..repositories import (
     get_routine_repo,
     get_task_definition_repo,
     get_task_repo,
+    get_user_repo,
 )
-from ..user import get_current_user, get_user_repo
-
-
-def get_auth_service(
-    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
-) -> AuthService:
-    """Get an instance of AuthService."""
-    return AuthService(user_repo=user_repo)
+from ..user import get_current_user
 
 
 def get_calendar_service(

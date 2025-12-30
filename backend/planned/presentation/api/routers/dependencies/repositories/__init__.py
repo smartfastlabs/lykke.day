@@ -20,6 +20,7 @@ from planned.application.repositories import (
     RoutineRepositoryProtocol,
     TaskDefinitionRepositoryProtocol,
     TaskRepositoryProtocol,
+    UserRepositoryProtocol,
 )
 from planned.domain.entities import User
 from planned.infrastructure.repositories import (
@@ -33,6 +34,7 @@ from planned.infrastructure.repositories import (
     RoutineRepository,
     TaskDefinitionRepository,
     TaskRepository,
+    UserRepository,
 )
 
 from ..user import get_current_user
@@ -118,3 +120,8 @@ def get_task_definition_repo(
         "TaskDefinitionRepositoryProtocol",
         TaskDefinitionRepository(user_id=user.id),
     )
+
+
+def get_user_repo() -> UserRepositoryProtocol:
+    """Get an instance of UserRepository (not user-scoped)."""
+    return cast("UserRepositoryProtocol", UserRepository())

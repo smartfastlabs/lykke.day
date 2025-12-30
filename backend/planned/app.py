@@ -8,14 +8,17 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
-from starlette.middleware.sessions import SessionMiddleware
-
 from planned.application.services import SheppardManager
 from planned.core.config import settings
 from planned.core.exceptions import BaseError
+from planned.infrastructure.auth import (
+    UserCreate,
+    UserRead,
+    auth_backend,
+    fastapi_users,
+)
 from planned.infrastructure.utils import youtube
 from planned.presentation.api.routers import router
-from planned.presentation.middlewares.auth import AuthMiddleware
 
 
 def is_testing() -> bool:
@@ -32,7 +35,7 @@ logger.add(
 
 
 @asynccontextmanager
-async def init_lifespan(app: FastAPI) -> AsyncIterator[Never]:
+async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
     """
     Lifespan context manager for FastAPI application.
     """
@@ -42,7 +45,7 @@ async def init_lifespan(app: FastAPI) -> AsyncIterator[Never]:
         manager = SheppardManager()
         await manager.start()
         # Store manager in app state for dependency injection
-        app.state.sheppard_manager = manager
+        fastapi_app.state.sheppard_manager = manager
 
     yield  # type: ignore
 
@@ -60,14 +63,6 @@ app = FastAPI(
     lifespan=init_lifespan,
 )
 
-
-app.add_middleware(
-    AuthMiddleware,  # type: ignore
-)
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=settings.SESSION_SECRET,
-)
 
 # Set all CORS enabled origins
 if settings.ENVIRONMENT == "development":
@@ -90,6 +85,19 @@ else:
         allow_headers=["*"],
     )
 
+# Include FastAPI Users auth routes
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix=f"{settings.API_PREFIX}/auth",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix=f"{settings.API_PREFIX}/auth",
+    tags=["auth"],
+)
+
+# Include application router
 app.include_router(
     router,
     prefix=settings.API_PREFIX,
@@ -97,7 +105,7 @@ app.include_router(
 
 
 @app.exception_handler(BaseError)
-async def custom_exception_handler(request: Request, exc: BaseError) -> JSONResponse:
+async def custom_exception_handler(_request: Request, exc: BaseError) -> JSONResponse:
     """Handle custom application exceptions."""
     return JSONResponse(
         status_code=exc.status_code,
