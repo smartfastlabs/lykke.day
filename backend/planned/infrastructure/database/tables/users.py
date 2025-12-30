@@ -1,23 +1,29 @@
 """Users table definition."""
 
-from sqlalchemy import Column, DateTime, Index, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
+from fastapi_users.db import SQLAlchemyBaseUserTableUUID
+from sqlalchemy import Column, DateTime, String
+from sqlalchemy.dialects.postgresql import JSONB
 
 from .base import Base
 
 
-class User(Base):
-    """User table for storing user accounts."""
+class User(SQLAlchemyBaseUserTableUUID, Base):
+    """User table for storing user accounts.
+
+    Inherits from SQLAlchemyBaseUserTableUUID which provides:
+    - id (UUID primary key)
+    - email (unique, indexed)
+    - hashed_password
+    - is_active (default True)
+    - is_superuser (default False)
+    - is_verified (default False)
+    """
 
     __tablename__ = "users"
 
-    uuid = Column(PGUUID, primary_key=True)
-    email = Column(String, nullable=False)
+    # Custom fields
     phone_number = Column(String, nullable=True)
-    password_hash = Column(Text, nullable=False)
     settings = Column(JSONB)  # UserSetting as JSONB
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=True)
-
-    __table_args__ = (Index("idx_users_email", "email", unique=True),)
 
