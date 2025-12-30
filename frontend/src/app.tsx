@@ -19,6 +19,8 @@ import NotificationsSubscribePage from "./pages/notifications/subscribe";
 import SettingsPage from "./pages/settings/index";
 import DayTemplatesPage from "./pages/settings/day-templates/index";
 import NewDayTemplatePage from "./pages/settings/day-templates/new";
+import TaskDefinitionsPage from "./pages/settings/task-definitions/index";
+import NewTaskDefinitionPage from "./pages/settings/task-definitions/new";
 
 import "./utils/icons";
 
@@ -87,6 +89,14 @@ export default function App() {
         <Route
           path="/settings/day-templates/new"
           component={NewDayTemplatePage}
+        />
+        <Route
+          path="/settings/task-definitions"
+          component={TaskDefinitionsPage}
+        />
+        <Route
+          path="/settings/task-definitions/new"
+          component={NewTaskDefinitionPage}
         />
       </Router>
     </SheppardProvider>

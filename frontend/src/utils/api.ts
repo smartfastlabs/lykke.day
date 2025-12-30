@@ -7,6 +7,7 @@ import {
   Day,
   DayContext,
   DayTemplate,
+  TaskDefinition,
   PushSubscription,
 } from "../types/api";
 
@@ -288,5 +289,22 @@ export const dayTemplateAPI = {
     }
     // Fallback to direct array if not paginated
     return resp.data as DayTemplate[];
+  },
+};
+
+export const taskDefinitionAPI = {
+  ...genericCrud("task-definitions"),
+
+  getAll: async (): Promise<TaskDefinition[]> => {
+    const resp = await fetchJSON("/api/task-definitions/", {
+      method: "GET",
+    });
+
+    // Handle paginated response - extract items array
+    if (resp.data && resp.data.items) {
+      return resp.data.items as TaskDefinition[];
+    }
+    // Fallback to direct array if not paginated
+    return resp.data as TaskDefinition[];
   },
 };

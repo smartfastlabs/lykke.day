@@ -11,6 +11,7 @@ from . import (
     push_subscriptions,
     routines,
     sheppard,
+    task_definitions,
     tasks,
 )
 
@@ -74,6 +75,11 @@ router.include_router(
     day_templates.router,
     prefix="/day-templates",
     tags=["day-templates"],
+)
+router.include_router(
+    task_definitions.router,
+    prefix="/task-definitions",
+    tags=["task-definitions"],
 )
 router.include_router(
     routines.router,
