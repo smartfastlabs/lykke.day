@@ -25,7 +25,6 @@ class UserResponse(BaseResponseObject):
 
 
 class RegisterRequest(BaseRequestObject):
-    username: str
     email: str
     phone_number: str | None = None
     password: str
@@ -60,13 +59,8 @@ async def register(
     if not normalized_email or "@" not in normalized_email:
         raise exceptions.BadRequestError("Invalid email format")
 
-    # Validate username is provided
-    if not data.username or not data.username.strip():
-        raise exceptions.BadRequestError("Username is required")
-
     # Create user (email and phone_number will be normalized in the service)
     user = await auth_service.create_user(
-        username=data.username.strip(),
         email=normalized_email,
         password=data.password,
         phone_number=data.phone_number,

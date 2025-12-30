@@ -157,7 +157,6 @@ export const authAPI = {
     return resp.data;
   },
   register: async (
-    username: string,
     email: string,
     password: string,
     phoneNumber?: string | null
@@ -165,7 +164,6 @@ export const authAPI = {
     const resp = await fetchJSON("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({
-        username,
         email,
         password,
         confirm_password: password,

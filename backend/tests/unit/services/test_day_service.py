@@ -182,7 +182,6 @@ async def test_get_or_preview_creates_base_day_if_not_found(
 
     user = User(
         uuid=test_user_uuid,
-        username="testuser",
         email="test@example.com",
         password_hash="hash",
         settings=UserSetting(template_defaults=[template_id] * 7),
@@ -225,7 +224,6 @@ async def test_get_or_create_creates_and_saves_day(
 
     user = User(
         uuid=test_user_uuid,
-        username="testuser",
         email="test@example.com",
         password_hash="hash",
         settings=UserSetting(template_defaults=[template_slug] * 7),

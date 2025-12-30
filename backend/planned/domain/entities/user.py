@@ -7,7 +7,6 @@ from .base import BaseEntityObject
 
 
 class User(BaseEntityObject):
-    username: str
     email: str
     phone_number: str | None = None
     password_hash: str

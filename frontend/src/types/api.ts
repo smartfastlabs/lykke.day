@@ -235,7 +235,6 @@ export interface RoutineTask {
 }
 export interface User {
   uuid?: string;
-  username: string;
   email: string;
   phone_number?: string | null;
   password_hash: string;

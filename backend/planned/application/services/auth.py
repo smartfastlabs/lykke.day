@@ -30,7 +30,6 @@ class AuthService(BaseService):
 
     async def create_user(
         self,
-        username: str,
         email: str,
         password: str,
         phone_number: str | None = None,
@@ -38,7 +37,6 @@ class AuthService(BaseService):
         """Create a new user with hashed password.
 
         Args:
-            username: User's username (must be unique)
             email: User's email address (must be unique)
             password: Plain text password to hash
             phone_number: Optional phone number
@@ -69,7 +67,6 @@ class AuthService(BaseService):
 
         # Create user with default settings
         user = User(
-            username=username,
             email=normalized_email,
             phone_number=normalized_phone,
             password_hash=password_hash,

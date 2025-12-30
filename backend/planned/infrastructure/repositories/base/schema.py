@@ -13,7 +13,6 @@ users = Table(
     "users",
     metadata,
     Column("uuid", PGUUID, primary_key=True),
-    Column("username", String, nullable=False),
     Column("email", String, nullable=False),
     Column("phone_number", String, nullable=True),
     Column("password_hash", Text, nullable=False),

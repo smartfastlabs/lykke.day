@@ -5,7 +5,6 @@ import { authAPI } from "../utils/api";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [username, setUsername] = createSignal("");
   const [email, setEmail] = createSignal("");
   const [phoneNumber, setPhoneNumber] = createSignal("");
   const [password, setPassword] = createSignal("");
@@ -16,11 +15,6 @@ export default function Register() {
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     setError("");
-
-    if (!username() || !username().trim()) {
-      setError("Username is required");
-      return;
-    }
 
     if (!email() || !email().trim()) {
       setError("Email is required");
@@ -41,7 +35,6 @@ export default function Register() {
 
     try {
       await authAPI.register(
-        username().trim(),
         email().trim(),
         password(),
         phoneNumber().trim() || null
@@ -63,22 +56,6 @@ export default function Register() {
           </h1>
 
           <form onSubmit={handleSubmit} class="space-y-6">
-            <div>
-              <label for="username" class="sr-only">
-                Username
-              </label>
-              <input
-                id="username"
-                type="text"
-                placeholder="Username"
-                value={username()}
-                onInput={(e) => setUsername(e.currentTarget.value)}
-                class="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow"
-                autocomplete="username"
-                required
-              />
-            </div>
-
             <div>
               <label for="email" class="sr-only">
                 Email

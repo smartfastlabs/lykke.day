@@ -29,7 +29,6 @@ def setup_test_user_day_template():
         user_repo = UserRepository()
         test_user_email = f"test_{uuid4()}@planned.day"
         test_user = User(
-            username=f"testuser_{uuid4().hex[:8]}",
             email=test_user_email,
             password_hash="",
             settings=UserSetting(),

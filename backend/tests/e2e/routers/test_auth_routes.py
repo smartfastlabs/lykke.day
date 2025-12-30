@@ -13,14 +13,12 @@ from planned.infrastructure.repositories import UserRepository
 @pytest.mark.asyncio
 async def test_register(test_client):
     """Test user registration."""
-    username = f"testuser_{uuid4().hex[:8]}"
     email = f"test-{uuid4()}@example.com"
     password = "password123"
 
     response = test_client.post(
         "/auth/register",
         json={
-            "username": username,
             "email": email,
             "password": password,
             "confirm_password": password,
@@ -36,7 +34,6 @@ async def test_register(test_client):
 @pytest.mark.asyncio
 async def test_register_with_phone_number(test_client):
     """Test user registration with phone number."""
-    username = f"testuser_{uuid4().hex[:8]}"
     email = f"test-{uuid4()}@example.com"
     password = "password123"
     phone_number = "+1234567890"
@@ -44,7 +41,6 @@ async def test_register_with_phone_number(test_client):
     response = test_client.post(
         "/auth/register",
         json={
-            "username": username,
             "email": email,
             "phone_number": phone_number,
             "password": password,
@@ -61,8 +57,6 @@ async def test_register_with_phone_number(test_client):
 @pytest.mark.asyncio
 async def test_register_duplicate_email(test_client):
     """Test registering with duplicate email fails."""
-    username1 = f"testuser_{uuid4().hex[:8]}"
-    username2 = f"testuser_{uuid4().hex[:8]}"
     email = f"test-{uuid4()}@example.com"
     password = "password123"
 
@@ -70,7 +64,6 @@ async def test_register_duplicate_email(test_client):
     test_client.post(
         "/auth/register",
         json={
-            "username": username1,
             "email": email,
             "password": password,
             "confirm_password": password,
@@ -81,7 +74,6 @@ async def test_register_duplicate_email(test_client):
     response = test_client.post(
         "/auth/register",
         json={
-            "username": username2,
             "email": email,
             "password": password,
             "confirm_password": password,
@@ -101,10 +93,8 @@ async def test_login(test_client):
     password_hash = pwd_context.hash(password)
 
     # Create user with hashed password
-    username = f"testuser_{uuid4().hex[:8]}"
     user = User(
-        id=str(uuid4()),
-        username=username,
+        uuid=uuid4(),
         email=email,
         password_hash=password_hash,
         settings=UserSetting(),
@@ -127,10 +117,8 @@ async def test_login_wrong_password(test_client):
     email = f"test-{uuid4()}@example.com"
     password_hash = pwd_context.hash("correct_password")
 
-    username = f"testuser_{uuid4().hex[:8]}"
     user = User(
-        id=str(uuid4()),
-        username=username,
+        uuid=uuid4(),
         email=email,
         password_hash=password_hash,
         settings=UserSetting(),

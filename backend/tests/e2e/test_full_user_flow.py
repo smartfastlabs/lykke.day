@@ -31,14 +31,12 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     await reset_engine()
 
     # Step 1: Register a new user
-    username = f"testuser_{uuid4().hex[:8]}"
     email = f"test-{uuid4()}@example.com"
     password = "test_password_123"
 
     register_response = test_client.post(
         "/auth/register",
         json={
-            "username": username,
             "email": email,
             "password": password,
             "confirm_password": password,
@@ -58,7 +56,6 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     user_from_db = await user_repo.get_by_email(email)
     assert user_from_db is not None, "User should exist in database after registration"
     assert user_from_db.email == email
-    assert user_from_db.username == username
     assert user_from_db.password_hash is not None, "Password hash should be set"
     assert str(user_from_db.uuid) == user_uuid_str
 

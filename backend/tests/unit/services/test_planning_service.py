@@ -166,7 +166,6 @@ async def test_preview_creates_day_context(
 
     user = User(
         uuid=test_user_uuid,
-        username="testuser",
         email="test@example.com",
         password_hash="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
@@ -378,7 +377,6 @@ async def test_schedule_creates_tasks_and_sets_status(
 
     user = User(
         uuid=test_user_uuid,
-        username="testuser",
         email="test@example.com",
         password_hash="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
