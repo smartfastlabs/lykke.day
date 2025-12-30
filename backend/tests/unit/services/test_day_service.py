@@ -2,11 +2,11 @@
 
 import datetime
 from datetime import UTC, timedelta
-from unittest.mock import patch
-from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
+from uuid import NAMESPACE_DNS, uuid4, uuid5
 
 import pytest
 from dobles import allow
+from freezegun import freeze_time
 from planned.application.services import DayService
 from planned.core.exceptions import exceptions
 from planned.domain.entities import (
@@ -306,8 +306,8 @@ async def test_get_upcomming_tasks(
 ):
     """Test get_upcomming_tasks returns tasks within look_ahead window."""
     date = datetime.date(2024, 1, 1)
-    now = datetime.datetime.now(UTC)
-    current_time = now.time()
+    # Fixed datetime for deterministic testing
+    now = datetime.datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
     future_time = (now + timedelta(minutes=15)).time()
     template_uuid = uuid4()
 
@@ -386,7 +386,12 @@ async def test_get_upcomming_tasks(
         date=date,
     )
 
-    ctx = DayContext(day=day, tasks=[task1, task2, task3], events=[], messages=[])
+    ctx = DayContext(
+        day=day,
+        tasks=[task1, task2, task3],
+        events=[],
+        messages=[],
+    )
 
     service = DayService(
         ctx=ctx,
@@ -397,16 +402,8 @@ async def test_get_upcomming_tasks(
         task_repo=mock_task_repo,
     )
 
-    # Mock current time
-    with (
-        patch(
-            "planned.infrastructure.utils.dates.get_current_time",
-            return_value=current_time,
-        ),
-        patch(
-            "planned.infrastructure.utils.dates.get_current_datetime", return_value=now
-        ),
-    ):
+    # Freeze time
+    with freeze_time(now, real_asyncio=True):
         result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
 
     # Should only include task1 (within window and not completed)
@@ -425,7 +422,8 @@ async def test_get_upcomming_events(
 ):
     """Test get_upcomming_events returns events within look_ahead window."""
     date = datetime.date(2024, 1, 1)
-    now = datetime.datetime.now(UTC)
+    # Fixed datetime for deterministic testing
+    now = datetime.datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
     future_time = now + timedelta(minutes=15)
     far_future = now + timedelta(hours=2)
     past_time = now - timedelta(hours=1)
@@ -508,9 +506,8 @@ async def test_get_upcomming_events(
         task_repo=mock_task_repo,
     )
 
-    with patch(
-        "planned.infrastructure.utils.dates.get_current_datetime", return_value=now
-    ):
+    # Freeze time
+    with freeze_time(now, real_asyncio=True):
         result = await service.get_upcomming_events(look_ahead=timedelta(minutes=30))
 
     # Should include event1 and event4 (within window and not cancelled)
@@ -892,8 +889,8 @@ async def test_get_upcomming_tasks_with_available_time(
 ):
     """Test get_upcomming_tasks handles tasks with available_time."""
     date = datetime.date(2024, 1, 1)
-    now = datetime.datetime.now(UTC)
-    current_time = now.time()
+    # Fixed datetime for deterministic testing
+    now = datetime.datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
     past_available_time = (now - timedelta(minutes=30)).time()
     future_available_time = (now + timedelta(minutes=30)).time()
 
@@ -961,16 +958,8 @@ async def test_get_upcomming_tasks_with_available_time(
         task_repo=mock_task_repo,
     )
 
-    with (
-        patch(
-            "planned.infrastructure.utils.dates.get_current_time",
-            return_value=current_time,
-        ),
-        patch(
-            "planned.infrastructure.utils.dates.get_current_datetime",
-            return_value=now,
-        ),
-    ):
+    # Freeze time
+    with freeze_time(now, real_asyncio=True):
         result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
 
     assert len(result) == 1
@@ -988,8 +977,8 @@ async def test_get_upcomming_tasks_with_end_time(
 ):
     """Test get_upcomming_tasks excludes tasks past end_time."""
     date = datetime.date(2024, 1, 1)
-    now = datetime.datetime.now(UTC)
-    current_time = now.time()
+    # Fixed datetime for deterministic testing
+    now = datetime.datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
     past_end_time = (now - timedelta(minutes=30)).time()
     future_start_time = (now + timedelta(minutes=15)).time()
 
@@ -1059,16 +1048,8 @@ async def test_get_upcomming_tasks_with_end_time(
         task_repo=mock_task_repo,
     )
 
-    with (
-        patch(
-            "planned.infrastructure.utils.dates.get_current_time",
-            return_value=current_time,
-        ),
-        patch(
-            "planned.infrastructure.utils.dates.get_current_datetime",
-            return_value=now,
-        ),
-    ):
+    # Freeze time
+    with freeze_time(now, real_asyncio=True):
         result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
 
     assert len(result) == 1
@@ -1086,8 +1067,8 @@ async def test_get_upcomming_tasks_excludes_completed_at(
 ):
     """Test get_upcomming_tasks excludes tasks with completed_at set."""
     date = datetime.date(2024, 1, 1)
-    now = datetime.datetime.now(UTC)
-    current_time = now.time()
+    # Fixed datetime for deterministic testing
+    now = datetime.datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
     future_time = (now + timedelta(minutes=15)).time()
 
     day = Day(
@@ -1104,7 +1085,7 @@ async def test_get_upcomming_tasks_excludes_completed_at(
         name="Completed Task",
         status=TaskStatus.PENDING,
         scheduled_date=date,
-        completed_at=datetime.datetime.now(UTC),
+        completed_at=now,
         task_definition=TaskDefinition(
             user_uuid=test_user_uuid,
             id="def-1",
@@ -1155,16 +1136,8 @@ async def test_get_upcomming_tasks_excludes_completed_at(
         task_repo=mock_task_repo,
     )
 
-    with (
-        patch(
-            "planned.infrastructure.utils.dates.get_current_time",
-            return_value=current_time,
-        ),
-        patch(
-            "planned.infrastructure.utils.dates.get_current_datetime",
-            return_value=now,
-        ),
-    ):
+    # Freeze time
+    with freeze_time(now, real_asyncio=True):
         result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
 
     assert len(result) == 1
