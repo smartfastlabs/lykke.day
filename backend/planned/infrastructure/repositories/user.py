@@ -40,7 +40,7 @@ class UserRepository(BaseRepository[User, BaseQuery]):
             "id": user.id,
             "email": user.email,
             "phone_number": user.phone_number,
-            "password_hash": user.password_hash,
+            "hashed_password": user.hashed_password,
         }
 
         # Handle settings JSONB field

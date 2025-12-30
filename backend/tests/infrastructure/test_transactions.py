@@ -3,15 +3,10 @@
 from uuid import uuid4
 
 import pytest
-
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Day, DayStatus, Task, TaskDefinition, TaskStatus
 from planned.domain.value_objects.query import DateQuery
-from planned.domain.value_objects.task import (
-    TaskCategory,
-    TaskFrequency,
-    TaskType,
-)
+from planned.domain.value_objects.task import TaskCategory, TaskFrequency, TaskType
 from planned.infrastructure.database.transaction import (
     TransactionManager,
     get_transaction_connection,
@@ -139,7 +134,6 @@ async def test_multiple_operations_in_single_transaction(
         scheduled_date=test_date,
         task_definition=TaskDefinition(
             user_id=test_user.id,
-            id="test-task",
             name="Test Task",
             description="Test",
             type=TaskType.ACTIVITY,

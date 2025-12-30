@@ -7,7 +7,6 @@ import pytest
 from dobles import allow
 from fastapi.testclient import TestClient
 from passlib.context import CryptContext
-
 from planned.app import app
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Alarm, DayTemplate, User
@@ -30,7 +29,7 @@ def setup_test_user_day_template():
         test_user_email = f"test_{uuid4()}@planned.day"
         test_user = User(
             email=test_user_email,
-            password_hash="",
+            hashed_password="",
             settings=UserSetting(),
         )
         test_user = await user_repo.put(test_user)
@@ -82,7 +81,7 @@ def authenticated_client(test_client, setup_test_user_day_template, request):
         # We need to set the password correctly for login
         user_repo = UserRepository()
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        user.password_hash = pwd_context.hash("test_password")
+        user.hashed_password = pwd_context.hash("test_password")
         user = await user_repo.put(user)
 
         # Login to set up the session

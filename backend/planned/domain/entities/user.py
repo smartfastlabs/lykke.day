@@ -8,14 +8,11 @@ from .base import BaseEntityObject
 
 
 class User(BaseEntityObject):
-    """User entity compatible with fastapi-users.
-
-    Uses 'hashed_password' instead of 'password_hash' to match fastapi-users conventions.
-    """
+    """User entity compatible with fastapi-users."""
 
     email: str
     phone_number: str | None = None
-    hashed_password: str = Field(alias="password_hash")
+    hashed_password: str
     is_active: bool = True
     is_superuser: bool = False
     is_verified: bool = False

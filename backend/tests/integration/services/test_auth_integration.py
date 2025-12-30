@@ -21,8 +21,8 @@ async def test_create_user(user_repo):
     user = await service.create_user(email, password)
     
     assert user.email == email
-    assert user.password_hash != password
-    assert pwd_context.verify(password, user.password_hash)
+    assert user.hashed_password != password
+    assert pwd_context.verify(password, user.hashed_password)
 
 
 @pytest.mark.asyncio

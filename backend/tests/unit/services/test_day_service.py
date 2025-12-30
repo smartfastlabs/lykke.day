@@ -181,7 +181,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     user = User(
         uuid=test_user_id,
         email="test@example.com",
-        password_hash="hash",
+        hashed_password="hash",
         settings=UserSetting(template_defaults=[template_id] * 7),
     )
 
@@ -223,7 +223,7 @@ async def test_get_or_create_creates_and_saves_day(
     user = User(
         uuid=test_user_id,
         email="test@example.com",
-        password_hash="hash",
+        hashed_password="hash",
         settings=UserSetting(template_defaults=[template_slug] * 7),
     )
 
@@ -329,7 +329,6 @@ async def test_get_upcomming_tasks_123(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-1",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -352,7 +351,6 @@ async def test_get_upcomming_tasks_123(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-2",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -375,7 +373,6 @@ async def test_get_upcomming_tasks_123(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-3",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -715,7 +712,6 @@ async def test_on_task_change_update(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-1",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -921,7 +917,6 @@ async def test_get_upcomming_tasks_with_available_time(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-1",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -944,7 +939,6 @@ async def test_get_upcomming_tasks_with_available_time(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-2",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -1009,7 +1003,6 @@ async def test_get_upcomming_tasks_with_end_time(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-1",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -1033,7 +1026,6 @@ async def test_get_upcomming_tasks_with_end_time(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-2",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -1099,7 +1091,6 @@ async def test_get_upcomming_tasks_excludes_completed_at(
         completed_at=now,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-1",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -1122,7 +1113,6 @@ async def test_get_upcomming_tasks_excludes_completed_at(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-2",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,

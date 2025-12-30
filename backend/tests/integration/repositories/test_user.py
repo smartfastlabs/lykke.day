@@ -20,7 +20,7 @@ async def test_get(user_repo, create_test_user):
 
     assert result.id == user.id
     assert result.email == user.email
-    assert result.password_hash == user.password_hash
+    assert result.hashed_password == user.hashed_password
 
 
 @pytest.mark.asyncio
@@ -36,7 +36,7 @@ async def test_put(user_repo):
     user = User(
         uuid=uuid4(),
         email=f"test-{uuid4()}@example.com",
-        password_hash="hashed_password",
+        hashed_password="hashed_password",
         settings=UserSetting(),
     )
 
@@ -44,7 +44,7 @@ async def test_put(user_repo):
 
     assert result.id == user.id
     assert result.email == user.email
-    assert result.password_hash == user.password_hash
+    assert result.hashed_password == user.hashed_password
 
 
 @pytest.mark.asyncio
@@ -133,7 +133,7 @@ async def test_user_with_custom_settings(user_repo):
     user = User(
         uuid=uuid4(),
         email=f"test-{uuid4()}@example.com",
-        password_hash="hash",
+        hashed_password="hash",
         settings=settings,
     )
 

@@ -7,7 +7,6 @@ from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
 
 import pytest
 from dobles import allow
-
 from planned.application.services import DayService, SheppardService
 from planned.domain.entities import (
     Day,
@@ -62,7 +61,6 @@ async def test_build_notification_payload_single_task(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-1",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -134,7 +132,6 @@ async def test_build_notification_payload_multiple_tasks(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-1",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -151,7 +148,6 @@ async def test_build_notification_payload_multiple_tasks(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-2",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -289,7 +285,6 @@ async def test_notify_for_tasks(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-1",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,

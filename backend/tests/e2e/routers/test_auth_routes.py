@@ -4,7 +4,6 @@ from uuid import uuid4
 
 import pytest
 from passlib.context import CryptContext
-
 from planned.domain.entities import User
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.repositories import UserRepository
@@ -90,13 +89,13 @@ async def test_login(test_client):
     user_repo = UserRepository()
     email = f"test-{uuid4()}@example.com"
     password = "password123"
-    password_hash = pwd_context.hash(password)
+    hashed_password = pwd_context.hash(password)
 
     # Create user with hashed password
     user = User(
         uuid=uuid4(),
         email=email,
-        password_hash=password_hash,
+        hashed_password=hashed_password,
         settings=UserSetting(),
     )
     await user_repo.put(user)
@@ -115,12 +114,12 @@ async def test_login_wrong_password(test_client):
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     user_repo = UserRepository()
     email = f"test-{uuid4()}@example.com"
-    password_hash = pwd_context.hash("correct_password")
+    hashed_password = pwd_context.hash("correct_password")
 
     user = User(
         uuid=uuid4(),
         email=email,
-        password_hash=password_hash,
+        hashed_password=hashed_password,
         settings=UserSetting(),
     )
     await user_repo.put(user)

@@ -168,7 +168,7 @@ async def test_preview_creates_day_context(
     user = User(
         uuid=test_user_id,
         email="test@example.com",
-        password_hash="hash",
+        hashed_password="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
     )
 
@@ -295,7 +295,6 @@ async def test_unschedule_deletes_routine_tasks(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-1",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -314,7 +313,6 @@ async def test_unschedule_deletes_routine_tasks(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-2",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -378,7 +376,7 @@ async def test_schedule_creates_tasks_and_sets_status(
     user = User(
         uuid=test_user_id,
         email="test@example.com",
-        password_hash="hash",
+        hashed_password="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
     )
 
@@ -446,7 +444,6 @@ async def test_save_action_for_task(
         scheduled_date=date,
         task_definition=TaskDefinition(
             user_id=test_user_id,
-            id="def-1",
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,

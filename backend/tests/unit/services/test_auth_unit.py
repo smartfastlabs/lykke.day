@@ -5,7 +5,6 @@ from uuid import UUID, uuid4
 import pytest
 from dobles import allow
 from passlib.context import CryptContext
-
 from planned.application.services import AuthService
 from planned.core.exceptions import exceptions
 from planned.domain.entities import User
@@ -25,9 +24,9 @@ async def test_create_user(mock_user_repo):
 
     # Mock put to return the created user
     expected_user = User(
-        uuid=uuid4(),
+        id=uuid4(),
         email=email,
-        password_hash=pwd_context.hash(password),
+        hashed_password=pwd_context.hash(password),
         settings=UserSetting(),
     )
     allow(mock_user_repo).put.and_return(expected_user)
@@ -38,8 +37,8 @@ async def test_create_user(mock_user_repo):
     assert result.email == email
     assert result.id == expected_user.id
     # Verify password was hashed (not plain text)
-    assert result.password_hash != password
-    assert pwd_context.verify(password, result.password_hash)
+    assert result.hashed_password != password
+    assert pwd_context.verify(password, result.hashed_password)
 
 
 @pytest.mark.asyncio
@@ -47,9 +46,9 @@ async def test_create_user_duplicate_email(mock_user_repo):
     """Test creating a user with duplicate email raises BadRequestError."""
     email = "existing@example.com"
     existing_user = User(
-        uuid=uuid4(),
+        id=uuid4(),
         email=email,
-        password_hash="hash",
+        hashed_password="hash",
         settings=UserSetting(),
     )
 
@@ -67,9 +66,9 @@ async def test_get_user(mock_user_repo):
     """Test getting a user by UUID."""
     user_id = uuid4()
     expected_user = User(
-        uuid=user_id,
+        id=user_id,
         email="test@example.com",
-        password_hash="hash",
+        hashed_password="hash",
         settings=UserSetting(),
     )
 
@@ -87,12 +86,12 @@ async def test_authenticate_user_success(mock_user_repo):
     """Test successful user authentication."""
     email = "test@example.com"
     password = "password123"
-    password_hash = pwd_context.hash(password)
+    hashed_password = pwd_context.hash(password)
 
     user = User(
-        uuid=uuid4(),
+        id=uuid4(),
         email=email,
-        password_hash=password_hash,
+        hashed_password=hashed_password,
         settings=UserSetting(),
     )
 
@@ -109,12 +108,12 @@ async def test_authenticate_user_success(mock_user_repo):
 async def test_authenticate_user_wrong_password(mock_user_repo):
     """Test authentication with wrong password returns None."""
     email = "test@example.com"
-    password_hash = pwd_context.hash("correct_password")
+    hashed_password = pwd_context.hash("correct_password")
 
     user = User(
-        uuid=uuid4(),
+        id=uuid4(),
         email=email,
-        password_hash=password_hash,
+        hashed_password=hashed_password,
         settings=UserSetting(),
     )
 
@@ -143,9 +142,9 @@ async def test_authenticate_user_not_found(mock_user_repo):
 async def test_set_password(mock_user_repo):
     """Test setting a new password for a user."""
     user = User(
-        uuid=uuid4(),
+        id=uuid4(),
         email="test@example.com",
-        password_hash="old_hash",
+        hashed_password="old_hash",
         settings=UserSetting(),
     )
     new_password = "new_password123"
@@ -157,5 +156,5 @@ async def test_set_password(mock_user_repo):
     await service.set_password(user, new_password)
 
     # Verify password was hashed
-    assert user.password_hash != new_password
-    assert pwd_context.verify(new_password, user.password_hash)
+    assert user.hashed_password != new_password
+    assert pwd_context.verify(new_password, user.hashed_password)

@@ -63,13 +63,13 @@ class AuthService(BaseService):
             )
 
         # Hash password
-        password_hash = pwd_context.hash(password)
+        hashed_password = pwd_context.hash(password)
 
         # Create user with default settings
         user = User(
             email=normalized_email,
             phone_number=normalized_phone,
-            password_hash=password_hash,
+            hashed_password=hashed_password,
             settings=UserSetting(),  # Default settings
         )
 
@@ -106,7 +106,7 @@ class AuthService(BaseService):
         if user is None:
             return None
 
-        if pwd_context.verify(password, user.password_hash):
+        if pwd_context.verify(password, user.hashed_password):
             return user
 
         return None
@@ -118,5 +118,5 @@ class AuthService(BaseService):
             user: User entity to update
             new_password: New plain text password to hash and set
         """
-        user.password_hash = pwd_context.hash(new_password)
+        user.hashed_password = pwd_context.hash(new_password)
         await self.user_repo.put(user)

@@ -16,7 +16,7 @@ async def test_user():
     user = User(
         uuid=uuid4(),
         email=f"test-{uuid4()}@example.com",
-        password_hash="test_hash",
+        hashed_password="test_hash",
         settings=UserSetting(),
     )
     return await user_repo.put(user)

@@ -12,7 +12,6 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-
 from planned.domain.entities import Alarm, DayTemplate
 from planned.domain.value_objects.alarm import AlarmType
 from planned.domain.value_objects.day import DayStatus
@@ -56,7 +55,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     user_from_db = await user_repo.get_by_email(email)
     assert user_from_db is not None, "User should exist in database after registration"
     assert user_from_db.email == email
-    assert user_from_db.password_hash is not None, "Password hash should be set"
+    assert user_from_db.hashed_password is not None, "Password hash should be set"
     assert str(user_from_db.id) == user_id_str
 
     # Step 2: Login as the user (using a fresh client to simulate real scenario)

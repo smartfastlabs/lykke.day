@@ -35,7 +35,7 @@ async def create_test_user():
 
         user = User(
             email=email,
-            password_hash="test_hash",
+            hashed_password="test_hash",
             settings=kwargs.pop("settings", UserSetting()),
             **kwargs,
         )

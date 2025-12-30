@@ -261,7 +261,7 @@ export interface User {
   id?: string;
   email: string;
   phone_number?: string | null;
-  password_hash: string;
+  hashed_password: string;
   settings?: UserSetting;
   created_at?: string;
   updated_at?: string | null;
