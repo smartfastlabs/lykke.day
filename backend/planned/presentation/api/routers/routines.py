@@ -1,5 +1,6 @@
 """Router for Routine CRUD operations."""
 
+from planned.infrastructure.repositories import RoutineRepository
 from planned.presentation.api.routers.dependencies.repositories import (
     get_routine_repo,
 )
@@ -12,7 +13,8 @@ from planned.presentation.api.routers.generic.config import (
 router = create_crud_router(
     EntityRouterConfig(
         entity_name="routines",
-        repository_dependency=get_routine_repo,
+        repo_loader=get_routine_repo,
+        repo_class=RoutineRepository,
         operations=CRUDOperations(
             enable_get=True,
             enable_list=True,

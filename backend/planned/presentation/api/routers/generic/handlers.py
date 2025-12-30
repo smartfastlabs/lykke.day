@@ -163,10 +163,10 @@ async def handle_create(
     repo: RepositoryProtocol[EntityType],
     _user: User,
 ) -> EntityType:
-    """Handle PUT/POST request for creating an entity.
+    """Handle POST request for creating an entity.
 
     Args:
-        entity_data: Entity data to create
+        entity_data: Entity data to create (UUID will be generated if not provided)
         repo: Repository instance
         user: Current user
 
@@ -216,6 +216,10 @@ async def handle_update(
     else:
         # Fallback: assume entity_data is already the full entity
         updated = entity_data
+
+    # Ensure UUID matches the path parameter
+    if hasattr(updated, "uuid"):
+        updated.uuid = entity_id
 
     entity = await repo.put(updated)
     return entity

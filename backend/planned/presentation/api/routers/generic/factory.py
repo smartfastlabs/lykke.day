@@ -1,13 +1,12 @@
 """Factory function for creating CRUD routers."""
 
-from typing import Annotated, Any, cast
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
 from planned.domain.entities import User
-from planned.domain.entities.base import BaseEntityObject
-from planned.domain.value_objects.query import BaseQuery, PagedQueryRequest
+from planned.domain.value_objects.query import PagedQueryRequest
 from planned.presentation.api.routers.dependencies.user import get_current_user
 
 from .config import EntityRouterConfig
@@ -32,12 +31,12 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
     router = APIRouter()
 
     entity_type = config.entity_type
-    repo_dependency = config.repository_dependency
+    repo_loader = config.repo_loader
     operations = config.operations
 
     if entity_type is None:
         raise ValueError(
-            f"Could not extract entity type from repository dependency {repo_dependency}"
+            f"Could not extract entity type from repository class {config.repo_class}"
         )
 
     # GET /{uuid} - Get single entity
@@ -46,7 +45,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
         @router.get("/{uuid}")
         async def get_entity(
             uuid: UUID,
-            repo: Annotated[Any, Depends(repo_dependency)],
+            repo: Annotated[Any, Depends(repo_loader)],
             user: Annotated[User, Depends(get_current_user)],
         ) -> entity_type:  # type: ignore
             return await handle_get(uuid, repo, user)
@@ -62,7 +61,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
             @router.get("/")
             async def list_entities_with_query_paged(
                 query: Annotated[query_type, Query()],  # type: ignore[valid-type]
-                repo: Annotated[Any, Depends(repo_dependency)],
+                repo: Annotated[Any, Depends(repo_loader)],
                 user: Annotated[User, Depends(get_current_user)],
             ) -> Any:
                 # Create PagedQueryRequest wrapper for handler
@@ -82,7 +81,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
             @router.get("/")
             async def list_entities_with_query(
                 query: Annotated[query_type, Query()],  # type: ignore[valid-type]
-                repo: Annotated[Any, Depends(repo_dependency)],
+                repo: Annotated[Any, Depends(repo_loader)],
                 user: Annotated[User, Depends(get_current_user)],
             ) -> Any:
                 # query is a BaseQuery instance, so it has limit and offset
@@ -105,7 +104,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
 
                 @router.get("/")
                 async def list_entities_paged(
-                    repo: Annotated[Any, Depends(repo_dependency)],
+                    repo: Annotated[Any, Depends(repo_loader)],
                     user: Annotated[User, Depends(get_current_user)],
                     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
                     offset: Annotated[int, Query(ge=0)] = 0,
@@ -119,7 +118,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
 
                 @router.get("/")
                 async def list_entities_simple(
-                    repo: Annotated[Any, Depends(repo_dependency)],
+                    repo: Annotated[Any, Depends(repo_loader)],
                     user: Annotated[User, Depends(get_current_user)],
                 ) -> Any:
                     paged_query: PagedQueryRequest[Any] = PagedQueryRequest(
@@ -131,21 +130,28 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
                     # result is PagedQueryResponse
                     return result.items
 
-    # PUT /{uuid} - Create or update entity
-    if operations.enable_create or operations.enable_update:
+    # POST / - Create entity
+    if operations.enable_create:
 
-        @router.put("/{uuid}")
-        async def create_or_update_entity(
-            uuid: UUID,
+        @router.post("/")
+        async def create_entity(
             entity_data: entity_type,  # type: ignore
-            repo: Annotated[Any, Depends(repo_dependency)],
+            repo: Annotated[Any, Depends(repo_loader)],
             user: Annotated[User, Depends(get_current_user)],
         ) -> entity_type:  # type: ignore
-            # Ensure UUID matches
-            if hasattr(entity_data, "uuid"):
-                # entity_data is a BaseEntityObject, which has uuid
-                entity_data.uuid = uuid
             return await handle_create(entity_data, repo, user)
+
+    # PUT /{uuid} - Update entity
+    if operations.enable_update:
+
+        @router.put("/{uuid}")
+        async def update_entity(
+            uuid: UUID,
+            entity_data: entity_type,  # type: ignore
+            repo: Annotated[Any, Depends(repo_loader)],
+            user: Annotated[User, Depends(get_current_user)],
+        ) -> entity_type:  # type: ignore
+            return await handle_update(uuid, entity_data, repo, user)
 
     # DELETE /{uuid} - Delete entity
     if operations.enable_delete:
@@ -153,7 +159,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
         @router.delete("/{uuid}")
         async def delete_entity(
             uuid: UUID,
-            repo: Annotated[Any, Depends(repo_dependency)],
+            repo: Annotated[Any, Depends(repo_loader)],
             user: Annotated[User, Depends(get_current_user)],
         ) -> None:
             await handle_delete(uuid, repo, user)
