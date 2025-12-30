@@ -44,7 +44,7 @@ class TaskStatus(str, Enum):
     COMPLETE = "COMPLETE"
     NOT_READY = "NOT_READY"
     READY = "READY"
-    PUNTED = "PUNTED"
+    PUNT = "PUNT"
     NOT_STARTED = "NOT_STARTED"
     PENDING = "PENDING"
 

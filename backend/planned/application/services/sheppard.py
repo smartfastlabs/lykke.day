@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+from datetime import UTC
 from typing import Any, Literal
 
 from langchain.agents import create_agent
@@ -168,7 +169,7 @@ class SheppardService(BaseService):
         if events_to_notify:
             await self._notify_for_events(events_to_notify)
 
-        self.last_run = datetime.datetime.now()
+        self.last_run = datetime.datetime.now(UTC)
 
     def _build_notification_payload(
         self,

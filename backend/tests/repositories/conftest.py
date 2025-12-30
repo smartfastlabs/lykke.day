@@ -1,6 +1,7 @@
 """Fixtures for repository tests."""
 
 import datetime
+from datetime import UTC
 from uuid import UUID, uuid4, uuid5, NAMESPACE_DNS
 from zoneinfo import ZoneInfo
 
@@ -28,11 +29,12 @@ async def test_user():
 @pytest_asyncio.fixture
 async def test_event(test_user, test_date):
     """Create a test event."""
+    # Create datetime in configured timezone, then convert to UTC
     starts_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=2),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     return objects.Event(
         user_uuid=test_user.uuid,
         name="Test Event",

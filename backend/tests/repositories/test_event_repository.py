@@ -1,5 +1,5 @@
 import datetime
-from datetime import timedelta
+from datetime import UTC, timedelta
 from uuid import uuid5, NAMESPACE_DNS
 from zoneinfo import ZoneInfo
 
@@ -16,12 +16,12 @@ from planned.domain.value_objects.query import DateQuery
 async def event_repo(test_date, test_user):
     repo = EventRepository(user_uuid=test_user.uuid)
 
-    # Create event on test_date
+    # Create event on test_date (convert to UTC)
     starts_at_today = datetime.datetime.combine(
         test_date,
         datetime.time(hour=2),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     event_today = objects.Event(
         user_uuid=test_user.uuid,
         name="Test Event",
@@ -34,13 +34,13 @@ async def event_repo(test_date, test_user):
     )
     await repo.put(event_today)
 
-    # Create event on test_date + 1 day
+    # Create event on test_date + 1 day (convert to UTC)
     test_date_next = test_date + timedelta(days=1)
     starts_at_next = datetime.datetime.combine(
         test_date_next,
         datetime.time(hour=2),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     event_next = objects.Event(
         user_uuid=test_user.uuid,
         name="Test Event",

@@ -5,7 +5,6 @@ from typing import Protocol, TypeVar
 from uuid import UUID
 
 from loguru import logger
-
 from planned.application.repositories import (
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
@@ -173,10 +172,9 @@ class PlanningService(BaseService):
         action: Action,
     ) -> HasActionsType:
         obj.actions.append(action)
-        action_type: TaskStatus = TaskStatus(action.type)
         if isinstance(obj, Task):
-            if action_type in [TaskStatus.COMPLETE, TaskStatus.PUNTED]:
-                obj.status = action_type
+            if action.type in [TaskStatus.COMPLETE, TaskStatus.PUNT]:
+                obj.status = TaskStatus(action.type)
             await self.task_repo.put(obj)
 
         elif isinstance(obj, Event):

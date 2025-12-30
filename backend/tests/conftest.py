@@ -59,7 +59,7 @@ def test_datetime_noon():
         "2025-11-27 12:00:00-6:00",
         real_asyncio=True,
     ):
-        yield datetime.datetime(2025, 11, 27, 12, 0, 0)
+        yield datetime.datetime(2025, 11, 27, 12, 0, 0, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -71,7 +71,7 @@ def test_datetime_morning():
         "2025-11-27 08:00:00-6:00",
         real_asyncio=True,
     ):
-        yield datetime.datetime(2025, 11, 27, 8, 0, 0)
+        yield datetime.datetime(2025, 11, 27, 8, 0, 0, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -83,4 +83,4 @@ def test_datetime_evening():
         "2025-11-27 18:00:00-6:00",
         real_asyncio=True,
     ):
-        yield datetime.datetime(2025, 11, 27, 18, 0, 0)
+        yield datetime.datetime(2025, 11, 27, 18, 0, 0, tzinfo=UTC)

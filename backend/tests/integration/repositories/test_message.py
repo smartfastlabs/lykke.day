@@ -1,6 +1,7 @@
 """Integration tests for MessageRepository."""
 
 import datetime
+from datetime import UTC
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -20,7 +21,7 @@ async def test_get(message_repo, test_user, test_date):
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     message = Message(
         uuid=uuid4(),
         user_uuid=test_user.uuid,
@@ -50,7 +51,7 @@ async def test_put(message_repo, test_user, test_date):
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     message = Message(
         uuid=uuid4(),
         user_uuid=test_user.uuid,
@@ -72,12 +73,12 @@ async def test_search_query(message_repo, test_user, test_date, test_date_tomorr
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     sent_at2 = datetime.datetime.combine(
         test_date_tomorrow,
         datetime.time(hour=14),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     
     message1 = Message(
         uuid=uuid4(),
@@ -110,7 +111,7 @@ async def test_user_isolation(message_repo, test_user, create_test_user, test_da
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     
     message = Message(
         uuid=uuid4(),

@@ -1,6 +1,7 @@
 """E2E tests for events router endpoints."""
 
 import datetime
+from datetime import UTC
 from uuid import uuid4, uuid5, NAMESPACE_DNS
 from zoneinfo import ZoneInfo
 
@@ -22,7 +23,7 @@ async def test_get_today(authenticated_client, test_date):
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     event = Event(
         uuid=uuid4(),
         user_uuid=user.uuid,

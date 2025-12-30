@@ -6,7 +6,6 @@ from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
 
 import pytest
 from dobles import allow
-
 from planned.application.services import PlanningService
 from planned.core.exceptions import exceptions
 from planned.domain.entities import (
@@ -631,7 +630,7 @@ async def test_schedule_with_template_uuid(
 
 
 @pytest.mark.asyncio
-async def test_save_action_for_task_punted(
+async def test_save_action_for_task_punt(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
@@ -642,7 +641,7 @@ async def test_save_action_for_task_punted(
     mock_task_repo,
     test_user_uuid,
 ):
-    """Test save_action updates task status to PUNTED."""
+    """Test save_action updates task status to PUNT."""
     date = datetime.date(2024, 1, 1)
     task = Task(
         uuid=uuid4(),
@@ -661,7 +660,7 @@ async def test_save_action_for_task_punted(
         date=date,
     )
 
-    action = Action(type=ActionType.PUNTED)
+    action = Action(type=ActionType.PUNT)
 
     allow(mock_task_repo).put.and_return(task)
 
@@ -680,8 +679,8 @@ async def test_save_action_for_task_punted(
     result = await service.save_action(task, action)
 
     assert len(result.actions) == 1
-    assert result.actions[0].type == ActionType.PUNTED
-    assert result.status == TaskStatus.PUNTED
+    assert result.actions[0].type == ActionType.PUNT
+    assert result.status == TaskStatus.PUNT
 
 
 @pytest.mark.asyncio

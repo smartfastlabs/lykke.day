@@ -3,6 +3,7 @@ import datetime
 from contextlib import suppress
 from typing import TypeVar
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from blinker import Signal
 from planned.application.repositories import (
@@ -13,6 +14,7 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
     UserRepositoryProtocol,
 )
+from planned.core.config import settings
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
 from planned.domain.value_objects.query import DateQuery
@@ -332,8 +334,14 @@ class DayService(BaseService):
         self,
         look_ahead: datetime.timedelta = datetime.timedelta(minutes=30),
     ) -> list[objects.Task]:
+        # Get current time in configured timezone for comparison with task times
         now: datetime.time = get_current_time()
-        cutoff_time: datetime.time = (get_current_datetime() + look_ahead).time()
+        # Get cutoff datetime in UTC, convert to configured timezone, then extract time
+        cutoff_datetime_utc = get_current_datetime() + look_ahead
+        cutoff_datetime_local = cutoff_datetime_utc.astimezone(
+            ZoneInfo(settings.TIMEZONE)
+        )
+        cutoff_time: datetime.time = cutoff_datetime_local.time()
 
         if cutoff_time < get_current_time():
             # tomorrow

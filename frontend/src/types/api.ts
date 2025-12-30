@@ -5,10 +5,23 @@
 /* Do not modify it by hand - just update the pydantic models and then re-run the script
 */
 
-export type ActionType = "COMPLETE" | "DELETE" | "EDIT" | "NOTIFY" | "PAUSE" | "PUNT" | "RESUME" | "START" | "VIEW";
+export type ActionType =
+  | "COMPLETE"
+  | "DELETE"
+  | "EDIT"
+  | "NOTIFY"
+  | "PAUSE"
+  | "PUNT"
+  | "RESUME"
+  | "START"
+  | "VIEW";
 export type AlarmType = "GENTLE" | "FIRM" | "LOUD" | "SIREN";
 export type DayTag = "WEEKEND" | "VACATION" | "WORKDAY";
-export type DayStatus = "UNSCHEDULED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETE";
+export type DayStatus =
+  | "UNSCHEDULED"
+  | "SCHEDULED"
+  | "IN_PROGRESS"
+  | "COMPLETE";
 export type TaskFrequency =
   | "DAILY"
   | "CUSTOM_WEEKLY"
@@ -19,11 +32,22 @@ export type TaskFrequency =
   | "BI_WEEKLY"
   | "WORK_DAYS"
   | "WEEKENDS";
-export type TaskStatus = "COMPLETE" | "NOT_READY" | "READY" | "PUNTED" | "NOT_STARTED" | "PENDING";
+export type TaskStatus =
+  | "COMPLETE"
+  | "NOT_READY"
+  | "READY"
+  | "PUNT"
+  | "NOT_STARTED"
+  | "PENDING";
 export type TaskType = "MEAL" | "EVENT" | "CHORE" | "ERRAND" | "ACTIVITY";
 export type TaskCategory = "HYGIENE" | "NUTRITION" | "HEALTH" | "PET" | "HOUSE";
 export type TimingType = "DEADLINE" | "FIXED_TIME" | "TIME_WINDOW" | "FLEXIBLE";
-export type TaskTag = "AVOIDANT" | "FORGETTABLE" | "IMPORTANT" | "URGENT" | "FUN";
+export type TaskTag =
+  | "AVOIDANT"
+  | "FORGETTABLE"
+  | "IMPORTANT"
+  | "URGENT"
+  | "FUN";
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface Action {

@@ -1,6 +1,7 @@
 """Integration tests for EventRepository."""
 
 import datetime
+from datetime import UTC
 from uuid import UUID, uuid4, uuid5, NAMESPACE_DNS
 from zoneinfo import ZoneInfo
 
@@ -20,7 +21,7 @@ async def test_get(event_repo, test_user, test_date):
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     event = Event(
         uuid=uuid4(),
         user_uuid=test_user.uuid,
@@ -55,7 +56,7 @@ async def test_put(event_repo, test_user, test_date):
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     event = Event(
         uuid=uuid4(),
         user_uuid=test_user.uuid,
@@ -82,7 +83,7 @@ async def test_put_update(event_repo, test_user, test_date):
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     event = Event(
         uuid=uuid4(),
         user_uuid=test_user.uuid,
@@ -114,12 +115,12 @@ async def test_all(event_repo, test_user, test_date, test_date_tomorrow):
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     starts_at2 = datetime.datetime.combine(
         test_date_tomorrow,
         datetime.time(hour=14),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     
     event1 = Event(
         uuid=uuid4(),
@@ -160,12 +161,12 @@ async def test_search_query(event_repo, test_user, test_date, test_date_tomorrow
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     starts_at2 = datetime.datetime.combine(
         test_date_tomorrow,
         datetime.time(hour=14),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     
     event1 = Event(
         uuid=uuid4(),
@@ -207,7 +208,7 @@ async def test_delete(event_repo, test_user, test_date):
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     event = Event(
         uuid=uuid4(),
         user_uuid=test_user.uuid,
@@ -236,17 +237,17 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     starts_at2 = datetime.datetime.combine(
         test_date,
         datetime.time(hour=14),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     starts_at3 = datetime.datetime.combine(
         test_date_tomorrow,
         datetime.time(hour=16),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     
     event1 = Event(
         uuid=uuid4(),
@@ -305,7 +306,7 @@ async def test_user_isolation(event_repo, test_user, create_test_user, test_date
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
-    )
+    ).astimezone(UTC)
     
     # Create event for test_user
     event = Event(

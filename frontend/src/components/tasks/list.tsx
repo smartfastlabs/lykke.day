@@ -65,7 +65,7 @@ const getStatusClasses = (status: TaskStatus): string => {
   switch (status) {
     case "COMPLETE":
       return "bg-gray-100";
-    case "PUNTED":
+    case "PUNT":
       return "bg-gray-50 italic";
     case "NOT_READY":
       return "opacity-40";

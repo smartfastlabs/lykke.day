@@ -19,7 +19,7 @@ const ALL_STATUSES: TaskStatus[] = [
   "READY",
   "COMPLETE",
   "NOT_READY",
-  "PUNTED",
+  "PUNT",
   "NOT_STARTED",
   "PENDING",
 ];

@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -34,7 +34,7 @@ async def google_login() -> RedirectResponse:
 
     # Store state for validation on callback
     oauth_states[state] = {
-        "expiry": datetime.now() + timedelta(minutes=10),
+        "expiry": datetime.now(UTC) + timedelta(minutes=10),
         "action": "login",
     }
 
@@ -56,7 +56,7 @@ def verify_state(
         )
 
     state_data = oauth_states[state]
-    if datetime.now() > cast("datetime", state_data["expiry"]):
+    if datetime.now(UTC) > cast("datetime", state_data["expiry"]):
         del oauth_states[state]
         raise HTTPException(
             status_code=400,

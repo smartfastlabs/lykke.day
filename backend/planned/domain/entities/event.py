@@ -1,5 +1,7 @@
 import uuid
-from datetime import UTC, date as dt_date, datetime, time
+from datetime import UTC
+from datetime import date as dt_date
+from datetime import datetime, time
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -88,30 +90,36 @@ class Event(BaseEntityObject):
             calendar_uuid: UUID of the calendar
             google_event: Google Calendar event object
             frequency: Task frequency for the event
-            target_timezone: Target timezone for datetime conversion
+            target_timezone: Target timezone for display purposes (datetimes stored in UTC)
         """
+        # Convert datetimes to UTC for storage
+        starts_at_utc = get_datetime(
+            google_event.start,
+            google_event.timezone,
+            "UTC",
+        )
+        ends_at_utc = (
+            get_datetime(
+                google_event.end,
+                google_event.timezone,
+                "UTC",
+            )
+            if google_event.end
+            else None
+        )
+
         event = cls(
             user_uuid=user_uuid,
             frequency=frequency,
             calendar_uuid=calendar_uuid,
             status=google_event.other.get("status", "NA"),
             name=google_event.summary,
-            starts_at=get_datetime(
-                google_event.start,
-                google_event.timezone,
-                target_timezone,
-            ),
-            ends_at=get_datetime(
-                google_event.end,
-                google_event.timezone,
-                target_timezone,
-            )
-            if google_event.end
-            else None,
+            starts_at=starts_at_utc,
+            ends_at=ends_at_utc,
             platform_id=google_event.id or "NA",
             platform="google",
-            created_at=google_event.created.astimezone(UTC).replace(tzinfo=None),
-            updated_at=google_event.updated.astimezone(UTC).replace(tzinfo=None),
+            created_at=google_event.created.astimezone(UTC),
+            updated_at=google_event.updated.astimezone(UTC),
             people=[
                 Person(
                     name=a.display_name or None,
