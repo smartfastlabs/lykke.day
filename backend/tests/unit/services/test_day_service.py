@@ -1,12 +1,11 @@
 """Unit tests for DayService."""
 
 import datetime
-from datetime import UTC, timedelta
+from datetime import timedelta
 from uuid import NAMESPACE_DNS, uuid4, uuid5
 
 import pytest
 from dobles import allow
-from freezegun import freeze_time
 from planned.application.services import DayService
 from planned.core.exceptions import exceptions
 from planned.domain.entities import (
@@ -303,12 +302,14 @@ async def test_get_upcomming_tasks_123(
     mock_message_repo,
     mock_task_repo,
     test_user_uuid,
+    test_datetime_noon,
 ):
     """Test get_upcomming_tasks returns tasks within look_ahead window."""
-    # TODO: This is failing because the time is not being frozen.
-    date = datetime.date(2024, 1, 1)
-    # Fixed datetime for deterministic testing
-    now = datetime.datetime(2024, 1, 1, 12, 0, 0)
+    date = test_datetime_noon.date()
+    # Use frozen datetime from fixture
+    now = test_datetime_noon.replace(
+        year=2025, month=11, day=27, hour=12, minute=0, second=0
+    )
     future_time = (now + timedelta(minutes=15)).time()
     template_uuid = uuid4()
 
@@ -403,9 +404,8 @@ async def test_get_upcomming_tasks_123(
         task_repo=mock_task_repo,
     )
 
-    # Freeze time
-    with freeze_time(now, real_asyncio=True):
-        result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
+    # Time is frozen by test_datetime_noon fixture
+    result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
 
     # Should only include task1 (within window and not completed)
     assert len(result) == 1
@@ -420,11 +420,12 @@ async def test_get_upcomming_events(
     mock_message_repo,
     mock_task_repo,
     test_user_uuid,
+    test_datetime_noon,
 ):
     """Test get_upcomming_events returns events within look_ahead window."""
-    date = datetime.date(2024, 1, 1)
-    # Fixed datetime for deterministic testing
-    now = datetime.datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+    date = datetime.date(2025, 11, 27)
+    # Use frozen datetime from fixture
+    now = test_datetime_noon
     future_time = now + timedelta(minutes=15)
     far_future = now + timedelta(hours=2)
     past_time = now - timedelta(hours=1)
@@ -507,9 +508,8 @@ async def test_get_upcomming_events(
         task_repo=mock_task_repo,
     )
 
-    # Freeze time
-    with freeze_time(now, real_asyncio=True):
-        result = await service.get_upcomming_events(look_ahead=timedelta(minutes=30))
+    # Time is frozen by test_datetime_noon fixture
+    result = await service.get_upcomming_events(look_ahead=timedelta(minutes=30))
 
     # Should include event1 and event4 (within window and not cancelled)
     assert len(result) == 2
@@ -525,9 +525,10 @@ async def test_on_event_change_create(
     mock_message_repo,
     mock_task_repo,
     test_user_uuid,
+    test_datetime_noon,
 ):
     """Test on_event_change handles create events."""
-    date = datetime.date(2024, 1, 1)
+    date = datetime.date(2025, 11, 27)
     day = Day(
         user_uuid=test_user_uuid,
         date=date,
@@ -556,7 +557,7 @@ async def test_on_event_change_create(
         platform_id="event-1",
         platform="test",
         status="confirmed",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
         date=date,
     )
 
@@ -579,9 +580,10 @@ async def test_on_event_change_delete(
     mock_message_repo,
     mock_task_repo,
     test_user_uuid,
+    test_datetime_noon,
 ):
     """Test on_event_change handles delete events."""
-    date = datetime.date(2024, 1, 1)
+    date = datetime.date(2025, 11, 27)
     event1 = Event(
         uuid=uuid4(),
         user_uuid=test_user_uuid,
@@ -591,7 +593,7 @@ async def test_on_event_change_delete(
         platform_id="event-1",
         platform="test",
         status="confirmed",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
         date=date,
     )
     event2 = Event(
@@ -603,7 +605,7 @@ async def test_on_event_change_delete(
         platform_id="event-2",
         platform="test",
         status="confirmed",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
         date=date,
     )
 
@@ -887,11 +889,12 @@ async def test_get_upcomming_tasks_with_available_time(
     mock_message_repo,
     mock_task_repo,
     test_user_uuid,
+    test_datetime_noon,
 ):
     """Test get_upcomming_tasks handles tasks with available_time."""
-    date = datetime.date(2024, 1, 1)
-    # Fixed datetime for deterministic testing
-    now = datetime.datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+    date = datetime.date(2025, 11, 27)
+    # Use frozen datetime from fixture
+    now = test_datetime_noon
     past_available_time = (now - timedelta(minutes=30)).time()
     future_available_time = (now + timedelta(minutes=30)).time()
 
@@ -959,9 +962,8 @@ async def test_get_upcomming_tasks_with_available_time(
         task_repo=mock_task_repo,
     )
 
-    # Freeze time
-    with freeze_time(now, real_asyncio=True):
-        result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
+    # Time is frozen by test_datetime_noon fixture
+    result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
 
     assert len(result) == 1
     assert result[0].uuid == task1.uuid
@@ -975,11 +977,12 @@ async def test_get_upcomming_tasks_with_end_time(
     mock_message_repo,
     mock_task_repo,
     test_user_uuid,
+    test_datetime_noon,
 ):
     """Test get_upcomming_tasks excludes tasks past end_time."""
-    date = datetime.date(2024, 1, 1)
-    # Fixed datetime for deterministic testing
-    now = datetime.datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+    date = datetime.date(2025, 11, 27)
+    # Use frozen datetime from fixture
+    now = test_datetime_noon
     past_end_time = (now - timedelta(minutes=30)).time()
     future_start_time = (now + timedelta(minutes=15)).time()
 
@@ -1049,9 +1052,8 @@ async def test_get_upcomming_tasks_with_end_time(
         task_repo=mock_task_repo,
     )
 
-    # Freeze time
-    with freeze_time(now, real_asyncio=True):
-        result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
+    # Time is frozen by test_datetime_noon fixture
+    result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
 
     assert len(result) == 1
     assert result[0].uuid == task2.uuid
@@ -1065,11 +1067,12 @@ async def test_get_upcomming_tasks_excludes_completed_at(
     mock_message_repo,
     mock_task_repo,
     test_user_uuid,
+    test_datetime_noon,
 ):
     """Test get_upcomming_tasks excludes tasks with completed_at set."""
-    date = datetime.date(2024, 1, 1)
-    # Fixed datetime for deterministic testing
-    now = datetime.datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+    date = datetime.date(2025, 11, 27)
+    # Use frozen datetime from fixture
+    now = test_datetime_noon
     future_time = (now + timedelta(minutes=15)).time()
 
     day = Day(
@@ -1137,9 +1140,8 @@ async def test_get_upcomming_tasks_excludes_completed_at(
         task_repo=mock_task_repo,
     )
 
-    # Freeze time
-    with freeze_time(now, real_asyncio=True):
-        result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
+    # Time is frozen by test_datetime_noon fixture
+    result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
 
     assert len(result) == 1
     assert result[0].uuid == task2.uuid

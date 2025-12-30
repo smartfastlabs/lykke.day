@@ -5,7 +5,6 @@ import os
 
 import pytest
 from freezegun import freeze_time
-
 from planned.core.config import settings
 from planned.infrastructure.utils.dates import get_current_date
 
@@ -49,3 +48,39 @@ def test_date_tomorrow(test_date):
 def test_date_yesterday(test_date):
     """Test date for yesterday."""
     return test_date - datetime.timedelta(days=1)
+
+
+@pytest.fixture
+def test_datetime_noon():
+    """Fixed test datetime at noon UTC for consistent testing."""
+    from datetime import UTC
+
+    with freeze_time(
+        "2025-11-27 12:00:00-6:00",
+        real_asyncio=True,
+    ):
+        yield datetime.datetime(2025, 11, 27, 12, 0, 0)
+
+
+@pytest.fixture
+def test_datetime_morning():
+    """Fixed test datetime in the morning UTC for consistent testing."""
+    from datetime import UTC
+
+    with freeze_time(
+        "2025-11-27 08:00:00-6:00",
+        real_asyncio=True,
+    ):
+        yield datetime.datetime(2025, 11, 27, 8, 0, 0)
+
+
+@pytest.fixture
+def test_datetime_evening():
+    """Fixed test datetime in the evening UTC for consistent testing."""
+    from datetime import UTC
+
+    with freeze_time(
+        "2025-11-27 18:00:00-6:00",
+        real_asyncio=True,
+    ):
+        yield datetime.datetime(2025, 11, 27, 18, 0, 0)

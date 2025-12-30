@@ -14,7 +14,7 @@ from planned.domain.entities import AuthToken, Calendar, Event
 
 @pytest.mark.asyncio
 async def test_sync_google(
-    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway, test_datetime_noon
 ):
     """Test syncing Google calendar."""
     calendar = Calendar(
@@ -25,7 +25,7 @@ async def test_sync_google(
         platform_id="platform-id",
     )
 
-    lookback = datetime.datetime.now(UTC) - timedelta(days=2)
+    lookback = test_datetime_noon - timedelta(days=2)
 
     token = AuthToken(
         uuid=calendar.auth_token_uuid,
@@ -43,7 +43,7 @@ async def test_sync_google(
         platform_id="event-id-1",
         platform="google",
         status="confirmed",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
     )
     event2 = Event(
         id=str(uuid4()),
@@ -54,7 +54,7 @@ async def test_sync_google(
         platform_id="event-id-2",
         platform="google",
         status="cancelled",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
     )
 
     allow(mock_auth_token_repo).get(token.uuid).and_return(token)
@@ -83,7 +83,7 @@ async def test_sync_google(
 
 @pytest.mark.asyncio
 async def test_sync(
-    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway, test_datetime_noon
 ):
     """Test syncing a calendar."""
     calendar = Calendar(
@@ -109,7 +109,7 @@ async def test_sync(
         platform_id="event-id",
         platform="google",
         status="confirmed",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
     )
 
     allow(mock_auth_token_repo).get(token.uuid).and_return(token)
@@ -168,7 +168,7 @@ async def test_sync_all(
 
 @pytest.mark.asyncio
 async def test_sync_with_last_sync_at(
-    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway, test_datetime_noon
 ):
     """Test syncing a calendar with last_sync_at set uses it for lookback."""
     calendar = Calendar(
@@ -177,7 +177,7 @@ async def test_sync_with_last_sync_at(
         auth_token_uuid=uuid4(),
         platform="google",
         platform_id="platform-id",
-        last_sync_at=datetime.datetime.now(UTC) - timedelta(hours=1),
+        last_sync_at=test_datetime_noon - timedelta(hours=1),
     )
 
     token = AuthToken(
@@ -195,7 +195,7 @@ async def test_sync_with_last_sync_at(
         platform_id="event-id",
         platform="google",
         status="confirmed",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
     )
 
     expected_lookback = calendar.last_sync_at - timedelta(minutes=30)
@@ -249,7 +249,7 @@ async def test_sync_unsupported_platform(
 
 @pytest.mark.asyncio
 async def test_sync_google_no_events(
-    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway, test_datetime_noon
 ):
     """Test syncing Google calendar with no events."""
     calendar = Calendar(
@@ -260,7 +260,7 @@ async def test_sync_google_no_events(
         platform_id="platform-id",
     )
 
-    lookback = datetime.datetime.now(UTC) - timedelta(days=2)
+    lookback = test_datetime_noon - timedelta(days=2)
 
     token = AuthToken(
         uuid=calendar.auth_token_uuid,
@@ -291,7 +291,7 @@ async def test_sync_google_no_events(
 
 @pytest.mark.asyncio
 async def test_sync_all_successful_syncs(
-    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway, test_datetime_noon
 ):
     """Test syncing all calendars with successful syncs."""
     calendar1 = Calendar(
@@ -330,7 +330,7 @@ async def test_sync_all_successful_syncs(
         platform_id="event-id-1",
         platform="google",
         status="confirmed",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
     )
     event2 = Event(
         user_uuid=calendar2.user_uuid,
@@ -340,7 +340,7 @@ async def test_sync_all_successful_syncs(
         platform_id="event-id-2",
         platform="google",
         status="confirmed",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
     )
 
     allow(mock_calendar_repo).all().and_return([calendar1, calendar2])
@@ -349,7 +349,7 @@ async def test_sync_all_successful_syncs(
     allow(mock_auth_token_repo).get(token1.uuid).and_return(token1)
     allow(mock_google_gateway).load_calendar_events(
         calendar1,
-        lookback=datetime.datetime.now(UTC) - timedelta(days=2),
+        lookback=test_datetime_noon - timedelta(days=2),
         token=token1,
     ).and_return([event1])
     
@@ -357,7 +357,7 @@ async def test_sync_all_successful_syncs(
     allow(mock_auth_token_repo).get(token2.uuid).and_return(token2)
     allow(mock_google_gateway).load_calendar_events(
         calendar2,
-        lookback=datetime.datetime.now(UTC) - timedelta(days=2),
+        lookback=test_datetime_noon - timedelta(days=2),
         token=token2,
     ).and_return([event2])
     

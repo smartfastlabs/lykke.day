@@ -340,7 +340,6 @@ class DayService(BaseService):
             return self.ctx.tasks
 
         result: list[objects.Task] = []
-        breakpoint()
         for task in self.ctx.tasks:
             if (
                 task.status
@@ -353,7 +352,6 @@ class DayService(BaseService):
                 or not task.schedule
             ):
                 continue
-
             if task.schedule.available_time:
                 if task.schedule.available_time > now:
                     continue

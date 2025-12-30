@@ -160,6 +160,7 @@ async def test_preview_creates_day_context(
     mock_task_definition_repo,
     mock_task_repo,
     test_user_uuid,
+    test_datetime_noon,
 ):
     """Test preview creates a DayContext with tasks, events, and messages."""
     date = datetime.date(2024, 1, 1)
@@ -187,7 +188,7 @@ async def test_preview_creates_day_context(
         platform_id="event-1",
         platform="test",
         status="confirmed",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
         date=date,
     )
 
@@ -490,6 +491,7 @@ async def test_save_action_for_event(
     mock_task_definition_repo,
     mock_task_repo,
     test_user_uuid,
+    test_datetime_noon,
 ):
     """Test save_action saves event with action."""
 
@@ -503,7 +505,7 @@ async def test_save_action_for_event(
         platform_id="event-1",
         platform="test",
         status="confirmed",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
         date=date,
     )
 

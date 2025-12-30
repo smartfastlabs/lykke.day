@@ -192,6 +192,7 @@ async def test_build_event_notification_payload(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_uuid,
+    test_datetime_noon,
 ):
     """Test _build_event_notification_payload."""
     date = datetime.date(2024, 1, 1)
@@ -222,7 +223,7 @@ async def test_build_event_notification_payload(
         platform_id="event-1",
         platform="test",
         status="confirmed",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
         date=date,
     )
 
@@ -668,6 +669,7 @@ async def test_notify_for_events(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_uuid,
+    test_datetime_noon,
 ):
     """Test _notify_for_events sends notifications for events."""
     date = datetime.date(2024, 1, 1)
@@ -697,7 +699,7 @@ async def test_notify_for_events(
         platform_id="event-1",
         platform="test",
         status="confirmed",
-        starts_at=datetime.datetime.now(UTC),
+        starts_at=test_datetime_noon,
         date=date,
     )
 
