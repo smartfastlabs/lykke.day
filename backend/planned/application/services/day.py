@@ -5,7 +5,6 @@ from typing import TypeVar
 from uuid import UUID
 
 from blinker import Signal
-
 from planned.application.repositories import (
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
@@ -341,6 +340,7 @@ class DayService(BaseService):
             return self.ctx.tasks
 
         result: list[objects.Task] = []
+        breakpoint()
         for task in self.ctx.tasks:
             if (
                 task.status

@@ -296,7 +296,7 @@ async def test_save(
 
 
 @pytest.mark.asyncio
-async def test_get_upcomming_tasks(
+async def test_get_upcomming_tasks_123(
     mock_day_repo,
     mock_day_template_repo,
     mock_event_repo,
@@ -305,9 +305,10 @@ async def test_get_upcomming_tasks(
     test_user_uuid,
 ):
     """Test get_upcomming_tasks returns tasks within look_ahead window."""
+    # TODO: This is failing because the time is not being frozen.
     date = datetime.date(2024, 1, 1)
     # Fixed datetime for deterministic testing
-    now = datetime.datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+    now = datetime.datetime(2024, 1, 1, 12, 0, 0)
     future_time = (now + timedelta(minutes=15)).time()
     template_uuid = uuid4()
 
