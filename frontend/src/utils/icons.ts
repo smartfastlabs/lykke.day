@@ -45,6 +45,7 @@ import {
   faBasketShopping,
   faPersonWalking,
   faCircle,
+  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 
 import type { TaskCategory, TaskType } from "../types/api";
@@ -91,7 +92,8 @@ library.add(
   faCalendar,
   faBasketShopping,
   faPersonWalking,
-  faCircle
+  faCircle,
+  faPlus
 );
 
 export const icons: Record<string, IconDefinition> = {
@@ -118,6 +120,7 @@ export const icons: Record<string, IconDefinition> = {
   checkMark: faCheckSquare,
   square: faSquare,
   calendar: faCalendar,
+  plus: faPlus,
 };
 
 config.autoAddCss = false;

@@ -1,35 +1,34 @@
-import { Component } from "solid-js";
+import { Component, Show } from "solid-js";
 import { DayTemplate } from "../../types/api";
 import { getIcon } from "../../utils/icons";
+import { Icon } from "../shared/icon";
 
 interface ListItemProps {
   template: DayTemplate;
-  onClick: (template: DayTemplate) => void;
 }
 
 const DayTemplateListItem: Component<ListItemProps> = (props) => {
-  const icon = props.template.icon ? getIcon(props.template.icon) : null;
+  const icon = () => props.template.icon ? getIcon(props.template.icon) : null;
 
   return (
-    <button
-      onClick={() => props.onClick(props.template)}
-      class="w-full flex items-center gap-4 p-4 bg-gray-100 rounded-lg text-left hover:bg-gray-200 transition-colors duration-150"
-    >
-      {icon && (
-        <svg
-          viewBox={`0 0 ${icon.icon[0]} ${icon.icon[1]}`}
-          class="w-8 h-8 flex-shrink-0 fill-gray-600"
-        >
-          <path d={icon.icon[4] as string} />
-        </svg>
-      )}
-      <div class="flex-1">
-        <div class="font-medium text-gray-900">{props.template.slug}</div>
-        <div class="text-sm text-gray-500">
+    <div class="flex items-center gap-4">
+      {/* Icon column */}
+      <span class="w-4 flex-shrink-0 flex items-center justify-center">
+        <Show when={icon()}>
+          <Icon key={props.template.icon!} />
+        </Show>
+      </span>
+
+      {/* Template name and task count */}
+      <div class="flex-1 min-w-0">
+        <span class="text-sm text-gray-800 block truncate">
+          {props.template.slug}
+        </span>
+        <span class="text-xs text-gray-500">
           {props.template.tasks?.length || 0} tasks
-        </div>
+        </span>
       </div>
-    </button>
+    </div>
   );
 };
 

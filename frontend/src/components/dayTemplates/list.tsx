@@ -1,5 +1,6 @@
-import { Component, For } from "solid-js";
+import { Component } from "solid-js";
 import { DayTemplate } from "../../types/api";
+import { GenericList } from "../shared/genericList";
 import DayTemplateListItem from "./listItem";
 
 interface ListProps {
@@ -9,18 +10,12 @@ interface ListProps {
 
 const DayTemplateList: Component<ListProps> = (props) => {
   return (
-    <div class="space-y-2">
-      <For each={props.templates}>
-        {(template) => (
-          <DayTemplateListItem
-            template={template}
-            onClick={props.onItemClick}
-          />
-        )}
-      </For>
-    </div>
+    <GenericList
+      items={props.templates}
+      renderItem={(template) => <DayTemplateListItem template={template} />}
+      onItemClick={props.onItemClick}
+    />
   );
 };
 
 export default DayTemplateList;
-
