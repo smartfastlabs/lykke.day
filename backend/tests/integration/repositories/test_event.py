@@ -24,10 +24,10 @@ async def test_get(event_repo, test_user, test_date):
     ).astimezone(UTC)
     event = Event(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Test Event",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -35,11 +35,11 @@ async def test_get(event_repo, test_user, test_date):
     )
     await event_repo.put(event)
     
-    result = await event_repo.get(event.uuid)
+    result = await event_repo.get(event.id)
     
-    assert result.uuid == event.uuid
+    assert result.id == event.id
     assert result.name == "Test Event"
-    assert result.user_uuid == test_user.uuid
+    assert result.user_id == test_user.id
 
 
 @pytest.mark.asyncio
@@ -59,10 +59,10 @@ async def test_put(event_repo, test_user, test_date):
     ).astimezone(UTC)
     event = Event(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="New Event",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -72,7 +72,7 @@ async def test_put(event_repo, test_user, test_date):
     result = await event_repo.put(event)
     
     assert result.name == "New Event"
-    assert result.user_uuid == test_user.uuid
+    assert result.user_id == test_user.id
     assert result.date == test_date
 
 
@@ -86,10 +86,10 @@ async def test_put_update(event_repo, test_user, test_date):
     ).astimezone(UTC)
     event = Event(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Original Event",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -104,7 +104,7 @@ async def test_put_update(event_repo, test_user, test_date):
     assert result.name == "Updated Event"
     
     # Verify it was saved
-    retrieved = await event_repo.get(event.uuid)
+    retrieved = await event_repo.get(event.id)
     assert retrieved.name == "Updated Event"
 
 
@@ -124,10 +124,10 @@ async def test_all(event_repo, test_user, test_date, test_date_tomorrow):
     
     event1 = Event(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Event 1",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-1",
         platform="testing",
         status="confirmed",
@@ -135,10 +135,10 @@ async def test_all(event_repo, test_user, test_date, test_date_tomorrow):
     )
     event2 = Event(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Event 2",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-2",
         platform="testing",
         status="confirmed",
@@ -149,9 +149,9 @@ async def test_all(event_repo, test_user, test_date, test_date_tomorrow):
     
     all_events = await event_repo.all()
     
-    event_uuids = [e.uuid for e in all_events]
-    assert event1.uuid in event_uuids
-    assert event2.uuid in event_uuids
+    event_ids = [e.id for e in all_events]
+    assert event1.id in event_ids
+    assert event2.id in event_ids
 
 
 @pytest.mark.asyncio
@@ -170,10 +170,10 @@ async def test_search_query(event_repo, test_user, test_date, test_date_tomorrow
     
     event1 = Event(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Event Today",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-1",
         platform="testing",
         status="confirmed",
@@ -181,10 +181,10 @@ async def test_search_query(event_repo, test_user, test_date, test_date_tomorrow
     )
     event2 = Event(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Event Tomorrow",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-2",
         platform="testing",
         status="confirmed",
@@ -211,10 +211,10 @@ async def test_delete(event_repo, test_user, test_date):
     ).astimezone(UTC)
     event = Event(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Event to Delete",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -227,7 +227,7 @@ async def test_delete(event_repo, test_user, test_date):
     
     # Should not be found
     with pytest.raises(exceptions.NotFoundError):
-        await event_repo.get(event.uuid)
+        await event_repo.get(event.id)
 
 
 @pytest.mark.asyncio
@@ -251,10 +251,10 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
     
     event1 = Event(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Event 1",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-1",
         platform="testing",
         status="confirmed",
@@ -262,10 +262,10 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
     )
     event2 = Event(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Event 2",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-2",
         platform="testing",
         status="confirmed",
@@ -273,10 +273,10 @@ async def test_delete_many(event_repo, test_user, test_date, test_date_tomorrow)
     )
     event3 = Event(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Event 3",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id-3",
         platform="testing",
         status="confirmed",
@@ -311,10 +311,10 @@ async def test_user_isolation(event_repo, test_user, create_test_user, test_date
     # Create event for test_user
     event = Event(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="User1 Event",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -324,13 +324,13 @@ async def test_user_isolation(event_repo, test_user, create_test_user, test_date
     
     # Create another user
     user2 = await create_test_user()
-    event_repo2 = EventRepository(user_uuid=user2.uuid)
+    event_repo2 = EventRepository(user_id=user2.id)
     
     # User2 should not see user1's event
     with pytest.raises(exceptions.NotFoundError):
-        await event_repo2.get(event.uuid)
+        await event_repo2.get(event.id)
     
     # User1 should still see their event
-    result = await event_repo.get(event.uuid)
-    assert result.user_uuid == test_user.uuid
+    result = await event_repo.get(event.id)
+    assert result.user_id == test_user.id
 

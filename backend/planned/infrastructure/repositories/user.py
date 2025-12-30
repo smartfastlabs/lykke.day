@@ -37,7 +37,7 @@ class UserRepository(BaseRepository[User, BaseQuery]):
     def entity_to_row(user: User) -> dict[str, Any]:
         """Convert a User entity to a database row dict."""
         row: dict[str, Any] = {
-            "uuid": user.uuid,
+            "id": user.id,
             "email": user.email,
             "phone_number": user.phone_number,
             "password_hash": user.password_hash,
@@ -65,7 +65,7 @@ class UserRepository(BaseRepository[User, BaseQuery]):
         """Convert a database row dict to a User entity."""
         data = dict(row)
 
-        # The users table uses 'uuid' as the primary key column name
+        # The users table uses 'id' as the primary key column name
         # No conversion needed - it already matches the entity field name
 
         # Handle settings - if stored as JSONB, deserialize it

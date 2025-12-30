@@ -36,10 +36,10 @@ async def test_event(test_user, test_date):
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
     return objects.Event(
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Test Event",
         frequency="ONCE",
-        calendar_uuid=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-id",
         platform="testing",
         status="status",

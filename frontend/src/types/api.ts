@@ -51,7 +51,7 @@ export type TaskTag =
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface Action {
-  uuid?: string;
+  id?: string;
   type: ActionType;
   data?: {
     [k: string]: unknown;
@@ -59,7 +59,7 @@ export interface Action {
   created_at?: string;
 }
 export interface Alarm {
-  uuid?: string;
+  id?: string;
   name: string;
   time: string;
   type: AlarmType;
@@ -67,8 +67,8 @@ export interface Alarm {
   triggered_at?: string | null;
 }
 export interface AuthToken {
-  uuid?: string;
-  user_uuid: string;
+  id?: string;
+  user_id: string;
   platform: string;
   token: string;
   refresh_token?: string | null;
@@ -80,7 +80,7 @@ export interface AuthToken {
   created_at?: string;
 }
 export interface BaseConfigObject {
-  uuid?: string;
+  id?: string;
 }
 /**
  * Base class for entities that have a date associated with them.
@@ -89,7 +89,7 @@ export interface BaseConfigObject {
  * or implement _get_datetime() and provide a timezone to convert to date.
  */
 export interface BaseDateObject {
-  uuid?: string;
+  id?: string;
   /**
    * Get the date for this entity.
    *
@@ -99,23 +99,23 @@ export interface BaseDateObject {
   date: string;
 }
 export interface BaseEntityObject {
-  uuid?: string;
+  id?: string;
 }
 export interface BaseObject {}
 export interface Calendar {
-  uuid?: string;
-  user_uuid: string;
+  id?: string;
+  user_id: string;
   name: string;
-  auth_token_uuid: string;
+  auth_token_id: string;
   platform_id: string;
   platform: string;
   last_sync_at?: string | null;
 }
 export interface Day {
-  uuid?: string;
-  user_uuid: string;
+  id?: string;
+  user_id: string;
   date: string;
-  template_uuid: string;
+  template_id: string;
   tags?: DayTag[];
   alarm?: Alarm | null;
   status?: DayStatus;
@@ -128,10 +128,10 @@ export interface DayContext {
   messages?: Message[];
 }
 export interface Event {
-  uuid?: string;
-  user_uuid: string;
+  id?: string;
+  user_id: string;
   name: string;
-  calendar_uuid: string;
+  calendar_id: string;
   platform_id: string;
   platform: string;
   status: string;
@@ -148,15 +148,15 @@ export interface Event {
   date: string;
 }
 export interface Person {
-  uuid?: string;
+  id?: string;
   name?: string | null;
   email?: string | null;
   phone_number?: string | null;
   relationship?: string | null;
 }
 export interface Task {
-  uuid?: string;
-  user_uuid: string;
+  id?: string;
+  user_id: string;
   scheduled_date: string;
   name: string;
   status: TaskStatus;
@@ -165,7 +165,7 @@ export interface Task {
   frequency: TaskFrequency;
   completed_at?: string | null;
   schedule?: TaskSchedule | null;
-  routine_uuid?: string | null;
+  routine_id?: string | null;
   tags?: TaskTag[];
   actions?: Action[];
   /**
@@ -177,8 +177,8 @@ export interface Task {
   date: string;
 }
 export interface TaskDefinition {
-  uuid?: string;
-  user_uuid: string;
+  id?: string;
+  user_id: string;
   name: string;
   description: string;
   type: TaskType;
@@ -190,8 +190,8 @@ export interface TaskSchedule {
   timing_type: TimingType;
 }
 export interface Message {
-  uuid?: string;
-  user_uuid: string;
+  id?: string;
+  user_id: string;
   author: "system" | "agent" | "user";
   sent_at: string;
   content: string;
@@ -205,21 +205,21 @@ export interface Message {
   date: string;
 }
 export interface DayTemplate {
-  uuid?: string;
-  user_uuid: string;
+  id?: string;
+  user_id: string;
   slug: string;
   tasks?: string[];
   alarm?: Alarm | null;
   icon?: string | null;
 }
 export interface NotificationAction {
-  uuid?: string;
+  id?: string;
   action: string;
   title: string;
   icon?: string | null;
 }
 export interface NotificationPayload {
-  uuid?: string;
+  id?: string;
   title: string;
   body: string;
   icon?: string | null;
@@ -231,8 +231,8 @@ export interface NotificationPayload {
   } | null;
 }
 export interface PushSubscription {
-  uuid?: string;
-  user_uuid: string;
+  id?: string;
+  user_id: string;
   device_name?: string | null;
   endpoint: string;
   p256dh: string;
@@ -240,8 +240,8 @@ export interface PushSubscription {
   createdAt?: string;
 }
 export interface Routine {
-  uuid?: string;
-  user_uuid: string;
+  id?: string;
+  user_id: string;
   name: string;
   category: TaskCategory;
   routine_schedule: RoutineSchedule;
@@ -253,12 +253,12 @@ export interface RoutineSchedule {
   weekdays?: DayOfWeek[] | null;
 }
 export interface RoutineTask {
-  task_definition_uuid: string;
+  task_definition_id: string;
   name?: string | null;
   schedule?: TaskSchedule | null;
 }
 export interface User {
-  uuid?: string;
+  id?: string;
   email: string;
   phone_number?: string | null;
   password_hash: string;

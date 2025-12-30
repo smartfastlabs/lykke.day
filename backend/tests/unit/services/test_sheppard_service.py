@@ -33,15 +33,15 @@ async def test_build_notification_payload_single_task(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test _build_notification_payload for a single task."""
     date = datetime.date(2024, 1, 1)
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -56,12 +56,12 @@ async def test_build_notification_payload_single_task(
 
     task = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Test Task",
         status=TaskStatus.READY,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-1",
             name="Task Def",
             description="Test task definition",
@@ -90,7 +90,7 @@ async def test_build_notification_payload_single_task(
     assert payload.title == "Test Task"
     assert "Test Task" in payload.body
     assert len(payload.data["tasks"]) == 1
-    assert payload.data["tasks"][0]["uuid"] == task.uuid
+    assert payload.data["tasks"][0]["id"] == task.id
 
 
 @pytest.mark.asyncio
@@ -104,16 +104,16 @@ async def test_build_notification_payload_multiple_tasks(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test _build_notification_payload for multiple tasks."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -128,12 +128,12 @@ async def test_build_notification_payload_multiple_tasks(
 
     task1 = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Task 1",
         status=TaskStatus.READY,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-1",
             name="Task Def",
             description="Test task definition",
@@ -145,12 +145,12 @@ async def test_build_notification_payload_multiple_tasks(
     )
     task2 = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Task 2",
         status=TaskStatus.READY,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-2",
             name="Task Def",
             description="Test task definition",
@@ -191,17 +191,17 @@ async def test_build_event_notification_payload(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
-    test_user_uuid,
+    test_user_id,
     test_datetime_noon,
 ):
     """Test _build_event_notification_payload."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -216,10 +216,10 @@ async def test_build_event_notification_payload(
 
     event = Event(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
+        calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-1",
         platform="test",
         status="confirmed",
@@ -245,7 +245,7 @@ async def test_build_event_notification_payload(
     assert payload.title == "Test Event"
     assert "starting soon" in payload.body
     assert len(payload.data["events"]) == 1
-    assert payload.data["events"][0]["uuid"] == event.uuid
+    assert payload.data["events"][0]["id"] == event.id
 
 
 @pytest.mark.asyncio
@@ -259,16 +259,16 @@ async def test_notify_for_tasks(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test _notify_for_tasks sends notifications."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -283,12 +283,12 @@ async def test_notify_for_tasks(
 
     task = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Test Task",
         status=TaskStatus.READY,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-1",
             name="Task Def",
             description="Test task definition",
@@ -301,7 +301,7 @@ async def test_notify_for_tasks(
 
     subscription = PushSubscription(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         endpoint="https://example.com/push",
         p256dh="key",
         auth="auth",
@@ -340,16 +340,16 @@ async def test_notify_for_tasks_empty_list(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test _notify_for_tasks handles empty task list."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -390,16 +390,16 @@ async def test_stop_sets_mode_to_stopping(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test stop sets mode to stopping."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -443,16 +443,16 @@ async def test_is_running_property(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test is_running property returns correct value."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -501,15 +501,15 @@ async def test_render_prompt(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test _render_prompt renders template with context."""
     date = datetime.date(2024, 1, 1)
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -560,15 +560,15 @@ async def test_morning_summary_prompt(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test morning_summary_prompt renders morning summary template."""
     date = datetime.date(2024, 1, 1)
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -614,15 +614,15 @@ async def test_evening_summary_prompt(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test evening_summary_prompt renders evening summary template."""
     date = datetime.date(2024, 1, 1)
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -668,16 +668,16 @@ async def test_notify_for_events(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
-    test_user_uuid,
+    test_user_id,
     test_datetime_noon,
 ):
     """Test _notify_for_events sends notifications for events."""
     date = datetime.date(2024, 1, 1)
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -692,10 +692,10 @@ async def test_notify_for_events(
 
     event = Event(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
+        calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-1",
         platform="test",
         status="confirmed",
@@ -705,7 +705,7 @@ async def test_notify_for_events(
 
     subscription = PushSubscription(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         endpoint="https://example.com/push",
         p256dh="key",
         auth="auth",
@@ -744,15 +744,15 @@ async def test_notify_for_events_empty_list(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test _notify_for_events handles empty event list."""
     date = datetime.date(2024, 1, 1)
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 

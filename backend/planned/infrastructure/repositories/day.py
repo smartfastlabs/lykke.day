@@ -13,18 +13,18 @@ class DayRepository(UserScopedBaseRepository[Day, BaseQuery]):
     table = days_tbl
     QueryClass = BaseQuery
 
-    def __init__(self, user_uuid: UUID) -> None:
+    def __init__(self, user_id: UUID) -> None:
         """Initialize DayRepository with user scoping."""
-        super().__init__(user_uuid=user_uuid)
+        super().__init__(user_id=user_id)
 
     @staticmethod
     def entity_to_row(day: Day) -> dict[str, Any]:
         """Convert a Day entity to a database row dict."""
         row: dict[str, Any] = {
-            "uuid": day.uuid,
-            "user_uuid": day.user_uuid,
+            "id": day.id,
+            "user_id": day.user_id,
             "date": day.date,
-            "template_uuid": day.template_uuid,
+            "template_id": day.template_id,
             "status": day.status.value,
             "scheduled_at": day.scheduled_at,
         }

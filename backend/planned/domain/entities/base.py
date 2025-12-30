@@ -18,7 +18,7 @@ class BaseObject(pydantic.BaseModel):
 
 
 class BaseEntityObject(BaseObject):
-    uuid: UUID = pydantic.Field(default_factory=uuid4)
+    id: UUID = pydantic.Field(default_factory=uuid4)
 
 
 class BaseConfigObject(BaseEntityObject):

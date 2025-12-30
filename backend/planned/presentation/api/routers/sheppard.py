@@ -5,7 +5,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from loguru import logger
-
 from planned.application.services import SheppardManager
 from planned.core.exceptions import exceptions
 from planned.domain.value_objects.repository_event import RepositoryEvent
@@ -55,10 +54,10 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
     # Get user from session
     session = getattr(websocket, "session", {})
-    user_uuid_str = session.get("user_uuid")
+    user_id_str = session.get("user_id")
 
     try:
-        user_uuid = UUID(user_uuid_str)
+        user_id = UUID(user_id_str)
     except (ValueError, TypeError):
         await websocket.close(code=1008, reason="Invalid session data")
         return
@@ -66,7 +65,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     # Get user to verify it exists
     user_repo = UserRepository()
     try:
-        await user_repo.get(user_uuid)
+        await user_repo.get(user_id)
     except exceptions.NotFoundError:
         await websocket.close(code=1008, reason="User not found")
         return
@@ -82,13 +81,13 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
     # Ensure sheppard service exists for the user (starting it if necessary)
     try:
-        await manager.ensure_service_for_user(user_uuid)
+        await manager.ensure_service_for_user(user_id)
     except RuntimeError as e:
-        logger.error(f"Failed to ensure SheppardService for user {user_uuid}: {e}")
+        logger.error(f"Failed to ensure SheppardService for user {user_id}: {e}")
         await websocket.close(code=1011, reason="Service unavailable")
         return
 
-    logger.info(f"WebSocket connected for user {user_uuid}")
+    logger.info(f"WebSocket connected for user {user_id}")
 
     # Queue to collect events from all repositories
     event_queue: asyncio.Queue[RepositoryEvent[Any]] = asyncio.Queue()
@@ -112,15 +111,15 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         _sender: object | None = None, *, event: RepositoryEvent[Any]
     ) -> None:
         # Filter events to only those for the logged-in user
-        # Check if the event value has a user_uuid attribute
+        # Check if the event value has a user_id attribute
         event_value = event.value
-        if hasattr(event_value, "user_uuid"):
-            event_user_uuid = (
-                UUID(event_value.user_uuid)
-                if isinstance(event_value.user_uuid, str)
-                else event_value.user_uuid
+        if hasattr(event_value, "user_id"):
+            event_user_id = (
+                UUID(event_value.user_id)
+                if isinstance(event_value.user_id, str)
+                else event_value.user_id
             )
-            if event_user_uuid == user_uuid:
+            if event_user_id == user_id:
                 await event_queue.put(event)
 
     # Subscribe to all repository signals

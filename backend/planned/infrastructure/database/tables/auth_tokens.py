@@ -11,8 +11,8 @@ class AuthToken(Base):
 
     __tablename__ = "auth_tokens"
 
-    uuid = Column(PGUUID, primary_key=True)
-    user_uuid = Column(PGUUID, nullable=False)
+    id = Column(PGUUID, primary_key=True)
+    user_id = Column(PGUUID, nullable=False)
     platform = Column(String, nullable=False)
     token = Column(Text, nullable=False)
     refresh_token = Column(Text)
@@ -23,5 +23,5 @@ class AuthToken(Base):
     expires_at = Column(DateTime)
     created_at = Column(DateTime, nullable=False)
 
-    __table_args__ = (Index("idx_auth_tokens_user_uuid", "user_uuid"),)
+    __table_args__ = (Index("idx_auth_tokens_user_id", "user_id"),)
 

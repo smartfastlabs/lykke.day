@@ -48,7 +48,7 @@ class DayTemplateQuery(BaseQuery):
 class AuthTokenQuery(BaseQuery):
     """Query class for AuthToken entities."""
 
-    user_uuid: UUID | None = None
+    user_id: UUID | None = None
     platform: str | None = None
 
 

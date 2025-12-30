@@ -11,13 +11,13 @@ class Calendar(Base):
 
     __tablename__ = "calendars"
 
-    uuid = Column(PGUUID, primary_key=True)
-    user_uuid = Column(PGUUID, nullable=False)
+    id = Column(PGUUID, primary_key=True)
+    user_id = Column(PGUUID, nullable=False)
     name = Column(String, nullable=False)
-    auth_token_uuid = Column(PGUUID, nullable=False)
+    auth_token_id = Column(PGUUID, nullable=False)
     platform_id = Column(String, nullable=False)
     platform = Column(String, nullable=False)
     last_sync_at = Column(DateTime)
 
-    __table_args__ = (Index("idx_calendars_user_uuid", "user_uuid"),)
+    __table_args__ = (Index("idx_calendars_user_id", "user_id"),)
 

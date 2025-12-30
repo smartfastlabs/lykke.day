@@ -15,9 +15,9 @@ class MessageRepository(UserScopedBaseRepository[Message, DateQuery]):
     table = messages_tbl
     QueryClass = DateQuery
 
-    def __init__(self, user_uuid: UUID) -> None:
+    def __init__(self, user_id: UUID) -> None:
         """Initialize MessageRepository with user scoping."""
-        super().__init__(user_uuid=user_uuid)
+        super().__init__(user_id=user_id)
 
     def build_query(self, query: DateQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
@@ -33,8 +33,8 @@ class MessageRepository(UserScopedBaseRepository[Message, DateQuery]):
     def entity_to_row(message: Message) -> dict[str, Any]:
         """Convert a Message entity to a database row dict."""
         row: dict[str, Any] = {
-            "uuid": message.uuid,
-            "user_uuid": message.user_uuid,
+            "id": message.id,
+            "user_id": message.user_id,
             "date": message.sent_at.date(),  # Extract date from sent_at for querying
             "author": message.author,
             "sent_at": message.sent_at,

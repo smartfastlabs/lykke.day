@@ -38,7 +38,7 @@ HasActionsType = TypeVar("HasActionsType", bound=Actionable)
 
 
 class PlanningService(BaseService):
-    user_uuid: UUID
+    user_id: UUID
     user_repo: UserRepositoryProtocol
     day_repo: DayRepositoryProtocol
     day_template_repo: DayTemplateRepositoryProtocol
@@ -51,7 +51,7 @@ class PlanningService(BaseService):
 
     def __init__(
         self,
-        user_uuid: UUID,
+        user_id: UUID,
         user_repo: UserRepositoryProtocol,
         day_repo: DayRepositoryProtocol,
         day_template_repo: DayTemplateRepositoryProtocol,
@@ -62,7 +62,7 @@ class PlanningService(BaseService):
         task_repo: TaskRepositoryProtocol,
         day_service: DayService | None = None,
     ) -> None:
-        self.user_uuid = user_uuid
+        self.user_id = user_id
         self.user_repo = user_repo
         self.day_repo = day_repo
         self.day_template_repo = day_template_repo
@@ -80,13 +80,13 @@ class PlanningService(BaseService):
             if is_routine_active(routine.routine_schedule, date):
                 for routine_task in routine.tasks:
                     task_def = await self.task_definition_repo.get(
-                        routine_task.task_definition_uuid,
+                        routine_task.task_definition_id,
                     )
                     task = objects.Task(
-                        user_uuid=self.user_uuid,
+                        user_id=self.user_id,
                         name=routine_task.name or f"ROUTINE: {routine.name}",
                         frequency=routine.routine_schedule.frequency,
-                        routine_uuid=routine.uuid,
+                        routine_id=routine.id,
                         task_definition=task_def,
                         schedule=routine_task.schedule,
                         scheduled_date=date,
@@ -100,20 +100,20 @@ class PlanningService(BaseService):
     async def preview(
         self,
         date: datetime.date,
-        template_uuid: UUID | None = None,
+        template_id: UUID | None = None,
     ) -> DayContext:
-        if template_uuid is None:
+        if template_id is None:
             with suppress(exceptions.NotFoundError):
-                day_uuid = objects.Day.uuid_from_date_and_user(date, self.user_uuid)
-                existing_day = await self.day_repo.get(day_uuid)
-                template_uuid = existing_day.template_uuid
+                day_id = objects.Day.id_from_date_and_user(date, self.user_id)
+                existing_day = await self.day_repo.get(day_id)
+                template_id = existing_day.template_id
 
-        # template_uuid will be None here, so base_day will look up by slug from template_defaults
+        # template_id will be None here, so base_day will look up by slug from template_defaults
         result: DayContext = DayContext(
             day=await DayService.base_day(
                 date,
-                user_uuid=self.user_uuid,
-                template_uuid=template_uuid,
+                user_id=self.user_id,
+                template_id=template_id,
                 day_template_repo=self.day_template_repo,
                 user_repo=self.user_repo,
             ),
@@ -131,14 +131,14 @@ class PlanningService(BaseService):
         async with self.transaction():
             # Get all tasks for the date, filter for routine tasks, then delete them
             tasks = await self.task_repo.search_query(DateQuery(date=date))
-            routine_tasks = [t for t in tasks if t.routine_uuid is not None]
+            routine_tasks = [t for t in tasks if t.routine_id is not None]
             if routine_tasks:
                 await asyncio.gather(
                     *[self.task_repo.delete(task) for task in routine_tasks]
                 )
             day = await DayService.get_or_create(
                 date,
-                user_uuid=self.user_uuid,
+                user_id=self.user_id,
                 day_repo=self.day_repo,
                 day_template_repo=self.day_template_repo,
                 user_repo=self.user_repo,
@@ -149,14 +149,14 @@ class PlanningService(BaseService):
     async def schedule(
         self,
         date: datetime.date,
-        template_uuid: UUID | None = None,
+        template_id: UUID | None = None,
     ) -> objects.DayContext:
         async with self.transaction():
             await self.task_repo.delete_many(DateQuery(date=date))
 
             result: objects.DayContext = await self.preview(
                 date,
-                template_uuid=template_uuid,
+                template_id=template_id,
             )
             result.day.status = objects.DayStatus.SCHEDULED
             await asyncio.gather(

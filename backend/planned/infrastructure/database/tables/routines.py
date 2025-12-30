@@ -11,13 +11,13 @@ class Routine(Base):
 
     __tablename__ = "routines"
 
-    uuid = Column(PGUUID, primary_key=True)
-    user_uuid = Column(PGUUID, nullable=False)
+    id = Column(PGUUID, primary_key=True)
+    user_id = Column(PGUUID, nullable=False)
     name = Column(String, nullable=False)
     category = Column(String, nullable=False)  # TaskCategory enum as string
     routine_schedule = Column(JSONB, nullable=False)  # RoutineSchedule
     description = Column(String, nullable=False)
     tasks = Column(JSONB)  # list[RoutineTask]
 
-    __table_args__ = (Index("idx_routines_user_uuid", "user_uuid"),)
+    __table_args__ = (Index("idx_routines_user_id", "user_id"),)
 

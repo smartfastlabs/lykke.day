@@ -25,24 +25,24 @@ class AuthTokenRepository(BaseRepository[AuthToken, AuthTokenQuery]):
         """Build a SQLAlchemy Core select statement from a query object."""
         stmt = super().build_query(query)
 
-        if query.user_uuid is not None:
-            stmt = stmt.where(self.table.c.user_uuid == query.user_uuid)
+        if query.user_id is not None:
+            stmt = stmt.where(self.table.c.user_id == query.user_id)
 
         if query.platform is not None:
             stmt = stmt.where(self.table.c.platform == query.platform)
 
         return stmt
 
-    async def get_by_user(self, user_uuid: UUID) -> list[AuthToken]:
+    async def get_by_user(self, user_id: UUID) -> list[AuthToken]:
         """Get all auth tokens for a user."""
-        return await self.search_query(AuthTokenQuery(user_uuid=user_uuid))
+        return await self.search_query(AuthTokenQuery(user_id=user_id))
 
     @staticmethod
     def entity_to_row(auth_token: AuthToken) -> dict[str, Any]:
         """Convert an AuthToken entity to a database row dict."""
         row: dict[str, Any] = {
-            "uuid": auth_token.uuid,
-            "user_uuid": auth_token.user_uuid,
+            "id": auth_token.id,
+            "user_id": auth_token.user_id,
             "platform": auth_token.platform,
             "token": auth_token.token,
             "refresh_token": auth_token.refresh_token,

@@ -15,9 +15,9 @@ class EventRepository(UserScopedBaseRepository[Event, DateQuery]):
     table = events_tbl
     QueryClass = DateQuery
 
-    def __init__(self, user_uuid: UUID) -> None:
+    def __init__(self, user_id: UUID) -> None:
         """Initialize EventRepository with user scoping."""
-        super().__init__(user_uuid=user_uuid)
+        super().__init__(user_id=user_id)
 
     def build_query(self, query: DateQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
@@ -33,11 +33,11 @@ class EventRepository(UserScopedBaseRepository[Event, DateQuery]):
     def entity_to_row(event: Event) -> dict[str, Any]:
         """Convert an Event entity to a database row dict."""
         row: dict[str, Any] = {
-            "uuid": event.uuid,
-            "user_uuid": event.user_uuid,
+            "id": event.id,
+            "user_id": event.user_id,
             "date": event.starts_at.date(),  # Extract date from starts_at for querying
             "name": event.name,
-            "calendar_uuid": event.calendar_uuid,
+            "calendar_id": event.calendar_id,
             "platform_id": event.platform_id,
             "platform": event.platform,
             "status": event.status,

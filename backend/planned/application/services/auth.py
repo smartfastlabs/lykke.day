@@ -76,11 +76,11 @@ class AuthService(BaseService):
         # Save to database
         return await self.user_repo.put(user)
 
-    async def get_user(self, user_uuid: UUID) -> User:
-        """Get user by UUID.
+    async def get_user(self, user_id: UUID) -> User:
+        """Get user by ID.
 
         Args:
-            user_uuid: User's UUID
+            user_id: User's ID
 
         Returns:
             User entity
@@ -88,7 +88,7 @@ class AuthService(BaseService):
         Raises:
             NotFoundError: If user doesn't exist
         """
-        return await self.user_repo.get(user_uuid)
+        return await self.user_repo.get(user_id)
 
     async def authenticate_user(self, email: str, password: str) -> User | None:
         """Authenticate user by email and password.

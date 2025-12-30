@@ -16,9 +16,9 @@ async def test_get(user_repo, create_test_user):
     user = await create_test_user()
 
     # Get it back
-    result = await user_repo.get(user.uuid)
+    result = await user_repo.get(user.id)
 
-    assert result.uuid == user.uuid
+    assert result.id == user.id
     assert result.email == user.email
     assert result.password_hash == user.password_hash
 
@@ -42,7 +42,7 @@ async def test_put(user_repo):
 
     result = await user_repo.put(user)
 
-    assert result.uuid == user.uuid
+    assert result.id == user.id
     assert result.email == user.email
     assert result.password_hash == user.password_hash
 
@@ -59,7 +59,7 @@ async def test_put_update(user_repo, create_test_user):
     assert result.email == user.email
 
     # Verify it was saved
-    retrieved = await user_repo.get(user.uuid)
+    retrieved = await user_repo.get(user.id)
     assert retrieved.email == user.email
 
 
@@ -72,7 +72,7 @@ async def test_get_by_email(user_repo, create_test_user):
     result = await user_repo.get_by_email(email)
 
     assert result is not None
-    assert result.uuid == user.uuid
+    assert result.id == user.id
     assert result.email == email
 
 
@@ -94,9 +94,9 @@ async def test_all(user_repo, create_test_user):
     all_users = await user_repo.all()
 
     # Should have at least our two users
-    user_uuids = [u.uuid for u in all_users]
-    assert user1.uuid in user_uuids
-    assert user2.uuid in user_uuids
+    user_ids = [u.id for u in all_users]
+    assert user1.id in user_ids
+    assert user2.id in user_ids
 
 
 @pytest.mark.asyncio
@@ -106,14 +106,14 @@ async def test_user_isolation(user_repo, create_test_user):
     user2 = await create_test_user(email=f"user2-{uuid4()}@example.com")
 
     # Each user should be retrievable independently
-    retrieved1 = await user_repo.get(user1.uuid)
-    retrieved2 = await user_repo.get(user2.uuid)
+    retrieved1 = await user_repo.get(user1.id)
+    retrieved2 = await user_repo.get(user2.id)
 
-    assert retrieved1.uuid == user1.uuid
+    assert retrieved1.id == user1.id
     assert retrieved1.email == user1.email
-    assert retrieved2.uuid == user2.uuid
+    assert retrieved2.id == user2.id
     assert retrieved2.email == user2.email
-    assert retrieved1.uuid != retrieved2.uuid
+    assert retrieved1.id != retrieved2.id
 
 
 @pytest.mark.asyncio
@@ -142,5 +142,5 @@ async def test_user_with_custom_settings(user_repo):
     assert result.settings.template_defaults == ["custom"] * 7
 
     # Verify persistence
-    retrieved = await user_repo.get(user.uuid)
+    retrieved = await user_repo.get(user.id)
     assert retrieved.settings.template_defaults == ["custom"] * 7

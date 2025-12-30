@@ -51,7 +51,7 @@ check:
 	make typecheck
 	make test
 
-test-target: docker-up
+test-target:
 	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test \
 	ENV_FILE=.env.test \
 	poetry run pytest $(if $(findstring /,$(TARGET)),$(TARGET),tests -k '$(TARGET)') --vcr-record=once -vv -s

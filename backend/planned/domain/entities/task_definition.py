@@ -5,7 +5,7 @@ from .base import BaseEntityObject
 
 
 class TaskDefinition(BaseEntityObject):
-    user_uuid: UUID
+    user_id: UUID
     name: str
     description: str
     type: TaskType

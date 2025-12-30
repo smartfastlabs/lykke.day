@@ -7,10 +7,10 @@ from planned.domain.entities import PushSubscription
 
 
 @pytest.mark.asyncio
-async def test_send_notification(mock_web_push_gateway, test_user_uuid):
+async def test_send_notification(mock_web_push_gateway, test_user_id):
     """Test sending a push notification."""
     subscription = PushSubscription(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         device_name="Test Device",
         endpoint="https://example.com",
         p256dh="p256dh",

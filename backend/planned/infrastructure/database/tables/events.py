@@ -11,11 +11,11 @@ class Event(Base):
 
     __tablename__ = "events"
 
-    uuid = Column(PGUUID, primary_key=True)
-    user_uuid = Column(PGUUID, nullable=False)
+    id = Column(PGUUID, primary_key=True)
+    user_id = Column(PGUUID, nullable=False)
     date = Column(Date, nullable=False)  # extracted from starts_at for querying
     name = Column(String, nullable=False)
-    calendar_uuid = Column(PGUUID, nullable=False)
+    calendar_id = Column(PGUUID, nullable=False)
     platform_id = Column(String, nullable=False)
     platform = Column(String, nullable=False)
     status = Column(String, nullable=False)
@@ -29,7 +29,7 @@ class Event(Base):
 
     __table_args__ = (
         Index("idx_events_date", "date"),
-        Index("idx_events_calendar_uuid", "calendar_uuid"),
-        Index("idx_events_user_uuid", "user_uuid"),
+        Index("idx_events_calendar_id", "calendar_id"),
+        Index("idx_events_user_id", "user_id"),
     )
 

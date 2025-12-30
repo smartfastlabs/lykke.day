@@ -22,6 +22,6 @@ class RoutineSchedule(BaseModel):
 
 
 class RoutineTask(BaseModel):
-    task_definition_uuid: UUID
+    task_definition_id: UUID
     name: str | None = None
     schedule: TaskSchedule | None = None

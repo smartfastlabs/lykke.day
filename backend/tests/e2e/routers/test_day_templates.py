@@ -33,16 +33,16 @@ async def test_get_day_template(authenticated_client):
     list_response = client.get("/day-templates/")
     assert list_response.status_code == 200
     templates = list_response.json()["items"]
-    template_uuid = templates[0]["uuid"]
+    template_id = templates[0]["id"]
 
     # Get the specific template
-    response = client.get(f"/day-templates/{template_uuid}")
+    response = client.get(f"/day-templates/{template_id}")
 
     assert response.status_code == 200
     data = response.json()
-    assert data["uuid"] == template_uuid
+    assert data["id"] == template_id
     assert "slug" in data
-    assert "user_uuid" in data
+    assert "user_id" in data
 
 
 @pytest.mark.asyncio
@@ -50,8 +50,8 @@ async def test_get_day_template_not_found(authenticated_client):
     """Test getting a non-existent day template returns 404."""
     client, user = await authenticated_client()
 
-    fake_uuid = uuid4()
-    response = client.get(f"/day-templates/{fake_uuid}")
+    fake_id = uuid4()
+    response = client.get(f"/day-templates/{fake_id}")
 
     assert response.status_code == 404
 
@@ -62,7 +62,7 @@ async def test_create_day_template(authenticated_client):
     client, user = await authenticated_client()
 
     template_data = {
-        "user_uuid": str(user.uuid),
+        "user_id": str(user.id),
         "slug": "test-template",
         "tasks": ["task1", "task2"],
         "alarm": {
@@ -77,7 +77,7 @@ async def test_create_day_template(authenticated_client):
     assert response.status_code == 200
     data = response.json()
     assert data["slug"] == "test-template"
-    assert data["user_uuid"] == str(user.uuid)
+    assert data["user_id"] == str(user.id)
     assert len(data["tasks"]) == 2
     assert data["alarm"]["name"] == "Test Alarm"
 
@@ -89,26 +89,26 @@ async def test_update_day_template(authenticated_client):
 
     # First, create a template
     template_data = {
-        "user_uuid": str(user.uuid),
+        "user_id": str(user.id),
         "slug": "update-test",
         "tasks": ["task1"],
     }
     create_response = client.post("/day-templates/", json=template_data)
     assert create_response.status_code == 200
-    template_uuid = create_response.json()["uuid"]
+    template_id = create_response.json()["id"]
 
     # Update the template
     update_data = {
-        "user_uuid": str(user.uuid),
+        "user_id": str(user.id),
         "slug": "update-test",
         "tasks": ["task1", "task2", "task3"],
         "icon": "test-icon",
     }
-    response = client.put(f"/day-templates/{template_uuid}", json=update_data)
+    response = client.put(f"/day-templates/{template_id}", json=update_data)
 
     assert response.status_code == 200
     data = response.json()
-    assert data["uuid"] == template_uuid
+    assert data["id"] == template_id
     assert len(data["tasks"]) == 3
     assert data["icon"] == "test-icon"
 
@@ -118,13 +118,13 @@ async def test_update_day_template_not_found(authenticated_client):
     """Test updating a non-existent day template returns 404."""
     client, user = await authenticated_client()
 
-    fake_uuid = uuid4()
+    fake_id = uuid4()
     update_data = {
-        "user_uuid": str(user.uuid),
+        "user_id": str(user.id),
         "slug": "does-not-exist",
         "tasks": [],
     }
-    response = client.put(f"/day-templates/{fake_uuid}", json=update_data)
+    response = client.put(f"/day-templates/{fake_id}", json=update_data)
 
     assert response.status_code == 404
 
@@ -136,21 +136,21 @@ async def test_delete_day_template(authenticated_client):
 
     # First, create a template
     template_data = {
-        "user_uuid": str(user.uuid),
+        "user_id": str(user.id),
         "slug": "delete-test",
         "tasks": [],
     }
     create_response = client.post("/day-templates/", json=template_data)
     assert create_response.status_code == 200
-    template_uuid = create_response.json()["uuid"]
+    template_id = create_response.json()["id"]
 
     # Delete the template
-    response = client.delete(f"/day-templates/{template_uuid}")
+    response = client.delete(f"/day-templates/{template_id}")
 
     assert response.status_code == 200
 
     # Verify it's gone
-    get_response = client.get(f"/day-templates/{template_uuid}")
+    get_response = client.get(f"/day-templates/{template_id}")
     assert get_response.status_code == 404
 
 
@@ -159,8 +159,8 @@ async def test_delete_day_template_not_found(authenticated_client):
     """Test deleting a non-existent day template returns 404."""
     client, user = await authenticated_client()
 
-    fake_uuid = uuid4()
-    response = client.delete(f"/day-templates/{fake_uuid}")
+    fake_id = uuid4()
+    response = client.delete(f"/day-templates/{fake_id}")
 
     assert response.status_code == 404
 
@@ -173,7 +173,7 @@ async def test_list_day_templates_pagination(authenticated_client):
     # Create multiple templates
     for i in range(3):
         template_data = {
-            "user_uuid": str(user.uuid),
+            "user_id": str(user.id),
             "slug": f"pagination-test-{i}",
             "tasks": [],
         }

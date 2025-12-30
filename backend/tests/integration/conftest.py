@@ -65,11 +65,11 @@ async def test_user(create_test_user):
 
 async def _setup_day_templates_for_user(user: User) -> None:
     """Helper function to create default day templates for a user."""
-    repo = DayTemplateRepository(user_uuid=user.uuid)
+    repo = DayTemplateRepository(user_id=user.id)
 
-    # Create default template (UUID will be auto-generated from slug + user_uuid)
+    # Create default template (UUID will be auto-generated from slug + user_id)
     default_template = DayTemplate(
-        user_uuid=user.uuid,
+        user_id=user.id,
         slug="default",
         tasks=[],
         alarm=Alarm(
@@ -80,9 +80,9 @@ async def _setup_day_templates_for_user(user: User) -> None:
     )
     await repo.put(default_template)
 
-    # Create weekend template (UUID will be auto-generated from slug + user_uuid)
+    # Create weekend template (UUID will be auto-generated from slug + user_id)
     weekend_template = DayTemplate(
-        user_uuid=user.uuid,
+        user_id=user.id,
         slug="weekend",
         tasks=[],
         alarm=Alarm(
@@ -110,31 +110,31 @@ async def user_repo():
 @pytest_asyncio.fixture
 async def day_repo(test_user):
     """DayRepository scoped to test_user."""
-    return DayRepository(user_uuid=test_user.uuid)
+    return DayRepository(user_id=test_user.id)
 
 
 @pytest_asyncio.fixture
 async def day_template_repo(test_user):
     """DayTemplateRepository scoped to test_user."""
-    return DayTemplateRepository(user_uuid=test_user.uuid)
+    return DayTemplateRepository(user_id=test_user.id)
 
 
 @pytest_asyncio.fixture
 async def event_repo(test_user):
     """EventRepository scoped to test_user."""
-    return EventRepository(user_uuid=test_user.uuid)
+    return EventRepository(user_id=test_user.id)
 
 
 @pytest_asyncio.fixture
 async def task_repo(test_user):
     """TaskRepository scoped to test_user."""
-    return TaskRepository(user_uuid=test_user.uuid)
+    return TaskRepository(user_id=test_user.id)
 
 
 @pytest_asyncio.fixture
 async def calendar_repo(test_user):
     """CalendarRepository scoped to test_user."""
-    return CalendarRepository(user_uuid=test_user.uuid)
+    return CalendarRepository(user_id=test_user.id)
 
 
 @pytest_asyncio.fixture
@@ -146,22 +146,22 @@ async def auth_token_repo(test_user):
 @pytest_asyncio.fixture
 async def message_repo(test_user):
     """MessageRepository scoped to test_user."""
-    return MessageRepository(user_uuid=test_user.uuid)
+    return MessageRepository(user_id=test_user.id)
 
 
 @pytest_asyncio.fixture
 async def push_subscription_repo(test_user):
     """PushSubscriptionRepository scoped to test_user."""
-    return PushSubscriptionRepository(user_uuid=test_user.uuid)
+    return PushSubscriptionRepository(user_id=test_user.id)
 
 
 @pytest_asyncio.fixture
 async def routine_repo(test_user):
     """RoutineRepository scoped to test_user."""
-    return RoutineRepository(user_uuid=test_user.uuid)
+    return RoutineRepository(user_id=test_user.id)
 
 
 @pytest_asyncio.fixture
 async def task_definition_repo(test_user):
     """TaskDefinitionRepository scoped to test_user."""
-    return TaskDefinitionRepository(user_uuid=test_user.uuid)
+    return TaskDefinitionRepository(user_id=test_user.id)

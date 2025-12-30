@@ -15,9 +15,9 @@ class TaskRepository(UserScopedBaseRepository[Task, DateQuery]):
     table = tasks_tbl
     QueryClass = DateQuery
 
-    def __init__(self, user_uuid: UUID) -> None:
+    def __init__(self, user_id: UUID) -> None:
         """Initialize TaskRepository with user scoping."""
-        super().__init__(user_uuid=user_uuid)
+        super().__init__(user_id=user_id)
 
     def build_query(self, query: DateQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
@@ -33,8 +33,8 @@ class TaskRepository(UserScopedBaseRepository[Task, DateQuery]):
     def entity_to_row(task: Task) -> dict[str, Any]:
         """Convert a Task entity to a database row dict."""
         row: dict[str, Any] = {
-            "uuid": task.uuid,
-            "user_uuid": task.user_uuid,
+            "id": task.id,
+            "user_id": task.user_id,
             "date": task.scheduled_date,  # Extract date from scheduled_date for querying
             "scheduled_date": task.scheduled_date,
             "name": task.name,
@@ -42,7 +42,7 @@ class TaskRepository(UserScopedBaseRepository[Task, DateQuery]):
             "category": task.category.value,
             "frequency": task.frequency.value,
             "completed_at": task.completed_at,
-            "routine_uuid": task.routine_uuid,
+            "routine_id": task.routine_id,
         }
 
         # Handle JSONB fields - task_definition is required, others are optional

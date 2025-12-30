@@ -24,16 +24,16 @@ async def test_get(message_repo, test_user, test_date):
     ).astimezone(UTC)
     message = Message(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         author="system",
         content="Test message",
         sent_at=sent_at,
     )
     await message_repo.put(message)
     
-    result = await message_repo.get(message.uuid)
+    result = await message_repo.get(message.id)
     
-    assert result.uuid == message.uuid
+    assert result.id == message.id
     assert result.content == "Test message"
 
 
@@ -54,7 +54,7 @@ async def test_put(message_repo, test_user, test_date):
     ).astimezone(UTC)
     message = Message(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         author="user",
         content="New message",
         sent_at=sent_at,
@@ -82,14 +82,14 @@ async def test_search_query(message_repo, test_user, test_date, test_date_tomorr
     
     message1 = Message(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         author="system",
         content="Message Today",
         sent_at=sent_at1,
     )
     message2 = Message(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         author="user",
         content="Message Tomorrow",
         sent_at=sent_at2,
@@ -115,7 +115,7 @@ async def test_user_isolation(message_repo, test_user, create_test_user, test_da
     
     message = Message(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         author="system",
         content="User1 Message",
         sent_at=sent_at,
@@ -124,9 +124,9 @@ async def test_user_isolation(message_repo, test_user, create_test_user, test_da
     
     # Create another user
     user2 = await create_test_user()
-    message_repo2 = MessageRepository(user_uuid=user2.uuid)
+    message_repo2 = MessageRepository(user_id=user2.id)
     
     # User2 should not see user1's message
     with pytest.raises(exceptions.NotFoundError):
-        await message_repo2.get(message.uuid)
+        await message_repo2.get(message.id)
 

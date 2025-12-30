@@ -65,7 +65,7 @@ async function fetchJSON(
 
 function putMethod(type: string) {
   return async function (item: any) {
-    const url = item.uuid ? `/api/${type}/${item.uuid}` : `/api/${type}`;
+    const url = item.id ? `/api/${type}/${item.id}` : `/api/${type}`;
     return fetchJSON(url, {
       method: "PUT",
       body: JSON.stringify(item),
@@ -78,7 +78,7 @@ function putMethod(type: string) {
 
 function postMethod(type: string) {
   return async function (item: any) {
-    const url = item.uuid ? `/api/${type}/${item.uuid}` : `/api/${type}`;
+    const url = item.id ? `/api/${type}/${item.id}` : `/api/${type}`;
     return fetchJSON(url, {
       method: "POST",
       body: JSON.stringify(item),
@@ -90,8 +90,8 @@ function postMethod(type: string) {
 }
 
 function deleteMethod(type: string) {
-  return async function (uuid: string) {
-    return fetchJSON(`/api/${type}/${uuid}`, {
+  return async function (id: string) {
+    return fetchJSON(`/api/${type}/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

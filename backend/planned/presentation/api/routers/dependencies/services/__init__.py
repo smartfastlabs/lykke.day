@@ -75,7 +75,7 @@ def get_planning_service(
 ) -> PlanningService:
     """Get a user-scoped instance of PlanningService."""
     return PlanningService(
-        user_uuid=user.uuid,
+        user_id=user.id,
         user_repo=user_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
@@ -99,7 +99,7 @@ async def get_day_service_for_current_date(
     """Get a user-scoped instance of DayService for today's date."""
     return await DayService.for_date(
         get_current_date(),
-        user_uuid=user.uuid,
+        user_id=user.id,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
@@ -132,12 +132,12 @@ async def get_sheppard_service(
             "SheppardManager is not available. The service may not be initialized."
         )
     
-    user_uuid = user.uuid
+    user_id = user.id
     try:
-        service = await manager.ensure_service_for_user(user_uuid)
+        service = await manager.ensure_service_for_user(user_id)
     except RuntimeError as e:
         raise exceptions.ServerError(
-            f"SheppardService is not available for user {user_uuid}: {e}"
+            f"SheppardService is not available for user {user_id}: {e}"
         ) from e
 
     return service

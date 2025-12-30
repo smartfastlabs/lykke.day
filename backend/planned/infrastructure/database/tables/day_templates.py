@@ -11,15 +11,15 @@ class DayTemplate(Base):
 
     __tablename__ = "day_templates"
 
-    uuid = Column(PGUUID, primary_key=True)
-    user_uuid = Column(PGUUID, nullable=False)
+    id = Column(PGUUID, primary_key=True)
+    user_id = Column(PGUUID, nullable=False)
     slug = Column(String, nullable=False)
     tasks = Column(JSONB)  # list[str]
     alarm = Column(JSONB)  # Alarm | None
     icon = Column(String)
 
     __table_args__ = (
-        Index("idx_day_templates_user_uuid", "user_uuid"),
-        Index("idx_day_templates_user_slug", "user_uuid", "slug", unique=True),
+        Index("idx_day_templates_user_id", "user_id"),
+        Index("idx_day_templates_user_slug", "user_id", "slug", unique=True),
     )
 

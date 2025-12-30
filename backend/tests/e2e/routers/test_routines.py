@@ -16,10 +16,10 @@ async def test_list_routines(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a routine via repository (since router is read-only)
-    routine_repo = RoutineRepository(user_uuid=user.uuid)
+    routine_repo = RoutineRepository(user_id=user.id)
     routine = Routine(
         uuid=uuid4(),
-        user_uuid=user.uuid,
+        user_id=user.id,
         name="Test Routine",
         category=TaskCategory.HOUSE,
         description="Test description",
@@ -47,10 +47,10 @@ async def test_get_routine(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a routine via repository
-    routine_repo = RoutineRepository(user_uuid=user.uuid)
+    routine_repo = RoutineRepository(user_id=user.id)
     routine = Routine(
         uuid=uuid4(),
-        user_uuid=user.uuid,
+        user_id=user.id,
         name="Get Test Routine",
         category=TaskCategory.HOUSE,
         description="Test description",
@@ -60,13 +60,13 @@ async def test_get_routine(authenticated_client):
     routine = await routine_repo.put(routine)
 
     # Get the specific routine
-    response = client.get(f"/routines/{routine.uuid}")
+    response = client.get(f"/routines/{routine.id}")
 
     assert response.status_code == 200
     data = response.json()
-    assert data["uuid"] == str(routine.uuid)
+    assert data["id"] == str(routine.id)
     assert data["name"] == "Get Test Routine"
-    assert data["user_uuid"] == str(user.uuid)
+    assert data["user_id"] == str(user.id)
 
 
 @pytest.mark.asyncio
@@ -74,8 +74,8 @@ async def test_get_routine_not_found(authenticated_client):
     """Test getting a non-existent routine returns 404."""
     client, user = await authenticated_client()
 
-    fake_uuid = uuid4()
-    response = client.get(f"/routines/{fake_uuid}")
+    fake_id = uuid4()
+    response = client.get(f"/routines/{fake_id}")
 
     assert response.status_code == 404
 
@@ -86,7 +86,7 @@ async def test_create_routine_not_allowed(authenticated_client):
     client, user = await authenticated_client()
 
     routine_data = {
-        "user_uuid": str(user.uuid),
+        "user_id": str(user.id),
         "name": "Should Not Work",
         "category": "HOUSE",
         "description": "Test",
@@ -106,10 +106,10 @@ async def test_update_routine_not_allowed(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a routine via repository
-    routine_repo = RoutineRepository(user_uuid=user.uuid)
+    routine_repo = RoutineRepository(user_id=user.id)
     routine = Routine(
         uuid=uuid4(),
-        user_uuid=user.uuid,
+        user_id=user.id,
         name="Test Routine",
         category=TaskCategory.HOUSE,
         description="Test description",
@@ -119,7 +119,7 @@ async def test_update_routine_not_allowed(authenticated_client):
     routine = await routine_repo.put(routine)
 
     update_data = {
-        "user_uuid": str(user.uuid),
+        "user_id": str(user.id),
         "name": "Updated Name",
         "category": "HOUSE",
         "description": "Test",
@@ -127,7 +127,7 @@ async def test_update_routine_not_allowed(authenticated_client):
         "tasks": [],
     }
 
-    response = client.put(f"/routines/{routine.uuid}", json=update_data)
+    response = client.put(f"/routines/{routine.id}", json=update_data)
 
     # Should return 405 Method Not Allowed or 404
     assert response.status_code in [404, 405]
@@ -139,10 +139,10 @@ async def test_delete_routine_not_allowed(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a routine via repository
-    routine_repo = RoutineRepository(user_uuid=user.uuid)
+    routine_repo = RoutineRepository(user_id=user.id)
     routine = Routine(
         uuid=uuid4(),
-        user_uuid=user.uuid,
+        user_id=user.id,
         name="Test Routine",
         category=TaskCategory.HOUSE,
         description="Test description",
@@ -151,7 +151,7 @@ async def test_delete_routine_not_allowed(authenticated_client):
     )
     routine = await routine_repo.put(routine)
 
-    response = client.delete(f"/routines/{routine.uuid}")
+    response = client.delete(f"/routines/{routine.id}")
 
     # Should return 405 Method Not Allowed or 404
     assert response.status_code in [404, 405]
@@ -163,11 +163,11 @@ async def test_list_routines_pagination(authenticated_client):
     client, user = await authenticated_client()
 
     # Create multiple routines via repository
-    routine_repo = RoutineRepository(user_uuid=user.uuid)
+    routine_repo = RoutineRepository(user_id=user.id)
     for i in range(3):
         routine = Routine(
             uuid=uuid4(),
-            user_uuid=user.uuid,
+            user_id=user.id,
             name=f"Pagination Test {i}",
             category=TaskCategory.HOUSE,
             description="Test description",

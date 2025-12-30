@@ -36,7 +36,7 @@ async def test_create_user(mock_user_repo):
     result = await service.create_user(email=email, password=password)
 
     assert result.email == email
-    assert result.uuid == expected_user.uuid
+    assert result.id == expected_user.id
     # Verify password was hashed (not plain text)
     assert result.password_hash != password
     assert pwd_context.verify(password, result.password_hash)
@@ -65,20 +65,20 @@ async def test_create_user_duplicate_email(mock_user_repo):
 @pytest.mark.asyncio
 async def test_get_user(mock_user_repo):
     """Test getting a user by UUID."""
-    user_uuid = uuid4()
+    user_id = uuid4()
     expected_user = User(
-        uuid=user_uuid,
+        uuid=user_id,
         email="test@example.com",
         password_hash="hash",
         settings=UserSetting(),
     )
 
-    allow(mock_user_repo).get(user_uuid).and_return(expected_user)
+    allow(mock_user_repo).get(user_id).and_return(expected_user)
 
     service = AuthService(user_repo=mock_user_repo)
-    result = await service.get_user(user_uuid)
+    result = await service.get_user(user_id)
 
-    assert result.uuid == user_uuid
+    assert result.id == user_id
     assert result.email == "test@example.com"
 
 

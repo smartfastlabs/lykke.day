@@ -16,7 +16,7 @@ async def test_get(routine_repo, test_user):
     """Test getting a routine by ID."""
     routine = Routine(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Test Routine",
         category=TaskCategory.HOUSE,
         description="Test description",
@@ -25,9 +25,9 @@ async def test_get(routine_repo, test_user):
     )
     await routine_repo.put(routine)
     
-    result = await routine_repo.get(routine.uuid)
+    result = await routine_repo.get(routine.id)
     
-    assert result.uuid == routine.uuid
+    assert result.id == routine.id
     assert result.name == "Test Routine"
 
 
@@ -43,7 +43,7 @@ async def test_put(routine_repo, test_user):
     """Test creating a new routine."""
     routine = Routine(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="New Routine",
         category=TaskCategory.HOUSE,
         description="New description",
@@ -62,7 +62,7 @@ async def test_all(routine_repo, test_user):
     """Test getting all routines."""
     routine1 = Routine(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Routine 1",
         category=TaskCategory.HOUSE,
         description="Description 1",
@@ -71,7 +71,7 @@ async def test_all(routine_repo, test_user):
     )
     routine2 = Routine(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="Routine 2",
         category=TaskCategory.HOUSE,
         description="Description 2",
@@ -83,9 +83,9 @@ async def test_all(routine_repo, test_user):
     
     all_routines = await routine_repo.all()
     
-    routine_uuids = [r.uuid for r in all_routines]
-    assert routine1.uuid in routine_uuids
-    assert routine2.uuid in routine_uuids
+    routine_ids = [r.id for r in all_routines]
+    assert routine1.id in routine_ids
+    assert routine2.id in routine_ids
 
 
 @pytest.mark.asyncio
@@ -93,7 +93,7 @@ async def test_user_isolation(routine_repo, test_user, create_test_user):
     """Test that different users' routines are properly isolated."""
     routine = Routine(
         uuid=uuid4(),
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         name="User1 Routine",
         category=TaskCategory.HOUSE,
         description="Description",
@@ -104,9 +104,9 @@ async def test_user_isolation(routine_repo, test_user, create_test_user):
     
     # Create another user
     user2 = await create_test_user()
-    routine_repo2 = RoutineRepository(user_uuid=user2.uuid)
+    routine_repo2 = RoutineRepository(user_id=user2.id)
     
     # User2 should not see user1's routine
     with pytest.raises(exceptions.NotFoundError):
-        await routine_repo2.get(routine.uuid)
+        await routine_repo2.get(routine.id)
 

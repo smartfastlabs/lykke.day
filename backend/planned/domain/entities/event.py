@@ -44,10 +44,10 @@ def get_datetime(
 
 
 class Event(BaseEntityObject):
-    uuid: UUID = Field(default_factory=uuid.uuid4)
-    user_uuid: UUID
+    id: UUID = Field(default_factory=uuid.uuid4)
+    user_id: UUID
     name: str
-    calendar_uuid: UUID
+    calendar_id: UUID
     platform_id: str
     platform: str
     status: str
@@ -77,8 +77,8 @@ class Event(BaseEntityObject):
     @classmethod
     def from_google(
         cls,
-        user_uuid: UUID,
-        calendar_uuid: UUID,
+        user_id: UUID,
+        calendar_id: UUID,
         google_event: GoogleEvent,
         frequency: TaskFrequency,
         target_timezone: str,
@@ -86,8 +86,8 @@ class Event(BaseEntityObject):
         """Create an Event from a Google Calendar event.
 
         Args:
-            user_uuid: User UUID for the event
-            calendar_uuid: UUID of the calendar
+            user_id: User ID for the event
+            calendar_id: ID of the calendar
             google_event: Google Calendar event object
             frequency: Task frequency for the event
             target_timezone: Target timezone for display purposes (datetimes stored in UTC)
@@ -109,9 +109,9 @@ class Event(BaseEntityObject):
         )
 
         event = cls(
-            user_uuid=user_uuid,
+            user_id=user_id,
             frequency=frequency,
-            calendar_uuid=calendar_uuid,
+            calendar_id=calendar_id,
             status=google_event.other.get("status", "NA"),
             name=google_event.summary,
             starts_at=starts_at_utc,

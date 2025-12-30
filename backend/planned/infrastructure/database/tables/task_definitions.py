@@ -11,11 +11,11 @@ class TaskDefinition(Base):
 
     __tablename__ = "task_definitions"
 
-    uuid = Column(PGUUID, primary_key=True)
-    user_uuid = Column(PGUUID, nullable=False)
+    id = Column(PGUUID, primary_key=True)
+    user_id = Column(PGUUID, nullable=False)
     name = Column(String, nullable=False)
     description = Column(String, nullable=False)
     type = Column(String, nullable=False)  # TaskType enum as string
 
-    __table_args__ = (Index("idx_task_definitions_user_uuid", "user_uuid"),)
+    __table_args__ = (Index("idx_task_definitions_user_id", "user_id"),)
 

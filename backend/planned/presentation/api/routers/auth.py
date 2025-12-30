@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
-
 from planned.application.services import AuthService
 from planned.core.exceptions import exceptions
 from planned.domain.entities import User
@@ -20,7 +19,7 @@ class StatusResponse(BaseResponseObject):
 
 
 class UserResponse(BaseResponseObject):
-    uuid: str
+    id: str
     email: str
 
 
@@ -66,9 +65,9 @@ async def register(
         phone_number=data.phone_number,
     )
 
-    request.session["user_uuid"] = str(user.uuid)
+    request.session["user_id"] = str(user.id)
 
-    return UserResponse(uuid=str(user.uuid), email=user.email)
+    return UserResponse(id=str(user.id), email=user.email)
 
 
 @router.post("/set-password")
@@ -100,6 +99,6 @@ async def login(
     if user is None:
         raise exceptions.AuthenticationError("Invalid email or password")
 
-    request.session["user_uuid"] = str(user.uuid)
+    request.session["user_id"] = str(user.id)
 
-    return UserResponse(uuid=str(user.uuid), email=user.email)
+    return UserResponse(id=str(user.id), email=user.email)

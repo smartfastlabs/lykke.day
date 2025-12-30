@@ -20,7 +20,7 @@ async def test_dispatch_success():
     request = InstanceDouble(
         "fastapi.Request",
         session={
-            "user_uuid": str(uuid4()),
+            "user_id": str(uuid4()),
         },
         url=url,
     )
@@ -78,7 +78,7 @@ async def test_dispatch_invalid_session():
         "fastapi.Request",
         url=url,
         session={
-            "user_uuid": "invalid",
+            "user_id": "invalid",
         },
     )
 

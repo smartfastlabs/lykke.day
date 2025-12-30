@@ -11,10 +11,10 @@ class Day(Base):
 
     __tablename__ = "days"
 
-    uuid = Column(PGUUID, primary_key=True)
-    user_uuid = Column(PGUUID, nullable=False)
+    id = Column(PGUUID, primary_key=True)
+    user_id = Column(PGUUID, nullable=False)
     date = Column(Date, nullable=False)
-    template_uuid = Column(PGUUID, nullable=False)
+    template_id = Column(PGUUID, nullable=False)
     tags = Column(JSONB)  # list[DayTag]
     alarm = Column(JSONB)  # Alarm | None
     status = Column(String, nullable=False)  # DayStatus enum as string
@@ -22,6 +22,6 @@ class Day(Base):
 
     __table_args__ = (
         Index("idx_days_date", "date"),
-        Index("idx_days_user_uuid", "user_uuid"),
+        Index("idx_days_user_id", "user_id"),
     )
 

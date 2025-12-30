@@ -6,7 +6,7 @@ from .base import BaseDateObject
 
 
 class Message(BaseDateObject):
-    user_uuid: UUID
+    user_id: UUID
     author: Literal["system", "agent", "user"]
     sent_at: datetime
     content: str

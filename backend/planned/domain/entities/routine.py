@@ -8,7 +8,7 @@ from .base import BaseConfigObject
 
 
 class Routine(BaseConfigObject):
-    user_uuid: UUID
+    user_id: UUID
     name: str
 
     category: TaskCategory

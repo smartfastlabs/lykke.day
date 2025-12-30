@@ -28,10 +28,10 @@ T = TypeVar("T")
 
 
 def replace(lst: list[T], obj: T) -> None:
-    """Replace an object in a list by uuid, or append if not found."""
-    # All objects passed here have uuid attribute (Event, Task, Message)
+    """Replace an object in a list by id, or append if not found."""
+    # All objects passed here have id attribute (Event, Task, Message)
     for i, item in enumerate(lst):
-        if getattr(item, "uuid", None) == getattr(obj, "uuid", None):
+        if getattr(item, "id", None) == getattr(obj, "id", None):
             lst[i] = obj
             return
     lst.append(obj)
@@ -73,7 +73,7 @@ class DayService(BaseService):
     async def for_date(
         cls,
         date: datetime.date,
-        user_uuid: UUID,
+        user_id: UUID,
         day_repo: DayRepositoryProtocol,
         day_template_repo: DayTemplateRepositoryProtocol,
         event_repo: EventRepositoryProtocol,
@@ -83,7 +83,7 @@ class DayService(BaseService):
     ) -> "DayService":
         ctx = await cls.load_context_cls(
             date,
-            user_uuid=user_uuid,
+            user_id=user_id,
             day_repo=day_repo,
             day_template_repo=day_template_repo,
             event_repo=event_repo,
@@ -110,7 +110,7 @@ class DayService(BaseService):
             return
 
         if change == "delete":
-            self.ctx.events = [e for e in self.ctx.events if e.uuid != obj.uuid]
+            self.ctx.events = [e for e in self.ctx.events if e.id != obj.id]
         elif change in ("create", "update"):
             replace(self.ctx.events, obj)
 
@@ -126,7 +126,7 @@ class DayService(BaseService):
             return
 
         if change == "delete":
-            self.ctx.messages = [m for m in self.ctx.messages if m.uuid != obj.uuid]
+            self.ctx.messages = [m for m in self.ctx.messages if m.id != obj.id]
         elif change in ("create", "update"):
             replace(self.ctx.messages, obj)
 
@@ -142,7 +142,7 @@ class DayService(BaseService):
             return
 
         if change == "delete":
-            self.ctx.tasks = [t for t in self.ctx.tasks if t.uuid != obj.uuid]
+            self.ctx.tasks = [t for t in self.ctx.tasks if t.id != obj.id]
         elif change in ("create", "update"):
             replace(self.ctx.tasks, obj)
 
@@ -151,21 +151,21 @@ class DayService(BaseService):
     async def set_date(
         self,
         date: datetime.date,
-        user_uuid: UUID | None = None,
+        user_id: UUID | None = None,
         user_repo: UserRepositoryProtocol | None = None,
     ) -> None:
         if self.date != date:
             self.date = date
-            # Extract user_uuid from repository if not provided
-            if user_uuid is None:
-                # Try to get from repository (repositories store user_uuid)
-                if hasattr(self.day_repo, "user_uuid"):
-                    user_uuid = self.day_repo.user_uuid
+            # Extract user_id from repository if not provided
+            if user_id is None:
+                # Try to get from repository (repositories store user_id)
+                if hasattr(self.day_repo, "user_id"):
+                    user_id = self.day_repo.user_id
                 else:
-                    raise ValueError("user_uuid required for set_date")
+                    raise ValueError("user_id required for set_date")
             self.ctx = await type(self).load_context_cls(
                 date,
-                user_uuid=user_uuid,
+                user_id=user_id,
                 day_repo=self.day_repo,
                 day_template_repo=self.day_template_repo,
                 event_repo=self.event_repo,
@@ -178,7 +178,7 @@ class DayService(BaseService):
     async def load_context(
         self,
         date: datetime.date | None = None,
-        user_uuid: UUID | None = None,
+        user_id: UUID | None = None,
         day_repo: DayRepositoryProtocol | None = None,
         day_template_repo: DayTemplateRepositoryProtocol | None = None,
         event_repo: EventRepositoryProtocol | None = None,
@@ -194,16 +194,16 @@ class DayService(BaseService):
         message_repo = message_repo or self.message_repo
         task_repo = task_repo or self.task_repo
 
-        # Extract user_uuid from repository if not provided
-        if user_uuid is None:
-            if hasattr(self.day_repo, "user_uuid"):
-                user_uuid = self.day_repo.user_uuid
+        # Extract user_id from repository if not provided
+        if user_id is None:
+            if hasattr(self.day_repo, "user_id"):
+                user_id = self.day_repo.user_id
             else:
-                raise ValueError("user_uuid required for load_context")
+                raise ValueError("user_id required for load_context")
 
         self.ctx = await type(self).load_context_cls(
             date,
-            user_uuid=user_uuid,
+            user_id=user_id,
             day_repo=day_repo,
             day_template_repo=day_template_repo,
             event_repo=event_repo,
@@ -217,7 +217,7 @@ class DayService(BaseService):
     async def load_context_cls(
         cls,  # noqa: N805
         date: datetime.date,
-        user_uuid: UUID,
+        user_id: UUID,
         day_repo: DayRepositoryProtocol,
         day_template_repo: DayTemplateRepositoryProtocol,
         event_repo: EventRepositoryProtocol,
@@ -231,17 +231,17 @@ class DayService(BaseService):
         day: objects.Day
 
         try:
-            day_uuid = objects.Day.uuid_from_date_and_user(date, user_uuid)
+            day_id = objects.Day.id_from_date_and_user(date, user_id)
             tasks, events, messages, day = await asyncio.gather(
                 task_repo.search_query(DateQuery(date=date)),
                 event_repo.search_query(DateQuery(date=date)),
                 message_repo.search_query(DateQuery(date=date)),
-                day_repo.get(day_uuid),
+                day_repo.get(day_id),
             )
         except exceptions.NotFoundError:
             day = await cls.base_day(
                 date,
-                user_uuid=user_uuid,
+                user_id=user_id,
                 day_template_repo=day_template_repo,
                 user_repo=user_repo,
             )
@@ -262,30 +262,30 @@ class DayService(BaseService):
     async def base_day(
         cls,
         date: datetime.date,
-        user_uuid: UUID,
+        user_id: UUID,
         day_template_repo: DayTemplateRepositoryProtocol,
         user_repo: UserRepositoryProtocol | None = None,
-        template_uuid: UUID | None = None,
+        template_id: UUID | None = None,
     ) -> objects.Day:
-        if template_uuid is None:
+        if template_id is None:
             if user_repo is None:
-                raise ValueError("user_repo required when template_uuid is None")
-            user = await user_repo.get(user_uuid)
+                raise ValueError("user_repo required when template_id is None")
+            user = await user_repo.get(user_id)
             # template_defaults stores slugs
             template_slug = user.settings.template_defaults[date.weekday()]
             template = await day_template_repo.get_by_slug(template_slug)
-            # Use template.uuid when looking up by slug
-            final_template_uuid = template.uuid
+            # Use template.id when looking up by slug
+            final_template_id = template.id
         else:
-            template = await day_template_repo.get(template_uuid)
-            # Use the passed template_uuid directly to preserve it
-            final_template_uuid = template_uuid
+            template = await day_template_repo.get(template_id)
+            # Use the passed template_id directly to preserve it
+            final_template_id = template_id
 
         return objects.Day(
-            user_uuid=user_uuid,
+            user_id=user_id,
             date=date,
             status=objects.DayStatus.UNSCHEDULED,
-            template_uuid=final_template_uuid,
+            template_id=final_template_id,
             alarm=template.alarm,
         )
 
@@ -293,18 +293,18 @@ class DayService(BaseService):
     async def get_or_preview(
         cls,
         date: datetime.date,
-        user_uuid: UUID,
+        user_id: UUID,
         day_repo: DayRepositoryProtocol,
         day_template_repo: DayTemplateRepositoryProtocol,
         user_repo: UserRepositoryProtocol | None = None,
     ) -> objects.Day:
         with suppress(exceptions.NotFoundError):
-            day_uuid = objects.Day.uuid_from_date_and_user(date, user_uuid)
-            return await day_repo.get(day_uuid)
+            day_id = objects.Day.id_from_date_and_user(date, user_id)
+            return await day_repo.get(day_id)
 
         return await cls.base_day(
             date,
-            user_uuid=user_uuid,
+            user_id=user_id,
             day_template_repo=day_template_repo,
             user_repo=user_repo,
         )
@@ -313,19 +313,19 @@ class DayService(BaseService):
     async def get_or_create(
         cls,
         date: datetime.date,
-        user_uuid: UUID,
+        user_id: UUID,
         day_repo: DayRepositoryProtocol,
         day_template_repo: DayTemplateRepositoryProtocol,
         user_repo: UserRepositoryProtocol | None = None,
     ) -> objects.Day:
         with suppress(exceptions.NotFoundError):
-            day_uuid = objects.Day.uuid_from_date_and_user(date, user_uuid)
-            return await day_repo.get(day_uuid)
+            day_id = objects.Day.id_from_date_and_user(date, user_id)
+            return await day_repo.get(day_id)
 
         return await day_repo.put(
             await cls.base_day(
                 date,
-                user_uuid=user_uuid,
+                user_id=user_id,
                 day_template_repo=day_template_repo,
                 user_repo=user_repo,
             )

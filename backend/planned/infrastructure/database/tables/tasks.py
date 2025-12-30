@@ -11,8 +11,8 @@ class Task(Base):
 
     __tablename__ = "tasks"
 
-    uuid = Column(PGUUID, primary_key=True)
-    user_uuid = Column(PGUUID, nullable=False)
+    id = Column(PGUUID, primary_key=True)
+    user_id = Column(PGUUID, nullable=False)
     date = Column(Date, nullable=False)  # extracted from scheduled_date for querying
     scheduled_date = Column(Date, nullable=False)
     name = Column(String, nullable=False)
@@ -22,13 +22,13 @@ class Task(Base):
     frequency = Column(String, nullable=False)  # TaskFrequency enum as string
     completed_at = Column(DateTime)
     schedule = Column(JSONB)  # TaskSchedule | None
-    routine_uuid = Column(PGUUID)
+    routine_id = Column(PGUUID)
     tags = Column(JSONB)  # list[TaskTag]
     actions = Column(JSONB)  # list[Action]
 
     __table_args__ = (
         Index("idx_tasks_date", "date"),
-        Index("idx_tasks_routine_uuid", "routine_uuid"),
-        Index("idx_tasks_user_uuid", "user_uuid"),
+        Index("idx_tasks_routine_id", "routine_id"),
+        Index("idx_tasks_user_id", "user_id"),
     )
 

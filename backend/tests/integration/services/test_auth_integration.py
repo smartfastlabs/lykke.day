@@ -40,7 +40,7 @@ async def test_authenticate_user_success(user_repo):
     authenticated = await service.authenticate_user(email, password)
     
     assert authenticated is not None
-    assert authenticated.uuid == user.uuid
+    assert authenticated.id == user.id
 
 
 @pytest.mark.asyncio

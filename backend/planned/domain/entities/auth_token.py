@@ -15,8 +15,8 @@ class AuthToken(BaseEntityObject):
         validate_by_name=True,
         # frozen=True,
     )
-    uuid: UUID = Field(default_factory=uuid.uuid4)
-    user_uuid: UUID
+    id: UUID = Field(default_factory=uuid.uuid4)
+    user_id: UUID
     platform: str
     token: str
     refresh_token: str | None = None

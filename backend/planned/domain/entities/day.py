@@ -1,5 +1,6 @@
 import uuid
-from datetime import date as dt_date, datetime
+from datetime import date as dt_date
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import Field, model_validator
@@ -10,63 +11,63 @@ from .base import BaseEntityObject
 
 
 class DayTemplate(BaseEntityObject):
-    uuid: UUID = Field(default_factory=uuid.uuid4)
-    user_uuid: UUID
+    id: UUID = Field(default_factory=uuid.uuid4)
+    user_id: UUID
     slug: str
     tasks: list[str] = Field(default_factory=list)
     alarm: Alarm | None = None
     icon: str | None = None
 
     @classmethod
-    def uuid_from_slug_and_user(cls, slug: str, user_uuid: UUID) -> UUID:
-        """Generate deterministic UUID5 from slug and user_uuid.
+    def id_from_slug_and_user(cls, slug: str, user_id: UUID) -> UUID:
+        """Generate deterministic UUID5 from slug and user_id.
 
-        This can be used to generate the UUID for looking up a DayTemplate by slug
+        This can be used to generate the ID for looking up a DayTemplate by slug
         without creating a DayTemplate instance.
         """
         namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
-        name = f"{user_uuid}:{slug}"
+        name = f"{user_id}:{slug}"
         return uuid.uuid5(namespace, name)
 
     @model_validator(mode="after")
-    def generate_uuid(self) -> "DayTemplate":
-        """Generate deterministic UUID5 based on slug and user_uuid.
+    def generate_id(self) -> "DayTemplate":
+        """Generate deterministic UUID5 based on slug and user_id.
 
-        This ensures that DayTemplates with the same slug and user_uuid always have
-        the same UUID, making lookups stable and deterministic.
+        This ensures that DayTemplates with the same slug and user_id always have
+        the same ID, making lookups stable and deterministic.
         """
-        # Always regenerate UUID for determinism (overrides default_factory)
-        self.uuid = self.uuid_from_slug_and_user(self.slug, self.user_uuid)
+        # Always regenerate ID for determinism (overrides default_factory)
+        self.id = self.id_from_slug_and_user(self.slug, self.user_id)
         return self
 
 
 class Day(BaseEntityObject):
-    uuid: UUID = Field(default_factory=uuid.uuid4)
-    user_uuid: UUID
+    id: UUID = Field(default_factory=uuid.uuid4)
+    user_id: UUID
     date: dt_date
-    template_uuid: UUID
+    template_id: UUID
     tags: list[DayTag] = Field(default_factory=list)
     alarm: Alarm | None = None
     status: DayStatus = DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
 
     @model_validator(mode="after")
-    def generate_uuid(self) -> "Day":
-        """Generate deterministic UUID5 based on date and user_uuid.
+    def generate_id(self) -> "Day":
+        """Generate deterministic UUID5 based on date and user_id.
 
-        This ensures that Days with the same date and user_uuid always have
-        the same UUID, making lookups stable and deterministic.
+        This ensures that Days with the same date and user_id always have
+        the same ID, making lookups stable and deterministic.
         """
-        self.uuid = self.uuid_from_date_and_user(self.date, self.user_uuid)
+        self.id = self.id_from_date_and_user(self.date, self.user_id)
         return self
 
     @classmethod
-    def uuid_from_date_and_user(cls, date: dt_date, user_uuid: UUID) -> UUID:
-        """Generate deterministic UUID5 from date and user_uuid.
+    def id_from_date_and_user(cls, date: dt_date, user_id: UUID) -> UUID:
+        """Generate deterministic UUID5 from date and user_id.
 
-        This can be used to generate the UUID for looking up a Day by date
+        This can be used to generate the ID for looking up a Day by date
         without creating a Day instance.
         """
         namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
-        name = f"{user_uuid}:{date.isoformat()}"
+        name = f"{user_id}:{date.isoformat()}"
         return uuid.uuid5(namespace, name)

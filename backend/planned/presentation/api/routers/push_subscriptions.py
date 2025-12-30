@@ -56,7 +56,7 @@ async def subscribe(
 ) -> objects.PushSubscription:
     result: objects.PushSubscription = await push_subscription_repo.put(
         objects.PushSubscription(
-            user_uuid=user.uuid,
+            user_id=user.id,
             device_name=request.device_name,
             endpoint=request.endpoint,
             p256dh=request.keys.p256dh,

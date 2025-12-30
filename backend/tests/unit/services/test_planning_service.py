@@ -41,15 +41,15 @@ async def test_preview_tasks(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test preview_tasks generates tasks from active routines."""
     date = datetime.date(2024, 1, 1)  # Monday
 
-    task_def_uuid = uuid4()
+    task_def_id = uuid4()
     routine = Routine(
-        uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        id=uuid4(),
+        user_id=test_user_id,
         name="Morning Routine",
         routine_schedule=RoutineSchedule(
             weekdays=[DayOfWeek.MONDAY],
@@ -57,7 +57,7 @@ async def test_preview_tasks(
         ),
         tasks=[
             RoutineTask(
-                task_definition_uuid=task_def_uuid,
+                task_definition_id=task_def_id,
                 name="Brush Teeth",
             ),
         ],
@@ -65,18 +65,18 @@ async def test_preview_tasks(
     )
 
     task_def = TaskDefinition(
-        uuid=task_def_uuid,
-        user_uuid=test_user_uuid,
+        id=task_def_id,
+        user_id=test_user_id,
         name="Brush Teeth",
         description="Brush teeth routine",
         type=TaskType.CHORE,
     )
 
     allow(mock_routine_repo).all().and_return([routine])
-    allow(mock_task_definition_repo).get(task_def_uuid).and_return(task_def)
+    allow(mock_task_definition_repo).get(task_def_id).and_return(task_def)
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -91,7 +91,7 @@ async def test_preview_tasks(
 
     assert len(result) == 1
     assert result[0].name == "Brush Teeth"
-    assert result[0].routine_uuid == routine.uuid
+    assert result[0].routine_id == routine.id
     assert result[0].status == TaskStatus.NOT_STARTED
 
 
@@ -105,7 +105,7 @@ async def test_preview_tasks_filters_inactive_routines(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test preview_tasks filters out routines not active on the date."""
     date = datetime.date(2024, 1, 1)  # Monday
@@ -113,7 +113,7 @@ async def test_preview_tasks_filters_inactive_routines(
     # Routine active on Tuesday (weekday 1)
     routine = Routine(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Tuesday Routine",
         routine_schedule=RoutineSchedule(
             weekdays=[DayOfWeek.TUESDAY],
@@ -121,7 +121,7 @@ async def test_preview_tasks_filters_inactive_routines(
         ),
         tasks=[
             RoutineTask(
-                task_definition_uuid=uuid4(),
+                task_definition_id=uuid4(),
                 name="Tuesday Task",
             ),
         ],
@@ -131,7 +131,7 @@ async def test_preview_tasks_filters_inactive_routines(
     allow(mock_routine_repo).all().and_return([routine])
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -158,15 +158,15 @@ async def test_preview_creates_day_context(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
     test_datetime_noon,
 ):
     """Test preview creates a DayContext with tasks, events, and messages."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
 
     user = User(
-        uuid=test_user_uuid,
+        uuid=test_user_id,
         email="test@example.com",
         password_hash="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
@@ -174,16 +174,16 @@ async def test_preview_creates_day_context(
 
     template = DayTemplate(
         slug="default",
-        uuid=template_uuid,
-        user_uuid=test_user_uuid,
+        uuid=template_id,
+        user_id=test_user_id,
     )
 
     event = Event(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
+        calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-1",
         platform="test",
         status="confirmed",
@@ -192,14 +192,14 @@ async def test_preview_creates_day_context(
     )
 
     allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
-    allow(mock_user_repo).get(test_user_uuid).and_return(user)
+    allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([event])
     allow(mock_message_repo).search_query.and_return([])
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -213,10 +213,10 @@ async def test_preview_creates_day_context(
     result = await service.preview(date)
 
     assert isinstance(result, DayContext)
-    assert result.day.user_uuid == test_user_uuid
+    assert result.day.user_id == test_user_id
     assert result.day.date == date
     assert len(result.events) == 1
-    assert result.events[0].uuid == event.uuid
+    assert result.events[0].id == event.id
 
 
 @pytest.mark.asyncio
@@ -229,33 +229,33 @@ async def test_preview_uses_existing_day_template(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test preview uses template from existing day if available."""
     date = datetime.date(2024, 1, 1)
-    existing_template_uuid = uuid4()
+    existing_template_id = uuid4()
 
     existing_day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.SCHEDULED,
-        template_uuid=existing_template_uuid,
+        template_id=existing_template_id,
     )
 
     template = DayTemplate(
-        uuid=existing_template_uuid,
+        uuid=existing_template_id,
         slug="custom",
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
     )
 
-    allow(mock_day_repo).get(existing_day.uuid).and_return(existing_day)
-    allow(mock_day_template_repo).get(existing_template_uuid).and_return(template)
+    allow(mock_day_repo).get(existing_day.id).and_return(existing_day)
+    allow(mock_day_template_repo).get(existing_template_id).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -268,7 +268,7 @@ async def test_preview_uses_existing_day_template(
 
     result = await service.preview(date)
 
-    assert result.day.template_uuid == existing_template_uuid
+    assert result.day.template_id == existing_template_id
 
 
 @pytest.mark.asyncio
@@ -281,20 +281,20 @@ async def test_unschedule_deletes_routine_tasks(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test unschedule deletes routine tasks and sets day to UNSCHEDULED."""
     date = datetime.date(2024, 1, 1)
 
-    routine_uuid = uuid4()
+    routine_id = uuid4()
     routine_task = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Routine Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-1",
             name="Task Def",
             description="Test task definition",
@@ -302,18 +302,18 @@ async def test_unschedule_deletes_routine_tasks(
         ),
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        routine_uuid=routine_uuid,
+        routine_id=routine_id,
         date=date,
     )
 
     non_routine_task = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Manual Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-2",
             name="Task Def",
             description="Test task definition",
@@ -321,27 +321,27 @@ async def test_unschedule_deletes_routine_tasks(
         ),
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.ONCE,
-        routine_uuid=None,
+        routine_id=None,
         date=date,
     )
 
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.SCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
 
     allow(mock_task_repo).search_query.and_return([routine_task, non_routine_task])
     allow(mock_task_repo).delete.and_return(None)
-    allow(mock_day_repo).get(day.uuid).and_return(day)
+    allow(mock_day_repo).get(day.id).and_return(day)
     allow(mock_day_repo).put.and_return(day)
     allow(mock_day_template_repo).get.and_return(
-        DayTemplate(slug="default", uuid=uuid4(), user_uuid=test_user_uuid)
+        DayTemplate(slug="default", uuid=uuid4(), user_id=test_user_id)
     )
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -369,14 +369,14 @@ async def test_schedule_creates_tasks_and_sets_status(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test schedule creates tasks and sets day status to SCHEDULED."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
 
     user = User(
-        uuid=test_user_uuid,
+        uuid=test_user_id,
         email="test@example.com",
         password_hash="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
@@ -384,29 +384,29 @@ async def test_schedule_creates_tasks_and_sets_status(
 
     template = DayTemplate(
         slug="default",
-        uuid=template_uuid,
-        user_uuid=test_user_uuid,
+        uuid=template_id,
+        user_id=test_user_id,
     )
 
     allow(mock_task_repo).delete_many.and_return(None)
     allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
-    allow(mock_user_repo).get(test_user_uuid).and_return(user)
+    allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
     allow(mock_day_repo).put.and_return(
         Day(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             date=date,
             status=DayStatus.SCHEDULED,
-            template_uuid=template_uuid,
+            template_id=template_id,
         )
     )
     allow(mock_task_repo).put.and_return(None)
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -433,19 +433,19 @@ async def test_save_action_for_task(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test save_action updates task status and saves it."""
 
     date = datetime.date(2024, 1, 1)
     task = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Test Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-1",
             name="Task Def",
             description="Test task definition",
@@ -461,7 +461,7 @@ async def test_save_action_for_task(
     allow(mock_task_repo).put.and_return(task)
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -489,7 +489,7 @@ async def test_save_action_for_event(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
     test_datetime_noon,
 ):
     """Test save_action saves event with action."""
@@ -497,10 +497,10 @@ async def test_save_action_for_event(
     date = datetime.date(2024, 1, 1)
     event = Event(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Test Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
+        calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-1",
         platform="test",
         status="confirmed",
@@ -513,7 +513,7 @@ async def test_save_action_for_event(
     allow(mock_event_repo).put.and_return(event)
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -531,7 +531,7 @@ async def test_save_action_for_event(
 
 
 @pytest.mark.asyncio
-async def test_preview_with_template_uuid(
+async def test_preview_with_template_id(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
@@ -540,25 +540,25 @@ async def test_preview_with_template_uuid(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
-    """Test preview with explicit template_uuid."""
+    """Test preview with explicit template_id."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
 
     template = DayTemplate(
-        uuid=template_uuid,
+        uuid=template_id,
         slug="custom",
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
     )
 
-    allow(mock_day_template_repo).get(template_uuid).and_return(template)
+    allow(mock_day_template_repo).get(template_id).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -569,13 +569,13 @@ async def test_preview_with_template_uuid(
         task_repo=mock_task_repo,
     )
 
-    result = await service.preview(date, template_uuid=template_uuid)
+    result = await service.preview(date, template_id=template_id)
 
-    assert result.day.template_uuid == template_uuid
+    assert result.day.template_id == template_id
 
 
 @pytest.mark.asyncio
-async def test_schedule_with_template_uuid(
+async def test_schedule_with_template_id(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
@@ -584,35 +584,35 @@ async def test_schedule_with_template_uuid(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
-    """Test schedule with explicit template_uuid."""
+    """Test schedule with explicit template_id."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
 
     template = DayTemplate(
-        uuid=template_uuid,
+        uuid=template_id,
         slug="custom",
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
     )
 
     allow(mock_task_repo).delete_many.and_return(None)
-    allow(mock_day_template_repo).get(template_uuid).and_return(template)
+    allow(mock_day_template_repo).get(template_id).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
     allow(mock_day_repo).put.and_return(
         Day(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             date=date,
             status=DayStatus.SCHEDULED,
-            template_uuid=template_uuid,
+            template_id=template_id,
         )
     )
     allow(mock_task_repo).put.and_return(None)
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -623,10 +623,10 @@ async def test_schedule_with_template_uuid(
         task_repo=mock_task_repo,
     )
 
-    result = await service.schedule(date, template_uuid=template_uuid)
+    result = await service.schedule(date, template_id=template_id)
 
     assert result.day.status == DayStatus.SCHEDULED
-    assert result.day.template_uuid == template_uuid
+    assert result.day.template_id == template_id
 
 
 @pytest.mark.asyncio
@@ -639,18 +639,18 @@ async def test_save_action_for_task_punt(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test save_action updates task status to PUNT."""
     date = datetime.date(2024, 1, 1)
     task = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Test Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
             type=TaskType.CHORE,
@@ -665,7 +665,7 @@ async def test_save_action_for_task_punt(
     allow(mock_task_repo).put.and_return(task)
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -693,7 +693,7 @@ async def test_save_action_for_invalid_object(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test save_action raises ValueError for invalid object type."""
     from planned.domain.entities import Message
@@ -701,7 +701,7 @@ async def test_save_action_for_invalid_object(
     date = datetime.date(2024, 1, 1)
     invalid_obj = Message(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         content="Test",
         date=date,
         author="user",
@@ -711,7 +711,7 @@ async def test_save_action_for_invalid_object(
     action = Action(type=ActionType.COMPLETE)
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -737,15 +737,15 @@ async def test_preview_tasks_uses_routine_task_name(
     mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test preview_tasks uses routine task name when provided."""
     date = datetime.date(2024, 1, 1)  # Monday
-    task_def_uuid = uuid4()
+    task_def_id = uuid4()
 
     routine = Routine(
-        uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        id=uuid4(),
+        user_id=test_user_id,
         name="Morning Routine",
         routine_schedule=RoutineSchedule(
             weekdays=[DayOfWeek.MONDAY],
@@ -753,7 +753,7 @@ async def test_preview_tasks_uses_routine_task_name(
         ),
         tasks=[
             RoutineTask(
-                task_definition_uuid=task_def_uuid,
+                task_definition_id=task_def_id,
                 name="Custom Task Name",
             ),
         ],
@@ -761,18 +761,18 @@ async def test_preview_tasks_uses_routine_task_name(
     )
 
     task_def = TaskDefinition(
-        uuid=task_def_uuid,
-        user_uuid=test_user_uuid,
+        id=task_def_id,
+        user_id=test_user_id,
         name="Task Definition Name",
         description="Task definition",
         type=TaskType.CHORE,
     )
 
     allow(mock_routine_repo).all().and_return([routine])
-    allow(mock_task_definition_repo).get(task_def_uuid).and_return(task_def)
+    allow(mock_task_definition_repo).get(task_def_id).and_return(task_def)
 
     service = PlanningService(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         user_repo=mock_user_repo,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,

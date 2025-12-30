@@ -43,31 +43,31 @@ async def test_set_date_changes_date_and_reloads_context(
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test that set_date changes the date and reloads context."""
     old_date = datetime.date(2024, 1, 1)
     new_date = datetime.date(2024, 1, 2)
-    template_uuid = uuid4()
+    template_id = uuid4()
 
     old_day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=old_date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
     new_day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=new_date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
 
     # Mock old context
     old_ctx = DayContext(day=old_day, tasks=[], events=[], messages=[])
 
     # Mock new context loading
-    allow(mock_day_repo).get(new_day.uuid).and_return(new_day)
+    allow(mock_day_repo).get(new_day.id).and_return(new_day)
     allow(mock_task_repo).search_query.and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
@@ -83,8 +83,8 @@ async def test_set_date_changes_date_and_reloads_context(
         task_repo=mock_task_repo,
     )
 
-    # Set user_uuid on repo for extraction
-    mock_day_repo.user_uuid = test_user_uuid
+    # Set user_id on repo for extraction
+    mock_day_repo.user_id = test_user_id
 
     await service.set_date(new_date)
 
@@ -93,34 +93,34 @@ async def test_set_date_changes_date_and_reloads_context(
 
 
 @pytest.mark.asyncio
-async def test_set_date_with_user_uuid(
+async def test_set_date_with_user_id(
     mock_day_repo,
     mock_day_template_repo,
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
-    """Test set_date with explicit user_uuid."""
+    """Test set_date with explicit user_id."""
     old_date = datetime.date(2024, 1, 1)
     new_date = datetime.date(2024, 1, 2)
 
     old_day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=old_date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     new_day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=new_date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
 
     old_ctx = DayContext(day=old_day, tasks=[], events=[], messages=[])
 
-    allow(mock_day_repo).get(new_day.uuid).and_return(new_day)
+    allow(mock_day_repo).get(new_day.id).and_return(new_day)
     allow(mock_task_repo).search_query.and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
@@ -135,7 +135,7 @@ async def test_set_date_with_user_uuid(
         task_repo=mock_task_repo,
     )
 
-    await service.set_date(new_date, user_uuid=test_user_uuid)
+    await service.set_date(new_date, user_id=test_user_id)
 
     assert service.date == new_date
 
@@ -144,27 +144,27 @@ async def test_set_date_with_user_uuid(
 async def test_get_or_preview_returns_existing_day(
     mock_day_repo,
     mock_day_template_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test get_or_preview returns existing day if found."""
     date = datetime.date(2024, 1, 1)
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
 
-    allow(mock_day_repo).get(day.uuid).and_return(day)
+    allow(mock_day_repo).get(day.id).and_return(day)
 
     result = await DayService.get_or_preview(
         date,
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
     )
 
-    assert result.uuid == day.uuid
+    assert result.id == day.id
 
 
 @pytest.mark.asyncio
@@ -172,39 +172,39 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     mock_day_repo,
     mock_day_template_repo,
     mock_user_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test get_or_preview creates base day if not found."""
     date = datetime.date(2024, 1, 1)
     template_id = "default"
 
     user = User(
-        uuid=test_user_uuid,
+        uuid=test_user_id,
         email="test@example.com",
         password_hash="hash",
         settings=UserSetting(template_defaults=[template_id] * 7),
     )
 
-    template_uuid = uuid4()
+    template_id = uuid4()
     template = DayTemplate(
-        uuid=template_uuid,
+        uuid=template_id,
         slug=str(template_id),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
     )
 
     allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
-    allow(mock_user_repo).get(test_user_uuid).and_return(user)
+    allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
 
     result = await DayService.get_or_preview(
         date,
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
         user_repo=mock_user_repo,
     )
 
-    assert result.user_uuid == test_user_uuid
+    assert result.user_id == test_user_id
     assert result.date == date
 
 
@@ -213,47 +213,47 @@ async def test_get_or_create_creates_and_saves_day(
     mock_day_repo,
     mock_day_template_repo,
     mock_user_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test get_or_create creates and saves day if not found."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
     template_slug = "default"
 
     user = User(
-        uuid=test_user_uuid,
+        uuid=test_user_id,
         email="test@example.com",
         password_hash="hash",
         settings=UserSetting(template_defaults=[template_slug] * 7),
     )
 
     template = DayTemplate(
-        uuid=template_uuid,
+        uuid=template_id,
         slug=template_slug,
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
     )
 
     created_day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
 
     allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
-    allow(mock_user_repo).get(test_user_uuid).and_return(user)
+    allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template_slug).and_return(template)
     allow(mock_day_repo).put.and_return(created_day)
 
     result = await DayService.get_or_create(
         date,
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
         user_repo=mock_user_repo,
     )
 
-    assert result.user_uuid == test_user_uuid
+    assert result.user_id == test_user_id
     assert result.date == date
 
 
@@ -264,16 +264,16 @@ async def test_save(
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test save persists the day."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -301,7 +301,7 @@ async def test_get_upcomming_tasks_123(
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
     test_datetime_noon,
 ):
     """Test get_upcomming_tasks returns tasks within look_ahead window."""
@@ -311,24 +311,24 @@ async def test_get_upcomming_tasks_123(
         year=2025, month=11, day=27, hour=12, minute=0, second=0
     )
     future_time = (now + timedelta(minutes=15)).time()
-    template_uuid = uuid4()
+    template_id = uuid4()
 
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
 
     # Task that should be included (within window)
     task1 = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Upcoming Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-1",
             name="Task Def",
             description="Test task definition",
@@ -346,12 +346,12 @@ async def test_get_upcomming_tasks_123(
     far_future_time = (now + timedelta(hours=2)).time()
     task2 = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Future Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-2",
             name="Task Def",
             description="Test task definition",
@@ -369,12 +369,12 @@ async def test_get_upcomming_tasks_123(
     # Task that should be excluded (already completed)
     task3 = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Completed Task",
         status=TaskStatus.COMPLETE,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-3",
             name="Task Def",
             description="Test task definition",
@@ -409,7 +409,7 @@ async def test_get_upcomming_tasks_123(
 
     # Should only include task1 (within window and not completed)
     assert len(result) == 1
-    assert result[0].uuid == task1.uuid
+    assert result[0].id == task1.id
 
 
 @pytest.mark.asyncio
@@ -419,7 +419,7 @@ async def test_get_upcomming_events(
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
     test_datetime_noon,
 ):
     """Test get_upcomming_events returns events within look_ahead window."""
@@ -432,22 +432,22 @@ async def test_get_upcomming_events(
     future_time = now + timedelta(minutes=15)
     far_future = now + timedelta(hours=2)
     past_time = now - timedelta(hours=1)
-    template_uuid = uuid4()
+    template_id = uuid4()
 
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
 
     # Event that should be included (within window)
     event1 = Event(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Upcoming Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
+        calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-1",
         platform="test",
         status="confirmed",
@@ -458,10 +458,10 @@ async def test_get_upcomming_events(
     # Event that should be excluded (too far in future)
     event2 = Event(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Future Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
+        calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-2",
         platform="test",
         status="confirmed",
@@ -472,10 +472,10 @@ async def test_get_upcomming_events(
     # Event that should be excluded (cancelled)
     event3 = Event(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Cancelled Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
+        calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-3",
         platform="test",
         status="cancelled",
@@ -486,10 +486,10 @@ async def test_get_upcomming_events(
     # Event that should be included (ongoing - started in past but not ended)
     event4 = Event(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Ongoing Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
+        calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-4",
         platform="test",
         status="confirmed",
@@ -516,8 +516,8 @@ async def test_get_upcomming_events(
 
     # Should include event1 and event4 (within window and not cancelled)
     assert len(result) == 2
-    assert any(e.uuid == event1.uuid for e in result)
-    assert any(e.uuid == event4.uuid for e in result)
+    assert any(e.id == event1.id for e in result)
+    assert any(e.id == event4.id for e in result)
 
 
 @pytest.mark.asyncio
@@ -527,16 +527,16 @@ async def test_on_event_change_create(
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
     test_datetime_noon,
 ):
     """Test on_event_change handles create events."""
     date = datetime.date(2025, 11, 27)
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -553,10 +553,10 @@ async def test_on_event_change_create(
 
     new_event = Event(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="New Event",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
+        calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-1",
         platform="test",
         status="confirmed",
@@ -572,7 +572,7 @@ async def test_on_event_change_create(
     await service.on_event_change(event=event)
 
     assert len(ctx.events) == 1
-    assert ctx.events[0].uuid == new_event.uuid
+    assert ctx.events[0].id == new_event.id
 
 
 @pytest.mark.asyncio
@@ -582,17 +582,17 @@ async def test_on_event_change_delete(
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
     test_datetime_noon,
 ):
     """Test on_event_change handles delete events."""
     date = datetime.date(2025, 11, 27)
     event1 = Event(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Event 1",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
+        calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-1",
         platform="test",
         status="confirmed",
@@ -601,10 +601,10 @@ async def test_on_event_change_delete(
     )
     event2 = Event(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Event 2",
         frequency=TaskFrequency.ONCE,
-        calendar_uuid=uuid5(NAMESPACE_DNS, "cal-1"),
+        calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="event-2",
         platform="test",
         status="confirmed",
@@ -613,10 +613,10 @@ async def test_on_event_change_delete(
     )
 
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[event1, event2], messages=[])
 
@@ -639,7 +639,7 @@ async def test_on_event_change_delete(
     await service.on_event_change(event=event)
 
     assert len(ctx.events) == 1
-    assert ctx.events[0].uuid == event2.uuid
+    assert ctx.events[0].id == event2.id
 
 
 @pytest.mark.asyncio
@@ -649,17 +649,17 @@ async def test_on_message_change_create(
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test on_message_change handles create events."""
     from planned.domain.entities import Message
 
     date = datetime.date(2024, 1, 1)
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -676,7 +676,7 @@ async def test_on_message_change_create(
 
     new_message = Message(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         content="New message",
         date=date,
         author="user",
@@ -693,7 +693,7 @@ async def test_on_message_change_create(
     await service.on_message_change(event=event)
 
     assert len(ctx.messages) == 1
-    assert ctx.messages[0].uuid == new_message.uuid
+    assert ctx.messages[0].id == new_message.id
 
 
 @pytest.mark.asyncio
@@ -703,18 +703,18 @@ async def test_on_task_change_update(
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test on_task_change handles update events."""
     date = datetime.date(2024, 1, 1)
     original_task = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Original Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-1",
             name="Task Def",
             description="Test task definition",
@@ -726,10 +726,10 @@ async def test_on_task_change_update(
     )
 
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[original_task], events=[], messages=[])
 
@@ -745,8 +745,8 @@ async def test_on_task_change_update(
     )
 
     updated_task = Task(
-        uuid=original_task.uuid,
-        user_uuid=test_user_uuid,
+        uuid=original_task.id,
+        user_id=test_user_id,
         name="Updated Task",
         status=TaskStatus.COMPLETE,
         scheduled_date=date,
@@ -764,7 +764,7 @@ async def test_on_task_change_update(
     await service.on_task_change(event=event)
 
     assert len(ctx.tasks) == 1
-    assert ctx.tasks[0].uuid == updated_task.uuid
+    assert ctx.tasks[0].id == updated_task.id
     assert ctx.tasks[0].name == "Updated Task"
     assert ctx.tasks[0].status == TaskStatus.COMPLETE
 
@@ -777,19 +777,19 @@ async def test_for_date_creates_service(
     mock_message_repo,
     mock_task_repo,
     mock_user_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test for_date creates a DayService with loaded context."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
 
-    allow(mock_day_repo).get(day.uuid).and_return(day)
+    allow(mock_day_repo).get(day.id).and_return(day)
     allow(mock_task_repo).search_query.and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
@@ -797,7 +797,7 @@ async def test_for_date_creates_service(
 
     service = await DayService.for_date(
         date,
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
         event_repo=mock_event_repo,
@@ -807,35 +807,35 @@ async def test_for_date_creates_service(
     )
 
     assert service.date == date
-    assert service.ctx.day.uuid == day.uuid
+    assert service.ctx.day.id == day.id
 
 
 @pytest.mark.asyncio
-async def test_base_day_with_template_uuid(
+async def test_base_day_with_template_id(
     mock_day_template_repo,
-    test_user_uuid,
+    test_user_id,
 ):
-    """Test base_day creates day with specified template_uuid."""
+    """Test base_day creates day with specified template_id."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
     template = DayTemplate(
-        uuid=template_uuid,
+        uuid=template_id,
         slug="custom",
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
     )
 
-    allow(mock_day_template_repo).get(template_uuid).and_return(template)
+    allow(mock_day_template_repo).get(template_id).and_return(template)
 
     day = await DayService.base_day(
         date,
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         day_template_repo=mock_day_template_repo,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
 
-    assert day.user_uuid == test_user_uuid
+    assert day.user_id == test_user_id
     assert day.date == date
-    assert day.template_uuid == template_uuid
+    assert day.template_id == template_id
     assert day.status == DayStatus.UNSCHEDULED
 
 
@@ -846,27 +846,27 @@ async def test_load_context_instance_method(
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
 ):
     """Test load_context instance method reloads context."""
     date = datetime.date(2024, 1, 1)
-    template_uuid = uuid4()
+    template_id = uuid4()
     old_day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
     new_day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.SCHEDULED,
-        template_uuid=template_uuid,
+        template_id=template_id,
     )
 
     old_ctx = DayContext(day=old_day, tasks=[], events=[], messages=[])
 
-    allow(mock_day_repo).get(new_day.uuid).and_return(new_day)
+    allow(mock_day_repo).get(new_day.id).and_return(new_day)
     allow(mock_task_repo).search_query.and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
@@ -880,7 +880,7 @@ async def test_load_context_instance_method(
         message_repo=mock_message_repo,
         task_repo=mock_task_repo,
     )
-    mock_day_repo.user_uuid = test_user_uuid
+    mock_day_repo.user_id = test_user_id
 
     ctx = await service.load_context()
 
@@ -895,7 +895,7 @@ async def test_get_upcomming_tasks_with_available_time(
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
     test_datetime_noon,
 ):
     """Test get_upcomming_tasks handles tasks with available_time."""
@@ -906,21 +906,21 @@ async def test_get_upcomming_tasks_with_available_time(
     future_available_time = (now + timedelta(minutes=30)).time()
 
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
 
     # Task with available_time in past (should be included)
     task1 = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Available Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-1",
             name="Task Def",
             description="Test task definition",
@@ -938,12 +938,12 @@ async def test_get_upcomming_tasks_with_available_time(
     # Task with available_time in future (should be excluded)
     task2 = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Future Available Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-2",
             name="Task Def",
             description="Test task definition",
@@ -973,7 +973,7 @@ async def test_get_upcomming_tasks_with_available_time(
     result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
 
     assert len(result) == 1
-    assert result[0].uuid == task1.uuid
+    assert result[0].id == task1.id
 
 
 @pytest.mark.asyncio
@@ -983,7 +983,7 @@ async def test_get_upcomming_tasks_with_end_time(
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
     test_datetime_noon,
 ):
     """Test get_upcomming_tasks excludes tasks past end_time."""
@@ -994,21 +994,21 @@ async def test_get_upcomming_tasks_with_end_time(
     future_start_time = (now + timedelta(minutes=15)).time()
 
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
 
     # Task with end_time in past (should be excluded)
     task1 = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Past End Time Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-1",
             name="Task Def",
             description="Test task definition",
@@ -1027,12 +1027,12 @@ async def test_get_upcomming_tasks_with_end_time(
     # Task with end_time in future (should be included)
     task2 = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Valid Task",
         status=TaskStatus.NOT_STARTED,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-2",
             name="Task Def",
             description="Test task definition",
@@ -1063,7 +1063,7 @@ async def test_get_upcomming_tasks_with_end_time(
     result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
 
     assert len(result) == 1
-    assert result[0].uuid == task2.uuid
+    assert result[0].id == task2.id
 
 
 @pytest.mark.asyncio
@@ -1073,7 +1073,7 @@ async def test_get_upcomming_tasks_excludes_completed_at(
     mock_event_repo,
     mock_message_repo,
     mock_task_repo,
-    test_user_uuid,
+    test_user_id,
     test_datetime_noon,
 ):
     """Test get_upcomming_tasks excludes tasks with completed_at set."""
@@ -1083,22 +1083,22 @@ async def test_get_upcomming_tasks_excludes_completed_at(
     future_time = (now + timedelta(minutes=15)).time()
 
     day = Day(
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
 
     # Task with completed_at (should be excluded even if status is PENDING)
     task1 = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Completed Task",
         status=TaskStatus.PENDING,
         scheduled_date=date,
         completed_at=now,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-1",
             name="Task Def",
             description="Test task definition",
@@ -1116,12 +1116,12 @@ async def test_get_upcomming_tasks_excludes_completed_at(
     # Task without completed_at (should be included)
     task2 = Task(
         uuid=uuid4(),
-        user_uuid=test_user_uuid,
+        user_id=test_user_id,
         name="Valid Task",
         status=TaskStatus.PENDING,
         scheduled_date=date,
         task_definition=TaskDefinition(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             id="def-2",
             name="Task Def",
             description="Test task definition",
@@ -1151,4 +1151,4 @@ async def test_get_upcomming_tasks_excludes_completed_at(
     result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
 
     assert len(result) == 1
-    assert result[0].uuid == task2.uuid
+    assert result[0].id == task2.id

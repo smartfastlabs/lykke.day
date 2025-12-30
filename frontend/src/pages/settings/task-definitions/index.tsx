@@ -11,8 +11,8 @@ const TaskDefinitionsPage: Component = () => {
   const [taskDefinitions] = createResource(taskDefinitionAPI.getAll);
 
   const onClick = (taskDefinition: TaskDefinition) => {
-    if (taskDefinition.uuid) {
-      navigate(`/settings/task-definitions/${taskDefinition.uuid}`);
+    if (taskDefinition.id) {
+      navigate(`/settings/task-definitions/${taskDefinition.id}`);
     }
   };
 
@@ -44,4 +44,3 @@ const TaskDefinitionsPage: Component = () => {
 };
 
 export default TaskDefinitionsPage;
-

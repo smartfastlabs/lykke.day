@@ -13,16 +13,16 @@ class PushSubscriptionRepository(UserScopedBaseRepository[PushSubscription, Base
     table = push_subscriptions_tbl
     QueryClass = BaseQuery
 
-    def __init__(self, user_uuid: UUID) -> None:
+    def __init__(self, user_id: UUID) -> None:
         """Initialize PushSubscriptionRepository with user scoping."""
-        super().__init__(user_uuid=user_uuid)
+        super().__init__(user_id=user_id)
 
     @staticmethod
     def entity_to_row(push_subscription: PushSubscription) -> dict[str, Any]:
         """Convert a PushSubscription entity to a database row dict."""
         row: dict[str, Any] = {
-            "uuid": push_subscription.uuid,
-            "user_uuid": push_subscription.user_uuid,
+            "id": push_subscription.id,
+            "user_id": push_subscription.user_id,
             "device_name": push_subscription.device_name,
             "endpoint": push_subscription.endpoint,
             "p256dh": push_subscription.p256dh,

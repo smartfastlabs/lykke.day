@@ -4,7 +4,6 @@ from typing import Annotated, cast
 from uuid import UUID
 
 from fastapi import Depends, Request
-
 from planned.application.repositories import UserRepositoryProtocol
 from planned.core.exceptions import exceptions
 from planned.domain.entities import User
@@ -32,17 +31,17 @@ async def get_current_user(
     Raises:
         AuthorizationError: If user is not authenticated
     """
-    # Get user_uuid from session
-    user_uuid_str = request.session.get("user_uuid")
+    # Get user_id from session
+    user_id_str = request.session.get("user_id")
     try:
-        user_uuid = UUID(user_uuid_str)
+        user_id = UUID(user_id_str)
     except (ValueError, TypeError):
         raise exceptions.AuthorizationError(
             "Invalid session data. Please log in again.",
         )
 
     try:
-        user = await user_repo.get(user_uuid)
+        user = await user_repo.get(user_id)
     except exceptions.NotFoundError:
         raise exceptions.AuthorizationError(
             "User not found. Please log in again.",

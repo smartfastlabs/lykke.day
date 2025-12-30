@@ -52,11 +52,11 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 "Session middleware not configured",
             )
 
-        user_uuid = request.session.get("user_uuid")
-        if user_uuid:
-            # Validate that user_uuid is a valid UUID string
+        user_id = request.session.get("user_id")
+        if user_id:
+            # Validate that user_id is a valid UUID string
             try:
-                UUID(user_uuid)  # Validate format
+                UUID(user_id)  # Validate format
             except (ValueError, TypeError):
                 raise exceptions.AuthorizationError(
                     "Invalid session data. Please log in again.",

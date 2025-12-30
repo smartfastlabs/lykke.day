@@ -119,6 +119,6 @@ def mock_planning_service():
 
 # Test user UUID fixture
 @pytest.fixture
-def test_user_uuid():
+def test_user_id():
     """Test user UUID for unit tests."""
     return uuid4()

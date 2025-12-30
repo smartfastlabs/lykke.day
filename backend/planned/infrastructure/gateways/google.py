@@ -189,8 +189,8 @@ def _load_calendar_events_sync(
             frequency = get_event_frequency(event, gc, frequency_cache)
             events.append(
                 Event.from_google(
-                    calendar.user_uuid,
-                    calendar.uuid,
+                    calendar.user_id,
+                    calendar.id,
                     event,
                     frequency,
                     settings.TIMEZONE,

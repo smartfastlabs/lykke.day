@@ -13,9 +13,9 @@ from planned.application.services import SheppardManager
 async def test_get_service_for_user_not_found():
     """Test get_service_for_user returns None when service doesn't exist."""
     manager = SheppardManager()
-    user_uuid = uuid4()
+    user_id = uuid4()
 
-    result = manager.get_service_for_user(user_uuid)
+    result = manager.get_service_for_user(user_id)
 
     assert result is None
 
@@ -35,14 +35,14 @@ async def test_get_service_for_user_returns_service():
     from planned.infrastructure.utils.dates import get_current_date
 
     manager = SheppardManager()
-    user_uuid = uuid4()
+    user_id = uuid4()
 
     # Create a minimal service for testing
     day = Day(
-        user_uuid=user_uuid,
+        user_id=user_id,
         date=get_current_date(),
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
     
@@ -53,9 +53,9 @@ async def test_get_service_for_user_returns_service():
     task = asyncio.create_task(asyncio.sleep(0))
     task.cancel()
     
-    manager._services[user_uuid] = (mock_service, task)
+    manager._services[user_id] = (mock_service, task)
 
-    result = manager.get_service_for_user(user_uuid)
+    result = manager.get_service_for_user(user_id)
 
     assert result is mock_service
 
@@ -75,14 +75,14 @@ async def test_stop_service_for_user_removes_service():
     from planned.infrastructure.utils.dates import get_current_date
 
     manager = SheppardManager()
-    user_uuid = uuid4()
+    user_id = uuid4()
 
     # Create a mock service
     day = Day(
-        user_uuid=user_uuid,
+        user_id=user_id,
         date=get_current_date(),
         status=DayStatus.UNSCHEDULED,
-        template_uuid=uuid4(),
+        template_id=uuid4(),
     )
     
     # Create a minimal service mock
@@ -92,27 +92,27 @@ async def test_stop_service_for_user_removes_service():
     task = asyncio.create_task(asyncio.sleep(0))
     task.cancel()
     
-    manager._services[user_uuid] = (mock_service, task)
+    manager._services[user_id] = (mock_service, task)
 
     # Mock the service.stop method if it's an actual service
     if hasattr(mock_service, "stop"):
         mock_service.stop = lambda: None
 
-    await manager._stop_service_for_user(user_uuid)
+    await manager._stop_service_for_user(user_id)
 
-    assert user_uuid not in manager._services
+    assert user_id not in manager._services
 
 
 @pytest.mark.asyncio
 async def test_stop_service_for_user_handles_missing_service():
     """Test _stop_service_for_user handles missing service gracefully."""
     manager = SheppardManager()
-    user_uuid = uuid4()
+    user_id = uuid4()
 
     # Should not raise an exception
-    await manager._stop_service_for_user(user_uuid)
+    await manager._stop_service_for_user(user_id)
 
-    assert user_uuid not in manager._services
+    assert user_id not in manager._services
 
 
 @pytest.mark.asyncio
@@ -145,7 +145,7 @@ async def test_stop_idempotent():
 async def test_ensure_service_for_user_raises_if_cannot_start(mock_user_repo):
     """Test ensure_service_for_user raises RuntimeError if service cannot be started."""
     manager = SheppardManager()
-    user_uuid = uuid4()
+    user_id = uuid4()
 
     # Mock _start_service_for_user to not actually start
     async def mock_start(uuid):
@@ -155,6 +155,6 @@ async def test_ensure_service_for_user_raises_if_cannot_start(mock_user_repo):
     manager._start_service_for_user = mock_start
 
     with pytest.raises(RuntimeError) as exc_info:
-        await manager.ensure_service_for_user(user_uuid)
+        await manager.ensure_service_for_user(user_id)
     
     assert "Failed to start" in str(exc_info.value)

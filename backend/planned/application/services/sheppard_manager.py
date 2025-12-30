@@ -61,11 +61,11 @@ class SheppardManager:
         self._is_running = False
         self._event_handler: ChangeHandler[User] | None = None
 
-    async def _create_service_for_user(self, user_uuid: UUID) -> SheppardService:
+    async def _create_service_for_user(self, user_id: UUID) -> SheppardService:
         """Create a SheppardService instance for a specific user.
 
         Args:
-            user_uuid: The UUID of the user to create a service for.
+            user_id: The ID of the user to create a service for.
 
         Returns:
             A configured SheppardService instance for the user.
@@ -75,27 +75,27 @@ class SheppardManager:
             "AuthTokenRepositoryProtocol", AuthTokenRepository()
         )
         calendar_repo: CalendarRepositoryProtocol = cast(
-            "CalendarRepositoryProtocol", CalendarRepository(user_uuid=user_uuid)
+            "CalendarRepositoryProtocol", CalendarRepository(user_id=user_id)
         )
         day_repo: DayRepositoryProtocol = cast(
-            "DayRepositoryProtocol", DayRepository(user_uuid=user_uuid)
+            "DayRepositoryProtocol", DayRepository(user_id=user_id)
         )
         day_template_repo: DayTemplateRepositoryProtocol = cast(
             "DayTemplateRepositoryProtocol",
-            DayTemplateRepository(user_uuid=user_uuid),
+            DayTemplateRepository(user_id=user_id),
         )
         event_repo: EventRepositoryProtocol = cast(
-            "EventRepositoryProtocol", EventRepository(user_uuid=user_uuid)
+            "EventRepositoryProtocol", EventRepository(user_id=user_id)
         )
         message_repo: MessageRepositoryProtocol = cast(
-            "MessageRepositoryProtocol", MessageRepository(user_uuid=user_uuid)
+            "MessageRepositoryProtocol", MessageRepository(user_id=user_id)
         )
         push_subscription_repo: PushSubscriptionRepositoryProtocol = cast(
             "PushSubscriptionRepositoryProtocol",
-            PushSubscriptionRepository(user_uuid=user_uuid),
+            PushSubscriptionRepository(user_id=user_id),
         )
         task_repo: TaskRepositoryProtocol = cast(
-            "TaskRepositoryProtocol", TaskRepository(user_uuid=user_uuid)
+            "TaskRepositoryProtocol", TaskRepository(user_id=user_id)
         )
 
         # Ensure default DayTemplate exists for user
@@ -104,7 +104,7 @@ class SheppardManager:
         except NotFoundError:
             # Template doesn't exist, create it
             default_template = DayTemplate(
-                user_uuid=user_uuid,
+                user_id=user_id,
                 slug="default",
                 tasks=[],
                 alarm=Alarm(
@@ -128,18 +128,18 @@ class SheppardManager:
         )
 
         planning_service = PlanningService(
-            user_uuid=user_uuid,
+            user_id=user_id,
             user_repo=cast("UserRepositoryProtocol", self._user_repo),
             day_repo=day_repo,
             day_template_repo=day_template_repo,
             event_repo=event_repo,
             message_repo=message_repo,
             routine_repo=cast(
-                "RoutineRepositoryProtocol", RoutineRepository(user_uuid=user_uuid)
+                "RoutineRepositoryProtocol", RoutineRepository(user_id=user_id)
             ),
             task_definition_repo=cast(
                 "TaskDefinitionRepositoryProtocol",
-                TaskDefinitionRepository(user_uuid=user_uuid),
+                TaskDefinitionRepository(user_id=user_id),
             ),
             task_repo=task_repo,
         )
@@ -147,7 +147,7 @@ class SheppardManager:
         # Create day service for current date
         day_svc = await DayService.for_date(
             get_current_date(),
-            user_uuid=user_uuid,
+            user_id=user_id,
             day_repo=day_repo,
             day_template_repo=day_template_repo,
             event_repo=event_repo,
@@ -185,64 +185,64 @@ class SheppardManager:
             event: The change event containing the user and event type.
         """
         user = event.value
-        user_uuid = user.uuid
+        user_id = user.id
 
         if event.type == "create":
-            await self._start_service_for_user(user_uuid)
+            await self._start_service_for_user(user_id)
         elif event.type == "delete":
-            await self._stop_service_for_user(user_uuid)
+            await self._stop_service_for_user(user_id)
 
-    async def _start_service_for_user(self, user_uuid: UUID) -> None:
+    async def _start_service_for_user(self, user_id: UUID) -> None:
         """Start a SheppardService for a user.
 
         Args:
-            user_uuid: The UUID of the user to start a service for.
+            user_id: The ID of the user to start a service for.
         """
-        if user_uuid in self._services:
+        if user_id in self._services:
             logger.warning(
-                f"SheppardService already exists for user {user_uuid}, skipping"
+                f"SheppardService already exists for user {user_id}, skipping"
             )
             return
 
         try:
-            logger.info(f"Starting SheppardService for user {user_uuid}")
-            service = await self._create_service_for_user(user_uuid)
+            logger.info(f"Starting SheppardService for user {user_id}")
+            service = await self._create_service_for_user(user_id)
             task = asyncio.create_task(service.run())
-            self._services[user_uuid] = (service, task)
-            logger.info(f"SheppardService started for user {user_uuid}")
+            self._services[user_id] = (service, task)
+            logger.info(f"SheppardService started for user {user_id}")
         except Exception as e:
             logger.exception(
-                f"Failed to start SheppardService for user {user_uuid}: {e}"
+                f"Failed to start SheppardService for user {user_id}: {e}"
             )
 
-    async def _stop_service_for_user(self, user_uuid: UUID) -> None:
+    async def _stop_service_for_user(self, user_id: UUID) -> None:
         """Stop and remove a SheppardService for a user.
 
         Args:
-            user_uuid: The UUID of the user to stop the service for.
+            user_id: The ID of the user to stop the service for.
         """
-        if user_uuid not in self._services:
-            logger.warning(f"No SheppardService found for user {user_uuid}, skipping")
+        if user_id not in self._services:
+            logger.warning(f"No SheppardService found for user {user_id}, skipping")
             return
 
         try:
-            logger.info(f"Stopping SheppardService for user {user_uuid}")
-            service, task = self._services[user_uuid]
+            logger.info(f"Stopping SheppardService for user {user_id}")
+            service, task = self._services[user_id]
             service.stop()
             task.cancel()
             try:
                 await task
             except asyncio.CancelledError:
                 pass
-            del self._services[user_uuid]
-            logger.info(f"SheppardService stopped for user {user_uuid}")
+            del self._services[user_id]
+            logger.info(f"SheppardService stopped for user {user_id}")
         except Exception as e:
             logger.exception(
-                f"Error stopping SheppardService for user {user_uuid}: {e}"
+                f"Error stopping SheppardService for user {user_id}: {e}"
             )
             # Clean up even if there was an error
-            if user_uuid in self._services:
-                del self._services[user_uuid]
+            if user_id in self._services:
+                del self._services[user_id]
 
     async def start(self) -> None:
         """Start the manager and all existing user services."""
@@ -262,8 +262,8 @@ class SheppardManager:
             users = await self._user_repo.all()
             logger.info(f"Found {len(users)} existing users, starting services...")
             for user in users:
-                user_uuid = user.uuid
-                await self._start_service_for_user(user_uuid)
+                user_id = user.id
+                await self._start_service_for_user(user_id)
             logger.info(
                 f"SheppardManager started with {len(self._services)} service(s)"
             )
@@ -289,31 +289,31 @@ class SheppardManager:
 
         # Stop all services
         logger.info(f"Stopping {len(self._services)} SheppardService instance(s)...")
-        user_uuids = list(self._services.keys())
-        for user_uuid in user_uuids:
-            await self._stop_service_for_user(user_uuid)
+        user_ids = list(self._services.keys())
+        for user_id in user_ids:
+            await self._stop_service_for_user(user_id)
 
         logger.info("SheppardManager stopped")
 
-    def get_service_for_user(self, user_uuid: UUID) -> SheppardService | None:
+    def get_service_for_user(self, user_id: UUID) -> SheppardService | None:
         """Get the SheppardService instance for a specific user.
 
         Args:
-            user_uuid: The UUID of the user to get the service for.
+            user_id: The ID of the user to get the service for.
 
         Returns:
             The SheppardService instance for the user, or None if it doesn't exist.
         """
-        if user_uuid in self._services:
-            service, _ = self._services[user_uuid]
+        if user_id in self._services:
+            service, _ = self._services[user_id]
             return service
         return None
 
-    async def ensure_service_for_user(self, user_uuid: UUID) -> SheppardService:
+    async def ensure_service_for_user(self, user_id: UUID) -> SheppardService:
         """Ensure a SheppardService exists for a user, starting it if necessary.
 
         Args:
-            user_uuid: The UUID of the user to ensure a service for.
+            user_id: The ID of the user to ensure a service for.
 
         Returns:
             The SheppardService instance for the user.
@@ -321,12 +321,12 @@ class SheppardManager:
         Raises:
             RuntimeError: If the service cannot be started.
         """
-        service = self.get_service_for_user(user_uuid)
+        service = self.get_service_for_user(user_id)
         if service is None:
-            await self._start_service_for_user(user_uuid)
-            service = self.get_service_for_user(user_uuid)
+            await self._start_service_for_user(user_id)
+            service = self.get_service_for_user(user_id)
             if service is None:
                 raise RuntimeError(
-                    f"Failed to start SheppardService for user {user_uuid}"
+                    f"Failed to start SheppardService for user {user_id}"
                 )
         return service

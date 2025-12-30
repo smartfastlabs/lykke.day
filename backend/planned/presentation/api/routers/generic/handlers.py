@@ -217,9 +217,9 @@ async def handle_update(
         # Fallback: assume entity_data is already the full entity
         updated = entity_data
 
-    # Ensure UUID matches the path parameter
-    if hasattr(updated, "uuid"):
-        updated.uuid = entity_id
+    # Ensure id matches the path parameter
+    if hasattr(updated, "id"):
+        updated.id = entity_id
 
     entity = await repo.put(updated)
     return entity

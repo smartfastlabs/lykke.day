@@ -17,19 +17,19 @@ class CalendarRepository(UserScopedBaseRepository[Calendar, BaseQuery]):
     table = calendars_tbl
     QueryClass = BaseQuery
 
-    def __init__(self, user_uuid: UUID) -> None:
+    def __init__(self, user_id: UUID) -> None:
         """Initialize CalendarRepository with user scoping."""
-        super().__init__(user_uuid=user_uuid)
+        super().__init__(user_id=user_id)
 
 
     @staticmethod
     def entity_to_row(calendar: Calendar) -> dict[str, Any]:
         """Convert a Calendar entity to a database row dict."""
         row: dict[str, Any] = {
-            "uuid": calendar.uuid,
-            "user_uuid": calendar.user_uuid,
+            "id": calendar.id,
+            "user_id": calendar.user_id,
             "name": calendar.name,
-            "auth_token_uuid": calendar.auth_token_uuid,
+            "auth_token_id": calendar.auth_token_id,
             "platform_id": calendar.platform_id,
             "platform": calendar.platform,
             "last_sync_at": calendar.last_sync_at,

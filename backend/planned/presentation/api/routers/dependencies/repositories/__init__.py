@@ -52,7 +52,7 @@ def get_calendar_repo(
 ) -> CalendarRepositoryProtocol:
     """Get a user-scoped instance of CalendarRepository."""
     return cast(
-        "CalendarRepositoryProtocol", CalendarRepository(user_uuid=user.uuid)
+        "CalendarRepositoryProtocol", CalendarRepository(user_id=user.id)
     )
 
 
@@ -60,7 +60,7 @@ def get_day_repo(
     user: Annotated[User, Depends(get_current_user)],
 ) -> DayRepositoryProtocol:
     """Get a user-scoped instance of DayRepository."""
-    return cast("DayRepositoryProtocol", DayRepository(user_uuid=user.uuid))
+    return cast("DayRepositoryProtocol", DayRepository(user_id=user.id))
 
 
 def get_day_template_repo(
@@ -68,7 +68,7 @@ def get_day_template_repo(
 ) -> DayTemplateRepositoryProtocol:
     """Get a user-scoped instance of DayTemplateRepository."""
     return cast(
-        "DayTemplateRepositoryProtocol", DayTemplateRepository(user_uuid=user.uuid)
+        "DayTemplateRepositoryProtocol", DayTemplateRepository(user_id=user.id)
     )
 
 
@@ -76,14 +76,14 @@ def get_event_repo(
     user: Annotated[User, Depends(get_current_user)],
 ) -> EventRepositoryProtocol:
     """Get a user-scoped instance of EventRepository."""
-    return cast("EventRepositoryProtocol", EventRepository(user_uuid=user.uuid))
+    return cast("EventRepositoryProtocol", EventRepository(user_id=user.id))
 
 
 def get_message_repo(
     user: Annotated[User, Depends(get_current_user)],
 ) -> MessageRepositoryProtocol:
     """Get a user-scoped instance of MessageRepository."""
-    return cast("MessageRepositoryProtocol", MessageRepository(user_uuid=user.uuid))
+    return cast("MessageRepositoryProtocol", MessageRepository(user_id=user.id))
 
 
 def get_push_subscription_repo(
@@ -92,7 +92,7 @@ def get_push_subscription_repo(
     """Get a user-scoped instance of PushSubscriptionRepository."""
     return cast(
         "PushSubscriptionRepositoryProtocol",
-        PushSubscriptionRepository(user_uuid=user.uuid),
+        PushSubscriptionRepository(user_id=user.id),
     )
 
 
@@ -100,14 +100,14 @@ def get_routine_repo(
     user: Annotated[User, Depends(get_current_user)],
 ) -> RoutineRepositoryProtocol:
     """Get a user-scoped instance of RoutineRepository."""
-    return cast("RoutineRepositoryProtocol", RoutineRepository(user_uuid=user.uuid))
+    return cast("RoutineRepositoryProtocol", RoutineRepository(user_id=user.id))
 
 
 def get_task_repo(
     user: Annotated[User, Depends(get_current_user)],
 ) -> TaskRepositoryProtocol:
     """Get a user-scoped instance of TaskRepository."""
-    return cast("TaskRepositoryProtocol", TaskRepository(user_uuid=user.uuid))
+    return cast("TaskRepositoryProtocol", TaskRepository(user_id=user.id))
 
 
 def get_task_definition_repo(
@@ -116,5 +116,5 @@ def get_task_definition_repo(
     """Get a user-scoped instance of TaskDefinitionRepository."""
     return cast(
         "TaskDefinitionRepositoryProtocol",
-        TaskDefinitionRepository(user_uuid=user.uuid),
+        TaskDefinitionRepository(user_id=user.id),
     )

@@ -26,9 +26,9 @@ const DayHeader: Component<{ day: Day }> = (props) => {
           </h1>
           <p class="text-sm text-gray-400 mt-0.5">{monthDay()}</p>
         </div>
-        <Show when={props.day.template_uuid}>
+        <Show when={props.day.template_id}>
           <span class="text-xs uppercase tracking-wider text-gray-400">
-            {props.day.template_uuid}
+            {props.day.template_id}
           </span>
         </Show>
       </div>

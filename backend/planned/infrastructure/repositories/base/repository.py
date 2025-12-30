@@ -91,16 +91,16 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                 yield conn
 
     async def get(self, key: UUID) -> ObjectType:
-        """Get an object by uuid."""
+        """Get an object by id."""
         async with self._get_connection(for_write=False) as conn:
-            stmt = select(self.table).where(self.table.c.uuid == key)
+            stmt = select(self.table).where(self.table.c.id == key)
 
             result = await conn.execute(stmt)
             row = result.mappings().first()
 
             if row is None:
                 raise exceptions.NotFoundError(
-                    f"{self.Object.__name__} with uuid {key} not found"
+                    f"{self.Object.__name__} with id {key} not found"
                 )
 
             return type(self).row_to_entity(dict(row))  # type: ignore[attr-defined,no-any-return]
@@ -135,8 +135,8 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                 else:
                     stmt = stmt.order_by(col)
         else:
-            # Default ordering by uuid
-            stmt = stmt.order_by(self.table.c.uuid)
+            # Default ordering by id
+            stmt = stmt.order_by(self.table.c.id)
 
         return stmt
 
@@ -195,17 +195,17 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
         async with self._get_connection(for_write=True) as conn:
             # Check if object exists
-            # All entities have uuid attribute (from BaseEntityObject)
-            obj_uuid = obj.uuid
-            stmt = select(self.table.c.uuid).where(self.table.c.uuid == obj_uuid)
+            # All entities have id attribute (from BaseEntityObject)
+            obj_id = obj.id
+            stmt = select(self.table.c.id).where(self.table.c.id == obj_id)
             result = await conn.execute(stmt)
             exists = result.first() is not None
 
             # Use PostgreSQL INSERT ... ON CONFLICT DO UPDATE
             insert_stmt = pg_insert(self.table).values(**row)
-            # Exclude only uuid from update
-            update_dict = {k: v for k, v in row.items() if k != "uuid"}
-            index_elements = ["uuid"]
+            # Exclude only id from update
+            update_dict = {k: v for k, v in row.items() if k != "id"}
+            index_elements = ["id"]
             upsert_stmt = insert_stmt.on_conflict_do_update(
                 index_elements=index_elements,
                 set_=update_dict,
@@ -241,10 +241,10 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         key: UUID,
         **updates: Any,
     ) -> ObjectType:
-        """Apply partial updates to an object identified by uuid.
+        """Apply partial updates to an object identified by id.
 
         Args:
-            key: The uuid of the object to update
+            key: The id of the object to update
             **updates: Dictionary of field updates to apply
 
         Returns:
@@ -256,7 +256,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
         async with self._get_connection(for_write=True) as conn:
             # Build update statement
-            stmt = self.table.update().values(**updates).where(self.table.c.uuid == key)
+            stmt = self.table.update().values(**updates).where(self.table.c.id == key)
 
             # Execute update
             await conn.execute(stmt)
@@ -288,7 +288,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         await self.delete(obj)
 
     async def delete(self, key: UUID | ObjectType) -> None:
-        """Delete an object by uuid or by object."""
+        """Delete an object by id or by object."""
         # Handle both key (UUID) and object deletion
         if isinstance(key, UUID):
             # Get object before deleting for event
@@ -299,15 +299,15 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                 return
 
             async with self._get_connection(for_write=True) as conn:
-                stmt = delete(self.table).where(self.table.c.uuid == key)
+                stmt = delete(self.table).where(self.table.c.id == key)
                 await conn.execute(stmt)
         else:
             # key is actually the object
             obj = key
             async with self._get_connection(for_write=True) as conn:
-                # All entities have uuid attribute (from BaseEntityObject)
-                obj_uuid = obj.uuid
-                stmt = delete(self.table).where(self.table.c.uuid == obj_uuid)
+                # All entities have id attribute (from BaseEntityObject)
+                obj_id = obj.id
+                stmt = delete(self.table).where(self.table.c.id == obj_id)
                 await conn.execute(stmt)
 
         event = RepositoryEvent[ObjectType](type="delete", value=obj)
@@ -320,38 +320,38 @@ class UserScopedBaseRepository(
     """Base repository that requires user scoping.
 
     This repository ensures all operations are scoped to a specific user.
-    All queries are automatically filtered by the provided user_uuid.
+    All queries are automatically filtered by the provided user_id.
 
     Type parameters:
         ObjectType: The entity type this repository manages
         QueryType: The query type for filtering/searching (must be a subclass of BaseQuery)
     """
 
-    def __init__(self, user_uuid: UUID) -> None:
+    def __init__(self, user_id: UUID) -> None:
         """Initialize repository with required user scoping.
 
         Args:
-            user_uuid: Required user UUID. All queries will be filtered by this user UUID.
+            user_id: Required user ID. All queries will be filtered by this user ID.
         """
         super().__init__()
-        self.user_uuid = user_uuid
+        self.user_id = user_id
 
     async def get(self, key: UUID) -> ObjectType:
-        """Get an object by uuid, filtered by user_uuid."""
+        """Get an object by id, filtered by user_id."""
         async with self._get_connection(for_write=False) as conn:
             # Build base statement from parent
-            stmt = select(self.table).where(self.table.c.uuid == key)
+            stmt = select(self.table).where(self.table.c.id == key)
 
-            # Add user_uuid filtering
-            if hasattr(self.table.c, "user_uuid"):
-                stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+            # Add user_id filtering
+            if hasattr(self.table.c, "user_id"):
+                stmt = stmt.where(self.table.c.user_id == self.user_id)
 
             result = await conn.execute(stmt)
             row = result.mappings().first()
 
             if row is None:
                 raise exceptions.NotFoundError(
-                    f"{self.Object.__name__} with uuid {key} not found"
+                    f"{self.Object.__name__} with id {key} not found"
                 )
 
             return type(self).row_to_entity(dict(row))  # type: ignore[attr-defined,no-any-return]
@@ -361,21 +361,21 @@ class UserScopedBaseRepository(
         # Call super to build the base query
         stmt = super().build_query(query)
 
-        # Add user_uuid filtering (must be first to ensure proper isolation)
-        if hasattr(self.table.c, "user_uuid"):
-            stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+        # Add user_id filtering (must be first to ensure proper isolation)
+        if hasattr(self.table.c, "user_id"):
+            stmt = stmt.where(self.table.c.user_id == self.user_id)
 
         return stmt
 
     async def all(self) -> list[ObjectType]:
-        """Get all objects, filtered by user_uuid."""
+        """Get all objects, filtered by user_id."""
         async with self._get_connection(for_write=False) as conn:
             # Build base statement from parent
             stmt = select(self.table)
 
-            # Add user_uuid filtering
-            if hasattr(self.table.c, "user_uuid"):
-                stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+            # Add user_id filtering
+            if hasattr(self.table.c, "user_id"):
+                stmt = stmt.where(self.table.c.user_id == self.user_id)
 
             result = await conn.execute(stmt)
             rows = result.mappings().all()
@@ -383,31 +383,31 @@ class UserScopedBaseRepository(
             return [type(self).row_to_entity(dict(row)) for row in rows]  # type: ignore[attr-defined]
 
     async def put(self, obj: ObjectType) -> ObjectType:
-        """Save or update an object, ensuring user_uuid is set and filtered."""
-        # Ensure user_uuid is set on entity
-        if hasattr(obj, "user_uuid"):
-            obj.user_uuid = self.user_uuid
+        """Save or update an object, ensuring user_id is set and filtered."""
+        # Ensure user_id is set on entity
+        if hasattr(obj, "user_id"):
+            obj.user_id = self.user_id
 
         row = type(self).entity_to_row(obj)  # type: ignore[attr-defined]
 
-        # Ensure user_uuid is in the row
-        if "user_uuid" not in row and hasattr(self.table.c, "user_uuid"):
-            row["user_uuid"] = self.user_uuid
+        # Ensure user_id is in the row
+        if "user_id" not in row and hasattr(self.table.c, "user_id"):
+            row["user_id"] = self.user_id
 
         async with self._get_connection(for_write=True) as conn:
             # Check if object exists (with user filtering)
-            obj_uuid = obj.uuid
-            stmt = select(self.table.c.uuid).where(self.table.c.uuid == obj_uuid)
-            if hasattr(self.table.c, "user_uuid"):
-                stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+            obj_id = obj.id
+            stmt = select(self.table.c.id).where(self.table.c.id == obj_id)
+            if hasattr(self.table.c, "user_id"):
+                stmt = stmt.where(self.table.c.user_id == self.user_id)
             result = await conn.execute(stmt)
             exists = result.first() is not None
 
             # Use PostgreSQL INSERT ... ON CONFLICT DO UPDATE
             insert_stmt = pg_insert(self.table).values(**row)
-            # Exclude only uuid from update
-            update_dict = {k: v for k, v in row.items() if k != "uuid"}
-            index_elements = ["uuid"]
+            # Exclude only id from update
+            update_dict = {k: v for k, v in row.items() if k != "id"}
+            index_elements = ["id"]
             upsert_stmt = insert_stmt.on_conflict_do_update(
                 index_elements=index_elements,
                 set_=update_dict,
@@ -420,22 +420,22 @@ class UserScopedBaseRepository(
         return obj
 
     async def insert_many(self, *objs: ObjectType) -> list[ObjectType]:
-        """Insert multiple objects in a single transaction, ensuring user_uuid is set."""
+        """Insert multiple objects in a single transaction, ensuring user_id is set."""
         if not objs:
             return []
 
-        # Ensure user_uuid is set on all entities
+        # Ensure user_id is set on all entities
         for obj in objs:
-            if hasattr(obj, "user_uuid"):
-                obj.user_uuid = self.user_uuid
+            if hasattr(obj, "user_id"):
+                obj.user_id = self.user_id
 
         rows = [type(self).entity_to_row(obj) for obj in objs]  # type: ignore[attr-defined]
 
-        # Ensure user_uuid is in all rows
-        if hasattr(self.table.c, "user_uuid"):
+        # Ensure user_id is in all rows
+        if hasattr(self.table.c, "user_id"):
             for row in rows:
-                if "user_uuid" not in row:
-                    row["user_uuid"] = self.user_uuid
+                if "user_id" not in row:
+                    row["user_id"] = self.user_id
 
         async with self._get_connection(for_write=True) as conn:
             # Insert all rows - using executemany with VALUES
@@ -451,18 +451,18 @@ class UserScopedBaseRepository(
         key: UUID,
         **updates: Any,
     ) -> ObjectType:
-        """Apply partial updates to an object identified by uuid, filtered by user_uuid."""
+        """Apply partial updates to an object identified by id, filtered by user_id."""
         if not updates:
             # No updates to apply, just fetch and return
             return await self.get(key)
 
         async with self._get_connection(for_write=True) as conn:
             # Build update statement
-            stmt = self.table.update().values(**updates).where(self.table.c.uuid == key)
+            stmt = self.table.update().values(**updates).where(self.table.c.id == key)
 
-            # Add user_uuid filtering
-            if hasattr(self.table.c, "user_uuid"):
-                stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+            # Add user_id filtering
+            if hasattr(self.table.c, "user_id"):
+                stmt = stmt.where(self.table.c.user_id == self.user_id)
 
             # Execute update
             await conn.execute(stmt)
@@ -471,7 +471,7 @@ class UserScopedBaseRepository(
         return await self.get(key)
 
     async def delete(self, key: UUID | ObjectType) -> None:
-        """Delete an object by uuid or by object, filtered by user_uuid."""
+        """Delete an object by id or by object, filtered by user_id."""
         # Handle both key (UUID) and object deletion
         if isinstance(key, UUID):
             # Get object before deleting for event
@@ -482,21 +482,21 @@ class UserScopedBaseRepository(
                 return
 
             async with self._get_connection(for_write=True) as conn:
-                stmt = delete(self.table).where(self.table.c.uuid == key)
-                # Add user_uuid filtering
-                if hasattr(self.table.c, "user_uuid"):
-                    stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+                stmt = delete(self.table).where(self.table.c.id == key)
+                # Add user_id filtering
+                if hasattr(self.table.c, "user_id"):
+                    stmt = stmt.where(self.table.c.user_id == self.user_id)
                 await conn.execute(stmt)
         else:
             # key is actually the object
             obj = key
             async with self._get_connection(for_write=True) as conn:
-                # All entities have uuid attribute (from BaseEntityObject)
-                obj_uuid = obj.uuid
-                stmt = delete(self.table).where(self.table.c.uuid == obj_uuid)
-                # Add user_uuid filtering
-                if hasattr(self.table.c, "user_uuid"):
-                    stmt = stmt.where(self.table.c.user_uuid == self.user_uuid)
+                # All entities have id attribute (from BaseEntityObject)
+                obj_id = obj.id
+                stmt = delete(self.table).where(self.table.c.id == obj_id)
+                # Add user_id filtering
+                if hasattr(self.table.c, "user_id"):
+                    stmt = stmt.where(self.table.c.user_id == self.user_id)
                 await conn.execute(stmt)
 
         event = RepositoryEvent[ObjectType](type="delete", value=obj)

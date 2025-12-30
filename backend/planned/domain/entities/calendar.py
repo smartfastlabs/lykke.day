@@ -8,18 +8,18 @@ from .base import BaseEntityObject
 
 
 class Calendar(BaseEntityObject):
-    uuid: UUID = Field(default_factory=uuid.uuid4)
-    user_uuid: UUID
+    id: UUID = Field(default_factory=uuid.uuid4)
+    user_id: UUID
     name: str
-    auth_token_uuid: UUID
+    auth_token_id: UUID
     platform_id: str
     platform: str
     last_sync_at: datetime | None = None
 
     def model_post_init(self, __context__=None) -> None:  # type: ignore
         # Generate UUID5 based on platform and platform_id for deterministic IDs
-        # Only set if uuid was not explicitly provided
-        if "uuid" not in self.model_fields_set:
+        # Only set if id was not explicitly provided
+        if "id" not in self.model_fields_set:
             namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
             name = f"{self.platform}:{self.platform_id}"
-            self.uuid = uuid.uuid5(namespace, name)
+            self.id = uuid.uuid5(namespace, name)

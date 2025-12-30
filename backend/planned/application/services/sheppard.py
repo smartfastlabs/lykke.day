@@ -187,7 +187,7 @@ class SheppardService(BaseService):
         # Include task information in the data field
         task_data = [
             {
-                "uuid": task.uuid,
+                "id": task.id,
                 "name": task.name,
                 "status": task.status.value,
                 "category": task.category.value,
@@ -207,7 +207,7 @@ class SheppardService(BaseService):
             ],
             data={
                 "type": "tasks",
-                "task_uuids": [task.uuid for task in tasks],
+                "task_ids": [task.id for task in tasks],
                 "tasks": task_data,
             },
         )
@@ -252,11 +252,11 @@ class SheppardService(BaseService):
         # Include event information in the data field
         event_data = [
             {
-                "uuid": event.uuid,
+                "id": event.id,
                 "name": event.name,
                 "starts_at": event.starts_at.isoformat(),
                 "ends_at": event.ends_at.isoformat() if event.ends_at else None,
-                "calendar_uuid": event.calendar_uuid,
+                "calendar_id": event.calendar_id,
                 "platform_id": event.platform_id,
                 "status": event.status,
             }
@@ -275,7 +275,7 @@ class SheppardService(BaseService):
             ],
             data={
                 "type": "events",
-                "event_uuids": [event.uuid for event in events],
+                "event_ids": [event.id for event in events],
                 "events": event_data,
             },
         )
@@ -335,7 +335,7 @@ class SheppardService(BaseService):
         # send morning summary
         self.day_svc = await DayService.for_date(
             get_current_date(),
-            user_uuid=self.planning_service.user_uuid,
+            user_id=self.planning_service.user_id,
             day_repo=self.day_repo,
             day_template_repo=self.day_template_repo,
             event_repo=self.event_repo,

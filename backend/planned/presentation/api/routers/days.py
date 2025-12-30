@@ -53,7 +53,7 @@ async def _get_context_for_date(
     """Helper function to get context for a specific date."""
     day_svc: DayService = await DayService.for_date(
         date,
-        user_uuid=user.uuid,
+        user_id=user.id,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
@@ -148,7 +148,7 @@ async def get_context(
 
 class UpdateDayRequest(BaseRequestObject):
     status: DayStatus | None = None
-    template_uuid: UUID | None = None
+    template_id: UUID | None = None
 
 
 @router.patch("/{date}")
@@ -164,15 +164,15 @@ async def update_day(
 ) -> Day:
     day: Day = await DayService.get_or_preview(
         date,
-        user_uuid=user.uuid,
+        user_id=user.id,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
     )
     if request.status is not None:
         day.status = request.status
-    if request.template_uuid is not None:
-        day.template_uuid = request.template_uuid
+    if request.template_id is not None:
+        day.template_id = request.template_id
     return await day_repo.put(day)
 
 

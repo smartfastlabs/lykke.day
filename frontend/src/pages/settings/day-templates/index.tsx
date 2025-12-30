@@ -11,8 +11,8 @@ const DayTemplatesPage: Component = () => {
   const [templates] = createResource(dayTemplateAPI.getAll);
 
   const onClick = (template: DayTemplate) => {
-    if (template.uuid) {
-      navigate(`/settings/day-templates/${template.uuid}`);
+    if (template.id) {
+      navigate(`/settings/day-templates/${template.id}`);
     }
   };
 

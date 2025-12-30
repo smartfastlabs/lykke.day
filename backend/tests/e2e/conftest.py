@@ -35,12 +35,12 @@ def setup_test_user_day_template():
         )
         test_user = await user_repo.put(test_user)
 
-        test_user_uuid = test_user.uuid
-        day_template_repo = DayTemplateRepository(user_uuid=test_user_uuid)
+        test_user_id = test_user.id
+        day_template_repo = DayTemplateRepository(user_id=test_user_id)
 
         # Create default template (UUID will be auto-generated)
         default_template = DayTemplate(
-            user_uuid=test_user_uuid,
+            user_id=test_user_id,
             slug="default",
             tasks=[],
             alarm=Alarm(

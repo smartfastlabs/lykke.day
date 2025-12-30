@@ -48,8 +48,8 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     )
     register_data = register_response.json()
     assert register_data["email"] == email
-    user_uuid_str = register_data["uuid"]
-    assert user_uuid_str is not None
+    user_id_str = register_data["id"]
+    assert user_id_str is not None
 
     # Verify user exists in database after registration
     user_repo = UserRepository()
@@ -57,7 +57,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     assert user_from_db is not None, "User should exist in database after registration"
     assert user_from_db.email == email
     assert user_from_db.password_hash is not None, "Password hash should be set"
-    assert str(user_from_db.uuid) == user_uuid_str
+    assert str(user_from_db.id) == user_id_str
 
     # Step 2: Login as the user (using a fresh client to simulate real scenario)
     # Note: TestClient should preserve cookies/session from registration
@@ -69,15 +69,15 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     assert login_response.status_code == 200, f"Login failed: {login_response.text}"
     login_data = login_response.json()
     assert login_data["email"] == email
-    assert login_data["uuid"] == user_uuid_str
+    assert login_data["id"] == user_id_str
 
     # Create default DayTemplate (required for scheduling)
     # Note: In production, this would be created by SheppardManager, but for e2e test
     # we create it directly since there's no API endpoint for template creation
-    user_uuid = UUID(user_uuid_str)
-    day_template_repo = DayTemplateRepository(user_uuid=user_uuid)
+    user_id = UUID(user_id_str)
+    day_template_repo = DayTemplateRepository(user_id=user_id)
     default_template = DayTemplate(
-        user_uuid=user_uuid,
+        user_id=user_id,
         slug="default",
         tasks=[],
         alarm=Alarm(
@@ -96,7 +96,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     )
     schedule_data = schedule_response.json()
     assert "day" in schedule_data
-    assert schedule_data["day"]["user_uuid"] == user_uuid_str
+    assert schedule_data["day"]["user_id"] == user_id_str
 
     # Get context for today (loads day, tasks, events, messages)
     context_response = test_client.get("/days/today/context")
@@ -108,7 +108,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     assert "tasks" in context_data
     assert "events" in context_data
     assert "messages" in context_data
-    assert context_data["day"]["user_uuid"] == user_uuid_str
+    assert context_data["day"]["user_id"] == user_id_str
 
     # Get templates
     templates_response = test_client.get("/days/templates")
@@ -124,22 +124,22 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     # Verify user in database
     user_from_db_after = await user_repo.get_by_email(email)
     assert user_from_db_after is not None
-    assert user_from_db_after.uuid == user_uuid
+    assert user_from_db_after.id == user_id
 
     # Verify day was created in database
-    day_repo = DayRepository(user_uuid=user_uuid)
+    day_repo = DayRepository(user_id=user_id)
     days = await day_repo.all()
     assert len(days) > 0, "At least one day should exist after scheduling"
 
     # Find the scheduled day
     scheduled_day = None
     for day in days:
-        if day.user_uuid == user_uuid:
+        if day.user_id == user_id:
             scheduled_day = day
             break
 
     assert scheduled_day is not None, "Scheduled day should exist in database"
-    assert scheduled_day.user_uuid == user_uuid
+    assert scheduled_day.user_id == user_id
     assert scheduled_day.status in [
         DayStatus.SCHEDULED,
         DayStatus.COMPLETE,
@@ -149,7 +149,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     )
 
     # Verify day template exists in database
-    day_template_repo = DayTemplateRepository(user_uuid=user_uuid)
+    day_template_repo = DayTemplateRepository(user_id=user_id)
     templates = await day_template_repo.all()
     assert len(templates) > 0, "At least one day template should exist"
 
@@ -161,11 +161,11 @@ async def test_full_user_flow_e2e(test_client: TestClient):
             break
 
     assert default_template is not None, "Default template should exist"
-    assert default_template.user_uuid == user_uuid
+    assert default_template.user_id == user_id
 
     # Verify the scheduled day references a template
-    if scheduled_day.template_uuid:
-        template_uuids = [t.uuid for t in templates]
-        assert scheduled_day.template_uuid in template_uuids, (
+    if scheduled_day.template_id:
+        template_ids = [t.id for t in templates]
+        assert scheduled_day.template_id in template_ids, (
             "Day should reference an existing template"
         )

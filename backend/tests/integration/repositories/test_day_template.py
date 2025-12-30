@@ -17,7 +17,7 @@ async def test_get_by_slug(day_template_repo, test_user, setup_day_templates):
     result = await day_template_repo.get_by_slug("default")
 
     assert result.slug == "default"
-    assert result.user_uuid == test_user.uuid
+    assert result.user_id == test_user.id
 
 
 @pytest.mark.asyncio
@@ -31,7 +31,7 @@ async def test_get_by_slug_not_found(day_template_repo):
 async def test_put(day_template_repo, test_user):
     """Test creating a new day template."""
     template = DayTemplate(
-        user_uuid=test_user.uuid,
+        user_id=test_user.id,
         slug="custom",
         tasks=[],
         alarm=Alarm(
@@ -66,7 +66,7 @@ async def test_user_isolation(
     await setup_day_templates
     # Create another user
     user2 = await create_test_user()
-    day_template_repo2 = DayTemplateRepository(user_uuid=user2.uuid)
+    day_template_repo2 = DayTemplateRepository(user_id=user2.id)
 
     # User2 should not see user1's templates
     with pytest.raises(exceptions.NotFoundError):
@@ -74,4 +74,4 @@ async def test_user_isolation(
 
     # User1 should still see their templates
     result = await day_template_repo.get_by_slug("default")
-    assert result.user_uuid == test_user.uuid
+    assert result.user_id == test_user.id

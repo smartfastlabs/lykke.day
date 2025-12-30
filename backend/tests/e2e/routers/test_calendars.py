@@ -17,7 +17,7 @@ async def test_list_calendars(authenticated_client):
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
         uuid=uuid4(),
-        user_uuid=user.uuid,
+        user_id=user.id,
         platform="google",
         token="test_token",
         refresh_token="refresh_token",
@@ -25,11 +25,11 @@ async def test_list_calendars(authenticated_client):
     auth_token = await auth_token_repo.put(auth_token)
 
     # Create a calendar via repository
-    calendar_repo = CalendarRepository(user_uuid=user.uuid)
+    calendar_repo = CalendarRepository(user_id=user.id)
     calendar = Calendar(
-        user_uuid=user.uuid,
+        user_id=user.id,
         name="Test Calendar",
-        auth_token_uuid=auth_token.uuid,
+        auth_token_id=auth_token.id,
         platform="google",
         platform_id="test-platform-id",
     )
@@ -57,7 +57,7 @@ async def test_get_calendar(authenticated_client):
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
         uuid=uuid4(),
-        user_uuid=user.uuid,
+        user_id=user.id,
         platform="google",
         token="test_token",
         refresh_token="refresh_token",
@@ -65,24 +65,24 @@ async def test_get_calendar(authenticated_client):
     auth_token = await auth_token_repo.put(auth_token)
 
     # Create a calendar via repository
-    calendar_repo = CalendarRepository(user_uuid=user.uuid)
+    calendar_repo = CalendarRepository(user_id=user.id)
     calendar = Calendar(
-        user_uuid=user.uuid,
+        user_id=user.id,
         name="Get Test Calendar",
-        auth_token_uuid=auth_token.uuid,
+        auth_token_id=auth_token.id,
         platform="google",
         platform_id="test-platform-id",
     )
     calendar = await calendar_repo.put(calendar)
 
     # Get the specific calendar
-    response = client.get(f"/calendars/{calendar.uuid}")
+    response = client.get(f"/calendars/{calendar.id}")
 
     assert response.status_code == 200
     data = response.json()
-    assert data["uuid"] == str(calendar.uuid)
+    assert data["id"] == str(calendar.id)
     assert data["name"] == "Get Test Calendar"
-    assert data["user_uuid"] == str(user.uuid)
+    assert data["user_id"] == str(user.id)
 
 
 @pytest.mark.asyncio
@@ -90,8 +90,8 @@ async def test_get_calendar_not_found(authenticated_client):
     """Test getting a non-existent calendar returns 404."""
     client, user = await authenticated_client()
 
-    fake_uuid = uuid4()
-    response = client.get(f"/calendars/{fake_uuid}")
+    fake_id = uuid4()
+    response = client.get(f"/calendars/{fake_id}")
 
     assert response.status_code == 404
 
@@ -105,7 +105,7 @@ async def test_create_calendar(authenticated_client):
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
         uuid=uuid4(),
-        user_uuid=user.uuid,
+        user_id=user.id,
         platform="google",
         token="test_token",
         refresh_token="refresh_token",
@@ -113,9 +113,9 @@ async def test_create_calendar(authenticated_client):
     auth_token = await auth_token_repo.put(auth_token)
 
     calendar_data = {
-        "user_uuid": str(user.uuid),
+        "user_id": str(user.id),
         "name": "New Calendar",
-        "auth_token_uuid": str(auth_token.uuid),
+        "auth_token_id": str(auth_token.id),
         "platform": "google",
         "platform_id": "new-platform-id",
     }
@@ -125,7 +125,7 @@ async def test_create_calendar(authenticated_client):
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "New Calendar"
-    assert data["user_uuid"] == str(user.uuid)
+    assert data["user_id"] == str(user.id)
     assert data["platform"] == "google"
     assert data["platform_id"] == "new-platform-id"
 
@@ -139,7 +139,7 @@ async def test_update_calendar(authenticated_client):
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
         uuid=uuid4(),
-        user_uuid=user.uuid,
+        user_id=user.id,
         platform="google",
         token="test_token",
         refresh_token="refresh_token",
@@ -148,29 +148,29 @@ async def test_update_calendar(authenticated_client):
 
     # Create a calendar
     calendar_data = {
-        "user_uuid": str(user.uuid),
+        "user_id": str(user.id),
         "name": "Update Test Calendar",
-        "auth_token_uuid": str(auth_token.uuid),
+        "auth_token_id": str(auth_token.id),
         "platform": "google",
         "platform_id": "update-test-id",
     }
     create_response = client.post("/calendars/", json=calendar_data)
     assert create_response.status_code == 200
-    calendar_uuid = create_response.json()["uuid"]
+    calendar_id = create_response.json()["id"]
 
     # Update the calendar
     update_data = {
-        "user_uuid": str(user.uuid),
+        "user_id": str(user.id),
         "name": "Updated Calendar Name",
-        "auth_token_uuid": str(auth_token.uuid),
+        "auth_token_id": str(auth_token.id),
         "platform": "google",
         "platform_id": "update-test-id",
     }
-    response = client.put(f"/calendars/{calendar_uuid}", json=update_data)
+    response = client.put(f"/calendars/{calendar_id}", json=update_data)
 
     assert response.status_code == 200
     data = response.json()
-    assert data["uuid"] == calendar_uuid
+    assert data["id"] == calendar_id
     assert data["name"] == "Updated Calendar Name"
 
 
@@ -183,22 +183,22 @@ async def test_update_calendar_not_found(authenticated_client):
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
         uuid=uuid4(),
-        user_uuid=user.uuid,
+        user_id=user.id,
         platform="google",
         token="test_token",
         refresh_token="refresh_token",
     )
     auth_token = await auth_token_repo.put(auth_token)
 
-    fake_uuid = uuid4()
+    fake_id = uuid4()
     update_data = {
-        "user_uuid": str(user.uuid),
+        "user_id": str(user.id),
         "name": "Does Not Exist",
-        "auth_token_uuid": str(auth_token.uuid),
+        "auth_token_id": str(auth_token.id),
         "platform": "google",
         "platform_id": "test-id",
     }
-    response = client.put(f"/calendars/{fake_uuid}", json=update_data)
+    response = client.put(f"/calendars/{fake_id}", json=update_data)
 
     assert response.status_code == 404
 
@@ -212,7 +212,7 @@ async def test_delete_calendar(authenticated_client):
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
         uuid=uuid4(),
-        user_uuid=user.uuid,
+        user_id=user.id,
         platform="google",
         token="test_token",
         refresh_token="refresh_token",
@@ -221,23 +221,23 @@ async def test_delete_calendar(authenticated_client):
 
     # Create a calendar
     calendar_data = {
-        "user_uuid": str(user.uuid),
+        "user_id": str(user.id),
         "name": "Delete Test Calendar",
-        "auth_token_uuid": str(auth_token.uuid),
+        "auth_token_id": str(auth_token.id),
         "platform": "google",
         "platform_id": "delete-test-id",
     }
     create_response = client.post("/calendars/", json=calendar_data)
     assert create_response.status_code == 200
-    calendar_uuid = create_response.json()["uuid"]
+    calendar_id = create_response.json()["id"]
 
     # Delete the calendar
-    response = client.delete(f"/calendars/{calendar_uuid}")
+    response = client.delete(f"/calendars/{calendar_id}")
 
     assert response.status_code == 200
 
     # Verify it's gone
-    get_response = client.get(f"/calendars/{calendar_uuid}")
+    get_response = client.get(f"/calendars/{calendar_id}")
     assert get_response.status_code == 404
 
 
@@ -246,8 +246,8 @@ async def test_delete_calendar_not_found(authenticated_client):
     """Test deleting a non-existent calendar returns 404."""
     client, user = await authenticated_client()
 
-    fake_uuid = uuid4()
-    response = client.delete(f"/calendars/{fake_uuid}")
+    fake_id = uuid4()
+    response = client.delete(f"/calendars/{fake_id}")
 
     assert response.status_code == 404
 
@@ -261,7 +261,7 @@ async def test_list_calendars_pagination(authenticated_client):
     auth_token_repo = AuthTokenRepository()
     auth_token = AuthToken(
         uuid=uuid4(),
-        user_uuid=user.uuid,
+        user_id=user.id,
         platform="google",
         token="test_token",
         refresh_token="refresh_token",
@@ -269,12 +269,12 @@ async def test_list_calendars_pagination(authenticated_client):
     auth_token = await auth_token_repo.put(auth_token)
 
     # Create multiple calendars
-    calendar_repo = CalendarRepository(user_uuid=user.uuid)
+    calendar_repo = CalendarRepository(user_id=user.id)
     for i in range(3):
         calendar = Calendar(
-            user_uuid=user.uuid,
+            user_id=user.id,
             name=f"Pagination Test {i}",
-            auth_token_uuid=auth_token.uuid,
+            auth_token_id=auth_token.id,
             platform="google",
             platform_id=f"pagination-test-{i}",
         )

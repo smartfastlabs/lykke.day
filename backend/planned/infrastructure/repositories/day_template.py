@@ -15,9 +15,9 @@ class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, DayTemplateQue
     table = day_templates_tbl
     QueryClass = DayTemplateQuery
 
-    def __init__(self, user_uuid: UUID) -> None:
+    def __init__(self, user_id: UUID) -> None:
         """Initialize DayTemplateRepository with user scoping."""
-        super().__init__(user_uuid=user_uuid)
+        super().__init__(user_id=user_id)
 
     def build_query(self, query: DayTemplateQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
@@ -32,8 +32,8 @@ class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, DayTemplateQue
     def entity_to_row(template: DayTemplate) -> dict[str, Any]:
         """Convert a DayTemplate entity to a database row dict."""
         row: dict[str, Any] = {
-            "uuid": template.uuid,
-            "user_uuid": template.user_uuid,
+            "id": template.id,
+            "user_id": template.user_id,
             "slug": template.slug,
             "tasks": template.tasks,
             "icon": template.icon,
