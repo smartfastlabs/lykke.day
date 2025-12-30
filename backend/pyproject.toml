@@ -14,6 +14,7 @@ gcsa = "2.5.1"
 uvicorn = "^0.23.0"
 alembic = "^1.11.0"
 fastapi = "^0.122.0"
+fastapi-users = {extras = ["sqlalchemy2"], version = "^15.0.3"}
 sqlalchemy = "^2.0.0"
 psycopg = {extras = ["pool"], version = "^3.2.0"}
 pydantic-settings = "^2.8.1"
