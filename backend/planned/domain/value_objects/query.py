@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from datetime import date as dt_date, datetime
+from typing import Generic, TypeVar
 
 import pydantic
+
+from .base import BaseRequestObject, BaseResponseObject
 
 
 class BaseQuery(pydantic.BaseModel):
@@ -27,4 +30,29 @@ class DateQuery(BaseQuery):
     """Query class for entities with a date column."""
 
     date: dt_date | None = None
+
+
+T = TypeVar("T", bound=BaseQuery)
+
+
+class PagedQueryRequest(BaseRequestObject, Generic[T]):
+    """Request wrapper for paginated queries."""
+
+    limit: int = pydantic.Field(default=50, ge=1, le=1000)
+    offset: int = pydantic.Field(default=0, ge=0)
+    query: T | None = None  # Optional nested query object (DateQuery, BaseQuery, etc.)
+
+
+EntityType = TypeVar("EntityType")
+
+
+class PagedQueryResponse(BaseResponseObject, Generic[EntityType]):
+    """Response wrapper for paginated query results."""
+
+    items: list[EntityType]
+    total: int
+    limit: int
+    offset: int
+    has_next: bool
+    has_previous: bool
 
