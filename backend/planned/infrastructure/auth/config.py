@@ -102,8 +102,21 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         request: Request | None = None,
     ) -> None:
         """Called after a user registers."""
-        # Could add logging or other post-registration logic here
-        pass
+        from planned.domain.entities import DayTemplate
+        from planned.infrastructure.repositories import DayTemplateRepository
+
+        # Create default day templates for new user
+        day_template_repo = DayTemplateRepository(user_id=user.id)
+        
+        default_templates = [
+            DayTemplate(user_id=user.id, slug="default", tasks=[], alarm=None, icon=None),
+            DayTemplate(user_id=user.id, slug="workday", tasks=[], alarm=None, icon=None),
+            DayTemplate(user_id=user.id, slug="weekday", tasks=[], alarm=None, icon=None),
+            DayTemplate(user_id=user.id, slug="weekend", tasks=[], alarm=None, icon=None),
+        ]
+        
+        # Insert all templates using insert_many for efficiency
+        await day_template_repo.insert_many(*default_templates)
 
 
 async def get_user_manager(

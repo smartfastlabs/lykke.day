@@ -1,5 +1,8 @@
 """Router for TaskDefinition CRUD operations."""
 
+from fastapi import APIRouter
+
+from planned.infrastructure.data.default_task_definitions import DEFAULT_TASK_DEFINITIONS
 from planned.infrastructure.repositories import TaskDefinitionRepository
 from planned.presentation.api.routers.dependencies.repositories import (
     get_task_definition_repo,
@@ -21,8 +24,19 @@ router = create_crud_router(
             enable_create=True,
             enable_update=True,
             enable_delete=True,
+            enable_bulk_create=True,
         ),
         tags=["task-definitions"],
     )
 )
+
+
+@router.get("/available")
+async def get_available_task_definitions() -> list[dict]:
+    """Get the curated list of available task definitions that users can import.
+    
+    Returns:
+        List of task definition dictionaries (without user_id)
+    """
+    return DEFAULT_TASK_DEFINITIONS
 

@@ -328,4 +328,26 @@ export const taskDefinitionAPI = {
     // Fallback to direct array if not paginated
     return resp.data as TaskDefinition[];
   },
+
+  getAvailable: async (): Promise<TaskDefinition[]> => {
+    const resp = await fetchJSON("/api/task-definitions/available", {
+      method: "GET",
+    });
+
+    return resp.data as TaskDefinition[];
+  },
+
+  bulkCreate: async (
+    taskDefinitions: TaskDefinition[]
+  ): Promise<TaskDefinition[]> => {
+    const resp = await fetchJSON("/api/task-definitions/bulk", {
+      method: "POST",
+      body: JSON.stringify(taskDefinitions),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return resp.data as TaskDefinition[];
+  },
 };

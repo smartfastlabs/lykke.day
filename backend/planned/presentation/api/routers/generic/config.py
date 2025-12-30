@@ -15,6 +15,7 @@ class CRUDOperations:
     enable_create: bool = True
     enable_update: bool = True
     enable_delete: bool = True
+    enable_bulk_create: bool = False
 
 
 @dataclass

@@ -36,6 +36,10 @@ class RepositoryProtocol(Protocol[EntityType]):
         """Delete an object by key or by object."""
         ...
 
+    async def insert_many(self, *objs: EntityType) -> list[EntityType]:
+        """Insert multiple objects in a single transaction."""
+        ...
+
 
 class SearchableRepositoryProtocol(Protocol[EntityType]):
     """Protocol for repositories that support search_query."""
@@ -243,3 +247,25 @@ async def handle_delete(
     # Get entity first to verify it exists
     entity = await repo.get(entity_id)
     await repo.delete(entity)
+
+
+async def handle_bulk_create(
+    entities: list[EntityType],
+    repo: RepositoryProtocol[EntityType],
+    _user: User,
+) -> list[EntityType]:
+    """Handle POST request for bulk creating entities.
+
+    Args:
+        entities: List of entity objects to create (user_id should already be set)
+        repo: Repository instance
+        user: Current user
+
+    Returns:
+        List of created entities
+    """
+    if not entities:
+        return []
+
+    created = await repo.insert_many(*entities)
+    return created

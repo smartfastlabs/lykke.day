@@ -4,13 +4,13 @@ from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
-
 from planned.domain.entities import User
 from planned.domain.value_objects.query import PagedQueryRequest
 from planned.presentation.api.routers.dependencies.user import get_current_user
 
 from .config import EntityRouterConfig
 from .handlers import (
+    handle_bulk_create,
     handle_create,
     handle_delete,
     handle_get,
@@ -140,6 +140,26 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
             user: Annotated[User, Depends(get_current_user)],
         ) -> entity_type:  # type: ignore
             return await handle_create(entity_data, repo, user)
+
+    # POST /bulk - Bulk create entities
+    if operations.enable_bulk_create:
+
+        @router.post("/bulk")
+        async def bulk_create_entities(
+            entities_data: list[dict],  # type: ignore
+            repo: Annotated[Any, Depends(repo_loader)],
+            user: Annotated[User, Depends(get_current_user)],
+        ) -> list[entity_type]:  # type: ignore
+            # Convert dictionaries to entity objects, setting user_id
+            entities = []
+            for data in entities_data:
+                # Set user_id if not present (Pydantic will handle UUID conversion)
+                if "user_id" not in data:
+                    data["user_id"] = user.id
+                # Create entity from dict
+                entity = entity_type.model_validate(data)  # type: ignore
+                entities.append(entity)
+            return await handle_bulk_create(entities, repo, user)
 
     # PUT /{uuid} - Update entity
     if operations.enable_update:
