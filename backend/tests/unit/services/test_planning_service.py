@@ -33,7 +33,6 @@ from planned.domain.value_objects.user import UserSetting
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip
 async def test_preview_tasks(
     mock_user_repo,
     mock_day_repo,
@@ -48,6 +47,7 @@ async def test_preview_tasks(
     """Test preview_tasks generates tasks from active routines."""
     date = datetime.date(2024, 1, 1)  # Monday
 
+    task_def_uuid = uuid4()
     routine = Routine(
         uuid=uuid4(),
         user_uuid=test_user_uuid,
@@ -58,7 +58,7 @@ async def test_preview_tasks(
         ),
         tasks=[
             RoutineTask(
-                task_definition_uuid=uuid4(),
+                task_definition_uuid=task_def_uuid,
                 name="Brush Teeth",
             ),
         ],
@@ -66,6 +66,7 @@ async def test_preview_tasks(
     )
 
     task_def = TaskDefinition(
+        uuid=task_def_uuid,
         user_uuid=test_user_uuid,
         name="Brush Teeth",
         description="Brush teeth routine",
@@ -73,7 +74,7 @@ async def test_preview_tasks(
     )
 
     allow(mock_routine_repo).all().and_return([routine])
-    allow(mock_task_definition_repo).get(task_def.uuid).and_return(task_def)
+    allow(mock_task_definition_repo).get(task_def_uuid).and_return(task_def)
 
     service = PlanningService(
         user_uuid=test_user_uuid,
@@ -219,7 +220,6 @@ async def test_preview_creates_day_context(
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip
 async def test_preview_uses_existing_day_template(
     mock_user_repo,
     mock_day_repo,
@@ -480,7 +480,6 @@ async def test_save_action_for_task(
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip
 async def test_save_action_for_event(
     mock_user_repo,
     mock_day_repo,
@@ -528,5 +527,260 @@ async def test_save_action_for_event(
 
     assert len(result.actions) == 1
     assert result.actions[0].type == ActionType.NOTIFY
+
+
+@pytest.mark.asyncio
+async def test_preview_with_template_uuid(
+    mock_user_repo,
+    mock_day_repo,
+    mock_day_template_repo,
+    mock_event_repo,
+    mock_message_repo,
+    mock_routine_repo,
+    mock_task_definition_repo,
+    mock_task_repo,
+    test_user_uuid,
+):
+    """Test preview with explicit template_uuid."""
+    date = datetime.date(2024, 1, 1)
+    template_uuid = uuid4()
+
+    template = DayTemplate(
+        uuid=template_uuid,
+        slug="custom",
+        user_uuid=test_user_uuid,
+    )
+
+    allow(mock_day_template_repo).get(template_uuid).and_return(template)
+    allow(mock_routine_repo).all().and_return([])
+    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_message_repo).search_query.and_return([])
+
+    service = PlanningService(
+        user_uuid=test_user_uuid,
+        user_repo=mock_user_repo,
+        day_repo=mock_day_repo,
+        day_template_repo=mock_day_template_repo,
+        event_repo=mock_event_repo,
+        message_repo=mock_message_repo,
+        routine_repo=mock_routine_repo,
+        task_definition_repo=mock_task_definition_repo,
+        task_repo=mock_task_repo,
+    )
+
+    result = await service.preview(date, template_uuid=template_uuid)
+
+    assert result.day.template_uuid == template_uuid
+
+
+@pytest.mark.asyncio
+async def test_schedule_with_template_uuid(
+    mock_user_repo,
+    mock_day_repo,
+    mock_day_template_repo,
+    mock_event_repo,
+    mock_message_repo,
+    mock_routine_repo,
+    mock_task_definition_repo,
+    mock_task_repo,
+    test_user_uuid,
+):
+    """Test schedule with explicit template_uuid."""
+    date = datetime.date(2024, 1, 1)
+    template_uuid = uuid4()
+
+    template = DayTemplate(
+        uuid=template_uuid,
+        slug="custom",
+        user_uuid=test_user_uuid,
+    )
+
+    allow(mock_task_repo).delete_many.and_return(None)
+    allow(mock_day_template_repo).get(template_uuid).and_return(template)
+    allow(mock_routine_repo).all().and_return([])
+    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_message_repo).search_query.and_return([])
+    allow(mock_day_repo).put.and_return(
+        Day(
+            user_uuid=test_user_uuid,
+            date=date,
+            status=DayStatus.SCHEDULED,
+            template_uuid=template_uuid,
+        )
+    )
+    allow(mock_task_repo).put.and_return(None)
+
+    service = PlanningService(
+        user_uuid=test_user_uuid,
+        user_repo=mock_user_repo,
+        day_repo=mock_day_repo,
+        day_template_repo=mock_day_template_repo,
+        event_repo=mock_event_repo,
+        message_repo=mock_message_repo,
+        routine_repo=mock_routine_repo,
+        task_definition_repo=mock_task_definition_repo,
+        task_repo=mock_task_repo,
+    )
+
+    result = await service.schedule(date, template_uuid=template_uuid)
+
+    assert result.day.status == DayStatus.SCHEDULED
+    assert result.day.template_uuid == template_uuid
+
+
+@pytest.mark.asyncio
+async def test_save_action_for_task_punted(
+    mock_user_repo,
+    mock_day_repo,
+    mock_day_template_repo,
+    mock_event_repo,
+    mock_message_repo,
+    mock_routine_repo,
+    mock_task_definition_repo,
+    mock_task_repo,
+    test_user_uuid,
+):
+    """Test save_action updates task status to PUNTED."""
+    date = datetime.date(2024, 1, 1)
+    task = Task(
+        uuid=uuid4(),
+        user_uuid=test_user_uuid,
+        name="Test Task",
+        status=TaskStatus.NOT_STARTED,
+        scheduled_date=date,
+        task_definition=TaskDefinition(
+            user_uuid=test_user_uuid,
+            name="Task Def",
+            description="Test task definition",
+            type=TaskType.CHORE,
+        ),
+        category=TaskCategory.HOUSE,
+        frequency=TaskFrequency.ONCE,
+        date=date,
+    )
+
+    action = Action(type=ActionType.PUNTED)
+
+    allow(mock_task_repo).put.and_return(task)
+
+    service = PlanningService(
+        user_uuid=test_user_uuid,
+        user_repo=mock_user_repo,
+        day_repo=mock_day_repo,
+        day_template_repo=mock_day_template_repo,
+        event_repo=mock_event_repo,
+        message_repo=mock_message_repo,
+        routine_repo=mock_routine_repo,
+        task_definition_repo=mock_task_definition_repo,
+        task_repo=mock_task_repo,
+    )
+
+    result = await service.save_action(task, action)
+
     assert len(result.actions) == 1
-    assert result.actions[0].type == ActionType.NOTIFY
+    assert result.actions[0].type == ActionType.PUNTED
+    assert result.status == TaskStatus.PUNTED
+
+
+@pytest.mark.asyncio
+async def test_save_action_for_invalid_object(
+    mock_user_repo,
+    mock_day_repo,
+    mock_day_template_repo,
+    mock_event_repo,
+    mock_message_repo,
+    mock_routine_repo,
+    mock_task_definition_repo,
+    mock_task_repo,
+    test_user_uuid,
+):
+    """Test save_action raises ValueError for invalid object type."""
+    from planned.domain.entities import Message
+
+    date = datetime.date(2024, 1, 1)
+    invalid_obj = Message(
+        uuid=uuid4(),
+        user_uuid=test_user_uuid,
+        content="Test",
+        date=date,
+    )
+
+    action = Action(type=ActionType.COMPLETE)
+
+    service = PlanningService(
+        user_uuid=test_user_uuid,
+        user_repo=mock_user_repo,
+        day_repo=mock_day_repo,
+        day_template_repo=mock_day_template_repo,
+        event_repo=mock_event_repo,
+        message_repo=mock_message_repo,
+        routine_repo=mock_routine_repo,
+        task_definition_repo=mock_task_definition_repo,
+        task_repo=mock_task_repo,
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        await service.save_action(invalid_obj, action)
+    assert "Invalid object type" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_preview_tasks_uses_routine_task_name(
+    mock_user_repo,
+    mock_day_repo,
+    mock_day_template_repo,
+    mock_event_repo,
+    mock_message_repo,
+    mock_routine_repo,
+    mock_task_definition_repo,
+    mock_task_repo,
+    test_user_uuid,
+):
+    """Test preview_tasks uses routine task name when provided."""
+    date = datetime.date(2024, 1, 1)  # Monday
+    task_def_uuid = uuid4()
+
+    routine = Routine(
+        uuid=uuid4(),
+        user_uuid=test_user_uuid,
+        name="Morning Routine",
+        routine_schedule=RoutineSchedule(
+            weekdays=[DayOfWeek.MONDAY],
+            frequency=TaskFrequency.DAILY,
+        ),
+        tasks=[
+            RoutineTask(
+                task_definition_uuid=task_def_uuid,
+                name="Custom Task Name",
+            ),
+        ],
+        category=TaskCategory.HEALTH,
+    )
+
+    task_def = TaskDefinition(
+        uuid=task_def_uuid,
+        user_uuid=test_user_uuid,
+        name="Task Definition Name",
+        description="Task definition",
+        type=TaskType.CHORE,
+    )
+
+    allow(mock_routine_repo).all().and_return([routine])
+    allow(mock_task_definition_repo).get(task_def_uuid).and_return(task_def)
+
+    service = PlanningService(
+        user_uuid=test_user_uuid,
+        user_repo=mock_user_repo,
+        day_repo=mock_day_repo,
+        day_template_repo=mock_day_template_repo,
+        event_repo=mock_event_repo,
+        message_repo=mock_message_repo,
+        routine_repo=mock_routine_repo,
+        task_definition_repo=mock_task_definition_repo,
+        task_repo=mock_task_repo,
+    )
+
+    result = await service.preview_tasks(date)
+
+    assert len(result) == 1
+    assert result[0].name == "Custom Task Name"

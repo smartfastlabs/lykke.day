@@ -22,7 +22,9 @@ def mock_day_repo():
 @pytest.fixture
 def mock_day_template_repo():
     """Mocked DayTemplateRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.DayTemplateRepositoryProtocol")
+    return InstanceDouble(
+        "planned.application.repositories.DayTemplateRepositoryProtocol"
+    )
 
 
 @pytest.fixture
@@ -50,7 +52,9 @@ def mock_calendar_repo():
 @pytest.fixture
 def mock_auth_token_repo():
     """Mocked AuthTokenRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.AuthTokenRepositoryProtocol")
+    return InstanceDouble(
+        "planned.application.repositories.AuthTokenRepositoryProtocol"
+    )
 
 
 @pytest.fixture
@@ -64,7 +68,9 @@ def mock_message_repo():
 @pytest.fixture
 def mock_push_subscription_repo():
     """Mocked PushSubscriptionRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.PushSubscriptionRepositoryProtocol")
+    return InstanceDouble(
+        "planned.application.repositories.PushSubscriptionRepositoryProtocol"
+    )
 
 
 @pytest.fixture
@@ -76,20 +82,26 @@ def mock_routine_repo():
 @pytest.fixture
 def mock_task_definition_repo():
     """Mocked TaskDefinitionRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.TaskDefinitionRepositoryProtocol")
+    return InstanceDouble(
+        "planned.application.repositories.TaskDefinitionRepositoryProtocol"
+    )
 
 
 # Mocked gateway fixtures
 @pytest.fixture
 def mock_google_gateway():
     """Mocked GoogleCalendarGatewayProtocol for unit tests."""
-    return InstanceDouble("planned.application.gateways.google_protocol.GoogleCalendarGatewayProtocol")
+    return InstanceDouble(
+        "planned.application.gateways.google_protocol.GoogleCalendarGatewayProtocol"
+    )
 
 
 @pytest.fixture
 def mock_web_push_gateway():
     """Mocked WebPushGatewayProtocol for unit tests."""
-    return InstanceDouble("planned.application.gateways.web_push_protocol.WebPushGatewayProtocol")
+    return InstanceDouble(
+        "planned.application.gateways.web_push_protocol.WebPushGatewayProtocol"
+    )
 
 
 # Mocked service fixtures
@@ -110,4 +122,3 @@ def mock_planning_service():
 def test_user_uuid():
     """Test user UUID for unit tests."""
     return uuid4()
-

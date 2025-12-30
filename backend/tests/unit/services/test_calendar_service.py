@@ -164,3 +164,272 @@ async def test_sync_all(
 
     # Should handle errors gracefully
     await service.sync_all()
+
+
+@pytest.mark.asyncio
+async def test_sync_with_last_sync_at(
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+):
+    """Test syncing a calendar with last_sync_at set uses it for lookback."""
+    calendar = Calendar(
+        user_uuid=UUID(str(uuid4())),
+        name="Test Calendar",
+        auth_token_uuid=uuid4(),
+        platform="google",
+        platform_id="platform-id",
+        last_sync_at=datetime.datetime.now(UTC) - timedelta(hours=1),
+    )
+
+    token = AuthToken(
+        uuid=calendar.auth_token_uuid,
+        user_uuid=calendar.user_uuid,
+        platform="google",
+        token="token",
+    )
+
+    event = Event(
+        user_uuid=calendar.user_uuid,
+        name="Event",
+        frequency="ONCE",
+        calendar_uuid=calendar.uuid,
+        platform_id="event-id",
+        platform="google",
+        status="confirmed",
+        starts_at=datetime.datetime.now(UTC),
+    )
+
+    expected_lookback = calendar.last_sync_at - timedelta(minutes=30)
+
+    allow(mock_auth_token_repo).get(token.uuid).and_return(token)
+    allow(mock_google_gateway).load_calendar_events(
+        calendar,
+        lookback=expected_lookback,
+        token=token,
+    ).and_return([event])
+    allow(mock_event_repo).put.and_return(event)
+
+    service = CalendarService(
+        auth_token_repo=mock_auth_token_repo,
+        calendar_repo=mock_calendar_repo,
+        event_repo=mock_event_repo,
+        google_gateway=mock_google_gateway,
+    )
+
+    events, deleted_events = await service.sync(calendar)
+
+    assert len(events) == 1
+    assert calendar.last_sync_at is not None
+    assert calendar.last_sync_at > expected_lookback
+
+
+@pytest.mark.asyncio
+async def test_sync_unsupported_platform(
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+):
+    """Test syncing a calendar with unsupported platform raises NotImplementedError."""
+    calendar = Calendar(
+        user_uuid=UUID(str(uuid4())),
+        name="Test Calendar",
+        auth_token_uuid=uuid4(),
+        platform="outlook",
+        platform_id="platform-id",
+    )
+
+    service = CalendarService(
+        auth_token_repo=mock_auth_token_repo,
+        calendar_repo=mock_calendar_repo,
+        event_repo=mock_event_repo,
+        google_gateway=mock_google_gateway,
+    )
+
+    with pytest.raises(NotImplementedError) as exc_info:
+        await service.sync(calendar)
+    assert "outlook" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_sync_google_no_events(
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+):
+    """Test syncing Google calendar with no events."""
+    calendar = Calendar(
+        user_uuid=UUID(str(uuid4())),
+        name="Test Calendar",
+        auth_token_uuid=uuid4(),
+        platform="google",
+        platform_id="platform-id",
+    )
+
+    lookback = datetime.datetime.now(UTC) - timedelta(days=2)
+
+    token = AuthToken(
+        uuid=calendar.auth_token_uuid,
+        user_uuid=calendar.user_uuid,
+        platform="google",
+        token="token",
+    )
+
+    allow(mock_auth_token_repo).get(token.uuid).and_return(token)
+    allow(mock_google_gateway).load_calendar_events(
+        calendar,
+        lookback=lookback,
+        token=token,
+    ).and_return([])
+
+    service = CalendarService(
+        auth_token_repo=mock_auth_token_repo,
+        calendar_repo=mock_calendar_repo,
+        event_repo=mock_event_repo,
+        google_gateway=mock_google_gateway,
+    )
+
+    events, deleted_events = await service.sync_google(calendar, lookback)
+
+    assert len(events) == 0
+    assert len(deleted_events) == 0
+
+
+@pytest.mark.asyncio
+async def test_sync_all_successful_syncs(
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+):
+    """Test syncing all calendars with successful syncs."""
+    calendar1 = Calendar(
+        user_uuid=UUID(str(uuid4())),
+        name="Calendar 1",
+        auth_token_uuid=uuid4(),
+        platform="google",
+        platform_id="platform-id-1",
+    )
+    calendar2 = Calendar(
+        user_uuid=UUID(str(uuid4())),
+        name="Calendar 2",
+        auth_token_uuid=uuid4(),
+        platform="google",
+        platform_id="platform-id-2",
+    )
+
+    token1 = AuthToken(
+        uuid=calendar1.auth_token_uuid,
+        user_uuid=calendar1.user_uuid,
+        platform="google",
+        token="token1",
+    )
+    token2 = AuthToken(
+        uuid=calendar2.auth_token_uuid,
+        user_uuid=calendar2.user_uuid,
+        platform="google",
+        token="token2",
+    )
+
+    event1 = Event(
+        user_uuid=calendar1.user_uuid,
+        name="Event 1",
+        frequency="ONCE",
+        calendar_uuid=calendar1.uuid,
+        platform_id="event-id-1",
+        platform="google",
+        status="confirmed",
+        starts_at=datetime.datetime.now(UTC),
+    )
+    event2 = Event(
+        user_uuid=calendar2.user_uuid,
+        name="Event 2",
+        frequency="ONCE",
+        calendar_uuid=calendar2.uuid,
+        platform_id="event-id-2",
+        platform="google",
+        status="confirmed",
+        starts_at=datetime.datetime.now(UTC),
+    )
+
+    allow(mock_calendar_repo).all().and_return([calendar1, calendar2])
+    
+    # First calendar
+    allow(mock_auth_token_repo).get(token1.uuid).and_return(token1)
+    allow(mock_google_gateway).load_calendar_events(
+        calendar1,
+        lookback=datetime.datetime.now(UTC) - timedelta(days=2),
+        token=token1,
+    ).and_return([event1])
+    
+    # Second calendar
+    allow(mock_auth_token_repo).get(token2.uuid).and_return(token2)
+    allow(mock_google_gateway).load_calendar_events(
+        calendar2,
+        lookback=datetime.datetime.now(UTC) - timedelta(days=2),
+        token=token2,
+    ).and_return([event2])
+    
+    allow(mock_event_repo).put.and_return(None)
+    allow(mock_event_repo).delete.and_return(None)
+
+    service = CalendarService(
+        auth_token_repo=mock_auth_token_repo,
+        calendar_repo=mock_calendar_repo,
+        event_repo=mock_event_repo,
+        google_gateway=mock_google_gateway,
+    )
+
+    await service.sync_all()
+
+    # Verify both calendars were synced (last_sync_at should be set)
+    assert calendar1.last_sync_at is not None
+    assert calendar2.last_sync_at is not None
+
+
+@pytest.mark.asyncio
+async def test_sync_all_with_exception_during_sync(
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+):
+    """Test syncing all calendars handles exceptions during sync."""
+    calendar1 = Calendar(
+        user_uuid=UUID(str(uuid4())),
+        name="Calendar 1",
+        auth_token_uuid=uuid4(),
+        platform="google",
+        platform_id="platform-id-1",
+    )
+    calendar2 = Calendar(
+        user_uuid=UUID(str(uuid4())),
+        name="Calendar 2",
+        auth_token_uuid=uuid4(),
+        platform="google",
+        platform_id="platform-id-2",
+    )
+
+    token1 = AuthToken(
+        uuid=calendar1.auth_token_uuid,
+        user_uuid=calendar1.user_uuid,
+        platform="google",
+        token="token1",
+    )
+    token2 = AuthToken(
+        uuid=calendar2.auth_token_uuid,
+        user_uuid=calendar2.user_uuid,
+        platform="google",
+        token="token2",
+    )
+
+    allow(mock_calendar_repo).all().and_return([calendar1, calendar2])
+    
+    # First calendar raises exception
+    allow(mock_auth_token_repo).get(token1.uuid).and_raise(Exception("Sync error"))
+    
+    # Second calendar succeeds
+    allow(mock_auth_token_repo).get(token2.uuid).and_return(token2)
+    allow(mock_google_gateway).load_calendar_events.and_return([])
+    allow(mock_event_repo).put.and_return(None)
+
+    service = CalendarService(
+        auth_token_repo=mock_auth_token_repo,
+        calendar_repo=mock_calendar_repo,
+        event_repo=mock_event_repo,
+        google_gateway=mock_google_gateway,
+    )
+
+    # Should handle errors gracefully and continue
+    await service.sync_all()
+    
+    # Second calendar should still be synced
+    assert calendar2.last_sync_at is not None
