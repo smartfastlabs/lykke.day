@@ -4,6 +4,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
+
 from planned.domain.entities import User
 from planned.domain.value_objects.query import PagedQueryRequest
 from planned.presentation.api.routers.dependencies.user import get_current_user
@@ -146,7 +147,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
 
         @router.post("/bulk")
         async def bulk_create_entities(
-            entities_data: list[dict],  # type: ignore
+            entities_data: list[dict],
             repo: Annotated[Any, Depends(repo_loader)],
             user: Annotated[User, Depends(get_current_user)],
         ) -> list[entity_type]:  # type: ignore

@@ -1,6 +1,5 @@
 import uuid
-from datetime import date as dt_date
-from datetime import datetime
+from datetime import date as dt_date, datetime
 from uuid import UUID
 
 from pydantic import Field, model_validator
