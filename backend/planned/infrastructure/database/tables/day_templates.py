@@ -16,6 +16,7 @@ class DayTemplate(Base):
     slug = Column(String, nullable=False)
     alarm = Column(JSONB)  # Alarm | None
     icon = Column(String)
+    routine_ids = Column(JSONB)  # list[UUID]
 
     __table_args__ = (
         Index("idx_day_templates_user_id", "user_id"),

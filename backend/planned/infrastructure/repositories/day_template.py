@@ -41,6 +41,12 @@ class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, DayTemplateQue
         # Handle JSONB fields
         if template.alarm:
             row["alarm"] = template.alarm.model_dump(mode="json")
+        
+        # Handle list fields - convert UUIDs to strings for JSON serialization
+        if template.routine_ids:
+            row["routine_ids"] = [str(routine_id) for routine_id in template.routine_ids]
+        else:
+            row["routine_ids"] = []
 
         return row
 
@@ -49,6 +55,11 @@ class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, DayTemplateQue
         """Convert a database row dict to a DayTemplate entity."""
         # Normalize None values to [] for list-typed fields
         data = normalize_list_fields(row, DayTemplate)
+        
+        # Convert string UUIDs back to UUID objects for routine_ids
+        if "routine_ids" in data and data["routine_ids"]:
+            data["routine_ids"] = [UUID(routine_id) if isinstance(routine_id, str) else routine_id for routine_id in data["routine_ids"]]
+        
         return DayTemplate.model_validate(data, from_attributes=True)
 
     async def get_by_slug(self, slug: str) -> DayTemplate:

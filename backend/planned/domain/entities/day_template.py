@@ -13,6 +13,7 @@ class DayTemplate(BaseEntityObject):
     slug: str
     alarm: Alarm | None = None
     icon: str | None = None
+    routine_ids: list[UUID] = Field(default_factory=list)
 
     @classmethod
     def id_from_slug_and_user(cls, slug: str, user_id: UUID) -> UUID:
