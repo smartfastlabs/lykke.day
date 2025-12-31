@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 from typing import TypeVar
 from uuid import UUID
@@ -14,14 +13,14 @@ from planned.application.repositories import (
     UserRepositoryProtocol,
 )
 from planned.application.utils import filter_upcoming_events, filter_upcoming_tasks
-from planned.core.constants import DEFAULT_END_OF_DAY_TIME, DEFAULT_LOOK_AHEAD
+from planned.core.constants import DEFAULT_LOOK_AHEAD
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
 from planned.domain.entities import User
-from planned.domain.value_objects.query import DateQuery
 from planned.domain.value_objects.repository_event import RepositoryEvent
 
 from .base import BaseService
+from .day_context_loader import DayContextLoader
 
 T = TypeVar("T")
 
@@ -143,61 +142,41 @@ class DayService(BaseService):
         self,
         date: datetime.date | None = None,
         user_id: UUID | None = None,
-        day_repo: DayRepositoryProtocol | None = None,
-        day_template_repo: DayTemplateRepositoryProtocol | None = None,
-        event_repo: EventRepositoryProtocol | None = None,
-        message_repo: MessageRepositoryProtocol | None = None,
-        task_repo: TaskRepositoryProtocol | None = None,
         user_repo: UserRepositoryProtocol | None = None,
     ) -> objects.DayContext:
+        """Load complete day context for the current or specified date.
+
+        Args:
+            date: Optional date to load (defaults to self.date)
+            user_id: Optional user ID (defaults to extracting from day_repo or self.user.id)
+            user_repo: Optional user repository (only needed if user_id is not provided)
+
+        Returns:
+            A DayContext with day, tasks, events, and messages loaded
+        """
         # Use instance attributes if not provided
         date = date or self.date
-        day_repo = day_repo or self.day_repo
-        day_template_repo = day_template_repo or self.day_template_repo
-        event_repo = event_repo or self.event_repo
-        message_repo = message_repo or self.message_repo
-        task_repo = task_repo or self.task_repo
 
-        # Extract user_id from repository if not provided
+        # Extract user_id if not provided
         if user_id is None:
             if hasattr(self.day_repo, "user_id"):
                 user_id = self.day_repo.user_id
+            elif hasattr(self, "user") and self.user:
+                user_id = self.user.id
             else:
                 raise ValueError("user_id required for load_context")
 
-        tasks: list[objects.Task] = []
-        events: list[objects.Event] = []
-        messages: list[objects.Message] = []
-        day: objects.Day
-
-        try:
-            day_id = objects.Day.id_from_date_and_user(date, user_id)
-            tasks, events, messages, day = await asyncio.gather(
-                task_repo.search_query(DateQuery(date=date)),
-                event_repo.search_query(DateQuery(date=date)),
-                message_repo.search_query(DateQuery(date=date)),
-                day_repo.get(day_id),
-            )
-        except exceptions.NotFoundError:
-            template_slug = self.user.settings.template_defaults[date.weekday()]
-            template = await day_template_repo.get_by_slug(template_slug)
-            day = await type(self).base_day(
-                date,
-                user_id=user_id,
-                template=template,
-            )
-
-        self.ctx = objects.DayContext(
-            day=day,
-            tasks=sorted(
-                tasks,
-                key=lambda x: x.schedule.start_time
-                if x.schedule and x.schedule.start_time
-                else DEFAULT_END_OF_DAY_TIME,
-            ),
-            events=sorted(events, key=lambda e: e.starts_at),
-            messages=messages,
+        # Create loader and load context
+        loader = DayContextLoader(
+            user=self.user,
+            day_repo=self.day_repo,
+            day_template_repo=self.day_template_repo,
+            event_repo=self.event_repo,
+            message_repo=self.message_repo,
+            task_repo=self.task_repo,
         )
+
+        self.ctx = await loader.load(date, user_id)
         return self.ctx
 
     @classmethod
