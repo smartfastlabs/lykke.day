@@ -2,7 +2,7 @@ import { Component, For, Show } from "solid-js";
 import { Icon } from "../shared/icon";
 import type { Accessor } from "solid-js";
 import { getTypeIcon } from "../../utils/icons";
-import { Event } from "types/api";
+import { Event } from "../../types/api";
 
 const formatDateTime = (dateTimeStr: string): string => {
   const date = new Date(dateTimeStr);

@@ -1,20 +1,6 @@
-import { Component } from "solid-js";
-import { config, library } from "@fortawesome/fontawesome-svg-core";
-import "@fortawesome/fontawesome-svg-core/styles.css";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
-  faCoffee,
-  faUser,
-  faChartBar,
-  faCogs,
-  faSquareCheck,
-  faCheckSquare,
-  faClock,
-  faBroom,
-  faFaceSmileWink,
-  faGrip,
-  faGear,
-  faGripVertical,
+  // General icons
   faBriefcase,
   faCouch,
   faDumbbell,
@@ -35,67 +21,26 @@ import {
   faTree,
   faGraduationCap,
   faCakeCandles,
+  faClock,
   faStar,
-  // Task category & type icons
+  faCheckSquare,
+  faPlus,
+  faGripVertical,
+  // Task category icons
   faUtensils,
   faDroplet,
   faPaw,
   faHeartPulse,
+  // Task type icons
   faBowlFood,
+  faBroom,
   faBasketShopping,
   faPersonWalking,
-  faCircle,
-  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 
 import type { TaskCategory, TaskType } from "../types/api";
 
-library.add(
-  faGear,
-  faGripVertical,
-  faSquareCheck,
-  faCheckSquare,
-  faFaceSmileWink,
-  faBroom,
-  faCogs,
-  faCoffee,
-  faClock,
-  faUser,
-  faChartBar,
-  faGrip,
-  faBriefcase,
-  faCouch,
-  faDumbbell,
-  faPlane,
-  faHouse,
-  faUsers,
-  faBook,
-  faPalette,
-  faHeart,
-  faBed,
-  faSun,
-  faMoon,
-  faSquare,
-  faUmbrellaBeach,
-  faMugHot,
-  faPersonRunning,
-  faTree,
-  faGraduationCap,
-  faCakeCandles,
-  faStar,
-  // Task category & type icons
-  faUtensils,
-  faDroplet,
-  faPaw,
-  faHeartPulse,
-  faBowlFood,
-  faCalendar,
-  faBasketShopping,
-  faPersonWalking,
-  faCircle,
-  faPlus
-);
-
+// General purpose icons by key name
 export const icons: Record<string, IconDefinition> = {
   work: faBriefcase,
   relax: faCouch,
@@ -121,9 +66,8 @@ export const icons: Record<string, IconDefinition> = {
   square: faSquare,
   calendar: faCalendar,
   plus: faPlus,
+  gripVertical: faGripVertical,
 };
-
-config.autoAddCss = false;
 
 export function getIcon(key: string): IconDefinition | null {
   return icons[key] ?? null;
@@ -138,9 +82,7 @@ const categoryIcons: Record<TaskCategory, IconDefinition> = {
   HOUSE: faHouse,
 };
 
-export function getCategoryIcon(
-  category?: TaskCategory
-): IconDefinition | null {
+export function getCategoryIcon(category?: TaskCategory): IconDefinition | null {
   if (!category) return null;
   return categoryIcons[category] ?? null;
 }

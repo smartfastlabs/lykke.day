@@ -1,5 +1,3 @@
-import { getRequestEvent } from "solid-js/web";
-
 import { globalNotifications } from "../providers/notifications";
 import {
   Event,
@@ -10,170 +8,161 @@ import {
   TaskDefinition,
   PushSubscription,
 } from "../types/api";
-import type { ApiResponse, ApiError } from "../types/api/utils";
+import type { ApiResponse, ApiError, PaginatedResponse } from "../types/api/utils";
 
-const isDev = process.env.NODE_ENV === "development";
+// Custom error class for API errors
+export class ApiRequestError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public detail?: string
+  ) {
+    super(message);
+    this.name = "ApiRequestError";
+  }
+}
 
-interface FetchOptions extends RequestInit {
+interface FetchOptions extends Omit<RequestInit, "headers"> {
   suppressError?: boolean;
-  headers?: HeadersInit;
+  suppressAuthRedirect?: boolean;
+  headers?: Record<string, string>;
 }
 
-function getHeaders(headers?: HeadersInit): HeadersInit {
-  const event = getRequestEvent();
-  const cookieHeader = event?.request.headers.get("cookie");
-  const defaultHeaders: HeadersInit = {
-    "Content-Type": "application/json",
-  };
+const DEFAULT_HEADERS: Record<string, string> = {
+  "Content-Type": "application/json",
+};
 
-  const mergedHeaders = headers ? { ...defaultHeaders, ...headers } : defaultHeaders;
-
-  if (cookieHeader && !(mergedHeaders as Record<string, string>)["Cookie"]) {
-    // If the headers object doesn't already have a Cookie header, add it
-    (mergedHeaders as Record<string, string>)["Cookie"] = cookieHeader;
-  }
-
-  return mergedHeaders;
-}
-
-async function fetchJSON<T = unknown>(
+async function fetchJSON<T>(
   url: string,
-  options: FetchOptions = { suppressError: false }
+  options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
-  const headers = getHeaders(options.headers);
+  const { suppressError = false, suppressAuthRedirect = false, headers = {}, ...fetchOptions } = options;
+  
+  const mergedHeaders = { ...DEFAULT_HEADERS, ...headers };
 
-  console.log("Fetching URL:", url, "with options:", options);
-  const response = await fetch(url, { ...options, headers });
-  const body = (await response.json()) as T | ApiError;
+  const response = await fetch(url, { 
+    ...fetchOptions, 
+    headers: mergedHeaders,
+    credentials: "include",
+  });
 
-  // Handle 401 Unauthorized - redirect to login
+  // Handle 401 Unauthorized
   if (response.status === 401) {
-    globalNotifications.add("Not Logged In", "error");
-    // Only redirect if not already on login page to avoid infinite redirects
-    if (["/login", "/register"].includes(window.location.pathname)) {
-      console.log(
-        "Already on login or register page, not redirecting",
-        window.location.pathname
-      );
-      return Promise.reject(new Error("Unauthorized"));
+    if (!suppressError) {
+      globalNotifications.addError("Not logged in");
     }
-    window.location.href = "/login";
+    if (!suppressAuthRedirect && !["/login", "/register"].includes(window.location.pathname)) {
+      window.location.href = "/login";
+    }
+    throw new ApiRequestError("Unauthorized", 401);
   }
 
-  if (!response.ok && !options.suppressError) {
+  // Handle empty responses (204 No Content)
+  if (response.status === 204) {
+    return {
+      data: undefined as T,
+      status: response.status,
+      ok: true,
+    };
+  }
+
+  const body = await response.json();
+
+  if (!response.ok) {
     const errorBody = body as ApiError;
-    globalNotifications.add(
-      `Error fetching data: ${errorBody.detail || "Unknown error"}`,
-      "error"
-    );
+    const errorMessage = errorBody.detail || "Unknown error";
+    
+    if (!suppressError) {
+      globalNotifications.addError(`Error: ${errorMessage}`);
+    }
+    
+    throw new ApiRequestError(errorMessage, response.status, errorBody.detail);
   }
 
   return {
     data: body as T,
     status: response.status,
-    ok: response.ok,
+    ok: true,
   };
 }
+
+// Helper to extract data from response (throws on error)
+async function fetchData<T>(url: string, options: FetchOptions = {}): Promise<T> {
+  const response = await fetchJSON<T>(url, options);
+  return response.data;
+}
+
+// Helper for paginated responses
+function extractItems<T>(data: T[] | PaginatedResponse<T>): T[] {
+  if (Array.isArray(data)) {
+    return data;
+  }
+  return data.items;
+}
+
+// --- Generic CRUD Factory ---
 
 interface EntityWithId {
   id?: string;
 }
 
-function putMethod<T extends EntityWithId>(type: string) {
-  return async function (item: T): Promise<ApiResponse<T>> {
-    const url = item.id ? `/api/${type}/${item.id}` : `/api/${type}`;
-    return fetchJSON<T>(url, {
-      method: "PUT",
-      body: JSON.stringify(item),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  };
-}
-
-function postMethod<T extends EntityWithId>(type: string) {
-  return async function (item: T): Promise<ApiResponse<T>> {
-    const url = item.id ? `/api/${type}/${item.id}` : `/api/${type}`;
-    return fetchJSON<T>(url, {
-      method: "POST",
-      body: JSON.stringify(item),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  };
-}
-
-function deleteMethod(type: string) {
-  return async function (id: string) {
-    return fetchJSON(`/api/${type}/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  };
-}
-
-export function readOnly<T extends EntityWithId>(type: string) {
+function createCrudMethods<T extends EntityWithId>(type: string) {
   return {
-    get: (u: string): Promise<ApiResponse<T>> => fetchJSON<T>(`/api/${type}/${u}`),
-    search: postMethod<T>(`${type}/search`),
+    get: (id: string): Promise<T> => 
+      fetchData<T>(`/api/${type}/${id}`),
+
+    getAll: async (): Promise<T[]> => {
+      const data = await fetchData<T[] | PaginatedResponse<T>>(`/api/${type}/`);
+      return extractItems(data);
+    },
+
+    create: (item: Omit<T, "id">): Promise<T> =>
+      fetchData<T>(`/api/${type}`, {
+        method: "POST",
+        body: JSON.stringify(item),
+      }),
+
+    update: (item: T): Promise<T> =>
+      fetchData<T>(`/api/${type}/${item.id}`, {
+        method: "PUT",
+        body: JSON.stringify(item),
+      }),
+
+    delete: (id: string): Promise<void> =>
+      fetchData<void>(`/api/${type}/${id}`, { method: "DELETE" }),
+
+    search: <Q>(query: Q): Promise<T[]> =>
+      fetchData<T[]>(`/api/${type}/search`, {
+        method: "POST",
+        body: JSON.stringify(query),
+      }),
   };
 }
 
-export function genericCrud<T extends EntityWithId>(type: string) {
-  return {
-    get: (u: string): Promise<ApiResponse<T>> => fetchJSON<T>(`/api/${type}/${u}`),
-    search: postMethod<T>(`${type}/search`),
-    delete: deleteMethod(type),
-    update: putMethod<T>(type),
-    create: postMethod<T>(type),
-  };
-}
+// --- API Modules ---
 
 export const eventAPI = {
-  ...genericCrud("events"),
+  ...createCrudMethods<Event>("events"),
 
-  getTodays: async (): Promise<Event[]> => {
-    const resp = await fetchJSON(`/api/events/today`, {
-      method: "GET",
-    });
-
-    return resp.data as Event[];
-  },
+  getTodays: (): Promise<Event[]> => 
+    fetchData<Event[]>("/api/events/today"),
 };
 
 export const taskAPI = {
-  ...genericCrud("tasks"),
+  ...createCrudMethods<Task>("tasks"),
 
-  getTodays: async (): Promise<Task[]> => {
-    const resp = await fetchJSON<Task[]>(`/api/tasks/today`, {
-      method: "GET",
-    });
+  getTodays: (): Promise<Task[]> => 
+    fetchData<Task[]>("/api/tasks/today"),
 
-    return resp.data;
-  },
-
-  setTaskStatus: async (task: Task, status: string): Promise<Task> => {
-    const resp = await fetchJSON(`/api/tasks/${task.date}/${task.id}/actions`, {
+  setTaskStatus: (task: Task, status: string): Promise<Task> =>
+    fetchData<Task>(`/api/tasks/${task.date}/${task.id}/actions`, {
       method: "POST",
-      body: JSON.stringify({
-        type: status,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    return resp.data as Task;
-  },
+      body: JSON.stringify({ type: status }),
+    }),
 };
+
 export const authAPI = {
   login: async (email: string, password: string): Promise<void> => {
-    // FastAPI Users uses form-urlencoded for login with OAuth2 spec
-    // where "username" is the email field
     const formData = new URLSearchParams();
     formData.append("username", email);
     formData.append("password", password);
@@ -181,37 +170,26 @@ export const authAPI = {
     const response = await fetch("/api/auth/login", {
       method: "POST",
       body: formData,
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       credentials: "include",
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || "Login failed");
+      throw new ApiRequestError(
+        errorData.detail || "Login failed",
+        response.status,
+        errorData.detail
+      );
     }
-    // 204 No Content on success - cookie is set automatically
   },
 
   register: async (email: string, password: string): Promise<unknown> => {
-    const resp = await fetchJSON("/api/auth/register", {
+    return fetchData("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify({
-        email,
-        password,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
+      body: JSON.stringify({ email, password }),
+      suppressAuthRedirect: true,
     });
-
-    if (!resp.ok) {
-      const errorData = resp.data as ApiError;
-      throw new Error(errorData.detail || "Registration failed");
-    }
-
-    return resp.data;
   },
 
   logout: async (): Promise<void> => {
@@ -221,150 +199,65 @@ export const authAPI = {
     });
 
     if (!response.ok) {
-      throw new Error("Logout failed");
+      throw new ApiRequestError("Logout failed", response.status);
     }
   },
 };
 
 export const alarmAPI = {
-  stopAll: async (): Promise<void> => {
-    await fetchJSON("/api/sheppard/stop-alarm", {
-      method: "PUT",
-    });
-  },
+  stopAll: (): Promise<void> => 
+    fetchData<void>("/api/sheppard/stop-alarm", { method: "PUT" }),
 };
 
 export const dayAPI = {
-  scheduleToday: async (): Promise<Day> => {
-    const resp = await fetchJSON("/api/days/today/schedule", {
-      method: "PUT",
-    });
+  getToday: (): Promise<DayContext> => 
+    fetchData<DayContext>("/api/days/today/context"),
 
-    return resp.data as Day;
-  },
-  getTomorrow: async (): Promise<DayContext> => {
-    const resp = await fetchJSON("/api/days/tomorrow/context", {
-      method: "GET",
-    });
+  getTomorrow: (): Promise<DayContext> => 
+    fetchData<DayContext>("/api/days/tomorrow/context"),
 
-    return resp.data as DayContext;
-  },
-  getTemplates: async (): Promise<DayTemplate[]> => {
-    const resp = await fetchJSON("/api/days/templates", {
-      method: "GET",
-    });
+  getContext: (date: string): Promise<DayContext> => 
+    fetchData<DayContext>(`/api/days/${date}/context`),
 
-    return resp.data as DayTemplate[];
-  },
+  scheduleToday: (): Promise<Day> => 
+    fetchData<Day>("/api/days/today/schedule", { method: "PUT" }),
 
-  getToday: async (): Promise<DayContext> => {
-    const resp = await fetchJSON("/api/days/today/context", {
-      method: "GET",
-    });
-
-    return resp.data as DayContext;
-  },
-
-  getContext: async (date: string): Promise<DayContext> => {
-    const resp = await fetchJSON(`/api/days/${date}/context`, {
-      method: "GET",
-    });
-
-    return resp.data as DayContext;
-  },
+  getTemplates: (): Promise<DayTemplate[]> => 
+    fetchData<DayTemplate[]>("/api/days/templates"),
 };
 
 export const planningAPI = {
-  scheduleToday: async (): Promise<DayContext> => {
-    const resp = await fetchJSON("/api/planning/schedule/today", {
-      method: "PUT",
-    });
+  scheduleToday: (): Promise<DayContext> => 
+    fetchData<DayContext>("/api/planning/schedule/today", { method: "PUT" }),
 
-    return resp.data as DayContext;
-  },
-  previewToday: async (): Promise<DayContext> => {
-    const resp = await fetchJSON("/api/planning/preview/today", {
-      method: "GET",
-    });
+  previewToday: (): Promise<DayContext> => 
+    fetchData<DayContext>("/api/planning/preview/today"),
 
-    return resp.data as DayContext;
-  },
-  previewTomorrow: async (): Promise<DayContext> => {
-    const resp = await fetchJSON("/api/planning/preview/tomorrow", {
-      method: "GET",
-    });
-
-    return resp.data as DayContext;
-  },
+  previewTomorrow: (): Promise<DayContext> => 
+    fetchData<DayContext>("/api/planning/preview/tomorrow"),
 };
 
 export const pushAPI = {
-  getSubscriptions: async (): Promise<PushSubscription[]> => {
-    const resp = await fetchJSON("/api/push/subscriptions", {
-      method: "GET",
-    });
+  getSubscriptions: (): Promise<PushSubscription[]> => 
+    fetchData<PushSubscription[]>("/api/push/subscriptions"),
 
-    return resp.data as PushSubscription[];
-  },
-  deleteSubscription: async (id: string): Promise<void> => {
-    await fetchJSON(`/api/push/subscriptions/${id}`, {
-      method: "DELETE",
-    });
-  },
+  deleteSubscription: (id: string): Promise<void> => 
+    fetchData<void>(`/api/push/subscriptions/${id}`, { method: "DELETE" }),
 };
 
 export const dayTemplateAPI = {
-  ...genericCrud("day-templates"),
-
-  getAll: async (): Promise<DayTemplate[]> => {
-    const resp = await fetchJSON<DayTemplate[] | { items: DayTemplate[] }>("/api/day-templates/", {
-      method: "GET",
-    });
-
-    // Handle paginated response - extract items array
-    if (resp.data && typeof resp.data === 'object' && 'items' in resp.data) {
-      return (resp.data as { items: DayTemplate[] }).items;
-    }
-    // Fallback to direct array if not paginated
-    return resp.data as DayTemplate[];
-  },
+  ...createCrudMethods<DayTemplate>("day-templates"),
 };
 
 export const taskDefinitionAPI = {
-  ...genericCrud("task-definitions"),
+  ...createCrudMethods<TaskDefinition>("task-definitions"),
 
-  getAll: async (): Promise<TaskDefinition[]> => {
-    const resp = await fetchJSON<TaskDefinition[] | { items: TaskDefinition[] }>("/api/task-definitions/", {
-      method: "GET",
-    });
+  getAvailable: (): Promise<TaskDefinition[]> => 
+    fetchData<TaskDefinition[]>("/api/task-definitions/available"),
 
-    // Handle paginated response - extract items array
-    if (resp.data && typeof resp.data === 'object' && 'items' in resp.data) {
-      return (resp.data as { items: TaskDefinition[] }).items;
-    }
-    // Fallback to direct array if not paginated
-    return resp.data as TaskDefinition[];
-  },
-
-  getAvailable: async (): Promise<TaskDefinition[]> => {
-    const resp = await fetchJSON("/api/task-definitions/available", {
-      method: "GET",
-    });
-
-    return resp.data as TaskDefinition[];
-  },
-
-  bulkCreate: async (
-    taskDefinitions: TaskDefinition[]
-  ): Promise<TaskDefinition[]> => {
-    const resp = await fetchJSON("/api/task-definitions/bulk", {
+  bulkCreate: (taskDefinitions: TaskDefinition[]): Promise<TaskDefinition[]> =>
+    fetchData<TaskDefinition[]>("/api/task-definitions/bulk", {
       method: "POST",
       body: JSON.stringify(taskDefinitions),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    return resp.data as TaskDefinition[];
-  },
+    }),
 };

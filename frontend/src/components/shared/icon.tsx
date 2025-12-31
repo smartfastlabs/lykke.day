@@ -1,31 +1,31 @@
-import { Component, type JSX } from "solid-js";
+import type { JSX } from "solid-js";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import {
-  faUtensils,
-  faDroplet,
-  faPaw,
-  faHeartPulse,
-  faHouse,
-  faBowlFood,
-  faCalendar,
-  faBroom,
-  faBasketShopping,
-  faPersonWalking,
-} from "@fortawesome/free-solid-svg-icons";
 import { getIcon } from "../../utils/icons";
-import type { TaskCategory, TaskType } from "../../types/api";
 
 interface IconProps {
+  /** Direct icon definition - takes precedence over key */
   icon?: IconDefinition;
+  /** Icon key name from the icons registry */
   key?: string;
+  /** CSS classes for the SVG element */
   class?: string;
 }
 
+/**
+ * Renders an icon as an inline SVG.
+ * 
+ * Usage:
+ * - With direct icon: <Icon icon={faCheck} />
+ * - With key: <Icon key="checkMark" />
+ * - With custom classes: <Icon key="plus" class="w-6 h-6 fill-blue-500" />
+ */
 export function Icon(props: IconProps): JSX.Element {
-  const icon = props.icon || getIcon(props.key || "") || getIcon("square");
+  const icon = props.icon ?? getIcon(props.key ?? "") ?? getIcon("square");
+  
   if (!icon) {
     return <></>;
   }
+  
   return (
     <svg
       viewBox={`0 0 ${icon.icon[0]} ${icon.icon[1]}`}
@@ -34,38 +34,4 @@ export function Icon(props: IconProps): JSX.Element {
       <path d={icon.icon[4] as string} />
     </svg>
   );
-}
-
-// Task Category icons
-const categoryIcons: Record<TaskCategory, IconDefinition> = {
-  NUTRITION: faUtensils,
-  HYGIENE: faDroplet,
-  PET: faPaw,
-  HEALTH: faHeartPulse,
-  HOUSE: faHouse,
-};
-
-interface CategoryIconProps {
-  category: TaskCategory;
-}
-
-export function CategoryIcon(props: CategoryIconProps): JSX.Element {
-  return <Icon icon={categoryIcons[props.category]} />;
-}
-
-// Task Type icons
-const typeIcons: Record<TaskType, IconDefinition> = {
-  MEAL: faBowlFood,
-  EVENT: faCalendar,
-  CHORE: faBroom,
-  ERRAND: faBasketShopping,
-  ACTIVITY: faPersonWalking,
-};
-
-interface TypeIconProps {
-  type: TaskType;
-}
-
-export function TypeIcon(props: TypeIconProps): JSX.Element {
-  return <Icon icon={typeIcons[props.type]} />;
 }

@@ -16,7 +16,7 @@
 
     // Type Checking & Safety
     "strict": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "types": ["vite/client", "node"]
   }
 }

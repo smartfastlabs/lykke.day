@@ -1,12 +1,10 @@
-import { Router, useNavigate, Route, useLocation } from "@solidjs/router";
-import { Title, Meta, MetaProvider } from "@solidjs/meta";
-import { Component, Suspense } from "solid-js";
+import { Router, useNavigate, Route } from "@solidjs/router";
+import { Title, MetaProvider } from "@solidjs/meta";
+import { Suspense, onMount, onCleanup } from "solid-js";
 import "./index.css";
 
-import { onMount, onCleanup, createEffect } from "solid-js";
 import { NotificationProvider } from "./providers/notifications";
 import { SheppardProvider } from "./providers/sheppard";
-import { authAPI } from "./utils/api";
 
 import Home from "./pages/home";
 import Login from "./pages/login";
@@ -27,13 +25,12 @@ import "./utils/icons";
 
 function NavigationHandler() {
   const navigate = useNavigate();
-  const location = useLocation();
 
   onMount(() => {
-    const handleSWMessage = (event) => {
+    const handleSWMessage = (event: MessageEvent): void => {
       console.log("SW message received:", event);
       if (event.data?.type === "NAVIGATE" && event.data?.url) {
-        navigate(event.data.url);
+        navigate(event.data.url as string);
       }
     };
 
@@ -52,10 +49,10 @@ export default function App() {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")
-        .then((registration) => {
+        .then((registration: ServiceWorkerRegistration) => {
           console.log("SW registered: ", registration);
         })
-        .catch((registrationError) => {
+        .catch((registrationError: unknown) => {
           console.log("SW registration failed: ", registrationError);
         });
     }

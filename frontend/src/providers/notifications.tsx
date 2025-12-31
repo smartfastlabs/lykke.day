@@ -1,12 +1,4 @@
-import {
-  createContext,
-  useContext,
-  createSignal,
-  For,
-  type Component,
-  type ParentProps,
-  type Accessor,
-} from "solid-js";
+import { createSignal, For, type ParentProps } from "solid-js";
 
 export type NotificationType = "error" | "success" | "warning" | "info";
 
@@ -23,10 +15,10 @@ interface NotificationOptions {
   persistent?: boolean;
 }
 
-// Create a global signal that can be imported anywhere
-export const [notifications, setNotifications] = createSignal<Notification[]>([]);
+// Global signal for notifications
+const [notifications, setNotifications] = createSignal<Notification[]>([]);
 
-// Global notification functions that can be imported anywhere
+// Global notification functions - can be imported and used anywhere
 export const globalNotifications = {
   add: (
     message: string,
@@ -46,7 +38,6 @@ export const globalNotifications = {
 
     setNotifications((prev) => [...prev, notification]);
 
-    // Auto-remove after duration
     if (duration > 0 && !persistent) {
       setTimeout(() => {
         globalNotifications.remove(id);
@@ -57,9 +48,7 @@ export const globalNotifications = {
   },
 
   remove: (id: string): void => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== id)
-    );
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   },
 
   clear: (): void => {
@@ -68,61 +57,30 @@ export const globalNotifications = {
 
   addError: (message: string, options?: NotificationOptions): string =>
     globalNotifications.add(message, "error", options),
+  
   addSuccess: (message: string, options?: NotificationOptions): string =>
     globalNotifications.add(message, "success", options),
+  
   addWarning: (message: string, options?: NotificationOptions): string =>
     globalNotifications.add(message, "warning", options),
+  
   addInfo: (message: string, options?: NotificationOptions): string =>
     globalNotifications.add(message, "info", options),
 };
 
-interface NotificationContextValue {
-  notifications: Accessor<Notification[]>;
-  add: (message: string, type?: NotificationType, options?: NotificationOptions) => string;
-  remove: (id: string) => void;
-  clear: () => void;
-  addError: (message: string, options?: NotificationOptions) => string;
-  addSuccess: (message: string, options?: NotificationOptions) => string;
-  addWarning: (message: string, options?: NotificationOptions) => string;
-  addInfo: (message: string, options?: NotificationOptions) => string;
-}
-
-const NotificationContext = createContext<NotificationContextValue>();
-
+// Simple provider that just renders children (keeps app structure consistent)
 export function NotificationProvider(props: ParentProps) {
-  // The provider now just wraps the global signal
-  const contextValue: NotificationContextValue = {
-    notifications,
-    ...globalNotifications,
-  };
-
-  return (
-    <NotificationContext.Provider value={contextValue}>
-      {props.children}
-    </NotificationContext.Provider>
-  );
+  return <>{props.children}</>;
 }
 
-export function useNotifications(): NotificationContextValue {
-  const context = useContext(NotificationContext);
-  if (!context) {
-    throw new Error(
-      "useNotifications must be used within NotificationProvider"
-    );
-  }
-  return context;
-}
-
+// Notification UI container - renders the toast notifications
 export function NotificationContainer() {
-  // Use the global signal directly
-  const remove = globalNotifications.remove;
-
   return (
-    <div class="notification-container fixed top-4 right-4 z-50 space-y-2">
+    <div class="fixed top-4 right-4 z-50 space-y-2">
       <For each={notifications()}>
         {(notification) => (
           <div
-            class={`notification p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ${
+            class={`p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 ${
               notification.type === "error"
                 ? "bg-red-500 text-white"
                 : notification.type === "success"
@@ -135,7 +93,7 @@ export function NotificationContainer() {
             <div class="flex items-center justify-between">
               <p class="flex-1">{notification.message}</p>
               <button
-                onClick={() => remove(notification.id)}
+                onClick={() => globalNotifications.remove(notification.id)}
                 class="ml-4 text-lg font-bold opacity-70 hover:opacity-100"
               >
                 ×

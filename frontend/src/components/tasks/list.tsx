@@ -1,9 +1,9 @@
 import { createSignal, Component, For, Show } from "solid-js";
 import type { Accessor } from "solid-js";
-import { getCategoryIcon, getIcon, getTypeIcon } from "../../utils/icons";
-import { TaskStatus, Task, TaskSchedule } from "types/api";
+import { getCategoryIcon, getTypeIcon } from "../../utils/icons";
+import { TaskStatus, Task, TaskSchedule } from "../../types/api";
 import { Icon } from "../shared/icon";
-import { useSheppardManager } from "../../providers/sheppard";
+import { useSheppard } from "../../providers/sheppard";
 
 export const formatTimeString = (timeStr: string): string => {
   const [h, m] = timeStr.split(":");
@@ -80,7 +80,7 @@ const TaskItem: Component<{ task: Task }> = (props) => {
     getCategoryIcon(props.task.category) ||
     getTypeIcon(props.task.task_definition?.type);
 
-  const { setTaskStatus } = useSheppardManager();
+  const { setTaskStatus } = useSheppard();
 
   const [translateX, setTranslateX] = createSignal(0);
   let startX = 0;

@@ -1,62 +1,81 @@
 import {
-  createSignal,
   createContext,
   createResource,
+  createMemo,
   useContext,
-  onMount,
-  type Resource,
-  type Component,
+  type Accessor,
   type ParentProps,
+  type ResourceReturn,
 } from "solid-js";
-import { DayContext, Task, Event, Day } from "../types/api";
+import { DayContext, Task, Event, Day, TaskStatus } from "../types/api";
 import { dayAPI, taskAPI } from "../utils/api";
-import type { TaskStatus } from "../types/api";
 
 interface SheppardContextValue {
-  tasks: Resource<Task[]>;
-  events: Resource<Event[]>;
-  day: Resource<Day | null>;
-  dayContext: Resource<DayContext | null>;
-  updateTask: (input: Task) => Promise<Task>;
+  // The main resource - provides loading/error states
+  dayContextResource: ResourceReturn<DayContext>;
+  // Derived accessors for convenience
+  dayContext: Accessor<DayContext | undefined>;
+  tasks: Accessor<Task[]>;
+  events: Accessor<Event[]>;
+  day: Accessor<Day | undefined>;
+  // Loading and error states
+  isLoading: Accessor<boolean>;
+  error: Accessor<Error | undefined>;
+  // Actions
+  refetch: () => void;
   setTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
 }
 
 const SheppardContext = createContext<SheppardContextValue>();
 
 export function SheppardProvider(props: ParentProps) {
-  const [tasks, taskManager] = createResource<Task[]>(() => []);
-  const [events, eventManager] = createResource<Event[]>(() => []);
-  const [day, dayManager] = createResource<Day | null>(() => null);
-  const [dayContext, dayContextManager] = createResource<DayContext | null>(
-    () => null
-  );
+  // Single resource that fetches all day context data
+  const [dayContext, { refetch, mutate }] = createResource(dayAPI.getToday);
 
-  onMount(async () => {
-    const ctx = await dayAPI.getToday();
-    dayContextManager.mutate(ctx);
-    dayManager.mutate(ctx.day);
-    taskManager.mutate(ctx.tasks || []);
-    eventManager.mutate(ctx.events || []);
-  });
+  // Derived values from the resource
+  const tasks = createMemo(() => dayContext()?.tasks ?? []);
+  const events = createMemo(() => dayContext()?.events ?? []);
+  const day = createMemo(() => dayContext()?.day);
+  const isLoading = createMemo(() => dayContext.loading);
+  const error = createMemo(() => dayContext.error);
 
-  const updateTask = async (input: Task): Promise<Task> => {
-    taskManager.mutate((items) =>
-      (items || []).map((i) => (i.id !== input.id ? i : { ...i, ...input }))
-    );
-    return input;
+  // Optimistically update a task in the local state
+  const updateTaskLocally = (updatedTask: Task) => {
+    mutate((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        tasks: current.tasks?.map((t) =>
+          t.id === updatedTask.id ? updatedTask : t
+        ),
+      };
+    });
   };
 
   const setTaskStatus = async (task: Task, status: TaskStatus): Promise<void> => {
-    const updatedTask = await taskAPI.setTaskStatus(task, status);
-    await updateTask(updatedTask);
+    // Optimistic update
+    const previousTask = task;
+    updateTaskLocally({ ...task, status });
+
+    try {
+      const updatedTask = await taskAPI.setTaskStatus(task, status);
+      updateTaskLocally(updatedTask);
+    } catch (error) {
+      // Rollback on error
+      updateTaskLocally(previousTask);
+      throw error;
+    }
   };
 
   const value: SheppardContextValue = {
+    dayContextResource: [dayContext, { refetch, mutate }],
+    dayContext: () => dayContext(),
     tasks,
     events,
     day,
-    dayContext,
-    updateTask,
+    isLoading,
+    error,
+    refetch,
     setTaskStatus,
   };
 
@@ -67,12 +86,13 @@ export function SheppardProvider(props: ParentProps) {
   );
 }
 
-export function useSheppardManager(): SheppardContextValue {
+export function useSheppard(): SheppardContextValue {
   const context = useContext(SheppardContext);
   if (!context) {
-    throw new Error(
-      "useSheppardManager must be used within a SheppardProvider"
-    );
+    throw new Error("useSheppard must be used within a SheppardProvider");
   }
   return context;
 }
+
+// Backwards compatibility alias - can be removed later
+export const useSheppardManager = useSheppard;

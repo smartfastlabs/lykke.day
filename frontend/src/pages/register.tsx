@@ -1,6 +1,7 @@
 import { createSignal } from "solid-js";
 import Page from "../components/shared/layout/page";
 import { authAPI } from "../utils/api";
+import { Input, SubmitButton, FormError } from "../components/forms";
 
 export default function Register() {
   const [email, setEmail] = createSignal("");
@@ -32,7 +33,6 @@ export default function Register() {
 
     try {
       await authAPI.register(email().trim(), password());
-      // After successful registration, log the user in
       await authAPI.login(email().trim(), password());
       window.location.href = "/welcome";
     } catch (err: unknown) {
@@ -52,65 +52,43 @@ export default function Register() {
           </h1>
 
           <form onSubmit={handleSubmit} class="space-y-6">
-            <div>
-              <label for="email" class="sr-only">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="Email"
-                value={email()}
-                onInput={(e) => setEmail(e.currentTarget.value)}
-                class="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow"
-                autocomplete="email"
-                required
-              />
-            </div>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={setEmail}
+              autocomplete="email"
+              required
+            />
 
-            <div>
-              <label for="password" class="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                placeholder="Password"
-                value={password()}
-                onInput={(e) => setPassword(e.currentTarget.value)}
-                class="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow"
-                autocomplete="new-password"
-                required
-              />
-            </div>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={setPassword}
+              autocomplete="new-password"
+              required
+            />
 
-            <div>
-              <label for="confirmPassword" class="sr-only">
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                placeholder="Confirm Password"
-                value={confirmPassword()}
-                onInput={(e) => setConfirmPassword(e.currentTarget.value)}
-                class="w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow"
-                autocomplete="new-password"
-                required
-              />
-            </div>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              autocomplete="new-password"
+              required
+            />
 
-            {error() && (
-              <p class="text-sm text-red-600 text-center">{error()}</p>
-            )}
+            <FormError error={error()} />
 
-            <button
-              type="submit"
-              disabled={isLoading()}
-              class="w-full py-3 bg-neutral-900 text-white font-medium rounded-lg hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isLoading() ? "Creating account..." : "Create Account"}
-            </button>
+            <SubmitButton
+              isLoading={isLoading()}
+              loadingText="Creating account..."
+              text="Create Account"
+            />
 
             <p class="text-sm text-center text-neutral-600">
               Already have an account?{" "}
