@@ -2,7 +2,6 @@ import asyncio
 import datetime
 from typing import TypeVar
 from uuid import UUID
-from zoneinfo import ZoneInfo
 
 from blinker import Signal
 
@@ -14,14 +13,13 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
     UserRepositoryProtocol,
 )
-from planned.core.config import settings
+from planned.application.utils import filter_upcoming_events, filter_upcoming_tasks
 from planned.core.constants import DEFAULT_END_OF_DAY_TIME, DEFAULT_LOOK_AHEAD
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
 from planned.domain.entities import User
 from planned.domain.value_objects.query import DateQuery
 from planned.domain.value_objects.repository_event import RepositoryEvent
-from planned.infrastructure.utils.dates import get_current_datetime, get_current_time
 
 from .base import BaseService
 
@@ -284,70 +282,26 @@ class DayService(BaseService):
         self,
         look_ahead: datetime.timedelta = DEFAULT_LOOK_AHEAD,
     ) -> list[objects.Task]:
-        # Get current time in configured timezone for comparison with task times
-        now: datetime.time = get_current_time()
-        # Get cutoff datetime in UTC, convert to configured timezone, then extract time
-        cutoff_datetime_utc = get_current_datetime() + look_ahead
-        cutoff_datetime_local = cutoff_datetime_utc.astimezone(
-            ZoneInfo(settings.TIMEZONE)
-        )
-        cutoff_time: datetime.time = cutoff_datetime_local.time()
+        """Get tasks that are upcoming within the look-ahead window.
 
-        if cutoff_time < get_current_time():
-            # tomorrow
-            return self.ctx.tasks
+        Args:
+            look_ahead: The time window to look ahead
 
-        result: list[objects.Task] = []
-        for task in self.ctx.tasks:
-            if (
-                task.status
-                not in (
-                    objects.TaskStatus.PENDING,
-                    objects.TaskStatus.NOT_STARTED,
-                    objects.TaskStatus.READY,
-                )
-                or task.completed_at
-                or not task.schedule
-            ):
-                continue
-            if task.schedule.available_time:
-                if task.schedule.available_time > now:
-                    continue
-
-            elif task.schedule.start_time and cutoff_time < task.schedule.start_time:
-                continue
-
-            if task.schedule.end_time and now > task.schedule.end_time:
-                continue
-
-            result.append(task)
-
-        return result
+        Returns:
+            List of tasks that are upcoming within the look-ahead window
+        """
+        return filter_upcoming_tasks(self.ctx.tasks, look_ahead)
 
     async def get_upcoming_events(
         self,
         look_ahead: datetime.timedelta = DEFAULT_LOOK_AHEAD,
     ) -> list[objects.Event]:
-        now: datetime.datetime = get_current_datetime()
-        result: list[objects.Event] = []
-        for event in self.ctx.events:
-            if event.status == "cancelled":
-                continue
+        """Get events that are upcoming within the look-ahead window.
 
-            # If event has already ended, skip it
-            if event.ends_at and event.ends_at < now:
-                continue
+        Args:
+            look_ahead: The time window to look ahead
 
-            # If event is ongoing (started but not ended), include it
-            if event.starts_at <= now:
-                result.append(event)
-                continue
-
-            # If event hasn't started yet and is too far in the future, skip it
-            if (event.starts_at - now) > look_ahead:
-                continue
-
-            # Event will start within look_ahead window
-            result.append(event)
-
-        return result
+        Returns:
+            List of events that are upcoming within the look-ahead window
+        """
+        return filter_upcoming_events(self.ctx.events, look_ahead)
