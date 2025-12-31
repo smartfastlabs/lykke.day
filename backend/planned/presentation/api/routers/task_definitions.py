@@ -2,7 +2,9 @@
 
 from fastapi import APIRouter
 
-from planned.infrastructure.data.default_task_definitions import DEFAULT_TASK_DEFINITIONS
+from planned.infrastructure.data.default_task_definitions import (
+    DEFAULT_TASK_DEFINITIONS,
+)
 from planned.infrastructure.repositories import TaskDefinitionRepository
 from planned.presentation.api.routers.dependencies.repositories import (
     get_task_definition_repo,
@@ -13,7 +15,22 @@ from planned.presentation.api.routers.generic.config import (
     EntityRouterConfig,
 )
 
-router = create_crud_router(
+# Create a new router and add the /available route FIRST (before CRUD routes)
+router = APIRouter()
+
+
+@router.get("/available")
+async def get_available_task_definitions() -> list[dict]:
+    """Get the curated list of available task definitions that users can import.
+
+    Returns:
+        List of task definition dictionaries (without user_id)
+    """
+    return DEFAULT_TASK_DEFINITIONS
+
+
+# Include the CRUD router AFTER the /available route is registered
+crud_router = create_crud_router(
     EntityRouterConfig(
         entity_name="task-definitions",
         repo_loader=get_task_definition_repo,
@@ -29,14 +46,4 @@ router = create_crud_router(
         tags=["task-definitions"],
     )
 )
-
-
-@router.get("/available")
-async def get_available_task_definitions() -> list[dict]:
-    """Get the curated list of available task definitions that users can import.
-    
-    Returns:
-        List of task definition dictionaries (without user_id)
-    """
-    return DEFAULT_TASK_DEFINITIONS
-
+router.include_router(crud_router)

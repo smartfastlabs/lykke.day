@@ -11,6 +11,7 @@ import { authAPI } from "./utils/api";
 import Home from "./pages/home";
 import Login from "./pages/login";
 import Register from "./pages/register";
+import Welcome from "./pages/welcome";
 import DayView from "./pages/day/preview";
 import NavPage from "./pages/navigation/links";
 import CalendarPage from "./pages/navigation/calendar";
@@ -76,6 +77,7 @@ export default function App() {
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
+        <Route path="/welcome" component={Welcome} />
         <Route path="/nav/calendar" component={CalendarPage} />
         <Route path="/nav" component={NavPage} />
         <Route path="/day/:date" component={DayView} />

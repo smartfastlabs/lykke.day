@@ -91,7 +91,11 @@ const Welcome: Component = () => {
 
         <Show
           when={availableTaskDefinitions()}
-          fallback={<div class="text-center text-gray-500 py-8">Loading...</div>}
+          fallback={
+            <div class="text-center text-gray-500 py-8">
+              Loading task definitions...
+            </div>
+          }
         >
           <div class="mb-6">
             <div class="flex items-center justify-between mb-4">
@@ -179,4 +183,3 @@ const Welcome: Component = () => {
 };
 
 export default Welcome;
-
