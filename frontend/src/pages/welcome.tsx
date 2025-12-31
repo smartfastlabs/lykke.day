@@ -31,9 +31,10 @@ const Welcome: Component = () => {
     if (!available) return;
 
     if (selectedIds().size === available.length) {
-      setSelectedIds(new Set());
+      setSelectedIds(new Set<string>());
     } else {
-      setSelectedIds(new Set(available.map((td) => td.name)));
+      const ids: string[] = available.map((td: TaskDefinition) => td.id).filter((id): id is string => id !== undefined && id !== "");
+      setSelectedIds(new Set<string>(ids));
     }
   };
 

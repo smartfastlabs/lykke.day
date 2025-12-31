@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js";
 import { authAPI } from "../../utils/api";
 
-function arrayBufferToBase64(buffer) {
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)));
 }
 
@@ -52,8 +52,8 @@ export default function PushNotifications() {
                 device_name: deviceName(),
                 endpoint: subscription.endpoint,
                 keys: {
-                  p256dh: arrayBufferToBase64(subscription.getKey("p256dh")),
-                  auth: arrayBufferToBase64(subscription.getKey("auth")),
+                  p256dh: arrayBufferToBase64(subscription.getKey("p256dh")!),
+                  auth: arrayBufferToBase64(subscription.getKey("auth")!),
                 },
               }),
             });

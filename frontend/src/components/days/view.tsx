@@ -5,6 +5,7 @@ import {
   For,
   Show,
   Accessor,
+  type JSX,
 } from "solid-js";
 import { createStore } from "solid-js/store";
 
@@ -12,7 +13,7 @@ import { Icon } from "../shared/icon";
 import TaskList from "../tasks/list";
 import { formatTimeString } from "../tasks/list";
 import EventList from "../events/list";
-import { TaskStatus, TaskType, TaskFrequency } from "../../types/api";
+import { TaskStatus, TaskType, TaskFrequency, Day, Task, Event } from "../../types/api";
 
 // Constants
 const ALL_STATUSES: TaskStatus[] = [
@@ -87,7 +88,7 @@ const FilterChip: Component<{
 // Filter Group Component
 const FilterGroup: Component<{
   label: string;
-  children: unknown;
+  children: JSX.Element;
 }> = (props) => (
   <div class="py-2">
     <div class="text-[10px] uppercase tracking-wider text-gray-400 mb-2">
@@ -106,7 +107,7 @@ const TaskFilters: Component<{
   };
   onToggleStatus: (value: string) => void;
   onToggleType: (value: string) => void;
-  onToggleFrequencyGroup: (value: FrequencyGroup) => void;
+  onToggleFrequencyGroup: (value: FrequencyGroup | "ALL") => void;
 }> = (props) => {
   const [expanded, setExpanded] = createSignal(false);
 

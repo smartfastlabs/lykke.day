@@ -1,8 +1,13 @@
 import { useNavigate } from "@solidjs/router";
 import { NotificationContainer } from "../../../providers/notifications";
 import NavButton from "../navButton";
+import { Component, JSX } from "solid-js";
 
-export default function Page(props) {
+interface PageProps {
+  children: JSX.Element;
+}
+
+const Page: Component<PageProps> = (props) => {
   return (
     <div class="overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <NotificationContainer />
@@ -14,4 +19,6 @@ export default function Page(props) {
       <NavButton />
     </div>
   );
-}
+};
+
+export default Page;

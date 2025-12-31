@@ -1,7 +1,12 @@
 import { FontAwesomeIcon } from "solid-fontawesome";
 import { faGear } from "@fortawesome/free-solid-svg-icons";
+import { Component } from "solid-js";
 
-const SettingsButton = (props) => {
+interface SettingsButtonProps {
+  onClick: () => void;
+}
+
+const SettingsButton: Component<SettingsButtonProps> = (props) => {
   return (
     <button
       onClick={props.onClick}
@@ -10,7 +15,7 @@ const SettingsButton = (props) => {
              print:hidden"
       aria-label="Settings"
     >
-      <FontAwesomeIcon icon={faGear} class="w-6 h-6" />
+      <FontAwesomeIcon icon={faGear as any} />
     </button>
   );
 };

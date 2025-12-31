@@ -75,7 +75,7 @@ const getStatusClasses = (status: TaskStatus): string => {
 };
 
 const TaskItem: Component<{ task: Task }> = (props) => {
-  const time = () => getTimeDisplay(props.task.schedule);
+  const time = () => getTimeDisplay(props.task.schedule ?? undefined);
   const icon = () =>
     getCategoryIcon(props.task.category) ||
     getTypeIcon(props.task.task_definition?.type);
@@ -179,7 +179,7 @@ const TaskItem: Component<{ task: Task }> = (props) => {
             {/* Category/Type icon */}
             <span class="w-4 flex-shrink-0 flex items-center justify-center">
               <Show when={icon()}>
-                <Icon key={icon()!} />
+                <Icon icon={icon()!} />
               </Show>
             </span>
 

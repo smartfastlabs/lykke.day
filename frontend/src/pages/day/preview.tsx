@@ -14,10 +14,14 @@ export const DayPreviewPage: Component = () => {
   return (
     <Page>
       <Show when={dayContext()}>
-        <div class="text-center">
-          <p class="text-sm text-gray-400">{dayContext()?.day.date}</p>
-        </div>
-        <DayPreview dayContext={dayContext()} />
+        {(ctx) => (
+          <>
+            <div class="text-center">
+              <p class="text-sm text-gray-400">{ctx().day.date}</p>
+            </div>
+            <DayPreview dayContext={ctx()} />
+          </>
+        )}
       </Show>
     </Page>
   );

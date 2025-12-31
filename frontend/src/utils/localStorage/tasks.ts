@@ -1,4 +1,4 @@
-import { Task } from "../types/api";
+import { Task } from "../../types/api";
 
 const TASK_KEY = (d: string): string => `tasks.instances.${d}`;
 

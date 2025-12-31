@@ -12,7 +12,7 @@ import {
 import { Icon } from "../shared/icon";
 
 interface TabIndicatorProps {
-  activeTab: Signal<string>;
+  activeTab: () => string;
   setActiveTab: Setter<string>;
 }
 

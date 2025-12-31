@@ -12,22 +12,28 @@ export const Home: Component = () => {
   return (
     <Page>
       <Show when={day()}>
-        <DayHeader day={day()} />
-        <DayTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-        <Switch>
-          <Match when={activeTab() == "home"}>
-            <DayPreview dayContext={dayContext()} />
-          </Match>
-          <Match when={activeTab() == "doit"}>
-            <DayView day={day} events={events} tasks={tasks} />
-          </Match>
-          <Match when={activeTab() == "tasks"}>
-            <DayView day={day} events={() => []} tasks={tasks} />
-          </Match>
-          <Match when={activeTab() == "events"}>
-            <DayView day={day} tasks={() => []} events={events} />
-          </Match>
-        </Switch>
+        {(dayValue) => (
+          <>
+            <DayHeader day={dayValue()} />
+            <DayTabs activeTab={() => activeTab()} setActiveTab={setActiveTab} />
+            <Switch>
+              <Match when={activeTab() == "home"}>
+                <Show when={dayContext()}>
+                  {(ctx) => <DayPreview dayContext={ctx()} />}
+                </Show>
+              </Match>
+              <Match when={activeTab() == "doit"}>
+                <DayView day={() => day()!} events={() => events() || []} tasks={() => tasks() || []} />
+              </Match>
+              <Match when={activeTab() == "tasks"}>
+                <DayView day={() => day()!} events={() => []} tasks={() => tasks() || []} />
+              </Match>
+              <Match when={activeTab() == "events"}>
+                <DayView day={() => day()!} tasks={() => []} events={() => events() || []} />
+              </Match>
+            </Switch>
+          </>
+        )}
       </Show>
     </Page>
   );

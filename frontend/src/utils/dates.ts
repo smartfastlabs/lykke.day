@@ -1,4 +1,4 @@
-import { Task, Weekday } from "../types/routines";
+import { DayOfWeek } from "../types/api";
 
 export function getDateString(date: Date = new Date()): string {
   const year = date.getFullYear();
@@ -8,18 +8,8 @@ export function getDateString(date: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
-export function getDayOfWeek(date: Date = new Date()): Weekday {
-  const days: Weekday[] = [
-    "SUNDAY",
-    "MONDAY",
-    "TUESDAY",
-    "WEDNESDAY",
-    "THURSDAY",
-    "FRIDAY",
-    "SATURDAY",
-  ];
-
-  return days[date.getDay()];
+export function getDayOfWeek(date: Date = new Date()): DayOfWeek {
+  return date.getDay() as DayOfWeek;
 }
 
 export function getTime(date: string, time: string): Date {

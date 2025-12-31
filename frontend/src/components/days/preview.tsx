@@ -1,8 +1,8 @@
-import Page from "../../shared/layout/page";
+import Page from "../shared/layout/page";
 import { createMemo, For, Component, createResource, Show } from "solid-js";
-import { dayAPI } from "../../../utils/api";
-import { Day, Task, Event, Alarm } from "../../../types/api";
-import type { DayContext, TaskFrequency } from "../../../types/api";
+import { dayAPI } from "../../utils/api";
+import { Day, Task, Event, Alarm } from "../../types/api";
+import type { DayContext, TaskFrequency } from "../../types/api";
 
 const formatTime = (timeStr: string): string => {
   const date = new Date(timeStr);
@@ -99,7 +99,7 @@ export const DayPreview: Component<PreviewProps> = (props) => {
       return [];
     }
     const categoryList = Array.isArray(categories) ? categories : [categories];
-    return tasks().filter((t) => categoryList.includes(t.category));
+    return tasks().filter((t: Task) => categoryList.includes(t.category));
   }
 
   function filterEvents(frequencies: string | string[]): Event[] {
@@ -109,15 +109,17 @@ export const DayPreview: Component<PreviewProps> = (props) => {
     const frequencyList = Array.isArray(frequencies)
       ? frequencies
       : [frequencies];
-    return events().filter((e) => frequencyList.includes(e.frequency));
+    return events().filter((e: Event) => frequencyList.includes(e.frequency));
   }
   return (
     <div class="flex flex-col min-h-full px-4 py-6">
       <div class="flex-1">
         <Show when={alarm()}>
-          <div class="mb-6">
-            <AlarmRow alarm={alarm()} />
-          </div>
+          {(alarmValue) => (
+            <div class="mb-6">
+              <AlarmRow alarm={alarmValue()} />
+            </div>
+          )}
         </Show>
         <div class="mb-6">
           <SectionHeader title="Noteable Events" />
@@ -163,8 +165,8 @@ export const DayPreview: Component<PreviewProps> = (props) => {
                 name={task.name}
                 subtitle={task.task_definition.type}
                 time={
-                  task.schedule?.time
-                    ? formatAlarmTime(task.schedule.time)
+                  task.schedule?.start_time
+                    ? formatAlarmTime(task.schedule.start_time)
                     : undefined
                 }
                 frequency={task.frequency}

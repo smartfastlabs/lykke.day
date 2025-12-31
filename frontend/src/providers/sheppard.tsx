@@ -41,7 +41,7 @@ export function SheppardProvider(props: ParentProps) {
 
   const updateTask = async (input: Task): Promise<Task> => {
     taskManager.mutate((items) =>
-      items.map((i) => (i.id !== input.id ? i : { ...i, ...input }))
+      (items || []).map((i) => (i.id !== input.id ? i : { ...i, ...input }))
     );
     return input;
   };

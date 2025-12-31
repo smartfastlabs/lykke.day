@@ -136,7 +136,7 @@ export function genericCrud<T extends EntityWithId>(type: string) {
 export const eventAPI = {
   ...genericCrud("events"),
 
-  getTodays: async (): Event[] => {
+  getTodays: async (): Promise<Event[]> => {
     const resp = await fetchJSON(`/api/events/today`, {
       method: "GET",
     });
@@ -156,7 +156,7 @@ export const taskAPI = {
     return resp.data;
   },
 
-  setTaskStatus: async (task: Task, status: string): Task => {
+  setTaskStatus: async (task: Task, status: string): Promise<Task> => {
     const resp = await fetchJSON(`/api/tasks/${task.date}/${task.id}/actions`, {
       method: "POST",
       body: JSON.stringify({
@@ -235,21 +235,21 @@ export const alarmAPI = {
 };
 
 export const dayAPI = {
-  scheduleToday: async (): Day => {
+  scheduleToday: async (): Promise<Day> => {
     const resp = await fetchJSON("/api/days/today/schedule", {
       method: "PUT",
     });
 
     return resp.data as Day;
   },
-  getTomorrow: async (): DayContext => {
+  getTomorrow: async (): Promise<DayContext> => {
     const resp = await fetchJSON("/api/days/tomorrow/context", {
       method: "GET",
     });
 
     return resp.data as DayContext;
   },
-  getTemplates: async (): DayTemplate[] => {
+  getTemplates: async (): Promise<DayTemplate[]> => {
     const resp = await fetchJSON("/api/days/templates", {
       method: "GET",
     });
@@ -257,7 +257,7 @@ export const dayAPI = {
     return resp.data as DayTemplate[];
   },
 
-  getToday: async (): DayContext => {
+  getToday: async (): Promise<DayContext> => {
     const resp = await fetchJSON("/api/days/today/context", {
       method: "GET",
     });
@@ -265,7 +265,7 @@ export const dayAPI = {
     return resp.data as DayContext;
   },
 
-  getContext: async (date: string): DayContext => {
+  getContext: async (date: string): Promise<DayContext> => {
     const resp = await fetchJSON(`/api/days/${date}/context`, {
       method: "GET",
     });
@@ -317,13 +317,13 @@ export const dayTemplateAPI = {
   ...genericCrud("day-templates"),
 
   getAll: async (): Promise<DayTemplate[]> => {
-    const resp = await fetchJSON("/api/day-templates/", {
+    const resp = await fetchJSON<DayTemplate[] | { items: DayTemplate[] }>("/api/day-templates/", {
       method: "GET",
     });
 
     // Handle paginated response - extract items array
-    if (resp.data && resp.data.items) {
-      return resp.data.items as DayTemplate[];
+    if (resp.data && typeof resp.data === 'object' && 'items' in resp.data) {
+      return (resp.data as { items: DayTemplate[] }).items;
     }
     // Fallback to direct array if not paginated
     return resp.data as DayTemplate[];
@@ -334,13 +334,13 @@ export const taskDefinitionAPI = {
   ...genericCrud("task-definitions"),
 
   getAll: async (): Promise<TaskDefinition[]> => {
-    const resp = await fetchJSON("/api/task-definitions/", {
+    const resp = await fetchJSON<TaskDefinition[] | { items: TaskDefinition[] }>("/api/task-definitions/", {
       method: "GET",
     });
 
     // Handle paginated response - extract items array
-    if (resp.data && resp.data.items) {
-      return resp.data.items as TaskDefinition[];
+    if (resp.data && typeof resp.data === 'object' && 'items' in resp.data) {
+      return (resp.data as { items: TaskDefinition[] }).items;
     }
     // Fallback to direct array if not paginated
     return resp.data as TaskDefinition[];

@@ -1,8 +1,9 @@
 import { FontAwesomeIcon } from "solid-fontawesome";
 import { faGripVertical } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "@solidjs/router";
+import { Component } from "solid-js";
 
-const NavButton = (props) => {
+const NavButton: Component = () => {
   const navigate = useNavigate();
 
   return (
@@ -13,7 +14,7 @@ const NavButton = (props) => {
              print:hidden"
       aria-label="Settings"
     >
-      <FontAwesomeIcon icon={faGripVertical} class="w-6 h-6" />
+      <FontAwesomeIcon icon={faGripVertical as any} />
     </button>
   );
 };
