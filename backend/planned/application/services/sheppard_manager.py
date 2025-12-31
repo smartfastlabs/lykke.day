@@ -18,12 +18,12 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
     UserRepositoryProtocol,
 )
-from planned.application.services import CalendarService, DayService, PlanningService
+from planned.application.services import CalendarService, PlanningService
+from planned.application.services.factories import DayServiceFactory
 from planned.common.repository_handler import ChangeHandler
 from planned.core import exceptions
 from planned.domain.entities import Alarm, DayTemplate, User
 from planned.domain.value_objects.alarm import AlarmType
-from planned.domain.value_objects.day import DayContext
 from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.gateways.adapters import (
     GoogleCalendarGatewayAdapter,
@@ -149,40 +149,18 @@ class SheppardManager:
             task_repo=task_repo,
         )
 
-        # Create day service for current date
+        # Create day service for current date using factory
         date = get_current_date()
-        # Create a temporary DayService instance to load context
-        template_slug = user.settings.template_defaults[date.weekday()]
-        template = await day_template_repo.get_by_slug(template_slug)
-        temp_day = await DayService.base_day(
-            date,
-            user_id=user_id,
-            template=template,
-        )
-        temp_ctx = DayContext(day=temp_day)
-        temp_day_svc = DayService(
+        factory = DayServiceFactory(
             user=user,
-            ctx=temp_ctx,
             day_repo=day_repo,
             day_template_repo=day_template_repo,
             event_repo=event_repo,
             message_repo=message_repo,
             task_repo=task_repo,
-        )
-        ctx = await temp_day_svc.load_context(
-            date=date,
-            user_id=user_id,
             user_repo=cast("UserRepositoryProtocol", self._user_repo),
         )
-        day_svc = DayService(
-            user=user,
-            ctx=ctx,
-            day_repo=day_repo,
-            day_template_repo=day_template_repo,
-            event_repo=event_repo,
-            message_repo=message_repo,
-            task_repo=task_repo,
-        )
+        day_svc = await factory.create(date, user_id=user_id)
 
         # Load push subscriptions
         push_subscriptions = await push_subscription_repo.all()

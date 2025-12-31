@@ -1,7 +1,7 @@
 import pytest
 
-from planned.application.services import DayService, PlanningService
-from planned.domain.entities import DayContext, DayTemplate
+from planned.application.services import PlanningService
+from planned.application.services.factories import DayServiceFactory
 from planned.infrastructure.repositories import (
     DayRepository,
     DayTemplateRepository,
@@ -48,38 +48,17 @@ async def test_schedule_today(test_date, test_user):
 
     assert len(result.tasks) == 2
 
-    # Create a temporary DayService instance to load context
-    template_slug = test_user.settings.template_defaults[test_date.weekday()]
-    template = await day_template_repo.get_by_slug(template_slug)
-    temp_day = await DayService.base_day(
-        test_date,
-        user_id=user_id,
-        template=template,
-    )
-    temp_ctx = DayContext(day=temp_day)
-    temp_day_svc = DayService(
+    # Create a DayService instance using the factory
+    factory = DayServiceFactory(
         user=test_user,
-        ctx=temp_ctx,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         event_repo=event_repo,
         message_repo=message_repo,
         task_repo=task_repo,
-    )
-    ctx = await temp_day_svc.load_context(
-        date=test_date,
-        user_id=user_id,
         user_repo=user_repo,
     )
-    day_svc = DayService(
-        user=test_user,
-        ctx=ctx,
-        day_repo=day_repo,
-        day_template_repo=day_template_repo,
-        event_repo=event_repo,
-        message_repo=message_repo,
-        task_repo=task_repo,
-    )
+    day_svc = await factory.create(test_date, user_id=user_id)
 
     def sort_tasks(tasks):
         return sorted(tasks, key=lambda t: t.name)

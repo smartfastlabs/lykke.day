@@ -8,6 +8,7 @@ import pytest
 from dobles import allow
 
 from planned.application.services import DayService
+from planned.application.services.factories import DayServiceFactory
 from planned.core.exceptions import exceptions
 from planned.domain.entities import (
     Day,
@@ -910,38 +911,19 @@ async def test_for_date_creates_service(
     allow(mock_message_repo).search_query.and_return([])
     setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo)
 
-    # Create a temporary DayService instance to load context
+    # Create a DayService instance using the factory
     template_slug = test_user.settings.template_defaults[date.weekday()]
     allow(mock_day_template_repo).get_by_slug(template_slug).and_return(template)
-    temp_day = await DayService.base_day(
-        date,
-        user_id=test_user_id,
-        template=template,
-    )
-    temp_ctx = DayContext(day=temp_day)
-    temp_service = DayService(
+    factory = DayServiceFactory(
         user=test_user,
-        ctx=temp_ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
         event_repo=mock_event_repo,
         message_repo=mock_message_repo,
         task_repo=mock_task_repo,
-    )
-    ctx = await temp_service.load_context(
-        date=date,
-        user_id=test_user_id,
         user_repo=mock_user_repo,
     )
-    service = DayService(
-        user=test_user,
-        ctx=ctx,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        task_repo=mock_task_repo,
-    )
+    service = await factory.create(date, user_id=test_user_id)
 
     assert service.date == date
     assert service.ctx.day.id == day.id
