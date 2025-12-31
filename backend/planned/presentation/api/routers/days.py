@@ -64,6 +64,7 @@ async def _get_context_for_date(
         user_repo=user_repo,
     )
     day_svc = DayService(
+        user=user,
         ctx=ctx,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
@@ -188,6 +189,7 @@ async def update_day(
         user_repo=user_repo,
     )
     day_svc = DayService(
+        user=user,
         ctx=ctx,
         day_repo=day_repo,
         day_template_repo=day_template_repo,

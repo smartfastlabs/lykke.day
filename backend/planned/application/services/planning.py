@@ -52,7 +52,7 @@ class PlanningService(BaseService):
 
     def __init__(
         self,
-        user_id: UUID,
+        user: objects.User,
         user_repo: UserRepositoryProtocol,
         day_repo: DayRepositoryProtocol,
         day_template_repo: DayTemplateRepositoryProtocol,
@@ -63,7 +63,8 @@ class PlanningService(BaseService):
         task_repo: TaskRepositoryProtocol,
         day_service: DayService | None = None,
     ) -> None:
-        self.user_id = user_id
+        super().__init__(user)
+        self.user_id = user.id
         self.user_repo = user_repo
         self.day_repo = day_repo
         self.day_template_repo = day_template_repo
@@ -160,6 +161,7 @@ class PlanningService(BaseService):
                 user_repo=self.user_repo,
             )
             day_svc = DayService(
+                user=self.user,
                 ctx=ctx,
                 day_repo=self.day_repo,
                 day_template_repo=self.day_template_repo,

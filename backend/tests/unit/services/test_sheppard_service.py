@@ -33,6 +33,7 @@ async def test_build_notification_payload_single_task(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_id,
+    test_user,
 ):
     """Test _build_notification_payload for a single task."""
     date = datetime.date(2024, 1, 1)
@@ -44,6 +45,7 @@ async def test_build_notification_payload_single_task(
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -69,6 +71,7 @@ async def test_build_notification_payload_single_task(
     )
 
     service = SheppardService(
+        user=test_user,
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
         task_repo=mock_task_repo,
@@ -101,6 +104,7 @@ async def test_build_notification_payload_multiple_tasks(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_id,
+    test_user,
 ):
     """Test _build_notification_payload for multiple tasks."""
     date = datetime.date(2024, 1, 1)
@@ -113,6 +117,7 @@ async def test_build_notification_payload_multiple_tasks(
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -153,6 +158,7 @@ async def test_build_notification_payload_multiple_tasks(
     )
 
     service = SheppardService(
+        user=test_user,
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
         task_repo=mock_task_repo,
@@ -183,6 +189,7 @@ async def test_build_event_notification_payload(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_id,
+    test_user,
     test_datetime_noon,
 ):
     """Test _build_event_notification_payload."""
@@ -196,6 +203,7 @@ async def test_build_event_notification_payload(
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -217,6 +225,7 @@ async def test_build_event_notification_payload(
     )
 
     service = SheppardService(
+        user=test_user,
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
         task_repo=mock_task_repo,
@@ -249,6 +258,7 @@ async def test_notify_for_tasks(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_id,
+    test_user,
 ):
     """Test _notify_for_tasks sends notifications."""
     date = datetime.date(2024, 1, 1)
@@ -261,6 +271,7 @@ async def test_notify_for_tasks(
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -296,6 +307,7 @@ async def test_notify_for_tasks(
     allow(mock_web_push_gateway).send_notification.and_return(None)
 
     service = SheppardService(
+        user=test_user,
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
         task_repo=mock_task_repo,
@@ -327,6 +339,7 @@ async def test_notify_for_tasks_empty_list(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_id,
+    test_user,
 ):
     """Test _notify_for_tasks handles empty task list."""
     date = datetime.date(2024, 1, 1)
@@ -339,6 +352,7 @@ async def test_notify_for_tasks_empty_list(
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -348,6 +362,7 @@ async def test_notify_for_tasks_empty_list(
     )
 
     service = SheppardService(
+        user=test_user,
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
         task_repo=mock_task_repo,
@@ -376,6 +391,7 @@ async def test_stop_sets_mode_to_stopping(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_id,
+    test_user,
 ):
     """Test stop sets mode to stopping."""
     date = datetime.date(2024, 1, 1)
@@ -388,6 +404,7 @@ async def test_stop_sets_mode_to_stopping(
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -397,6 +414,7 @@ async def test_stop_sets_mode_to_stopping(
     )
 
     service = SheppardService(
+        user=test_user,
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
         task_repo=mock_task_repo,
@@ -428,6 +446,7 @@ async def test_is_running_property(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_id,
+    test_user,
 ):
     """Test is_running property returns correct value."""
     date = datetime.date(2024, 1, 1)
@@ -440,6 +459,7 @@ async def test_is_running_property(
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -450,6 +470,7 @@ async def test_is_running_property(
 
     # Test active mode
     service = SheppardService(
+        user=test_user,
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
         task_repo=mock_task_repo,
@@ -485,6 +506,7 @@ async def test_render_prompt(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_id,
+    test_user,
 ):
     """Test _render_prompt renders template with context."""
     date = datetime.date(2024, 1, 1)
@@ -496,6 +518,7 @@ async def test_render_prompt(
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -505,6 +528,7 @@ async def test_render_prompt(
     )
 
     service = SheppardService(
+        user=test_user,
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
         task_repo=mock_task_repo,
@@ -543,6 +567,7 @@ async def test_morning_summary_prompt(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_id,
+    test_user,
 ):
     """Test morning_summary_prompt renders morning summary template."""
     date = datetime.date(2024, 1, 1)
@@ -554,6 +579,7 @@ async def test_morning_summary_prompt(
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -563,6 +589,7 @@ async def test_morning_summary_prompt(
     )
 
     service = SheppardService(
+        user=test_user,
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
         task_repo=mock_task_repo,
@@ -596,6 +623,7 @@ async def test_evening_summary_prompt(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_id,
+    test_user,
 ):
     """Test evening_summary_prompt renders evening summary template."""
     date = datetime.date(2024, 1, 1)
@@ -607,6 +635,7 @@ async def test_evening_summary_prompt(
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -616,6 +645,7 @@ async def test_evening_summary_prompt(
     )
 
     service = SheppardService(
+        user=test_user,
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
         task_repo=mock_task_repo,
@@ -649,6 +679,7 @@ async def test_notify_for_events(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_id,
+    test_user,
     test_datetime_noon,
 ):
     """Test _notify_for_events sends notifications for events."""
@@ -661,6 +692,7 @@ async def test_notify_for_events(
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -692,6 +724,7 @@ async def test_notify_for_events(
     allow(mock_web_push_gateway).send_notification.and_return(None)
 
     service = SheppardService(
+        user=test_user,
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
         task_repo=mock_task_repo,
@@ -723,6 +756,7 @@ async def test_notify_for_events_empty_list(
     mock_planning_service,
     mock_web_push_gateway,
     test_user_id,
+    test_user,
 ):
     """Test _notify_for_events handles empty event list."""
     date = datetime.date(2024, 1, 1)
@@ -734,6 +768,7 @@ async def test_notify_for_events_empty_list(
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -743,6 +778,7 @@ async def test_notify_for_events_empty_list(
     )
 
     service = SheppardService(
+        user=test_user,
         day_svc=day_svc,
         push_subscription_repo=mock_push_subscription_repo,
         task_repo=mock_task_repo,

@@ -13,6 +13,7 @@ from planned.domain.entities import AuthToken, Calendar, Event
 
 @pytest.mark.asyncio
 async def test_sync_google(
+    test_user,
     mock_auth_token_repo,
     mock_calendar_repo,
     mock_event_repo,
@@ -70,6 +71,7 @@ async def test_sync_google(
     allow(mock_event_repo).delete.and_return(None)
 
     service = CalendarService(
+        user=test_user,
         auth_token_repo=mock_auth_token_repo,
         calendar_repo=mock_calendar_repo,
         event_repo=mock_event_repo,
@@ -86,6 +88,7 @@ async def test_sync_google(
 
 @pytest.mark.asyncio
 async def test_sync(
+    test_user,
     mock_auth_token_repo,
     mock_calendar_repo,
     mock_event_repo,
@@ -124,6 +127,7 @@ async def test_sync(
     allow(mock_event_repo).put.and_return(event)
 
     service = CalendarService(
+        user=test_user,
         auth_token_repo=mock_auth_token_repo,
         calendar_repo=mock_calendar_repo,
         event_repo=mock_event_repo,
@@ -138,6 +142,7 @@ async def test_sync(
 
 @pytest.mark.asyncio
 async def test_sync_all(
+    test_user,
     mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
 ):
     """Test syncing all calendars."""
@@ -163,6 +168,7 @@ async def test_sync_all(
     allow(mock_event_repo).put.and_return(None)
 
     service = CalendarService(
+        user=test_user,
         auth_token_repo=mock_auth_token_repo,
         calendar_repo=mock_calendar_repo,
         event_repo=mock_event_repo,
@@ -175,6 +181,7 @@ async def test_sync_all(
 
 @pytest.mark.asyncio
 async def test_sync_with_last_sync_at(
+    test_user,
     mock_auth_token_repo,
     mock_calendar_repo,
     mock_event_repo,
@@ -220,6 +227,7 @@ async def test_sync_with_last_sync_at(
     allow(mock_event_repo).put.and_return(event)
 
     service = CalendarService(
+        user=test_user,
         auth_token_repo=mock_auth_token_repo,
         calendar_repo=mock_calendar_repo,
         event_repo=mock_event_repo,
@@ -235,6 +243,7 @@ async def test_sync_with_last_sync_at(
 
 @pytest.mark.asyncio
 async def test_sync_unsupported_platform(
+    test_user,
     mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
 ):
     """Test syncing a calendar with unsupported platform raises NotImplementedError."""
@@ -247,6 +256,7 @@ async def test_sync_unsupported_platform(
     )
 
     service = CalendarService(
+        user=test_user,
         auth_token_repo=mock_auth_token_repo,
         calendar_repo=mock_calendar_repo,
         event_repo=mock_event_repo,
@@ -260,6 +270,7 @@ async def test_sync_unsupported_platform(
 
 @pytest.mark.asyncio
 async def test_sync_google_no_events(
+    test_user,
     mock_auth_token_repo,
     mock_calendar_repo,
     mock_event_repo,
@@ -292,6 +303,7 @@ async def test_sync_google_no_events(
     ).and_return([])
 
     service = CalendarService(
+        user=test_user,
         auth_token_repo=mock_auth_token_repo,
         calendar_repo=mock_calendar_repo,
         event_repo=mock_event_repo,
@@ -306,6 +318,7 @@ async def test_sync_google_no_events(
 
 @pytest.mark.asyncio
 async def test_sync_all_successful_syncs(
+    test_user,
     mock_auth_token_repo,
     mock_calendar_repo,
     mock_event_repo,
@@ -384,6 +397,7 @@ async def test_sync_all_successful_syncs(
     allow(mock_event_repo).delete.and_return(None)
 
     service = CalendarService(
+        user=test_user,
         auth_token_repo=mock_auth_token_repo,
         calendar_repo=mock_calendar_repo,
         event_repo=mock_event_repo,
@@ -399,6 +413,7 @@ async def test_sync_all_successful_syncs(
 
 @pytest.mark.asyncio
 async def test_sync_all_with_exception_during_sync(
+    test_user,
     mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
 ):
     """Test syncing all calendars handles exceptions during sync."""
@@ -441,6 +456,7 @@ async def test_sync_all_with_exception_during_sync(
     allow(mock_event_repo).put.and_return(None)
 
     service = CalendarService(
+        user=test_user,
         auth_token_repo=mock_auth_token_repo,
         calendar_repo=mock_calendar_repo,
         event_repo=mock_event_repo,

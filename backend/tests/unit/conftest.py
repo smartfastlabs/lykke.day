@@ -139,3 +139,18 @@ def mock_planning_service():
 def test_user_id():
     """Test user UUID for unit tests."""
     return uuid4()
+
+
+# Test user fixture
+@pytest.fixture
+def test_user(test_user_id):
+    """Test user entity for unit tests."""
+    from planned.domain.entities import User
+    from planned.domain.value_objects.user import UserSetting
+
+    return User(
+        id=test_user_id,
+        email="test@example.com",
+        hashed_password="hash",
+        settings=UserSetting(template_defaults=["default"] * 7),
+    )

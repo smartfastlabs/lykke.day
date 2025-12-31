@@ -29,7 +29,7 @@ async def test_schedule_today(test_date, test_user):
 
     # Create planning service with repositories
     planning_svc = PlanningService(
-        user_id=user_id,
+        user=test_user,
         user_repo=user_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
@@ -59,6 +59,7 @@ async def test_schedule_today(test_date, test_user):
         user_repo=user_repo,
     )
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
@@ -90,7 +91,7 @@ async def test_schedule_tomorrow(test_date_tomorrow, test_user):
 
     # Create planning service with repositories
     planning_svc = PlanningService(
-        user_id=user_id,
+        user=test_user,
         user_repo=user_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,

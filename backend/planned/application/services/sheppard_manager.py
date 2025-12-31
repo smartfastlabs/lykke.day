@@ -115,12 +115,16 @@ class SheppardManager:
             )
             await day_template_repo.put(default_template)
 
+        # Get user
+        user = await self._user_repo.get(user_id)
+
         # Create gateway adapters
         google_gateway = GoogleCalendarGatewayAdapter()
         web_push_gateway = WebPushGatewayAdapter()
 
         # Create services
         calendar_service = CalendarService(
+            user=user,
             auth_token_repo=auth_token_repo,
             calendar_repo=calendar_repo,
             event_repo=event_repo,
@@ -128,7 +132,7 @@ class SheppardManager:
         )
 
         planning_service = PlanningService(
-            user_id=user_id,
+            user=user,
             user_repo=cast("UserRepositoryProtocol", self._user_repo),
             day_repo=day_repo,
             day_template_repo=day_template_repo,
@@ -157,6 +161,7 @@ class SheppardManager:
             user_repo=cast("UserRepositoryProtocol", self._user_repo),
         )
         day_svc = DayService(
+            user=user,
             ctx=ctx,
             day_repo=day_repo,
             day_template_repo=day_template_repo,
@@ -170,6 +175,7 @@ class SheppardManager:
 
         # Create and return SheppardService
         return SheppardService(
+            user=user,
             day_svc=day_svc,
             push_subscription_repo=push_subscription_repo,
             task_repo=task_repo,

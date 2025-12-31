@@ -45,6 +45,7 @@ async def test_set_date_changes_date_and_reloads_context(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
 ):
     """Test that set_date changes the date and reloads context."""
     old_date = datetime.date(2024, 1, 1)
@@ -79,6 +80,7 @@ async def test_set_date_changes_date_and_reloads_context(
 
     # Create service with old date
     service = DayService(
+        user=test_user,
         ctx=old_ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -104,6 +106,7 @@ async def test_set_date_with_user_id(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
 ):
     """Test set_date with explicit user_id."""
     old_date = datetime.date(2024, 1, 1)
@@ -135,6 +138,7 @@ async def test_set_date_with_user_id(
     setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo)
 
     service = DayService(
+        user=test_user,
         ctx=old_ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -157,6 +161,7 @@ async def test_get_or_preview_returns_existing_day(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
 ):
     """Test get_or_preview returns existing day if found."""
     date = datetime.date(2024, 1, 1)
@@ -180,6 +185,7 @@ async def test_get_or_preview_returns_existing_day(
     # Create a DayService instance
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -212,6 +218,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
 ):
     """Test get_or_preview creates base day if not found."""
     date = datetime.date(2024, 1, 1)
@@ -250,6 +257,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
         messages=[],
     )
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -277,6 +285,7 @@ async def test_get_or_create_creates_and_saves_day(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
 ):
     """Test get_or_create creates and saves day if not found."""
     date = datetime.date(2024, 1, 1)
@@ -323,6 +332,7 @@ async def test_get_or_create_creates_and_saves_day(
         messages=[],
     )
     day_svc = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -349,6 +359,7 @@ async def test_save(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
 ):
     """Test save persists the day."""
     date = datetime.date(2024, 1, 1)
@@ -367,6 +378,7 @@ async def test_save(
     allow(mock_day_repo).put.and_return(day)
 
     service = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -389,6 +401,7 @@ async def test_get_upcomming_tasks_123(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
     test_datetime_noon,
 ):
     """Test get_upcomming_tasks returns tasks within look_ahead window."""
@@ -480,6 +493,7 @@ async def test_get_upcomming_tasks_123(
     )
 
     service = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -504,6 +518,7 @@ async def test_get_upcomming_events(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
     test_datetime_noon,
 ):
     """Test get_upcomming_events returns events within look_ahead window."""
@@ -586,6 +601,7 @@ async def test_get_upcomming_events(
     )
 
     service = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -611,6 +627,7 @@ async def test_on_event_change_create(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
     test_datetime_noon,
 ):
     """Test on_event_change handles create events."""
@@ -630,6 +647,7 @@ async def test_on_event_change_create(
     setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo)
 
     service = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -669,6 +687,7 @@ async def test_on_event_change_delete(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
     test_datetime_noon,
 ):
     """Test on_event_change handles delete events."""
@@ -706,6 +725,7 @@ async def test_on_event_change_delete(
     setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo)
 
     service = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -733,6 +753,7 @@ async def test_on_message_change_create(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
 ):
     """Test on_message_change handles create events."""
     from planned.domain.entities import Message
@@ -753,6 +774,7 @@ async def test_on_message_change_create(
     setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo)
 
     service = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -790,6 +812,7 @@ async def test_on_task_change_update(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
 ):
     """Test on_task_change handles update events."""
     date = datetime.date(2024, 1, 1)
@@ -824,6 +847,7 @@ async def test_on_task_change_update(
     setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo)
 
     service = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -865,6 +889,7 @@ async def test_for_date_creates_service(
     mock_task_repo,
     mock_user_repo,
     test_user_id,
+    test_user,
 ):
     """Test for_date creates a DayService with loaded context."""
     date = datetime.date(2024, 1, 1)
@@ -897,6 +922,7 @@ async def test_for_date_creates_service(
         user_repo=mock_user_repo,
     )
     service = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -912,6 +938,7 @@ async def test_for_date_creates_service(
 @pytest.mark.asyncio
 async def test_base_day_with_template(
     test_user_id,
+    test_user,
 ):
     """Test base_day creates day with specified template."""
     date = datetime.date(2024, 1, 1)
@@ -941,6 +968,7 @@ async def test_load_context_instance_method(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
 ):
     """Test load_context instance method reloads context."""
     date = datetime.date(2024, 1, 1)
@@ -970,6 +998,7 @@ async def test_load_context_instance_method(
     setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo)
 
     service = DayService(
+        user=test_user,
         ctx=old_ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -993,6 +1022,7 @@ async def test_get_upcomming_tasks_with_available_time(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
     test_datetime_noon,
 ):
     """Test get_upcomming_tasks handles tasks with available_time."""
@@ -1058,6 +1088,7 @@ async def test_get_upcomming_tasks_with_available_time(
     ctx = DayContext(day=day, tasks=[task1, task2], events=[], messages=[])
 
     service = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -1081,6 +1112,7 @@ async def test_get_upcomming_tasks_with_end_time(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
     test_datetime_noon,
 ):
     """Test get_upcomming_tasks excludes tasks past end_time."""
@@ -1148,6 +1180,7 @@ async def test_get_upcomming_tasks_with_end_time(
     ctx = DayContext(day=day, tasks=[task1, task2], events=[], messages=[])
 
     service = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
@@ -1171,6 +1204,7 @@ async def test_get_upcomming_tasks_excludes_completed_at(
     mock_message_repo,
     mock_task_repo,
     test_user_id,
+    test_user,
     test_datetime_noon,
 ):
     """Test get_upcomming_tasks excludes tasks with completed_at set."""
@@ -1236,6 +1270,7 @@ async def test_get_upcomming_tasks_excludes_completed_at(
     ctx = DayContext(day=day, tasks=[task1, task2], events=[], messages=[])
 
     service = DayService(
+        user=test_user,
         ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,

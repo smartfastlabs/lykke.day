@@ -43,6 +43,7 @@ from ..user import get_current_user
 
 
 def get_calendar_service(
+    user: Annotated[User, Depends(get_current_user)],
     auth_token_repo: Annotated[AuthTokenRepositoryProtocol, Depends(get_auth_token_repo)],
     calendar_repo: Annotated[CalendarRepositoryProtocol, Depends(get_calendar_repo)],
     event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
@@ -50,6 +51,7 @@ def get_calendar_service(
     """Get an instance of CalendarService."""
     google_gateway = GoogleCalendarGatewayAdapter()
     return CalendarService(
+        user=user,
         auth_token_repo=auth_token_repo,
         calendar_repo=calendar_repo,
         event_repo=event_repo,
@@ -70,7 +72,7 @@ def get_planning_service(
 ) -> PlanningService:
     """Get a user-scoped instance of PlanningService."""
     return PlanningService(
-        user_id=user.id,
+        user=user,
         user_repo=user_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
@@ -127,6 +129,7 @@ async def get_day_service_for_date(
         user_repo=user_repo,
     )
     return DayService(
+        user=user,
         ctx=ctx,
         day_repo=day_repo,
         day_template_repo=day_template_repo,

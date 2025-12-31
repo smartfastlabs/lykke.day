@@ -51,6 +51,7 @@ class DayService(BaseService):
 
     def __init__(
         self,
+        user: User,
         ctx: objects.DayContext,
         day_repo: DayRepositoryProtocol,
         day_template_repo: DayTemplateRepositoryProtocol,
@@ -58,6 +59,7 @@ class DayService(BaseService):
         message_repo: MessageRepositoryProtocol,
         task_repo: TaskRepositoryProtocol,
     ) -> None:
+        super().__init__(user)
         self.ctx = ctx
         self.date = ctx.day.date
         self.signal_source = Signal()

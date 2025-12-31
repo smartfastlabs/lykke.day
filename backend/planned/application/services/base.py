@@ -1,3 +1,4 @@
+from planned.domain.entities import User
 from planned.infrastructure.database.transaction import TransactionManager
 
 
@@ -6,6 +7,16 @@ class BaseService:
 
     Provides transaction management capabilities.
     """
+
+    user: User
+
+    def __init__(self, user: User) -> None:
+        """Initialize the service with a user.
+
+        Args:
+            user: The user associated with this service instance.
+        """
+        self.user = user
 
     def transaction(self) -> TransactionManager:
         """Get a transaction manager for wrapping operations in a transaction.

@@ -3,14 +3,14 @@ from uuid import UUID
 
 from loguru import logger
 
+from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from planned.application.repositories import (
     AuthTokenRepositoryProtocol,
     CalendarRepositoryProtocol,
     EventRepositoryProtocol,
 )
-from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from planned.core.exceptions import exceptions
-from planned.domain.entities import Calendar, Event
+from planned.domain.entities import Calendar, Event, User
 
 from .base import BaseService
 
@@ -24,16 +24,17 @@ class CalendarService(BaseService):
 
     def __init__(
         self,
+        user: User,
         auth_token_repo: AuthTokenRepositoryProtocol,
         calendar_repo: CalendarRepositoryProtocol,
         event_repo: EventRepositoryProtocol,
         google_gateway: GoogleCalendarGatewayProtocol,
     ) -> None:
+        super().__init__(user)
         self.auth_token_repo = auth_token_repo
         self.calendar_repo = calendar_repo
         self.event_repo = event_repo
         self.google_gateway = google_gateway
-
 
     async def sync_google(
         self,

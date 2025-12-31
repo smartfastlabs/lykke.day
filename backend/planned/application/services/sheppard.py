@@ -65,6 +65,7 @@ class SheppardService(BaseService):
 
     def __init__(
         self,
+        user: objects.User,
         day_svc: DayService,
         push_subscription_repo: PushSubscriptionRepositoryProtocol,
         task_repo: TaskRepositoryProtocol,
@@ -78,6 +79,7 @@ class SheppardService(BaseService):
         push_subscriptions: list[objects.PushSubscription] | None = None,
         mode: SheppardMode = "starting",
     ) -> None:
+        super().__init__(user)
         self.mode = mode
         self.push_subscription_repo = push_subscription_repo
         self.task_repo = task_repo
@@ -346,6 +348,7 @@ class SheppardService(BaseService):
             user_repo=self.planning_service.user_repo,
         )
         self.day_svc = DayService(
+            user=self.user,
             ctx=ctx,
             day_repo=self.day_repo,
             day_template_repo=self.day_template_repo,
