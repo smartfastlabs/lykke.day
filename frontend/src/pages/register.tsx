@@ -35,8 +35,10 @@ export default function Register() {
       // After successful registration, log the user in
       await authAPI.login(email().trim(), password());
       window.location.href = "/welcome";
-    } catch (err: any) {
-      setError(err?.message || "Registration failed");
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Registration failed";
+      setError(errorMessage);
       setIsLoading(false);
     }
   };

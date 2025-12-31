@@ -27,8 +27,10 @@ export default function Login() {
     try {
       await authAPI.login(email(), password());
       window.location.href = "/";
-    } catch (err: any) {
-      setError(err?.message || "Authentication failed");
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Authentication failed";
+      setError(errorMessage);
       setIsLoading(false);
     }
   };

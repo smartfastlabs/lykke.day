@@ -1,50 +1,81 @@
 import { getTime } from "./dates";
+import type { Task } from "../types/api";
 
-export function groupTasks(tasks: Any[]) {
+interface GroupedTasks {
+  punted: Task[];
+  pending: Task[];
+  missed: Task[];
+  completed: Task[];
+}
+
+export function groupTasks(tasks: Task[]): GroupedTasks {
   // remove all items with availableTime in the future
-  const result = {
-    punted: [] as Any[],
-    pending: [] as Any[],
-    missed: [] as Any[],
-    completed: [] as Any[],
+  const result: GroupedTasks = {
+    punted: [],
+    pending: [],
+    missed: [],
+    completed: [],
   };
 
   for (const task of tasks) {
-    const startTime: Date | null = task.definition.startTime
-      ? getTime(task.date, task.definition.startTime)
+    const schedule = task.schedule;
+    if (!schedule) {
+      result.pending.push(task);
+      continue;
+    }
+
+    const startTime: Date | null = schedule.start_time
+      ? getTime(task.date, schedule.start_time)
       : null;
 
-    const endTime: Date | null = task.definition.endTime
-      ? getTime(task.date, task.definition.endTime)
+    const endTime: Date | null = schedule.end_time
+      ? getTime(task.date, schedule.end_time)
       : null;
 
-    const availableTime: Date | null = task.definition.availableTime
-      ? getTime(task.date, task.definition.availableTime)
+    const availableTime: Date | null = schedule.available_time
+      ? getTime(task.date, schedule.available_time)
       : null;
 
-    const taskStatus: string | null = task.statuses.length
-      ? task.statuses[task.statuses.length - 1].type
-      : null;
+    const taskStatus = task.status;
 
-    switch (task.definition.timingType) {
+    switch (schedule.timing_type) {
       case "FIXED_TIME":
-        if (startTime && startTime < new Date()) {
+        if (taskStatus === "COMPLETE") {
+          result.completed.push(task);
+        } else if (taskStatus === "PUNT") {
+          result.punted.push(task);
+        } else if (startTime && startTime < new Date()) {
           result.missed.push(task);
         } else {
           result.pending.push(task);
         }
         break;
       case "DEADLINE":
-        if (endTime && endTime < new Date()) {
+        if (taskStatus === "COMPLETE") {
+          result.completed.push(task);
+        } else if (taskStatus === "PUNT") {
+          result.punted.push(task);
+        } else if (endTime && endTime < new Date()) {
           result.missed.push(task);
         } else if (!availableTime || availableTime < new Date()) {
           result.pending.push(task);
         }
         break;
       case "TIME_WINDOW":
+        if (taskStatus === "COMPLETE") {
+          result.completed.push(task);
+        } else if (taskStatus === "PUNT") {
+          result.punted.push(task);
+        } else {
+          result.pending.push(task);
+        }
         break;
       case "FLEXIBLE":
-        if (!availableTime || availableTime < new Date()) {
+        if (taskStatus === "COMPLETE") {
+          result.completed.push(task);
+        } else if (taskStatus === "PUNT") {
+          result.punted.push(task);
+        } else if (!availableTime || availableTime < new Date()) {
           result.pending.push(task);
         }
         break;

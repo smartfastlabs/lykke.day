@@ -87,7 +87,7 @@ const FilterChip: Component<{
 // Filter Group Component
 const FilterGroup: Component<{
   label: string;
-  children: any;
+  children: unknown;
 }> = (props) => (
   <div class="py-2">
     <div class="text-[10px] uppercase tracking-wider text-gray-400 mb-2">

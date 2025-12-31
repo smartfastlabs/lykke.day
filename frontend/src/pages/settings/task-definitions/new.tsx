@@ -17,8 +17,12 @@ export default function NewTaskDefinition() {
     try {
       await taskDefinitionAPI.create(taskDefinition as TaskDefinition);
       navigate("/settings/task-definitions");
-    } catch (err: any) {
-      setError(err?.message || "Failed to create task definition");
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to create task definition";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

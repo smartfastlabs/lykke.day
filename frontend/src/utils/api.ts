@@ -10,33 +10,41 @@ import {
   TaskDefinition,
   PushSubscription,
 } from "../types/api";
+import type { ApiResponse, ApiError } from "../types/api/utils";
 
 const isDev = process.env.NODE_ENV === "development";
 
-function getHeaders(headers) {
+interface FetchOptions extends RequestInit {
+  suppressError?: boolean;
+  headers?: HeadersInit;
+}
+
+function getHeaders(headers?: HeadersInit): HeadersInit {
   const event = getRequestEvent();
   const cookieHeader = event?.request.headers.get("cookie");
-  headers = headers || {
+  const defaultHeaders: HeadersInit = {
     "Content-Type": "application/json",
   };
 
-  if (cookieHeader && !headers["Cookie"]) {
+  const mergedHeaders = headers ? { ...defaultHeaders, ...headers } : defaultHeaders;
+
+  if (cookieHeader && !(mergedHeaders as Record<string, string>)["Cookie"]) {
     // If the headers object doesn't already have a Cookie header, add it
-    headers["Cookie"] = cookieHeader;
+    (mergedHeaders as Record<string, string>)["Cookie"] = cookieHeader;
   }
 
-  return headers;
+  return mergedHeaders;
 }
 
-async function fetchJSON(
+async function fetchJSON<T = unknown>(
   url: string,
-  options: object = { suppressError: false }
-): any {
-  options.headers = getHeaders(options.headers);
+  options: FetchOptions = { suppressError: false }
+): Promise<ApiResponse<T>> {
+  const headers = getHeaders(options.headers);
 
   console.log("Fetching URL:", url, "with options:", options);
-  const response = await fetch(url, options);
-  const body = await response.json();
+  const response = await fetch(url, { ...options, headers });
+  const body = (await response.json()) as T | ApiError;
 
   // Handle 401 Unauthorized - redirect to login
   if (response.status === 401) {
@@ -53,20 +61,28 @@ async function fetchJSON(
   }
 
   if (!response.ok && !options.suppressError) {
-    globalNotifications.add(`Error fetching data: ${body.detail}`, "error");
+    const errorBody = body as ApiError;
+    globalNotifications.add(
+      `Error fetching data: ${errorBody.detail || "Unknown error"}`,
+      "error"
+    );
   }
 
   return {
-    data: body,
+    data: body as T,
     status: response.status,
     ok: response.ok,
   };
 }
 
-function putMethod(type: string) {
-  return async function (item: any) {
+interface EntityWithId {
+  id?: string;
+}
+
+function putMethod<T extends EntityWithId>(type: string) {
+  return async function (item: T): Promise<ApiResponse<T>> {
     const url = item.id ? `/api/${type}/${item.id}` : `/api/${type}`;
-    return fetchJSON(url, {
+    return fetchJSON<T>(url, {
       method: "PUT",
       body: JSON.stringify(item),
       headers: {
@@ -76,10 +92,10 @@ function putMethod(type: string) {
   };
 }
 
-function postMethod(type: string) {
-  return async function (item: any) {
+function postMethod<T extends EntityWithId>(type: string) {
+  return async function (item: T): Promise<ApiResponse<T>> {
     const url = item.id ? `/api/${type}/${item.id}` : `/api/${type}`;
-    return fetchJSON(url, {
+    return fetchJSON<T>(url, {
       method: "POST",
       body: JSON.stringify(item),
       headers: {
@@ -100,20 +116,20 @@ function deleteMethod(type: string) {
   };
 }
 
-export function readOnly(type: string) {
+export function readOnly<T extends EntityWithId>(type: string) {
   return {
-    get: (u: string) => fetchJSON(`/api/${type}/${u}`),
-    search: postMethod(`${type}/search`),
+    get: (u: string): Promise<ApiResponse<T>> => fetchJSON<T>(`/api/${type}/${u}`),
+    search: postMethod<T>(`${type}/search`),
   };
 }
 
-export function genericCrud(type) {
+export function genericCrud<T extends EntityWithId>(type: string) {
   return {
-    get: (u: string) => fetchJSON(`/api/${type}/${u}`),
-    search: postMethod(`${type}/search`),
+    get: (u: string): Promise<ApiResponse<T>> => fetchJSON<T>(`/api/${type}/${u}`),
+    search: postMethod<T>(`${type}/search`),
     delete: deleteMethod(type),
-    update: putMethod(type),
-    create: postMethod(type),
+    update: putMethod<T>(type),
+    create: postMethod<T>(type),
   };
 }
 
@@ -132,12 +148,12 @@ export const eventAPI = {
 export const taskAPI = {
   ...genericCrud("tasks"),
 
-  getTodays: async (): Event[] => {
-    const resp = await fetchJSON(`/api/tasks/today`, {
+  getTodays: async (): Promise<Task[]> => {
+    const resp = await fetchJSON<Task[]>(`/api/tasks/today`, {
       method: "GET",
     });
 
-    return resp.data as Event[];
+    return resp.data;
   },
 
   setTaskStatus: async (task: Task, status: string): Task => {
@@ -178,7 +194,7 @@ export const authAPI = {
     // 204 No Content on success - cookie is set automatically
   },
 
-  register: async (email: string, password: string): Promise<any> => {
+  register: async (email: string, password: string): Promise<unknown> => {
     const resp = await fetchJSON("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({
@@ -191,7 +207,8 @@ export const authAPI = {
     });
 
     if (!resp.ok) {
-      throw new Error(resp.data?.detail || "Registration failed");
+      const errorData = resp.data as ApiError;
+      throw new Error(errorData.detail || "Registration failed");
     }
 
     return resp.data;
@@ -210,8 +227,8 @@ export const authAPI = {
 };
 
 export const alarmAPI = {
-  stopAll: async (): null => {
-    fetchJSON("/api/sheppard/stop-alarm", {
+  stopAll: async (): Promise<void> => {
+    await fetchJSON("/api/sheppard/stop-alarm", {
       method: "PUT",
     });
   },

@@ -17,8 +17,10 @@ export default function NewDayTemplate() {
     try {
       await dayTemplateAPI.create(template as DayTemplate);
       navigate("/settings/day-templates");
-    } catch (err: any) {
-      setError(err?.message || "Failed to create day template");
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to create day template";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

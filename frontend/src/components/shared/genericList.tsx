@@ -1,8 +1,8 @@
-import { Component, For } from "solid-js";
+import { Component, For, type JSX } from "solid-js";
 
 interface GenericListProps<T> {
   items: T[];
-  renderItem: (item: T) => any;
+  renderItem: (item: T) => JSX.Element;
   class?: string;
   onItemClick?: (item: T) => void;
 }

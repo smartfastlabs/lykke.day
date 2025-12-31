@@ -9,12 +9,16 @@
     "build": "vite build",
     "serve": "vite preview",
     "dev-https": "vite --port 443 --host master-bedroom.local",
-    "serve-https": "vite build && vite preview --port 443 --host master-bedroom.local"
+    "serve-https": "vite build && vite preview --port 443 --host master-bedroom.local",
+    "generate-types": "cd ../backend && make generate-types",
+    "prebuild": "npm run generate-types",
+    "predev": "npm run generate-types"
   },
   "license": "MIT",
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.13",
     "json-schema-to-typescript": "^15.0.4",
+    "openapi-typescript": "^7.4.2",
     "solid-devtools": "^0.34.3",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2",

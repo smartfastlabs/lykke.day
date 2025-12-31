@@ -1,15 +1,42 @@
-import { createContext, useContext, createSignal, For } from "solid-js";
+import {
+  createContext,
+  useContext,
+  createSignal,
+  For,
+  type Component,
+  type ParentProps,
+  type Accessor,
+} from "solid-js";
+
+export type NotificationType = "error" | "success" | "warning" | "info";
+
+export interface Notification {
+  id: string;
+  message: string;
+  type: NotificationType;
+  timestamp: number;
+  persistent: boolean;
+}
+
+interface NotificationOptions {
+  duration?: number;
+  persistent?: boolean;
+}
 
 // Create a global signal that can be imported anywhere
-export const [notifications, setNotifications] = createSignal([]);
+export const [notifications, setNotifications] = createSignal<Notification[]>([]);
 
 // Global notification functions that can be imported anywhere
 export const globalNotifications = {
-  add: (message, type = "error", options = {}) => {
+  add: (
+    message: string,
+    type: NotificationType = "error",
+    options: NotificationOptions = {}
+  ): string => {
     const { duration = 5000, persistent = false } = options;
     const id = crypto.randomUUID();
 
-    const notification = {
+    const notification: Notification = {
       id,
       message,
       type,
@@ -29,31 +56,42 @@ export const globalNotifications = {
     return id;
   },
 
-  remove: (id) => {
+  remove: (id: string): void => {
     setNotifications((prev) =>
       prev.filter((notification) => notification.id !== id)
     );
   },
 
-  clear: () => {
+  clear: (): void => {
     setNotifications([]);
   },
 
-  addError: (message, options) =>
+  addError: (message: string, options?: NotificationOptions): string =>
     globalNotifications.add(message, "error", options),
-  addSuccess: (message, options) =>
+  addSuccess: (message: string, options?: NotificationOptions): string =>
     globalNotifications.add(message, "success", options),
-  addWarning: (message, options) =>
+  addWarning: (message: string, options?: NotificationOptions): string =>
     globalNotifications.add(message, "warning", options),
-  addInfo: (message, options) =>
+  addInfo: (message: string, options?: NotificationOptions): string =>
     globalNotifications.add(message, "info", options),
 };
 
-const NotificationContext = createContext();
+interface NotificationContextValue {
+  notifications: Accessor<Notification[]>;
+  add: (message: string, type?: NotificationType, options?: NotificationOptions) => string;
+  remove: (id: string) => void;
+  clear: () => void;
+  addError: (message: string, options?: NotificationOptions) => string;
+  addSuccess: (message: string, options?: NotificationOptions) => string;
+  addWarning: (message: string, options?: NotificationOptions) => string;
+  addInfo: (message: string, options?: NotificationOptions) => string;
+}
 
-export function NotificationProvider(props) {
+const NotificationContext = createContext<NotificationContextValue>();
+
+export function NotificationProvider(props: ParentProps) {
   // The provider now just wraps the global signal
-  const contextValue = {
+  const contextValue: NotificationContextValue = {
     notifications,
     ...globalNotifications,
   };
@@ -65,7 +103,7 @@ export function NotificationProvider(props) {
   );
 }
 
-export function useNotifications() {
+export function useNotifications(): NotificationContextValue {
   const context = useContext(NotificationContext);
   if (!context) {
     throw new Error(

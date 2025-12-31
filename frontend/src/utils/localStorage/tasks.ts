@@ -1,6 +1,6 @@
-import { Task } from "~/types/tasks";
+import { Task } from "../types/api";
 
-const TASK_KEY = (d) => `tasks.instances.${d}`;
+const TASK_KEY = (d: string): string => `tasks.instances.${d}`;
 
 function getFromStorage<T>(key: string): T | null {
   const result = localStorage.getItem(key);
@@ -28,12 +28,12 @@ export const TaskStorage = {
     const currentInstances = getTasksFromStorage(TASK_KEY(task.date)) || [];
 
     const index = currentInstances.findIndex(
-      (item) => item.definition.id === task.definition.id
+      (item) => item.id === task.id
     );
     if (index !== -1) {
       currentInstances[index] = task;
     } else {
-      currentInstances?.push(task);
+      currentInstances.push(task);
     }
 
     saveToStorage(TASK_KEY(task.date), currentInstances);

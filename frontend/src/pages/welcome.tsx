@@ -56,10 +56,12 @@ const Welcome: Component = () => {
         `Successfully imported ${selected.length} task definition${selected.length > 1 ? "s" : ""}!`
       );
       navigate("/");
-    } catch (error: any) {
-      globalNotifications.addError(
-        error?.message || "Failed to import task definitions"
-      );
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to import task definitions";
+      globalNotifications.addError(errorMessage);
     } finally {
       setIsImporting(false);
     }
