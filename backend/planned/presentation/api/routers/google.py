@@ -10,6 +10,7 @@ from planned.application.repositories import (
     AuthTokenRepositoryProtocol,
     CalendarRepositoryProtocol,
 )
+from planned.core.constants import OAUTH_STATE_EXPIRY
 from planned.domain.entities import AuthToken, Calendar, User
 from planned.infrastructure.gateways.google import get_flow
 
@@ -34,7 +35,7 @@ async def google_login() -> RedirectResponse:
 
     # Store state for validation on callback
     oauth_states[state] = {
-        "expiry": datetime.now(UTC) + timedelta(minutes=10),
+        "expiry": datetime.now(UTC) + OAUTH_STATE_EXPIRY,
         "action": "login",
     }
 

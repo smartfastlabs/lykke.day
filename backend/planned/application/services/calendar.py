@@ -9,6 +9,7 @@ from planned.application.repositories import (
     CalendarRepositoryProtocol,
     EventRepositoryProtocol,
 )
+from planned.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Calendar, Event, User
 
@@ -57,9 +58,9 @@ class CalendarService(BaseService):
         return events, deleted_events
 
     async def sync(self, calendar: Calendar) -> tuple[list[Event], list[Event]]:
-        lookback: datetime = datetime.now(UTC) - timedelta(days=2)
+        lookback: datetime = datetime.now(UTC) - CALENDAR_DEFAULT_LOOKBACK
         if calendar.last_sync_at:
-            lookback = calendar.last_sync_at - timedelta(minutes=30)
+            lookback = calendar.last_sync_at - CALENDAR_SYNC_LOOKBACK
 
         if calendar.platform == "google":
             calendar.last_sync_at = datetime.now(UTC)

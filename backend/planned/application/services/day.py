@@ -16,6 +16,7 @@ from planned.application.repositories import (
     UserRepositoryProtocol,
 )
 from planned.core.config import settings
+from planned.core.constants import DEFAULT_END_OF_DAY_TIME, DEFAULT_LOOK_AHEAD
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
 from planned.domain.entities import User
@@ -195,7 +196,7 @@ class DayService(BaseService):
                 tasks,
                 key=lambda x: x.schedule.start_time
                 if x.schedule and x.schedule.start_time
-                else datetime.time(23, 59),
+                else DEFAULT_END_OF_DAY_TIME,
             ),
             events=sorted(events, key=lambda e: e.starts_at),
             messages=messages,
@@ -262,7 +263,7 @@ class DayService(BaseService):
 
     async def get_upcoming_tasks(
         self,
-        look_ahead: datetime.timedelta = datetime.timedelta(minutes=30),
+        look_ahead: datetime.timedelta = DEFAULT_LOOK_AHEAD,
     ) -> list[objects.Task]:
         # Get current time in configured timezone for comparison with task times
         now: datetime.time = get_current_time()
@@ -306,7 +307,7 @@ class DayService(BaseService):
 
     async def get_upcoming_events(
         self,
-        look_ahead: datetime.timedelta = datetime.timedelta(minutes=30),
+        look_ahead: datetime.timedelta = DEFAULT_LOOK_AHEAD,
     ) -> list[objects.Event]:
         now: datetime.datetime = get_current_datetime()
         result: list[objects.Event] = []
