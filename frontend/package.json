@@ -10,10 +10,7 @@
     "serve": "vite preview",
     "dev-https": "vite --port 443 --host master-bedroom.local",
     "serve-https": "vite build && vite preview --port 443 --host master-bedroom.local",
-    "type-check": "tsc --noEmit",
-    "generate-types": "cd ../backend && make generate-types",
-    "prebuild": "npm run generate-types",
-    "predev": "npm run generate-types"
+    "type-check": "tsc --noEmit"
   },
   "license": "MIT",
   "devDependencies": {

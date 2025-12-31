@@ -1,4 +1,5 @@
 """Generate TypeScript types from OpenAPI schema file."""
+
 import subprocess
 import sys
 from pathlib import Path
@@ -18,8 +19,8 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Generate types using openapi-typescript
-    # Note: openapi-typescript generates a single file, we'll split it manually
-    temp_output = output_dir / "api.generated.ts"
+    # Output directly to the final location as a single file
+    output_file = output_dir / "api.generated.ts"
 
     try:
         subprocess.run(
@@ -28,32 +29,13 @@ def main():
                 "openapi-typescript",
                 str(schema_file),
                 "-o",
-                str(temp_output),
+                str(output_file),
             ],
             cwd=str(frontend_dir),
             check=True,
         )
 
-        # Split the generated file into multiple files
-        try:
-            from split_types import split_types_file
-            split_types_file(temp_output, output_dir)
-        except ImportError:
-            # If split_types can't be imported, try running it as a script
-            split_script = Path(__file__).parent / "split_types.py"
-            subprocess.run(
-                [
-                    sys.executable,
-                    str(split_script),
-                    str(temp_output),
-                    str(output_dir),
-                ],
-                check=True,
-            )
-        finally:
-            temp_output.unlink()  # Remove temp file
-
-        print(f"Types generated in {output_dir}")
+        print(f"Types generated in {output_file}")
     except subprocess.CalledProcessError as e:
         print(f"Error generating types: {e}")
         sys.exit(1)

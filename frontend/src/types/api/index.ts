@@ -1,9 +1,6 @@
 // Re-export all types for convenience
 // Generated types from OpenAPI schema
-export * from './schemas';
-export * from './paths';
-export * from './parameters';
-export * from './enums';
+export * from './api.generated';
 
 // Utility types
 export * from './utils';
