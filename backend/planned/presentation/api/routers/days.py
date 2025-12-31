@@ -24,7 +24,7 @@ from .dependencies.repositories import (
     get_message_repo,
     get_task_repo,
 )
-from .dependencies.services import get_planning_service
+from .dependencies.services import get_day_service_for_date, get_planning_service
 from .dependencies.repositories import get_user_repo
 from .dependencies.user import get_current_user
 
@@ -52,7 +52,8 @@ async def _get_context_for_date(
     task_repo: TaskRepositoryProtocol,
 ) -> DayContext:
     """Helper function to get context for a specific date."""
-    day_svc: DayService = await DayService.for_date(
+    # Load context for the date
+    ctx = await DayService.load_context_cls(
         date,
         user_id=user.id,
         day_repo=day_repo,
@@ -61,6 +62,14 @@ async def _get_context_for_date(
         message_repo=message_repo,
         task_repo=task_repo,
         user_repo=user_repo,
+    )
+    day_svc = DayService(
+        ctx=ctx,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        event_repo=event_repo,
+        message_repo=message_repo,
+        task_repo=task_repo,
     )
     if day_svc.ctx.day.status != DayStatus.SCHEDULED:
         return await planning_service.schedule(day_svc.ctx.day.date)
@@ -162,12 +171,33 @@ async def update_day(
     day_template_repo: Annotated[
         DayTemplateRepositoryProtocol, Depends(get_day_template_repo)
     ],
+    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
+    message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
+    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
 ) -> Day:
-    day: Day = await DayService.get_or_preview(
+    # Create a DayService instance to use get_or_preview
+    # We need to load context first to create the service
+    ctx = await DayService.load_context_cls(
         date,
         user_id=user.id,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
+        event_repo=event_repo,
+        message_repo=message_repo,
+        task_repo=task_repo,
+        user_repo=user_repo,
+    )
+    day_svc = DayService(
+        ctx=ctx,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        event_repo=event_repo,
+        message_repo=message_repo,
+        task_repo=task_repo,
+    )
+    day: Day = await day_svc.get_or_preview(
+        date,
+        user=user,
         user_repo=user_repo,
     )
     if request.status is not None:

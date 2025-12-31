@@ -152,6 +152,10 @@ async def test_set_date_with_user_id(
 async def test_get_or_preview_returns_existing_day(
     mock_day_repo,
     mock_day_template_repo,
+    mock_user_repo,
+    mock_event_repo,
+    mock_message_repo,
+    mock_task_repo,
     test_user_id,
 ):
     """Test get_or_preview returns existing day if found."""
@@ -168,12 +172,32 @@ async def test_get_or_preview_returns_existing_day(
     )
 
     allow(mock_day_repo).get(day.id).and_return(day)
+    allow(mock_task_repo).search_query.and_return([])
+    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_message_repo).search_query.and_return([])
+    setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo)
 
-    result = await DayService.get_or_preview(
-        date,
-        user_id=test_user_id,
+    # Create a DayService instance
+    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    day_svc = DayService(
+        ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
+        event_repo=mock_event_repo,
+        message_repo=mock_message_repo,
+        task_repo=mock_task_repo,
+    )
+
+    user = User(
+        id=test_user_id,
+        email="test@example.com",
+        hashed_password="hash",
+    )
+
+    result = await day_svc.get_or_preview(
+        date,
+        user=user,
+        user_repo=mock_user_repo,
     )
 
     assert result.id == day.id
@@ -184,6 +208,9 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     mock_day_repo,
     mock_day_template_repo,
     mock_user_repo,
+    mock_event_repo,
+    mock_message_repo,
+    mock_task_repo,
     test_user_id,
 ):
     """Test get_or_preview creates base day if not found."""
@@ -205,12 +232,35 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
     allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template_slug).and_return(template)
+    allow(mock_task_repo).search_query.and_return([])
+    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_message_repo).search_query.and_return([])
+    setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo)
 
-    result = await DayService.get_or_preview(
-        date,
-        user_id=test_user_id,
+    # Create a DayService instance
+    ctx = DayContext(
+        day=Day(
+            user_id=test_user_id,
+            date=date,
+            status=DayStatus.UNSCHEDULED,
+            template=template,
+        ),
+        tasks=[],
+        events=[],
+        messages=[],
+    )
+    day_svc = DayService(
+        ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
+        event_repo=mock_event_repo,
+        message_repo=mock_message_repo,
+        task_repo=mock_task_repo,
+    )
+
+    result = await day_svc.get_or_preview(
+        date,
+        user=user,
         user_repo=mock_user_repo,
     )
 
@@ -223,6 +273,9 @@ async def test_get_or_create_creates_and_saves_day(
     mock_day_repo,
     mock_day_template_repo,
     mock_user_repo,
+    mock_event_repo,
+    mock_message_repo,
+    mock_task_repo,
     test_user_id,
 ):
     """Test get_or_create creates and saves day if not found."""
@@ -252,12 +305,35 @@ async def test_get_or_create_creates_and_saves_day(
     allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template_slug).and_return(template)
     allow(mock_day_repo).put.and_return(created_day)
+    allow(mock_task_repo).search_query.and_return([])
+    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_message_repo).search_query.and_return([])
+    setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo)
 
-    result = await DayService.get_or_create(
-        date,
-        user_id=test_user_id,
+    # Create a DayService instance
+    ctx = DayContext(
+        day=Day(
+            user_id=test_user_id,
+            date=date,
+            status=DayStatus.UNSCHEDULED,
+            template=template,
+        ),
+        tasks=[],
+        events=[],
+        messages=[],
+    )
+    day_svc = DayService(
+        ctx=ctx,
         day_repo=mock_day_repo,
         day_template_repo=mock_day_template_repo,
+        event_repo=mock_event_repo,
+        message_repo=mock_message_repo,
+        task_repo=mock_task_repo,
+    )
+
+    result = await day_svc.get_or_create(
+        date,
+        user=user,
         user_repo=mock_user_repo,
     )
 
@@ -809,7 +885,8 @@ async def test_for_date_creates_service(
     allow(mock_message_repo).search_query.and_return([])
     setup_repo_listeners(mock_event_repo, mock_message_repo, mock_task_repo)
 
-    service = await DayService.for_date(
+    # Load context and create service
+    ctx = await DayService.load_context_cls(
         date,
         user_id=test_user_id,
         day_repo=mock_day_repo,
@@ -818,6 +895,14 @@ async def test_for_date_creates_service(
         message_repo=mock_message_repo,
         task_repo=mock_task_repo,
         user_repo=mock_user_repo,
+    )
+    service = DayService(
+        ctx=ctx,
+        day_repo=mock_day_repo,
+        day_template_repo=mock_day_template_repo,
+        event_repo=mock_event_repo,
+        message_repo=mock_message_repo,
+        task_repo=mock_task_repo,
     )
 
     assert service.date == date

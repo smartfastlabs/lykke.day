@@ -147,11 +147,30 @@ class PlanningService(BaseService):
                 await asyncio.gather(
                     *[self.task_repo.delete(task) for task in routine_tasks]
                 )
-            day = await DayService.get_or_create(
+            # Create a DayService instance to use get_or_create
+            # Load context first to create the service
+            ctx = await DayService.load_context_cls(
                 date,
                 user_id=self.user_id,
                 day_repo=self.day_repo,
                 day_template_repo=self.day_template_repo,
+                event_repo=self.event_repo,
+                message_repo=self.message_repo,
+                task_repo=self.task_repo,
+                user_repo=self.user_repo,
+            )
+            day_svc = DayService(
+                ctx=ctx,
+                day_repo=self.day_repo,
+                day_template_repo=self.day_template_repo,
+                event_repo=self.event_repo,
+                message_repo=self.message_repo,
+                task_repo=self.task_repo,
+            )
+            user = await self.user_repo.get(self.user_id)
+            day = await day_svc.get_or_create(
+                date,
+                user=user,
                 user_repo=self.user_repo,
             )
             day.status = objects.DayStatus.UNSCHEDULED

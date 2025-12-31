@@ -333,9 +333,20 @@ class SheppardService(BaseService):
         # If it is not already scheduled, schedule
         # Update the day service to the new date
         # send morning summary
-        self.day_svc = await DayService.for_date(
-            get_current_date(),
+        date = get_current_date()
+        # Load context for the date
+        ctx = await DayService.load_context_cls(
+            date,
             user_id=self.planning_service.user_id,
+            day_repo=self.day_repo,
+            day_template_repo=self.day_template_repo,
+            event_repo=self.event_repo,
+            message_repo=self.message_repo,
+            task_repo=self.task_repo,
+            user_repo=self.planning_service.user_repo,
+        )
+        self.day_svc = DayService(
+            ctx=ctx,
             day_repo=self.day_repo,
             day_template_repo=self.day_template_repo,
             event_repo=self.event_repo,

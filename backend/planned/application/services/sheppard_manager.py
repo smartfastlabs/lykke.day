@@ -106,7 +106,7 @@ class SheppardManager:
             default_template = DayTemplate(
                 user_id=user_id,
                 slug="default",
-                tasks=[],
+                routine_ids=[],
                 alarm=Alarm(
                     name="Default Alarm",
                     time=time(7, 15),
@@ -145,8 +145,9 @@ class SheppardManager:
         )
 
         # Create day service for current date
-        day_svc = await DayService.for_date(
-            get_current_date(),
+        date = get_current_date()
+        ctx = await DayService.load_context_cls(
+            date,
             user_id=user_id,
             day_repo=day_repo,
             day_template_repo=day_template_repo,
@@ -154,6 +155,14 @@ class SheppardManager:
             message_repo=message_repo,
             task_repo=task_repo,
             user_repo=cast("UserRepositoryProtocol", self._user_repo),
+        )
+        day_svc = DayService(
+            ctx=ctx,
+            day_repo=day_repo,
+            day_template_repo=day_template_repo,
+            event_repo=event_repo,
+            message_repo=message_repo,
+            task_repo=task_repo,
         )
 
         # Load push subscriptions
@@ -211,9 +220,7 @@ class SheppardManager:
             self._services[user_id] = (service, task)
             logger.info(f"SheppardService started for user {user_id}")
         except Exception as e:
-            logger.exception(
-                f"Failed to start SheppardService for user {user_id}: {e}"
-            )
+            logger.exception(f"Failed to start SheppardService for user {user_id}: {e}")
 
     async def _stop_service_for_user(self, user_id: UUID) -> None:
         """Stop and remove a SheppardService for a user.
@@ -237,9 +244,7 @@ class SheppardManager:
             del self._services[user_id]
             logger.info(f"SheppardService stopped for user {user_id}")
         except Exception as e:
-            logger.exception(
-                f"Error stopping SheppardService for user {user_id}: {e}"
-            )
+            logger.exception(f"Error stopping SheppardService for user {user_id}: {e}")
             # Clean up even if there was an error
             if user_id in self._services:
                 del self._services[user_id]

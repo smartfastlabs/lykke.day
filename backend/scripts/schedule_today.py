@@ -10,7 +10,13 @@ from planned.infrastructure.utils.dates import get_current_date
 
 
 async def main():
-    result = await (await DayService.for_date(get_current_date())).schedule()
+    # NOTE: This script needs to be updated to create repositories and get a user_id
+    # This is a placeholder showing the new pattern
+    date = get_current_date()
+    # TODO: Get user_id and create repositories
+    # ctx = await DayService.load_context_cls(...)
+    # day_svc = DayService(ctx=ctx, ...)
+    # result = await day_svc.schedule()  # Note: DayService doesn't have schedule() method
     breakpoint()
 
 

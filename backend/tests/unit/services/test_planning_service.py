@@ -332,8 +332,19 @@ async def test_unschedule_deletes_routine_tasks(
 
     allow(mock_task_repo).search_query.and_return([routine_task, non_routine_task])
     allow(mock_task_repo).delete.and_return(None)
+    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_message_repo).search_query.and_return([])
     allow(mock_day_repo).get(day.id).and_return(day)
     allow(mock_day_repo).put.and_return(day)
+    allow(mock_user_repo).get(test_user_id).and_return(
+        User(
+            id=test_user_id,
+            email="test@example.com",
+            hashed_password="hash",
+            settings=UserSetting(template_defaults=["default"] * 7),
+        )
+    )
+    allow(mock_day_template_repo).get_by_slug("default").and_return(template)
     allow(mock_day_template_repo).get.and_return(
         DayTemplate(slug="default", id=uuid4(), user_id=test_user_id)
     )

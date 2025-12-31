@@ -5,6 +5,7 @@ Each function returns an instance of a service, which can be used
 with FastAPI's Depends() in route handlers.
 """
 
+import datetime
 from typing import Annotated
 
 from fastapi import Depends, Request
@@ -91,8 +92,32 @@ async def get_day_service_for_current_date(
     task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
 ) -> DayService:
     """Get a user-scoped instance of DayService for today's date."""
-    return await DayService.for_date(
+    return await get_day_service_for_date(
         get_current_date(),
+        user=user,
+        user_repo=user_repo,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        event_repo=event_repo,
+        message_repo=message_repo,
+        task_repo=task_repo,
+    )
+
+
+async def get_day_service_for_date(
+    date: datetime.date,
+    user: Annotated[User, Depends(get_current_user)],
+    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
+    day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
+    day_template_repo: Annotated[DayTemplateRepositoryProtocol, Depends(get_day_template_repo)],
+    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
+    message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
+    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
+) -> DayService:
+    """Get a user-scoped instance of DayService for a specific date."""
+    # Load context for the date
+    ctx = await DayService.load_context_cls(
+        date,
         user_id=user.id,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
@@ -100,6 +125,14 @@ async def get_day_service_for_current_date(
         message_repo=message_repo,
         task_repo=task_repo,
         user_repo=user_repo,
+    )
+    return DayService(
+        ctx=ctx,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        event_repo=event_repo,
+        message_repo=message_repo,
+        task_repo=task_repo,
     )
 
 

@@ -18,6 +18,7 @@ from planned.application.repositories import (
 from planned.core.config import settings
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
+from planned.domain.entities import User
 from planned.domain.value_objects.query import DateQuery
 from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.utils.dates import get_current_datetime, get_current_time
@@ -69,37 +70,6 @@ class DayService(BaseService):
         self.event_repo.listen(self.on_event_change)
         self.message_repo.listen(self.on_message_change)
         self.task_repo.listen(self.on_task_change)
-
-    @classmethod
-    async def for_date(
-        cls,
-        date: datetime.date,
-        user_id: UUID,
-        day_repo: DayRepositoryProtocol,
-        day_template_repo: DayTemplateRepositoryProtocol,
-        event_repo: EventRepositoryProtocol,
-        message_repo: MessageRepositoryProtocol,
-        task_repo: TaskRepositoryProtocol,
-        user_repo: UserRepositoryProtocol | None = None,
-    ) -> "DayService":
-        ctx = await cls.load_context_cls(
-            date,
-            user_id=user_id,
-            day_repo=day_repo,
-            day_template_repo=day_template_repo,
-            event_repo=event_repo,
-            message_repo=message_repo,
-            task_repo=task_repo,
-            user_repo=user_repo,
-        )
-        return cls(
-            ctx=ctx,
-            day_repo=day_repo,
-            day_template_repo=day_template_repo,
-            event_repo=event_repo,
-            message_repo=message_repo,
-            task_repo=task_repo,
-        )
 
     async def on_event_change(
         self, _sender: object | None = None, *, event: RepositoryEvent[objects.Event]
@@ -279,54 +249,42 @@ class DayService(BaseService):
             alarm=template.alarm,
         )
 
-    @classmethod
     async def get_or_preview(
-        cls,
+        self,
         date: datetime.date,
-        user_id: UUID,
-        day_repo: DayRepositoryProtocol,
-        day_template_repo: DayTemplateRepositoryProtocol,
-        user_repo: UserRepositoryProtocol | None = None,
+        user: User,
+        user_repo: UserRepositoryProtocol,
     ) -> objects.Day:
         with suppress(exceptions.NotFoundError):
-            day_id = objects.Day.id_from_date_and_user(date, user_id)
-            return await day_repo.get(day_id)
+            day_id = objects.Day.id_from_date_and_user(date, user.id)
+            return await self.day_repo.get(day_id)
 
-        if user_repo is None:
-            raise ValueError("user_repo required when day not found")
-        user = await user_repo.get(user_id)
         # template_defaults stores slugs
         template_slug = user.settings.template_defaults[date.weekday()]
-        template = await day_template_repo.get_by_slug(template_slug)
-        return await cls.base_day(
+        template = await self.day_template_repo.get_by_slug(template_slug)
+        return await type(self).base_day(
             date,
-            user_id=user_id,
+            user_id=user.id,
             template=template,
         )
 
-    @classmethod
     async def get_or_create(
-        cls,
+        self,
         date: datetime.date,
-        user_id: UUID,
-        day_repo: DayRepositoryProtocol,
-        day_template_repo: DayTemplateRepositoryProtocol,
-        user_repo: UserRepositoryProtocol | None = None,
+        user: User,
+        user_repo: UserRepositoryProtocol,
     ) -> objects.Day:
         with suppress(exceptions.NotFoundError):
-            day_id = objects.Day.id_from_date_and_user(date, user_id)
-            return await day_repo.get(day_id)
+            day_id = objects.Day.id_from_date_and_user(date, user.id)
+            return await self.day_repo.get(day_id)
 
-        if user_repo is None:
-            raise ValueError("user_repo required when day not found")
-        user = await user_repo.get(user_id)
         # template_defaults stores slugs
         template_slug = user.settings.template_defaults[date.weekday()]
-        template = await day_template_repo.get_by_slug(template_slug)
-        return await day_repo.put(
-            await cls.base_day(
+        template = await self.day_template_repo.get_by_slug(template_slug)
+        return await self.day_repo.put(
+            await type(self).base_day(
                 date,
-                user_id=user_id,
+                user_id=user.id,
                 template=template,
             )
         )

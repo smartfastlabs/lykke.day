@@ -47,7 +47,8 @@ async def test_schedule_today(test_date, test_user):
 
     assert len(result.tasks) == 2
 
-    day_svc = await DayService.for_date(
+    # Load context and create service
+    ctx = await DayService.load_context_cls(
         test_date,
         user_id=user_id,
         day_repo=day_repo,
@@ -56,6 +57,14 @@ async def test_schedule_today(test_date, test_user):
         message_repo=message_repo,
         task_repo=task_repo,
         user_repo=user_repo,
+    )
+    day_svc = DayService(
+        ctx=ctx,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        event_repo=event_repo,
+        message_repo=message_repo,
+        task_repo=task_repo,
     )
 
     def sort_tasks(tasks):
