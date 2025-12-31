@@ -104,10 +104,29 @@ class SheppardService(BaseService):
     async def run_loop(
         self,
     ) -> None:
+        """Main loop that runs periodically to handle day operations."""
+        await self._check_and_handle_day_transition()
+        await self._handle_alarm()
+
+        tasks_to_update, tasks_to_notify = await self._process_upcoming_tasks()
+        events_to_notify = await self._process_upcoming_events()
+
+        await self._save_updates_and_send_notifications(
+            tasks_to_update=tasks_to_update,
+            tasks_to_notify=tasks_to_notify,
+            events_to_notify=events_to_notify,
+        )
+
+        self.last_run = datetime.datetime.now(UTC)
+
+    async def _check_and_handle_day_transition(self) -> None:
+        """Check if the day has changed and handle the transition."""
         if get_current_date() != self.day_svc.date:
             await self.end_day()
             await self.start_day()
 
+    async def _handle_alarm(self) -> None:
+        """Check and trigger alarm if it's time."""
         current_time: datetime.time = get_current_time()
         if alarm := self.day_svc.ctx.day.alarm:  # noqa
             if alarm.triggered_at is None and alarm.time < current_time:
@@ -117,29 +136,46 @@ class SheppardService(BaseService):
                 youtube.play_audio("https://www.youtube.com/watch?v=Gcv7re2dEVg")
                 await self.day_svc.save()
 
-        # Collect tasks that need notifications
+    async def _process_upcoming_tasks(
+        self,
+    ) -> tuple[list[objects.Task], list[objects.Task]]:
+        """Process upcoming tasks and determine which need updates and notifications.
+
+        Returns:
+            Tuple of (tasks_to_update, tasks_to_notify)
+        """
         tasks_to_notify: list[objects.Task] = []
         tasks_to_update: list[objects.Task] = []
 
         for task in await self.day_svc.get_upcoming_tasks():
+            logger.info(f"UPCOMING TASK {task.name}")
+
+            # Update task status if needed
             if task.status != objects.TaskStatus.PENDING:
                 task.status = objects.TaskStatus.PENDING
                 tasks_to_update.append(task)
 
-                # Check if this task needs a notification
-                if not any(
-                    action.type == objects.ActionType.NOTIFY for action in task.actions
-                ):
-                    tasks_to_notify.append(task)
-                    task.actions.append(
-                        objects.Action(
-                            type=objects.ActionType.NOTIFY,
-                        ),
-                    )
+            # Check if this task needs a notification
+            if not any(
+                action.type == objects.ActionType.NOTIFY for action in task.actions
+            ):
+                tasks_to_notify.append(task)
+                task.actions.append(
+                    objects.Action(
+                        type=objects.ActionType.NOTIFY,
+                    ),
+                )
 
-            logger.info(f"UPCOMING TASK {task.name}")
+        return tasks_to_update, tasks_to_notify
 
-        # Collect events that need notifications
+    async def _process_upcoming_events(
+        self,
+    ) -> list[objects.Event]:
+        """Process upcoming events and determine which need notifications.
+
+        Returns:
+            List of events that need notifications
+        """
         events_to_notify: list[objects.Event] = []
 
         for event in await self.day_svc.get_upcoming_events():
@@ -156,6 +192,21 @@ class SheppardService(BaseService):
                     ),
                 )
 
+        return events_to_notify
+
+    async def _save_updates_and_send_notifications(
+        self,
+        tasks_to_update: list[objects.Task],
+        tasks_to_notify: list[objects.Task],
+        events_to_notify: list[objects.Event],
+    ) -> None:
+        """Save updates to database and send notifications.
+
+        Args:
+            tasks_to_update: Tasks that need to be saved to database
+            tasks_to_notify: Tasks that need notifications sent
+            events_to_notify: Events that need notifications sent
+        """
         # Wrap database operations in a transaction
         async with self.transaction():
             # Save all updated tasks
@@ -172,8 +223,6 @@ class SheppardService(BaseService):
 
         if events_to_notify:
             await self._notify_for_events(events_to_notify)
-
-        self.last_run = datetime.datetime.now(UTC)
 
     def _build_notification_payload(
         self,
