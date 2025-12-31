@@ -20,7 +20,7 @@ from planned.application.repositories import (
 )
 from planned.application.services import CalendarService, DayService, PlanningService
 from planned.common.repository_handler import ChangeHandler
-from planned.core.exceptions import NotFoundError
+from planned.core import exceptions
 from planned.domain.entities import Alarm, DayTemplate, User
 from planned.domain.value_objects.alarm import AlarmType
 from planned.domain.value_objects.day import DayContext
@@ -102,7 +102,7 @@ class SheppardManager:
         # Ensure default DayTemplate exists for user
         try:
             await day_template_repo.get_by_slug("default")
-        except NotFoundError:
+        except exceptions.NotFoundError:
             # Template doesn't exist, create it
             default_template = DayTemplate(
                 user_id=user_id,

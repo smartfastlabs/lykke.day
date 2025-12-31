@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-from contextlib import suppress
 from typing import Protocol, TypeVar
 from uuid import UUID
 
@@ -111,12 +110,16 @@ class PlanningService(BaseService):
         else:
             # Try to get it from existing day
             template_found = False
-            with suppress(exceptions.NotFoundError):
+            try:
                 day_id = objects.Day.id_from_date_and_user(date, self.user_id)
                 existing_day = await self.day_repo.get(day_id)
                 if existing_day.template:
                     template = existing_day.template
                     template_found = True
+            except exceptions.NotFoundError:
+                # Day doesn't exist, will use default template
+                pass
+
             if not template_found:
                 # Get from user's template_defaults
                 user = await self.user_repo.get(self.user_id)

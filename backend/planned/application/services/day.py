@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-from contextlib import suppress
 from typing import TypeVar
 from uuid import UUID
 from zoneinfo import ZoneInfo
@@ -224,18 +223,28 @@ class DayService(BaseService):
         user: User,
         user_repo: UserRepositoryProtocol,
     ) -> objects.Day:
-        with suppress(exceptions.NotFoundError):
-            day_id = objects.Day.id_from_date_and_user(date, user.id)
-            return await self.day_repo.get(day_id)
+        """Get an existing day or return a preview (unsaved) day.
 
-        # template_defaults stores slugs
-        template_slug = user.settings.template_defaults[date.weekday()]
-        template = await self.day_template_repo.get_by_slug(template_slug)
-        return await type(self).base_day(
-            date,
-            user_id=user.id,
-            template=template,
-        )
+        Args:
+            date: The date to get or preview
+            user: The user for the day
+            user_repo: Repository for user lookups
+
+        Returns:
+            An existing Day if found, otherwise a preview Day (not saved)
+        """
+        day_id = objects.Day.id_from_date_and_user(date, user.id)
+        try:
+            return await self.day_repo.get(day_id)
+        except exceptions.NotFoundError:
+            # Day doesn't exist, create a preview
+            template_slug = user.settings.template_defaults[date.weekday()]
+            template = await self.day_template_repo.get_by_slug(template_slug)
+            return await type(self).base_day(
+                date,
+                user_id=user.id,
+                template=template,
+            )
 
     async def get_or_create(
         self,
@@ -243,20 +252,30 @@ class DayService(BaseService):
         user: User,
         user_repo: UserRepositoryProtocol,
     ) -> objects.Day:
-        with suppress(exceptions.NotFoundError):
-            day_id = objects.Day.id_from_date_and_user(date, user.id)
-            return await self.day_repo.get(day_id)
+        """Get an existing day or create a new one.
 
-        # template_defaults stores slugs
-        template_slug = user.settings.template_defaults[date.weekday()]
-        template = await self.day_template_repo.get_by_slug(template_slug)
-        return await self.day_repo.put(
-            await type(self).base_day(
-                date,
-                user_id=user.id,
-                template=template,
+        Args:
+            date: The date to get or create
+            user: The user for the day
+            user_repo: Repository for user lookups
+
+        Returns:
+            An existing Day if found, otherwise a newly created and saved Day
+        """
+        day_id = objects.Day.id_from_date_and_user(date, user.id)
+        try:
+            return await self.day_repo.get(day_id)
+        except exceptions.NotFoundError:
+            # Day doesn't exist, create it
+            template_slug = user.settings.template_defaults[date.weekday()]
+            template = await self.day_template_repo.get_by_slug(template_slug)
+            return await self.day_repo.put(
+                await type(self).base_day(
+                    date,
+                    user_id=user.id,
+                    template=template,
+                )
             )
-        )
 
     async def save(self) -> None:
         await self.day_repo.put(self.ctx.day)
