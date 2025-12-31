@@ -26,3 +26,4 @@ class PushSubscription(BaseEntityObject):
             namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
             name = f"{self.endpoint}:{self.user_id}"
             self.id = uuid.uuid5(namespace, name)
+

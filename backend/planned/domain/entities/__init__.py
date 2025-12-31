@@ -3,11 +3,12 @@ from .alarm import Alarm
 from .auth_token import AuthToken
 from .base import BaseConfigObject, BaseDateObject, BaseEntityObject, BaseObject
 from .calendar import Calendar
-from .day import Day, DayTemplate
+from .day import Day
+from .day_template import DayTemplate
 from .event import Event
 from .message import Message
 from .person import Person
-from .push import PushSubscription
+from .push_subscription import PushSubscription
 from .routine import Routine
 from .task import Task
 from .task_definition import TaskDefinition
