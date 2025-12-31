@@ -1,6 +1,11 @@
 """Export OpenAPI schema from FastAPI app to JSON file."""
+
 import json
+import sys
 from pathlib import Path
+
+# Add parent directory to path so we can import planned
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import FastAPI app
 from planned.app import app
@@ -16,4 +21,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -1,4 +1,9 @@
+import sys
 import time
+from pathlib import Path
+
+# Add parent directory to path so we can import planned
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import numpy as np
 import pvcheetah
