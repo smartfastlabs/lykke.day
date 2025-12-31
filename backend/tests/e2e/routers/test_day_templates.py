@@ -64,7 +64,6 @@ async def test_create_day_template(authenticated_client):
     template_data = {
         "user_id": str(user.id),
         "slug": "test-template",
-        "tasks": ["task1", "task2"],
         "alarm": {
             "name": "Test Alarm",
             "time": "08:00:00",
@@ -78,7 +77,6 @@ async def test_create_day_template(authenticated_client):
     data = response.json()
     assert data["slug"] == "test-template"
     assert data["user_id"] == str(user.id)
-    assert len(data["tasks"]) == 2
     assert data["alarm"]["name"] == "Test Alarm"
 
 
@@ -91,7 +89,6 @@ async def test_update_day_template(authenticated_client):
     template_data = {
         "user_id": str(user.id),
         "slug": "update-test",
-        "tasks": ["task1"],
     }
     create_response = client.post("/day-templates/", json=template_data)
     assert create_response.status_code == 200
@@ -101,7 +98,6 @@ async def test_update_day_template(authenticated_client):
     update_data = {
         "user_id": str(user.id),
         "slug": "update-test",
-        "tasks": ["task1", "task2", "task3"],
         "icon": "test-icon",
     }
     response = client.put(f"/day-templates/{template_id}", json=update_data)
@@ -109,7 +105,6 @@ async def test_update_day_template(authenticated_client):
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == template_id
-    assert len(data["tasks"]) == 3
     assert data["icon"] == "test-icon"
 
 
@@ -122,7 +117,6 @@ async def test_update_day_template_not_found(authenticated_client):
     update_data = {
         "user_id": str(user.id),
         "slug": "does-not-exist",
-        "tasks": [],
     }
     response = client.put(f"/day-templates/{fake_id}", json=update_data)
 
@@ -138,7 +132,6 @@ async def test_delete_day_template(authenticated_client):
     template_data = {
         "user_id": str(user.id),
         "slug": "delete-test",
-        "tasks": [],
     }
     create_response = client.post("/day-templates/", json=template_data)
     assert create_response.status_code == 200
@@ -175,7 +168,6 @@ async def test_list_day_templates_pagination(authenticated_client):
         template_data = {
             "user_id": str(user.id),
             "slug": f"pagination-test-{i}",
-            "tasks": [],
         }
         client.post("/day-templates/", json=template_data)
 

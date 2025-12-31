@@ -41,7 +41,6 @@ def setup_test_user_day_template():
         default_template = DayTemplate(
             user_id=test_user_id,
             slug="default",
-            tasks=[],
             alarm=Alarm(
                 name="Default Alarm",
                 time=time(7, 15),

@@ -109,10 +109,10 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         day_template_repo = DayTemplateRepository(user_id=user.id)
         
         default_templates = [
-            DayTemplate(user_id=user.id, slug="default", tasks=[], alarm=None, icon=None),
-            DayTemplate(user_id=user.id, slug="workday", tasks=[], alarm=None, icon=None),
-            DayTemplate(user_id=user.id, slug="weekday", tasks=[], alarm=None, icon=None),
-            DayTemplate(user_id=user.id, slug="weekend", tasks=[], alarm=None, icon=None),
+            DayTemplate(user_id=user.id, slug="default", alarm=None, icon=None),
+            DayTemplate(user_id=user.id, slug="workday", alarm=None, icon=None),
+            DayTemplate(user_id=user.id, slug="weekday", alarm=None, icon=None),
+            DayTemplate(user_id=user.id, slug="weekend", alarm=None, icon=None),
         ]
         
         # Insert all templates using insert_many for efficiency

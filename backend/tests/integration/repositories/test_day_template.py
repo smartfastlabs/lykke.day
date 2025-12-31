@@ -33,7 +33,6 @@ async def test_put(day_template_repo, test_user):
     template = DayTemplate(
         user_id=test_user.id,
         slug="custom",
-        tasks=[],
         alarm=Alarm(
             name="Custom Alarm",
             time=time(8, 0),

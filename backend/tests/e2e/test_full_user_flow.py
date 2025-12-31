@@ -78,7 +78,6 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     default_template = DayTemplate(
         user_id=user_id,
         slug="default",
-        tasks=[],
         alarm=Alarm(
             name="Default Alarm",
             time=time(7, 15),

@@ -71,7 +71,6 @@ async def _setup_day_templates_for_user(user: User) -> None:
     default_template = DayTemplate(
         user_id=user.id,
         slug="default",
-        tasks=[],
         alarm=Alarm(
             name="Default Alarm",
             time=time(7, 15),
@@ -84,7 +83,6 @@ async def _setup_day_templates_for_user(user: User) -> None:
     weekend_template = DayTemplate(
         user_id=user.id,
         slug="weekend",
-        tasks=[],
         alarm=Alarm(
             name="Weekend Alarm",
             time=time(7, 15),

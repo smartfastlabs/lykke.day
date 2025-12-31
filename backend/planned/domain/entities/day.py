@@ -39,3 +39,4 @@ class Day(BaseEntityObject):
         namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
         name = f"{user_id}:{date.isoformat()}"
         return uuid.uuid5(namespace, name)
+        return uuid.uuid5(namespace, name)

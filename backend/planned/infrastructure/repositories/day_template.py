@@ -35,7 +35,6 @@ class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, DayTemplateQue
             "id": template.id,
             "user_id": template.user_id,
             "slug": template.slug,
-            "tasks": template.tasks,
             "icon": template.icon,
         }
 

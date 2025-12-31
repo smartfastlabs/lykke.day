@@ -11,7 +11,6 @@ class DayTemplate(BaseEntityObject):
     id: UUID = Field(default_factory=uuid.uuid4)
     user_id: UUID
     slug: str
-    tasks: list[str] = Field(default_factory=list)
     alarm: Alarm | None = None
     icon: str | None = None
 
@@ -36,4 +35,3 @@ class DayTemplate(BaseEntityObject):
         # Always regenerate ID for determinism (overrides default_factory)
         self.id = self.id_from_slug_and_user(self.slug, self.user_id)
         return self
-
