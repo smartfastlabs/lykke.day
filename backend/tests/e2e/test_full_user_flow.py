@@ -162,8 +162,8 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     assert default_template.user_id == user_id
 
     # Verify the scheduled day references a template
-    if scheduled_day.template_id:
+    if scheduled_day.template:
         template_ids = [t.id for t in templates]
-        assert scheduled_day.template_id in template_ids, (
+        assert scheduled_day.template.id in template_ids, (
             "Day should reference an existing template"
         )

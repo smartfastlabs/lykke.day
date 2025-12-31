@@ -6,6 +6,7 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from blinker import Signal
+
 from planned.application.repositories import (
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
@@ -238,12 +239,17 @@ class DayService(BaseService):
                 message_repo.search_query(DateQuery(date=date)),
                 day_repo.get(day_id),
             )
-        except exceptions.NotFoundError:
+        except exceptions.NotFoundError as err:
+            if user_repo is None:
+                raise ValueError("user_repo required when day not found") from err
+            user = await user_repo.get(user_id)
+            # template_defaults stores slugs
+            template_slug = user.settings.template_defaults[date.weekday()]
+            template = await day_template_repo.get_by_slug(template_slug)
             day = await cls.base_day(
                 date,
                 user_id=user_id,
-                day_template_repo=day_template_repo,
-                user_repo=user_repo,
+                template=template,
             )
 
         return objects.DayContext(
@@ -263,29 +269,13 @@ class DayService(BaseService):
         cls,
         date: datetime.date,
         user_id: UUID,
-        day_template_repo: DayTemplateRepositoryProtocol,
-        user_repo: UserRepositoryProtocol | None = None,
-        template_id: UUID | None = None,
+        template: objects.DayTemplate,
     ) -> objects.Day:
-        if template_id is None:
-            if user_repo is None:
-                raise ValueError("user_repo required when template_id is None")
-            user = await user_repo.get(user_id)
-            # template_defaults stores slugs
-            template_slug = user.settings.template_defaults[date.weekday()]
-            template = await day_template_repo.get_by_slug(template_slug)
-            # Use template.id when looking up by slug
-            final_template_id = template.id
-        else:
-            template = await day_template_repo.get(template_id)
-            # Use the passed template_id directly to preserve it
-            final_template_id = template_id
-
         return objects.Day(
             user_id=user_id,
             date=date,
             status=objects.DayStatus.UNSCHEDULED,
-            template_id=final_template_id,
+            template=template,
             alarm=template.alarm,
         )
 
@@ -302,11 +292,16 @@ class DayService(BaseService):
             day_id = objects.Day.id_from_date_and_user(date, user_id)
             return await day_repo.get(day_id)
 
+        if user_repo is None:
+            raise ValueError("user_repo required when day not found")
+        user = await user_repo.get(user_id)
+        # template_defaults stores slugs
+        template_slug = user.settings.template_defaults[date.weekday()]
+        template = await day_template_repo.get_by_slug(template_slug)
         return await cls.base_day(
             date,
             user_id=user_id,
-            day_template_repo=day_template_repo,
-            user_repo=user_repo,
+            template=template,
         )
 
     @classmethod
@@ -322,12 +317,17 @@ class DayService(BaseService):
             day_id = objects.Day.id_from_date_and_user(date, user_id)
             return await day_repo.get(day_id)
 
+        if user_repo is None:
+            raise ValueError("user_repo required when day not found")
+        user = await user_repo.get(user_id)
+        # template_defaults stores slugs
+        template_slug = user.settings.template_defaults[date.weekday()]
+        template = await day_template_repo.get_by_slug(template_slug)
         return await day_repo.put(
             await cls.base_day(
                 date,
                 user_id=user_id,
-                day_template_repo=day_template_repo,
-                user_repo=user_repo,
+                template=template,
             )
         )
 

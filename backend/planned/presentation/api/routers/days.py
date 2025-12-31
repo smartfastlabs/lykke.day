@@ -173,7 +173,8 @@ async def update_day(
     if request.status is not None:
         day.status = request.status
     if request.template_id is not None:
-        day.template_id = request.template_id
+        template = await day_template_repo.get(request.template_id)
+        day.template = template
     return await day_repo.put(day)
 
 

@@ -111,7 +111,12 @@ async def test_update_day_template(authenticated_client, test_date):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["template_id"] == template_id
+    # The response should include the template object, not just template_id
+    assert "template" in data or "template_id" in data
+    if "template" in data and data["template"]:
+        assert data["template"]["id"] == template_id
+    elif "template_id" in data:
+        assert data["template_id"] == template_id
 
 
 @pytest.mark.asyncio

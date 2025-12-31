@@ -6,6 +6,7 @@ from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
 
 import pytest
 from dobles import allow
+
 from planned.application.services import PlanningService
 from planned.core.exceptions import exceptions
 from planned.domain.entities import (
@@ -163,7 +164,6 @@ async def test_preview_creates_day_context(
 ):
     """Test preview creates a DayContext with tasks, events, and messages."""
     date = datetime.date(2024, 1, 1)
-    template_id = uuid4()
 
     user = User(
         id=test_user_id,
@@ -174,7 +174,6 @@ async def test_preview_creates_day_context(
 
     template = DayTemplate(
         slug="default",
-        id=template_id,
         user_id=test_user_id,
     )
 
@@ -232,23 +231,21 @@ async def test_preview_uses_existing_day_template(
 ):
     """Test preview uses template from existing day if available."""
     date = datetime.date(2024, 1, 1)
-    existing_template_id = uuid4()
+
+    template = DayTemplate(
+        slug="custom",
+        user_id=test_user_id,
+    )
 
     existing_day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.SCHEDULED,
-        template_id=existing_template_id,
-    )
-
-    template = DayTemplate(
-        id=existing_template_id,
-        slug="custom",
-        user_id=test_user_id,
+        template=template,
     )
 
     allow(mock_day_repo).get(existing_day.id).and_return(existing_day)
-    allow(mock_day_template_repo).get(existing_template_id).and_return(template)
+    allow(mock_day_template_repo).get(template.id).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
@@ -267,7 +264,8 @@ async def test_preview_uses_existing_day_template(
 
     result = await service.preview(date)
 
-    assert result.day.template_id == existing_template_id
+    assert result.day.template is not None
+    assert result.day.template.id == template.id
 
 
 @pytest.mark.asyncio
@@ -320,11 +318,16 @@ async def test_unschedule_deletes_routine_tasks(
         routine_id=None,
     )
 
+    template = DayTemplate(
+        id=uuid4(),
+        slug="default",
+        user_id=test_user_id,
+    )
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.SCHEDULED,
-        template_id=uuid4(),
+        template=template,
     )
 
     allow(mock_task_repo).search_query.and_return([routine_task, non_routine_task])
@@ -368,7 +371,6 @@ async def test_schedule_creates_tasks_and_sets_status(
 ):
     """Test schedule creates tasks and sets day status to SCHEDULED."""
     date = datetime.date(2024, 1, 1)
-    template_id = uuid4()
 
     user = User(
         id=test_user_id,
@@ -379,7 +381,6 @@ async def test_schedule_creates_tasks_and_sets_status(
 
     template = DayTemplate(
         slug="default",
-        id=template_id,
         user_id=test_user_id,
     )
 
@@ -395,7 +396,7 @@ async def test_schedule_creates_tasks_and_sets_status(
             user_id=test_user_id,
             date=date,
             status=DayStatus.SCHEDULED,
-            template_id=template_id,
+            template=template,
         )
     )
     allow(mock_task_repo).put.and_return(None)
@@ -536,15 +537,13 @@ async def test_preview_with_template_id(
 ):
     """Test preview with explicit template_id."""
     date = datetime.date(2024, 1, 1)
-    template_id = uuid4()
 
     template = DayTemplate(
-        id=template_id,
         slug="custom",
         user_id=test_user_id,
     )
 
-    allow(mock_day_template_repo).get(template_id).and_return(template)
+    allow(mock_day_template_repo).get(template.id).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
@@ -561,9 +560,10 @@ async def test_preview_with_template_id(
         task_repo=mock_task_repo,
     )
 
-    result = await service.preview(date, template_id=template_id)
+    result = await service.preview(date, template_id=template.id)
 
-    assert result.day.template_id == template_id
+    assert result.day.template is not None
+    assert result.day.template.id == template.id
 
 
 @pytest.mark.asyncio
@@ -580,16 +580,14 @@ async def test_schedule_with_template_id(
 ):
     """Test schedule with explicit template_id."""
     date = datetime.date(2024, 1, 1)
-    template_id = uuid4()
 
     template = DayTemplate(
-        id=template_id,
         slug="custom",
         user_id=test_user_id,
     )
 
     allow(mock_task_repo).delete_many.and_return(None)
-    allow(mock_day_template_repo).get(template_id).and_return(template)
+    allow(mock_day_template_repo).get(template.id).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
@@ -598,7 +596,7 @@ async def test_schedule_with_template_id(
             user_id=test_user_id,
             date=date,
             status=DayStatus.SCHEDULED,
-            template_id=template_id,
+            template=template,
         )
     )
     allow(mock_task_repo).put.and_return(None)
@@ -615,10 +613,11 @@ async def test_schedule_with_template_id(
         task_repo=mock_task_repo,
     )
 
-    result = await service.schedule(date, template_id=template_id)
+    result = await service.schedule(date, template_id=template.id)
 
     assert result.day.status == DayStatus.SCHEDULED
-    assert result.day.template_id == template_id
+    assert result.day.template is not None
+    assert result.day.template.id == template.id
 
 
 @pytest.mark.asyncio

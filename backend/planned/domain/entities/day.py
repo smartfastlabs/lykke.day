@@ -7,17 +7,19 @@ from pydantic import Field, model_validator
 from ..value_objects.day import DayStatus, DayTag
 from .alarm import Alarm
 from .base import BaseEntityObject
+from .day_template import DayTemplate
 
 
 class Day(BaseEntityObject):
     id: UUID = Field(default_factory=uuid.uuid4)
     user_id: UUID
     date: dt_date
-    template_id: UUID
-    tags: list[DayTag] = Field(default_factory=list)
     alarm: Alarm | None = None
     status: DayStatus = DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
+
+    tags: list[DayTag] = Field(default_factory=list)
+    template: DayTemplate | None = None
 
     @model_validator(mode="after")
     def generate_id(self) -> "Day":
@@ -38,5 +40,7 @@ class Day(BaseEntityObject):
         """
         namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
         name = f"{user_id}:{date.isoformat()}"
+        return uuid.uuid5(namespace, name)
+        return uuid.uuid5(namespace, name)
         return uuid.uuid5(namespace, name)
         return uuid.uuid5(namespace, name)

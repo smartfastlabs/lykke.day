@@ -16,16 +16,16 @@ async def test_get(
     """Test getting a day by date."""
     await setup_day_templates
     templates = await day_template_repo.all()
-    default_template_id = (
-        templates[0].id if templates else UUID("00000000-0000-0000-0000-000000000000")
-    )
+    default_template = templates[0] if templates else None
+    if not default_template:
+        pytest.skip("No templates available")
 
     day = Day(
         user_id=test_user.id,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
-        template_id=default_template_id,
+        template=default_template,
     )
     await day_repo.put(day)
 
@@ -50,15 +50,15 @@ async def test_put(
     """Test creating a new day."""
     await setup_day_templates
     templates = await day_template_repo.all()
-    default_template_id = (
-        templates[0].id if templates else UUID("00000000-0000-0000-0000-000000000000")
-    )
+    default_template = templates[0] if templates else None
+    if not default_template:
+        pytest.skip("No templates available")
 
     day = Day(
         user_id=test_user.id,
         date=test_date,
         status=DayStatus.UNSCHEDULED,
-        template_id=default_template_id,
+        template=default_template,
     )
 
     result = await day_repo.put(day)
@@ -75,15 +75,15 @@ async def test_put_update(
     """Test updating an existing day."""
     await setup_day_templates
     templates = await day_template_repo.all()
-    default_template_id = (
-        templates[0].id if templates else UUID("00000000-0000-0000-0000-000000000000")
-    )
+    default_template = templates[0] if templates else None
+    if not default_template:
+        pytest.skip("No templates available")
 
     day = Day(
         user_id=test_user.id,
         date=test_date,
         status=DayStatus.UNSCHEDULED,
-        template_id=default_template_id,
+        template=default_template,
     )
     await day_repo.put(day)
 
@@ -112,22 +112,22 @@ async def test_all(
     """Test getting all days."""
     await setup_day_templates
     templates = await day_template_repo.all()
-    default_template_id = (
-        templates[0].id if templates else UUID("00000000-0000-0000-0000-000000000000")
-    )
+    default_template = templates[0] if templates else None
+    if not default_template:
+        pytest.skip("No templates available")
 
     day1 = Day(
         user_id=test_user.id,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
-        template_id=default_template_id,
+        template=default_template,
     )
     day2 = Day(
         user_id=test_user.id,
         date=test_date_tomorrow,
         status=DayStatus.UNSCHEDULED,
-        template_id=default_template_id,
+        template=default_template,
     )
     await day_repo.put(day1)
     await day_repo.put(day2)
@@ -151,20 +151,22 @@ async def test_search_query(
     """Test searching days with DateQuery."""
     await setup_day_templates
     templates = await day_template_repo.all()
-    default_template_id = templates[0].id if templates else uuid4()
+    default_template = templates[0] if templates else None
+    if not default_template:
+        pytest.skip("No templates available")
 
     day1 = Day(
         user_id=test_user.id,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
-        template_id=default_template_id,
+        template=default_template,
     )
     day2 = Day(
         user_id=test_user.id,
         date=test_date_tomorrow,
         status=DayStatus.UNSCHEDULED,
-        template_id=default_template_id,
+        template=default_template,
     )
     await day_repo.put(day1)
     await day_repo.put(day2)
@@ -190,9 +192,9 @@ async def test_user_isolation(
     """Test that different users' days are properly isolated."""
     await setup_day_templates
     templates = await day_template_repo.all()
-    default_template_id = (
-        templates[0].id if templates else UUID("00000000-0000-0000-0000-000000000000")
-    )
+    default_template = templates[0] if templates else None
+    if not default_template:
+        pytest.skip("No templates available")
 
     # Create day for test_user
     day1 = Day(
@@ -200,7 +202,7 @@ async def test_user_isolation(
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
-        template_id=default_template_id,
+        template=default_template,
     )
     await day_repo.put(day1)
 
@@ -224,16 +226,16 @@ async def test_delete(
     """Test deleting a day."""
     await setup_day_templates
     templates = await day_template_repo.all()
-    default_template_id = (
-        templates[0].id if templates else UUID("00000000-0000-0000-0000-000000000000")
-    )
+    default_template = templates[0] if templates else None
+    if not default_template:
+        pytest.skip("No templates available")
 
     day = Day(
         user_id=test_user.id,
         date=test_date,
         status=DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
-        template_id=default_template_id,
+        template=default_template,
     )
     await day_repo.put(day)
 

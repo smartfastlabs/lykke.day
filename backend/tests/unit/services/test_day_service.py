@@ -6,6 +6,7 @@ from uuid import NAMESPACE_DNS, uuid4, uuid5
 
 import pytest
 from dobles import allow
+
 from planned.application.services import DayService
 from planned.core.exceptions import exceptions
 from planned.domain.entities import (
@@ -48,19 +49,22 @@ async def test_set_date_changes_date_and_reloads_context(
     """Test that set_date changes the date and reloads context."""
     old_date = datetime.date(2024, 1, 1)
     new_date = datetime.date(2024, 1, 2)
-    template_id = uuid4()
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
 
     old_day = Day(
         user_id=test_user_id,
         date=old_date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
+        template=template,
     )
     new_day = Day(
         user_id=test_user_id,
         date=new_date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
+        template=template,
     )
 
     # Mock old context
@@ -104,18 +108,22 @@ async def test_set_date_with_user_id(
     """Test set_date with explicit user_id."""
     old_date = datetime.date(2024, 1, 1)
     new_date = datetime.date(2024, 1, 2)
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
 
     old_day = Day(
         user_id=test_user_id,
         date=old_date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
+        template=template,
     )
     new_day = Day(
         user_id=test_user_id,
         date=new_date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
+        template=template,
     )
 
     old_ctx = DayContext(day=old_day, tasks=[], events=[], messages=[])
@@ -148,11 +156,15 @@ async def test_get_or_preview_returns_existing_day(
 ):
     """Test get_or_preview returns existing day if found."""
     date = datetime.date(2024, 1, 1)
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
+        template=template,
     )
 
     allow(mock_day_repo).get(day.id).and_return(day)
@@ -185,9 +197,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
         settings=UserSetting(template_defaults=[template_slug] * 7),
     )
 
-    template_id = uuid4()
     template = DayTemplate(
-        id=template_id,
         slug=template_slug,
         user_id=test_user_id,
     )
@@ -217,7 +227,6 @@ async def test_get_or_create_creates_and_saves_day(
 ):
     """Test get_or_create creates and saves day if not found."""
     date = datetime.date(2024, 1, 1)
-    template_id = uuid4()
     template_slug = "default"
 
     user = User(
@@ -228,7 +237,6 @@ async def test_get_or_create_creates_and_saves_day(
     )
 
     template = DayTemplate(
-        id=template_id,
         slug=template_slug,
         user_id=test_user_id,
     )
@@ -237,7 +245,7 @@ async def test_get_or_create_creates_and_saves_day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
+        template=template,
     )
 
     allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
@@ -268,12 +276,15 @@ async def test_save(
 ):
     """Test save persists the day."""
     date = datetime.date(2024, 1, 1)
-    template_id = uuid4()
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
+        template=template,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -311,13 +322,16 @@ async def test_get_upcomming_tasks_123(
         year=2025, month=11, day=27, hour=12, minute=0, second=0
     )
     future_time = (now + timedelta(minutes=15)).time()
-    template_id = uuid4()
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
 
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
+        template=template,
     )
 
     # Task that should be included (within window)
@@ -426,13 +440,16 @@ async def test_get_upcomming_events(
     future_time = now + timedelta(minutes=15)
     far_future = now + timedelta(hours=2)
     past_time = now - timedelta(hours=1)
-    template_id = uuid4()
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
 
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
+        template=template,
     )
 
     # Event that should be included (within window)
@@ -522,11 +539,15 @@ async def test_on_event_change_create(
 ):
     """Test on_event_change handles create events."""
     date = datetime.date(2025, 11, 27)
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
+        template=template,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -603,7 +624,6 @@ async def test_on_event_change_delete(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[event1, event2], messages=[])
 
@@ -642,11 +662,15 @@ async def test_on_message_change_create(
     from planned.domain.entities import Message
 
     date = datetime.date(2024, 1, 1)
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
+        template=template,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -709,11 +733,15 @@ async def test_on_task_change_update(
         frequency=TaskFrequency.ONCE,
     )
 
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
+        template=template,
     )
     ctx = DayContext(day=day, tasks=[original_task], events=[], messages=[])
 
@@ -764,12 +792,15 @@ async def test_for_date_creates_service(
 ):
     """Test for_date creates a DayService with loaded context."""
     date = datetime.date(2024, 1, 1)
-    template_id = uuid4()
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
+        template=template,
     )
 
     allow(mock_day_repo).get(day.id).and_return(day)
@@ -794,31 +825,26 @@ async def test_for_date_creates_service(
 
 
 @pytest.mark.asyncio
-async def test_base_day_with_template_id(
-    mock_day_template_repo,
+async def test_base_day_with_template(
     test_user_id,
 ):
-    """Test base_day creates day with specified template_id."""
+    """Test base_day creates day with specified template."""
     date = datetime.date(2024, 1, 1)
-    template_id = uuid4()
     template = DayTemplate(
-        id=template_id,
         slug="custom",
         user_id=test_user_id,
     )
 
-    allow(mock_day_template_repo).get(template_id).and_return(template)
-
     day = await DayService.base_day(
         date,
         user_id=test_user_id,
-        day_template_repo=mock_day_template_repo,
-        template_id=template_id,
+        template=template,
     )
 
     assert day.user_id == test_user_id
     assert day.date == date
-    assert day.template_id == template_id
+    assert day.template is not None
+    assert day.template.id == template.id
     assert day.status == DayStatus.UNSCHEDULED
 
 
@@ -833,18 +859,21 @@ async def test_load_context_instance_method(
 ):
     """Test load_context instance method reloads context."""
     date = datetime.date(2024, 1, 1)
-    template_id = uuid4()
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
     old_day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
+        template=template,
     )
     new_day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.SCHEDULED,
-        template_id=template_id,
+        template=template,
     )
 
     old_ctx = DayContext(day=old_day, tasks=[], events=[], messages=[])
@@ -887,12 +916,16 @@ async def test_get_upcomming_tasks_with_available_time(
     now = test_datetime_noon
     past_available_time = (now - timedelta(minutes=30)).time()
     future_available_time = (now + timedelta(minutes=30)).time()
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
 
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
+        template=template,
     )
 
     # Task with available_time in past (should be included)
@@ -971,12 +1004,16 @@ async def test_get_upcomming_tasks_with_end_time(
     now = test_datetime_noon
     past_end_time = (now - timedelta(minutes=30)).time()
     future_start_time = (now + timedelta(minutes=15)).time()
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
 
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
+        template=template,
     )
 
     # Task with end_time in past (should be excluded)
@@ -1056,12 +1093,16 @@ async def test_get_upcomming_tasks_excludes_completed_at(
     # Use frozen datetime from fixture
     now = test_datetime_noon
     future_time = (now + timedelta(minutes=15)).time()
+    template = DayTemplate(
+        slug="default",
+        user_id=test_user_id,
+    )
 
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
+        template=template,
     )
 
     # Task with completed_at (should be excluded even if status is PENDING)

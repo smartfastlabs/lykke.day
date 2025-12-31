@@ -14,7 +14,7 @@ class Day(Base):
     id = Column(PGUUID, primary_key=True)
     user_id = Column(PGUUID, nullable=False)
     date = Column(Date, nullable=False)
-    template_id = Column(PGUUID, nullable=False)
+    template = Column(JSONB)  # DayTemplate | None
     tags = Column(JSONB)  # list[DayTag]
     alarm = Column(JSONB)  # Alarm | None
     status = Column(String, nullable=False)  # DayStatus enum as string

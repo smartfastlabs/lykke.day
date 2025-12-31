@@ -94,7 +94,7 @@ async def test_schedule_tomorrow(test_date_tomorrow, test_user):
 
     result = await planning_svc.schedule(test_date_tomorrow)
 
-    # Check that template_id is set (we can't check the exact value since it's a UUID)
-    assert result.day.template_id is not None
+    # Check that template is set (we can't check the exact value since it's a UUID)
+    assert result.day.template is not None
     assert len(result.events) == 0
     assert len(result.tasks) == 2

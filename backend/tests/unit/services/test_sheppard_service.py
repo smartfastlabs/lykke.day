@@ -40,7 +40,6 @@ async def test_build_notification_payload_single_task(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -110,7 +109,6 @@ async def test_build_notification_payload_multiple_tasks(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -194,7 +192,6 @@ async def test_build_event_notification_payload(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -260,7 +257,6 @@ async def test_notify_for_tasks(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -339,7 +335,6 @@ async def test_notify_for_tasks_empty_list(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -389,7 +384,6 @@ async def test_stop_sets_mode_to_stopping(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -442,7 +436,6 @@ async def test_is_running_property(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=template_id,
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -499,7 +492,6 @@ async def test_render_prompt(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -558,7 +550,6 @@ async def test_morning_summary_prompt(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -612,7 +603,6 @@ async def test_evening_summary_prompt(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -667,7 +657,6 @@ async def test_notify_for_events(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 
@@ -741,7 +730,6 @@ async def test_notify_for_events_empty_list(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
 

@@ -24,7 +24,6 @@ class DayRepository(UserScopedBaseRepository[Day, BaseQuery]):
             "id": day.id,
             "user_id": day.user_id,
             "date": day.date,
-            "template_id": day.template_id,
             "status": day.status.value,
             "scheduled_at": day.scheduled_at,
         }
@@ -35,6 +34,9 @@ class DayRepository(UserScopedBaseRepository[Day, BaseQuery]):
 
         if day.alarm:
             row["alarm"] = day.alarm.model_dump(mode="json")
+
+        if day.template:
+            row["template"] = day.template.model_dump(mode="json")
 
         return row
 

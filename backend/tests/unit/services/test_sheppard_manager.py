@@ -42,7 +42,6 @@ async def test_get_service_for_user_returns_service():
         user_id=user_id,
         date=get_current_date(),
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
     )
     ctx = DayContext(day=day, tasks=[], events=[], messages=[])
     
@@ -82,7 +81,6 @@ async def test_stop_service_for_user_removes_service():
         user_id=user_id,
         date=get_current_date(),
         status=DayStatus.UNSCHEDULED,
-        template_id=uuid4(),
     )
     
     # Create a minimal service mock

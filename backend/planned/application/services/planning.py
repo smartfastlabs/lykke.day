@@ -5,6 +5,7 @@ from typing import Protocol, TypeVar
 from uuid import UUID
 
 from loguru import logger
+
 from planned.application.repositories import (
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
@@ -102,20 +103,30 @@ class PlanningService(BaseService):
         date: datetime.date,
         template_id: UUID | None = None,
     ) -> DayContext:
-        if template_id is None:
+        # Get template: either by id, from existing day, or from user defaults
+        template: objects.DayTemplate
+        if template_id is not None:
+            template = await self.day_template_repo.get(template_id)
+        else:
+            # Try to get it from existing day
+            template_found = False
             with suppress(exceptions.NotFoundError):
                 day_id = objects.Day.id_from_date_and_user(date, self.user_id)
                 existing_day = await self.day_repo.get(day_id)
-                template_id = existing_day.template_id
+                if existing_day.template:
+                    template = existing_day.template
+                    template_found = True
+            if not template_found:
+                # Get from user's template_defaults
+                user = await self.user_repo.get(self.user_id)
+                template_slug = user.settings.template_defaults[date.weekday()]
+                template = await self.day_template_repo.get_by_slug(template_slug)
 
-        # template_id will be None here, so base_day will look up by slug from template_defaults
         result: DayContext = DayContext(
             day=await DayService.base_day(
                 date,
                 user_id=self.user_id,
-                template_id=template_id,
-                day_template_repo=self.day_template_repo,
-                user_repo=self.user_repo,
+                template=template,
             ),
         )
 
