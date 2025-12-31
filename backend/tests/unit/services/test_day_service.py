@@ -394,7 +394,7 @@ async def test_save(
 
 
 @pytest.mark.asyncio
-async def test_get_upcomming_tasks_123(
+async def test_get_upcoming_tasks_123(
     mock_day_repo,
     mock_day_template_repo,
     mock_event_repo,
@@ -404,7 +404,7 @@ async def test_get_upcomming_tasks_123(
     test_user,
     test_datetime_noon,
 ):
-    """Test get_upcomming_tasks returns tasks within look_ahead window."""
+    """Test get_upcoming_tasks returns tasks within look_ahead window."""
     date = test_datetime_noon.date()
     # Use frozen datetime from fixture
     now = test_datetime_noon.replace(
@@ -503,7 +503,7 @@ async def test_get_upcomming_tasks_123(
     )
 
     # Time is frozen by test_datetime_noon fixture
-    result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
+    result = await service.get_upcoming_tasks(look_ahead=timedelta(minutes=30))
 
     # Should only include task1 (within window and not completed)
     assert len(result) == 1
@@ -511,7 +511,7 @@ async def test_get_upcomming_tasks_123(
 
 
 @pytest.mark.asyncio
-async def test_get_upcomming_events(
+async def test_get_upcoming_events(
     mock_day_repo,
     mock_day_template_repo,
     mock_event_repo,
@@ -521,7 +521,7 @@ async def test_get_upcomming_events(
     test_user,
     test_datetime_noon,
 ):
-    """Test get_upcomming_events returns events within look_ahead window."""
+    """Test get_upcoming_events returns events within look_ahead window."""
     date = datetime.date(2025, 11, 27)
     # Use frozen datetime from fixture - get_current_datetime() will return the frozen time
     # which is 2025-11-27 18:00:00 UTC (12:00:00-6:00)
@@ -611,7 +611,7 @@ async def test_get_upcomming_events(
     )
 
     # Time is frozen by test_datetime_noon fixture
-    result = await service.get_upcomming_events(look_ahead=timedelta(minutes=30))
+    result = await service.get_upcoming_events(look_ahead=timedelta(minutes=30))
 
     # Should include event1 and event4 (within window and not cancelled)
     assert len(result) == 2
@@ -1027,7 +1027,7 @@ async def test_load_context_instance_method(
 
 
 @pytest.mark.asyncio
-async def test_get_upcomming_tasks_with_available_time(
+async def test_get_upcoming_tasks_with_available_time(
     mock_day_repo,
     mock_day_template_repo,
     mock_event_repo,
@@ -1037,7 +1037,7 @@ async def test_get_upcomming_tasks_with_available_time(
     test_user,
     test_datetime_noon,
 ):
-    """Test get_upcomming_tasks handles tasks with available_time."""
+    """Test get_upcoming_tasks handles tasks with available_time."""
     date = datetime.date(2025, 11, 27)
     # Use frozen datetime from fixture
     now = test_datetime_noon
@@ -1110,14 +1110,14 @@ async def test_get_upcomming_tasks_with_available_time(
     )
 
     # Time is frozen by test_datetime_noon fixture
-    result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
+    result = await service.get_upcoming_tasks(look_ahead=timedelta(minutes=30))
 
     assert len(result) == 1
     assert result[0].id == task1.id
 
 
 @pytest.mark.asyncio
-async def test_get_upcomming_tasks_with_end_time(
+async def test_get_upcoming_tasks_with_end_time(
     mock_day_repo,
     mock_day_template_repo,
     mock_event_repo,
@@ -1127,7 +1127,7 @@ async def test_get_upcomming_tasks_with_end_time(
     test_user,
     test_datetime_noon,
 ):
-    """Test get_upcomming_tasks excludes tasks past end_time."""
+    """Test get_upcoming_tasks excludes tasks past end_time."""
     date = datetime.date(2025, 11, 27)
     # Use frozen datetime from fixture
     now = test_datetime_noon
@@ -1202,14 +1202,14 @@ async def test_get_upcomming_tasks_with_end_time(
     )
 
     # Time is frozen by test_datetime_noon fixture
-    result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
+    result = await service.get_upcoming_tasks(look_ahead=timedelta(minutes=30))
 
     assert len(result) == 1
     assert result[0].id == task2.id
 
 
 @pytest.mark.asyncio
-async def test_get_upcomming_tasks_excludes_completed_at(
+async def test_get_upcoming_tasks_excludes_completed_at(
     mock_day_repo,
     mock_day_template_repo,
     mock_event_repo,
@@ -1219,7 +1219,7 @@ async def test_get_upcomming_tasks_excludes_completed_at(
     test_user,
     test_datetime_noon,
 ):
-    """Test get_upcomming_tasks excludes tasks with completed_at set."""
+    """Test get_upcoming_tasks excludes tasks with completed_at set."""
     date = datetime.date(2025, 11, 27)
     # Use frozen datetime from fixture
     now = test_datetime_noon
@@ -1292,7 +1292,7 @@ async def test_get_upcomming_tasks_excludes_completed_at(
     )
 
     # Time is frozen by test_datetime_noon fixture
-    result = await service.get_upcomming_tasks(look_ahead=timedelta(minutes=30))
+    result = await service.get_upcoming_tasks(look_ahead=timedelta(minutes=30))
 
     assert len(result) == 1
     assert result[0].id == task2.id

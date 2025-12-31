@@ -120,7 +120,7 @@ class SheppardService(BaseService):
         tasks_to_notify: list[objects.Task] = []
         tasks_to_update: list[objects.Task] = []
 
-        for task in await self.day_svc.get_upcomming_tasks():
+        for task in await self.day_svc.get_upcoming_tasks():
             if task.status != objects.TaskStatus.PENDING:
                 task.status = objects.TaskStatus.PENDING
                 tasks_to_update.append(task)
@@ -141,7 +141,7 @@ class SheppardService(BaseService):
         # Collect events that need notifications
         events_to_notify: list[objects.Event] = []
 
-        for event in await self.day_svc.get_upcomming_events():
+        for event in await self.day_svc.get_upcoming_events():
             logger.info(f"UPCOMING EVENT {event.name}")
 
             # Check if this event needs a notification

@@ -260,7 +260,7 @@ class DayService(BaseService):
     async def save(self) -> None:
         await self.day_repo.put(self.ctx.day)
 
-    async def get_upcomming_tasks(
+    async def get_upcoming_tasks(
         self,
         look_ahead: datetime.timedelta = datetime.timedelta(minutes=30),
     ) -> list[objects.Task]:
@@ -304,7 +304,7 @@ class DayService(BaseService):
 
         return result
 
-    async def get_upcomming_events(
+    async def get_upcoming_events(
         self,
         look_ahead: datetime.timedelta = datetime.timedelta(minutes=30),
     ) -> list[objects.Event]:
