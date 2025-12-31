@@ -23,6 +23,7 @@ from planned.common.repository_handler import ChangeHandler
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Alarm, DayTemplate, User
 from planned.domain.value_objects.alarm import AlarmType
+from planned.domain.value_objects.day import DayContext
 from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.gateways.adapters import (
     GoogleCalendarGatewayAdapter,
@@ -150,14 +151,27 @@ class SheppardManager:
 
         # Create day service for current date
         date = get_current_date()
-        ctx = await DayService.load_context_cls(
+        # Create a temporary DayService instance to load context
+        template_slug = user.settings.template_defaults[date.weekday()]
+        template = await day_template_repo.get_by_slug(template_slug)
+        temp_day = await DayService.base_day(
             date,
             user_id=user_id,
+            template=template,
+        )
+        temp_ctx = DayContext(day=temp_day)
+        temp_day_svc = DayService(
+            user=user,
+            ctx=temp_ctx,
             day_repo=day_repo,
             day_template_repo=day_template_repo,
             event_repo=event_repo,
             message_repo=message_repo,
             task_repo=task_repo,
+        )
+        ctx = await temp_day_svc.load_context(
+            date=date,
+            user_id=user_id,
             user_repo=cast("UserRepositoryProtocol", self._user_repo),
         )
         day_svc = DayService(

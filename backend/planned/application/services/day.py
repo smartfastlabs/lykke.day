@@ -22,7 +22,6 @@ from planned.domain.entities import User
 from planned.domain.value_objects.query import DateQuery
 from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.utils.dates import get_current_datetime, get_current_time
-from planned.infrastructure.utils.decorators import hybridmethod
 
 from .base import BaseService
 
@@ -136,18 +135,12 @@ class DayService(BaseService):
                     user_id = self.day_repo.user_id
                 else:
                     raise ValueError("user_id required for set_date")
-            self.ctx = await type(self).load_context_cls(
-                date,
+            self.ctx = await self.load_context(
+                date=date,
                 user_id=user_id,
-                day_repo=self.day_repo,
-                day_template_repo=self.day_template_repo,
-                event_repo=self.event_repo,
-                message_repo=self.message_repo,
-                task_repo=self.task_repo,
                 user_repo=user_repo,
             )
 
-    @hybridmethod
     async def load_context(
         self,
         date: datetime.date | None = None,
@@ -174,30 +167,6 @@ class DayService(BaseService):
             else:
                 raise ValueError("user_id required for load_context")
 
-        self.ctx = await type(self).load_context_cls(
-            date,
-            user_id=user_id,
-            day_repo=day_repo,
-            day_template_repo=day_template_repo,
-            event_repo=event_repo,
-            message_repo=message_repo,
-            task_repo=task_repo,
-            user_repo=user_repo,
-        )
-        return self.ctx
-
-    @load_context.classmethod
-    async def load_context_cls(
-        cls,  # noqa: N805
-        date: datetime.date,
-        user_id: UUID,
-        day_repo: DayRepositoryProtocol,
-        day_template_repo: DayTemplateRepositoryProtocol,
-        event_repo: EventRepositoryProtocol,
-        message_repo: MessageRepositoryProtocol,
-        task_repo: TaskRepositoryProtocol,
-        user_repo: UserRepositoryProtocol | None = None,
-    ) -> objects.DayContext:
         tasks: list[objects.Task] = []
         events: list[objects.Event] = []
         messages: list[objects.Message] = []
@@ -211,20 +180,16 @@ class DayService(BaseService):
                 message_repo.search_query(DateQuery(date=date)),
                 day_repo.get(day_id),
             )
-        except exceptions.NotFoundError as err:
-            if user_repo is None:
-                raise ValueError("user_repo required when day not found") from err
-            user = await user_repo.get(user_id)
-            # template_defaults stores slugs
-            template_slug = user.settings.template_defaults[date.weekday()]
+        except exceptions.NotFoundError:
+            template_slug = self.user.settings.template_defaults[date.weekday()]
             template = await day_template_repo.get_by_slug(template_slug)
-            day = await cls.base_day(
+            day = await type(self).base_day(
                 date,
                 user_id=user_id,
                 template=template,
             )
 
-        return objects.DayContext(
+        self.ctx = objects.DayContext(
             day=day,
             tasks=sorted(
                 tasks,
@@ -235,6 +200,7 @@ class DayService(BaseService):
             events=sorted(events, key=lambda e: e.starts_at),
             messages=messages,
         )
+        return self.ctx
 
     @classmethod
     async def base_day(

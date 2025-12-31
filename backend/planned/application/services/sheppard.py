@@ -6,6 +6,7 @@ from typing import Any, Literal
 from langchain.agents import create_agent
 from langchain_core.runnables import Runnable
 from loguru import logger
+
 from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from planned.application.repositories import (
     DayRepositoryProtocol,
@@ -330,21 +331,35 @@ class SheppardService(BaseService):
         # Make sure tomorrow's day is scheduled
         pass
 
-    async def start_day(self, template: str = "default") -> None:
+    async def start_day(self, _: str = "default") -> None:
         # Confirm yesterday is ended
         # If it is not already scheduled, schedule
         # Update the day service to the new date
         # send morning summary
         date = get_current_date()
-        # Load context for the date
-        ctx = await DayService.load_context_cls(
+        # Create a temporary DayService instance to load context
+        template_slug = self.user.settings.template_defaults[date.weekday()]
+        template = await self.day_template_repo.get_by_slug(template_slug)
+        temp_day = await DayService.base_day(
             date,
             user_id=self.planning_service.user_id,
+            template=template,
+        )
+        from planned.domain.value_objects.day import DayContext
+
+        temp_ctx = DayContext(day=temp_day)
+        temp_day_svc = DayService(
+            user=self.user,
+            ctx=temp_ctx,
             day_repo=self.day_repo,
             day_template_repo=self.day_template_repo,
             event_repo=self.event_repo,
             message_repo=self.message_repo,
             task_repo=self.task_repo,
+        )
+        ctx = await temp_day_svc.load_context(
+            date=date,
+            user_id=self.planning_service.user_id,
             user_repo=self.planning_service.user_repo,
         )
         self.day_svc = DayService(
