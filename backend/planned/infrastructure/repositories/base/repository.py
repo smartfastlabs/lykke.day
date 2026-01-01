@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.sql import Select
 
 from planned.common.repository_handler import ChangeHandler
+from planned.common.signal_registry import entity_signals
 from planned.core.exceptions import exceptions
 from planned.domain.entities.base import BaseEntityObject
 from planned.domain.value_objects.query import BaseQuery
@@ -45,9 +46,17 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         """
         Initialize a class-level signal for each repository subclass.
         This ensures all instances of the same repository class share the same signal.
+
+        Also registers the signal with the entity signal registry so that
+        application layer code can subscribe without importing infrastructure.
         """
         super().__init_subclass__(**kwargs)
         cls.signal_source = Signal()
+
+        # Register signal with the entity signal registry
+        # Use the Object class name as the entity name (e.g., "User", "Event", "Task")
+        if hasattr(cls, "Object") and cls.Object is not None:
+            entity_signals.register(cls.Object.__name__, cls.signal_source)
 
     def listen(self, handler: ChangeHandler[ObjectType]) -> None:
         """

@@ -6,6 +6,7 @@ from blinker import Signal
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.application.utils import filter_upcoming_events, filter_upcoming_tasks
+from planned.common.signal_registry import entity_signals
 from planned.core.constants import DEFAULT_LOOK_AHEAD
 from planned.core.exceptions import exceptions
 from planned.domain import entities as objects
@@ -55,19 +56,11 @@ class DayService(BaseService):
         self.signal_source = Signal()
         self.uow_factory = uow_factory
 
-        # Set up listeners for repository events
-        # Access repository classes directly for signals (signals are class-level)
-        # TODO: Circular import - application layer should not import from infrastructure.
-        # Refactor to use dependency injection or an event bus pattern.
-        from planned.infrastructure.repositories import (
-            EventRepository,
-            MessageRepository,
-            TaskRepository,
-        )
-
-        EventRepository.signal_source.connect(self.on_event_change)
-        MessageRepository.signal_source.connect(self.on_message_change)
-        TaskRepository.signal_source.connect(self.on_task_change)
+        # Set up listeners for repository events via the signal registry
+        # This avoids circular imports between application and infrastructure layers
+        entity_signals.connect("Event", self.on_event_change)
+        entity_signals.connect("Message", self.on_message_change)
+        entity_signals.connect("Task", self.on_task_change)
 
     async def on_event_change(
         self, _sender: object | None = None, *, event: RepositoryEvent[objects.Event]

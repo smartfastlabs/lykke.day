@@ -10,6 +10,7 @@ from planned.application.services import CalendarService, PlanningService
 from planned.application.services.factories import DayServiceFactory
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.common.repository_handler import ChangeHandler
+from planned.common.signal_registry import entity_signals
 from planned.core import exceptions
 from planned.domain.entities import Alarm, DayTemplate, User
 from planned.domain.value_objects.alarm import AlarmType
@@ -199,15 +200,11 @@ class SheppardManager:
         async with dummy_uow:
             user_repo = dummy_uow.users
 
-            # Listen to UserRepository events (signals are class-level)
+            # Listen to User events via the signal registry
+            # This avoids circular imports between application and infrastructure layers
             self._event_handler = self._handle_user_event
-            # Access the class-level signal
-            # TODO: Circular import - application layer should not import from infrastructure.
-            # Refactor to use dependency injection or an event bus pattern.
-            from planned.infrastructure.repositories import UserRepository
-
-            UserRepository.signal_source.connect(self._event_handler)
-            logger.info("SheppardManager listening to UserRepository events")
+            entity_signals.connect("User", self._event_handler)
+            logger.info("SheppardManager listening to User events via signal registry")
 
             # Start services for all existing users
             try:
@@ -230,15 +227,11 @@ class SheppardManager:
 
         self._is_running = False
 
-        # Disconnect from UserRepository events
+        # Disconnect from User events via the signal registry
         if self._event_handler is not None:
-            # TODO: Circular import - application layer should not import from infrastructure.
-            # Refactor to use dependency injection or an event bus pattern.
-            from planned.infrastructure.repositories import UserRepository
-
-            UserRepository.signal_source.disconnect(self._event_handler)
+            entity_signals.disconnect("User", self._event_handler)
             self._event_handler = None
-            logger.info("SheppardManager disconnected from UserRepository events")
+            logger.info("SheppardManager disconnected from User events")
 
         # Stop all services
         logger.info(f"Stopping {len(self._services)} SheppardService instance(s)...")
