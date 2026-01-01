@@ -23,11 +23,11 @@ from planned.domain.entities import (
 from planned.domain.value_objects.task import TaskCategory, TaskFrequency, TaskType
 
 
-def create_day_service(user, ctx, uow_factory):
+def create_day_service(user, day_ctx, uow_factory):
     """Helper to create a DayService with the new signature."""
     return DayService(
         user=user,
-        ctx=ctx,
+        day_ctx=day_ctx,
         uow_factory=uow_factory,
     )
 
@@ -71,9 +71,9 @@ async def test_build_notification_payload_single_task(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
-    day_svc = create_day_service(test_user, ctx, mock_uow_factory)
+    day_svc = create_day_service(test_user, day_ctx, mock_uow_factory)
 
     task = Task(
         id=uuid4(),
@@ -125,9 +125,9 @@ async def test_build_notification_payload_multiple_tasks(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
-    day_svc = create_day_service(test_user, ctx, mock_uow_factory)
+    day_svc = create_day_service(test_user, day_ctx, mock_uow_factory)
 
     task1 = Task(
         id=uuid4(),
@@ -193,9 +193,9 @@ async def test_build_event_notification_payload(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
-    day_svc = create_day_service(test_user, ctx, mock_uow_factory)
+    day_svc = create_day_service(test_user, day_ctx, mock_uow_factory)
 
     calendar_entry = CalendarEntry(
         id=uuid4(),
@@ -243,9 +243,9 @@ async def test_notify_for_tasks(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
-    day_svc = create_day_service(test_user, ctx, mock_uow_factory)
+    day_svc = create_day_service(test_user, day_ctx, mock_uow_factory)
 
     task = Task(
         id=uuid4(),
@@ -306,9 +306,9 @@ async def test_notify_for_tasks_empty_list(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
-    day_svc = create_day_service(test_user, ctx, mock_uow_factory)
+    day_svc = create_day_service(test_user, day_ctx, mock_uow_factory)
 
     service = create_sheppard_service(
         user=test_user,
@@ -340,9 +340,9 @@ async def test_stop_sets_mode_to_stopping(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
-    day_svc = create_day_service(test_user, ctx, mock_uow_factory)
+    day_svc = create_day_service(test_user, day_ctx, mock_uow_factory)
 
     service = create_sheppard_service(
         user=test_user,
@@ -377,9 +377,9 @@ async def test_is_running_property(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
-    day_svc = create_day_service(test_user, ctx, mock_uow_factory)
+    day_svc = create_day_service(test_user, day_ctx, mock_uow_factory)
 
     # Test active mode
     service = create_sheppard_service(
@@ -418,9 +418,9 @@ async def test_render_prompt(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
-    day_svc = create_day_service(test_user, ctx, mock_uow_factory)
+    day_svc = create_day_service(test_user, day_ctx, mock_uow_factory)
 
     service = create_sheppard_service(
         user=test_user,
@@ -461,9 +461,9 @@ async def test_morning_summary_prompt(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
-    day_svc = create_day_service(test_user, ctx, mock_uow_factory)
+    day_svc = create_day_service(test_user, day_ctx, mock_uow_factory)
 
     service = create_sheppard_service(
         user=test_user,
@@ -499,9 +499,9 @@ async def test_evening_summary_prompt(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
-    day_svc = create_day_service(test_user, ctx, mock_uow_factory)
+    day_svc = create_day_service(test_user, day_ctx, mock_uow_factory)
 
     service = create_sheppard_service(
         user=test_user,
@@ -538,9 +538,9 @@ async def test_notify_for_calendar_entries(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
-    day_svc = create_day_service(test_user, ctx, mock_uow_factory)
+    day_svc = create_day_service(test_user, day_ctx, mock_uow_factory)
 
     calendar_entry = CalendarEntry(
         id=uuid4(),
@@ -596,9 +596,9 @@ async def test_notify_for_events_empty_list(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
-    day_svc = create_day_service(test_user, ctx, mock_uow_factory)
+    day_svc = create_day_service(test_user, day_ctx, mock_uow_factory)
 
     service = create_sheppard_service(
         user=test_user,

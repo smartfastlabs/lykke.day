@@ -15,7 +15,7 @@ async def main():
     date = get_current_date()
     # TODO: Get user_id and create repositories
     # ctx = await DayService.load_context_cls(...)
-    # day_svc = DayService(ctx=ctx, ...)
+    # day_svc = DayService(day_ctx=day_ctx, ...)
     # result = await day_svc.schedule()  # Note: DayService doesn't have schedule() method
     breakpoint()
 

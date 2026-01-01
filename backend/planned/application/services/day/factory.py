@@ -67,15 +67,15 @@ class DayServiceFactory:
             )
 
             # Create temporary context and service for loading
-            temp_ctx = DayContext(day=temp_day)
+            temp_day_ctx = DayContext(day=temp_day)
             temp_day_svc = DayService(
                 user=self.user,
-                ctx=temp_ctx,
+                day_ctx=temp_day_ctx,
                 uow_factory=self.uow_factory,
             )
 
             # Load full context
-            ctx = await temp_day_svc.load_context(
+            day_ctx = await temp_day_svc.load_context(
                 date=date,
                 user_id=user_id,
             )
@@ -83,7 +83,7 @@ class DayServiceFactory:
         # Create and return final DayService with loaded context
         return DayService(
             user=self.user,
-            ctx=ctx,
+            day_ctx=day_ctx,
             uow_factory=self.uow_factory,
         )
 

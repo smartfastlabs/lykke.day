@@ -123,7 +123,7 @@ class SheppardService(BaseService):
     async def _handle_alarm(self) -> None:
         """Check and trigger alarm if it's time."""
         current_time: datetime.time = get_current_time()
-        if alarm := self.day_svc.ctx.day.alarm:  # noqa
+        if alarm := self.day_svc.day_ctx.day.alarm:  # noqa
             if alarm.triggered_at is None and alarm.time < current_time:
                 alarm.triggered_at = current_time
                 logger.info(f"Triggering alarm: {alarm.name} at {alarm.time}")
@@ -365,8 +365,8 @@ class SheppardService(BaseService):
         return templates.render(
             template_name,
             current_time=get_current_time(),
-            tasks=self.day_svc.ctx.tasks,
-            calendar_entries=self.day_svc.ctx.calendar_entries,
+            tasks=self.day_svc.day_ctx.tasks,
+            calendar_entries=self.day_svc.day_ctx.calendar_entries,
             **kwargs,
         )
 
@@ -406,7 +406,7 @@ class SheppardService(BaseService):
         # Subscribe new day service to events
         self.day_svc.subscribe_to_events()
 
-        if self.day_svc.ctx.day.status != objects.DayStatus.SCHEDULED:
+        if self.day_svc.day_ctx.day.status != objects.DayStatus.SCHEDULED:
             await self.planning_service.schedule(self.day_svc.date)
 
     async def run(self) -> None:

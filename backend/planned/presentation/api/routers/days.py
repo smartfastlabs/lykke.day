@@ -3,7 +3,6 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-
 from planned.application.services import DayService, PlanningService
 from planned.application.services.factories import DayServiceFactory
 from planned.application.unit_of_work import UnitOfWorkFactory
@@ -35,14 +34,14 @@ async def schedule_today(
 async def get_context_today(
     day_service: Annotated[DayService, Depends(get_day_service_for_current_date)],
 ) -> DayContext:
-    return day_service.ctx
+    return day_service.day_ctx
 
 
 @router.get("/tomorrow/context")
 async def get_context_tomorrow(
     day_service: Annotated[DayService, Depends(get_day_service_for_tomorrow_date)],
 ) -> DayContext:
-    return day_service.ctx
+    return day_service.day_ctx
 
 
 @router.get("/{date}/context")
@@ -50,7 +49,7 @@ async def get_context(
     date: datetime.date,
     day_service: Annotated[DayService, Depends(get_day_service_for_date)],
 ) -> DayContext:
-    return day_service.ctx
+    return day_service.day_ctx
 
 
 class UpdateDayRequest(BaseRequestObject):

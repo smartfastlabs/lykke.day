@@ -23,29 +23,29 @@ from .event_handlers import DayEventHandler, TaskEventHandler
 class DayService(BaseService, EventHandlerMixin):
     """Service for managing day context and operations.
 
-    Subscribes to domain events to keep its cache (ctx) up to date.
+    Subscribes to domain events to keep its cache (day_ctx) up to date.
     """
 
-    ctx: objects.DayContext
+    day_ctx: objects.DayContext
     date: datetime.date
     uow_factory: UnitOfWorkFactory
 
     def __init__(
         self,
         user: User,
-        ctx: objects.DayContext,
+        day_ctx: objects.DayContext,
         uow_factory: UnitOfWorkFactory,
     ) -> None:
         """Initialize DayService.
 
         Args:
             user: The user for this service
-            ctx: The day context to manage
+            day_ctx: The day context to manage
             uow_factory: Factory for creating UnitOfWork instances
         """
         super().__init__(user)
-        self.ctx = ctx
-        self.date = ctx.day.date
+        self.day_ctx = day_ctx
+        self.date = day_ctx.day.date
         self.uow_factory = uow_factory
 
         # Initialize event handler mixin
@@ -80,7 +80,7 @@ class DayService(BaseService, EventHandlerMixin):
         if self.date != date:
             self.date = date
             user_id = user_id or self.user.id
-            self.ctx = await self.load_context(date=date, user_id=user_id)
+            self.day_ctx = await self.load_context(date=date, user_id=user_id)
             # Update date in day event handler
             for handler in self._event_handlers:
                 if isinstance(handler, DayEventHandler):
@@ -115,8 +115,8 @@ class DayService(BaseService, EventHandlerMixin):
                 task_repo=uow.tasks,
             )
 
-            self.ctx = await loader.load(date, user_id)
-        return self.ctx
+            self.day_ctx = await loader.load(date, user_id)
+        return self.day_ctx
 
     async def get_or_preview(
         self,
@@ -181,7 +181,7 @@ class DayService(BaseService, EventHandlerMixin):
         """Save the current day context's day to the database."""
         uow = self.uow_factory.create(self.user.id)
         async with uow:
-            await uow.days.put(self.ctx.day)
+            await uow.days.put(self.day_ctx.day)
             await uow.commit()
 
     async def get_upcoming_tasks(
@@ -196,7 +196,7 @@ class DayService(BaseService, EventHandlerMixin):
         Returns:
             List of tasks that are upcoming within the look-ahead window
         """
-        return filter_upcoming_tasks(self.ctx.tasks, look_ahead)
+        return filter_upcoming_tasks(self.day_ctx.tasks, look_ahead)
 
     async def get_upcoming_calendar_entries(
         self,
@@ -210,4 +210,6 @@ class DayService(BaseService, EventHandlerMixin):
         Returns:
             List of calendar entries that are upcoming within the look-ahead window
         """
-        return filter_upcoming_calendar_entries(self.ctx.calendar_entries, look_ahead)
+        return filter_upcoming_calendar_entries(
+            self.day_ctx.calendar_entries, look_ahead
+        )

@@ -43,9 +43,9 @@ class TaskEventHandler(EventHandler["DayService"]):
         self._user_id = user_id
 
     @property
-    def ctx(self) -> objects.DayContext:
+    def day_ctx(self) -> objects.DayContext:
         """Get the DayContext from the parent service."""
-        return self.service.ctx
+        return self.service.day_ctx
 
     def can_handle(self, event: DomainEvent) -> bool:
         """Check if this handler can handle the given event."""
@@ -73,7 +73,7 @@ class TaskEventHandler(EventHandler["DayService"]):
         task_id = event.task_id
 
         # Check if this task is in our context
-        task_in_ctx = next((t for t in self.ctx.tasks if t.id == task_id), None)
+        task_in_ctx = next((t for t in self.day_ctx.tasks if t.id == task_id), None)
         if task_in_ctx is None:
             # Task not in our day's context, ignore
             return
@@ -102,7 +102,7 @@ class TaskEventHandler(EventHandler["DayService"]):
         task_id = event.task_id
 
         # Check if this task is in our context
-        task_in_ctx = next((t for t in self.ctx.tasks if t.id == task_id), None)
+        task_in_ctx = next((t for t in self.day_ctx.tasks if t.id == task_id), None)
         if task_in_ctx is None:
             return
 
@@ -123,10 +123,10 @@ class TaskEventHandler(EventHandler["DayService"]):
             updated_task: The updated task to put in the context
         """
         # Remove old version and add updated one
-        self.ctx.tasks = [t for t in self.ctx.tasks if t.id != updated_task.id]
-        self.ctx.tasks.append(updated_task)
+        self.day_ctx.tasks = [t for t in self.day_ctx.tasks if t.id != updated_task.id]
+        self.day_ctx.tasks.append(updated_task)
         # Re-sort by start time
-        self.ctx.tasks.sort(
+        self.day_ctx.tasks.sort(
             key=lambda x: x.schedule.start_time
             if x.schedule and x.schedule.start_time
             else DEFAULT_END_OF_DAY_TIME,
@@ -138,4 +138,4 @@ class TaskEventHandler(EventHandler["DayService"]):
         Args:
             task_id: The ID of the task to remove
         """
-        self.ctx.tasks = [t for t in self.ctx.tasks if t.id != task_id]
+        self.day_ctx.tasks = [t for t in self.day_ctx.tasks if t.id != task_id]

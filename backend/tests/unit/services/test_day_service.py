@@ -6,7 +6,6 @@ from uuid import NAMESPACE_DNS, uuid4, uuid5
 
 import pytest
 from dobles import allow
-
 from planned.application.services import DayService
 from planned.application.services.factories import DayServiceFactory
 from planned.core.exceptions import NotFoundError
@@ -64,7 +63,7 @@ async def test_set_date_changes_date_and_reloads_context(
     )
 
     # Mock old context
-    old_ctx = DayContext(day=old_day, tasks=[], calendar_entries=[], messages=[])
+    old_day_ctx = DayContext(day=old_day, tasks=[], calendar_entries=[], messages=[])
 
     # Mock new context loading
     allow(mock_day_repo).get(new_day.id).and_return(new_day)
@@ -76,14 +75,14 @@ async def test_set_date_changes_date_and_reloads_context(
     # Create service with old date
     service = DayService(
         user=test_user,
-        ctx=old_ctx,
+        day_ctx=old_day_ctx,
         uow_factory=mock_uow_factory,
     )
 
     await service.set_date(new_date)
 
     assert service.date == new_date
-    assert service.ctx.day.date == new_date
+    assert service.day_ctx.day.date == new_date
 
 
 @pytest.mark.asyncio
@@ -118,7 +117,7 @@ async def test_set_date_with_user_id(
         template=template,
     )
 
-    old_ctx = DayContext(day=old_day, tasks=[], calendar_entries=[], messages=[])
+    old_day_ctx = DayContext(day=old_day, tasks=[], calendar_entries=[], messages=[])
 
     allow(mock_day_repo).get(new_day.id).and_return(new_day)
     allow(mock_task_repo).search_query.and_return([])
@@ -128,7 +127,7 @@ async def test_set_date_with_user_id(
 
     service = DayService(
         user=test_user,
-        ctx=old_ctx,
+        day_ctx=old_day_ctx,
         uow_factory=mock_uow_factory,
     )
 
@@ -168,10 +167,10 @@ async def test_get_or_preview_returns_existing_day(
     allow(mock_message_repo).search_query.and_return([])
 
     # Create a DayService instance
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
     day_svc = DayService(
         user=test_user,
-        ctx=ctx,
+        day_ctx=day_ctx,
         uow_factory=mock_uow_factory,
     )
 
@@ -216,7 +215,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     allow(mock_message_repo).search_query.and_return([])
 
     # Create a DayService instance
-    ctx = DayContext(
+    day_ctx = DayContext(
         day=Day(
             user_id=test_user_id,
             date=date,
@@ -229,7 +228,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     )
     day_svc = DayService(
         user=test_user,
-        ctx=ctx,
+        day_ctx=day_ctx,
         uow_factory=mock_uow_factory,
     )
 
@@ -283,7 +282,7 @@ async def test_get_or_create_creates_and_saves_day(
     allow(mock_message_repo).search_query.and_return([])
 
     # Create a DayService instance
-    ctx = DayContext(
+    day_ctx = DayContext(
         day=Day(
             user_id=test_user_id,
             date=date,
@@ -296,7 +295,7 @@ async def test_get_or_create_creates_and_saves_day(
     )
     day_svc = DayService(
         user=test_user,
-        ctx=ctx,
+        day_ctx=day_ctx,
         uow_factory=mock_uow_factory,
     )
 
@@ -329,13 +328,13 @@ async def test_save(
         status=DayStatus.UNSCHEDULED,
         template=template,
     )
-    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     allow(mock_day_repo).put.and_return(day)
 
     service = DayService(
         user=test_user,
-        ctx=ctx,
+        day_ctx=day_ctx,
         uow_factory=mock_uow_factory,
     )
 
@@ -438,7 +437,7 @@ async def test_get_upcoming_tasks_123(
         ),
     )
 
-    ctx = DayContext(
+    day_ctx = DayContext(
         day=day,
         tasks=[task1, task2, task3],
         calendar_entries=[],
@@ -447,7 +446,7 @@ async def test_get_upcoming_tasks_123(
 
     service = DayService(
         user=test_user,
-        ctx=ctx,
+        day_ctx=day_ctx,
         uow_factory=mock_uow_factory,
     )
 
@@ -546,7 +545,7 @@ async def test_get_upcoming_calendar_entries(
         ends_at=future_time,
     )
 
-    ctx = DayContext(
+    day_ctx = DayContext(
         day=day,
         tasks=[],
         calendar_entries=[
@@ -560,7 +559,7 @@ async def test_get_upcoming_calendar_entries(
 
     service = DayService(
         user=test_user,
-        ctx=ctx,
+        day_ctx=day_ctx,
         uow_factory=mock_uow_factory,
     )
 
@@ -615,7 +614,7 @@ async def test_for_date_creates_service(
     service = await factory.create(date, user_id=test_user_id)
 
     assert service.date == date
-    assert service.ctx.day.id == day.id
+    assert service.day_ctx.day.id == day.id
 
 
 @pytest.mark.asyncio
@@ -675,7 +674,7 @@ async def test_load_context_instance_method(
         template=template,
     )
 
-    old_ctx = DayContext(day=old_day, tasks=[], calendar_entries=[], messages=[])
+    old_day_ctx = DayContext(day=old_day, tasks=[], calendar_entries=[], messages=[])
 
     allow(mock_day_repo).get(new_day.id).and_return(new_day)
     allow(mock_task_repo).search_query.and_return([])
@@ -685,14 +684,14 @@ async def test_load_context_instance_method(
 
     service = DayService(
         user=test_user,
-        ctx=old_ctx,
+        day_ctx=old_day_ctx,
         uow_factory=mock_uow_factory,
     )
 
-    ctx = await service.load_context()
+    day_ctx = await service.load_context()
 
-    assert ctx.day.status == DayStatus.SCHEDULED
-    assert service.ctx.day.status == DayStatus.SCHEDULED
+    assert day_ctx.day.status == DayStatus.SCHEDULED
+    assert service.day_ctx.day.status == DayStatus.SCHEDULED
 
 
 @pytest.mark.asyncio
@@ -767,11 +766,13 @@ async def test_get_upcoming_tasks_with_available_time(
         ),
     )
 
-    ctx = DayContext(day=day, tasks=[task1, task2], calendar_entries=[], messages=[])
+    day_ctx = DayContext(
+        day=day, tasks=[task1, task2], calendar_entries=[], messages=[]
+    )
 
     service = DayService(
         user=test_user,
-        ctx=ctx,
+        day_ctx=day_ctx,
         uow_factory=mock_uow_factory,
     )
 
@@ -856,11 +857,13 @@ async def test_get_upcoming_tasks_with_end_time(
         ),
     )
 
-    ctx = DayContext(day=day, tasks=[task1, task2], calendar_entries=[], messages=[])
+    day_ctx = DayContext(
+        day=day, tasks=[task1, task2], calendar_entries=[], messages=[]
+    )
 
     service = DayService(
         user=test_user,
-        ctx=ctx,
+        day_ctx=day_ctx,
         uow_factory=mock_uow_factory,
     )
 
@@ -943,11 +946,13 @@ async def test_get_upcoming_tasks_excludes_completed_at(
         ),
     )
 
-    ctx = DayContext(day=day, tasks=[task1, task2], calendar_entries=[], messages=[])
+    day_ctx = DayContext(
+        day=day, tasks=[task1, task2], calendar_entries=[], messages=[]
+    )
 
     service = DayService(
         user=test_user,
-        ctx=ctx,
+        day_ctx=day_ctx,
         uow_factory=mock_uow_factory,
     )
 

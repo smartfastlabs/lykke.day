@@ -46,9 +46,9 @@ class DayEventHandler(EventHandler["DayService"]):
         self._date = date
 
     @property
-    def ctx(self) -> objects.DayContext:
+    def day_ctx(self) -> objects.DayContext:
         """Get the DayContext from the parent service."""
-        return self.service.ctx
+        return self.service.day_ctx
 
     @property
     def date(self) -> datetime.date:
@@ -91,7 +91,7 @@ class DayEventHandler(EventHandler["DayService"]):
         async with uow:
             try:
                 updated_day = await uow.days.get(event.day_id)
-                self.ctx.day = updated_day
+                self.day_ctx.day = updated_day
                 logger.debug(f"Updated day {event.day_id} in DayService cache")
             except NotFoundError:
                 logger.warning(f"Day {event.day_id} not found after status change")
@@ -107,7 +107,7 @@ class DayEventHandler(EventHandler["DayService"]):
         async with uow:
             try:
                 updated_day = await uow.days.get(event.day_id)
-                self.ctx.day = updated_day
+                self.day_ctx.day = updated_day
                 logger.debug(f"Updated unscheduled day {event.day_id} in cache")
             except NotFoundError:
                 logger.warning(f"Day {event.day_id} not found after unschedule")
