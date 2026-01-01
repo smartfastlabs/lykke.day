@@ -7,7 +7,6 @@ from planned.domain.entities import AuthToken
 from planned.infrastructure.database.tables import auth_tokens_tbl
 
 from .base import AuthTokenQuery, BaseRepository
-from .base.utils import normalize_list_fields
 
 
 class AuthTokenRepository(BaseRepository[AuthToken, AuthTokenQuery]):
@@ -58,10 +57,3 @@ class AuthTokenRepository(BaseRepository[AuthToken, AuthTokenQuery]):
             row["scopes"] = auth_token.scopes
 
         return row
-
-    @staticmethod
-    def row_to_entity(row: dict[str, Any]) -> AuthToken:
-        """Convert a database row dict to an AuthToken entity."""
-        # Normalize None values to [] for list-typed fields
-        data = normalize_list_fields(row, AuthToken)
-        return AuthToken.model_validate(data, from_attributes=True)

@@ -7,13 +7,14 @@ from planned.domain.entities import Task
 
 from .base import DateQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import tasks_tbl
-from .base.utils import normalize_list_fields
 
 
 class TaskRepository(UserScopedBaseRepository[Task, DateQuery]):
     Object = Task
     table = tasks_tbl
     QueryClass = DateQuery
+    # Exclude 'date' - it's a database-only field for querying (computed from scheduled_date)
+    excluded_row_fields = {"date"}
 
     def __init__(self, user_id: UUID) -> None:
         """Initialize TaskRepository with user scoping."""
@@ -58,15 +59,3 @@ class TaskRepository(UserScopedBaseRepository[Task, DateQuery]):
             row["actions"] = [action.model_dump(mode="json") for action in task.actions]
 
         return row
-
-    @staticmethod
-    def row_to_entity(row: dict[str, Any]) -> Task:
-        """Convert a database row dict to a Task entity."""
-        # Remove 'date' field - it's database-only for querying
-        # The entity computes date from scheduled_date
-        data = {k: v for k, v in row.items() if k != "date"}
-
-        # Normalize None values to [] for list-typed fields
-        data = normalize_list_fields(data, Task)
-
-        return Task.model_validate(data, from_attributes=True)

@@ -5,7 +5,6 @@ from planned.domain.entities import PushSubscription
 
 from .base import BaseQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import push_subscriptions_tbl
-from .base.utils import normalize_list_fields
 
 
 class PushSubscriptionRepository(UserScopedBaseRepository[PushSubscription, BaseQuery]):
@@ -31,10 +30,3 @@ class PushSubscriptionRepository(UserScopedBaseRepository[PushSubscription, Base
         }
 
         return row
-
-    @staticmethod
-    def row_to_entity(row: dict[str, Any]) -> PushSubscription:
-        """Convert a database row dict to a PushSubscription entity."""
-        # Normalize None values to [] for list-typed fields
-        data = normalize_list_fields(row, PushSubscription)
-        return PushSubscription.model_validate(data, from_attributes=True)

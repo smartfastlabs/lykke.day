@@ -7,13 +7,14 @@ from planned.domain.entities import Event
 
 from .base import DateQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import events_tbl
-from .base.utils import normalize_list_fields
 
 
 class EventRepository(UserScopedBaseRepository[Event, DateQuery]):
     Object = Event
     table = events_tbl
     QueryClass = DateQuery
+    # Exclude 'date' - it's a database-only field for querying (computed from starts_at)
+    excluded_row_fields = {"date"}
 
     def __init__(self, user_id: UUID) -> None:
         """Initialize EventRepository with user scoping."""
@@ -58,15 +59,3 @@ class EventRepository(UserScopedBaseRepository[Event, DateQuery]):
             ]
 
         return row
-
-    @staticmethod
-    def row_to_entity(row: dict[str, Any]) -> Event:
-        """Convert a database row dict to an Event entity."""
-        # Remove 'date' field - it's database-only for querying
-        # The entity computes date from starts_at
-        data = {k: v for k, v in row.items() if k != "date"}
-
-        # Normalize None values to [] for list-typed fields
-        data = normalize_list_fields(data, Event)
-
-        return Event.model_validate(data, from_attributes=True)

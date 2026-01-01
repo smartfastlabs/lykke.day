@@ -5,7 +5,6 @@ from planned.domain.entities.routine import Routine
 
 from .base import BaseQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import routines_tbl
-from .base.utils import normalize_list_fields
 
 
 class RoutineRepository(UserScopedBaseRepository[Routine, BaseQuery]):
@@ -36,10 +35,3 @@ class RoutineRepository(UserScopedBaseRepository[Routine, BaseQuery]):
             row["tasks"] = [task.model_dump(mode="json") for task in routine.tasks]
 
         return row
-
-    @staticmethod
-    def row_to_entity(row: dict[str, Any]) -> Routine:
-        """Convert a database row dict to a Routine entity."""
-        # Normalize None values to [] for list-typed fields
-        data = normalize_list_fields(row, Routine)
-        return Routine.model_validate(data, from_attributes=True)

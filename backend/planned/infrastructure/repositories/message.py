@@ -7,13 +7,14 @@ from planned.domain.entities import Message
 
 from .base import DateQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import messages_tbl
-from .base.utils import normalize_list_fields
 
 
 class MessageRepository(UserScopedBaseRepository[Message, DateQuery]):
     Object = Message
     table = messages_tbl
     QueryClass = DateQuery
+    # Exclude 'date' - it's a database-only field for querying (computed from sent_at)
+    excluded_row_fields = {"date"}
 
     def __init__(self, user_id: UUID) -> None:
         """Initialize MessageRepository with user scoping."""
@@ -43,15 +44,3 @@ class MessageRepository(UserScopedBaseRepository[Message, DateQuery]):
         }
 
         return row
-
-    @staticmethod
-    def row_to_entity(row: dict[str, Any]) -> Message:
-        """Convert a database row dict to a Message entity."""
-        # Remove 'date' field - it's database-only for querying
-        # The entity computes date from sent_at
-        data = {k: v for k, v in row.items() if k != "date"}
-
-        # Normalize None values to [] for list-typed fields
-        data = normalize_list_fields(data, Message)
-
-        return Message.model_validate(data, from_attributes=True)

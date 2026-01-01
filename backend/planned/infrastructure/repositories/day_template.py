@@ -7,7 +7,6 @@ from planned.domain.entities import DayTemplate
 from planned.infrastructure.database.tables import day_templates_tbl
 
 from .base import DayTemplateQuery, UserScopedBaseRepository
-from .base.utils import normalize_list_fields
 
 
 class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, DayTemplateQuery]):
@@ -50,16 +49,23 @@ class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, DayTemplateQue
 
         return row
 
-    @staticmethod
-    def row_to_entity(row: dict[str, Any]) -> DayTemplate:
-        """Convert a database row dict to a DayTemplate entity."""
-        # Normalize None values to [] for list-typed fields
-        data = normalize_list_fields(row, DayTemplate)
-        
+    @classmethod
+    def row_to_entity(cls, row: dict[str, Any]) -> DayTemplate:
+        """Convert a database row dict to a DayTemplate entity.
+
+        Overrides base to handle UUID conversion for routine_ids stored as JSON strings.
+        """
+        from planned.infrastructure.repositories.base.utils import normalize_list_fields
+
+        data = normalize_list_fields(dict(row), DayTemplate)
+
         # Convert string UUIDs back to UUID objects for routine_ids
         if "routine_ids" in data and data["routine_ids"]:
-            data["routine_ids"] = [UUID(routine_id) if isinstance(routine_id, str) else routine_id for routine_id in data["routine_ids"]]
-        
+            data["routine_ids"] = [
+                UUID(routine_id) if isinstance(routine_id, str) else routine_id
+                for routine_id in data["routine_ids"]
+            ]
+
         return DayTemplate.model_validate(data, from_attributes=True)
 
     async def get_by_slug(self, slug: str) -> DayTemplate:

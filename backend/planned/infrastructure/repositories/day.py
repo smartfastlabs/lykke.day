@@ -5,7 +5,6 @@ from planned.domain.entities import Day
 
 from .base import BaseQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import days_tbl
-from .base.utils import normalize_list_fields
 
 
 class DayRepository(UserScopedBaseRepository[Day, BaseQuery]):
@@ -39,13 +38,3 @@ class DayRepository(UserScopedBaseRepository[Day, BaseQuery]):
             row["template"] = day.template.model_dump(mode="json")
 
         return row
-
-    @staticmethod
-    def row_to_entity(row: dict[str, Any]) -> Day:
-        """Convert a database row dict to a Day entity."""
-        data = dict(row)
-
-        # Normalize None values to [] for list-typed fields
-        data = normalize_list_fields(data, Day)
-
-        return Day.model_validate(data, from_attributes=True)

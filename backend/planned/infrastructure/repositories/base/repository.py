@@ -5,7 +5,7 @@ and non-user-scoped operations through composition rather than inheritance dupli
 """
 
 from contextlib import asynccontextmanager
-from typing import Any, Generic, Literal, TypeVar
+from typing import Any, ClassVar, Generic, Literal, TypeVar
 from uuid import UUID
 
 from blinker import Signal
@@ -23,6 +23,7 @@ from planned.domain.value_objects.query import BaseQuery
 from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.database.transaction import get_transaction_connection
+from planned.infrastructure.repositories.base.utils import normalize_list_fields
 
 ObjectType = TypeVar("ObjectType", bound=BaseEntityObject)
 QueryType = TypeVar("QueryType", bound=BaseQuery)
@@ -38,7 +39,14 @@ class BaseRepository(Generic[ObjectType, QueryType]):
     This repository supports optional user scoping. When user_id is provided,
     all operations are automatically filtered by user_id.
 
-    Attributes:
+    Class Attributes:
+        Object: The entity class this repository manages.
+        table: The SQLAlchemy table for this entity.
+        QueryClass: The query class for filtering.
+        excluded_row_fields: Set of field names to exclude when converting row to entity.
+            Useful for database-only fields like computed date columns.
+
+    Instance Attributes:
         user_id: Optional user ID for scoping. When set, all queries filter by this user.
     """
 
@@ -47,6 +55,10 @@ class BaseRepository(Generic[ObjectType, QueryType]):
     table: "Table"  # type: ignore[name-defined]  # noqa: F821
     QueryClass: type[QueryType]
     user_id: UUID | None
+
+    # Fields to exclude when converting database row to entity
+    # Override in subclasses for entity-specific exclusions (e.g., {"date"} for computed fields)
+    excluded_row_fields: ClassVar[set[str]] = set()
 
     def __init__(self, user_id: UUID | None = None) -> None:
         """Initialize repository with optional user scoping.
@@ -73,6 +85,35 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         # Use the Object class name as the entity name (e.g., "User", "Event", "Task")
         if hasattr(cls, "Object") and cls.Object is not None:
             entity_signals.register(cls.Object.__name__, cls.signal_source)
+
+    @classmethod
+    def row_to_entity(cls, row: dict[str, Any]) -> ObjectType:
+        """Convert a database row dict to an entity.
+
+        Default implementation that:
+        1. Filters out fields listed in `excluded_row_fields`
+        2. Normalizes None values to [] for list-typed fields
+        3. Validates via Pydantic's model_validate
+
+        Override this method in subclasses that need custom deserialization
+        logic (e.g., handling JSONB fields that need special parsing).
+
+        Args:
+            row: Dictionary containing database row data.
+
+        Returns:
+            An instance of the entity class.
+        """
+        # Filter out excluded fields (e.g., database-only computed columns)
+        if cls.excluded_row_fields:
+            data = {k: v for k, v in row.items() if k not in cls.excluded_row_fields}
+        else:
+            data = dict(row)
+
+        # Normalize None values to [] for list-typed fields
+        data = normalize_list_fields(data, cls.Object)
+
+        return cls.Object.model_validate(data, from_attributes=True)
 
     @property
     def _is_user_scoped(self) -> bool:
@@ -132,9 +173,8 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         Returns:
             The row with user_id set (if applicable).
         """
-        if self._is_user_scoped and self._table_has_user_id:
-            if "user_id" not in row:
-                row["user_id"] = self.user_id
+        if self._is_user_scoped and self._table_has_user_id and "user_id" not in row:
+            row["user_id"] = self.user_id
         return row
 
     def listen(self, handler: ChangeHandler[ObjectType]) -> None:
@@ -208,7 +248,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             if row is None:
                 raise NotFoundError(f"{self.Object.__name__} with id {key} not found")
 
-            return type(self).row_to_entity(dict(row))  # type: ignore[attr-defined,no-any-return]
+            return type(self).row_to_entity(dict(row))
 
     def build_query(self, query: QueryType) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object.
@@ -263,7 +303,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                     f"No results found for the given query in `{self.Object.__name__}`."
                 )
 
-            return type(self).row_to_entity(dict(row))  # type: ignore[attr-defined,no-any-return]
+            return type(self).row_to_entity(dict(row))
 
     async def get_one_or_none(self, query: QueryType) -> ObjectType | None:
         """Get a single object matching the query, or None if not found."""
@@ -277,7 +317,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             if row is None:
                 return None
 
-            return type(self).row_to_entity(dict(row))  # type: ignore[attr-defined,no-any-return]
+            return type(self).row_to_entity(dict(row))
 
     async def search_query(self, query: QueryType) -> list[ObjectType]:
         """Search for objects based on the provided query object."""
@@ -286,7 +326,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             result = await conn.execute(stmt)
             rows = result.mappings().all()
 
-            return [type(self).row_to_entity(dict(row)) for row in rows]  # type: ignore[attr-defined]
+            return [type(self).row_to_entity(dict(row)) for row in rows]
 
     async def all(self) -> list[ObjectType]:
         """Get all objects.
@@ -300,7 +340,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             result = await conn.execute(stmt)
             rows = result.mappings().all()
 
-            return [type(self).row_to_entity(dict(row)) for row in rows]  # type: ignore[attr-defined]
+            return [type(self).row_to_entity(dict(row)) for row in rows]
 
     async def put(self, obj: ObjectType) -> ObjectType:
         """Save or update an object.
