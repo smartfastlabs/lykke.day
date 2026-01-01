@@ -1,8 +1,8 @@
 from .auth_token import AuthTokenRepository
 from .calendar import CalendarRepository
+from .calendar_entry import CalendarEntryRepository
 from .day import DayRepository
 from .day_template import DayTemplateRepository
-from .event import EventRepository
 from .message import MessageRepository
 from .push_subscription import PushSubscriptionRepository
 from .routine import RoutineRepository
@@ -12,10 +12,10 @@ from .user import UserRepository
 
 __all__ = [
     "AuthTokenRepository",
+    "CalendarEntryRepository",
     "CalendarRepository",
     "DayRepository",
     "DayTemplateRepository",
-    "EventRepository",
     "MessageRepository",
     "PushSubscriptionRepository",
     "RoutineRepository",

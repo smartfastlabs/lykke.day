@@ -3,9 +3,9 @@ from .alarm import Alarm
 from .auth_token import AuthToken
 from .base import BaseConfigObject, BaseDateObject, BaseEntityObject, BaseObject
 from .calendar import Calendar
+from .calendar_entry import CalendarEntry
 from .day import Day
 from .day_template import DayTemplate
-from .event import Event
 from .message import Message
 from .person import Person
 from .push_subscription import PushSubscription
@@ -23,9 +23,9 @@ __all__ = [
     "BaseEntityObject",
     "BaseObject",
     "Calendar",
+    "CalendarEntry",
     "Day",
     "DayTemplate",
-    "Event",
     "Message",
     "Person",
     "PushSubscription",

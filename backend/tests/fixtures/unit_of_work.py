@@ -5,10 +5,10 @@ from uuid import UUID
 from planned.application.unit_of_work import UnitOfWorkProtocol
 from tests.fixtures.repositories import (
     InMemoryAuthTokenRepository,
+    InMemoryCalendarEntryRepository,
     InMemoryCalendarRepository,
     InMemoryDayRepository,
     InMemoryDayTemplateRepository,
-    InMemoryEventRepository,
     InMemoryMessageRepository,
     InMemoryPushSubscriptionRepository,
     InMemoryRoutineRepository,
@@ -37,10 +37,10 @@ class InMemoryUnitOfWork:
 
         # Initialize all repositories
         self.auth_tokens = InMemoryAuthTokenRepository()
+        self.calendar_entries = InMemoryCalendarEntryRepository()
         self.calendars = InMemoryCalendarRepository()
         self.days = InMemoryDayRepository()
         self.day_templates = InMemoryDayTemplateRepository()
-        self.events = InMemoryEventRepository()
         self.messages = InMemoryMessageRepository()
         self.push_subscriptions = InMemoryPushSubscriptionRepository()
         self.routines = InMemoryRoutineRepository()

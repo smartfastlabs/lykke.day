@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
+    from ..entities.calendar_entry import CalendarEntry
     from ..entities.day import Day
-    from ..entities.event import Event
     from ..entities.message import Message
     from ..entities.task import Task
 
@@ -32,7 +32,7 @@ class DayMode(str, Enum):
 
 class DayContext(BaseModel):
     day: "Day"
-    events: list["Event"] = Field(default_factory=list)
+    calendar_entries: list["CalendarEntry"] = Field(default_factory=list)
     tasks: list["Task"] = Field(default_factory=list)
     messages: list["Message"] = Field(default_factory=list)
 

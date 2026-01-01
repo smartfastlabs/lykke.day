@@ -11,10 +11,10 @@ from fastapi import Depends
 
 from planned.application.repositories import (
     AuthTokenRepositoryProtocol,
+    CalendarEntryRepositoryProtocol,
     CalendarRepositoryProtocol,
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
-    EventRepositoryProtocol,
     MessageRepositoryProtocol,
     PushSubscriptionRepositoryProtocol,
     RoutineRepositoryProtocol,
@@ -25,10 +25,10 @@ from planned.application.repositories import (
 from planned.domain.entities import User
 from planned.infrastructure.repositories import (
     AuthTokenRepository,
+    CalendarEntryRepository,
     CalendarRepository,
     DayRepository,
     DayTemplateRepository,
-    EventRepository,
     MessageRepository,
     PushSubscriptionRepository,
     RoutineRepository,
@@ -47,6 +47,13 @@ def get_auth_token_repo(
     return cast(
         "AuthTokenRepositoryProtocol", AuthTokenRepository()
     )
+
+
+def get_calendar_entry_repo(
+    user: Annotated[User, Depends(get_current_user)],
+) -> CalendarEntryRepositoryProtocol:
+    """Get a user-scoped instance of CalendarEntryRepository."""
+    return cast("CalendarEntryRepositoryProtocol", CalendarEntryRepository(user_id=user.id))
 
 
 def get_calendar_repo(
@@ -72,13 +79,6 @@ def get_day_template_repo(
     return cast(
         "DayTemplateRepositoryProtocol", DayTemplateRepository(user_id=user.id)
     )
-
-
-def get_event_repo(
-    user: Annotated[User, Depends(get_current_user)],
-) -> EventRepositoryProtocol:
-    """Get a user-scoped instance of EventRepository."""
-    return cast("EventRepositoryProtocol", EventRepository(user_id=user.id))
 
 
 def get_message_repo(

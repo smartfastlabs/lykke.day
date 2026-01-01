@@ -50,9 +50,9 @@ def mock_day_template_repo():
 
 
 @pytest.fixture
-def mock_event_repo():
-    """Mocked EventRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.EventRepositoryProtocol")
+def mock_calendar_entry_repo():
+    """Mocked CalendarEntryRepositoryProtocol for unit tests."""
+    return InstanceDouble("planned.application.repositories.CalendarEntryRepositoryProtocol")
 
 
 @pytest.fixture
@@ -173,10 +173,10 @@ async def in_memory_uow(test_user):
 @pytest.fixture
 def mock_uow_factory(
     mock_auth_token_repo,
+    mock_calendar_entry_repo,
     mock_calendar_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
     mock_message_repo,
     mock_push_subscription_repo,
     mock_routine_repo,
@@ -190,10 +190,10 @@ def mock_uow_factory(
     class MockUnitOfWork:
         def __init__(self):
             self.auth_tokens = mock_auth_token_repo
+            self.calendar_entries = mock_calendar_entry_repo
             self.calendars = mock_calendar_repo
             self.days = mock_day_repo
             self.day_templates = mock_day_template_repo
-            self.events = mock_event_repo
             self.messages = mock_message_repo
             self.push_subscriptions = mock_push_subscription_repo
             self.routines = mock_routine_repo

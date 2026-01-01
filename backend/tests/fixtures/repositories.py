@@ -9,10 +9,10 @@ from uuid import UUID
 
 from planned.application.repositories import (
     AuthTokenRepositoryProtocol,
+    CalendarEntryRepositoryProtocol,
     CalendarRepositoryProtocol,
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
-    EventRepositoryProtocol,
     MessageRepositoryProtocol,
     PushSubscriptionRepositoryProtocol,
     RoutineRepositoryProtocol,
@@ -65,7 +65,11 @@ class InMemoryDayRepository(InMemoryBaseRepository):
         """Search for days matching the query."""
         all_days = await self.all()
         if query.date:
-            return [day for day in all_days if hasattr(day, "date") and day.date == query.date]
+            return [
+                day
+                for day in all_days
+                if hasattr(day, "date") and day.date == query.date
+            ]
         return all_days
 
 
@@ -90,19 +94,19 @@ class InMemoryTaskRepository(InMemoryBaseRepository):
             await self.delete(task)
 
 
-class InMemoryEventRepository(InMemoryBaseRepository):
-    """In-memory implementation of EventRepositoryProtocol."""
+class InMemoryCalendarEntryRepository(InMemoryBaseRepository):
+    """In-memory implementation of CalendarEntryRepositoryProtocol."""
 
     async def search_query(self, query: DateQuery) -> list:
-        """Search for events matching the query."""
-        all_events = await self.all()
+        """Search for calendar entries matching the query."""
+        all_calendar_entries = await self.all()
         if query.date:
             return [
-                event
-                for event in all_events
-                if hasattr(event, "date") and event.date == query.date
+                calendar_entry
+                for calendar_entry in all_calendar_entries
+                if hasattr(calendar_entry, "date") and calendar_entry.date == query.date
             ]
-        return all_events
+        return all_calendar_entries
 
 
 class InMemoryMessageRepository(InMemoryBaseRepository):
@@ -150,4 +154,3 @@ InMemoryCalendarRepository = InMemoryBaseRepository
 InMemoryPushSubscriptionRepository = InMemoryBaseRepository
 InMemoryRoutineRepository = InMemoryBaseRepository
 InMemoryTaskDefinitionRepository = InMemoryBaseRepository
-

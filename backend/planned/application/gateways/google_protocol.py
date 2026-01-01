@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
 
-from planned.domain.entities import AuthToken, Calendar, Event
+from planned.domain.entities import AuthToken, Calendar, CalendarEntry
 
 if TYPE_CHECKING:
     from google_auth_oauthlib.flow import Flow
@@ -17,16 +17,16 @@ class GoogleCalendarGatewayProtocol(Protocol):
         calendar: Calendar,
         lookback: datetime,
         token: AuthToken,
-    ) -> list[Event]:
-        """Load calendar events from Google Calendar.
+    ) -> list[CalendarEntry]:
+        """Load calendar entries from Google Calendar.
 
         Args:
-            calendar: The calendar to load events from.
+            calendar: The calendar to load entries from.
             lookback: The datetime to look back from.
             token: The authentication token.
 
         Returns:
-            List of events from the calendar.
+            List of calendar entries from the calendar.
         """
         ...
 

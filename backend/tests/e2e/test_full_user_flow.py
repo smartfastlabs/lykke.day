@@ -12,7 +12,6 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-
 from planned.domain.entities import Alarm, DayTemplate
 from planned.domain.value_objects.alarm import AlarmType
 from planned.domain.value_objects.day import DayStatus
@@ -96,7 +95,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     assert "day" in schedule_data
     assert schedule_data["day"]["user_id"] == user_id_str
 
-    # Get context for today (loads day, tasks, events, messages)
+    # Get context for today (loads day, tasks, calendar_entries, messages)
     context_response = test_client.get("/days/today/context")
     assert context_response.status_code == 200, (
         f"Get context failed: {context_response.text}"
@@ -104,7 +103,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     context_data = context_response.json()
     assert "day" in context_data
     assert "tasks" in context_data
-    assert "events" in context_data
+    assert "calendar_entries" in context_data
     assert "messages" in context_data
     assert context_data["day"]["user_id"] == user_id_str
 

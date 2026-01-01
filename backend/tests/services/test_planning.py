@@ -3,9 +3,9 @@ import pytest
 from planned.application.services import PlanningService
 from planned.application.services.factories import DayServiceFactory
 from planned.infrastructure.repositories import (
+    CalendarEntryRepository,
     DayRepository,
     DayTemplateRepository,
-    EventRepository,
     MessageRepository,
     RoutineRepository,
     TaskDefinitionRepository,
@@ -21,7 +21,7 @@ async def test_schedule_today(test_date, test_user):
     # Create repository instances
     day_repo = DayRepository(user_id=user_id)
     day_template_repo = DayTemplateRepository(user_id=user_id)
-    event_repo = EventRepository(user_id=user_id)
+    calendar_entry_repo = CalendarEntryRepository(user_id=user_id)
     message_repo = MessageRepository(user_id=user_id)
     routine_repo = RoutineRepository(user_id=user_id)
     task_definition_repo = TaskDefinitionRepository(user_id=user_id)
@@ -34,7 +34,7 @@ async def test_schedule_today(test_date, test_user):
         user_repo=user_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        event_repo=event_repo,
+        calendar_entry_repo=calendar_entry_repo,
         message_repo=message_repo,
         routine_repo=routine_repo,
         task_definition_repo=task_definition_repo,
@@ -42,9 +42,9 @@ async def test_schedule_today(test_date, test_user):
     )
 
     result = await planning_svc.schedule(test_date)
-    assert len(result.events) == 1
+    assert len(result.calendar_entries) == 1
 
-    assert result.events[0].name == "Sifleet Family Thanksgiving"
+    assert result.calendar_entries[0].name == "Sifleet Family Thanksgiving"
 
     assert len(result.tasks) == 2
 
@@ -53,7 +53,7 @@ async def test_schedule_today(test_date, test_user):
         user=test_user,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        event_repo=event_repo,
+        calendar_entry_repo=calendar_entry_repo,
         message_repo=message_repo,
         task_repo=task_repo,
         user_repo=user_repo,
@@ -74,7 +74,7 @@ async def test_schedule_tomorrow(test_date_tomorrow, test_user):
     # Create repository instances
     day_repo = DayRepository(user_id=user_id)
     day_template_repo = DayTemplateRepository(user_id=user_id)
-    event_repo = EventRepository(user_id=user_id)
+    calendar_entry_repo = CalendarEntryRepository(user_id=user_id)
     message_repo = MessageRepository(user_id=user_id)
     routine_repo = RoutineRepository(user_id=user_id)
     task_definition_repo = TaskDefinitionRepository(user_id=user_id)
@@ -87,7 +87,7 @@ async def test_schedule_tomorrow(test_date_tomorrow, test_user):
         user_repo=user_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        event_repo=event_repo,
+        calendar_entry_repo=calendar_entry_repo,
         message_repo=message_repo,
         routine_repo=routine_repo,
         task_definition_repo=task_definition_repo,
@@ -98,5 +98,5 @@ async def test_schedule_tomorrow(test_date_tomorrow, test_user):
 
     # Check that template is set (we can't check the exact value since it's a UUID)
     assert result.day.template is not None
-    assert len(result.events) == 0
+    assert len(result.calendar_entries) == 0
     assert len(result.tasks) == 2

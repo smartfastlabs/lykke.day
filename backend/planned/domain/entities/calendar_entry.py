@@ -43,7 +43,7 @@ def get_datetime(
     )
 
 
-class Event(BaseEntityObject):
+class CalendarEntry(BaseEntityObject):
     id: UUID = Field(default_factory=uuid.uuid4)
     user_id: UUID
     name: str
@@ -63,7 +63,7 @@ class Event(BaseEntityObject):
     @computed_field  # mypy: ignore
     @property
     def date(self) -> dt_date:
-        """Get the date for this event."""
+        """Get the date for this calendar entry."""
         dt = self.starts_at
         tz = self.timezone
         if tz:
@@ -82,14 +82,14 @@ class Event(BaseEntityObject):
         google_event: GoogleEvent,
         frequency: TaskFrequency,
         target_timezone: str,
-    ) -> "Event":
-        """Create an Event from a Google Calendar event.
+    ) -> "CalendarEntry":
+        """Create a CalendarEntry from a Google Calendar event.
 
         Args:
-            user_id: User ID for the event
+            user_id: User ID for the calendar entry
             calendar_id: ID of the calendar
             google_event: Google Calendar event object
-            frequency: Task frequency for the event
+            frequency: Task frequency for the calendar entry
             target_timezone: Target timezone for display purposes (datetimes stored in UTC)
         """
         # Convert datetimes to UTC for storage
@@ -108,7 +108,7 @@ class Event(BaseEntityObject):
             else None
         )
 
-        event = cls(
+        calendar_entry = cls(
             user_id=user_id,
             frequency=frequency,
             calendar_id=calendar_id,
@@ -129,4 +129,5 @@ class Event(BaseEntityObject):
             ],
             timezone=target_timezone,
         )
-        return event
+        return calendar_entry
+

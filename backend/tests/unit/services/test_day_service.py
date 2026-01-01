@@ -11,11 +11,11 @@ from planned.application.services import DayService
 from planned.application.services.factories import DayServiceFactory
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import (
+    CalendarEntry,
     Day,
     DayContext,
     DayStatus,
     DayTemplate,
-    Event,
     Task,
     TaskDefinition,
     User,
@@ -35,7 +35,7 @@ from planned.domain.value_objects.user import UserSetting
 async def test_set_date_changes_date_and_reloads_context(
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     test_user_id,
@@ -64,12 +64,12 @@ async def test_set_date_changes_date_and_reloads_context(
     )
 
     # Mock old context
-    old_ctx = DayContext(day=old_day, tasks=[], events=[], messages=[])
+    old_ctx = DayContext(day=old_day, tasks=[], calendar_entries=[], messages=[])
 
     # Mock new context loading
     allow(mock_day_repo).get(new_day.id).and_return(new_day)
     allow(mock_task_repo).search_query.and_return([])
-    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
     allow(mock_day_template_repo).get_by_slug("default").and_return(template)
 
@@ -90,7 +90,7 @@ async def test_set_date_changes_date_and_reloads_context(
 async def test_set_date_with_user_id(
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     test_user_id,
@@ -118,11 +118,11 @@ async def test_set_date_with_user_id(
         template=template,
     )
 
-    old_ctx = DayContext(day=old_day, tasks=[], events=[], messages=[])
+    old_ctx = DayContext(day=old_day, tasks=[], calendar_entries=[], messages=[])
 
     allow(mock_day_repo).get(new_day.id).and_return(new_day)
     allow(mock_task_repo).search_query.and_return([])
-    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
     allow(mock_day_template_repo).get_by_slug("default").and_return(template)
 
@@ -142,7 +142,7 @@ async def test_get_or_preview_returns_existing_day(
     mock_day_repo,
     mock_day_template_repo,
     mock_user_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     test_user_id,
@@ -164,11 +164,11 @@ async def test_get_or_preview_returns_existing_day(
 
     allow(mock_day_repo).get(day.id).and_return(day)
     allow(mock_task_repo).search_query.and_return([])
-    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
 
     # Create a DayService instance
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
     day_svc = DayService(
         user=test_user,
         ctx=ctx,
@@ -185,7 +185,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     mock_day_repo,
     mock_day_template_repo,
     mock_user_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     test_user_id,
@@ -212,7 +212,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template_slug).and_return(template)
     allow(mock_task_repo).search_query.and_return([])
-    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
 
     # Create a DayService instance
@@ -224,7 +224,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
             template=template,
         ),
         tasks=[],
-        events=[],
+        calendar_entries=[],
         messages=[],
     )
     day_svc = DayService(
@@ -244,7 +244,7 @@ async def test_get_or_create_creates_and_saves_day(
     mock_day_repo,
     mock_day_template_repo,
     mock_user_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     test_user_id,
@@ -279,7 +279,7 @@ async def test_get_or_create_creates_and_saves_day(
     allow(mock_day_template_repo).get_by_slug(template_slug).and_return(template)
     allow(mock_day_repo).put.and_return(created_day)
     allow(mock_task_repo).search_query.and_return([])
-    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
 
     # Create a DayService instance
@@ -291,7 +291,7 @@ async def test_get_or_create_creates_and_saves_day(
             template=template,
         ),
         tasks=[],
-        events=[],
+        calendar_entries=[],
         messages=[],
     )
     day_svc = DayService(
@@ -310,7 +310,7 @@ async def test_get_or_create_creates_and_saves_day(
 async def test_save(
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     test_user_id,
@@ -329,7 +329,7 @@ async def test_save(
         status=DayStatus.UNSCHEDULED,
         template=template,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     allow(mock_day_repo).put.and_return(day)
 
@@ -349,7 +349,7 @@ async def test_save(
 async def test_get_upcoming_tasks_123(
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     test_user_id,
@@ -441,7 +441,7 @@ async def test_get_upcoming_tasks_123(
     ctx = DayContext(
         day=day,
         tasks=[task1, task2, task3],
-        events=[],
+        calendar_entries=[],
         messages=[],
     )
 
@@ -460,10 +460,10 @@ async def test_get_upcoming_tasks_123(
 
 
 @pytest.mark.asyncio
-async def test_get_upcoming_events(
+async def test_get_upcoming_calendar_entries(
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     test_user_id,
@@ -471,7 +471,7 @@ async def test_get_upcoming_events(
     test_datetime_noon,
     mock_uow_factory,
 ):
-    """Test get_upcoming_events returns events within look_ahead window."""
+    """Test get_upcoming_calendar_entries returns calendar entries within look_ahead window."""
     date = datetime.date(2025, 11, 27)
     # Use frozen datetime from fixture - get_current_datetime() will return the frozen time
     # which is 2025-11-27 18:00:00 UTC (12:00:00-6:00)
@@ -493,53 +493,53 @@ async def test_get_upcoming_events(
         template=template,
     )
 
-    # Event that should be included (within window)
-    event1 = Event(
+    # CalendarEntry that should be included (within window)
+    calendar_entry1 = CalendarEntry(
         id=uuid4(),
         user_id=test_user_id,
-        name="Upcoming Event",
+        name="Upcoming Calendar Entry",
         frequency=TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
-        platform_id="event-1",
+        platform_id="entry-1",
         platform="test",
         status="confirmed",
         starts_at=future_time,
     )
 
-    # Event that should be excluded (too far in future)
-    event2 = Event(
+    # CalendarEntry that should be excluded (too far in future)
+    calendar_entry2 = CalendarEntry(
         id=uuid4(),
         user_id=test_user_id,
-        name="Future Event",
+        name="Future Calendar Entry",
         frequency=TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
-        platform_id="event-2",
+        platform_id="entry-2",
         platform="test",
         status="confirmed",
         starts_at=far_future,
     )
 
-    # Event that should be excluded (cancelled)
-    event3 = Event(
+    # CalendarEntry that should be excluded (cancelled)
+    calendar_entry3 = CalendarEntry(
         id=uuid4(),
         user_id=test_user_id,
-        name="Cancelled Event",
+        name="Cancelled Calendar Entry",
         frequency=TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
-        platform_id="event-3",
+        platform_id="entry-3",
         platform="test",
         status="cancelled",
         starts_at=future_time,
     )
 
-    # Event that should be included (ongoing - started in past but not ended)
-    event4 = Event(
+    # CalendarEntry that should be included (ongoing - started in past but not ended)
+    calendar_entry4 = CalendarEntry(
         id=uuid4(),
         user_id=test_user_id,
-        name="Ongoing Event",
+        name="Ongoing Calendar Entry",
         frequency=TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
-        platform_id="event-4",
+        platform_id="entry-4",
         platform="test",
         status="confirmed",
         starts_at=past_time,
@@ -547,7 +547,15 @@ async def test_get_upcoming_events(
     )
 
     ctx = DayContext(
-        day=day, tasks=[], events=[event1, event2, event3, event4], messages=[]
+        day=day,
+        tasks=[],
+        calendar_entries=[
+            calendar_entry1,
+            calendar_entry2,
+            calendar_entry3,
+            calendar_entry4,
+        ],
+        messages=[],
     )
 
     service = DayService(
@@ -557,19 +565,21 @@ async def test_get_upcoming_events(
     )
 
     # Time is frozen by test_datetime_noon fixture
-    result = await service.get_upcoming_events(look_ahead=timedelta(minutes=30))
+    result = await service.get_upcoming_calendar_entries(
+        look_ahead=timedelta(minutes=30)
+    )
 
-    # Should include event1 and event4 (within window and not cancelled)
+    # Should include calendar_entry1 and calendar_entry4 (within window and not cancelled)
     assert len(result) == 2
-    assert any(e.id == event1.id for e in result)
-    assert any(e.id == event4.id for e in result)
+    assert any(e.id == calendar_entry1.id for e in result)
+    assert any(e.id == calendar_entry4.id for e in result)
 
 
 @pytest.mark.asyncio
 async def test_for_date_creates_service(
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     mock_user_repo,
@@ -592,7 +602,7 @@ async def test_for_date_creates_service(
 
     allow(mock_day_repo).get(day.id).and_return(day)
     allow(mock_task_repo).search_query.and_return([])
-    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
 
     # Create a DayService instance using the factory
@@ -639,7 +649,7 @@ async def test_base_day_with_template(
 async def test_load_context_instance_method(
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     test_user_id,
@@ -665,11 +675,11 @@ async def test_load_context_instance_method(
         template=template,
     )
 
-    old_ctx = DayContext(day=old_day, tasks=[], events=[], messages=[])
+    old_ctx = DayContext(day=old_day, tasks=[], calendar_entries=[], messages=[])
 
     allow(mock_day_repo).get(new_day.id).and_return(new_day)
     allow(mock_task_repo).search_query.and_return([])
-    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
     allow(mock_day_template_repo).get_by_slug("default").and_return(template)
 
@@ -689,7 +699,7 @@ async def test_load_context_instance_method(
 async def test_get_upcoming_tasks_with_available_time(
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     test_user_id,
@@ -757,7 +767,7 @@ async def test_get_upcoming_tasks_with_available_time(
         ),
     )
 
-    ctx = DayContext(day=day, tasks=[task1, task2], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[task1, task2], calendar_entries=[], messages=[])
 
     service = DayService(
         user=test_user,
@@ -776,7 +786,7 @@ async def test_get_upcoming_tasks_with_available_time(
 async def test_get_upcoming_tasks_with_end_time(
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     test_user_id,
@@ -846,7 +856,7 @@ async def test_get_upcoming_tasks_with_end_time(
         ),
     )
 
-    ctx = DayContext(day=day, tasks=[task1, task2], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[task1, task2], calendar_entries=[], messages=[])
 
     service = DayService(
         user=test_user,
@@ -865,7 +875,7 @@ async def test_get_upcoming_tasks_with_end_time(
 async def test_get_upcoming_tasks_excludes_completed_at(
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_task_repo,
     test_user_id,
@@ -933,7 +943,7 @@ async def test_get_upcoming_tasks_excludes_completed_at(
         ),
     )
 
-    ctx = DayContext(day=day, tasks=[task1, task2], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[task1, task2], calendar_entries=[], messages=[])
 
     service = DayService(
         user=test_user,

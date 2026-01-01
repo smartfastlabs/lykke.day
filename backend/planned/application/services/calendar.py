@@ -6,7 +6,7 @@ from planned.application.gateways.google_protocol import GoogleCalendarGatewayPr
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from planned.core.exceptions import TokenExpiredError
-from planned.domain.entities import Calendar, Event, User
+from planned.domain.entities import Calendar, CalendarEntry, User
 
 from .base import BaseService
 
@@ -39,34 +39,36 @@ class CalendarService(BaseService):
         self,
         calendar: Calendar,
         lookback: datetime,
-    ) -> tuple[list[Event], list[Event]]:
-        """Sync events from Google Calendar.
+    ) -> tuple[list[CalendarEntry], list[CalendarEntry]]:
+        """Sync calendar entries from Google Calendar.
 
         Args:
             calendar: The calendar to sync
             lookback: The datetime to look back from
 
         Returns:
-            Tuple of (events, deleted_events)
+            Tuple of (calendar_entries, deleted_calendar_entries)
         """
-        events, deleted_events = [], []
+        calendar_entries, deleted_calendar_entries = [], []
 
         uow = self.uow_factory.create(self.user.id)
         async with uow:
             token = await uow.auth_tokens.get(calendar.auth_token_id)
-            for event in await self.google_gateway.load_calendar_events(
+            for calendar_entry in await self.google_gateway.load_calendar_events(
                 calendar,
                 lookback=lookback,
                 token=token,
             ):
-                if event.status == "cancelled":
-                    deleted_events.append(event)
+                if calendar_entry.status == "cancelled":
+                    deleted_calendar_entries.append(calendar_entry)
                 else:
-                    events.append(event)
+                    calendar_entries.append(calendar_entry)
 
-        return events, deleted_events
+        return calendar_entries, deleted_calendar_entries
 
-    async def sync(self, calendar: Calendar) -> tuple[list[Event], list[Event]]:
+    async def sync(
+        self, calendar: Calendar
+    ) -> tuple[list[CalendarEntry], list[CalendarEntry]]:
         lookback: datetime = datetime.now(UTC) - CALENDAR_DEFAULT_LOOKBACK
         if calendar.last_sync_at:
             lookback = calendar.last_sync_at - CALENDAR_SYNC_LOOKBACK
@@ -88,12 +90,14 @@ class CalendarService(BaseService):
         async with uow:
             for calendar in await uow.calendars.all():
                 try:
-                    events, deleted_events = await self.sync(calendar)
-                    for event in events:
-                        await uow.events.put(event)
-                    for event in deleted_events:
-                        logger.info(f"DELETING EVENT: {event.name}")
-                        await uow.events.delete(event)
+                    calendar_entries, deleted_calendar_entries = await self.sync(
+                        calendar
+                    )
+                    for calendar_entry in calendar_entries:
+                        await uow.calendar_entries.put(calendar_entry)
+                    for calendar_entry in deleted_calendar_entries:
+                        logger.info(f"DELETING CALENDAR ENTRY: {calendar_entry.name}")
+                        await uow.calendar_entries.delete(calendar_entry)
                     await uow.commit()
                 except TokenExpiredError:
                     logger.info(f"Token expired for calendar {calendar.name}")

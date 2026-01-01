@@ -1,4 +1,4 @@
-"""Filtering utilities for events."""
+"""Filtering utilities for calendar entries."""
 
 import datetime
 
@@ -6,60 +6,60 @@ from planned.domain import entities as objects
 from planned.infrastructure.utils.dates import get_current_datetime
 
 
-def is_event_eligible_for_upcoming(
-    event: objects.Event,
+def is_calendar_entry_eligible_for_upcoming(
+    calendar_entry: objects.CalendarEntry,
     now: datetime.datetime,
     look_ahead: datetime.timedelta,
 ) -> bool:
-    """Check if an event is eligible to be included in upcoming events.
+    """Check if a calendar entry is eligible to be included in upcoming entries.
 
     Args:
-        event: The event to check
+        calendar_entry: The calendar entry to check
         now: Current datetime
         look_ahead: The time window to look ahead
 
     Returns:
-        True if the event should be included, False otherwise
+        True if the calendar entry should be included, False otherwise
     """
-    # Exclude cancelled events
-    if event.status == "cancelled":
+    # Exclude cancelled calendar entries
+    if calendar_entry.status == "cancelled":
         return False
 
-    # Exclude events that have already ended
-    if event.ends_at and event.ends_at < now:
+    # Exclude calendar entries that have already ended
+    if calendar_entry.ends_at and calendar_entry.ends_at < now:
         return False
 
-    # Include events that are ongoing (started but not ended)
-    if event.starts_at <= now:
+    # Include calendar entries that are ongoing (started but not ended)
+    if calendar_entry.starts_at <= now:
         return True
 
-    # Exclude events that are too far in the future
-    if (event.starts_at - now) > look_ahead:
+    # Exclude calendar entries that are too far in the future
+    if (calendar_entry.starts_at - now) > look_ahead:
         return False
 
-    # Event will start within look_ahead window
+    # Calendar entry will start within look_ahead window
     return True
 
 
-def filter_upcoming_events(
-    events: list[objects.Event],
+def filter_upcoming_calendar_entries(
+    calendar_entries: list[objects.CalendarEntry],
     look_ahead: datetime.timedelta,
-) -> list[objects.Event]:
-    """Filter events to only include those that are upcoming within the look-ahead window.
+) -> list[objects.CalendarEntry]:
+    """Filter calendar entries to only include those that are upcoming within the look-ahead window.
 
     Args:
-        events: List of events to filter
+        calendar_entries: List of calendar entries to filter
         look_ahead: The time window to look ahead
 
     Returns:
-        List of events that are upcoming within the look-ahead window
+        List of calendar entries that are upcoming within the look-ahead window
     """
     now: datetime.datetime = get_current_datetime()
-    result: list[objects.Event] = []
+    result: list[objects.CalendarEntry] = []
 
-    for event in events:
-        if is_event_eligible_for_upcoming(event, now, look_ahead):
-            result.append(event)
+    for calendar_entry in calendar_entries:
+        if is_calendar_entry_eligible_for_upcoming(calendar_entry, now, look_ahead):
+            result.append(calendar_entry)
 
     return result
 

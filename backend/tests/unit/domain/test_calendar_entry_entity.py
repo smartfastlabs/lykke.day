@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 from dateutil.tz import tzoffset
 
-from planned.domain.entities.event import get_datetime
+from planned.domain.entities.calendar_entry import get_datetime
 
 TARGET_TIMEZONE = "America/Chicago"
 
@@ -61,3 +61,4 @@ def test_get_datetime_with_date_end_of_day():
     assert result == datetime(
         2025, 12, 9, 23, 59, 59, tzinfo=ZoneInfo("America/Chicago")
     )
+

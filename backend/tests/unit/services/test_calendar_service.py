@@ -8,7 +8,7 @@ import pytest
 from dobles import allow
 from planned.application.services import CalendarService
 from planned.core.exceptions import NotFoundError, TokenExpiredError
-from planned.domain.entities import AuthToken, Calendar, Event
+from planned.domain.entities import AuthToken, Calendar, CalendarEntry
 
 
 @pytest.mark.asyncio
@@ -16,7 +16,7 @@ async def test_sync_google(
     test_user,
     mock_auth_token_repo,
     mock_calendar_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_google_gateway,
     mock_uow_factory,
     test_datetime_noon,
@@ -39,24 +39,24 @@ async def test_sync_google(
         token="token",
     )
 
-    event1 = Event(
+    calendar_entry1 = CalendarEntry(
         id=str(uuid4()),
         user_id=calendar.user_id,
-        name="Event 1",
+        name="Calendar Entry 1",
         frequency="ONCE",
         calendar_id=calendar.id,
-        platform_id="event-id-1",
+        platform_id="entry-id-1",
         platform="google",
         status="confirmed",
         starts_at=test_datetime_noon,
     )
-    event2 = Event(
+    calendar_entry2 = CalendarEntry(
         id=str(uuid4()),
         user_id=calendar.user_id,
-        name="Event 2",
+        name="Calendar Entry 2",
         frequency="ONCE",
         calendar_id=calendar.id,
-        platform_id="event-id-2",
+        platform_id="entry-id-2",
         platform="google",
         status="cancelled",
         starts_at=test_datetime_noon,
@@ -67,9 +67,9 @@ async def test_sync_google(
         calendar,
         lookback=lookback,
         token=token,
-    ).and_return([event1, event2])
-    allow(mock_event_repo).put.and_return(event1)
-    allow(mock_event_repo).delete.and_return(None)
+    ).and_return([calendar_entry1, calendar_entry2])
+    allow(mock_calendar_entry_repo).put.and_return(calendar_entry1)
+    allow(mock_calendar_entry_repo).delete.and_return(None)
 
     service = CalendarService(
         user=test_user,
@@ -77,12 +77,12 @@ async def test_sync_google(
         google_gateway=mock_google_gateway,
     )
 
-    events, deleted_events = await service.sync_google(calendar, lookback)
+    calendar_entries, deleted_calendar_entries = await service.sync_google(calendar, lookback)
 
-    assert len(events) == 1
-    assert len(deleted_events) == 1
-    assert events[0].name == "Event 1"
-    assert deleted_events[0].name == "Event 2"
+    assert len(calendar_entries) == 1
+    assert len(deleted_calendar_entries) == 1
+    assert calendar_entries[0].name == "Calendar Entry 1"
+    assert deleted_calendar_entries[0].name == "Calendar Entry 2"
 
 
 @pytest.mark.asyncio
@@ -90,7 +90,7 @@ async def test_sync(
     test_user,
     mock_auth_token_repo,
     mock_calendar_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_google_gateway,
     mock_uow_factory,
     test_datetime_noon,
@@ -111,20 +111,20 @@ async def test_sync(
         token="token",
     )
 
-    event = Event(
+    calendar_entry = CalendarEntry(
         user_id=calendar.user_id,
-        name="Event",
+        name="Calendar Entry",
         frequency="ONCE",
         calendar_id=calendar.id,
-        platform_id="event-id",
+        platform_id="entry-id",
         platform="google",
         status="confirmed",
         starts_at=test_datetime_noon,
     )
 
     allow(mock_auth_token_repo).get(token.id).and_return(token)
-    allow(mock_google_gateway).load_calendar_events.and_return([event])
-    allow(mock_event_repo).put.and_return(event)
+    allow(mock_google_gateway).load_calendar_events.and_return([calendar_entry])
+    allow(mock_calendar_entry_repo).put.and_return(calendar_entry)
 
     service = CalendarService(
         user=test_user,
@@ -132,16 +132,16 @@ async def test_sync(
         google_gateway=mock_google_gateway,
     )
 
-    events, deleted_events = await service.sync(calendar)
+    calendar_entries, deleted_calendar_entries = await service.sync(calendar)
 
-    assert len(events) == 1
+    assert len(calendar_entries) == 1
     assert calendar.last_sync_at is not None
 
 
 @pytest.mark.asyncio
 async def test_sync_all(
     test_user,
-    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway, mock_uow_factory
+    mock_auth_token_repo, mock_calendar_repo, mock_calendar_entry_repo, mock_google_gateway, mock_uow_factory
 ):
     """Test syncing all calendars."""
     calendar1 = Calendar(
@@ -163,7 +163,7 @@ async def test_sync_all(
     allow(mock_auth_token_repo).get.and_raise(
         TokenExpiredError("Token expired")
     )
-    allow(mock_event_repo).put.and_return(None)
+    allow(mock_calendar_entry_repo).put.and_return(None)
 
     service = CalendarService(
         user=test_user,
@@ -180,7 +180,7 @@ async def test_sync_with_last_sync_at(
     test_user,
     mock_auth_token_repo,
     mock_calendar_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_google_gateway,
     mock_uow_factory,
     test_datetime_noon,
@@ -202,12 +202,12 @@ async def test_sync_with_last_sync_at(
         token="token",
     )
 
-    event = Event(
+    calendar_entry = CalendarEntry(
         user_id=calendar.user_id,
-        name="Event",
+        name="Calendar Entry",
         frequency="ONCE",
         calendar_id=calendar.id,
-        platform_id="event-id",
+        platform_id="entry-id",
         platform="google",
         status="confirmed",
         starts_at=test_datetime_noon,
@@ -220,8 +220,8 @@ async def test_sync_with_last_sync_at(
         calendar,
         lookback=expected_lookback,
         token=token,
-    ).and_return([event])
-    allow(mock_event_repo).put.and_return(event)
+    ).and_return([calendar_entry])
+    allow(mock_calendar_entry_repo).put.and_return(calendar_entry)
 
     service = CalendarService(
         user=test_user,
@@ -229,9 +229,9 @@ async def test_sync_with_last_sync_at(
         google_gateway=mock_google_gateway,
     )
 
-    events, deleted_events = await service.sync(calendar)
+    calendar_entries, deleted_calendar_entries = await service.sync(calendar)
 
-    assert len(events) == 1
+    assert len(calendar_entries) == 1
     assert calendar.last_sync_at is not None
     assert calendar.last_sync_at > expected_lookback
 
@@ -239,7 +239,7 @@ async def test_sync_with_last_sync_at(
 @pytest.mark.asyncio
 async def test_sync_unsupported_platform(
     test_user,
-    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway, mock_uow_factory
+    mock_auth_token_repo, mock_calendar_repo, mock_calendar_entry_repo, mock_google_gateway, mock_uow_factory
 ):
     """Test syncing a calendar with unsupported platform raises NotImplementedError."""
     calendar = Calendar(
@@ -262,16 +262,16 @@ async def test_sync_unsupported_platform(
 
 
 @pytest.mark.asyncio
-async def test_sync_google_no_events(
+async def test_sync_google_no_calendar_entries(
     test_user,
     mock_auth_token_repo,
     mock_calendar_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_google_gateway,
     mock_uow_factory,
     test_datetime_noon,
 ):
-    """Test syncing Google calendar with no events."""
+    """Test syncing Google calendar with no calendar entries."""
     calendar = Calendar(
         user_id=UUID(str(uuid4())),
         name="Test Calendar",
@@ -302,10 +302,10 @@ async def test_sync_google_no_events(
         google_gateway=mock_google_gateway,
     )
 
-    events, deleted_events = await service.sync_google(calendar, lookback)
+    calendar_entries, deleted_calendar_entries = await service.sync_google(calendar, lookback)
 
-    assert len(events) == 0
-    assert len(deleted_events) == 0
+    assert len(calendar_entries) == 0
+    assert len(deleted_calendar_entries) == 0
 
 
 @pytest.mark.asyncio
@@ -313,7 +313,7 @@ async def test_sync_all_successful_syncs(
     test_user,
     mock_auth_token_repo,
     mock_calendar_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_google_gateway,
     mock_uow_factory,
     test_datetime_noon,
@@ -347,22 +347,22 @@ async def test_sync_all_successful_syncs(
         token="token2",
     )
 
-    event1 = Event(
+    calendar_entry1 = CalendarEntry(
         user_id=calendar1.user_id,
-        name="Event 1",
+        name="Calendar Entry 1",
         frequency="ONCE",
         calendar_id=calendar1.id,
-        platform_id="event-id-1",
+        platform_id="entry-id-1",
         platform="google",
         status="confirmed",
         starts_at=test_datetime_noon,
     )
-    event2 = Event(
+    calendar_entry2 = CalendarEntry(
         user_id=calendar2.user_id,
-        name="Event 2",
+        name="Calendar Entry 2",
         frequency="ONCE",
         calendar_id=calendar2.id,
-        platform_id="event-id-2",
+        platform_id="entry-id-2",
         platform="google",
         status="confirmed",
         starts_at=test_datetime_noon,
@@ -376,7 +376,7 @@ async def test_sync_all_successful_syncs(
         calendar1,
         lookback=test_datetime_noon - timedelta(days=2),
         token=token1,
-    ).and_return([event1])
+    ).and_return([calendar_entry1])
 
     # Second calendar
     allow(mock_auth_token_repo).get(token2.id).and_return(token2)
@@ -384,10 +384,10 @@ async def test_sync_all_successful_syncs(
         calendar2,
         lookback=test_datetime_noon - timedelta(days=2),
         token=token2,
-    ).and_return([event2])
+    ).and_return([calendar_entry2])
 
-    allow(mock_event_repo).put.and_return(None)
-    allow(mock_event_repo).delete.and_return(None)
+    allow(mock_calendar_entry_repo).put.and_return(None)
+    allow(mock_calendar_entry_repo).delete.and_return(None)
 
     service = CalendarService(
         user=test_user,
@@ -405,7 +405,7 @@ async def test_sync_all_successful_syncs(
 @pytest.mark.asyncio
 async def test_sync_all_with_exception_during_sync(
     test_user,
-    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway, mock_uow_factory
+    mock_auth_token_repo, mock_calendar_repo, mock_calendar_entry_repo, mock_google_gateway, mock_uow_factory
 ):
     """Test syncing all calendars handles exceptions during sync."""
     calendar1 = Calendar(
@@ -444,7 +444,7 @@ async def test_sync_all_with_exception_during_sync(
     # Second calendar succeeds
     allow(mock_auth_token_repo).get(token2.id).and_return(token2)
     allow(mock_google_gateway).load_calendar_events.and_return([])
-    allow(mock_event_repo).put.and_return(None)
+    allow(mock_calendar_entry_repo).put.and_return(None)
 
     service = CalendarService(
         user=test_user,

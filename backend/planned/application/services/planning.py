@@ -8,7 +8,7 @@ from loguru import logger
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import NotFoundError
 from planned.domain import entities as objects
-from planned.domain.entities import Action, DayContext, Event, Task, TaskStatus
+from planned.domain.entities import Action, CalendarEntry, DayContext, Task, TaskStatus
 from planned.domain.value_objects.query import DateQuery
 
 from .base import BaseService
@@ -129,9 +129,13 @@ class PlanningService(BaseService):
                 ),
             )
 
-            result.tasks, result.events, result.messages = await asyncio.gather(
+            (
+                result.tasks,
+                result.calendar_entries,
+                result.messages,
+            ) = await asyncio.gather(
                 self.preview_tasks(date),
-                uow.events.search_query(DateQuery(date=date)),
+                uow.calendar_entries.search_query(DateQuery(date=date)),
                 uow.messages.search_query(DateQuery(date=date)),
             )
 
@@ -219,7 +223,7 @@ class PlanningService(BaseService):
             return objects.DayContext(
                 day=day,
                 tasks=tasks,
-                events=preview_result.events,
+                calendar_entries=preview_result.calendar_entries,
                 messages=preview_result.messages,
             )
 
@@ -247,10 +251,10 @@ class PlanningService(BaseService):
                 obj.record_action(action)
                 await uow.tasks.put(obj)
 
-            elif isinstance(obj, Event):
-                # Events don't have record_action yet, so use direct append
+            elif isinstance(obj, CalendarEntry):
+                # CalendarEntries don't have record_action yet, so use direct append
                 obj.actions.append(action)
-                await uow.events.put(obj)
+                await uow.calendar_entries.put(obj)
             else:
                 raise ValueError(f"Invalid object type: {type(obj)}")
             await uow.commit()

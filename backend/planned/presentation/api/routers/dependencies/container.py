@@ -11,10 +11,10 @@ from fastapi import Depends
 
 from planned.application.repositories import (
     AuthTokenRepositoryProtocol,
+    CalendarEntryRepositoryProtocol,
     CalendarRepositoryProtocol,
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
-    EventRepositoryProtocol,
     MessageRepositoryProtocol,
     PushSubscriptionRepositoryProtocol,
     RoutineRepositoryProtocol,
@@ -26,10 +26,10 @@ from planned.domain.entities import User
 
 from .repositories import (
     get_auth_token_repo,
+    get_calendar_entry_repo,
     get_calendar_repo,
     get_day_repo,
     get_day_template_repo,
-    get_event_repo,
     get_message_repo,
     get_push_subscription_repo,
     get_routine_repo,
@@ -53,7 +53,7 @@ class RepositoryContainer:
         user_repo: UserRepositoryProtocol,
         day_repo: DayRepositoryProtocol,
         day_template_repo: DayTemplateRepositoryProtocol,
-        event_repo: EventRepositoryProtocol,
+        calendar_entry_repo: CalendarEntryRepositoryProtocol,
         message_repo: MessageRepositoryProtocol,
         task_repo: TaskRepositoryProtocol,
         task_definition_repo: TaskDefinitionRepositoryProtocol,
@@ -67,7 +67,7 @@ class RepositoryContainer:
         self.user_repo = user_repo
         self.day_repo = day_repo
         self.day_template_repo = day_template_repo
-        self.event_repo = event_repo
+        self.calendar_entry_repo = calendar_entry_repo
         self.message_repo = message_repo
         self.task_repo = task_repo
         self.task_definition_repo = task_definition_repo
@@ -84,7 +84,9 @@ def get_repository_container(
     day_template_repo: Annotated[
         DayTemplateRepositoryProtocol, Depends(get_day_template_repo)
     ],
-    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
+    calendar_entry_repo: Annotated[
+        CalendarEntryRepositoryProtocol, Depends(get_calendar_entry_repo)
+    ],
     message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
     task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
     task_definition_repo: Annotated[
@@ -105,7 +107,7 @@ def get_repository_container(
         user_repo=user_repo,
         day_repo=day_repo,
         day_template_repo=day_template_repo,
-        event_repo=event_repo,
+        calendar_entry_repo=calendar_entry_repo,
         message_repo=message_repo,
         task_repo=task_repo,
         task_definition_repo=task_definition_repo,
@@ -114,4 +116,3 @@ def get_repository_container(
         auth_token_repo=auth_token_repo,
         push_subscription_repo=push_subscription_repo,
     )
-

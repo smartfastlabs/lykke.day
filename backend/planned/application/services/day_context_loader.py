@@ -5,12 +5,11 @@ import datetime
 from uuid import UUID
 
 from planned.application.repositories import (
+    CalendarEntryRepositoryProtocol,
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
-    EventRepositoryProtocol,
     MessageRepositoryProtocol,
     TaskRepositoryProtocol,
-    UserRepositoryProtocol,
 )
 from planned.core.constants import DEFAULT_END_OF_DAY_TIME
 from planned.core.exceptions import NotFoundError
@@ -19,7 +18,7 @@ from planned.domain.value_objects.query import DateQuery
 
 
 class DayContextLoader:
-    """Loads DayContext with tasks, events, messages, and day data.
+    """Loads DayContext with tasks, calendar entries, messages, and day data.
 
     Encapsulates the logic for loading a complete day context, handling
     both existing days and creating preview days when needed.
@@ -30,7 +29,7 @@ class DayContextLoader:
         user: objects.User,
         day_repo: DayRepositoryProtocol,
         day_template_repo: DayTemplateRepositoryProtocol,
-        event_repo: EventRepositoryProtocol,
+        calendar_entry_repo: CalendarEntryRepositoryProtocol,
         message_repo: MessageRepositoryProtocol,
         task_repo: TaskRepositoryProtocol,
     ) -> None:
@@ -40,14 +39,14 @@ class DayContextLoader:
             user: The user for whom to load context
             day_repo: Repository for day entities
             day_template_repo: Repository for day templates
-            event_repo: Repository for event entities
+            calendar_entry_repo: Repository for calendar entry entities
             message_repo: Repository for message entities
             task_repo: Repository for task entities
         """
         self.user = user
         self.day_repo = day_repo
         self.day_template_repo = day_template_repo
-        self.event_repo = event_repo
+        self.calendar_entry_repo = calendar_entry_repo
         self.message_repo = message_repo
         self.task_repo = task_repo
 
@@ -63,19 +62,19 @@ class DayContextLoader:
             user_id: The user ID for the context
 
         Returns:
-            A DayContext with day, tasks, events, and messages loaded and sorted
+            A DayContext with day, tasks, calendar entries, and messages loaded and sorted
         """
         tasks: list[objects.Task] = []
-        events: list[objects.Event] = []
+        calendar_entries: list[objects.CalendarEntry] = []
         messages: list[objects.Message] = []
         day: objects.Day
 
         try:
             # Try to load existing day and all related data
             day_id = objects.Day.id_from_date_and_user(date, user_id)
-            tasks, events, messages, day = await asyncio.gather(
+            tasks, calendar_entries, messages, day = await asyncio.gather(
                 self.task_repo.search_query(DateQuery(date=date)),
-                self.event_repo.search_query(DateQuery(date=date)),
+                self.calendar_entry_repo.search_query(DateQuery(date=date)),
                 self.message_repo.search_query(DateQuery(date=date)),
                 self.day_repo.get(day_id),
             )
@@ -83,7 +82,7 @@ class DayContextLoader:
             # Day doesn't exist, create a preview day using default template
             day = await self._create_preview_day(date, user_id)
 
-        return self._build_context(day, tasks, events, messages)
+        return self._build_context(day, tasks, calendar_entries, messages)
 
     async def _create_preview_day(
         self,
@@ -129,7 +128,7 @@ class DayContextLoader:
         self,
         day: objects.Day,
         tasks: list[objects.Task],
-        events: list[objects.Event],
+        calendar_entries: list[objects.CalendarEntry],
         messages: list[objects.Message],
     ) -> objects.DayContext:
         """Build a DayContext from loaded data.
@@ -137,11 +136,11 @@ class DayContextLoader:
         Args:
             day: The day entity
             tasks: List of tasks for the day
-            events: List of events for the day
+            calendar_entries: List of calendar entries for the day
             messages: List of messages for the day
 
         Returns:
-            A DayContext with sorted tasks and events
+            A DayContext with sorted tasks and calendar entries
         """
         return objects.DayContext(
             day=day,
@@ -151,6 +150,6 @@ class DayContextLoader:
                 if x.schedule and x.schedule.start_time
                 else DEFAULT_END_OF_DAY_TIME,
             ),
-            events=sorted(events, key=lambda e: e.starts_at),
+            calendar_entries=sorted(calendar_entries, key=lambda e: e.starts_at),
             messages=messages,
         )

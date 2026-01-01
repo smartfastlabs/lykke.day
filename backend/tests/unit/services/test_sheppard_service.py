@@ -11,10 +11,10 @@ from planned.application.services import DayService, SheppardService
 from planned.application.services.calendar import CalendarService
 from planned.application.services.planning import PlanningService
 from planned.domain.entities import (
+    CalendarEntry,
     Day,
     DayContext,
     DayStatus,
-    Event,
     PushSubscription,
     Task,
     TaskDefinition,
@@ -71,7 +71,7 @@ async def test_build_notification_payload_single_task(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, ctx, mock_uow_factory)
 
@@ -125,7 +125,7 @@ async def test_build_notification_payload_multiple_tasks(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, ctx, mock_uow_factory)
 
@@ -193,17 +193,17 @@ async def test_build_event_notification_payload(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, ctx, mock_uow_factory)
 
-    event = Event(
+    calendar_entry = CalendarEntry(
         id=uuid4(),
         user_id=test_user_id,
-        name="Test Event",
+        name="Test Calendar Entry",
         frequency=TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
-        platform_id="event-1",
+        platform_id="entry-1",
         platform="test",
         status="confirmed",
         starts_at=test_datetime_noon,
@@ -218,12 +218,12 @@ async def test_build_event_notification_payload(
         web_push_gateway=mock_web_push_gateway,
     )
 
-    payload = service._build_event_notification_payload([event])
+    payload = service._build_calendar_entry_notification_payload([calendar_entry])
 
-    assert payload.title == "Test Event"
+    assert payload.title == "Test Calendar Entry"
     assert "starting soon" in payload.body
-    assert len(payload.data["events"]) == 1
-    assert payload.data["events"][0]["id"] == event.id
+    assert len(payload.data["calendar_entries"]) == 1
+    assert payload.data["calendar_entries"][0]["id"] == calendar_entry.id
 
 
 @pytest.mark.asyncio
@@ -243,7 +243,7 @@ async def test_notify_for_tasks(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, ctx, mock_uow_factory)
 
@@ -306,7 +306,7 @@ async def test_notify_for_tasks_empty_list(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, ctx, mock_uow_factory)
 
@@ -340,7 +340,7 @@ async def test_stop_sets_mode_to_stopping(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, ctx, mock_uow_factory)
 
@@ -377,7 +377,7 @@ async def test_is_running_property(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, ctx, mock_uow_factory)
 
@@ -418,7 +418,7 @@ async def test_render_prompt(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, ctx, mock_uow_factory)
 
@@ -440,7 +440,7 @@ async def test_render_prompt(
     call_kwargs = mock_render.call_args[1]
     assert "test-template.md" in mock_render.call_args[0]
     assert "tasks" in call_kwargs
-    assert "events" in call_kwargs
+    assert "calendar_entries" in call_kwargs
     assert "current_time" in call_kwargs
     assert call_kwargs["extra_arg"] == "value"
 
@@ -461,7 +461,7 @@ async def test_morning_summary_prompt(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, ctx, mock_uow_factory)
 
@@ -499,7 +499,7 @@ async def test_evening_summary_prompt(
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, ctx, mock_uow_factory)
 
@@ -522,7 +522,7 @@ async def test_evening_summary_prompt(
 
 
 @pytest.mark.asyncio
-async def test_notify_for_events(
+async def test_notify_for_calendar_entries(
     mock_calendar_service,
     mock_planning_service,
     mock_web_push_gateway,
@@ -531,24 +531,24 @@ async def test_notify_for_events(
     test_datetime_noon,
     mock_uow_factory,
 ):
-    """Test _notify_for_events sends notifications for events."""
+    """Test _notify_for_calendar_entries sends notifications for calendar entries."""
     date = datetime.date(2024, 1, 1)
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, ctx, mock_uow_factory)
 
-    event = Event(
+    calendar_entry = CalendarEntry(
         id=uuid4(),
         user_id=test_user_id,
-        name="Test Event",
+        name="Test Calendar Entry",
         frequency=TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
-        platform_id="event-1",
+        platform_id="entry-1",
         platform="test",
         status="confirmed",
         starts_at=test_datetime_noon,
@@ -574,7 +574,7 @@ async def test_notify_for_events(
         push_subscriptions=[subscription],
     )
 
-    await service._notify_for_events([event])
+    await service._notify_for_calendar_entries([calendar_entry])
 
     # Verify send_notification was called
     assert True  # If we get here, no exception was raised
@@ -589,14 +589,14 @@ async def test_notify_for_events_empty_list(
     test_user,
     mock_uow_factory,
 ):
-    """Test _notify_for_events handles empty event list."""
+    """Test _notify_for_calendar_entries handles empty calendar entry list."""
     date = datetime.date(2024, 1, 1)
     day = Day(
         user_id=test_user_id,
         date=date,
         status=DayStatus.UNSCHEDULED,
     )
-    ctx = DayContext(day=day, tasks=[], events=[], messages=[])
+    ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, ctx, mock_uow_factory)
 
@@ -610,4 +610,4 @@ async def test_notify_for_events_empty_list(
     )
 
     # Should not raise an exception
-    await service._notify_for_events([])
+    await service._notify_for_calendar_entries([])

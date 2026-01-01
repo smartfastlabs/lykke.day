@@ -11,11 +11,11 @@ from planned.application.services import PlanningService
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import (
     Action,
+    CalendarEntry,
     Day,
     DayContext,
     DayStatus,
     DayTemplate,
-    Event,
     Routine,
     Task,
     TaskDefinition,
@@ -37,7 +37,7 @@ async def test_preview_tasks(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,
@@ -96,7 +96,7 @@ async def test_preview_tasks_filters_inactive_routines(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,
@@ -144,7 +144,7 @@ async def test_preview_creates_day_context(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,
@@ -169,13 +169,13 @@ async def test_preview_creates_day_context(
         user_id=test_user_id,
     )
 
-    event = Event(
+    calendar_entry = CalendarEntry(
         id=uuid4(),
         user_id=test_user_id,
-        name="Test Event",
+        name="Test Calendar Entry",
         frequency=TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
-        platform_id="event-1",
+        platform_id="entry-1",
         platform="test",
         status="confirmed",
         starts_at=test_datetime_noon,
@@ -185,7 +185,7 @@ async def test_preview_creates_day_context(
     allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
     allow(mock_routine_repo).all().and_return([])
-    allow(mock_event_repo).search_query.and_return([event])
+    allow(mock_calendar_entry_repo).search_query.and_return([calendar_entry])
     allow(mock_message_repo).search_query.and_return([])
 
     service = PlanningService(
@@ -198,8 +198,8 @@ async def test_preview_creates_day_context(
     assert isinstance(result, DayContext)
     assert result.day.user_id == test_user_id
     assert result.day.date == date
-    assert len(result.events) == 1
-    assert result.events[0].id == event.id
+    assert len(result.calendar_entries) == 1
+    assert result.calendar_entries[0].id == calendar_entry.id
 
 
 @pytest.mark.asyncio
@@ -207,7 +207,7 @@ async def test_preview_uses_existing_day_template(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,
@@ -234,7 +234,7 @@ async def test_preview_uses_existing_day_template(
     allow(mock_day_repo).get(existing_day.id).and_return(existing_day)
     allow(mock_day_template_repo).get(template.id).and_return(template)
     allow(mock_routine_repo).all().and_return([])
-    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
 
     service = PlanningService(
@@ -253,7 +253,7 @@ async def test_unschedule_deletes_routine_tasks(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,
@@ -314,7 +314,7 @@ async def test_unschedule_deletes_routine_tasks(
 
     allow(mock_task_repo).search_query.and_return([routine_task, non_routine_task])
     allow(mock_task_repo).delete.and_return(None)
-    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
     allow(mock_day_repo).get(day.id).and_return(day)
     allow(mock_day_repo).put.and_return(day)
@@ -348,7 +348,7 @@ async def test_schedule_creates_tasks_and_sets_status(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,
@@ -378,7 +378,7 @@ async def test_schedule_creates_tasks_and_sets_status(
     allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
     allow(mock_day_template_repo).get(template.id).and_return(template)
     allow(mock_routine_repo).all().and_return([])
-    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
     allow(mock_day_repo).put.and_return(
         Day(
@@ -406,7 +406,7 @@ async def test_save_action_for_task(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,
@@ -455,7 +455,7 @@ async def test_save_action_for_event(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,
@@ -465,16 +465,16 @@ async def test_save_action_for_event(
     mock_uow_factory,
     test_datetime_noon,
 ):
-    """Test save_action saves event with action."""
+    """Test save_action saves calendar entry with action."""
 
     date = datetime.date(2024, 1, 1)
-    event = Event(
+    calendar_entry = CalendarEntry(
         id=uuid4(),
         user_id=test_user_id,
-        name="Test Event",
+        name="Test Calendar Entry",
         frequency=TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
-        platform_id="event-1",
+        platform_id="entry-1",
         platform="test",
         status="confirmed",
         starts_at=test_datetime_noon,
@@ -482,14 +482,14 @@ async def test_save_action_for_event(
 
     action = Action(type=ActionType.NOTIFY)
 
-    allow(mock_event_repo).put.and_return(event)
+    allow(mock_calendar_entry_repo).put.and_return(calendar_entry)
 
     service = PlanningService(
         user=test_user,
         uow_factory=mock_uow_factory,
     )
 
-    result = await service.save_action(event, action)
+    result = await service.save_action(calendar_entry, action)
 
     assert len(result.actions) == 1
     assert result.actions[0].type == ActionType.NOTIFY
@@ -500,7 +500,7 @@ async def test_preview_with_template_id(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,
@@ -519,7 +519,7 @@ async def test_preview_with_template_id(
 
     allow(mock_day_template_repo).get(template.id).and_return(template)
     allow(mock_routine_repo).all().and_return([])
-    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
 
     service = PlanningService(
@@ -538,7 +538,7 @@ async def test_schedule_with_template_id(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,
@@ -558,7 +558,7 @@ async def test_schedule_with_template_id(
     allow(mock_task_repo).delete_many.and_return(None)
     allow(mock_day_template_repo).get(template.id).and_return(template)
     allow(mock_routine_repo).all().and_return([])
-    allow(mock_event_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
     allow(mock_day_repo).put.and_return(
         Day(
@@ -587,7 +587,7 @@ async def test_save_action_for_task_punt(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,
@@ -635,7 +635,7 @@ async def test_save_action_for_invalid_object(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,
@@ -673,7 +673,7 @@ async def test_preview_tasks_uses_routine_task_name(
     mock_user_repo,
     mock_day_repo,
     mock_day_template_repo,
-    mock_event_repo,
+    mock_calendar_entry_repo,
     mock_message_repo,
     mock_routine_repo,
     mock_task_definition_repo,

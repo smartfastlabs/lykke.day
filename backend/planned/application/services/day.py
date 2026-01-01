@@ -2,7 +2,10 @@ import datetime
 from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.application.utils import filter_upcoming_events, filter_upcoming_tasks
+from planned.application.utils import (
+    filter_upcoming_calendar_entries,
+    filter_upcoming_tasks,
+)
 from planned.core.constants import DEFAULT_LOOK_AHEAD
 from planned.core.exceptions import NotFoundError
 from planned.domain import entities as objects
@@ -77,7 +80,7 @@ class DayService(BaseService):
                 user=self.user,
                 day_repo=uow.days,
                 day_template_repo=uow.day_templates,
-                event_repo=uow.events,
+                calendar_entry_repo=uow.calendar_entries,
                 message_repo=uow.messages,
                 task_repo=uow.tasks,
             )
@@ -165,16 +168,16 @@ class DayService(BaseService):
         """
         return filter_upcoming_tasks(self.ctx.tasks, look_ahead)
 
-    async def get_upcoming_events(
+    async def get_upcoming_calendar_entries(
         self,
         look_ahead: datetime.timedelta = DEFAULT_LOOK_AHEAD,
-    ) -> list[objects.Event]:
-        """Get events that are upcoming within the look-ahead window.
+    ) -> list[objects.CalendarEntry]:
+        """Get calendar entries that are upcoming within the look-ahead window.
 
         Args:
             look_ahead: The time window to look ahead
 
         Returns:
-            List of events that are upcoming within the look-ahead window
+            List of calendar entries that are upcoming within the look-ahead window
         """
-        return filter_upcoming_events(self.ctx.events, look_ahead)
+        return filter_upcoming_calendar_entries(self.ctx.calendar_entries, look_ahead)

@@ -11,10 +11,10 @@ from planned.domain.value_objects.alarm import AlarmType
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.repositories import (
     AuthTokenRepository,
+    CalendarEntryRepository,
     CalendarRepository,
     DayRepository,
     DayTemplateRepository,
-    EventRepository,
     MessageRepository,
     PushSubscriptionRepository,
     RoutineRepository,
@@ -118,9 +118,9 @@ async def day_template_repo(test_user):
 
 
 @pytest_asyncio.fixture
-async def event_repo(test_user):
-    """EventRepository scoped to test_user."""
-    return EventRepository(user_id=test_user.id)
+async def calendar_entry_repo(test_user):
+    """CalendarEntryRepository scoped to test_user."""
+    return CalendarEntryRepository(user_id=test_user.id)
 
 
 @pytest_asyncio.fixture

@@ -11,7 +11,7 @@ from loguru import logger
 
 from planned.core.config import settings
 from planned.core.exceptions import TokenExpiredError
-from planned.domain.entities import AuthToken, Calendar, Event, TaskFrequency
+from planned.domain.entities import AuthToken, Calendar, CalendarEntry, TaskFrequency
 
 # Google OAuth Flow
 CLIENT_SECRET_FILE = ".credentials.json"
@@ -164,12 +164,12 @@ def _load_calendar_events_sync(
     calendar: Calendar,
     lookback: datetime,
     token: AuthToken,
-) -> list[Event]:
-    """Synchronous implementation of calendar event loading."""
-    events: list[Event] = []
+) -> list[CalendarEntry]:
+    """Synchronous implementation of calendar entry loading."""
+    calendar_entries: list[CalendarEntry] = []
     frequency_cache: dict[str, TaskFrequency] = {}
 
-    logger.info(f"Loading events for calendar {calendar.name}...")
+    logger.info(f"Loading calendar entries for calendar {calendar.name}...")
     gc = get_google_calendar(calendar, token)
 
     for event in gc.get_events(
@@ -187,8 +187,8 @@ def _load_calendar_events_sync(
         try:
             # Get frequency, fetching parent event if this is a recurring instance
             frequency = get_event_frequency(event, gc, frequency_cache)
-            events.append(
-                Event.from_google(
+            calendar_entries.append(
+                CalendarEntry.from_google(
                     calendar.user_id,
                     calendar.id,
                     event,
@@ -199,15 +199,15 @@ def _load_calendar_events_sync(
         except Exception as e:
             logger.info(f"Error converting event {event.id}: {e}")
             continue
-    return events
+    return calendar_entries
 
 
 async def load_calendar_events(
     calendar: Calendar,
     lookback: datetime,
     token: AuthToken,
-) -> list[Event]:
-    """Asynchronously load calendar events by running the sync operation in a thread pool."""
+) -> list[CalendarEntry]:
+    """Asynchronously load calendar entries by running the sync operation in a thread pool."""
     try:
         return await asyncio.to_thread(
             _load_calendar_events_sync,

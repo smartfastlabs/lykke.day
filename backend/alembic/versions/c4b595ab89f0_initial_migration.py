@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 9ba773fa0f28
+Revision ID: c4b595ab89f0
 Revises:
-Create Date: 2025-12-30 16:00:36.638081
+Create Date: 2025-12-31 21:44:05.498469
 
 """
 
@@ -15,7 +15,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = "9ba773fa0f28"
+revision: str = "c4b595ab89f0"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -41,49 +41,7 @@ def upgrade() -> None:
     )
     op.create_index("idx_auth_tokens_user_id", "auth_tokens", ["user_id"], unique=False)
     op.create_table(
-        "calendars",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("user_id", sa.UUID(), nullable=False),
-        sa.Column("name", sa.String(), nullable=False),
-        sa.Column("auth_token_id", sa.UUID(), nullable=False),
-        sa.Column("platform_id", sa.String(), nullable=False),
-        sa.Column("platform", sa.String(), nullable=False),
-        sa.Column("last_sync_at", sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index("idx_calendars_user_id", "calendars", ["user_id"], unique=False)
-    op.create_table(
-        "day_templates",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("user_id", sa.UUID(), nullable=False),
-        sa.Column("slug", sa.String(), nullable=False),
-        sa.Column("tasks", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-        sa.Column("alarm", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-        sa.Column("icon", sa.String(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(
-        "idx_day_templates_user_id", "day_templates", ["user_id"], unique=False
-    )
-    op.create_index(
-        "idx_day_templates_user_slug", "day_templates", ["user_id", "slug"], unique=True
-    )
-    op.create_table(
-        "days",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("user_id", sa.UUID(), nullable=False),
-        sa.Column("date", sa.Date(), nullable=False),
-        sa.Column("template_id", sa.UUID(), nullable=False),
-        sa.Column("tags", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-        sa.Column("alarm", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-        sa.Column("status", sa.String(), nullable=False),
-        sa.Column("scheduled_at", sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index("idx_days_date", "days", ["date"], unique=False)
-    op.create_index("idx_days_user_id", "days", ["user_id"], unique=False)
-    op.create_table(
-        "events",
+        "calendar_entries",
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("date", sa.Date(), nullable=False),
@@ -101,9 +59,62 @@ def upgrade() -> None:
         sa.Column("actions", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("idx_events_calendar_id", "events", ["calendar_id"], unique=False)
-    op.create_index("idx_events_date", "events", ["date"], unique=False)
-    op.create_index("idx_events_user_id", "events", ["user_id"], unique=False)
+    op.create_index(
+        "idx_calendar_entries_calendar_id",
+        "calendar_entries",
+        ["calendar_id"],
+        unique=False,
+    )
+    op.create_index(
+        "idx_calendar_entries_date", "calendar_entries", ["date"], unique=False
+    )
+    op.create_index(
+        "idx_calendar_entries_user_id", "calendar_entries", ["user_id"], unique=False
+    )
+    op.create_table(
+        "calendars",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("auth_token_id", sa.UUID(), nullable=False),
+        sa.Column("platform_id", sa.String(), nullable=False),
+        sa.Column("platform", sa.String(), nullable=False),
+        sa.Column("last_sync_at", sa.DateTime(), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index("idx_calendars_user_id", "calendars", ["user_id"], unique=False)
+    op.create_table(
+        "day_templates",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("slug", sa.String(), nullable=False),
+        sa.Column("alarm", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("icon", sa.String(), nullable=True),
+        sa.Column(
+            "routine_ids", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(
+        "idx_day_templates_user_id", "day_templates", ["user_id"], unique=False
+    )
+    op.create_index(
+        "idx_day_templates_user_slug", "day_templates", ["user_id", "slug"], unique=True
+    )
+    op.create_table(
+        "days",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("date", sa.Date(), nullable=False),
+        sa.Column("template", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("tags", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("alarm", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("status", sa.String(), nullable=False),
+        sa.Column("scheduled_at", sa.DateTime(), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index("idx_days_date", "days", ["date"], unique=False)
+    op.create_index("idx_days_user_id", "days", ["user_id"], unique=False)
     op.create_table(
         "messages",
         sa.Column("id", sa.UUID(), nullable=False),
@@ -219,10 +230,6 @@ def downgrade() -> None:
     op.drop_index("idx_messages_user_id", table_name="messages")
     op.drop_index("idx_messages_date", table_name="messages")
     op.drop_table("messages")
-    op.drop_index("idx_events_user_id", table_name="events")
-    op.drop_index("idx_events_date", table_name="events")
-    op.drop_index("idx_events_calendar_id", table_name="events")
-    op.drop_table("events")
     op.drop_index("idx_days_user_id", table_name="days")
     op.drop_index("idx_days_date", table_name="days")
     op.drop_table("days")
@@ -231,6 +238,10 @@ def downgrade() -> None:
     op.drop_table("day_templates")
     op.drop_index("idx_calendars_user_id", table_name="calendars")
     op.drop_table("calendars")
+    op.drop_index("idx_calendar_entries_user_id", table_name="calendar_entries")
+    op.drop_index("idx_calendar_entries_date", table_name="calendar_entries")
+    op.drop_index("idx_calendar_entries_calendar_id", table_name="calendar_entries")
+    op.drop_table("calendar_entries")
     op.drop_index("idx_auth_tokens_user_id", table_name="auth_tokens")
     op.drop_table("auth_tokens")
     # ### end Alembic commands ###

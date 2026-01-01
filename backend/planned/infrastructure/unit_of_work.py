@@ -11,10 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from planned.application.repositories import (
     AuthTokenRepositoryProtocol,
+    CalendarEntryRepositoryProtocol,
     CalendarRepositoryProtocol,
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
-    EventRepositoryProtocol,
     MessageRepositoryProtocol,
     PushSubscriptionRepositoryProtocol,
     RoutineRepositoryProtocol,
@@ -32,10 +32,10 @@ from planned.infrastructure.database.transaction import (
 )
 from planned.infrastructure.repositories import (
     AuthTokenRepository,
+    CalendarEntryRepository,
     CalendarRepository,
     DayRepository,
     DayTemplateRepository,
-    EventRepository,
     MessageRepository,
     PushSubscriptionRepository,
     RoutineRepository,
@@ -57,10 +57,10 @@ class SqlAlchemyUnitOfWork:
 
     # Repository type annotations for protocol compatibility
     auth_tokens: AuthTokenRepositoryProtocol
+    calendar_entries: CalendarEntryRepositoryProtocol
     calendars: CalendarRepositoryProtocol
     days: DayRepositoryProtocol
     day_templates: DayTemplateRepositoryProtocol
-    events: EventRepositoryProtocol
     messages: MessageRepositoryProtocol
     push_subscriptions: PushSubscriptionRepositoryProtocol
     routines: RoutineRepositoryProtocol
@@ -116,8 +116,9 @@ class SqlAlchemyUnitOfWork:
         self.day_templates = cast(
             "DayTemplateRepositoryProtocol", DayTemplateRepository(user_id=self.user_id)
         )
-        self.events = cast(
-            "EventRepositoryProtocol", EventRepository(user_id=self.user_id)
+        self.calendar_entries = cast(
+            "CalendarEntryRepositoryProtocol",
+            CalendarEntryRepository(user_id=self.user_id),
         )
         self.messages = cast(
             "MessageRepositoryProtocol", MessageRepository(user_id=self.user_id)
@@ -219,7 +220,7 @@ class SqlAlchemyUnitOfWork:
         repositories = [
             self.days,
             self.day_templates,
-            self.events,
+            self.calendar_entries,
             self.messages,
             self.tasks,
             self.routines,

@@ -12,10 +12,10 @@ from uuid import UUID
 
 from planned.application.repositories import (
     AuthTokenRepositoryProtocol,
+    CalendarEntryRepositoryProtocol,
     CalendarRepositoryProtocol,
     DayRepositoryProtocol,
     DayTemplateRepositoryProtocol,
-    EventRepositoryProtocol,
     MessageRepositoryProtocol,
     PushSubscriptionRepositoryProtocol,
     RoutineRepositoryProtocol,
@@ -34,10 +34,10 @@ class UnitOfWorkProtocol(Protocol):
 
     # Repository properties
     auth_tokens: AuthTokenRepositoryProtocol
+    calendar_entries: CalendarEntryRepositoryProtocol
     calendars: CalendarRepositoryProtocol
     days: DayRepositoryProtocol
     day_templates: DayTemplateRepositoryProtocol
-    events: EventRepositoryProtocol
     messages: MessageRepositoryProtocol
     push_subscriptions: PushSubscriptionRepositoryProtocol
     routines: RoutineRepositoryProtocol
@@ -53,7 +53,12 @@ class UnitOfWorkProtocol(Protocol):
         """
         ...
 
-    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
+    ) -> None:
         """Exit the unit of work context.
 
         Automatically commits on success or rolls back on exception.
@@ -92,4 +97,3 @@ class UnitOfWorkFactory(Protocol):
             A new UnitOfWork instance (not yet entered).
         """
         ...
-

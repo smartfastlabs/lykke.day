@@ -29,7 +29,7 @@ async def test_get_context_today(authenticated_client, test_date):
     data = response.json()
     assert "day" in data
     assert "tasks" in data
-    assert "events" in data
+    assert "calendar_entries" in data
     assert "messages" in data
     assert data["day"]["date"] == test_date.isoformat()
 
@@ -113,7 +113,7 @@ async def test_update_day_template(authenticated_client, test_date):
     data = response.json()
     # The response should include the template object, not just template_id
     assert "template" in data or "template_id" in data
-    if "template" in data and data["template"]:
+    if data.get("template"):
         assert data["template"]["id"] == template_id
     elif "template_id" in data:
         assert data["template_id"] == template_id

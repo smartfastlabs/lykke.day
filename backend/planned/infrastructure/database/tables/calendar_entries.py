@@ -1,4 +1,4 @@
-"""Events table definition."""
+"""Calendar entries table definition."""
 
 from sqlalchemy import Column, Date, DateTime, Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
@@ -6,10 +6,10 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 from .base import Base
 
 
-class Event(Base):
-    """Event table for storing calendar events."""
+class CalendarEntry(Base):
+    """CalendarEntry table for storing calendar entries."""
 
-    __tablename__ = "events"
+    __tablename__ = "calendar_entries"
 
     id = Column(PGUUID, primary_key=True)
     user_id = Column(PGUUID, nullable=False)
@@ -28,8 +28,8 @@ class Event(Base):
     actions = Column(JSONB)  # list[Action]
 
     __table_args__ = (
-        Index("idx_events_date", "date"),
-        Index("idx_events_calendar_id", "calendar_id"),
-        Index("idx_events_user_id", "user_id"),
+        Index("idx_calendar_entries_date", "date"),
+        Index("idx_calendar_entries_calendar_id", "calendar_id"),
+        Index("idx_calendar_entries_user_id", "user_id"),
     )
 

@@ -103,12 +103,12 @@ class SheppardService(BaseService):
         await self._handle_alarm()
 
         tasks_to_update, tasks_to_notify = await self._process_upcoming_tasks()
-        events_to_notify = await self._process_upcoming_events()
+        calendar_entries_to_notify = await self._process_upcoming_calendar_entries()
 
         await self._save_updates_and_send_notifications(
             tasks_to_update=tasks_to_update,
             tasks_to_notify=tasks_to_notify,
-            events_to_notify=events_to_notify,
+            calendar_entries_to_notify=calendar_entries_to_notify,
         )
 
         self.last_run = datetime.datetime.now(UTC)
@@ -162,44 +162,45 @@ class SheppardService(BaseService):
 
         return tasks_to_update, tasks_to_notify
 
-    async def _process_upcoming_events(
+    async def _process_upcoming_calendar_entries(
         self,
-    ) -> list[objects.Event]:
-        """Process upcoming events and determine which need notifications.
+    ) -> list[objects.CalendarEntry]:
+        """Process upcoming calendar entries and determine which need notifications.
 
         Returns:
-            List of events that need notifications
+            List of calendar entries that need notifications
         """
-        events_to_notify: list[objects.Event] = []
+        calendar_entries_to_notify: list[objects.CalendarEntry] = []
 
-        for event in await self.day_svc.get_upcoming_events():
-            logger.info(f"UPCOMING EVENT {event.name}")
+        for calendar_entry in await self.day_svc.get_upcoming_calendar_entries():
+            logger.info(f"UPCOMING CALENDAR ENTRY {calendar_entry.name}")
 
-            # Check if this event needs a notification
+            # Check if this calendar entry needs a notification
             if not any(
-                action.type == objects.ActionType.NOTIFY for action in event.actions
+                action.type == objects.ActionType.NOTIFY
+                for action in calendar_entry.actions
             ):
-                events_to_notify.append(event)
-                event.actions.append(
+                calendar_entries_to_notify.append(calendar_entry)
+                calendar_entry.actions.append(
                     objects.Action(
                         type=objects.ActionType.NOTIFY,
                     )
                 )
 
-        return events_to_notify
+        return calendar_entries_to_notify
 
     async def _save_updates_and_send_notifications(
         self,
         tasks_to_update: list[objects.Task],
         tasks_to_notify: list[objects.Task],
-        events_to_notify: list[objects.Event],
+        calendar_entries_to_notify: list[objects.CalendarEntry],
     ) -> None:
         """Save updates to database and send notifications.
 
         Args:
             tasks_to_update: Tasks that need to be saved to database
             tasks_to_notify: Tasks that need notifications sent
-            events_to_notify: Events that need notifications sent
+            calendar_entries_to_notify: Calendar entries that need notifications sent
         """
         # Wrap database operations in a transaction
         uow = self.uow_factory.create(self.user.id)
@@ -208,9 +209,9 @@ class SheppardService(BaseService):
             for task in tasks_to_update:
                 await uow.tasks.put(task)
 
-            # Save all events that were notified (they all got NOTIFY actions added)
-            for event in events_to_notify:
-                await uow.events.put(event)
+            # Save all calendar entries that were notified (they all got NOTIFY actions added)
+            for calendar_entry in calendar_entries_to_notify:
+                await uow.calendar_entries.put(calendar_entry)
 
             # Commit transaction
             await uow.commit()
@@ -219,8 +220,8 @@ class SheppardService(BaseService):
         if tasks_to_notify:
             await self._notify_for_tasks(tasks_to_notify)
 
-        if events_to_notify:
-            await self._notify_for_events(events_to_notify)
+        if calendar_entries_to_notify:
+            await self._notify_for_calendar_entries(calendar_entries_to_notify)
 
     def _build_notification_payload(
         self,
@@ -287,31 +288,33 @@ class SheppardService(BaseService):
                     f"Failed to send notification to {subscription.endpoint}: {e}"
                 )
 
-    def _build_event_notification_payload(
+    def _build_calendar_entry_notification_payload(
         self,
-        events: list[objects.Event],
+        calendar_entries: list[objects.CalendarEntry],
     ) -> objects.NotificationPayload:
-        """Build a notification payload for one or more events."""
-        if len(events) == 1:
-            event = events[0]
-            title = event.name
-            body = f"Event starting soon: {event.name}"
+        """Build a notification payload for one or more calendar entries."""
+        if len(calendar_entries) == 1:
+            calendar_entry = calendar_entries[0]
+            title = calendar_entry.name
+            body = f"Event starting soon: {calendar_entry.name}"
         else:
-            title = f"{len(events)} events starting soon"
-            body = f"You have {len(events)} events starting soon"
+            title = f"{len(calendar_entries)} events starting soon"
+            body = f"You have {len(calendar_entries)} events starting soon"
 
-        # Include event information in the data field
-        event_data = [
+        # Include calendar entry information in the data field
+        calendar_entry_data = [
             {
-                "id": event.id,
-                "name": event.name,
-                "starts_at": event.starts_at.isoformat(),
-                "ends_at": event.ends_at.isoformat() if event.ends_at else None,
-                "calendar_id": event.calendar_id,
-                "platform_id": event.platform_id,
-                "status": event.status,
+                "id": calendar_entry.id,
+                "name": calendar_entry.name,
+                "starts_at": calendar_entry.starts_at.isoformat(),
+                "ends_at": calendar_entry.ends_at.isoformat()
+                if calendar_entry.ends_at
+                else None,
+                "calendar_id": calendar_entry.calendar_id,
+                "platform_id": calendar_entry.platform_id,
+                "status": calendar_entry.status,
             }
-            for event in events
+            for calendar_entry in calendar_entries
         ]
 
         return objects.NotificationPayload(
@@ -325,25 +328,27 @@ class SheppardService(BaseService):
                 ),
             ],
             data={
-                "type": "events",
-                "event_ids": [event.id for event in events],
-                "events": event_data,
+                "type": "calendar_entries",
+                "calendar_entry_ids": [
+                    calendar_entry.id for calendar_entry in calendar_entries
+                ],
+                "calendar_entries": calendar_entry_data,
             },
         )
 
-    async def _notify_for_events(
+    async def _notify_for_calendar_entries(
         self,
-        events: list[objects.Event],
+        calendar_entries: list[objects.CalendarEntry],
     ) -> None:
-        """Send notifications for the given events to all push subscriptions."""
-        if not events:
+        """Send notifications for the given calendar entries to all push subscriptions."""
+        if not calendar_entries:
             return
 
-        payload = self._build_event_notification_payload(events)
+        payload = self._build_calendar_entry_notification_payload(calendar_entries)
 
         for subscription in self.push_subscriptions:
             logger.info(
-                f"Sending notification for {len(events)} event(s) to {subscription.endpoint}"
+                f"Sending notification for {len(calendar_entries)} calendar entry(ies) to {subscription.endpoint}"
             )
             try:
                 await self.web_push_gateway.send_notification(
@@ -360,7 +365,7 @@ class SheppardService(BaseService):
             template_name,
             current_time=get_current_time(),
             tasks=self.day_svc.ctx.tasks,
-            events=self.day_svc.ctx.events,
+            calendar_entries=self.day_svc.ctx.calendar_entries,
             **kwargs,
         )
 
