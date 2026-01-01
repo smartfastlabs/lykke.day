@@ -7,6 +7,11 @@ from uuid import uuid4
 import pytest
 from dobles import InstanceDouble, allow
 
+from tests.fixtures.unit_of_work import (
+    InMemoryUnitOfWork,
+    InMemoryUnitOfWorkFactory,
+)
+
 
 @asynccontextmanager
 async def mock_transaction():
@@ -154,3 +159,68 @@ def test_user(test_user_id):
         hashed_password="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
     )
+
+
+# UnitOfWork fixtures
+@pytest.fixture
+def in_memory_uow_factory():
+    """In-memory UnitOfWorkFactory for unit tests."""
+    return InMemoryUnitOfWorkFactory()
+
+
+@pytest.fixture
+async def in_memory_uow(test_user):
+    """In-memory UnitOfWork for unit tests."""
+    uow = InMemoryUnitOfWork(user_id=test_user.id)
+    async with uow:
+        yield uow
+
+
+@pytest.fixture
+def mock_uow_factory(
+    mock_auth_token_repo,
+    mock_calendar_repo,
+    mock_day_repo,
+    mock_day_template_repo,
+    mock_event_repo,
+    mock_message_repo,
+    mock_push_subscription_repo,
+    mock_routine_repo,
+    mock_task_definition_repo,
+    mock_task_repo,
+    mock_user_repo,
+):
+    """Mock UnitOfWorkFactory that returns a mock UnitOfWork with all repositories."""
+    from unittest.mock import MagicMock
+
+    class MockUnitOfWork:
+        def __init__(self):
+            self.auth_tokens = mock_auth_token_repo
+            self.calendars = mock_calendar_repo
+            self.days = mock_day_repo
+            self.day_templates = mock_day_template_repo
+            self.events = mock_event_repo
+            self.messages = mock_message_repo
+            self.push_subscriptions = mock_push_subscription_repo
+            self.routines = mock_routine_repo
+            self.task_definitions = mock_task_definition_repo
+            self.tasks = mock_task_repo
+            self.users = mock_user_repo
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            pass
+
+        async def commit(self):
+            pass
+
+        async def rollback(self):
+            pass
+
+    class MockUnitOfWorkFactory:
+        def create(self, user_id):
+            return MockUnitOfWork()
+
+    return MockUnitOfWorkFactory()

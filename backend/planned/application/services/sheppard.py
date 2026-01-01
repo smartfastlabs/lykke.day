@@ -8,14 +8,7 @@ from langchain_core.runnables import Runnable
 from loguru import logger
 
 from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
-from planned.application.repositories import (
-    DayRepositoryProtocol,
-    DayTemplateRepositoryProtocol,
-    EventRepositoryProtocol,
-    MessageRepositoryProtocol,
-    PushSubscriptionRepositoryProtocol,
-    TaskRepositoryProtocol,
-)
+from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain import entities as objects
 from planned.infrastructure.utils import templates, youtube
 from planned.infrastructure.utils.dates import get_current_date, get_current_time
@@ -49,48 +42,49 @@ SheppardMode = Literal[
 ]
 
 
+# TODO: Consider renaming SheppardService to DaySchedulerService or NotificationService
+# for better clarity. "Sheppard" is unclear and doesn't convey the service's purpose.
 class SheppardService(BaseService):
+    """Service for managing day scheduling and notifications."""
+
     agent: Runnable
     day_svc: DayService
     mode: SheppardMode
     last_run: datetime.datetime | None = None
     push_subscriptions: list[objects.PushSubscription] = []
-    push_subscription_repo: PushSubscriptionRepositoryProtocol
-    task_repo: TaskRepositoryProtocol
+    uow_factory: UnitOfWorkFactory
     calendar_service: CalendarService
     planning_service: PlanningService
-    day_repo: DayRepositoryProtocol
-    day_template_repo: DayTemplateRepositoryProtocol
-    event_repo: EventRepositoryProtocol
-    message_repo: MessageRepositoryProtocol
     web_push_gateway: WebPushGatewayProtocol
 
     def __init__(
         self,
         user: objects.User,
         day_svc: DayService,
-        push_subscription_repo: PushSubscriptionRepositoryProtocol,
-        task_repo: TaskRepositoryProtocol,
+        uow_factory: UnitOfWorkFactory,
         calendar_service: CalendarService,
         planning_service: PlanningService,
-        day_repo: DayRepositoryProtocol,
-        day_template_repo: DayTemplateRepositoryProtocol,
-        event_repo: EventRepositoryProtocol,
-        message_repo: MessageRepositoryProtocol,
         web_push_gateway: WebPushGatewayProtocol,
         push_subscriptions: list[objects.PushSubscription] | None = None,
         mode: SheppardMode = "starting",
     ) -> None:
+        """Initialize SheppardService.
+
+        Args:
+            user: The user for this service
+            day_svc: DayService instance for managing day context
+            uow_factory: Factory for creating UnitOfWork instances
+            calendar_service: CalendarService for syncing calendars
+            planning_service: PlanningService for scheduling
+            web_push_gateway: Gateway for web push notifications
+            push_subscriptions: List of push subscriptions for the user
+            mode: Initial mode of the service
+        """
         super().__init__(user)
         self.mode = mode
-        self.push_subscription_repo = push_subscription_repo
-        self.task_repo = task_repo
+        self.uow_factory = uow_factory
         self.calendar_service = calendar_service
         self.planning_service = planning_service
-        self.day_repo = day_repo
-        self.day_template_repo = day_template_repo
-        self.event_repo = event_repo
-        self.message_repo = message_repo
         self.web_push_gateway = web_push_gateway
         self.push_subscriptions = push_subscriptions or []
         self.last_run = None
@@ -152,7 +146,7 @@ class SheppardService(BaseService):
 
             # Update task status if needed
             if task.status != objects.TaskStatus.PENDING:
-                task.status = objects.TaskStatus.PENDING
+                task.mark_pending()
                 tasks_to_update.append(task)
 
             # Check if this task needs a notification
@@ -160,10 +154,13 @@ class SheppardService(BaseService):
                 action.type == objects.ActionType.NOTIFY for action in task.actions
             ):
                 tasks_to_notify.append(task)
-                task.actions.append(
-                    objects.Action(
-                        type=objects.ActionType.NOTIFY,
-                    ),
+                from planned.domain.entities import Action
+                from planned.domain.value_objects.action import ActionType
+
+                task.record_action(
+                    Action(
+                        type=ActionType.NOTIFY,
+                    )
                 )
 
         return tasks_to_update, tasks_to_notify
@@ -186,10 +183,13 @@ class SheppardService(BaseService):
                 action.type == objects.ActionType.NOTIFY for action in event.actions
             ):
                 events_to_notify.append(event)
-                event.actions.append(
-                    objects.Action(
-                        type=objects.ActionType.NOTIFY,
-                    ),
+                from planned.domain.entities import Action
+                from planned.domain.value_objects.action import ActionType
+
+                event.actions.append(  # type: ignore[attr-defined]
+                    Action(
+                        type=ActionType.NOTIFY,
+                    )
                 )
 
         return events_to_notify
@@ -208,14 +208,18 @@ class SheppardService(BaseService):
             events_to_notify: Events that need notifications sent
         """
         # Wrap database operations in a transaction
-        async with self.transaction():
+        uow = self.uow_factory.create(self.user.id)
+        async with uow:
             # Save all updated tasks
             for task in tasks_to_update:
-                await self.task_repo.put(task)
+                await uow.tasks.put(task)
 
             # Save all events that were notified (they all got NOTIFY actions added)
             for event in events_to_notify:
-                await self.event_repo.put(event)
+                await uow.events.put(event)
+
+            # Commit transaction
+            await uow.commit()
 
         # Send notifications after transaction commits
         if tasks_to_notify:
@@ -382,22 +386,18 @@ class SheppardService(BaseService):
         pass
 
     async def start_day(self, _: str = "default") -> None:
-        # Confirm yesterday is ended
-        # If it is not already scheduled, schedule
-        # Update the day service to the new date
-        # send morning summary
+        """Start a new day.
+
+        Confirms yesterday is ended, schedules today if not already scheduled,
+        and updates the day service to the new date.
+        """
         date = get_current_date()
         # Create a DayService instance using the factory
         factory = DayServiceFactory(
             user=self.user,
-            day_repo=self.day_repo,
-            day_template_repo=self.day_template_repo,
-            event_repo=self.event_repo,
-            message_repo=self.message_repo,
-            task_repo=self.task_repo,
-            user_repo=self.planning_service.user_repo,
+            uow_factory=self.uow_factory,
         )
-        self.day_svc = await factory.create(date, user_id=self.planning_service.user_id)
+        self.day_svc = await factory.create(date, user_id=self.user.id)
 
         if self.day_svc.ctx.day.status != objects.DayStatus.SCHEDULED:
             await self.planning_service.schedule(self.day_svc.date)

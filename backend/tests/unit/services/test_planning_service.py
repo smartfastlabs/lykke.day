@@ -44,6 +44,7 @@ async def test_preview_tasks(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
 ):
     """Test preview_tasks generates tasks from active routines."""
     date = datetime.date(2024, 1, 1)  # Monday
@@ -79,14 +80,7 @@ async def test_preview_tasks(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     result = await service.preview_tasks(date)
@@ -109,6 +103,7 @@ async def test_preview_tasks_filters_inactive_routines(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
 ):
     """Test preview_tasks filters out routines not active on the date."""
     date = datetime.date(2024, 1, 1)  # Monday
@@ -135,14 +130,7 @@ async def test_preview_tasks_filters_inactive_routines(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     result = await service.preview_tasks(date)
@@ -163,6 +151,7 @@ async def test_preview_creates_day_context(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
     test_datetime_noon,
 ):
     """Test preview creates a DayContext with tasks, events, and messages."""
@@ -201,14 +190,7 @@ async def test_preview_creates_day_context(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     result = await service.preview(date)
@@ -232,6 +214,7 @@ async def test_preview_uses_existing_day_template(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
 ):
     """Test preview uses template from existing day if available."""
     date = datetime.date(2024, 1, 1)
@@ -256,14 +239,7 @@ async def test_preview_uses_existing_day_template(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     result = await service.preview(date)
@@ -284,6 +260,7 @@ async def test_unschedule_deletes_routine_tasks(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
 ):
     """Test unschedule deletes routine tasks and sets day to UNSCHEDULED."""
     date = datetime.date(2024, 1, 1)
@@ -356,14 +333,7 @@ async def test_unschedule_deletes_routine_tasks(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     await service.unschedule(date)
@@ -385,6 +355,7 @@ async def test_schedule_creates_tasks_and_sets_status(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
 ):
     """Test schedule creates tasks and sets day status to SCHEDULED."""
     date = datetime.date(2024, 1, 1)
@@ -405,6 +376,7 @@ async def test_schedule_creates_tasks_and_sets_status(
     allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
     allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
+    allow(mock_day_template_repo).get(template.id).and_return(template)
     allow(mock_routine_repo).all().and_return([])
     allow(mock_event_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
@@ -420,14 +392,7 @@ async def test_schedule_creates_tasks_and_sets_status(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     result = await service.schedule(date)
@@ -448,6 +413,7 @@ async def test_save_action_for_task(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
 ):
     """Test save_action updates task status and saves it."""
 
@@ -474,14 +440,7 @@ async def test_save_action_for_task(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     result = await service.save_action(task, action)
@@ -503,6 +462,7 @@ async def test_save_action_for_event(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
     test_datetime_noon,
 ):
     """Test save_action saves event with action."""
@@ -526,14 +486,7 @@ async def test_save_action_for_event(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     result = await service.save_action(event, action)
@@ -554,6 +507,7 @@ async def test_preview_with_template_id(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
 ):
     """Test preview with explicit template_id."""
     date = datetime.date(2024, 1, 1)
@@ -570,14 +524,7 @@ async def test_preview_with_template_id(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     result = await service.preview(date, template_id=template.id)
@@ -598,6 +545,7 @@ async def test_schedule_with_template_id(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
 ):
     """Test schedule with explicit template_id."""
     date = datetime.date(2024, 1, 1)
@@ -624,14 +572,7 @@ async def test_schedule_with_template_id(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     result = await service.schedule(date, template_id=template.id)
@@ -653,6 +594,7 @@ async def test_save_action_for_task_punt(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
 ):
     """Test save_action updates task status to PUNT."""
     date = datetime.date(2024, 1, 1)
@@ -678,14 +620,7 @@ async def test_save_action_for_task_punt(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     result = await service.save_action(task, action)
@@ -707,6 +642,7 @@ async def test_save_action_for_invalid_object(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
 ):
     """Test save_action raises ValueError for invalid object type."""
     from planned.domain.entities import Message
@@ -724,14 +660,7 @@ async def test_save_action_for_invalid_object(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     with pytest.raises(ValueError) as exc_info:
@@ -751,6 +680,7 @@ async def test_preview_tasks_uses_routine_task_name(
     mock_task_repo,
     test_user_id,
     test_user,
+    mock_uow_factory,
 ):
     """Test preview_tasks uses routine task name when provided."""
     date = datetime.date(2024, 1, 1)  # Monday
@@ -786,14 +716,7 @@ async def test_preview_tasks_uses_routine_task_name(
 
     service = PlanningService(
         user=test_user,
-        user_repo=mock_user_repo,
-        day_repo=mock_day_repo,
-        day_template_repo=mock_day_template_repo,
-        event_repo=mock_event_repo,
-        message_repo=mock_message_repo,
-        routine_repo=mock_routine_repo,
-        task_definition_repo=mock_task_definition_repo,
-        task_repo=mock_task_repo,
+        uow_factory=mock_uow_factory,
     )
 
     result = await service.preview_tasks(date)

@@ -1,14 +1,9 @@
-from datetime import UTC, datetime, timedelta
-from uuid import UUID
+from datetime import UTC, datetime
 
 from loguru import logger
 
 from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from planned.application.repositories import (
-    AuthTokenRepositoryProtocol,
-    CalendarRepositoryProtocol,
-    EventRepositoryProtocol,
-)
+from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from planned.core.exceptions import exceptions
 from planned.domain.entities import Calendar, Event, User
@@ -17,24 +12,27 @@ from .base import BaseService
 
 
 class CalendarService(BaseService):
-    auth_token_repo: AuthTokenRepositoryProtocol
-    calendar_repo: CalendarRepositoryProtocol
-    event_repo: EventRepositoryProtocol
+    """Service for managing calendar synchronization."""
+
+    uow_factory: UnitOfWorkFactory
     google_gateway: GoogleCalendarGatewayProtocol
     running: bool = False
 
     def __init__(
         self,
         user: User,
-        auth_token_repo: AuthTokenRepositoryProtocol,
-        calendar_repo: CalendarRepositoryProtocol,
-        event_repo: EventRepositoryProtocol,
+        uow_factory: UnitOfWorkFactory,
         google_gateway: GoogleCalendarGatewayProtocol,
     ) -> None:
+        """Initialize CalendarService.
+
+        Args:
+            user: The user for this service
+            uow_factory: Factory for creating UnitOfWork instances
+            google_gateway: Gateway for Google Calendar integration
+        """
         super().__init__(user)
-        self.auth_token_repo = auth_token_repo
-        self.calendar_repo = calendar_repo
-        self.event_repo = event_repo
+        self.uow_factory = uow_factory
         self.google_gateway = google_gateway
 
     async def sync_google(
@@ -42,18 +40,29 @@ class CalendarService(BaseService):
         calendar: Calendar,
         lookback: datetime,
     ) -> tuple[list[Event], list[Event]]:
+        """Sync events from Google Calendar.
+
+        Args:
+            calendar: The calendar to sync
+            lookback: The datetime to look back from
+
+        Returns:
+            Tuple of (events, deleted_events)
+        """
         events, deleted_events = [], []
 
-        token = await self.auth_token_repo.get(calendar.auth_token_id)
-        for event in await self.google_gateway.load_calendar_events(
-            calendar,
-            lookback=lookback,
-            token=token,
-        ):
-            if event.status == "cancelled":
-                deleted_events.append(event)
-            else:
-                events.append(event)
+        uow = self.uow_factory.create(self.user.id)
+        async with uow:
+            token = await uow.auth_tokens.get(calendar.auth_token_id)
+            for event in await self.google_gateway.load_calendar_events(
+                calendar,
+                lookback=lookback,
+                token=token,
+            ):
+                if event.status == "cancelled":
+                    deleted_events.append(event)
+                else:
+                    events.append(event)
 
         return events, deleted_events
 
@@ -74,15 +83,20 @@ class CalendarService(BaseService):
         )
 
     async def sync_all(self) -> None:
-        for calendar in await self.calendar_repo.all():
-            try:
-                events, deleted_events = await self.sync(calendar)
-                for event in events:
-                    await self.event_repo.put(event)
-                for event in deleted_events:
-                    logger.info(f"DELETING EVENT: {event.name}")
-                    await self.event_repo.delete(event)
-            except exceptions.TokenExpiredError:
-                logger.info(f"Token expired for calendar {calendar.name}")
-            except Exception as e:
-                logger.exception(f"Error syncing calendar {calendar.name}: {e}")
+        """Sync all calendars for the user."""
+        uow = self.uow_factory.create(self.user.id)
+        async with uow:
+            for calendar in await uow.calendars.all():
+                try:
+                    events, deleted_events = await self.sync(calendar)
+                    for event in events:
+                        await uow.events.put(event)
+                    for event in deleted_events:
+                        logger.info(f"DELETING EVENT: {event.name}")
+                        await uow.events.delete(event)
+                    await uow.commit()
+                except exceptions.TokenExpiredError:
+                    logger.info(f"Token expired for calendar {calendar.name}")
+                except Exception as e:
+                    logger.exception(f"Error syncing calendar {calendar.name}: {e}")
+                    await uow.rollback()

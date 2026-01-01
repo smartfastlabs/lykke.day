@@ -101,10 +101,10 @@ class DayContextLoader:
         """
         template_slug = self.user.settings.template_defaults[date.weekday()]
         template = await self.day_template_repo.get_by_slug(template_slug)
-        return await self._base_day(date, user_id, template)
+        return self._base_day(date, user_id, template)
 
     @staticmethod
-    async def _base_day(
+    def _base_day(
         date: datetime.date,
         user_id: UUID,
         template: objects.DayTemplate,
@@ -119,12 +119,10 @@ class DayContextLoader:
         Returns:
             A Day entity with default status
         """
-        return objects.Day(
+        return objects.Day.create_for_date(
+            date,
             user_id=user_id,
-            date=date,
-            status=objects.DayStatus.UNSCHEDULED,
             template=template,
-            alarm=template.alarm,
         )
 
     def _build_context(

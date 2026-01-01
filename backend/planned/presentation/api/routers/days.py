@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from planned.application.services import DayService, PlanningService
+from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain.entities import Day, DayContext, DayStatus, DayTemplate
 from planned.domain.value_objects.base import BaseRequestObject
 from planned.infrastructure.utils.dates import get_current_date
@@ -15,6 +16,7 @@ from .dependencies.services import (
     get_day_service_for_date,
     get_day_service_for_tomorrow_date,
     get_planning_service,
+    get_unit_of_work_factory,
 )
 
 router = APIRouter()
@@ -60,52 +62,46 @@ async def update_day(
     date: datetime.date,
     request: UpdateDayRequest,
     repos: Annotated[RepositoryContainer, Depends(get_repository_container)],
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> Day:
     """Update a day's status or template."""
-    # Create a DayService instance to use get_or_preview
-    # Create a temporary DayService instance to load context
-    template_slug = repos.user.settings.template_defaults[date.weekday()]
-    template = await repos.day_template_repo.get_by_slug(template_slug)
-    temp_day = await DayService.base_day(
-        date,
-        user_id=repos.user.id,
-        template=template,
-    )
-    temp_ctx = DayContext(day=temp_day)
-    temp_day_svc = DayService(
+    from planned.application.services.factories import DayServiceFactory
+
+    # Use factory to create DayService
+    factory = DayServiceFactory(
         user=repos.user,
-        ctx=temp_ctx,
-        day_repo=repos.day_repo,
-        day_template_repo=repos.day_template_repo,
-        event_repo=repos.event_repo,
-        message_repo=repos.message_repo,
-        task_repo=repos.task_repo,
+        uow_factory=uow_factory,
     )
-    ctx = await temp_day_svc.load_context(
-        date=date,
-        user_id=repos.user.id,
-        user_repo=repos.user_repo,
-    )
-    day_svc = DayService(
-        user=repos.user,
-        ctx=ctx,
-        day_repo=repos.day_repo,
-        day_template_repo=repos.day_template_repo,
-        event_repo=repos.event_repo,
-        message_repo=repos.message_repo,
-        task_repo=repos.task_repo,
-    )
-    day: Day = await day_svc.get_or_preview(
-        date,
-        user=repos.user,
-        user_repo=repos.user_repo,
-    )
-    if request.status is not None:
-        day.status = request.status
-    if request.template_id is not None:
-        template = await repos.day_template_repo.get(request.template_id)
-        day.template = template
-    return await repos.day_repo.put(day)
+    day_svc = await factory.create(date, user_id=repos.user.id)
+
+    # Get or preview the day
+    day: Day = await day_svc.get_or_preview(date)
+
+    # Update day using domain methods and save
+    uow = uow_factory.create(repos.user.id)
+    async with uow:
+        # Reload day in UoW context
+        day = await uow.days.get(day.id)
+
+        if request.status is not None:
+            if request.status == DayStatus.SCHEDULED and day.template:
+                day.schedule(day.template)
+            elif request.status == DayStatus.UNSCHEDULED:
+                day.unschedule()
+            elif request.status == DayStatus.COMPLETE:
+                day.complete()
+            else:
+                # For other statuses, set directly (not ideal but maintains compatibility)
+                day.status = request.status
+
+        if request.template_id is not None:
+            template = await uow.day_templates.get(request.template_id)
+            day.update_template(template)
+
+        # Save and commit
+        result = await uow.days.put(day)
+        await uow.commit()
+        return result
 
 
 @router.get("/templates")

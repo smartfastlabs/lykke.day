@@ -11,6 +11,9 @@ class BaseObject(pydantic.BaseModel):
         from_attributes=True,
         populate_by_name=True,
         extra="forbid",
+        # TODO: Enable immutability once all entity modifications are refactored
+        # to use model_copy(update={...}) instead of direct assignment.
+        # This requires updating all code that modifies entities (services, etc.)
         # frozen=True,
     )
 

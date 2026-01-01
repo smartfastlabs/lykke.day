@@ -1,52 +1,26 @@
 import asyncio
 from datetime import time
-from typing import cast
 from uuid import UUID
 
 from loguru import logger
 
-from planned.application.repositories import (
-    AuthTokenRepositoryProtocol,
-    CalendarRepositoryProtocol,
-    DayRepositoryProtocol,
-    DayTemplateRepositoryProtocol,
-    EventRepositoryProtocol,
-    MessageRepositoryProtocol,
-    PushSubscriptionRepositoryProtocol,
-    RoutineRepositoryProtocol,
-    TaskDefinitionRepositoryProtocol,
-    TaskRepositoryProtocol,
-    UserRepositoryProtocol,
-)
+from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from planned.application.services import CalendarService, PlanningService
 from planned.application.services.factories import DayServiceFactory
+from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.common.repository_handler import ChangeHandler
 from planned.core import exceptions
 from planned.domain.entities import Alarm, DayTemplate, User
 from planned.domain.value_objects.alarm import AlarmType
 from planned.domain.value_objects.repository_event import RepositoryEvent
-from planned.infrastructure.gateways.adapters import (
-    GoogleCalendarGatewayAdapter,
-    WebPushGatewayAdapter,
-)
-from planned.infrastructure.repositories import (
-    AuthTokenRepository,
-    CalendarRepository,
-    DayRepository,
-    DayTemplateRepository,
-    EventRepository,
-    MessageRepository,
-    PushSubscriptionRepository,
-    RoutineRepository,
-    TaskDefinitionRepository,
-    TaskRepository,
-    UserRepository,
-)
 from planned.infrastructure.utils.dates import get_current_date
 
 from .sheppard import SheppardService
 
 
+# TODO: Consider renaming SheppardManager to UserSchedulerManager or DaySchedulerManager
+# for better clarity. "Sheppard" is unclear and doesn't convey the manager's purpose.
 class SheppardManager:
     """Manages per-user SheppardService instances.
 
@@ -54,11 +28,23 @@ class SheppardManager:
     as users are created/deleted. Each user gets their own isolated SheppardService.
     """
 
-    def __init__(self) -> None:
-        """Initialize the SheppardManager."""
+    def __init__(
+        self,
+        uow_factory: UnitOfWorkFactory,
+        google_gateway: GoogleCalendarGatewayProtocol,
+        web_push_gateway: WebPushGatewayProtocol,
+    ) -> None:
+        """Initialize the SheppardManager.
 
+        Args:
+            uow_factory: Factory for creating UnitOfWork instances
+            google_gateway: Gateway for Google Calendar integration
+            web_push_gateway: Gateway for web push notifications
+        """
         self._services: dict[UUID, tuple[SheppardService, asyncio.Task]] = {}
-        self._user_repo = UserRepository()
+        self._uow_factory = uow_factory
+        self._google_gateway = google_gateway
+        self._web_push_gateway = web_push_gateway
         self._is_running = False
         self._event_handler: ChangeHandler[User] | None = None
 
@@ -71,113 +57,62 @@ class SheppardManager:
         Returns:
             A configured SheppardService instance for the user.
         """
-        # Create repositories scoped to user
-        auth_token_repo: AuthTokenRepositoryProtocol = cast(
-            "AuthTokenRepositoryProtocol", AuthTokenRepository()
-        )
-        calendar_repo: CalendarRepositoryProtocol = cast(
-            "CalendarRepositoryProtocol", CalendarRepository(user_id=user_id)
-        )
-        day_repo: DayRepositoryProtocol = cast(
-            "DayRepositoryProtocol", DayRepository(user_id=user_id)
-        )
-        day_template_repo: DayTemplateRepositoryProtocol = cast(
-            "DayTemplateRepositoryProtocol",
-            DayTemplateRepository(user_id=user_id),
-        )
-        event_repo: EventRepositoryProtocol = cast(
-            "EventRepositoryProtocol", EventRepository(user_id=user_id)
-        )
-        message_repo: MessageRepositoryProtocol = cast(
-            "MessageRepositoryProtocol", MessageRepository(user_id=user_id)
-        )
-        push_subscription_repo: PushSubscriptionRepositoryProtocol = cast(
-            "PushSubscriptionRepositoryProtocol",
-            PushSubscriptionRepository(user_id=user_id),
-        )
-        task_repo: TaskRepositoryProtocol = cast(
-            "TaskRepositoryProtocol", TaskRepository(user_id=user_id)
-        )
+        # Create UnitOfWork for setup operations
+        uow = self._uow_factory.create(user_id)
+        async with uow:
+            # Ensure default DayTemplate exists for user
+            try:
+                await uow.day_templates.get_by_slug("default")
+            except exceptions.NotFoundError:
+                # Template doesn't exist, create it
+                default_template = DayTemplate(
+                    user_id=user_id,
+                    slug="default",
+                    routine_ids=[],
+                    alarm=Alarm(
+                        name="Default Alarm",
+                        time=time(7, 15),
+                        type=AlarmType.FIRM,
+                    ),
+                )
+                await uow.day_templates.put(default_template)
+                await uow.commit()
 
-        # Ensure default DayTemplate exists for user
-        try:
-            await day_template_repo.get_by_slug("default")
-        except exceptions.NotFoundError:
-            # Template doesn't exist, create it
-            default_template = DayTemplate(
-                user_id=user_id,
-                slug="default",
-                routine_ids=[],
-                alarm=Alarm(
-                    name="Default Alarm",
-                    time=time(7, 15),
-                    type=AlarmType.FIRM,
-                ),
+            # Get user
+            user = await uow.users.get(user_id)
+
+            # Load push subscriptions
+            push_subscriptions = await uow.push_subscriptions.all()
+
+            # Create services outside UoW context (they'll create their own when needed)
+            # Create day service for current date using factory
+            date = get_current_date()
+            factory = DayServiceFactory(
+                user=user,
+                uow_factory=self._uow_factory,
             )
-            await day_template_repo.put(default_template)
+            day_svc = await factory.create(date, user_id=user_id)
 
-        # Get user
-        user = await self._user_repo.get(user_id)
-
-        # Create gateway adapters
-        google_gateway = GoogleCalendarGatewayAdapter()
-        web_push_gateway = WebPushGatewayAdapter()
-
-        # Create services
+        # Create services (they'll create their own UoW instances when needed)
         calendar_service = CalendarService(
             user=user,
-            auth_token_repo=auth_token_repo,
-            calendar_repo=calendar_repo,
-            event_repo=event_repo,
-            google_gateway=google_gateway,
+            uow_factory=self._uow_factory,
+            google_gateway=self._google_gateway,
         )
 
         planning_service = PlanningService(
             user=user,
-            user_repo=cast("UserRepositoryProtocol", self._user_repo),
-            day_repo=day_repo,
-            day_template_repo=day_template_repo,
-            event_repo=event_repo,
-            message_repo=message_repo,
-            routine_repo=cast(
-                "RoutineRepositoryProtocol", RoutineRepository(user_id=user_id)
-            ),
-            task_definition_repo=cast(
-                "TaskDefinitionRepositoryProtocol",
-                TaskDefinitionRepository(user_id=user_id),
-            ),
-            task_repo=task_repo,
+            uow_factory=self._uow_factory,
         )
-
-        # Create day service for current date using factory
-        date = get_current_date()
-        factory = DayServiceFactory(
-            user=user,
-            day_repo=day_repo,
-            day_template_repo=day_template_repo,
-            event_repo=event_repo,
-            message_repo=message_repo,
-            task_repo=task_repo,
-            user_repo=cast("UserRepositoryProtocol", self._user_repo),
-        )
-        day_svc = await factory.create(date, user_id=user_id)
-
-        # Load push subscriptions
-        push_subscriptions = await push_subscription_repo.all()
 
         # Create and return SheppardService
         return SheppardService(
             user=user,
             day_svc=day_svc,
-            push_subscription_repo=push_subscription_repo,
-            task_repo=task_repo,
+            uow_factory=self._uow_factory,
             calendar_service=calendar_service,
             planning_service=planning_service,
-            day_repo=day_repo,
-            day_template_repo=day_template_repo,
-            event_repo=event_repo,
-            message_repo=message_repo,
-            web_push_gateway=web_push_gateway,
+            web_push_gateway=self._web_push_gateway,
             push_subscriptions=push_subscriptions,
             mode="starting",
         )
@@ -255,24 +190,36 @@ class SheppardManager:
 
         self._is_running = True
 
-        # Listen to UserRepository events
-        self._event_handler = self._handle_user_event
-        self._user_repo.listen(self._event_handler)
-        logger.info("SheppardManager listening to UserRepository events")
+        # Get UserRepository to listen to events
+        # UserRepository is not user-scoped, so we use a dummy user_id
+        # The actual user_id doesn't matter for accessing the users repository
+        dummy_uow = self._uow_factory.create(
+            UUID("00000000-0000-0000-0000-000000000000")
+        )
+        async with dummy_uow:
+            user_repo = dummy_uow.users
 
-        # Start services for all existing users
-        try:
-            users = await self._user_repo.all()
-            logger.info(f"Found {len(users)} existing users, starting services...")
-            for user in users:
-                user_id = user.id
-                await self._start_service_for_user(user_id)
-            logger.info(
-                f"SheppardManager started with {len(self._services)} service(s)"
-            )
-        except Exception as e:
-            logger.exception(f"Error starting SheppardManager: {e}")
-            raise
+            # Listen to UserRepository events (signals are class-level)
+            self._event_handler = self._handle_user_event
+            # Access the class-level signal
+            from planned.infrastructure.repositories import UserRepository
+
+            UserRepository.signal_source.connect(self._event_handler)
+            logger.info("SheppardManager listening to UserRepository events")
+
+            # Start services for all existing users
+            try:
+                users = await user_repo.all()
+                logger.info(f"Found {len(users)} existing users, starting services...")
+                for user in users:
+                    user_id = user.id
+                    await self._start_service_for_user(user_id)
+                logger.info(
+                    f"SheppardManager started with {len(self._services)} service(s)"
+                )
+            except Exception as e:
+                logger.exception(f"Error starting SheppardManager: {e}")
+                raise
 
     async def stop(self) -> None:
         """Stop the manager and all user services."""
@@ -283,7 +230,6 @@ class SheppardManager:
 
         # Disconnect from UserRepository events
         if self._event_handler is not None:
-            # TODO: Move import to top if circular import can be resolved
             from planned.infrastructure.repositories import UserRepository
 
             UserRepository.signal_source.disconnect(self._event_handler)

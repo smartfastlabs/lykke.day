@@ -18,6 +18,7 @@ async def test_sync_google(
     mock_calendar_repo,
     mock_event_repo,
     mock_google_gateway,
+    mock_uow_factory,
     test_datetime_noon,
 ):
     """Test syncing Google calendar."""
@@ -72,9 +73,7 @@ async def test_sync_google(
 
     service = CalendarService(
         user=test_user,
-        auth_token_repo=mock_auth_token_repo,
-        calendar_repo=mock_calendar_repo,
-        event_repo=mock_event_repo,
+        uow_factory=mock_uow_factory,
         google_gateway=mock_google_gateway,
     )
 
@@ -93,6 +92,7 @@ async def test_sync(
     mock_calendar_repo,
     mock_event_repo,
     mock_google_gateway,
+    mock_uow_factory,
     test_datetime_noon,
 ):
     """Test syncing a calendar."""
@@ -128,9 +128,7 @@ async def test_sync(
 
     service = CalendarService(
         user=test_user,
-        auth_token_repo=mock_auth_token_repo,
-        calendar_repo=mock_calendar_repo,
-        event_repo=mock_event_repo,
+        uow_factory=mock_uow_factory,
         google_gateway=mock_google_gateway,
     )
 
@@ -143,7 +141,7 @@ async def test_sync(
 @pytest.mark.asyncio
 async def test_sync_all(
     test_user,
-    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway, mock_uow_factory
 ):
     """Test syncing all calendars."""
     calendar1 = Calendar(
@@ -169,9 +167,7 @@ async def test_sync_all(
 
     service = CalendarService(
         user=test_user,
-        auth_token_repo=mock_auth_token_repo,
-        calendar_repo=mock_calendar_repo,
-        event_repo=mock_event_repo,
+        uow_factory=mock_uow_factory,
         google_gateway=mock_google_gateway,
     )
 
@@ -186,6 +182,7 @@ async def test_sync_with_last_sync_at(
     mock_calendar_repo,
     mock_event_repo,
     mock_google_gateway,
+    mock_uow_factory,
     test_datetime_noon,
 ):
     """Test syncing a calendar with last_sync_at set uses it for lookback."""
@@ -228,9 +225,7 @@ async def test_sync_with_last_sync_at(
 
     service = CalendarService(
         user=test_user,
-        auth_token_repo=mock_auth_token_repo,
-        calendar_repo=mock_calendar_repo,
-        event_repo=mock_event_repo,
+        uow_factory=mock_uow_factory,
         google_gateway=mock_google_gateway,
     )
 
@@ -244,7 +239,7 @@ async def test_sync_with_last_sync_at(
 @pytest.mark.asyncio
 async def test_sync_unsupported_platform(
     test_user,
-    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway, mock_uow_factory
 ):
     """Test syncing a calendar with unsupported platform raises NotImplementedError."""
     calendar = Calendar(
@@ -257,9 +252,7 @@ async def test_sync_unsupported_platform(
 
     service = CalendarService(
         user=test_user,
-        auth_token_repo=mock_auth_token_repo,
-        calendar_repo=mock_calendar_repo,
-        event_repo=mock_event_repo,
+        uow_factory=mock_uow_factory,
         google_gateway=mock_google_gateway,
     )
 
@@ -275,6 +268,7 @@ async def test_sync_google_no_events(
     mock_calendar_repo,
     mock_event_repo,
     mock_google_gateway,
+    mock_uow_factory,
     test_datetime_noon,
 ):
     """Test syncing Google calendar with no events."""
@@ -304,9 +298,7 @@ async def test_sync_google_no_events(
 
     service = CalendarService(
         user=test_user,
-        auth_token_repo=mock_auth_token_repo,
-        calendar_repo=mock_calendar_repo,
-        event_repo=mock_event_repo,
+        uow_factory=mock_uow_factory,
         google_gateway=mock_google_gateway,
     )
 
@@ -323,6 +315,7 @@ async def test_sync_all_successful_syncs(
     mock_calendar_repo,
     mock_event_repo,
     mock_google_gateway,
+    mock_uow_factory,
     test_datetime_noon,
 ):
     """Test syncing all calendars with successful syncs."""
@@ -398,9 +391,7 @@ async def test_sync_all_successful_syncs(
 
     service = CalendarService(
         user=test_user,
-        auth_token_repo=mock_auth_token_repo,
-        calendar_repo=mock_calendar_repo,
-        event_repo=mock_event_repo,
+        uow_factory=mock_uow_factory,
         google_gateway=mock_google_gateway,
     )
 
@@ -414,7 +405,7 @@ async def test_sync_all_successful_syncs(
 @pytest.mark.asyncio
 async def test_sync_all_with_exception_during_sync(
     test_user,
-    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway
+    mock_auth_token_repo, mock_calendar_repo, mock_event_repo, mock_google_gateway, mock_uow_factory
 ):
     """Test syncing all calendars handles exceptions during sync."""
     calendar1 = Calendar(
@@ -457,9 +448,7 @@ async def test_sync_all_with_exception_during_sync(
 
     service = CalendarService(
         user=test_user,
-        auth_token_repo=mock_auth_token_repo,
-        calendar_repo=mock_calendar_repo,
-        event_repo=mock_event_repo,
+        uow_factory=mock_uow_factory,
         google_gateway=mock_google_gateway,
     )
 

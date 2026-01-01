@@ -4,14 +4,7 @@ from uuid import UUID
 
 from blinker import Signal
 
-from planned.application.repositories import (
-    DayRepositoryProtocol,
-    DayTemplateRepositoryProtocol,
-    EventRepositoryProtocol,
-    MessageRepositoryProtocol,
-    TaskRepositoryProtocol,
-    UserRepositoryProtocol,
-)
+from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.application.utils import filter_upcoming_events, filter_upcoming_tasks
 from planned.core.constants import DEFAULT_LOOK_AHEAD
 from planned.core.exceptions import exceptions
@@ -36,38 +29,43 @@ def replace(lst: list[T], obj: T) -> None:
 
 
 class DayService(BaseService):
+    """Service for managing day context and operations."""
+
     ctx: objects.DayContext
     date: datetime.date
     signal_source: Signal
-    day_repo: DayRepositoryProtocol
-    day_template_repo: DayTemplateRepositoryProtocol
-    event_repo: EventRepositoryProtocol
-    message_repo: MessageRepositoryProtocol
-    task_repo: TaskRepositoryProtocol
+    uow_factory: UnitOfWorkFactory
 
     def __init__(
         self,
         user: User,
         ctx: objects.DayContext,
-        day_repo: DayRepositoryProtocol,
-        day_template_repo: DayTemplateRepositoryProtocol,
-        event_repo: EventRepositoryProtocol,
-        message_repo: MessageRepositoryProtocol,
-        task_repo: TaskRepositoryProtocol,
+        uow_factory: UnitOfWorkFactory,
     ) -> None:
+        """Initialize DayService.
+
+        Args:
+            user: The user for this service
+            ctx: The day context to manage
+            uow_factory: Factory for creating UnitOfWork instances
+        """
         super().__init__(user)
         self.ctx = ctx
         self.date = ctx.day.date
         self.signal_source = Signal()
-        self.day_repo = day_repo
-        self.day_template_repo = day_template_repo
-        self.event_repo = event_repo
-        self.message_repo = message_repo
-        self.task_repo = task_repo
+        self.uow_factory = uow_factory
 
-        self.event_repo.listen(self.on_event_change)
-        self.message_repo.listen(self.on_message_change)
-        self.task_repo.listen(self.on_task_change)
+        # Set up listeners for repository events
+        # Access repository classes directly for signals (signals are class-level)
+        from planned.infrastructure.repositories import (
+            EventRepository,
+            MessageRepository,
+            TaskRepository,
+        )
+
+        EventRepository.signal_source.connect(self.on_event_change)
+        MessageRepository.signal_source.connect(self.on_message_change)
+        TaskRepository.signal_source.connect(self.on_task_change)
 
     async def on_event_change(
         self, _sender: object | None = None, *, event: RepositoryEvent[objects.Event]
@@ -121,141 +119,115 @@ class DayService(BaseService):
         self,
         date: datetime.date,
         user_id: UUID | None = None,
-        user_repo: UserRepositoryProtocol | None = None,
     ) -> None:
+        """Set the date for this service and reload context.
+
+        Args:
+            date: The new date
+            user_id: Optional user ID (defaults to self.user.id)
+        """
         if self.date != date:
             self.date = date
-            # Extract user_id from repository if not provided
-            if user_id is None:
-                # Try to get from repository (repositories store user_id)
-                if hasattr(self.day_repo, "user_id"):
-                    user_id = self.day_repo.user_id
-                else:
-                    raise ValueError("user_id required for set_date")
-            self.ctx = await self.load_context(
-                date=date,
-                user_id=user_id,
-                user_repo=user_repo,
-            )
+            user_id = user_id or self.user.id
+            self.ctx = await self.load_context(date=date, user_id=user_id)
 
     async def load_context(
         self,
         date: datetime.date | None = None,
         user_id: UUID | None = None,
-        user_repo: UserRepositoryProtocol | None = None,
     ) -> objects.DayContext:
         """Load complete day context for the current or specified date.
 
         Args:
             date: Optional date to load (defaults to self.date)
-            user_id: Optional user ID (defaults to extracting from day_repo or self.user.id)
-            user_repo: Optional user repository (only needed if user_id is not provided)
+            user_id: Optional user ID (defaults to self.user.id)
 
         Returns:
             A DayContext with day, tasks, events, and messages loaded
         """
-        # Use instance attributes if not provided
         date = date or self.date
+        user_id = user_id or self.user.id
 
-        # Extract user_id if not provided
-        if user_id is None:
-            if hasattr(self.day_repo, "user_id"):
-                user_id = self.day_repo.user_id
-            elif hasattr(self, "user") and self.user:
-                user_id = self.user.id
-            else:
-                raise ValueError("user_id required for load_context")
+        uow = self.uow_factory.create(user_id)
+        async with uow:
+            # Create loader and load context
+            loader = DayContextLoader(
+                user=self.user,
+                day_repo=uow.days,
+                day_template_repo=uow.day_templates,
+                event_repo=uow.events,
+                message_repo=uow.messages,
+                task_repo=uow.tasks,
+            )
 
-        # Create loader and load context
-        loader = DayContextLoader(
-            user=self.user,
-            day_repo=self.day_repo,
-            day_template_repo=self.day_template_repo,
-            event_repo=self.event_repo,
-            message_repo=self.message_repo,
-            task_repo=self.task_repo,
-        )
-
-        self.ctx = await loader.load(date, user_id)
+            self.ctx = await loader.load(date, user_id)
         return self.ctx
-
-    @classmethod
-    async def base_day(
-        cls,
-        date: datetime.date,
-        user_id: UUID,
-        template: objects.DayTemplate,
-    ) -> objects.Day:
-        return objects.Day(
-            user_id=user_id,
-            date=date,
-            status=objects.DayStatus.UNSCHEDULED,
-            template=template,
-            alarm=template.alarm,
-        )
 
     async def get_or_preview(
         self,
         date: datetime.date,
-        user: User,
-        user_repo: UserRepositoryProtocol,
     ) -> objects.Day:
         """Get an existing day or return a preview (unsaved) day.
 
         Args:
             date: The date to get or preview
-            user: The user for the day
-            user_repo: Repository for user lookups
 
         Returns:
             An existing Day if found, otherwise a preview Day (not saved)
         """
-        day_id = objects.Day.id_from_date_and_user(date, user.id)
-        try:
-            return await self.day_repo.get(day_id)
-        except exceptions.NotFoundError:
-            # Day doesn't exist, create a preview
-            template_slug = user.settings.template_defaults[date.weekday()]
-            template = await self.day_template_repo.get_by_slug(template_slug)
-            return await type(self).base_day(
-                date,
-                user_id=user.id,
-                template=template,
-            )
+        uow = self.uow_factory.create(self.user.id)
+        async with uow:
+            day_id = objects.Day.id_from_date_and_user(date, self.user.id)
+            try:
+                return await uow.days.get(day_id)
+            except exceptions.NotFoundError:
+                # Day doesn't exist, create a preview
+                user = await uow.users.get(self.user.id)
+                template_slug = user.settings.template_defaults[date.weekday()]
+                template = await uow.day_templates.get_by_slug(template_slug)
+                return objects.Day.create_for_date(
+                    date,
+                    user_id=self.user.id,
+                    template=template,
+                )
 
     async def get_or_create(
         self,
         date: datetime.date,
-        user: User,
-        user_repo: UserRepositoryProtocol,
     ) -> objects.Day:
         """Get an existing day or create a new one.
 
         Args:
             date: The date to get or create
-            user: The user for the day
-            user_repo: Repository for user lookups
 
         Returns:
             An existing Day if found, otherwise a newly created and saved Day
         """
-        day_id = objects.Day.id_from_date_and_user(date, user.id)
-        try:
-            return await self.day_repo.get(day_id)
-        except exceptions.NotFoundError:
-            # Day doesn't exist, create it
-            template_slug = user.settings.template_defaults[date.weekday()]
-            template = await self.day_template_repo.get_by_slug(template_slug)
-            return await self.day_repo.put(
-                await type(self).base_day(
+        uow = self.uow_factory.create(self.user.id)
+        async with uow:
+            day_id = objects.Day.id_from_date_and_user(date, self.user.id)
+            try:
+                return await uow.days.get(day_id)
+            except exceptions.NotFoundError:
+                # Day doesn't exist, create it
+                user = await uow.users.get(self.user.id)
+                template_slug = user.settings.template_defaults[date.weekday()]
+                template = await uow.day_templates.get_by_slug(template_slug)
+                day = objects.Day.create_for_date(
                     date,
-                    user_id=user.id,
+                    user_id=self.user.id,
                     template=template,
                 )
-            )
+                result = await uow.days.put(day)
+                await uow.commit()
+                return result
 
     async def save(self) -> None:
-        await self.day_repo.put(self.ctx.day)
+        """Save the current day context's day to the database."""
+        uow = self.uow_factory.create(self.user.id)
+        async with uow:
+            await uow.days.put(self.ctx.day)
+            await uow.commit()
 
     async def get_upcoming_tasks(
         self,

@@ -45,7 +45,27 @@ class TokenExpiredError(BaseError):
     _message = "Token has expired"
 
 
-# Create a namespace object for backward compatibility
+class DomainError(BaseError):
+    """Error raised when a domain invariant is violated."""
+    status_code = 400
+    _message = "Domain rule violation"
+
+
+# Export exceptions directly for cleaner imports
+__all__ = [
+    "BaseError",
+    "NotFoundError",
+    "PushNotificationError",
+    "BadRequestError",
+    "AuthenticationError",
+    "AuthorizationError",
+    "ServerError",
+    "TokenExpiredError",
+    "DomainError",
+]
+
+# Create a namespace object for backward compatibility with existing code
+# This can be removed once all code is updated to use direct imports
 class _ExceptionsNamespace:
     def __init__(self) -> None:
         self.BaseError: type[BaseError] = BaseError
@@ -56,6 +76,7 @@ class _ExceptionsNamespace:
         self.AuthorizationError: type[AuthorizationError] = AuthorizationError
         self.ServerError: type[ServerError] = ServerError
         self.TokenExpiredError: type[TokenExpiredError] = TokenExpiredError
+        self.DomainError: type[DomainError] = DomainError
 
 
 exceptions = _ExceptionsNamespace()

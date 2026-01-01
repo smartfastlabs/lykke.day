@@ -17,6 +17,11 @@ from planned.infrastructure.auth import (
     auth_backend,
     fastapi_users,
 )
+from planned.infrastructure.gateways.adapters import (
+    GoogleCalendarGatewayAdapter,
+    WebPushGatewayAdapter,
+)
+from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from planned.infrastructure.utils import youtube
 from planned.presentation.api.routers import router
 
@@ -42,7 +47,14 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
     manager = None
     if not is_testing():
         # Create and start SheppardManager (skip during testing)
-        manager = SheppardManager()
+        uow_factory = SqlAlchemyUnitOfWorkFactory()
+        google_gateway = GoogleCalendarGatewayAdapter()
+        web_push_gateway = WebPushGatewayAdapter()
+        manager = SheppardManager(
+            uow_factory=uow_factory,
+            google_gateway=google_gateway,
+            web_push_gateway=web_push_gateway,
+        )
         await manager.start()
         # Store manager in app state for dependency injection
         fastapi_app.state.sheppard_manager = manager

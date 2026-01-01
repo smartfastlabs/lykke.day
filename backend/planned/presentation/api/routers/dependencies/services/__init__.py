@@ -10,18 +10,6 @@ from typing import Annotated
 
 from fastapi import Depends, Request
 
-from planned.application.repositories import (
-    AuthTokenRepositoryProtocol,
-    CalendarRepositoryProtocol,
-    DayRepositoryProtocol,
-    DayTemplateRepositoryProtocol,
-    EventRepositoryProtocol,
-    MessageRepositoryProtocol,
-    RoutineRepositoryProtocol,
-    TaskDefinitionRepositoryProtocol,
-    TaskRepositoryProtocol,
-    UserRepositoryProtocol,
-)
 from planned.application.services import (
     CalendarService,
     DayService,
@@ -29,169 +17,98 @@ from planned.application.services import (
     SheppardManager,
     SheppardService,
 )
+from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import exceptions
 from planned.domain.entities import User
-from planned.infrastructure.gateways.adapters import GoogleCalendarGatewayAdapter
+from planned.infrastructure.gateways.adapters import (
+    GoogleCalendarGatewayAdapter,
+    WebPushGatewayAdapter,
+)
+from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from planned.infrastructure.utils.dates import get_current_date, get_tomorrows_date
 
-from ..repositories import (
-    get_auth_token_repo,
-    get_calendar_repo,
-    get_day_repo,
-    get_day_template_repo,
-    get_event_repo,
-    get_message_repo,
-    get_routine_repo,
-    get_task_definition_repo,
-    get_task_repo,
-    get_user_repo,
-)
 from ..user import get_current_user
+
+
+def get_unit_of_work_factory() -> UnitOfWorkFactory:
+    """Get a UnitOfWorkFactory instance."""
+    return SqlAlchemyUnitOfWorkFactory()
+
+
+def get_google_gateway() -> GoogleCalendarGatewayAdapter:
+    """Get a GoogleCalendarGatewayAdapter instance."""
+    return GoogleCalendarGatewayAdapter()
+
+
+def get_web_push_gateway() -> WebPushGatewayAdapter:
+    """Get a WebPushGatewayAdapter instance."""
+    return WebPushGatewayAdapter()
 
 
 def get_calendar_service(
     user: Annotated[User, Depends(get_current_user)],
-    auth_token_repo: Annotated[
-        AuthTokenRepositoryProtocol, Depends(get_auth_token_repo)
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    google_gateway: Annotated[
+        GoogleCalendarGatewayAdapter, Depends(get_google_gateway)
     ],
-    calendar_repo: Annotated[CalendarRepositoryProtocol, Depends(get_calendar_repo)],
-    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
 ) -> CalendarService:
     """Get an instance of CalendarService."""
-    google_gateway = GoogleCalendarGatewayAdapter()
     return CalendarService(
         user=user,
-        auth_token_repo=auth_token_repo,
-        calendar_repo=calendar_repo,
-        event_repo=event_repo,
+        uow_factory=uow_factory,
         google_gateway=google_gateway,
     )
 
 
 def get_planning_service(
     user: Annotated[User, Depends(get_current_user)],
-    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
-    day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
-    day_template_repo: Annotated[
-        DayTemplateRepositoryProtocol, Depends(get_day_template_repo)
-    ],
-    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
-    message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
-    routine_repo: Annotated[RoutineRepositoryProtocol, Depends(get_routine_repo)],
-    task_definition_repo: Annotated[
-        TaskDefinitionRepositoryProtocol, Depends(get_task_definition_repo)
-    ],
-    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> PlanningService:
     """Get a user-scoped instance of PlanningService."""
     return PlanningService(
         user=user,
-        user_repo=user_repo,
-        day_repo=day_repo,
-        day_template_repo=day_template_repo,
-        event_repo=event_repo,
-        message_repo=message_repo,
-        routine_repo=routine_repo,
-        task_definition_repo=task_definition_repo,
-        task_repo=task_repo,
+        uow_factory=uow_factory,
     )
 
 
 async def get_day_service_for_current_date(
     user: Annotated[User, Depends(get_current_user)],
-    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
-    day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
-    day_template_repo: Annotated[
-        DayTemplateRepositoryProtocol, Depends(get_day_template_repo)
-    ],
-    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
-    message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
-    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> DayService:
     """Get a user-scoped instance of DayService for today's date."""
     return await get_day_service_for_date(
         get_current_date(),
         user=user,
-        user_repo=user_repo,
-        day_repo=day_repo,
-        day_template_repo=day_template_repo,
-        event_repo=event_repo,
-        message_repo=message_repo,
-        task_repo=task_repo,
+        uow_factory=uow_factory,
     )
 
 
 async def get_day_service_for_tomorrow_date(
     user: Annotated[User, Depends(get_current_user)],
-    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
-    day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
-    day_template_repo: Annotated[
-        DayTemplateRepositoryProtocol, Depends(get_day_template_repo)
-    ],
-    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
-    message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
-    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> DayService:
     """Get a user-scoped instance of DayService for tomorrow's date."""
     return await get_day_service_for_date(
         get_tomorrows_date(),
         user=user,
-        user_repo=user_repo,
-        day_repo=day_repo,
-        day_template_repo=day_template_repo,
-        event_repo=event_repo,
-        message_repo=message_repo,
-        task_repo=task_repo,
+        uow_factory=uow_factory,
     )
 
 
 async def get_day_service_for_date(
     date: datetime.date,
     user: Annotated[User, Depends(get_current_user)],
-    user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
-    day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
-    day_template_repo: Annotated[
-        DayTemplateRepositoryProtocol, Depends(get_day_template_repo)
-    ],
-    event_repo: Annotated[EventRepositoryProtocol, Depends(get_event_repo)],
-    message_repo: Annotated[MessageRepositoryProtocol, Depends(get_message_repo)],
-    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> DayService:
     """Get a user-scoped instance of DayService for a specific date."""
-    # Create a temporary DayService instance to load context
-    template_slug = user.settings.template_defaults[date.weekday()]
-    template = await day_template_repo.get_by_slug(template_slug)
-    temp_day = await DayService.base_day(
-        date,
-        user_id=user.id,
-        template=template,
-    )
-    from planned.domain.value_objects.day import DayContext
+    from planned.application.services.factories import DayServiceFactory
 
-    temp_ctx = DayContext(day=temp_day)
-    temp_day_svc = DayService(
+    # Use the factory to create DayService
+    factory = DayServiceFactory(
         user=user,
-        ctx=temp_ctx,
-        day_repo=day_repo,
-        day_template_repo=day_template_repo,
-        event_repo=event_repo,
-        message_repo=message_repo,
-        task_repo=task_repo,
+        uow_factory=uow_factory,
     )
-    ctx = await temp_day_svc.load_context(
-        date=date,
-        user_id=user.id,
-        user_repo=user_repo,
-    )
-    return DayService(
-        user=user,
-        ctx=ctx,
-        day_repo=day_repo,
-        day_template_repo=day_template_repo,
-        event_repo=event_repo,
-        message_repo=message_repo,
-        task_repo=task_repo,
-    )
+    return await factory.create(date, user_id=user.id)
 
 
 async def get_sheppard_service(
