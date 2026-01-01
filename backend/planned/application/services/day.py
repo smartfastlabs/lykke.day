@@ -1,32 +1,15 @@
 import datetime
-from typing import TypeVar
 from uuid import UUID
-
-from blinker import Signal
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.application.utils import filter_upcoming_events, filter_upcoming_tasks
-from planned.common.signal_registry import EntityType, entity_signals
 from planned.core.constants import DEFAULT_LOOK_AHEAD
 from planned.core.exceptions import NotFoundError
 from planned.domain import entities as objects
 from planned.domain.entities import User
-from planned.domain.value_objects.repository_event import RepositoryEvent
 
 from .base import BaseService
 from .day_context_loader import DayContextLoader
-
-T = TypeVar("T")
-
-
-def replace(lst: list[T], obj: T) -> None:
-    """Replace an object in a list by id, or append if not found."""
-    # All objects passed here have id attribute (Event, Task, Message)
-    for i, item in enumerate(lst):
-        if getattr(item, "id", None) == getattr(obj, "id", None):
-            lst[i] = obj
-            return
-    lst.append(obj)
 
 
 class DayService(BaseService):
@@ -34,7 +17,6 @@ class DayService(BaseService):
 
     ctx: objects.DayContext
     date: datetime.date
-    signal_source: Signal
     uow_factory: UnitOfWorkFactory
 
     def __init__(
@@ -53,62 +35,7 @@ class DayService(BaseService):
         super().__init__(user)
         self.ctx = ctx
         self.date = ctx.day.date
-        self.signal_source = Signal()
         self.uow_factory = uow_factory
-
-        # Set up listeners for repository events via the signal registry
-        # This avoids circular imports between application and infrastructure layers
-        entity_signals.connect(EntityType.EVENT, self.on_event_change)
-        entity_signals.connect(EntityType.MESSAGE, self.on_message_change)
-        entity_signals.connect(EntityType.TASK, self.on_task_change)
-
-    async def on_event_change(
-        self, _sender: object | None = None, *, event: RepositoryEvent[objects.Event]
-    ) -> None:
-        obj = event.value
-        change = event.type
-
-        if obj.date != self.date:
-            return
-
-        if change == "delete":
-            self.ctx.events = [e for e in self.ctx.events if e.id != obj.id]
-        elif change in ("create", "update"):
-            replace(self.ctx.events, obj)
-
-        await self.signal_source.send_async("change", event=event)
-
-    async def on_message_change(
-        self, _sender: object | None = None, *, event: RepositoryEvent[objects.Message]
-    ) -> None:
-        obj = event.value
-        change = event.type
-
-        if obj.date != self.date:
-            return
-
-        if change == "delete":
-            self.ctx.messages = [m for m in self.ctx.messages if m.id != obj.id]
-        elif change in ("create", "update"):
-            replace(self.ctx.messages, obj)
-
-        await self.signal_source.send_async("change", event=event)
-
-    async def on_task_change(
-        self, _sender: object | None = None, *, event: RepositoryEvent[objects.Task]
-    ) -> None:
-        obj = event.value
-        change = event.type
-
-        if obj.date != self.date:
-            return
-
-        if change == "delete":
-            self.ctx.tasks = [t for t in self.ctx.tasks if t.id != obj.id]
-        elif change in ("create", "update"):
-            replace(self.ctx.tasks, obj)
-
-        await self.signal_source.send_async("change", event=event)
 
     async def set_date(
         self,

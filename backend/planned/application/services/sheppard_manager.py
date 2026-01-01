@@ -9,12 +9,9 @@ from planned.application.gateways.web_push_protocol import WebPushGatewayProtoco
 from planned.application.services import CalendarService, PlanningService
 from planned.application.services.factories import DayServiceFactory
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.common.repository_handler import ChangeHandler
-from planned.common.signal_registry import EntityType, entity_signals
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import Alarm, DayTemplate, User
+from planned.domain.entities import Alarm, DayTemplate
 from planned.domain.value_objects.alarm import AlarmType
-from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.utils.dates import get_current_date
 
 from .sheppard import SheppardService
@@ -25,8 +22,7 @@ from .sheppard import SheppardService
 class SheppardManager:
     """Manages per-user SheppardService instances.
 
-    Listens to UserRepository events to automatically start/stop services
-    as users are created/deleted. Each user gets their own isolated SheppardService.
+    Each user gets their own isolated SheppardService.
     """
 
     def __init__(
@@ -47,7 +43,6 @@ class SheppardManager:
         self._google_gateway = google_gateway
         self._web_push_gateway = web_push_gateway
         self._is_running = False
-        self._event_handler: ChangeHandler[User] | None = None
 
     async def _create_service_for_user(self, user_id: UUID) -> SheppardService:
         """Create a SheppardService instance for a specific user.
@@ -118,23 +113,6 @@ class SheppardManager:
             mode="starting",
         )
 
-    async def _handle_user_event(
-        self, _sender: object | None = None, *, event: RepositoryEvent[User]
-    ) -> None:
-        """Handle user creation/deletion events.
-
-        Args:
-            _sender: The sender of the event (unused).
-            event: The change event containing the user and event type.
-        """
-        user = event.value
-        user_id = user.id
-
-        if event.type == "create":
-            await self._start_service_for_user(user_id)
-        elif event.type == "delete":
-            await self._stop_service_for_user(user_id)
-
     async def _start_service_for_user(self, user_id: UUID) -> None:
         """Start a SheppardService for a user.
 
@@ -191,7 +169,7 @@ class SheppardManager:
 
         self._is_running = True
 
-        # Get UserRepository to listen to events
+        # Get UserRepository to load existing users
         # UserRepository is not user-scoped, so we use a dummy user_id
         # The actual user_id doesn't matter for accessing the users repository
         dummy_uow = self._uow_factory.create(
@@ -199,12 +177,6 @@ class SheppardManager:
         )
         async with dummy_uow:
             user_repo = dummy_uow.users
-
-            # Listen to User events via the signal registry
-            # This avoids circular imports between application and infrastructure layers
-            self._event_handler = self._handle_user_event
-            entity_signals.connect(EntityType.USER, self._event_handler)
-            logger.info("SheppardManager listening to User events via signal registry")
 
             # Start services for all existing users
             try:
@@ -226,12 +198,6 @@ class SheppardManager:
             return
 
         self._is_running = False
-
-        # Disconnect from User events via the signal registry
-        if self._event_handler is not None:
-            entity_signals.disconnect(EntityType.USER, self._event_handler)
-            self._event_handler = None
-            logger.info("SheppardManager disconnected from User events")
 
         # Stop all services
         logger.info(f"Stopping {len(self._services)} SheppardService instance(s)...")

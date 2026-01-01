@@ -3,8 +3,6 @@
 from typing import Protocol, TypeVar
 from uuid import UUID
 
-from planned.common.repository_handler import ChangeHandler
-
 T = TypeVar("T")
 
 
@@ -53,7 +51,7 @@ class BasicCrudRepositoryProtocol(Protocol[T]):
 
 
 class DateScopedCrudRepositoryProtocol(Protocol[T]):
-    """Base protocol for date-scoped CRUD repositories (get by key, put, search_query, delete, listen).
+    """Base protocol for date-scoped CRUD repositories (get by key, put, search_query, delete).
 
     Note: Date filtering should be done using query objects with date fields.
     """
@@ -78,13 +76,9 @@ class DateScopedCrudRepositoryProtocol(Protocol[T]):
         """Delete objects matching a query."""
         ...
 
-    def listen(self, handler: ChangeHandler[T]) -> None:
-        """Register a change handler for repository events."""
-        ...
-
 
 class SimpleDateScopedRepositoryProtocol(Protocol[T]):
-    """Base protocol for simple date-scoped repositories (get by key, put, listen)."""
+    """Base protocol for simple date-scoped repositories (get by key, put)."""
 
     async def get(self, key: UUID) -> T:
         """Get an object by key."""
@@ -92,8 +86,4 @@ class SimpleDateScopedRepositoryProtocol(Protocol[T]):
 
     async def put(self, obj: T) -> T:
         """Save or update an object."""
-        ...
-
-    def listen(self, handler: ChangeHandler[T]) -> None:
-        """Register a change handler for repository events."""
         ...

@@ -57,10 +57,6 @@ class InMemoryBaseRepository:
         if obj_id in self._store:
             del self._store[obj_id]
 
-    def listen(self, handler: Any) -> None:
-        """Register a change handler (no-op for in-memory repositories)."""
-        pass
-
 
 class InMemoryDayRepository(InMemoryBaseRepository):
     """In-memory implementation of DayRepositoryProtocol."""

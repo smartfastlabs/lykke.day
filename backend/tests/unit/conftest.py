@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
-from dobles import InstanceDouble, allow
+from dobles import InstanceDouble
 
 from tests.fixtures.unit_of_work import (
     InMemoryUnitOfWork,
@@ -52,17 +52,13 @@ def mock_day_template_repo():
 @pytest.fixture
 def mock_event_repo():
     """Mocked EventRepositoryProtocol for unit tests."""
-    repo = InstanceDouble("planned.application.repositories.EventRepositoryProtocol")
-    allow(repo).listen.and_return(None)
-    return repo
+    return InstanceDouble("planned.application.repositories.EventRepositoryProtocol")
 
 
 @pytest.fixture
 def mock_task_repo():
     """Mocked TaskRepositoryProtocol for unit tests."""
-    repo = InstanceDouble("planned.application.repositories.TaskRepositoryProtocol")
-    allow(repo).listen.and_return(None)
-    return repo
+    return InstanceDouble("planned.application.repositories.TaskRepositoryProtocol")
 
 
 @pytest.fixture
@@ -82,9 +78,7 @@ def mock_auth_token_repo():
 @pytest.fixture
 def mock_message_repo():
     """Mocked MessageRepositoryProtocol for unit tests."""
-    repo = InstanceDouble("planned.application.repositories.MessageRepositoryProtocol")
-    allow(repo).listen.and_return(None)
-    return repo
+    return InstanceDouble("planned.application.repositories.MessageRepositoryProtocol")
 
 
 @pytest.fixture

@@ -5,22 +5,18 @@ and non-user-scoped operations through composition rather than inheritance dupli
 """
 
 from contextlib import asynccontextmanager
-from typing import Any, ClassVar, Generic, Literal, TypeVar
+from typing import Any, ClassVar, Generic, TypeVar
 from uuid import UUID
 
-from blinker import Signal
 from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.sql import Select
 
-from planned.common.repository_handler import ChangeHandler
-from planned.common.signal_registry import entity_signals
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities.base import BaseEntityObject
 from planned.domain.events.base import BaseAggregateRoot, DomainEvent
 from planned.domain.value_objects.query import BaseQuery
-from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.database.transaction import get_transaction_connection
 from planned.infrastructure.repositories.base.utils import normalize_list_fields
@@ -50,7 +46,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         user_id: Optional user ID for scoping. When set, all queries filter by this user.
     """
 
-    signal_source: Signal
     Object: type[ObjectType]
     table: "Table"  # type: ignore[name-defined]  # noqa: F821
     QueryClass: type[QueryType]
@@ -70,21 +65,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         # Track aggregates that were saved during this repository's lifetime
         # Used for collecting domain events before transaction commit
         self._saved_aggregates: list[BaseAggregateRoot] = []
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Initialize a class-level signal for each repository subclass.
-
-        This ensures all instances of the same repository class share the same signal.
-        Also registers the signal with the entity signal registry so that
-        application layer code can subscribe without importing infrastructure.
-        """
-        super().__init_subclass__(**kwargs)
-        cls.signal_source = Signal()
-
-        # Register signal with the entity signal registry
-        # Use the Object class name as the entity name (e.g., "User", "Event", "Task")
-        if hasattr(cls, "Object") and cls.Object is not None:
-            entity_signals.register(cls.Object.__name__, cls.signal_source)
 
     @classmethod
     def row_to_entity(cls, row: dict[str, Any]) -> ObjectType:
@@ -176,13 +156,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         if self._is_user_scoped and self._table_has_user_id and "user_id" not in row:
             row["user_id"] = self.user_id
         return row
-
-    def listen(self, handler: ChangeHandler[ObjectType]) -> None:
-        """Connect a handler to receive RepositoryEvent[ObjectType] notifications.
-
-        The handler should accept (sender, *, event: RepositoryEvent[ObjectType]) as parameters.
-        """
-        type(self).signal_source.connect(handler)
 
     def collect_domain_events(self) -> list[DomainEvent]:
         """Collect and clear domain events from all saved aggregates.
@@ -355,13 +328,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         row = self._prepare_row_for_save(row)
 
         async with self._get_connection(for_write=True) as conn:
-            # Check if object exists (with user filtering if scoped)
-            obj_id = obj.id
-            exists_stmt = select(self.table.c.id).where(self.table.c.id == obj_id)
-            exists_stmt = self._apply_user_scope(exists_stmt)
-            result = await conn.execute(exists_stmt)
-            exists = result.first() is not None
-
             # Use PostgreSQL INSERT ... ON CONFLICT DO UPDATE
             insert_stmt = pg_insert(self.table).values(**row)
             # Exclude only id from update
@@ -377,9 +343,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         if isinstance(obj, BaseAggregateRoot) and obj.has_events():
             self._saved_aggregates.append(obj)
 
-        event_type: Literal["create", "update"] = "update" if exists else "create"
-        event = RepositoryEvent[ObjectType](type=event_type, value=obj)
-        await self.signal_source.send_async("change", event=event)
         return obj
 
     async def insert_many(self, *objs: ObjectType) -> list[ObjectType]:
@@ -469,25 +432,15 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         """
         # Handle both key (UUID) and object deletion
         if isinstance(key, UUID):
-            # Get object before deleting for event
-            try:
-                obj = await self.get(key)
-            except NotFoundError:
-                # If not found, nothing to delete
-                return
             obj_id = key
         else:
             # key is actually the object
-            obj = key
-            obj_id = obj.id
+            obj_id = key.id
 
         async with self._get_connection(for_write=True) as conn:
             stmt = delete(self.table).where(self.table.c.id == obj_id)
             stmt = self._apply_user_scope_to_mutate(stmt)
             await conn.execute(stmt)
-
-        event = RepositoryEvent[ObjectType](type="delete", value=obj)
-        await self.signal_source.send_async("change", event=event)
 
 
 class UserScopedBaseRepository(
