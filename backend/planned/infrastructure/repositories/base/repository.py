@@ -1,3 +1,9 @@
+"""Base repository implementations with optional user scoping.
+
+This module provides a unified BaseRepository that handles both user-scoped
+and non-user-scoped operations through composition rather than inheritance duplication.
+"""
+
 from contextlib import asynccontextmanager
 from typing import Any, Generic, Literal, TypeVar
 from uuid import UUID
@@ -10,7 +16,7 @@ from sqlalchemy.sql import Select
 
 from planned.common.repository_handler import ChangeHandler
 from planned.common.signal_registry import entity_signals
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities.base import BaseEntityObject
 from planned.domain.value_objects.query import BaseQuery
 from planned.domain.value_objects.repository_event import RepositoryEvent
@@ -28,25 +34,31 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         ObjectType: The entity type this repository manages
         QueryType: The query type for filtering/searching (must be a subclass of BaseQuery)
 
-    Child repositories should set QueryClass class attribute to specify their custom query type.
+    This repository supports optional user scoping. When user_id is provided,
+    all operations are automatically filtered by user_id.
 
-    Note: This repository is NOT user-scoped. For user-scoped repositories, use UserScopedBaseRepository.
+    Attributes:
+        user_id: Optional user ID for scoping. When set, all queries filter by this user.
     """
 
     signal_source: Signal
     Object: type[ObjectType]
     table: "Table"  # type: ignore[name-defined]  # noqa: F821
     QueryClass: type[QueryType]
+    user_id: UUID | None
 
-    def __init__(self) -> None:
-        """Initialize repository without user scoping."""
-        pass
+    def __init__(self, user_id: UUID | None = None) -> None:
+        """Initialize repository with optional user scoping.
+
+        Args:
+            user_id: Optional user ID. When provided, all operations are scoped to this user.
+        """
+        self.user_id = user_id
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
-        """
-        Initialize a class-level signal for each repository subclass.
-        This ensures all instances of the same repository class share the same signal.
+        """Initialize a class-level signal for each repository subclass.
 
+        This ensures all instances of the same repository class share the same signal.
         Also registers the signal with the entity signal registry so that
         application layer code can subscribe without importing infrastructure.
         """
@@ -58,9 +70,71 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         if hasattr(cls, "Object") and cls.Object is not None:
             entity_signals.register(cls.Object.__name__, cls.signal_source)
 
-    def listen(self, handler: ChangeHandler[ObjectType]) -> None:
+    @property
+    def _is_user_scoped(self) -> bool:
+        """Check if this repository instance is user-scoped."""
+        return self.user_id is not None
+
+    @property
+    def _table_has_user_id(self) -> bool:
+        """Check if the table has a user_id column."""
+        return hasattr(self.table.c, "user_id")
+
+    def _apply_user_scope(self, stmt: Select[tuple]) -> Select[tuple]:
+        """Apply user scope filtering to a select statement.
+
+        Args:
+            stmt: The SQLAlchemy select statement to filter.
+
+        Returns:
+            The statement with user_id filtering applied (if applicable).
         """
-        Connect a handler to receive RepositoryEvent[ObjectType] notifications.
+        if self._is_user_scoped and self._table_has_user_id:
+            stmt = stmt.where(self.table.c.user_id == self.user_id)
+        return stmt
+
+    def _apply_user_scope_to_mutate(self, stmt: Any) -> Any:
+        """Apply user scope filtering to update/delete statements.
+
+        Args:
+            stmt: The SQLAlchemy update or delete statement to filter.
+
+        Returns:
+            The statement with user_id filtering applied (if applicable).
+        """
+        if self._is_user_scoped and self._table_has_user_id:
+            stmt = stmt.where(self.table.c.user_id == self.user_id)
+        return stmt
+
+    def _prepare_entity_for_save(self, obj: ObjectType) -> ObjectType:
+        """Prepare an entity for saving by setting user_id if scoped.
+
+        Args:
+            obj: The entity to prepare.
+
+        Returns:
+            The entity with user_id set (if applicable).
+        """
+        if self._is_user_scoped and hasattr(obj, "user_id"):
+            obj.user_id = self.user_id
+        return obj
+
+    def _prepare_row_for_save(self, row: dict[str, Any]) -> dict[str, Any]:
+        """Prepare a row dict for saving by ensuring user_id is set.
+
+        Args:
+            row: The row dictionary to prepare.
+
+        Returns:
+            The row with user_id set (if applicable).
+        """
+        if self._is_user_scoped and self._table_has_user_id:
+            if "user_id" not in row:
+                row["user_id"] = self.user_id
+        return row
+
+    def listen(self, handler: ChangeHandler[ObjectType]) -> None:
+        """Connect a handler to receive RepositoryEvent[ObjectType] notifications.
 
         The handler should accept (sender, *, event: RepositoryEvent[ObjectType]) as parameters.
         """
@@ -100,26 +174,32 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                 yield conn
 
     async def get(self, key: UUID) -> ObjectType:
-        """Get an object by id."""
+        """Get an object by id.
+
+        If this repository is user-scoped, the query will also filter by user_id.
+        """
         async with self._get_connection(for_write=False) as conn:
             stmt = select(self.table).where(self.table.c.id == key)
+            stmt = self._apply_user_scope(stmt)
 
             result = await conn.execute(stmt)
             row = result.mappings().first()
 
             if row is None:
-                raise exceptions.NotFoundError(
-                    f"{self.Object.__name__} with id {key} not found"
-                )
+                raise NotFoundError(f"{self.Object.__name__} with id {key} not found")
 
             return type(self).row_to_entity(dict(row))  # type: ignore[attr-defined,no-any-return]
 
     def build_query(self, query: QueryType) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object.
 
+        Automatically applies user scoping if this repository is user-scoped.
         Subclasses can override this to add custom filtering logic.
         """
         stmt: Select[tuple] = select(self.table)
+
+        # Apply user scope first to ensure proper isolation
+        stmt = self._apply_user_scope(stmt)
 
         if query.limit is not None:
             stmt = stmt.limit(query.limit)
@@ -159,7 +239,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             row = result.mappings().first()
 
             if row is None:
-                raise exceptions.NotFoundError(
+                raise NotFoundError(
                     f"No results found for the given query in `{self.Object.__name__}`."
                 )
 
@@ -189,9 +269,13 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             return [type(self).row_to_entity(dict(row)) for row in rows]  # type: ignore[attr-defined]
 
     async def all(self) -> list[ObjectType]:
-        """Get all objects."""
+        """Get all objects.
+
+        If this repository is user-scoped, only returns objects for the user.
+        """
         async with self._get_connection(for_write=False) as conn:
             stmt = select(self.table)
+            stmt = self._apply_user_scope(stmt)
 
             result = await conn.execute(stmt)
             rows = result.mappings().all()
@@ -199,15 +283,21 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             return [type(self).row_to_entity(dict(row)) for row in rows]  # type: ignore[attr-defined]
 
     async def put(self, obj: ObjectType) -> ObjectType:
-        """Save or update an object."""
+        """Save or update an object.
+
+        If this repository is user-scoped, ensures user_id is set on the entity.
+        """
+        # Prepare entity and row for save
+        obj = self._prepare_entity_for_save(obj)
         row = type(self).entity_to_row(obj)  # type: ignore[attr-defined]
+        row = self._prepare_row_for_save(row)
 
         async with self._get_connection(for_write=True) as conn:
-            # Check if object exists
-            # All entities have id attribute (from BaseEntityObject)
+            # Check if object exists (with user filtering if scoped)
             obj_id = obj.id
-            stmt = select(self.table.c.id).where(self.table.c.id == obj_id)
-            result = await conn.execute(stmt)
+            exists_stmt = select(self.table.c.id).where(self.table.c.id == obj_id)
+            exists_stmt = self._apply_user_scope(exists_stmt)
+            result = await conn.execute(exists_stmt)
             exists = result.first() is not None
 
             # Use PostgreSQL INSERT ... ON CONFLICT DO UPDATE
@@ -229,21 +319,25 @@ class BaseRepository(Generic[ObjectType, QueryType]):
     async def insert_many(self, *objs: ObjectType) -> list[ObjectType]:
         """Insert multiple objects in a single transaction.
 
+        If this repository is user-scoped, ensures user_id is set on all entities.
         Note: For better performance, consider batching large numbers of objects.
         """
         if not objs:
             return []
 
-        rows = [type(self).entity_to_row(obj) for obj in objs]  # type: ignore[attr-defined]
+        # Prepare all entities and rows
+        prepared_objs = [self._prepare_entity_for_save(obj) for obj in objs]
+        rows = [type(self).entity_to_row(obj) for obj in prepared_objs]  # type: ignore[attr-defined]
+        rows = [self._prepare_row_for_save(row) for row in rows]
 
         async with self._get_connection(for_write=True) as conn:
-            # Insert all rows - using executemany with VALUES
+            # Insert all rows
             for row in rows:
                 insert_stmt = pg_insert(self.table).values(**row)
                 await conn.execute(insert_stmt)
 
         # Return the objects (they should now have persisted data)
-        return list(objs)
+        return list(prepared_objs)
 
     async def apply_updates(
         self,
@@ -251,6 +345,8 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         **updates: Any,
     ) -> ObjectType:
         """Apply partial updates to an object identified by id.
+
+        If this repository is user-scoped, the update is filtered by user_id.
 
         Args:
             key: The id of the object to update
@@ -264,8 +360,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             return await self.get(key)
 
         async with self._get_connection(for_write=True) as conn:
-            # Build update statement
+            # Build update statement with user scope
             stmt = self.table.update().values(**updates).where(self.table.c.id == key)
+            stmt = self._apply_user_scope_to_mutate(stmt)
 
             # Execute update
             await conn.execute(stmt)
@@ -274,7 +371,10 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         return await self.get(key)
 
     async def delete_many(self, query: QueryType) -> None:
-        """Delete objects based on the provided query."""
+        """Delete objects based on the provided query.
+
+        User scoping is automatically applied via build_query.
+        """
         async with self._get_connection(for_write=True) as conn:
             # Build the select query to get the where clause
             select_stmt = self.build_query(query)
@@ -297,27 +397,28 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         await self.delete(obj)
 
     async def delete(self, key: UUID | ObjectType) -> None:
-        """Delete an object by id or by object."""
+        """Delete an object by id or by object.
+
+        If this repository is user-scoped, the delete is filtered by user_id.
+        """
         # Handle both key (UUID) and object deletion
         if isinstance(key, UUID):
             # Get object before deleting for event
             try:
                 obj = await self.get(key)
-            except exceptions.NotFoundError:
+            except NotFoundError:
                 # If not found, nothing to delete
                 return
-
-            async with self._get_connection(for_write=True) as conn:
-                stmt = delete(self.table).where(self.table.c.id == key)
-                await conn.execute(stmt)
+            obj_id = key
         else:
             # key is actually the object
             obj = key
-            async with self._get_connection(for_write=True) as conn:
-                # All entities have id attribute (from BaseEntityObject)
-                obj_id = obj.id
-                stmt = delete(self.table).where(self.table.c.id == obj_id)
-                await conn.execute(stmt)
+            obj_id = obj.id
+
+        async with self._get_connection(for_write=True) as conn:
+            stmt = delete(self.table).where(self.table.c.id == obj_id)
+            stmt = self._apply_user_scope_to_mutate(stmt)
+            await conn.execute(stmt)
 
         event = RepositoryEvent[ObjectType](type="delete", value=obj)
         await self.signal_source.send_async("change", event=event)
@@ -328,13 +429,15 @@ class UserScopedBaseRepository(
 ):
     """Base repository that requires user scoping.
 
-    This repository ensures all operations are scoped to a specific user.
-    All queries are automatically filtered by the provided user_id.
+    This is a thin wrapper around BaseRepository that enforces user_id is required.
+    All the actual logic is in BaseRepository.
 
     Type parameters:
         ObjectType: The entity type this repository manages
         QueryType: The query type for filtering/searching (must be a subclass of BaseQuery)
     """
+
+    user_id: UUID  # Override to make non-optional
 
     def __init__(self, user_id: UUID) -> None:
         """Initialize repository with required user scoping.
@@ -342,171 +445,4 @@ class UserScopedBaseRepository(
         Args:
             user_id: Required user ID. All queries will be filtered by this user ID.
         """
-        super().__init__()
-        self.user_id = user_id
-
-    async def get(self, key: UUID) -> ObjectType:
-        """Get an object by id, filtered by user_id."""
-        async with self._get_connection(for_write=False) as conn:
-            # Build base statement from parent
-            stmt = select(self.table).where(self.table.c.id == key)
-
-            # Add user_id filtering
-            if hasattr(self.table.c, "user_id"):
-                stmt = stmt.where(self.table.c.user_id == self.user_id)
-
-            result = await conn.execute(stmt)
-            row = result.mappings().first()
-
-            if row is None:
-                raise exceptions.NotFoundError(
-                    f"{self.Object.__name__} with id {key} not found"
-                )
-
-            return type(self).row_to_entity(dict(row))  # type: ignore[attr-defined,no-any-return]
-
-    def build_query(self, query: QueryType) -> Select[tuple]:
-        """Build a SQLAlchemy Core select statement from a query object with user filtering."""
-        # Call super to build the base query
-        stmt = super().build_query(query)
-
-        # Add user_id filtering (must be first to ensure proper isolation)
-        if hasattr(self.table.c, "user_id"):
-            stmt = stmt.where(self.table.c.user_id == self.user_id)
-
-        return stmt
-
-    async def all(self) -> list[ObjectType]:
-        """Get all objects, filtered by user_id."""
-        async with self._get_connection(for_write=False) as conn:
-            # Build base statement from parent
-            stmt = select(self.table)
-
-            # Add user_id filtering
-            if hasattr(self.table.c, "user_id"):
-                stmt = stmt.where(self.table.c.user_id == self.user_id)
-
-            result = await conn.execute(stmt)
-            rows = result.mappings().all()
-
-            return [type(self).row_to_entity(dict(row)) for row in rows]  # type: ignore[attr-defined]
-
-    async def put(self, obj: ObjectType) -> ObjectType:
-        """Save or update an object, ensuring user_id is set and filtered."""
-        # Ensure user_id is set on entity
-        if hasattr(obj, "user_id"):
-            obj.user_id = self.user_id
-
-        row = type(self).entity_to_row(obj)  # type: ignore[attr-defined]
-
-        # Ensure user_id is in the row
-        if "user_id" not in row and hasattr(self.table.c, "user_id"):
-            row["user_id"] = self.user_id
-
-        async with self._get_connection(for_write=True) as conn:
-            # Check if object exists (with user filtering)
-            obj_id = obj.id
-            stmt = select(self.table.c.id).where(self.table.c.id == obj_id)
-            if hasattr(self.table.c, "user_id"):
-                stmt = stmt.where(self.table.c.user_id == self.user_id)
-            result = await conn.execute(stmt)
-            exists = result.first() is not None
-
-            # Use PostgreSQL INSERT ... ON CONFLICT DO UPDATE
-            insert_stmt = pg_insert(self.table).values(**row)
-            # Exclude only id from update
-            update_dict = {k: v for k, v in row.items() if k != "id"}
-            index_elements = ["id"]
-            upsert_stmt = insert_stmt.on_conflict_do_update(
-                index_elements=index_elements,
-                set_=update_dict,
-            )
-            await conn.execute(upsert_stmt)
-
-        event_type: Literal["create", "update"] = "update" if exists else "create"
-        event = RepositoryEvent[ObjectType](type=event_type, value=obj)
-        await self.signal_source.send_async("change", event=event)
-        return obj
-
-    async def insert_many(self, *objs: ObjectType) -> list[ObjectType]:
-        """Insert multiple objects in a single transaction, ensuring user_id is set."""
-        if not objs:
-            return []
-
-        # Ensure user_id is set on all entities
-        for obj in objs:
-            if hasattr(obj, "user_id"):
-                obj.user_id = self.user_id
-
-        rows = [type(self).entity_to_row(obj) for obj in objs]  # type: ignore[attr-defined]
-
-        # Ensure user_id is in all rows
-        if hasattr(self.table.c, "user_id"):
-            for row in rows:
-                if "user_id" not in row:
-                    row["user_id"] = self.user_id
-
-        async with self._get_connection(for_write=True) as conn:
-            # Insert all rows - using executemany with VALUES
-            for row in rows:
-                insert_stmt = pg_insert(self.table).values(**row)
-                await conn.execute(insert_stmt)
-
-        # Return the objects (they should now have persisted data)
-        return list(objs)
-
-    async def apply_updates(
-        self,
-        key: UUID,
-        **updates: Any,
-    ) -> ObjectType:
-        """Apply partial updates to an object identified by id, filtered by user_id."""
-        if not updates:
-            # No updates to apply, just fetch and return
-            return await self.get(key)
-
-        async with self._get_connection(for_write=True) as conn:
-            # Build update statement
-            stmt = self.table.update().values(**updates).where(self.table.c.id == key)
-
-            # Add user_id filtering
-            if hasattr(self.table.c, "user_id"):
-                stmt = stmt.where(self.table.c.user_id == self.user_id)
-
-            # Execute update
-            await conn.execute(stmt)
-
-        # Fetch and return updated object
-        return await self.get(key)
-
-    async def delete(self, key: UUID | ObjectType) -> None:
-        """Delete an object by id or by object, filtered by user_id."""
-        # Handle both key (UUID) and object deletion
-        if isinstance(key, UUID):
-            # Get object before deleting for event
-            try:
-                obj = await self.get(key)
-            except exceptions.NotFoundError:
-                # If not found, nothing to delete
-                return
-
-            async with self._get_connection(for_write=True) as conn:
-                stmt = delete(self.table).where(self.table.c.id == key)
-                # Add user_id filtering
-                if hasattr(self.table.c, "user_id"):
-                    stmt = stmt.where(self.table.c.user_id == self.user_id)
-                await conn.execute(stmt)
-        else:
-            # key is actually the object
-            obj = key
-            async with self._get_connection(for_write=True) as conn:
-                # All entities have id attribute (from BaseEntityObject)
-                obj_id = obj.id
-                stmt = delete(self.table).where(self.table.c.id == obj_id)
-                # Add user_id filtering
-                if hasattr(self.table.c, "user_id"):
-                    stmt = stmt.where(self.table.c.user_id == self.user_id)
-                await conn.execute(stmt)
-
-        event = RepositoryEvent[ObjectType](type="delete", value=obj)
-        await self.signal_source.send_async("change", event=event)
+        super().__init__(user_id=user_id)
