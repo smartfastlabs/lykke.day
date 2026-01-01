@@ -4,7 +4,6 @@ import datetime
 from uuid import UUID
 
 from loguru import logger
-
 from planned.application.services.base import BaseService
 from planned.application.services.event_handler import EventHandlerMixin
 from planned.application.unit_of_work import UnitOfWorkFactory
@@ -21,7 +20,7 @@ from .context_loader import DayContextLoader
 from .event_handlers import DayEventHandler, TaskEventHandler
 
 
-class DayService(BaseService, EventHandlerMixin[objects.DayContext]):
+class DayService(BaseService, EventHandlerMixin):
     """Service for managing day context and operations.
 
     Subscribes to domain events to keep its cache (ctx) up to date.
@@ -53,12 +52,8 @@ class DayService(BaseService, EventHandlerMixin[objects.DayContext]):
         self._init_event_handlers()
 
         # Register event handlers
-        self._register_handler(
-            TaskEventHandler(ctx, uow_factory, user.id),
-        )
-        self._register_handler(
-            DayEventHandler(ctx, uow_factory, user.id, self.date),
-        )
+        self._register_handler(TaskEventHandler(uow_factory, user.id))
+        self._register_handler(DayEventHandler(uow_factory, user.id, self.date))
         logger.debug(f"DayService initialized for date {self.date}")
 
     def subscribe_to_events(self) -> None:
@@ -69,9 +64,7 @@ class DayService(BaseService, EventHandlerMixin[objects.DayContext]):
     def unsubscribe_from_events(self) -> None:
         """Unsubscribe from domain events."""
         EventHandlerMixin.unsubscribe_from_events(self)
-        logger.debug(
-            f"DayService unsubscribed from domain events for date {self.date}"
-        )
+        logger.debug(f"DayService unsubscribed from domain events for date {self.date}")
 
     async def set_date(
         self,
@@ -88,8 +81,6 @@ class DayService(BaseService, EventHandlerMixin[objects.DayContext]):
             self.date = date
             user_id = user_id or self.user.id
             self.ctx = await self.load_context(date=date, user_id=user_id)
-            # Update context in all handlers
-            self._update_handler_contexts(self.ctx)
             # Update date in day event handler
             for handler in self._event_handlers:
                 if isinstance(handler, DayEventHandler):
@@ -220,4 +211,3 @@ class DayService(BaseService, EventHandlerMixin[objects.DayContext]):
             List of calendar entries that are upcoming within the look-ahead window
         """
         return filter_upcoming_calendar_entries(self.ctx.calendar_entries, look_ahead)
-

@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from ..service import DayService
 
 
-class TaskEventHandler(EventHandler[objects.DayContext, "DayService"]):
+class TaskEventHandler(EventHandler["DayService"]):
     """Handles task-related domain events for DayService.
 
     Keeps the DayContext's task list synchronized with task changes.
@@ -29,20 +29,23 @@ class TaskEventHandler(EventHandler[objects.DayContext, "DayService"]):
 
     def __init__(
         self,
-        ctx: objects.DayContext,
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
     ) -> None:
         """Initialize the task event handler.
 
         Args:
-            ctx: The DayContext to keep synchronized
             uow_factory: Factory for creating UnitOfWork instances
             user_id: The user ID for database operations
         """
-        super().__init__(ctx)
+        super().__init__()
         self._uow_factory = uow_factory
         self._user_id = user_id
+
+    @property
+    def ctx(self) -> objects.DayContext:
+        """Get the DayContext from the parent service."""
+        return self.service.ctx
 
     def can_handle(self, event: DomainEvent) -> bool:
         """Check if this handler can handle the given event."""

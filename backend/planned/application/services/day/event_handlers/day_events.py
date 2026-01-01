@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from ..service import DayService
 
 
-class DayEventHandler(EventHandler[objects.DayContext, "DayService"]):
+class DayEventHandler(EventHandler["DayService"]):
     """Handles day-related domain events for DayService.
 
     Keeps the DayContext's day entity synchronized with day changes.
@@ -29,7 +29,6 @@ class DayEventHandler(EventHandler[objects.DayContext, "DayService"]):
 
     def __init__(
         self,
-        ctx: objects.DayContext,
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
         date: datetime.date,
@@ -37,15 +36,19 @@ class DayEventHandler(EventHandler[objects.DayContext, "DayService"]):
         """Initialize the day event handler.
 
         Args:
-            ctx: The DayContext to keep synchronized
             uow_factory: Factory for creating UnitOfWork instances
             user_id: The user ID for database operations
             date: The date this handler is responsible for
         """
-        super().__init__(ctx)
+        super().__init__()
         self._uow_factory = uow_factory
         self._user_id = user_id
         self._date = date
+
+    @property
+    def ctx(self) -> objects.DayContext:
+        """Get the DayContext from the parent service."""
+        return self.service.ctx
 
     @property
     def date(self) -> datetime.date:
