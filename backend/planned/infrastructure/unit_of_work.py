@@ -1,6 +1,6 @@
 """Infrastructure implementation of Unit of Work pattern using SQLAlchemy."""
 
-from contextvars import ContextVar, Token
+from contextvars import Token
 from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
@@ -21,7 +21,11 @@ from planned.application.repositories import (
 )
 from planned.application.unit_of_work import UnitOfWorkProtocol
 from planned.infrastructure.database import get_engine
-from planned.infrastructure.database.transaction import get_transaction_connection
+from planned.infrastructure.database.transaction import (
+    get_transaction_connection,
+    reset_transaction_connection,
+    set_transaction_connection,
+)
 from planned.infrastructure.repositories import (
     AuthTokenRepository,
     CalendarRepository,
@@ -92,49 +96,51 @@ class SqlAlchemyUnitOfWork:
             await self._connection.begin()
 
             # Set the connection in the context variable so repositories can use it
-            # Import here to avoid circular dependency
-            from planned.infrastructure.database.transaction import (
-                _transaction_connection,
-            )
-
-            self._token = _transaction_connection.set(self._connection)
+            self._token = set_transaction_connection(self._connection)
 
         # Initialize all repositories with user scoping (where applicable)
         # UserRepository and AuthTokenRepository are not user-scoped
         # Use cast to satisfy type checker - concrete repos implement protocols
-        self.users = cast(UserRepositoryProtocol, UserRepository())
-        self.auth_tokens = cast(AuthTokenRepositoryProtocol, AuthTokenRepository())
+        self.users = cast("UserRepositoryProtocol", UserRepository())
+        self.auth_tokens = cast("AuthTokenRepositoryProtocol", AuthTokenRepository())
 
         # All other repositories are user-scoped
         self.calendars = cast(
-            CalendarRepositoryProtocol, CalendarRepository(user_id=self.user_id)
+            "CalendarRepositoryProtocol", CalendarRepository(user_id=self.user_id)
         )
-        self.days = cast(DayRepositoryProtocol, DayRepository(user_id=self.user_id))
+        self.days = cast("DayRepositoryProtocol", DayRepository(user_id=self.user_id))
         self.day_templates = cast(
-            DayTemplateRepositoryProtocol, DayTemplateRepository(user_id=self.user_id)
+            "DayTemplateRepositoryProtocol", DayTemplateRepository(user_id=self.user_id)
         )
         self.events = cast(
-            EventRepositoryProtocol, EventRepository(user_id=self.user_id)
+            "EventRepositoryProtocol", EventRepository(user_id=self.user_id)
         )
         self.messages = cast(
-            MessageRepositoryProtocol, MessageRepository(user_id=self.user_id)
+            "MessageRepositoryProtocol", MessageRepository(user_id=self.user_id)
         )
         self.push_subscriptions = cast(
-            PushSubscriptionRepositoryProtocol,
+            "PushSubscriptionRepositoryProtocol",
             PushSubscriptionRepository(user_id=self.user_id),
         )
         self.routines = cast(
-            RoutineRepositoryProtocol, RoutineRepository(user_id=self.user_id)
+            "RoutineRepositoryProtocol", RoutineRepository(user_id=self.user_id)
         )
         self.task_definitions = cast(
-            TaskDefinitionRepositoryProtocol,
+            "TaskDefinitionRepositoryProtocol",
             TaskDefinitionRepository(user_id=self.user_id),
         )
-        self.tasks = cast(TaskRepositoryProtocol, TaskRepository(user_id=self.user_id))
+        self.tasks = cast(
+            "TaskRepositoryProtocol", TaskRepository(user_id=self.user_id)
+        )
 
         return self
 
-    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
+    ) -> None:
         """Exit the unit of work context.
 
         For nested transactions, do nothing (let outer transaction handle it).
@@ -157,11 +163,7 @@ class SqlAlchemyUnitOfWork:
         finally:
             # Reset the context variable
             if self._token is not None:
-                from planned.infrastructure.database.transaction import (
-                    _transaction_connection,
-                )
-
-                _transaction_connection.reset(self._token)
+                reset_transaction_connection(self._token)
                 self._token = None
 
             # Close the connection
@@ -264,4 +266,3 @@ class SqlAlchemyUnitOfWorkFactory:
             A new UnitOfWork instance (not yet entered).
         """
         return SqlAlchemyUnitOfWork(user_id=user_id)
-

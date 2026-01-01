@@ -27,6 +27,27 @@ def get_transaction_connection() -> AsyncConnection | None:
     return _transaction_connection.get()
 
 
+def set_transaction_connection(conn: AsyncConnection) -> Token[AsyncConnection | None]:
+    """Set the active transaction connection.
+
+    Args:
+        conn: The connection to set as the active transaction.
+
+    Returns:
+        A token that can be used to reset the connection later.
+    """
+    return _transaction_connection.set(conn)
+
+
+def reset_transaction_connection(token: Token[AsyncConnection | None]) -> None:
+    """Reset the transaction connection to its previous state.
+
+    Args:
+        token: The token returned from set_transaction_connection.
+    """
+    _transaction_connection.reset(token)
+
+
 class TransactionManager:
     """Context manager for managing database transactions.
 
@@ -69,7 +90,7 @@ class TransactionManager:
         await self._connection.begin()
 
         # Set the connection in the context variable
-        self._token = _transaction_connection.set(self._connection)
+        self._token = set_transaction_connection(self._connection)
 
         return self._connection
 
@@ -99,7 +120,7 @@ class TransactionManager:
             # we only reach here if self._is_nested is False, which means
             # we created a new transaction and set self._token in __aenter__
             assert self._token is not None
-            _transaction_connection.reset(self._token)
+            reset_transaction_connection(self._token)
 
             # Close the connection
             await self._connection.close()
