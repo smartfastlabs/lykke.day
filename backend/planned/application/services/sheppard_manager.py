@@ -10,7 +10,7 @@ from planned.application.services import CalendarService, PlanningService
 from planned.application.services.factories import DayServiceFactory
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.common.repository_handler import ChangeHandler
-from planned.common.signal_registry import entity_signals
+from planned.common.signal_registry import EntityType, entity_signals
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Alarm, DayTemplate, User
 from planned.domain.value_objects.alarm import AlarmType
@@ -203,7 +203,7 @@ class SheppardManager:
             # Listen to User events via the signal registry
             # This avoids circular imports between application and infrastructure layers
             self._event_handler = self._handle_user_event
-            entity_signals.connect("User", self._event_handler)
+            entity_signals.connect(EntityType.USER, self._event_handler)
             logger.info("SheppardManager listening to User events via signal registry")
 
             # Start services for all existing users
@@ -229,7 +229,7 @@ class SheppardManager:
 
         # Disconnect from User events via the signal registry
         if self._event_handler is not None:
-            entity_signals.disconnect("User", self._event_handler)
+            entity_signals.disconnect(EntityType.USER, self._event_handler)
             self._event_handler = None
             logger.info("SheppardManager disconnected from User events")
 

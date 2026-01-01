@@ -23,6 +23,7 @@ from planned.application.repositories import (
     UserRepositoryProtocol,
 )
 from planned.application.unit_of_work import UnitOfWorkProtocol
+from planned.domain.events.base import DomainEvent
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.database.transaction import (
     get_transaction_connection,
@@ -45,8 +46,6 @@ from planned.infrastructure.repositories import (
 
 if TYPE_CHECKING:
     from typing import Self
-
-    from planned.domain.events.base import DomainEvent
 
 
 class SqlAlchemyUnitOfWork:
@@ -204,43 +203,62 @@ class SqlAlchemyUnitOfWork:
         # This ensures events are only dispatched if the transaction succeeded
         await self._dispatch_domain_events(events)
 
-    async def _collect_domain_events(self) -> list:
+    async def _collect_domain_events(self) -> list[DomainEvent]:
         """Collect domain events from all aggregates in this unit of work.
+
+        Iterates through all repositories and collects domain events from
+        aggregates that were saved during this transaction.
 
         Returns:
             A list of all domain events collected from aggregates.
         """
         events: list[DomainEvent] = []
 
-        # Collect events from aggregates that were saved
-        # This is a simplified implementation. A more sophisticated approach
-        # would track which aggregates were modified during the transaction.
-        #
-        # For now, we rely on aggregates to collect their own events via
-        # the collect_events() method. Services should call collect_events()
-        # on aggregates before saving them, or we can enhance repositories
-        # to automatically collect events when saving aggregates.
-        #
-        # TODO: Enhance repositories to automatically collect domain events
-        # from aggregates when they are saved.
+        # Collect events from all repositories that track aggregates
+        # Each repository tracks aggregates saved via put() that had pending events
+        repositories = [
+            self.days,
+            self.day_templates,
+            self.events,
+            self.messages,
+            self.tasks,
+            self.routines,
+            self.calendars,
+            self.users,
+            self.auth_tokens,
+            self.task_definitions,
+            self.push_subscriptions,
+        ]
+
+        for repo in repositories:
+            # All our concrete repositories have collect_domain_events method
+            if hasattr(repo, "collect_domain_events"):
+                events.extend(repo.collect_domain_events())
 
         return events
 
-    async def _dispatch_domain_events(self, events: list) -> None:
+    async def _dispatch_domain_events(self, events: list[DomainEvent]) -> None:
         """Dispatch domain events after successful commit.
+
+        Currently logs events for debugging. This can be enhanced with a proper
+        event bus/dispatcher to enable event-driven workflows like:
+        - Sending notifications when tasks are completed
+        - Triggering calendar syncs when events change
+        - Audit logging
 
         Args:
             events: List of domain events to dispatch.
         """
-        # For now, domain events are collected but not dispatched
-        # This can be enhanced with an event bus/dispatcher in the future
-        # The events are available for logging or future event handlers
+        if not events:
+            return
 
-        if events:
-            # Log events for now (can be replaced with proper event bus)
-            logger.debug(f"Dispatching {len(events)} domain events")
-            for event in events:
-                logger.debug(f"Domain event: {event.__class__.__name__}")
+        logger.debug(f"Dispatching {len(events)} domain events")
+        for event in events:
+            logger.debug(
+                f"Domain event: {event.__class__.__name__} at {event.occurred_at}"
+            )
+            # Future: dispatch to event handlers via an event bus
+            # await self._event_bus.publish(event)
 
     async def rollback(self) -> None:
         """Rollback the current transaction."""

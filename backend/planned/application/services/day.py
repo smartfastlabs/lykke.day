@@ -6,7 +6,7 @@ from blinker import Signal
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.application.utils import filter_upcoming_events, filter_upcoming_tasks
-from planned.common.signal_registry import entity_signals
+from planned.common.signal_registry import EntityType, entity_signals
 from planned.core.constants import DEFAULT_LOOK_AHEAD
 from planned.core.exceptions import NotFoundError
 from planned.domain import entities as objects
@@ -58,9 +58,9 @@ class DayService(BaseService):
 
         # Set up listeners for repository events via the signal registry
         # This avoids circular imports between application and infrastructure layers
-        entity_signals.connect("Event", self.on_event_change)
-        entity_signals.connect("Message", self.on_message_change)
-        entity_signals.connect("Task", self.on_task_change)
+        entity_signals.connect(EntityType.EVENT, self.on_event_change)
+        entity_signals.connect(EntityType.MESSAGE, self.on_message_change)
+        entity_signals.connect(EntityType.TASK, self.on_task_change)
 
     async def on_event_change(
         self, _sender: object | None = None, *, event: RepositoryEvent[objects.Event]

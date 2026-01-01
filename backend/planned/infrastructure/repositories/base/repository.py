@@ -18,6 +18,7 @@ from planned.common.repository_handler import ChangeHandler
 from planned.common.signal_registry import entity_signals
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities.base import BaseEntityObject
+from planned.domain.events.base import BaseAggregateRoot, DomainEvent
 from planned.domain.value_objects.query import BaseQuery
 from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.database import get_engine
@@ -54,6 +55,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             user_id: Optional user ID. When provided, all operations are scoped to this user.
         """
         self.user_id = user_id
+        # Track aggregates that were saved during this repository's lifetime
+        # Used for collecting domain events before transaction commit
+        self._saved_aggregates: list[BaseAggregateRoot] = []
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Initialize a class-level signal for each repository subclass.
@@ -139,6 +143,22 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         The handler should accept (sender, *, event: RepositoryEvent[ObjectType]) as parameters.
         """
         type(self).signal_source.connect(handler)
+
+    def collect_domain_events(self) -> list[DomainEvent]:
+        """Collect and clear domain events from all saved aggregates.
+
+        This should be called by the Unit of Work before committing the transaction.
+        Events are collected from all aggregates that were saved via put() and had
+        pending domain events.
+
+        Returns:
+            A list of domain events from all saved aggregates.
+        """
+        events: list[DomainEvent] = []
+        for aggregate in self._saved_aggregates:
+            events.extend(aggregate.collect_events())
+        self._saved_aggregates.clear()
+        return events
 
     def _get_engine(self) -> AsyncEngine:
         """Get the database engine."""
@@ -286,6 +306,8 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         """Save or update an object.
 
         If this repository is user-scoped, ensures user_id is set on the entity.
+        If the object is an aggregate root with pending domain events, they are
+        tracked for collection before commit.
         """
         # Prepare entity and row for save
         obj = self._prepare_entity_for_save(obj)
@@ -310,6 +332,10 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                 set_=update_dict,
             )
             await conn.execute(upsert_stmt)
+
+        # Track aggregate for domain event collection if it has pending events
+        if isinstance(obj, BaseAggregateRoot) and obj.has_events():
+            self._saved_aggregates.append(obj)
 
         event_type: Literal["create", "update"] = "update" if exists else "create"
         event = RepositoryEvent[ObjectType](type=event_type, value=obj)
