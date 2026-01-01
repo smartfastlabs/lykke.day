@@ -8,7 +8,7 @@ from planned.domain import entities as objects
 from planned.domain.entities import User
 from planned.domain.value_objects.day import DayContext
 
-from ..day import DayService
+from .service import DayService
 
 
 class DayServiceFactory:

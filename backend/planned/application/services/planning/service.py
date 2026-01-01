@@ -1,3 +1,5 @@
+"""PlanningService for planning and scheduling days."""
+
 import asyncio
 import datetime
 from typing import Protocol, TypeVar
@@ -5,13 +7,12 @@ from uuid import UUID
 
 from loguru import logger
 
+from planned.application.services.base import BaseService
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import NotFoundError
 from planned.domain import entities as objects
 from planned.domain.entities import Action, CalendarEntry, DayContext, Task, TaskStatus
 from planned.domain.value_objects.query import DateQuery
-
-from .base import BaseService
 
 
 def is_routine_active(schedule: objects.RoutineSchedule, date: datetime.date) -> bool:
@@ -259,3 +260,4 @@ class PlanningService(BaseService):
                 raise ValueError(f"Invalid object type: {type(obj)}")
             await uow.commit()
         return obj
+

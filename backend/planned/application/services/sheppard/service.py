@@ -1,3 +1,5 @@
+"""SheppardService for managing day scheduling and notifications."""
+
 import asyncio
 import datetime
 from datetime import UTC
@@ -6,17 +8,17 @@ from typing import Any, Literal
 from langchain.agents import create_agent
 from langchain_core.runnables import Runnable
 from loguru import logger
+
 from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
+from planned.application.services.base import BaseService
+from planned.application.services.calendar import CalendarService
+from planned.application.services.day import DayService
+from planned.application.services.day.factory import DayServiceFactory
+from planned.application.services.planning import PlanningService
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain import entities as objects
 from planned.infrastructure.utils import templates, youtube
 from planned.infrastructure.utils.dates import get_current_date, get_current_time
-
-from .base import BaseService
-from .calendar import CalendarService
-from .day import DayService
-from .factories import DayServiceFactory
-from .planning import PlanningService
 
 
 def get_weather(city: str) -> str:
@@ -440,3 +442,4 @@ class SheppardService(BaseService):
     @property
     def is_running(self) -> bool:
         return self.mode not in ("stopping", "starting")
+

@@ -1,3 +1,5 @@
+"""SheppardManager for managing per-user SheppardService instances."""
+
 import asyncio
 from datetime import time
 from uuid import UUID
@@ -6,15 +8,16 @@ from loguru import logger
 
 from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
-from planned.application.services import CalendarService, PlanningService
-from planned.application.services.factories import DayServiceFactory
+from planned.application.services.calendar import CalendarService
+from planned.application.services.day.factory import DayServiceFactory
+from planned.application.services.planning import PlanningService
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Alarm, DayTemplate
 from planned.domain.value_objects.alarm import AlarmType
 from planned.infrastructure.utils.dates import get_current_date
 
-from .sheppard import SheppardService
+from .service import SheppardService
 
 
 # TODO: Consider renaming SheppardManager to UserSchedulerManager or DaySchedulerManager
@@ -242,3 +245,4 @@ class SheppardManager:
                     f"Failed to start SheppardService for user {user_id}"
                 )
         return service
+

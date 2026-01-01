@@ -1,14 +1,15 @@
+"""CalendarService for managing calendar synchronization."""
+
 from datetime import UTC, datetime
 
 from loguru import logger
 
 from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+from planned.application.services.base import BaseService
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from planned.core.exceptions import TokenExpiredError
 from planned.domain.entities import Calendar, CalendarEntry, User
-
-from .base import BaseService
 
 
 class CalendarService(BaseService):
@@ -104,3 +105,4 @@ class CalendarService(BaseService):
                 except Exception as e:
                     logger.exception(f"Error syncing calendar {calendar.name}: {e}")
                     await uow.rollback()
+

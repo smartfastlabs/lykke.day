@@ -153,3 +153,4 @@ class DayContextLoader:
             calendar_entries=sorted(calendar_entries, key=lambda e: e.starts_at),
             messages=messages,
         )
+

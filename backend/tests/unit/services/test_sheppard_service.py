@@ -432,7 +432,7 @@ async def test_render_prompt(
     )
 
     # Mock the templates.render function
-    with patch("planned.application.services.sheppard.templates.render") as mock_render:
+    with patch("planned.application.services.sheppard.service.templates.render") as mock_render:
         mock_render.return_value = "rendered template"
         result = service._render_prompt("test-template.md", extra_arg="value")
 
@@ -474,7 +474,7 @@ async def test_morning_summary_prompt(
         web_push_gateway=mock_web_push_gateway,
     )
 
-    with patch("planned.application.services.sheppard.templates.render") as mock_render:
+    with patch("planned.application.services.sheppard.service.templates.render") as mock_render:
         mock_render.return_value = "morning summary"
         result = service.morning_summary_prompt()
 
@@ -512,7 +512,7 @@ async def test_evening_summary_prompt(
         web_push_gateway=mock_web_push_gateway,
     )
 
-    with patch("planned.application.services.sheppard.templates.render") as mock_render:
+    with patch("planned.application.services.sheppard.service.templates.render") as mock_render:
         mock_render.return_value = "evening summary"
         result = service.evening_summary_prompt()
 
