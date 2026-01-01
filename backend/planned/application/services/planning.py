@@ -249,7 +249,7 @@ class PlanningService(BaseService):
 
             elif isinstance(obj, Event):
                 # Events don't have record_action yet, so use direct append
-                obj.actions.append(action)  # type: ignore[attr-defined]
+                obj.actions.append(action)
                 await uow.events.put(obj)
             else:
                 raise ValueError(f"Invalid object type: {type(obj)}")

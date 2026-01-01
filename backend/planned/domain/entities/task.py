@@ -60,7 +60,7 @@ class Task(BaseDateObject, BaseAggregateRoot):
             DomainError: If the action is invalid for the current state
         """
         # Add the action
-        self.actions.append(action)  # type: ignore[attr-defined]
+        self.actions.append(action)
 
         # Handle status transitions based on action type
         old_status = self.status

@@ -1,11 +1,24 @@
 """Infrastructure implementation of Unit of Work pattern using SQLAlchemy."""
 
 from contextvars import ContextVar, Token
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from planned.application.repositories import (
+    AuthTokenRepositoryProtocol,
+    CalendarRepositoryProtocol,
+    DayRepositoryProtocol,
+    DayTemplateRepositoryProtocol,
+    EventRepositoryProtocol,
+    MessageRepositoryProtocol,
+    PushSubscriptionRepositoryProtocol,
+    RoutineRepositoryProtocol,
+    TaskDefinitionRepositoryProtocol,
+    TaskRepositoryProtocol,
+    UserRepositoryProtocol,
+)
 from planned.application.unit_of_work import UnitOfWorkProtocol
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.database.transaction import get_transaction_connection
@@ -34,6 +47,19 @@ class SqlAlchemyUnitOfWork:
     scoped to that transaction. All repositories share the same connection.
     """
 
+    # Repository type annotations for protocol compatibility
+    auth_tokens: AuthTokenRepositoryProtocol
+    calendars: CalendarRepositoryProtocol
+    days: DayRepositoryProtocol
+    day_templates: DayTemplateRepositoryProtocol
+    events: EventRepositoryProtocol
+    messages: MessageRepositoryProtocol
+    push_subscriptions: PushSubscriptionRepositoryProtocol
+    routines: RoutineRepositoryProtocol
+    task_definitions: TaskDefinitionRepositoryProtocol
+    tasks: TaskRepositoryProtocol
+    users: UserRepositoryProtocol
+
     def __init__(self, user_id: UUID) -> None:
         """Initialize the unit of work for a specific user.
 
@@ -44,19 +70,6 @@ class SqlAlchemyUnitOfWork:
         self._connection: AsyncConnection | None = None
         self._token: Token[AsyncConnection | None] | None = None
         self._is_nested = False
-
-        # Initialize repositories (will be connected when entering context)
-        self.auth_tokens: AuthTokenRepository
-        self.calendars: CalendarRepository
-        self.days: DayRepository
-        self.day_templates: DayTemplateRepository
-        self.events: EventRepository
-        self.messages: MessageRepository
-        self.push_subscriptions: PushSubscriptionRepository
-        self.routines: RoutineRepository
-        self.task_definitions: TaskDefinitionRepository
-        self.tasks: TaskRepository
-        self.users: UserRepository
 
     async def __aenter__(self) -> "Self":
         """Enter the unit of work context.
@@ -88,23 +101,40 @@ class SqlAlchemyUnitOfWork:
 
         # Initialize all repositories with user scoping (where applicable)
         # UserRepository and AuthTokenRepository are not user-scoped
-        self.users = UserRepository()
-        self.auth_tokens = AuthTokenRepository()
+        # Use cast to satisfy type checker - concrete repos implement protocols
+        self.users = cast(UserRepositoryProtocol, UserRepository())
+        self.auth_tokens = cast(AuthTokenRepositoryProtocol, AuthTokenRepository())
 
         # All other repositories are user-scoped
-        self.calendars = CalendarRepository(user_id=self.user_id)
-        self.days = DayRepository(user_id=self.user_id)
-        self.day_templates = DayTemplateRepository(user_id=self.user_id)
-        self.events = EventRepository(user_id=self.user_id)
-        self.messages = MessageRepository(user_id=self.user_id)
-        self.push_subscriptions = PushSubscriptionRepository(user_id=self.user_id)
-        self.routines = RoutineRepository(user_id=self.user_id)
-        self.task_definitions = TaskDefinitionRepository(user_id=self.user_id)
-        self.tasks = TaskRepository(user_id=self.user_id)
+        self.calendars = cast(
+            CalendarRepositoryProtocol, CalendarRepository(user_id=self.user_id)
+        )
+        self.days = cast(DayRepositoryProtocol, DayRepository(user_id=self.user_id))
+        self.day_templates = cast(
+            DayTemplateRepositoryProtocol, DayTemplateRepository(user_id=self.user_id)
+        )
+        self.events = cast(
+            EventRepositoryProtocol, EventRepository(user_id=self.user_id)
+        )
+        self.messages = cast(
+            MessageRepositoryProtocol, MessageRepository(user_id=self.user_id)
+        )
+        self.push_subscriptions = cast(
+            PushSubscriptionRepositoryProtocol,
+            PushSubscriptionRepository(user_id=self.user_id),
+        )
+        self.routines = cast(
+            RoutineRepositoryProtocol, RoutineRepository(user_id=self.user_id)
+        )
+        self.task_definitions = cast(
+            TaskDefinitionRepositoryProtocol,
+            TaskDefinitionRepository(user_id=self.user_id),
+        )
+        self.tasks = cast(TaskRepositoryProtocol, TaskRepository(user_id=self.user_id))
 
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object) -> None:
         """Exit the unit of work context.
 
         For nested transactions, do nothing (let outer transaction handle it).
@@ -224,7 +254,7 @@ class SqlAlchemyUnitOfWork:
 class SqlAlchemyUnitOfWorkFactory:
     """Factory for creating SqlAlchemyUnitOfWork instances."""
 
-    def create(self, user_id: UUID) -> SqlAlchemyUnitOfWork:
+    def create(self, user_id: UUID) -> UnitOfWorkProtocol:
         """Create a new UnitOfWork instance for the given user.
 
         Args:

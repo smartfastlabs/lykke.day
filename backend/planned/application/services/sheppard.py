@@ -186,7 +186,7 @@ class SheppardService(BaseService):
                 from planned.domain.entities import Action
                 from planned.domain.value_objects.action import ActionType
 
-                event.actions.append(  # type: ignore[attr-defined]
+                event.actions.append(
                     Action(
                         type=ActionType.NOTIFY,
                     )
