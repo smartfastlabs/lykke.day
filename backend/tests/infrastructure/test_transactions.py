@@ -3,7 +3,7 @@
 from uuid import uuid4
 
 import pytest
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Day, DayStatus, Task, TaskDefinition, TaskStatus
 from planned.domain.value_objects.query import DateQuery
 from planned.domain.value_objects.task import TaskCategory, TaskFrequency, TaskType
@@ -50,7 +50,7 @@ async def test_transaction_rolls_back_on_exception(test_date, test_user, day_rep
 
     # After rollback, the day should not be in the database
     day_id = Day.id_from_date_and_user(test_date, test_user.id)
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await day_repo.get(day_id)
 
 
@@ -204,5 +204,5 @@ async def test_transaction_rollback_on_nested_exception(test_date, test_user, da
                 raise ValueError("Nested exception")
 
     # After rollback, nothing should be persisted
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await day_repo.get(day.id)

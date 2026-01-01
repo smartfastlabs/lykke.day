@@ -10,7 +10,7 @@ from google_auth_oauthlib.flow import Flow
 from loguru import logger
 
 from planned.core.config import settings
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import TokenExpiredError
 from planned.domain.entities import AuthToken, Calendar, Event, TaskFrequency
 
 # Google OAuth Flow
@@ -52,7 +52,7 @@ def get_google_calendar(calendar: Calendar, token: AuthToken) -> GoogleCalendar:
         )
     except RefreshError:
         # Token is invalid - need to re-authenticate
-        raise exceptions.TokenExpiredError("User needs to re-authenticate")
+        raise TokenExpiredError("User needs to re-authenticate")
 
 
 def parse_recurrence_frequency(recurrence: list[str] | None) -> TaskFrequency:
@@ -216,4 +216,4 @@ async def load_calendar_events(
             token,
         )
     except RefreshError:
-        raise exceptions.TokenExpiredError("User needs to re-authenticate")
+        raise TokenExpiredError("User needs to re-authenticate")

@@ -8,7 +8,7 @@ import pytest
 from dobles import allow
 
 from planned.application.services import PlanningService
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import (
     Action,
     Day,
@@ -181,7 +181,7 @@ async def test_preview_creates_day_context(
         starts_at=test_datetime_noon,
     )
 
-    allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
+    allow(mock_day_repo).get.and_raise(NotFoundError("Not found"))
     allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
     allow(mock_routine_repo).all().and_return([])
@@ -373,7 +373,7 @@ async def test_schedule_creates_tasks_and_sets_status(
     )
 
     allow(mock_task_repo).delete_many.and_return(None)
-    allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
+    allow(mock_day_repo).get.and_raise(NotFoundError("Not found"))
     allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template.slug).and_return(template)
     allow(mock_day_template_repo).get(template.id).and_return(template)

@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import AuthToken, Calendar
 from planned.infrastructure.repositories import CalendarRepository
 
@@ -41,7 +41,7 @@ async def test_get(calendar_repo, test_user, auth_token_repo):
 @pytest.mark.asyncio
 async def test_get_not_found(calendar_repo):
     """Test getting a non-existent calendar raises NotFoundError."""
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await calendar_repo.get(uuid4())
 
 
@@ -127,6 +127,6 @@ async def test_user_isolation(calendar_repo, test_user, create_test_user, auth_t
     calendar_repo2 = CalendarRepository(user_id=user2.id)
     
     # User2 should not see user1's calendar
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await calendar_repo2.get(calendar.id)
 

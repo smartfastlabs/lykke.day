@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from planned.core.config import settings
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Message
 from planned.infrastructure.repositories import MessageRepository
 from planned.domain.value_objects.query import DateQuery
@@ -40,7 +40,7 @@ async def test_get(message_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_get_not_found(message_repo):
     """Test getting a non-existent message raises NotFoundError."""
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await message_repo.get(uuid4())
 
 
@@ -127,6 +127,6 @@ async def test_user_isolation(message_repo, test_user, create_test_user, test_da
     message_repo2 = MessageRepository(user_id=user2.id)
     
     # User2 should not see user1's message
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await message_repo2.get(message.id)
 

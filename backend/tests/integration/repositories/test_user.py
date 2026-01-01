@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import User
 from planned.domain.value_objects.user import UserSetting
 
@@ -26,7 +26,7 @@ async def test_get(user_repo, create_test_user):
 @pytest.mark.asyncio
 async def test_get_not_found(user_repo):
     """Test getting a non-existent user raises NotFoundError."""
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await user_repo.get(uuid4())
 
 

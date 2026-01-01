@@ -5,7 +5,7 @@ from uuid import uuid4, uuid5
 
 import pytest
 
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Task, TaskDefinition
 from planned.domain.value_objects.query import DateQuery
 from planned.domain.value_objects.task import (
@@ -60,7 +60,7 @@ async def test_get(task_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_get_not_found(task_repo):
     """Test getting a non-existent task raises NotFoundError."""
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await task_repo.get(uuid4())
 
 
@@ -200,7 +200,7 @@ async def test_delete(task_repo, test_user, test_date):
     await task_repo.delete(task)
 
     # Should not be found
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await task_repo.get(task.id)
 
 
@@ -225,7 +225,7 @@ async def test_user_isolation(task_repo, test_user, create_test_user, test_date)
     task_repo2 = TaskRepository(user_id=user2.id)
 
     # User2 should not see user1's task
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await task_repo2.get(task.id)
 
     # User1 should still see their task

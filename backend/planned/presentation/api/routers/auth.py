@@ -9,7 +9,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from passlib.context import CryptContext
 from planned.application.repositories import UserRepositoryProtocol
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import BadRequestError
 from planned.domain.entities import User
 from planned.domain.value_objects.base import BaseRequestObject, BaseResponseObject
 
@@ -39,7 +39,7 @@ async def set_password(
 ) -> StatusResponse:
     """Update password for the current user."""
     if data.new_password != data.confirm_new_password:
-        raise exceptions.BadRequestError("Passwords do not match")
+        raise BadRequestError("Passwords do not match")
 
     # Hash and set new password
     user.hashed_password = pwd_context.hash(data.new_password)

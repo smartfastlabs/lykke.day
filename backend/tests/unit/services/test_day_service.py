@@ -9,7 +9,7 @@ from dobles import allow
 
 from planned.application.services import DayService
 from planned.application.services.factories import DayServiceFactory
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import (
     Day,
     DayContext,
@@ -208,7 +208,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
         user_id=test_user_id,
     )
 
-    allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
+    allow(mock_day_repo).get.and_raise(NotFoundError("Not found"))
     allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template_slug).and_return(template)
     allow(mock_task_repo).search_query.and_return([])
@@ -274,7 +274,7 @@ async def test_get_or_create_creates_and_saves_day(
         template=template,
     )
 
-    allow(mock_day_repo).get.and_raise(exceptions.NotFoundError("Not found"))
+    allow(mock_day_repo).get.and_raise(NotFoundError("Not found"))
     allow(mock_user_repo).get(test_user_id).and_return(user)
     allow(mock_day_template_repo).get_by_slug(template_slug).and_return(template)
     allow(mock_day_repo).put.and_return(created_day)

@@ -13,7 +13,7 @@ from planned.application.repositories import (
     UserRepositoryProtocol,
 )
 from planned.core.constants import DEFAULT_END_OF_DAY_TIME
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain import entities as objects
 from planned.domain.value_objects.query import DateQuery
 
@@ -79,7 +79,7 @@ class DayContextLoader:
                 self.message_repo.search_query(DateQuery(date=date)),
                 self.day_repo.get(day_id),
             )
-        except exceptions.NotFoundError:
+        except NotFoundError:
             # Day doesn't exist, create a preview day using default template
             day = await self._create_preview_day(date, user_id)
 
@@ -154,4 +154,3 @@ class DayContextLoader:
             events=sorted(events, key=lambda e: e.starts_at),
             messages=messages,
         )
-

@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import TaskDefinition
 from planned.domain.value_objects.task import TaskType
 from planned.infrastructure.repositories import TaskDefinitionRepository
@@ -30,7 +30,7 @@ async def test_get(task_definition_repo, test_user):
 @pytest.mark.asyncio
 async def test_get_not_found(task_definition_repo):
     """Test getting a non-existent task definition raises NotFoundError."""
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await task_definition_repo.get(uuid4())
 
 
@@ -91,5 +91,5 @@ async def test_user_isolation(task_definition_repo, test_user, create_test_user)
     task_definition_repo2 = TaskDefinitionRepository(user_id=user2.id)
 
     # User2 should not see user1's task definition
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await task_definition_repo2.get(task_def.id)

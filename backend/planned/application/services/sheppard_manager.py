@@ -11,7 +11,7 @@ from planned.application.services.factories import DayServiceFactory
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.common.repository_handler import ChangeHandler
 from planned.common.signal_registry import entity_signals
-from planned.core import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Alarm, DayTemplate, User
 from planned.domain.value_objects.alarm import AlarmType
 from planned.domain.value_objects.repository_event import RepositoryEvent
@@ -64,7 +64,7 @@ class SheppardManager:
             # Ensure default DayTemplate exists for user
             try:
                 await uow.day_templates.get_by_slug("default")
-            except exceptions.NotFoundError:
+            except NotFoundError:
                 # Template doesn't exist, create it
                 default_template = DayTemplate(
                     user_id=user_id,

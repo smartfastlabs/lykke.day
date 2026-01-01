@@ -4,7 +4,7 @@ from datetime import time
 
 import pytest
 
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Alarm, DayTemplate
 from planned.domain.value_objects.alarm import AlarmType
 from planned.infrastructure.repositories import DayTemplateRepository
@@ -23,7 +23,7 @@ async def test_get_by_slug(day_template_repo, test_user, setup_day_templates):
 @pytest.mark.asyncio
 async def test_get_by_slug_not_found(day_template_repo):
     """Test getting a non-existent day template raises NotFoundError."""
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await day_template_repo.get_by_slug("nonexistent")
 
 
@@ -68,7 +68,7 @@ async def test_user_isolation(
     day_template_repo2 = DayTemplateRepository(user_id=user2.id)
 
     # User2 should not see user1's templates
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await day_template_repo2.get_by_slug("default")
 
     # User1 should still see their templates

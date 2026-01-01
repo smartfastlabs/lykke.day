@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 import pytest
 from dobles import allow
 from planned.application.services import CalendarService
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError, TokenExpiredError
 from planned.domain.entities import AuthToken, Calendar, Event
 
 
@@ -161,7 +161,7 @@ async def test_sync_all(
 
     allow(mock_calendar_repo).all().and_return([calendar1, calendar2])
     allow(mock_auth_token_repo).get.and_raise(
-        exceptions.TokenExpiredError("Token expired")
+        TokenExpiredError("Token expired")
     )
     allow(mock_event_repo).put.and_return(None)
 

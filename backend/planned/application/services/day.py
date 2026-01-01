@@ -8,7 +8,7 @@ from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.application.utils import filter_upcoming_events, filter_upcoming_tasks
 from planned.common.signal_registry import entity_signals
 from planned.core.constants import DEFAULT_LOOK_AHEAD
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain import entities as objects
 from planned.domain.entities import User
 from planned.domain.value_objects.repository_event import RepositoryEvent
@@ -175,7 +175,7 @@ class DayService(BaseService):
             day_id = objects.Day.id_from_date_and_user(date, self.user.id)
             try:
                 return await uow.days.get(day_id)
-            except exceptions.NotFoundError:
+            except NotFoundError:
                 # Day doesn't exist, create a preview
                 user = await uow.users.get(self.user.id)
                 template_slug = user.settings.template_defaults[date.weekday()]
@@ -203,7 +203,7 @@ class DayService(BaseService):
             day_id = objects.Day.id_from_date_and_user(date, self.user.id)
             try:
                 return await uow.days.get(day_id)
-            except exceptions.NotFoundError:
+            except NotFoundError:
                 # Day doesn't exist, create it
                 user = await uow.users.get(self.user.id)
                 template_slug = user.settings.template_defaults[date.weekday()]

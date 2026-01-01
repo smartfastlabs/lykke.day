@@ -4,7 +4,7 @@ import aiohttp
 from webpush import WebPush, WebPushMessage, WebPushSubscription  # type: ignore
 
 from planned.core.config import settings
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import PushNotificationError
 from planned.domain import entities as objects
 
 wp = WebPush(
@@ -41,6 +41,6 @@ async def send_notification(
             headers=message.headers,
         )
         if not response.ok:
-            raise exceptions.PushNotificationError(
+            raise PushNotificationError(
                 f"Failed to send push notification: {response.status} {response.reason}",
             )

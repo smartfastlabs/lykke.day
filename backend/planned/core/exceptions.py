@@ -51,7 +51,6 @@ class DomainError(BaseError):
     _message = "Domain rule violation"
 
 
-# Export exceptions directly for cleaner imports
 __all__ = [
     "BaseError",
     "NotFoundError",
@@ -63,20 +62,3 @@ __all__ = [
     "TokenExpiredError",
     "DomainError",
 ]
-
-# Create a namespace object for backward compatibility with existing code
-# This can be removed once all code is updated to use direct imports
-class _ExceptionsNamespace:
-    def __init__(self) -> None:
-        self.BaseError: type[BaseError] = BaseError
-        self.NotFoundError: type[NotFoundError] = NotFoundError
-        self.PushNotificationError: type[PushNotificationError] = PushNotificationError
-        self.BadRequestError: type[BadRequestError] = BadRequestError
-        self.AuthenticationError: type[AuthenticationError] = AuthenticationError
-        self.AuthorizationError: type[AuthorizationError] = AuthorizationError
-        self.ServerError: type[ServerError] = ServerError
-        self.TokenExpiredError: type[TokenExpiredError] = TokenExpiredError
-        self.DomainError: type[DomainError] = DomainError
-
-
-exceptions = _ExceptionsNamespace()

@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from loguru import logger
 from planned.application.services import SheppardManager
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.value_objects.repository_event import RepositoryEvent
 from planned.infrastructure.repositories import (
     AuthTokenRepository,
@@ -66,7 +66,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     user_repo = UserRepository()
     try:
         await user_repo.get(user_id)
-    except exceptions.NotFoundError:
+    except NotFoundError:
         await websocket.close(code=1008, reason="User not found")
         return
 

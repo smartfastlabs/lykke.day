@@ -6,7 +6,7 @@ from uuid import UUID
 from loguru import logger
 
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain import entities as objects
 from planned.domain.entities import Action, DayContext, Event, Task, TaskStatus
 from planned.domain.value_objects.query import DateQuery
@@ -111,7 +111,7 @@ class PlanningService(BaseService):
                     if existing_day.template:
                         template = existing_day.template
                         template_found = True
-                except exceptions.NotFoundError:
+                except NotFoundError:
                     # Day doesn't exist, will use default template
                     pass
 
@@ -157,7 +157,7 @@ class PlanningService(BaseService):
             day_id = objects.Day.id_from_date_and_user(date, self.user_id)
             try:
                 day = await uow.days.get(day_id)
-            except exceptions.NotFoundError:
+            except NotFoundError:
                 # Day doesn't exist, create it
                 user = await uow.users.get(self.user_id)
                 template_slug = user.settings.template_defaults[date.weekday()]

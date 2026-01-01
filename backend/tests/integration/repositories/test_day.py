@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Day, DayStatus
 from planned.infrastructure.utils.dates import get_current_datetime
 
@@ -39,7 +39,7 @@ async def test_get(
 @pytest.mark.asyncio
 async def test_get_not_found(day_repo, test_date):
     """Test getting a non-existent day raises NotFoundError."""
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await day_repo.get(uuid4())
 
 
@@ -211,7 +211,7 @@ async def test_user_isolation(
     day_repo2 = day_repo.__class__(user_id=user2.id)
 
     # User2 should not see user1's day
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await day_repo2.get(day1.id)
 
     # User1 should still see their day
@@ -243,5 +243,5 @@ async def test_delete(
     await day_repo.delete(day)
 
     # Should not be found
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await day_repo.get(day.id)

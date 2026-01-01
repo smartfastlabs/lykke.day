@@ -4,7 +4,6 @@ from uuid import UUID
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.sql import select
 
-from planned.core.exceptions import exceptions
 from planned.domain.entities import Calendar
 
 from .base import BaseQuery, UserScopedBaseRepository

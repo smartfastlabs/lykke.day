@@ -19,7 +19,7 @@ from planned.application.services import (
 )
 from planned.application.services.factories import DayServiceFactory
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import ServerError
 from planned.domain.entities import User
 from planned.infrastructure.gateways.adapters import (
     GoogleCalendarGatewayAdapter,
@@ -131,7 +131,7 @@ async def get_sheppard_service(
         request.app.state, "sheppard_manager", None
     )
     if manager is None:
-        raise exceptions.ServerError(
+        raise ServerError(
             "SheppardManager is not available. The service may not be initialized."
         )
 
@@ -139,7 +139,7 @@ async def get_sheppard_service(
     try:
         service = await manager.ensure_service_for_user(user_id)
     except RuntimeError as e:
-        raise exceptions.ServerError(
+        raise ServerError(
             f"SheppardService is not available for user {user_id}: {e}"
         ) from e
 

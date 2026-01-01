@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from planned.core.config import settings
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import Event
 from planned.infrastructure.repositories import EventRepository
 from planned.domain.value_objects.query import DateQuery
@@ -45,7 +45,7 @@ async def test_get(event_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_get_not_found(event_repo):
     """Test getting a non-existent event raises NotFoundError."""
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await event_repo.get(uuid4())
 
 
@@ -226,7 +226,7 @@ async def test_delete(event_repo, test_user, test_date):
     await event_repo.delete(event)
     
     # Should not be found
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await event_repo.get(event.id)
 
 
@@ -327,7 +327,7 @@ async def test_user_isolation(event_repo, test_user, create_test_user, test_date
     event_repo2 = EventRepository(user_id=user2.id)
     
     # User2 should not see user1's event
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await event_repo2.get(event.id)
     
     # User1 should still see their event

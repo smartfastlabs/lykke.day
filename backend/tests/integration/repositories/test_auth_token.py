@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from planned.core.exceptions import exceptions
+from planned.core.exceptions import NotFoundError
 from planned.domain.entities import AuthToken
 from planned.infrastructure.repositories import AuthTokenRepository
 
@@ -31,7 +31,7 @@ async def test_get(auth_token_repo, test_user):
 @pytest.mark.asyncio
 async def test_get_not_found(auth_token_repo):
     """Test getting a non-existent auth token raises NotFoundError."""
-    with pytest.raises(exceptions.NotFoundError):
+    with pytest.raises(NotFoundError):
         await auth_token_repo.get(uuid4())
 
 
