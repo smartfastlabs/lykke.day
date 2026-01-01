@@ -8,14 +8,17 @@ from uuid import UUID
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin, schemas
 from fastapi_users.authentication import AuthenticationBackend, CookieTransport
+from fastapi_users.exceptions import UserAlreadyExists
 from fastapi_users.authentication.strategy import JWTStrategy
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from planned.core.config import settings
+from planned.domain.entities import DayTemplate
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.database.tables import User
 from planned.infrastructure.database.utils import get_engine
+from planned.infrastructure.repositories import DayTemplateRepository
 
 # JWT secret - using the same secret as session was using
 SECRET = settings.SESSION_SECRET
@@ -71,8 +74,6 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         request: Request | None = None,
     ) -> User:
         """Create a new user with custom fields."""
-        from fastapi_users.exceptions import UserAlreadyExists
-        
         # Check if user already exists
         existing_user = await self.user_db.get_by_email(user_create.email)
         if existing_user is not None:
@@ -102,9 +103,6 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         request: Request | None = None,
     ) -> None:
         """Called after a user registers."""
-        from planned.domain.entities import DayTemplate
-        from planned.infrastructure.repositories import DayTemplateRepository
-
         # Create default day templates for new user
         day_template_repo = DayTemplateRepository(user_id=user.id)
         

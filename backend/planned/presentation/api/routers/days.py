@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from planned.application.services import DayService, PlanningService
+from planned.application.services.factories import DayServiceFactory
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain.entities import Day, DayContext, DayStatus, DayTemplate
 from planned.domain.value_objects.base import BaseRequestObject
@@ -65,8 +66,6 @@ async def update_day(
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> Day:
     """Update a day's status or template."""
-    from planned.application.services.factories import DayServiceFactory
-
     # Use factory to create DayService
     factory = DayServiceFactory(
         user=repos.user,

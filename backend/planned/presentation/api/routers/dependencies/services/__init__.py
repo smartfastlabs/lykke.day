@@ -17,6 +17,7 @@ from planned.application.services import (
     SheppardManager,
     SheppardService,
 )
+from planned.application.services.factories import DayServiceFactory
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import exceptions
 from planned.domain.entities import User
@@ -101,8 +102,6 @@ async def get_day_service_for_date(
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> DayService:
     """Get a user-scoped instance of DayService for a specific date."""
-    from planned.application.services.factories import DayServiceFactory
-
     # Use the factory to create DayService
     factory = DayServiceFactory(
         user=user,

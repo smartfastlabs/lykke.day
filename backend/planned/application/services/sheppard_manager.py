@@ -202,6 +202,8 @@ class SheppardManager:
             # Listen to UserRepository events (signals are class-level)
             self._event_handler = self._handle_user_event
             # Access the class-level signal
+            # TODO: Circular import - application layer should not import from infrastructure.
+            # Refactor to use dependency injection or an event bus pattern.
             from planned.infrastructure.repositories import UserRepository
 
             UserRepository.signal_source.connect(self._event_handler)
@@ -230,6 +232,8 @@ class SheppardManager:
 
         # Disconnect from UserRepository events
         if self._event_handler is not None:
+            # TODO: Circular import - application layer should not import from infrastructure.
+            # Refactor to use dependency injection or an event bus pattern.
             from planned.infrastructure.repositories import UserRepository
 
             UserRepository.signal_source.disconnect(self._event_handler)

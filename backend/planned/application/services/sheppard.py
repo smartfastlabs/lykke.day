@@ -154,12 +154,9 @@ class SheppardService(BaseService):
                 action.type == objects.ActionType.NOTIFY for action in task.actions
             ):
                 tasks_to_notify.append(task)
-                from planned.domain.entities import Action
-                from planned.domain.value_objects.action import ActionType
-
                 task.record_action(
-                    Action(
-                        type=ActionType.NOTIFY,
+                    objects.Action(
+                        type=objects.ActionType.NOTIFY,
                     )
                 )
 
@@ -183,12 +180,9 @@ class SheppardService(BaseService):
                 action.type == objects.ActionType.NOTIFY for action in event.actions
             ):
                 events_to_notify.append(event)
-                from planned.domain.entities import Action
-                from planned.domain.value_objects.action import ActionType
-
                 event.actions.append(
-                    Action(
-                        type=ActionType.NOTIFY,
+                    objects.Action(
+                        type=objects.ActionType.NOTIFY,
                     )
                 )
 

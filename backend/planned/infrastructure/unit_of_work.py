@@ -1,9 +1,12 @@
 """Infrastructure implementation of Unit of Work pattern using SQLAlchemy."""
 
+from __future__ import annotations
+
 from contextvars import Token
 from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from planned.application.repositories import (
@@ -43,6 +46,8 @@ from planned.infrastructure.repositories import (
 if TYPE_CHECKING:
     from typing import Self
 
+    from planned.domain.events.base import DomainEvent
+
 
 class SqlAlchemyUnitOfWork:
     """SQLAlchemy implementation of UnitOfWorkProtocol.
@@ -75,7 +80,7 @@ class SqlAlchemyUnitOfWork:
         self._token: Token[AsyncConnection | None] | None = None
         self._is_nested = False
 
-    async def __aenter__(self) -> "Self":
+    async def __aenter__(self) -> Self:
         """Enter the unit of work context.
 
         Creates a database connection and transaction, then initializes all repositories
@@ -205,8 +210,6 @@ class SqlAlchemyUnitOfWork:
         Returns:
             A list of all domain events collected from aggregates.
         """
-        from planned.domain.events.base import DomainEvent
-
         events: list[DomainEvent] = []
 
         # Collect events from aggregates that were saved
@@ -235,8 +238,6 @@ class SqlAlchemyUnitOfWork:
 
         if events:
             # Log events for now (can be replaced with proper event bus)
-            from loguru import logger
-
             logger.debug(f"Dispatching {len(events)} domain events")
             for event in events:
                 logger.debug(f"Domain event: {event.__class__.__name__}")

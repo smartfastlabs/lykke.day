@@ -57,6 +57,8 @@ class DayService(BaseService):
 
         # Set up listeners for repository events
         # Access repository classes directly for signals (signals are class-level)
+        # TODO: Circular import - application layer should not import from infrastructure.
+        # Refactor to use dependency injection or an event bus pattern.
         from planned.infrastructure.repositories import (
             EventRepository,
             MessageRepository,

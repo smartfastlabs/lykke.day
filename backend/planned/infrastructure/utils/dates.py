@@ -34,8 +34,6 @@ def get_time_between(
     
     All datetimes are converted to UTC for comparison.
     """
-    from datetime import UTC
-    
     today = get_current_date()
     desired_timezone = ZoneInfo(settings.TIMEZONE)
 
