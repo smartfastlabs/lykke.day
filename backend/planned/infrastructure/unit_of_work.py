@@ -6,9 +6,7 @@ from contextvars import Token
 from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncConnection
-
+from planned.application.events import send_domain_events
 from planned.application.repositories import (
     AuthTokenRepositoryProtocol,
     CalendarEntryRepositoryProtocol,
@@ -43,6 +41,7 @@ from planned.infrastructure.repositories import (
     TaskRepository,
     UserRepository,
 )
+from sqlalchemy.ext.asyncio import AsyncConnection
 
 if TYPE_CHECKING:
     from typing import Self
@@ -241,8 +240,9 @@ class SqlAlchemyUnitOfWork:
     async def _dispatch_domain_events(self, events: list[DomainEvent]) -> None:
         """Dispatch domain events after successful commit.
 
-        Currently logs events for debugging. This can be enhanced with a proper
-        event bus/dispatcher to enable event-driven workflows like:
+        Uses blinker signals to dispatch events to registered handlers.
+        This enables event-driven workflows like:
+        - Keeping service caches up to date
         - Sending notifications when tasks are completed
         - Triggering calendar syncs when events change
         - Audit logging
@@ -250,16 +250,7 @@ class SqlAlchemyUnitOfWork:
         Args:
             events: List of domain events to dispatch.
         """
-        if not events:
-            return
-
-        logger.debug(f"Dispatching {len(events)} domain events")
-        for event in events:
-            logger.debug(
-                f"Domain event: {event.__class__.__name__} at {event.occurred_at}"
-            )
-            # Future: dispatch to event handlers via an event bus
-            # await self._event_bus.publish(event)
+        await send_domain_events(events)
 
     async def rollback(self) -> None:
         """Rollback the current transaction."""

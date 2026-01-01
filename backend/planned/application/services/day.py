@@ -1,26 +1,43 @@
 import datetime
 from uuid import UUID
 
+from loguru import logger
+from planned.application.events import domain_event_signal
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.application.utils import (
     filter_upcoming_calendar_entries,
     filter_upcoming_tasks,
 )
-from planned.core.constants import DEFAULT_LOOK_AHEAD
+from planned.core.constants import DEFAULT_END_OF_DAY_TIME, DEFAULT_LOOK_AHEAD
 from planned.core.exceptions import NotFoundError
 from planned.domain import entities as objects
 from planned.domain.entities import User
+from planned.domain.events.base import DomainEvent
+from planned.domain.events.day_events import (
+    DayCompletedEvent,
+    DayScheduledEvent,
+    DayUnscheduledEvent,
+)
+from planned.domain.events.task_events import (
+    TaskActionRecordedEvent,
+    TaskCompletedEvent,
+    TaskStatusChangedEvent,
+)
 
 from .base import BaseService
 from .day_context_loader import DayContextLoader
 
 
 class DayService(BaseService):
-    """Service for managing day context and operations."""
+    """Service for managing day context and operations.
+
+    Subscribes to domain events to keep its cache (ctx) up to date.
+    """
 
     ctx: objects.DayContext
     date: datetime.date
     uow_factory: UnitOfWorkFactory
+    _is_subscribed: bool
 
     def __init__(
         self,
@@ -39,6 +56,167 @@ class DayService(BaseService):
         self.ctx = ctx
         self.date = ctx.day.date
         self.uow_factory = uow_factory
+        self._is_subscribed = False
+
+    def subscribe_to_events(self) -> None:
+        """Subscribe to domain events to keep cache up to date."""
+        if self._is_subscribed:
+            return
+        domain_event_signal.connect(self._handle_domain_event)
+        self._is_subscribed = True
+        logger.debug(f"DayService subscribed to domain events for date {self.date}")
+
+    def unsubscribe_from_events(self) -> None:
+        """Unsubscribe from domain events."""
+        if not self._is_subscribed:
+            return
+        domain_event_signal.disconnect(self._handle_domain_event)
+        self._is_subscribed = False
+        logger.debug(f"DayService unsubscribed from domain events for date {self.date}")
+
+    async def _handle_domain_event(
+        self,
+        sender: type[DomainEvent],
+        event: DomainEvent,
+    ) -> None:
+        """Handle incoming domain events and update cache accordingly.
+
+        Args:
+            sender: The event class (used by blinker for filtering)
+            event: The domain event to handle
+        """
+        # Task events
+        if isinstance(event, TaskStatusChangedEvent | TaskCompletedEvent):
+            await self._handle_task_status_change(event)
+        elif isinstance(event, TaskActionRecordedEvent):
+            await self._handle_task_action_recorded(event)
+        # Day events
+        elif isinstance(event, DayScheduledEvent | DayCompletedEvent):
+            await self._handle_day_status_change(event)
+        elif isinstance(event, DayUnscheduledEvent):
+            await self._handle_day_unscheduled(event)
+
+    async def _handle_task_status_change(
+        self,
+        event: TaskStatusChangedEvent | TaskCompletedEvent,
+    ) -> None:
+        """Handle task status change by reloading the task from the database.
+
+        Args:
+            event: The task status change event
+        """
+        task_id = event.task_id
+
+        # Check if this task is in our context
+        task_in_ctx = next((t for t in self.ctx.tasks if t.id == task_id), None)
+        if task_in_ctx is None:
+            # Task not in our day's context, ignore
+            return
+
+        # Reload the task from database to get updated state
+        uow = self.uow_factory.create(self.user.id)
+        async with uow:
+            try:
+                updated_task = await uow.tasks.get(task_id)
+                # Update the task in our context
+                self._update_task_in_context(updated_task)
+                logger.debug(f"Updated task {task_id} in DayService cache")
+            except NotFoundError:
+                # Task was deleted, remove from context
+                self._remove_task_from_context(task_id)
+                logger.debug(f"Removed deleted task {task_id} from DayService cache")
+
+    async def _handle_task_action_recorded(
+        self,
+        event: TaskActionRecordedEvent,
+    ) -> None:
+        """Handle task action recorded by reloading the task.
+
+        Args:
+            event: The task action recorded event
+        """
+        task_id = event.task_id
+
+        # Check if this task is in our context
+        task_in_ctx = next((t for t in self.ctx.tasks if t.id == task_id), None)
+        if task_in_ctx is None:
+            return
+
+        # Reload the task from database
+        uow = self.uow_factory.create(self.user.id)
+        async with uow:
+            try:
+                updated_task = await uow.tasks.get(task_id)
+                self._update_task_in_context(updated_task)
+                logger.debug(f"Updated task {task_id} after action in DayService cache")
+            except NotFoundError:
+                self._remove_task_from_context(task_id)
+
+    async def _handle_day_status_change(
+        self,
+        event: DayScheduledEvent | DayCompletedEvent,
+    ) -> None:
+        """Handle day status change by reloading the day.
+
+        Args:
+            event: The day status change event
+        """
+        # Only handle events for our day
+        if event.date != self.date:
+            return
+
+        # Reload the day from database
+        uow = self.uow_factory.create(self.user.id)
+        async with uow:
+            try:
+                updated_day = await uow.days.get(event.day_id)
+                self.ctx.day = updated_day
+                logger.debug(f"Updated day {event.day_id} in DayService cache")
+            except NotFoundError:
+                logger.warning(f"Day {event.day_id} not found after status change")
+
+    async def _handle_day_unscheduled(self, event: DayUnscheduledEvent) -> None:
+        """Handle day unscheduled event.
+
+        Args:
+            event: The day unscheduled event
+        """
+        if event.date != self.date:
+            return
+
+        # Reload the day from database
+        uow = self.uow_factory.create(self.user.id)
+        async with uow:
+            try:
+                updated_day = await uow.days.get(event.day_id)
+                self.ctx.day = updated_day
+                logger.debug(f"Updated unscheduled day {event.day_id} in cache")
+            except NotFoundError:
+                logger.warning(f"Day {event.day_id} not found after unschedule")
+
+    def _update_task_in_context(self, updated_task: objects.Task) -> None:
+        """Update a task in the context, maintaining sort order.
+
+        Args:
+            updated_task: The updated task to put in the context
+        """
+        # Remove old version and add updated one
+        self.ctx.tasks = [t for t in self.ctx.tasks if t.id != updated_task.id]
+        self.ctx.tasks.append(updated_task)
+        # Re-sort by start time
+        self.ctx.tasks.sort(
+            key=lambda x: x.schedule.start_time
+            if x.schedule and x.schedule.start_time
+            else DEFAULT_END_OF_DAY_TIME,
+        )
+
+    def _remove_task_from_context(self, task_id: UUID) -> None:
+        """Remove a task from the context.
+
+        Args:
+            task_id: The ID of the task to remove
+        """
+        self.ctx.tasks = [t for t in self.ctx.tasks if t.id != task_id]
 
     async def set_date(
         self,

@@ -6,7 +6,6 @@ from typing import Any, Literal
 from langchain.agents import create_agent
 from langchain_core.runnables import Runnable
 from loguru import logger
-
 from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain import entities as objects
@@ -391,6 +390,10 @@ class SheppardService(BaseService):
         and updates the day service to the new date.
         """
         date = get_current_date()
+
+        # Unsubscribe old day service from events before replacing
+        self.day_svc.unsubscribe_from_events()
+
         # Create a DayService instance using the factory
         factory = DayServiceFactory(
             user=self.user,
@@ -398,12 +401,17 @@ class SheppardService(BaseService):
         )
         self.day_svc = await factory.create(date, user_id=self.user.id)
 
+        # Subscribe new day service to events
+        self.day_svc.subscribe_to_events()
+
         if self.day_svc.ctx.day.status != objects.DayStatus.SCHEDULED:
             await self.planning_service.schedule(self.day_svc.date)
 
     async def run(self) -> None:
         logger.info("Starting Sheppard Service...")
         self.mode = "active"
+        # Subscribe to domain events to keep cache up to date
+        self.day_svc.subscribe_to_events()
         while self.is_running:
             wait_time: int = 30
             try:
@@ -426,6 +434,8 @@ class SheppardService(BaseService):
 
     def stop(self) -> None:
         self.mode = "stopping"
+        # Unsubscribe from domain events
+        self.day_svc.unsubscribe_from_events()
 
     @property
     def is_running(self) -> bool:
