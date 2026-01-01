@@ -1,89 +1,547 @@
 ---
-globs: backend/*
+globs: backend/**/*.py
 alwaysApply: false
 ---
 
-This codebase follows a VERY strict layered architecture (Clean Architecture/Hexagonal Architecture). Any changes that break any of the following rules won't be accepted.
+# Backend Architecture & Contribution Guide
+
+This codebase follows a **strict Clean Architecture (Hexagonal Architecture)**. Understanding and respecting layer boundaries is critical. Changes that violate these rules will not be accepted.
+
+---
+
+## Quick Reference: Make Commands
+
+All commands should be run from the `backend/` directory:
+
+```bash
+# Database Migrations
+make migrate-dev                    # Apply migrations to dev database
+make migrate-test                   # Apply migrations to test database
+make migrate-create MSG='message'   # Create a new migration
+
+# Testing & Quality
+make test               # Run all tests
+make test-target TARGET=test_name   # Run specific test by name
+make test-target TARGET=path/to/test.py  # Run specific test file
+make typecheck          # Run mypy type checking
+make check              # Run both typecheck and tests
+
+# Type Generation
+make export-openapi     # Export OpenAPI schema
+make generate-types     # Generate TypeScript types from OpenAPI
+```
+
+**IMPORTANT: Always use `poetry run` for any Python commands:**
+
+```bash
+poetry run alembic upgrade head    # Run migrations
+poetry run pytest tests/unit       # Run unit tests
+poetry run mypy planned           # Type check
+```
+
+---
 
 ## Architecture Overview
 
-The codebase is organized into the following layers:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     PRESENTATION LAYER                          │
+│  FastAPI routers, middlewares, request/response handling        │
+│  presentation/api/routers/                                      │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ depends on
+┌─────────────────────────────────────────────────────────────────┐
+│                     APPLICATION LAYER                           │
+│  Services (business logic), Repository & Gateway protocols      │
+│  application/services/, application/repositories/               │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ depends on
+┌─────────────────────────────────────────────────────────────────┐
+│                      DOMAIN LAYER                               │
+│  Entities, Value Objects, Domain Events (pure business rules)   │
+│  domain/entities/, domain/value_objects/, domain/events/        │
+└─────────────────────────────────────────────────────────────────┘
 
-### 1. Domain Layer (`domain/`)
+┌─────────────────────────────────────────────────────────────────┐
+│                   INFRASTRUCTURE LAYER                          │
+│  Implements protocols: repositories, gateways, database         │
+│  infrastructure/repositories/, infrastructure/gateways/         │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-- **Entities** (`domain/entities/`): Core business objects that represent the domain concepts
-- **Value Objects** (`domain/value_objects/`): Immutable value objects including `BaseRequestObject` and `BaseResponseObject`
-- This layer has no dependencies on other layers - it's the innermost layer
+---
 
-### 2. Application Layer (`application/`)
+## Layer Details & Data Flow
 
-- **Gateways** (`application/gateways/`): Protocol definitions (interfaces) for external service integrations
-  - Protocols use Python's `Protocol` type to define interfaces
-  - Examples: `GoogleCalendarGatewayProtocol`, `WebPushGatewayProtocol`
-- **Repositories** (`application/repositories/`): Protocol definitions (interfaces) for data access
-  - Each repository has a corresponding `*RepositoryProtocol`
-  - Examples: `TaskRepositoryProtocol`, `DayRepositoryProtocol`
-- **Services** (`application/services/`): All business logic lives here
+### 1. Domain Layer (`domain/`) - The Core
 
-  - Services depend on repository and gateway protocols, not implementations
-  - You should never need to create a new service. If you think you should...ask me first.
+The innermost layer with **ZERO external dependencies**.
 
-  Current Services:
+```
+domain/
+├── entities/          # Business objects (Task, Day, User, etc.)
+│   ├── base.py        # BaseObject, BaseEntityObject, BaseDateObject
+│   ├── task.py        # Task aggregate root with business methods
+│   └── ...
+├── value_objects/     # Immutable value types
+│   ├── base.py        # BaseValueObject, BaseRequestObject, BaseResponseObject
+│   ├── query.py       # Query objects (BaseQuery, DateQuery, etc.)
+│   └── ...
+└── events/            # Domain events
+    ├── base.py        # DomainEvent, BaseAggregateRoot
+    └── task_events.py # TaskCompletedEvent, TaskStatusChangedEvent
+```
 
-  1.  **AuthService**: Handles all things authentication
-  2.  **CalendarService**: Handles syncing calendars from 3rd party APIs
-  3.  **DayService**: Manages day-specific operations and state
-  4.  **PlanningService**: Converts Routines into Tasks (i.e. schedules the task for a specific date when applicable)
-  5.  **SheppardService**: Handles Intraday planning, notifications, conversations and everything that is realtime. This is where all realtime business logic should live.
+**Example: Entity with Domain Events**
 
-### 3. Infrastructure Layer (`infrastructure/`)
+```python
+# domain/entities/task.py
+class Task(BaseDateObject, BaseAggregateRoot):
+    """Task is an aggregate root - it owns business invariants and emits events."""
 
-- **Gateways** (`infrastructure/gateways/`): Implementations of gateway protocols
-  - Actual implementations that connect to external APIs/Services
-  - Use adapters (`infrastructure/gateways/adapters.py`) that implement the application protocols
-  - They must accept and return our own domain objects, not 3rd party objects
-  - Can be implemented as classes (for session management) or modules with stateless functions
-- **Repositories** (`infrastructure/repositories/`): Implementations of repository protocols
-  - Actual data access implementations (file-based, database, etc.)
-  - You should never need to create a new repository. If you think you should...ask me first.
-- **Utils** (`infrastructure/utils/`): Stateless helper functions
-  - Always check here before creating a new helper function
-- **Sidecars** (`infrastructure/sidecars/`): Background processes and listeners
+    user_id: UUID
+    scheduled_date: dt_date
+    name: str
+    status: TaskStatus
 
-### 4. Presentation Layer (`presentation/`)
+    def record_action(self, action: Action) -> None:
+        """Record an action - enforces business rules, emits events."""
+        self.actions.append(action)
 
-- **Routers** (`presentation/api/routers/`): FastAPI route handlers
-  - Must stay simple! They should contain no business logic
-  - They can validate input
-  - They can fetch data (e.g. for auth, validation, etc.)
-  - They send that data to services to run business logic
-  - Request objects should extend `BaseRequestObject` from `domain/value_objects/base.py`
-  - Response objects should extend `BaseResponseObject` from `domain/value_objects/base.py`
-  - Use dependency injection via `presentation/api/routers/dependencies/` to get services and repositories
-- **Middlewares** (`presentation/middlewares/`): FastAPI middlewares for cross-cutting concerns (auth, etc.)
+        if action.type == ActionType.COMPLETE:
+            if self.status == TaskStatus.COMPLETE:
+                raise DomainError("Task is already complete")
+            self.status = TaskStatus.COMPLETE
+            self.completed_at = datetime.now(UTC)
+            self._add_event(TaskCompletedEvent(task_id=self.id))
+```
 
-### 5. Core Layer (`core/`)
+**Key Rules:**
 
-- **Config** (`core/config.py`): Application configuration
-- **Constants** (`core/constants.py`): Application constants
-- **Exceptions** (`core/exceptions.py`): Application exceptions
+- Entities use Pydantic models extending `BaseEntityObject`
+- Aggregate roots extend `BaseAggregateRoot` for domain event support
+- Business logic (state transitions, validation) lives in entity methods
+- Never import from infrastructure or presentation
 
-### 6. Scripts (`scripts/`)
+### 2. Application Layer (`application/`) - Business Logic
 
-- Utility scripts not run as part of production
+Contains **services** and **protocol definitions** (interfaces).
 
-## Dependency Rules
+```
+application/
+├── services/          # Business logic orchestration
+│   ├── base.py        # BaseService with transaction support
+│   ├── day.py         # DayService
+│   ├── planning.py    # PlanningService
+│   └── factories/     # Service factories for DI
+├── repositories/      # Repository PROTOCOLS (interfaces)
+│   ├── base.py        # CrudRepositoryProtocol, etc.
+│   ├── task_repository.py  # TaskRepositoryProtocol
+│   └── ...
+├── gateways/          # External service PROTOCOLS
+│   ├── google_protocol.py
+│   └── web_push_protocol.py
+└── unit_of_work.py    # UnitOfWorkProtocol
+```
 
-- **Domain** has no dependencies (it's the core)
-- **Application** depends only on **Domain**
-- **Infrastructure** depends on **Application** and **Domain** (implements the protocols)
-- **Presentation** depends on **Application**, **Domain**, and **Infrastructure** (uses services and repositories)
-- Services should depend on protocols (from application layer), not implementations (from infrastructure layer)
+**Example: Repository Protocol**
 
-## Important Notes
+```python
+# application/repositories/task_repository.py
+class TaskRepositoryProtocol(DateScopedCrudRepositoryProtocol[Task]):
+    """Protocol defining the interface for task repositories."""
+    pass
 
-The structure of this codebase is very important; if you're not sure please ask questions. The layered architecture ensures:
+# Base protocols in application/repositories/base.py
+class CrudRepositoryProtocol(Protocol[T]):
+    async def get(self, key: UUID) -> T: ...
+    async def put(self, obj: T) -> T: ...
+    async def all(self) -> list[T]: ...
+    async def delete(self, key: UUID | T) -> None: ...
+```
 
-- Business logic is independent of infrastructure details
-- Interfaces and implementations are clearly separated
-- The codebase remains testable and maintainable
+**Example: Service using Protocols**
+
+```python
+# application/services/day.py
+class DayService(BaseService):
+    """Services depend on PROTOCOLS, not implementations."""
+
+    def __init__(
+        self,
+        user: User,
+        ctx: objects.DayContext,
+        uow_factory: UnitOfWorkFactory,  # Protocol, not SqlAlchemyUnitOfWorkFactory
+    ) -> None:
+        super().__init__(user)
+        self.ctx = ctx
+        self.uow_factory = uow_factory
+
+    async def get_or_create(self, date: datetime.date) -> objects.Day:
+        """Business logic using Unit of Work pattern."""
+        uow = self.uow_factory.create(self.user.id)
+        async with uow:
+            day_id = objects.Day.id_from_date_and_user(date, self.user.id)
+            try:
+                return await uow.days.get(day_id)
+            except NotFoundError:
+                # Create new day
+                day = objects.Day.create_for_date(date, user_id=self.user.id)
+                result = await uow.days.put(day)
+                await uow.commit()
+                return result
+```
+
+**Existing Services (don't create new ones without asking):**
+
+1. **DayService** - Day-specific operations and context loading
+2. **PlanningService** - Converts Routines into scheduled Tasks
+3. **CalendarService** - Syncs calendars from external APIs
+4. **SheppardService** - Realtime planning, notifications, conversations
+5. **AuthService** - Authentication handling
+
+### 3. Infrastructure Layer (`infrastructure/`) - Implementations
+
+Implements the protocols defined in the application layer.
+
+```
+infrastructure/
+├── repositories/      # Repository implementations
+│   ├── base/          # BaseRepository, UserScopedBaseRepository
+│   ├── task.py        # TaskRepository implements TaskRepositoryProtocol
+│   └── ...
+├── gateways/          # External API implementations
+│   ├── google.py
+│   └── web_push.py
+├── database/          # SQLAlchemy tables, connection management
+│   ├── tables/        # Table definitions
+│   └── transaction.py # TransactionManager
+├── unit_of_work.py    # SqlAlchemyUnitOfWork
+└── utils/             # Stateless helper functions
+```
+
+**Example: Repository Implementation**
+
+```python
+# infrastructure/repositories/task.py
+class TaskRepository(UserScopedBaseRepository[Task, DateQuery]):
+    """Concrete implementation using SQLAlchemy."""
+
+    Object = Task                    # Entity class
+    table = tasks_tbl                # SQLAlchemy table
+    QueryClass = DateQuery           # Query object type
+    excluded_row_fields = {"date"}   # DB-only fields to exclude
+
+    def __init__(self, user_id: UUID) -> None:
+        super().__init__(user_id=user_id)
+
+    def build_query(self, query: DateQuery) -> Select[tuple]:
+        """Extend base query with date filtering."""
+        stmt = super().build_query(query)
+        if query.date is not None:
+            stmt = stmt.where(self.table.c.date == query.date)
+        return stmt
+
+    @staticmethod
+    def entity_to_row(task: Task) -> dict[str, Any]:
+        """Convert entity to database row."""
+        return {
+            "id": task.id,
+            "user_id": task.user_id,
+            "name": task.name,
+            "status": task.status.value,
+            # ... other fields
+        }
+```
+
+### 4. Presentation Layer (`presentation/`) - API Layer
+
+FastAPI routers that delegate to services. **Must stay thin!**
+
+```
+presentation/
+├── api/
+│   └── routers/
+│       ├── dependencies/      # DI factories for services/repos
+│       │   ├── container.py   # RepositoryContainer bundles dependencies
+│       │   ├── repositories/  # Repository DI functions
+│       │   └── services/      # Service DI functions
+│       ├── tasks.py
+│       ├── days.py
+│       └── ...
+└── middlewares/
+```
+
+**Example: Router (Keep It Simple!)**
+
+```python
+# presentation/api/routers/tasks.py
+router = APIRouter()
+
+@router.post("/{date}/{_id}/actions")
+async def add_task_action(
+    date: dt.date,
+    _id: uuid.UUID,
+    action: Action,
+    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
+    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
+) -> Task:
+    # Routers: fetch data, delegate to service, return result
+    task: Task = await task_repo.get(_id)
+    return await planning_service.save_action(task, action)
+```
+
+**Example: Request/Response Objects**
+
+```python
+# In router file or domain/value_objects/
+class UpdateDayRequest(BaseRequestObject):
+    """Request objects extend BaseRequestObject."""
+    status: DayStatus | None = None
+    template_id: UUID | None = None
+```
+
+---
+
+## Unit of Work Pattern
+
+The codebase uses Unit of Work for transaction management:
+
+```python
+# Using UnitOfWork in services
+async def schedule(self, date: datetime.date) -> DayContext:
+    uow = self.uow_factory.create(self.user.id)
+    async with uow:                    # Transaction starts
+        day = await uow.days.get(day_id)
+        tasks = await self._create_tasks(uow, day)
+        for task in tasks:
+            await uow.tasks.put(task)
+        await uow.commit()             # Commits + dispatches domain events
+    return self.ctx                    # Transaction ended
+```
+
+The `SqlAlchemyUnitOfWork`:
+
+- Provides access to all repositories scoped to a user
+- Manages database transactions
+- Collects and dispatches domain events after commit
+
+---
+
+## Testing Guidelines
+
+### Test Structure
+
+```
+tests/
+├── conftest.py        # Global fixtures (dates, database URL)
+├── unit/              # Unit tests - mock all dependencies
+│   ├── conftest.py    # Mock fixtures using dobles
+│   └── services/      # Test services in isolation
+├── integration/       # Integration tests - real database
+│   ├── conftest.py    # Database setup/teardown
+│   └── repositories/  # Test repository implementations
+├── e2e/               # End-to-end tests - full API flow
+│   ├── conftest.py    # TestClient setup
+│   └── routers/       # Test API endpoints
+└── fixtures/          # Reusable test fixtures
+    ├── repositories.py
+    └── unit_of_work.py
+```
+
+### Unit Testing (Mock Everything)
+
+Use `dobles` for mocking protocols:
+
+```python
+# tests/unit/services/test_day_service.py
+@pytest.mark.asyncio
+async def test_get_or_preview_returns_existing_day(
+    mock_day_repo,              # Mocked DayRepositoryProtocol
+    mock_uow_factory,           # Mocked UnitOfWorkFactory
+    test_user,
+):
+    """Test with all dependencies mocked."""
+    date = datetime.date(2024, 1, 1)
+    day = Day(user_id=test_user.id, date=date, ...)
+
+    # Set up mock behavior
+    allow(mock_day_repo).get(day.id).and_return(day)
+
+    # Create service with mocks
+    service = DayService(user=test_user, ctx=ctx, uow_factory=mock_uow_factory)
+
+    result = await service.get_or_preview(date)
+
+    assert result.id == day.id
+```
+
+### Time-Based Testing
+
+Use `freezegun` for time-dependent tests:
+
+```python
+@pytest.fixture
+def test_datetime_noon():
+    """Freeze time at noon for consistent testing."""
+    with freeze_time("2025-11-27 12:00:00-6:00", real_asyncio=True):
+        yield datetime.datetime(2025, 11, 27, 12, 0, 0, tzinfo=UTC)
+
+@pytest.mark.asyncio
+async def test_upcoming_tasks(test_datetime_noon, ...):
+    # All datetime.now() calls will return the frozen time
+    result = await service.get_upcoming_tasks()
+```
+
+### E2E Testing
+
+Test full API flows:
+
+```python
+# tests/e2e/test_full_user_flow.py
+@pytest.mark.asyncio
+async def test_full_user_flow(test_client: TestClient):
+    # Register
+    response = test_client.post("/auth/register", json={...})
+    assert response.status_code == 201
+
+    # Login
+    response = test_client.post("/auth/login", data={...})
+    assert response.status_code == 204
+
+    # Use API
+    response = test_client.get("/days/today/context")
+    assert response.status_code == 200
+```
+
+### When to Write Tests
+
+1. **Always write tests for:**
+
+   - New service methods (unit tests)
+   - New API endpoints (e2e tests)
+   - Bug fixes (regression tests)
+   - Complex business logic in entities
+
+2. **Test coverage priorities:**
+   - Domain entities: Test business methods and state transitions
+   - Services: Test orchestration logic with mocked dependencies
+   - API: Test happy paths and error handling
+
+---
+
+## Writing Incremental, Reviewable Code
+
+### 1. Small, Focused Changes
+
+Each PR/commit should do ONE thing:
+
+```
+✓ Good commit sequence:
+  1. "Add TaskPriority value object"
+  2. "Add priority field to Task entity"
+  3. "Add priority filtering to TaskRepository"
+  4. "Add priority update to PlanningService"
+  5. "Add priority endpoint to tasks router"
+
+✗ Bad: Single commit with all of the above
+```
+
+### 2. Follow the Layer Order
+
+When adding a new feature, work bottom-up:
+
+1. **Domain first**: Add entities, value objects
+2. **Application second**: Add/update protocols, then services
+3. **Infrastructure third**: Implement the protocols
+4. **Presentation last**: Add API endpoints
+
+### 3. Ask Questions Early
+
+If you're unsure about:
+
+- Whether to create a new service → Ask first
+- Whether to create a new repository → Ask first
+- Where logic should live → Ask first
+- How data should flow → Ask first
+
+### 4. Code Review Checklist
+
+Before submitting:
+
+- [ ] All tests pass (`make test`)
+- [ ] Type checking passes (`make typecheck`)
+- [ ] New code has tests
+- [ ] Layer boundaries are respected
+- [ ] Services depend on protocols, not implementations
+- [ ] Routers are thin (no business logic)
+- [ ] Domain entities enforce business rules
+
+---
+
+## Common Patterns
+
+### Query Objects
+
+Use query objects for flexible filtering:
+
+```python
+# domain/value_objects/query.py
+class DateQuery(BaseQuery):
+    date: dt_date | None = None
+
+# Usage in repository
+tasks = await task_repo.search_query(DateQuery(date=today))
+```
+
+### Factory Pattern for Services
+
+Services that need complex initialization use factories:
+
+```python
+# application/services/factories/day.py
+class DayServiceFactory:
+    def __init__(self, user: User, uow_factory: UnitOfWorkFactory):
+        self.user = user
+        self.uow_factory = uow_factory
+
+    async def create(self, date: date, user_id: UUID) -> DayService:
+        # Load context, create service
+        ctx = await self._load_context(date, user_id)
+        return DayService(user=self.user, ctx=ctx, uow_factory=self.uow_factory)
+```
+
+### Dependency Injection in Routers
+
+```python
+# presentation/api/routers/dependencies/repositories/__init__.py
+def get_task_repo(
+    user: Annotated[User, Depends(get_current_user)],
+) -> TaskRepositoryProtocol:
+    return cast("TaskRepositoryProtocol", TaskRepository(user_id=user.id))
+```
+
+---
+
+## Dependency Rules Summary
+
+| Layer          | Can Depend On       |
+| -------------- | ------------------- |
+| Domain         | Nothing (core)      |
+| Application    | Domain only         |
+| Infrastructure | Application, Domain |
+| Presentation   | All layers          |
+| Core           | Nothing             |
+
+**Golden Rule**: Inner layers never know about outer layers. Services use protocols, not concrete implementations.
+
+---
+
+## Getting Help
+
+1. Check existing code for patterns
+2. Check `infrastructure/utils/` before creating helpers
+3. Ask questions if unsure about architecture decisions
+4. Don't create new services or repositories without discussion

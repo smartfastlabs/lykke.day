@@ -8,11 +8,6 @@ from contextlib import asynccontextmanager
 from typing import Any, ClassVar, Generic, TypeVar
 from uuid import UUID
 
-from sqlalchemy import delete, select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlalchemy.sql import Select
-
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities.base import BaseEntityObject
 from planned.domain.events.base import BaseAggregateRoot, DomainEvent
@@ -20,6 +15,10 @@ from planned.domain.value_objects.query import BaseQuery
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.database.transaction import get_transaction_connection
 from planned.infrastructure.repositories.base.utils import normalize_list_fields
+from sqlalchemy import delete, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.sql import Select
 
 ObjectType = TypeVar("ObjectType", bound=BaseEntityObject)
 QueryType = TypeVar("QueryType", bound=BaseQuery)
@@ -465,3 +464,7 @@ class UserScopedBaseRepository(
             user_id: Required user ID. All queries will be filtered by this user ID.
         """
         super().__init__(user_id=user_id)
+
+    @property
+    def _is_user_scoped(self) -> bool:
+        return True
