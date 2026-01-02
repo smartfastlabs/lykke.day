@@ -496,7 +496,7 @@ async def test_get_upcoming_calendar_entries(
     date = datetime.date(2025, 11, 27)
     # Use frozen datetime from fixture - get_current_datetime() will return the frozen time
     # which is 2025-11-27 18:00:00 UTC (12:00:00-6:00)
-    from planned.infrastructure.utils.dates import get_current_datetime
+    from planned.core.utils.dates import get_current_datetime
 
     now = get_current_datetime()
     future_time = now + timedelta(minutes=15)

@@ -6,7 +6,7 @@ import os
 import pytest
 from freezegun import freeze_time
 from planned.core.config import settings
-from planned.infrastructure.utils.dates import get_current_date
+from planned.core.utils.dates import get_current_date
 
 
 @pytest.fixture(scope="session")

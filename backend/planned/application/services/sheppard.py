@@ -25,7 +25,7 @@ from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain import entities, value_objects
 from planned.domain.services.notification import NotificationPayloadBuilder
 from planned.infrastructure.utils import templates, youtube
-from planned.infrastructure.utils.dates import get_current_date, get_current_time
+from planned.core.utils.dates import get_current_date, get_current_time
 
 
 def get_weather(city: str) -> str:

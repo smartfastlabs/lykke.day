@@ -9,7 +9,7 @@ from planned.application.mediator import Mediator
 from planned.application.queries import PreviewDayQuery
 from planned.application.repositories import RoutineRepositoryProtocol
 from planned.domain import entities, value_objects
-from planned.infrastructure.utils.dates import get_current_date, get_tomorrows_date
+from planned.core.utils.dates import get_current_date, get_tomorrows_date
 
 from .dependencies.repositories import get_routine_repo
 from .dependencies.services import get_mediator

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from planned.application.repositories import CalendarEntryRepositoryProtocol
 from planned.domain import entities, value_objects
-from planned.infrastructure.utils.dates import get_current_date
+from planned.core.utils.dates import get_current_date
 
 from .dependencies.repositories import get_calendar_entry_repo
 

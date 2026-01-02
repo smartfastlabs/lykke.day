@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from planned.application.services import DayService
-from planned.infrastructure.utils.dates import get_current_date
+from planned.core.utils.dates import get_current_date
 
 
 async def main():

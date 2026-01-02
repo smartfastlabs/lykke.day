@@ -8,8 +8,8 @@ from fastapi import APIRouter, Depends
 from planned.application.commands import ScheduleDayCommand, UpdateDayCommand
 from planned.application.mediator import Mediator
 from planned.application.queries import GetDayContextQuery, PreviewDayQuery
+from planned.core.utils.dates import get_current_date, get_tomorrows_date
 from planned.domain import entities, value_objects
-from planned.infrastructure.utils.dates import get_current_date, get_tomorrows_date
 
 from .dependencies.container import RepositoryContainer, get_repository_container
 from .dependencies.services import get_mediator

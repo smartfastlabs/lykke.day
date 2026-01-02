@@ -19,10 +19,10 @@ from planned.application.services import (
 from planned.application.services.factories import DayServiceFactory
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import ServerError
+from planned.core.utils.dates import get_current_date, get_tomorrows_date
 from planned.domain import entities
 from planned.infrastructure.gateways import GoogleCalendarGateway, WebPushGateway
 from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
-from planned.infrastructure.utils.dates import get_current_date, get_tomorrows_date
 
 from ..user import get_current_user
 

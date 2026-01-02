@@ -1,3 +1,9 @@
+"""Date and time utility functions.
+
+These utilities provide timezone-aware date/time operations that respect
+the application's configured timezone settings.
+"""
+
 import datetime
 from datetime import UTC
 from zoneinfo import ZoneInfo
@@ -23,6 +29,7 @@ def get_current_time() -> datetime.time:
 
 
 def get_tomorrows_date() -> datetime.date:
+    """Get tomorrow's date in the configured timezone."""
     return get_current_date() + datetime.timedelta(days=1)
 
 
@@ -48,3 +55,4 @@ def get_time_between(
         t2 = datetime.datetime.combine(today, t2, tzinfo=desired_timezone).astimezone(UTC)
 
     return t1 - t2
+

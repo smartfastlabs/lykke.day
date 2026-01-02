@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from planned.core.config import settings
 from planned.domain import entities, value_objects
-from planned.infrastructure.utils.dates import get_current_datetime, get_current_time
+from planned.core.utils.dates import get_current_datetime, get_current_time
 
 
 def is_task_eligible_for_upcoming(

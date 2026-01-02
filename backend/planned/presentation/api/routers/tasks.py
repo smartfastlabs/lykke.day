@@ -8,8 +8,8 @@ from fastapi import APIRouter, Depends
 from planned.application.commands import RecordTaskActionCommand
 from planned.application.mediator import Mediator
 from planned.application.repositories import TaskRepositoryProtocol
+from planned.core.utils.dates import get_current_date
 from planned.domain import entities, value_objects
-from planned.infrastructure.utils.dates import get_current_date
 
 from .dependencies.repositories import get_task_repo
 from .dependencies.services import get_mediator

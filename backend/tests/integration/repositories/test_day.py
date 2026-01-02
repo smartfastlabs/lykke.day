@@ -6,7 +6,7 @@ import pytest
 
 from planned.core.exceptions import NotFoundError
 from planned.domain import entities, value_objects
-from planned.infrastructure.utils.dates import get_current_datetime
+from planned.core.utils.dates import get_current_datetime
 
 
 @pytest.mark.asyncio
