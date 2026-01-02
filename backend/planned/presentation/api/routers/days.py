@@ -1,58 +1,103 @@
+"""Routes for day operations."""
+
 import datetime
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from planned.application.services import DayService, PlanningService
-from planned.application.services.factories import DayServiceFactory
-from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain.entities import Day, DayContext, DayStatus, DayTemplate
+from planned.application.commands import ScheduleDayCommand, UpdateDayCommand
+from planned.application.mediator import Mediator
+from planned.application.queries import GetDayContextQuery, PreviewDayQuery
+from planned.domain.entities import Day, DayContext, DayTemplate, User
 from planned.domain.value_objects.base import BaseRequestObject
-from planned.infrastructure.utils.dates import get_current_date
+from planned.domain.value_objects.day import DayStatus
+from planned.infrastructure.utils.dates import get_current_date, get_tomorrows_date
 
 from .dependencies.container import RepositoryContainer, get_repository_container
-from .dependencies.services import (
-    get_day_service_for_current_date,
-    get_day_service_for_date,
-    get_day_service_for_tomorrow_date,
-    get_planning_service,
-    get_unit_of_work_factory,
-)
+from .dependencies.services import get_mediator
+from .dependencies.user import get_current_user
 
 router = APIRouter()
 
 
-@router.put("/today/schedule")
-async def schedule_today(
-    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
-) -> DayContext:
-    result = await planning_service.schedule(get_current_date())
-    return result
+# ============================================================================
+# Day Context Queries
+# ============================================================================
 
 
 @router.get("/today/context")
 async def get_context_today(
-    day_service: Annotated[DayService, Depends(get_day_service_for_current_date)],
+    user: Annotated[User, Depends(get_current_user)],
+    mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> DayContext:
-    return await day_service.load_context()
+    """Get the complete context for today."""
+    query = GetDayContextQuery(user=user, date=get_current_date())
+    return await mediator.query(query)
 
 
 @router.get("/tomorrow/context")
 async def get_context_tomorrow(
-    day_service: Annotated[DayService, Depends(get_day_service_for_tomorrow_date)],
+    user: Annotated[User, Depends(get_current_user)],
+    mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> DayContext:
-    return await day_service.load_context()
+    """Get the complete context for tomorrow."""
+    query = GetDayContextQuery(user=user, date=get_tomorrows_date())
+    return await mediator.query(query)
 
 
 @router.get("/{date}/context")
 async def get_context(
-    date: datetime.date,  # Used by dependency injection
-    day_service: Annotated[DayService, Depends(get_day_service_for_date)],
+    date: datetime.date,
+    user: Annotated[User, Depends(get_current_user)],
+    mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> DayContext:
-    return await day_service.load_context()
+    """Get the complete context for a specific date."""
+    query = GetDayContextQuery(user=user, date=date)
+    return await mediator.query(query)
+
+
+@router.get("/{date}/preview")
+async def preview_day(
+    date: datetime.date,
+    user: Annotated[User, Depends(get_current_user)],
+    mediator: Annotated[Mediator, Depends(get_mediator)],
+    template_id: UUID | None = None,
+) -> DayContext:
+    """Preview what a day would look like if scheduled."""
+    query = PreviewDayQuery(user_id=user.id, date=date, template_id=template_id)
+    return await mediator.query(query)
+
+
+# ============================================================================
+# Day Commands
+# ============================================================================
+
+
+@router.put("/today/schedule")
+async def schedule_today(
+    user: Annotated[User, Depends(get_current_user)],
+    mediator: Annotated[Mediator, Depends(get_mediator)],
+) -> DayContext:
+    """Schedule today with tasks from routines."""
+    cmd = ScheduleDayCommand(user_id=user.id, date=get_current_date())
+    return await mediator.execute(cmd)
+
+
+@router.put("/{date}/schedule")
+async def schedule_day(
+    date: datetime.date,
+    user: Annotated[User, Depends(get_current_user)],
+    mediator: Annotated[Mediator, Depends(get_mediator)],
+    template_id: UUID | None = None,
+) -> DayContext:
+    """Schedule a specific day with tasks from routines."""
+    cmd = ScheduleDayCommand(user_id=user.id, date=date, template_id=template_id)
+    return await mediator.execute(cmd)
 
 
 class UpdateDayRequest(BaseRequestObject):
+    """Request body for updating a day."""
+
     status: DayStatus | None = None
     template_id: UUID | None = None
 
@@ -61,49 +106,27 @@ class UpdateDayRequest(BaseRequestObject):
 async def update_day(
     date: datetime.date,
     request: UpdateDayRequest,
-    repos: Annotated[RepositoryContainer, Depends(get_repository_container)],
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    user: Annotated[User, Depends(get_current_user)],
+    mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> Day:
     """Update a day's status or template."""
-    # Use factory to create DayService
-    factory = DayServiceFactory(
-        user=repos.user,
-        uow_factory=uow_factory,
+    cmd = UpdateDayCommand(
+        user_id=user.id,
+        date=date,
+        status=request.status,
+        template_id=request.template_id,
     )
-    day_svc = await factory.create(date, user_id=repos.user.id)
+    return await mediator.execute(cmd)
 
-    # Get or preview the day
-    day: Day = await day_svc.get_or_preview(date)
 
-    # Update day using domain methods and save
-    uow = uow_factory.create(repos.user.id)
-    async with uow:
-        # Reload day in UoW context
-        day = await uow.days.get(day.id)
-
-        if request.status is not None:
-            if request.status == DayStatus.SCHEDULED and day.template:
-                day.schedule(day.template)
-            elif request.status == DayStatus.UNSCHEDULED:
-                day.unschedule()
-            elif request.status == DayStatus.COMPLETE:
-                day.complete()
-            else:
-                # For other statuses, set directly (not ideal but maintains compatibility)
-                day.status = request.status
-
-        if request.template_id is not None:
-            template = await uow.day_templates.get(request.template_id)
-            day.update_template(template)
-
-        # Save and commit
-        result = await uow.days.put(day)
-        await uow.commit()
-        return result
+# ============================================================================
+# Templates (simple query via repository)
+# ============================================================================
 
 
 @router.get("/templates")
 async def get_templates(
     repos: Annotated[RepositoryContainer, Depends(get_repository_container)],
 ) -> list[DayTemplate]:
+    """Get all available day templates."""
     return await repos.day_template_repo.all()

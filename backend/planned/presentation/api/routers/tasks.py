@@ -1,17 +1,20 @@
+"""Routes for task operations."""
+
 import datetime as dt
 import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-
+from planned.application.commands import RecordTaskActionCommand
+from planned.application.mediator import Mediator
 from planned.application.repositories import TaskRepositoryProtocol
-from planned.application.services import PlanningService
-from planned.domain.entities import Action, Task
+from planned.domain.entities import Action, Task, User
 from planned.domain.value_objects.query import DateQuery
 from planned.infrastructure.utils.dates import get_current_date
 
 from .dependencies.repositories import get_task_repo
-from .dependencies.services import get_planning_service
+from .dependencies.services import get_mediator
+from .dependencies.user import get_current_user
 
 router = APIRouter()
 
@@ -20,6 +23,7 @@ router = APIRouter()
 async def list_todays_tasks(
     task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
 ) -> list[Task]:
+    """Get all tasks for today."""
     return await task_repo.search_query(DateQuery(date=get_current_date()))
 
 
@@ -28,8 +32,14 @@ async def add_task_action(
     date: dt.date,
     _id: uuid.UUID,
     action: Action,
-    task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
-    planning_service: Annotated[PlanningService, Depends(get_planning_service)],
+    user: Annotated[User, Depends(get_current_user)],
+    mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> Task:
-    task: Task = await task_repo.get(_id)
-    return await planning_service.save_action(task, action)
+    _ = date  # Path parameter kept for API compatibility
+    """Record an action on a task."""
+    cmd = RecordTaskActionCommand(
+        user_id=user.id,
+        task_id=_id,
+        action=action,
+    )
+    return await mediator.execute(cmd)

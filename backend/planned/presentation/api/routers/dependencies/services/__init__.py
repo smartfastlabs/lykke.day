@@ -9,6 +9,7 @@ import datetime
 from typing import Annotated
 
 from fastapi import Depends, Request
+from planned.application.mediator import Mediator
 from planned.application.services import (
     CalendarService,
     DayService,
@@ -32,6 +33,13 @@ from ..user import get_current_user
 def get_unit_of_work_factory() -> UnitOfWorkFactory:
     """Get a UnitOfWorkFactory instance."""
     return SqlAlchemyUnitOfWorkFactory()
+
+
+def get_mediator(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> Mediator:
+    """Get a Mediator instance for dispatching commands and queries."""
+    return Mediator(uow_factory)
 
 
 def get_google_gateway() -> GoogleCalendarGatewayAdapter:
