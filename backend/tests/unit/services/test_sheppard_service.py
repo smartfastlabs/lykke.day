@@ -436,7 +436,7 @@ async def test_render_prompt(
     allow(day_svc).load_context.and_return(day_ctx)
     
     # Mock the templates.render function
-    with patch("planned.application.services.sheppard.service.templates.render") as mock_render:
+    with patch("planned.application.services.sheppard.templates.render") as mock_render:
         mock_render.return_value = "rendered template"
         result = await service._render_prompt("test-template.md", extra_arg="value")
 
@@ -482,7 +482,7 @@ async def test_morning_summary_prompt(
     from dobles import allow
     allow(day_svc).load_context.and_return(day_ctx)
     
-    with patch("planned.application.services.sheppard.service.templates.render") as mock_render:
+    with patch("planned.application.services.sheppard.templates.render") as mock_render:
         mock_render.return_value = "morning summary"
         result = await service.morning_summary_prompt()
 
@@ -524,7 +524,7 @@ async def test_evening_summary_prompt(
     from dobles import allow
     allow(day_svc).load_context.and_return(day_ctx)
     
-    with patch("planned.application.services.sheppard.service.templates.render") as mock_render:
+    with patch("planned.application.services.sheppard.templates.render") as mock_render:
         mock_render.return_value = "evening summary"
         result = await service.evening_summary_prompt()
 

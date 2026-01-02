@@ -436,3 +436,4 @@ class SheppardService(BaseService):
     @property
     def is_running(self) -> bool:
         return self.mode not in ("stopping", "starting")
+
