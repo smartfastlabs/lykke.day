@@ -19,8 +19,7 @@ from planned.application.commands import (
 )
 from planned.application.mediator import Mediator
 from planned.application.queries import GetEntityQuery, ListEntitiesQuery
-from planned.domain import entities
-from planned.domain.value_objects.query import BaseQuery, PagedQueryResponse
+from planned.domain import entities, value_objects
 
 from .config import EntityRouterConfig
 
@@ -77,11 +76,11 @@ class EntityCrudOperations(Generic[EntityT]):
 
     async def list_all(
         self,
-        query: BaseQuery | None = None,
+        query: value_objects.BaseQuery | None = None,
         limit: int = 50,
         offset: int = 0,
         paginate: bool = True,
-    ) -> list[EntityT] | PagedQueryResponse[EntityT]:
+    ) -> list[EntityT] | value_objects.PagedQueryResponse[EntityT]:
         """List entities with optional filtering and pagination.
 
         Args:
@@ -91,7 +90,7 @@ class EntityCrudOperations(Generic[EntityT]):
             paginate: Whether to return paginated response
 
         Returns:
-            List of entities or PagedQueryResponse
+            List of entities or value_objects.PagedQueryResponse
         """
         return await self._mediator.query(
             ListEntitiesQuery[EntityT](
@@ -220,10 +219,10 @@ async def handle_list(
     user: entities.User,
     mediator: Mediator,
     config: EntityRouterConfig,
-    query: BaseQuery | None = None,
+    query: value_objects.BaseQuery | None = None,
     limit: int = 50,
     offset: int = 0,
-) -> list[EntityT] | PagedQueryResponse[EntityT]:
+) -> list[EntityT] | value_objects.PagedQueryResponse[EntityT]:
     """Handle GET request for listing entities with optional pagination.
 
     Args:

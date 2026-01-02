@@ -13,7 +13,7 @@ from loguru import logger
 from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from planned.core.config import settings
 from planned.core.exceptions import TokenExpiredError
-from planned.domain import entities
+from planned.domain import entities, value_objects
 
 if TYPE_CHECKING:
     pass
@@ -60,7 +60,7 @@ def get_google_calendar(calendar: entities.Calendar, token: entities.AuthToken) 
         raise TokenExpiredError("User needs to re-authenticate")
 
 
-def parse_recurrence_frequency(recurrence: list[str] | None) -> entities.TaskFrequency:
+def parse_recurrence_frequency(recurrence: list[str] | None) -> value_objects.TaskFrequency:
     """Parse Google Calendar recurrence rules to determine TaskFrequency.
 
     Args:
@@ -71,7 +71,7 @@ def parse_recurrence_frequency(recurrence: list[str] | None) -> entities.TaskFre
         The appropriate TaskFrequency enum value.
     """
     if not recurrence:
-        return entities.TaskFrequency.ONCE
+        return value_objects.TaskFrequency.ONCE
 
     for rule in recurrence:
         if not rule.startswith("RRULE:"):
@@ -85,7 +85,7 @@ def parse_recurrence_frequency(recurrence: list[str] | None) -> entities.TaskFre
         freq = freq_match.group(1).upper()
 
         if freq == "DAILY":
-            return entities.TaskFrequency.DAILY
+            return value_objects.TaskFrequency.DAILY
         elif freq == "WEEKLY":
             # Check if it's a custom weekly schedule (multiple specific days)
             byday_match = re.search(r"BYDAY=([A-Z,]+)", rule)
@@ -94,27 +94,27 @@ def parse_recurrence_frequency(recurrence: list[str] | None) -> entities.TaskFre
                 print(days)
                 # If more than one day specified, it's a custom weekly schedule
                 if days == {"MO", "TU", "WE", "TH", "FR"}:
-                    return entities.TaskFrequency.WEEK_DAYS
+                    return value_objects.TaskFrequency.WEEK_DAYS
                 elif days == {"SA", "SU"}:
-                    return entities.TaskFrequency.WEEKEND_DAYS
+                    return value_objects.TaskFrequency.WEEKEND_DAYS
                 elif len(days) == 1:
-                    return entities.TaskFrequency.WEEKLY
+                    return value_objects.TaskFrequency.WEEKLY
                 elif len(days) == 2:
-                    return entities.TaskFrequency.BI_WEEKLY
-                return entities.TaskFrequency.CUSTOM_WEEKLY
+                    return value_objects.TaskFrequency.BI_WEEKLY
+                return value_objects.TaskFrequency.CUSTOM_WEEKLY
         elif freq == "MONTHLY":
-            return entities.TaskFrequency.MONTHLY
+            return value_objects.TaskFrequency.MONTHLY
         elif freq == "YEARLY":
-            return entities.TaskFrequency.YEARLY
+            return value_objects.TaskFrequency.YEARLY
 
-    return entities.TaskFrequency.ONCE
+    return value_objects.TaskFrequency.ONCE
 
 
 def get_event_frequency(
     event: GoogleEvent,
     gc: GoogleCalendar,
-    frequency_cache: dict[str, entities.TaskFrequency],
-) -> entities.TaskFrequency:
+    frequency_cache: dict[str, value_objects.TaskFrequency],
+) -> value_objects.TaskFrequency:
     """Determine the frequency of an event, fetching parent event if necessary.
 
     Args:
@@ -145,7 +145,7 @@ def get_event_frequency(
         logger.warning(
             f"Failed to fetch parent event {event.recurring_event_id} for event {event.id}: {e}"
         )
-        frequency = entities.TaskFrequency.ONCE
+        frequency = value_objects.TaskFrequency.ONCE
 
     # Cache the result
     frequency_cache[event.recurring_event_id] = frequency
@@ -172,7 +172,7 @@ def _load_calendar_events_sync(
 ) -> list[entities.CalendarEntry]:
     """Synchronous implementation of calendar entry loading."""
     calendar_entries: list[entities.CalendarEntry] = []
-    frequency_cache: dict[str, entities.TaskFrequency] = {}
+    frequency_cache: dict[str, value_objects.TaskFrequency] = {}
 
     logger.info(f"Loading calendar entries for calendar {calendar.name}...")
     gc = get_google_calendar(calendar, token)

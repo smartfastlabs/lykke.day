@@ -1,20 +1,24 @@
 import uuid
-from datetime import UTC, date as dt_date, datetime
+from datetime import UTC
+from datetime import date as dt_date
+from datetime import datetime
 from uuid import UUID
 
+from planned.core.exceptions import DomainError
 from pydantic import Field, model_validator
 
-from planned.core.exceptions import DomainError
-
+from .. import value_objects
 from ..events.base import BaseAggregateRoot
-from ..events.day_events import DayCompletedEvent, DayScheduledEvent, DayUnscheduledEvent
+from ..events.day_events import (
+    DayCompletedEvent,
+    DayScheduledEvent,
+    DayUnscheduledEvent,
+)
 from ..events.task_events import (
     TaskActionRecordedEvent,
     TaskCompletedEvent,
     TaskStatusChangedEvent,
 )
-from ..value_objects.action import ActionType
-from ..value_objects.day import DayStatus, DayTag
 from .action import Action
 from .alarm import Alarm
 from .day_template import DayTemplate
@@ -26,10 +30,10 @@ class Day(BaseAggregateRoot):
     user_id: UUID
     date: dt_date
     alarm: Alarm | None = None
-    status: DayStatus = DayStatus.UNSCHEDULED
+    status: value_objects.DayStatus = value_objects.DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
 
-    tags: list[DayTag] = Field(default_factory=list)
+    tags: list[value_objects.DayTag] = Field(default_factory=list)
     template: DayTemplate | None = None
 
     @model_validator(mode="after")
@@ -76,7 +80,7 @@ class Day(BaseAggregateRoot):
         return cls(
             user_id=user_id,
             date=date,
-            status=DayStatus.UNSCHEDULED,
+            status=value_objects.DayStatus.UNSCHEDULED,
             template=template,
             alarm=template.alarm,
         )
@@ -93,7 +97,7 @@ class Day(BaseAggregateRoot):
         Raises:
             DomainError: If the day is not in UNSCHEDULED status
         """
-        if self.status != DayStatus.UNSCHEDULED:
+        if self.status != value_objects.DayStatus.UNSCHEDULED:
             raise DomainError(
                 f"Cannot schedule day in {self.status.value} status. "
                 "Only unscheduled days can be scheduled."
@@ -101,7 +105,7 @@ class Day(BaseAggregateRoot):
 
         self.template = template
         self.alarm = template.alarm
-        self.status = DayStatus.SCHEDULED
+        self.status = value_objects.DayStatus.SCHEDULED
         self.scheduled_at = datetime.now(UTC)
         self._add_event(
             DayScheduledEvent(
@@ -120,13 +124,13 @@ class Day(BaseAggregateRoot):
         Raises:
             DomainError: If the day is not in SCHEDULED status
         """
-        if self.status != DayStatus.SCHEDULED:
+        if self.status != value_objects.DayStatus.SCHEDULED:
             raise DomainError(
                 f"Cannot unschedule day in {self.status.value} status. "
                 "Only scheduled days can be unscheduled."
             )
 
-        self.status = DayStatus.UNSCHEDULED
+        self.status = value_objects.DayStatus.UNSCHEDULED
         self.scheduled_at = None
         self._add_event(DayUnscheduledEvent(day_id=self.id, date=self.date))
 
@@ -139,13 +143,13 @@ class Day(BaseAggregateRoot):
         Raises:
             DomainError: If the day is not in SCHEDULED status
         """
-        if self.status != DayStatus.SCHEDULED:
+        if self.status != value_objects.DayStatus.SCHEDULED:
             raise DomainError(
                 f"Cannot complete day in {self.status.value} status. "
                 "Only scheduled days can be completed."
             )
 
-        self.status = DayStatus.COMPLETE
+        self.status = value_objects.DayStatus.COMPLETE
         self._add_event(DayCompletedEvent(day_id=self.id, date=self.date))
 
     def update_template(self, template: DayTemplate) -> None:
@@ -191,7 +195,7 @@ class Day(BaseAggregateRoot):
         old_status = task.record_action(action)
 
         # Raise domain events on behalf of the aggregate
-        if action.type == ActionType.COMPLETE and task.completed_at:
+        if action.type == value_objects.ActionType.COMPLETE and task.completed_at:
             self._add_event(
                 TaskCompletedEvent(
                     task_id=task.id,

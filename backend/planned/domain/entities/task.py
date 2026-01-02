@@ -6,14 +6,7 @@ from uuid import UUID
 from planned.core.exceptions import DomainError
 from pydantic import Field
 
-from ..value_objects.action import ActionType
-from ..value_objects.task import (
-    TaskCategory,
-    TaskFrequency,
-    TaskSchedule,
-    TaskStatus,
-    TaskTag,
-)
+from .. import value_objects
 from .action import Action
 from .base import BaseDateObject
 from .task_definition import TaskDefinition
@@ -23,14 +16,14 @@ class Task(BaseDateObject):
     user_id: UUID
     scheduled_date: dt_date
     name: str
-    status: TaskStatus
+    status: value_objects.TaskStatus
     task_definition: TaskDefinition
-    category: TaskCategory
-    frequency: TaskFrequency
+    category: value_objects.TaskCategory
+    frequency: value_objects.TaskFrequency
     completed_at: datetime | None = None
-    schedule: TaskSchedule | None = None
+    schedule: value_objects.TaskSchedule | None = None
     routine_id: UUID | None = None
-    tags: list[TaskTag] = Field(default_factory=list)
+    tags: list[value_objects.TaskTag] = Field(default_factory=list)
     actions: list[Action] = Field(default_factory=list)
 
     def _get_date(self) -> dt_date:
@@ -41,7 +34,7 @@ class Task(BaseDateObject):
         # This is required by BaseDateObject but not used since _get_date is implemented
         return datetime.combine(self.scheduled_date, datetime.min.time())
 
-    def record_action(self, action: Action) -> TaskStatus:
+    def record_action(self, action: Action) -> value_objects.TaskStatus:
         """Record an action on this task.
 
         This method handles action recording and status transitions based on
@@ -65,16 +58,16 @@ class Task(BaseDateObject):
 
         # Handle status transitions based on action type
         old_status = self.status
-        if action.type == ActionType.COMPLETE:
-            if self.status == TaskStatus.COMPLETE:
+        if action.type == value_objects.ActionType.COMPLETE:
+            if self.status == value_objects.TaskStatus.COMPLETE:
                 raise DomainError("Task is already complete")
-            self.status = TaskStatus.COMPLETE
+            self.status = value_objects.TaskStatus.COMPLETE
             self.completed_at = datetime.now(UTC)
-        elif action.type == ActionType.PUNT:
-            if self.status == TaskStatus.PUNT:
+        elif action.type == value_objects.ActionType.PUNT:
+            if self.status == value_objects.TaskStatus.PUNT:
                 raise DomainError("Task is already punted")
-            self.status = TaskStatus.PUNT
-        elif action.type == ActionType.NOTIFY:
+            self.status = value_objects.TaskStatus.PUNT
+        elif action.type == value_objects.ActionType.NOTIFY:
             # Notification doesn't change status, just records the action
             pass
         else:
@@ -84,7 +77,7 @@ class Task(BaseDateObject):
         # Return the old status so the aggregate root can raise events if needed
         return old_status
 
-    def mark_pending(self) -> TaskStatus:
+    def mark_pending(self) -> value_objects.TaskStatus:
         """Mark the task as pending (ready to be worked on).
 
         This is typically called when a task's scheduled time arrives.
@@ -92,14 +85,14 @@ class Task(BaseDateObject):
         Returns:
             The old status before the change
         """
-        if self.status == TaskStatus.PENDING:
+        if self.status == value_objects.TaskStatus.PENDING:
             return self.status  # Already pending
 
         old_status = self.status
-        self.status = TaskStatus.PENDING
+        self.status = value_objects.TaskStatus.PENDING
         return old_status
 
-    def mark_ready(self) -> TaskStatus:
+    def mark_ready(self) -> value_objects.TaskStatus:
         """Mark the task as ready (available to be worked on).
 
         This is typically called when a task becomes available based on
@@ -108,9 +101,9 @@ class Task(BaseDateObject):
         Returns:
             The old status before the change
         """
-        if self.status == TaskStatus.READY:
+        if self.status == value_objects.TaskStatus.READY:
             return self.status  # Already ready
 
         old_status = self.status
-        self.status = TaskStatus.READY
+        self.status = value_objects.TaskStatus.READY
         return old_status

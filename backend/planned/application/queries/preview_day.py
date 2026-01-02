@@ -10,8 +10,7 @@ from loguru import logger
 from planned.application.queries.preview_tasks import PreviewTasksHandler, PreviewTasksQuery
 from planned.application.unit_of_work import UnitOfWorkFactory, UnitOfWorkProtocol
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities
-from planned.domain.value_objects.query import DateQuery
+from planned.domain import entities, value_objects
 
 from .base import Query, QueryHandler
 
@@ -29,14 +28,14 @@ class PreviewDayQuery(Query):
     template_id: UUID | None = None
 
 
-class PreviewDayHandler(QueryHandler[PreviewDayQuery, entities.DayContext]):
+class PreviewDayHandler(QueryHandler[PreviewDayQuery, value_objects.DayContext]):
     """Handles PreviewDayQuery."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
         self._preview_tasks_handler = PreviewTasksHandler(uow_factory)
 
-    async def handle(self, query: PreviewDayQuery) -> entities.DayContext:
+    async def handle(self, query: PreviewDayQuery) -> value_objects.DayContext:
         """Preview what a day would look like if scheduled.
 
         Args:
@@ -63,11 +62,11 @@ class PreviewDayHandler(QueryHandler[PreviewDayQuery, entities.DayContext]):
             )
             tasks, calendar_entries, messages = await asyncio.gather(
                 self._preview_tasks_handler.handle(preview_tasks_query),
-                uow.calendar_entries.search_query(DateQuery(date=query.date)),
-                uow.messages.search_query(DateQuery(date=query.date)),
+                uow.calendar_entries.search_query(value_objects.DateQuery(date=query.date)),
+                uow.messages.search_query(value_objects.DateQuery(date=query.date)),
             )
 
-            return entities.DayContext(
+            return value_objects.DayContext(
                 day=day,
                 tasks=tasks,
                 calendar_entries=calendar_entries,

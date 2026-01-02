@@ -26,7 +26,7 @@ from planned.application.queries.get_upcoming_items import (
 from planned.application.services.base import BaseService
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.constants import DEFAULT_LOOK_AHEAD
-from planned.domain import entities
+from planned.domain import entities, value_objects
 
 
 class DayService(BaseService):
@@ -72,7 +72,7 @@ class DayService(BaseService):
         self,
         date: datetime.date | None = None,
         user_id: UUID | None = None,
-    ) -> entities.DayContext:
+    ) -> value_objects.DayContext:
         """Load complete day context for the current or specified date.
 
         Args:

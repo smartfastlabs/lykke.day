@@ -13,8 +13,7 @@ from planned.application.repositories import (
 )
 from planned.core.constants import DEFAULT_END_OF_DAY_TIME
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities
-from planned.domain.value_objects.query import DateQuery
+from planned.domain import entities, value_objects
 
 
 class DayContextLoader:
@@ -54,7 +53,7 @@ class DayContextLoader:
         self,
         date: datetime.date,
         user_id: UUID,
-    ) -> entities.DayContext:
+    ) -> value_objects.DayContext:
         """Load complete day context for the given date and user.
 
         Args:
@@ -73,9 +72,9 @@ class DayContextLoader:
             # Try to load existing day and all related data
             day_id = entities.Day.id_from_date_and_user(date, user_id)
             tasks, calendar_entries, messages, day = await asyncio.gather(
-                self.task_repo.search_query(DateQuery(date=date)),
-                self.calendar_entry_repo.search_query(DateQuery(date=date)),
-                self.message_repo.search_query(DateQuery(date=date)),
+                self.task_repo.search_query(value_objects.DateQuery(date=date)),
+                self.calendar_entry_repo.search_query(value_objects.DateQuery(date=date)),
+                self.message_repo.search_query(value_objects.DateQuery(date=date)),
                 self.day_repo.get(day_id),
             )
         except NotFoundError:
@@ -130,7 +129,7 @@ class DayContextLoader:
         tasks: list[entities.Task],
         calendar_entries: list[entities.CalendarEntry],
         messages: list[entities.Message],
-    ) -> entities.DayContext:
+    ) -> value_objects.DayContext:
         """Build a DayContext from loaded data.
 
         Args:
@@ -142,7 +141,7 @@ class DayContextLoader:
         Returns:
             A DayContext with sorted tasks and calendar entries
         """
-        return entities.DayContext(
+        return value_objects.DayContext(
             day=day,
             tasks=sorted(
                 tasks,

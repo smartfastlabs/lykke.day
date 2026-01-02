@@ -2,7 +2,7 @@
 
 import datetime
 
-from planned.domain.value_objects.routine import RoutineSchedule
+from planned.domain import value_objects
 
 
 class RoutineService:
@@ -12,7 +12,7 @@ class RoutineService:
     """
 
     @staticmethod
-    def is_routine_active(schedule: RoutineSchedule, target_date: datetime.date) -> bool:
+    def is_routine_active(schedule: value_objects.RoutineSchedule, target_date: datetime.date) -> bool:
         """Check if a routine is active for the given date.
 
         Args:

@@ -4,9 +4,7 @@ from uuid import uuid4
 
 import pytest
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import Day, DayStatus, Task, TaskDefinition, TaskStatus
-from planned.domain.value_objects.query import DateQuery
-from planned.domain.value_objects.task import TaskCategory, TaskFrequency, TaskType
+from planned.domain import entities, value_objects
 from planned.infrastructure.database.transaction import (
     TransactionManager,
     get_transaction_connection,
@@ -17,10 +15,10 @@ from planned.infrastructure.utils.dates import get_current_datetime
 @pytest.mark.asyncio
 async def test_transaction_commits_on_success(test_date, test_user, day_repo):
     """Test that a transaction commits successfully when no exception occurs."""
-    day = Day(
+    day = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
     )
 
@@ -28,18 +26,18 @@ async def test_transaction_commits_on_success(test_date, test_user, day_repo):
         await day_repo.put(day)
 
     # After transaction commits, the day should be retrievable
-    day_id = Day.id_from_date_and_user(test_date, test_user.id)
+    day_id = entities.Day.id_from_date_and_user(test_date, test_user.id)
     result = await day_repo.get(day_id)
-    assert result.status == DayStatus.SCHEDULED
+    assert result.status == value_objects.DayStatus.SCHEDULED
 
 
 @pytest.mark.asyncio
 async def test_transaction_rolls_back_on_exception(test_date, test_user, day_repo):
     """Test that a transaction rolls back when an exception occurs."""
-    day = Day(
+    day = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
     )
 
@@ -49,7 +47,7 @@ async def test_transaction_rolls_back_on_exception(test_date, test_user, day_rep
             raise ValueError("Test exception")
 
     # After rollback, the day should not be in the database
-    day_id = Day.id_from_date_and_user(test_date, test_user.id)
+    day_id = entities.Day.id_from_date_and_user(test_date, test_user.id)
     with pytest.raises(NotFoundError):
         await day_repo.get(day_id)
 
@@ -57,28 +55,28 @@ async def test_transaction_rolls_back_on_exception(test_date, test_user, day_rep
 @pytest.mark.asyncio
 async def test_repository_works_without_transaction(test_date, test_user, day_repo):
     """Test that repositories work correctly without an active transaction."""
-    day = Day(
+    day = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
     )
 
     # No transaction - should create its own connection
     await day_repo.put(day)
 
-    day_id = Day.id_from_date_and_user(test_date, test_user.id)
+    day_id = entities.Day.id_from_date_and_user(test_date, test_user.id)
     result = await day_repo.get(day_id)
-    assert result.status == DayStatus.SCHEDULED
+    assert result.status == value_objects.DayStatus.SCHEDULED
 
 
 @pytest.mark.asyncio
 async def test_read_operations_see_uncommitted_changes(test_date, test_user, day_repo):
     """Test that read operations within a transaction see uncommitted changes."""
-    day = Day(
+    day = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
     )
 
@@ -88,19 +86,19 @@ async def test_read_operations_see_uncommitted_changes(test_date, test_user, day
 
         # Read it back - should see the uncommitted change
         result = await day_repo.get(day.id)
-        assert result.status == DayStatus.SCHEDULED
+        assert result.status == value_objects.DayStatus.SCHEDULED
 
         # Update it
-        day.status = DayStatus.UNSCHEDULED
+        day.status = value_objects.DayStatus.UNSCHEDULED
         await day_repo.put(day)
 
         # Read it again - should see the updated uncommitted change
         result = await day_repo.get(day.id)
-        assert result.status == DayStatus.UNSCHEDULED
+        assert result.status == value_objects.DayStatus.UNSCHEDULED
 
     # After commit, the final state should be persisted
     result = await day_repo.get(day.id)
-    assert result.status == DayStatus.UNSCHEDULED
+    assert result.status == value_objects.DayStatus.UNSCHEDULED
 
 
 @pytest.mark.asyncio
@@ -108,25 +106,25 @@ async def test_multiple_operations_in_single_transaction(
     test_date, test_user, day_repo, task_repo
 ):
     """Test that multiple operations in a single transaction are atomic."""
-    day = Day(
+    day = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
     )
 
-    task = Task(
+    task = entities.Task(
         user_id=test_user.id,
         name="Test Task",
-        status=TaskStatus.NOT_STARTED,
-        category=TaskCategory.HOUSE,
-        frequency=TaskFrequency.DAILY,
+        status=value_objects.TaskStatus.NOT_STARTED,
+        category=value_objects.TaskCategory.HOUSE,
+        frequency=value_objects.TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=TaskDefinition(
+        task_definition=entities.TaskDefinition(
             user_id=test_user.id,
             name="Test Task",
             description="Test",
-            type=TaskType.ACTIVITY,
+            type=value_objects.TaskType.ACTIVITY,
         ),
     )
 
@@ -136,10 +134,10 @@ async def test_multiple_operations_in_single_transaction(
 
     # Both should be committed
     result_day = await day_repo.get(day.id)
-    assert result_day.status == DayStatus.SCHEDULED
+    assert result_day.status == value_objects.DayStatus.SCHEDULED
 
     # Find the task
-    tasks = await task_repo.search_query(DateQuery(date=test_date))
+    tasks = await task_repo.search_query(value_objects.DateQuery(date=test_date))
     assert len(tasks) == 1
     assert tasks[0].name == "Test Task"
 
@@ -147,10 +145,10 @@ async def test_multiple_operations_in_single_transaction(
 @pytest.mark.asyncio
 async def test_nested_transactions_reuse_connection(test_date, test_user, day_repo):
     """Test that nested transactions reuse the same connection."""
-    day1 = Day(
+    day1 = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
     )
 
@@ -168,12 +166,12 @@ async def test_nested_transactions_reuse_connection(test_date, test_user, day_re
             assert inner_conn is outer_conn
 
             # Update the day
-            day1.status = DayStatus.UNSCHEDULED
+            day1.status = value_objects.DayStatus.UNSCHEDULED
             await day_repo.put(day1)
 
     # After commit, the final state should be persisted
     result = await day_repo.get(day1.id)
-    assert result.status == DayStatus.UNSCHEDULED
+    assert result.status == value_objects.DayStatus.UNSCHEDULED
 
 
 @pytest.mark.asyncio
@@ -186,10 +184,10 @@ async def test_transaction_connection_is_none_outside_transaction():
 @pytest.mark.asyncio
 async def test_transaction_rollback_on_nested_exception(test_date, test_user, day_repo):
     """Test that an exception in a nested transaction rolls back the entire transaction."""
-    day = Day(
+    day = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
     )
 
@@ -199,7 +197,7 @@ async def test_transaction_rollback_on_nested_exception(test_date, test_user, da
 
             # Nested transaction - exception should rollback everything
             async with TransactionManager():
-                day.status = DayStatus.UNSCHEDULED
+                day.status = value_objects.DayStatus.UNSCHEDULED
                 await day_repo.put(day)
                 raise ValueError("Nested exception")
 

@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 from gcsa.event import Event as GoogleEvent
 from pydantic import Field, computed_field
 
-from ..value_objects.task import TaskFrequency
+from .. import value_objects
 from .action import Action
 from .base import BaseEntityObject
 from .person import Person
@@ -52,7 +52,7 @@ class CalendarEntry(BaseEntityObject):
     platform: str
     status: str
     starts_at: datetime
-    frequency: TaskFrequency
+    frequency: value_objects.TaskFrequency
     ends_at: datetime | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -80,7 +80,7 @@ class CalendarEntry(BaseEntityObject):
         user_id: UUID,
         calendar_id: UUID,
         google_event: GoogleEvent,
-        frequency: TaskFrequency,
+        frequency: value_objects.TaskFrequency,
         target_timezone: str,
     ) -> "CalendarEntry":
         """Create a CalendarEntry from a Google Calendar event.

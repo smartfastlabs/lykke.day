@@ -10,8 +10,7 @@ from fastapi import APIRouter, Depends
 from passlib.context import CryptContext
 from planned.application.repositories import UserRepositoryProtocol
 from planned.core.exceptions import BadRequestError
-from planned.domain import entities
-from planned.domain.value_objects.base import BaseRequestObject, BaseResponseObject
+from planned.domain import entities, value_objects
 
 from .dependencies.repositories import get_user_repo
 from .dependencies.user import get_current_user
@@ -21,11 +20,11 @@ router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-class StatusResponse(BaseResponseObject):
+class StatusResponse(value_objects.BaseResponseObject):
     ok: bool = True
 
 
-class UpdatePasswordRequest(BaseRequestObject):
+class UpdatePasswordRequest(value_objects.BaseRequestObject):
     new_password: str
     confirm_new_password: str
     old_password: str | None = None

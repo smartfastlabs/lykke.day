@@ -3,7 +3,7 @@ from .alarm import AlarmType
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .day import DayContext, DayMode, DayStatus, DayTag
 from .push import NotificationAction, NotificationPayload
-from .query import BaseQuery, DateQuery
+from .query import AuthTokenQuery, BaseQuery, DateQuery, DayTemplateQuery, PagedQueryResponse, UserQuery
 from .routine import DayOfWeek, RoutineSchedule, RoutineTask
 from .task import (
     TaskCategory,
@@ -28,8 +28,12 @@ __all__ = [
     "DayTag",
     "NotificationAction",
     "NotificationPayload",
+    "AuthTokenQuery",
     "BaseQuery",
     "DateQuery",
+    "DayTemplateQuery",
+    "PagedQueryResponse",
+    "UserQuery",
     "DayOfWeek",
     "RoutineSchedule",
     "RoutineTask",

@@ -4,8 +4,7 @@ from datetime import datetime
 from typing import Annotated, Any, cast
 
 from fastapi import Depends
-from planned.domain import entities
-from planned.domain.value_objects.user import UserSetting
+from planned.domain import entities, value_objects
 from planned.infrastructure.auth import current_active_user
 from planned.infrastructure.database.tables import User as UserDB
 
@@ -23,7 +22,7 @@ async def get_current_user(
     """
     # Parse settings from JSONB
     settings_data = cast("dict[str, Any] | None", user.settings)
-    settings = UserSetting(**settings_data) if settings_data else UserSetting()
+    settings = value_objects.UserSetting(**settings_data) if settings_data else value_objects.UserSetting()
 
     # Convert SQLAlchemy model to domain entity
     return entities.User(

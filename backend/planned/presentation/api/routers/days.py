@@ -8,9 +8,7 @@ from fastapi import APIRouter, Depends
 from planned.application.commands import ScheduleDayCommand, UpdateDayCommand
 from planned.application.mediator import Mediator
 from planned.application.queries import GetDayContextQuery, PreviewDayQuery
-from planned.domain import entities
-from planned.domain.value_objects.base import BaseRequestObject
-from planned.domain.value_objects.day import DayStatus
+from planned.domain import entities, value_objects
 from planned.infrastructure.utils.dates import get_current_date, get_tomorrows_date
 
 from .dependencies.container import RepositoryContainer, get_repository_container
@@ -29,7 +27,7 @@ router = APIRouter()
 async def get_context_today(
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> entities.DayContext:
+) -> value_objects.DayContext:
     """Get the complete context for today."""
     query = GetDayContextQuery(user=user, date=get_current_date())
     return await mediator.query(query)
@@ -39,7 +37,7 @@ async def get_context_today(
 async def get_context_tomorrow(
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> entities.DayContext:
+) -> value_objects.DayContext:
     """Get the complete context for tomorrow."""
     query = GetDayContextQuery(user=user, date=get_tomorrows_date())
     return await mediator.query(query)
@@ -50,7 +48,7 @@ async def get_context(
     date: datetime.date,
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> entities.DayContext:
+) -> value_objects.DayContext:
     """Get the complete context for a specific date."""
     query = GetDayContextQuery(user=user, date=date)
     return await mediator.query(query)
@@ -62,7 +60,7 @@ async def preview_day(
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
     template_id: UUID | None = None,
-) -> entities.DayContext:
+) -> value_objects.DayContext:
     """Preview what a day would look like if scheduled."""
     query = PreviewDayQuery(user_id=user.id, date=date, template_id=template_id)
     return await mediator.query(query)
@@ -77,7 +75,7 @@ async def preview_day(
 async def schedule_today(
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> entities.DayContext:
+) -> value_objects.DayContext:
     """Schedule today with tasks from routines."""
     cmd = ScheduleDayCommand(user_id=user.id, date=get_current_date())
     return await mediator.execute(cmd)
@@ -89,16 +87,16 @@ async def schedule_day(
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
     template_id: UUID | None = None,
-) -> entities.DayContext:
+) -> value_objects.DayContext:
     """Schedule a specific day with tasks from routines."""
     cmd = ScheduleDayCommand(user_id=user.id, date=date, template_id=template_id)
     return await mediator.execute(cmd)
 
 
-class UpdateDayRequest(BaseRequestObject):
+class UpdateDayRequest(value_objects.BaseRequestObject):
     """Request body for updating a day."""
 
-    status: DayStatus | None = None
+    status: value_objects.DayStatus | None = None
     template_id: UUID | None = None
 
 

@@ -7,8 +7,7 @@ from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities
-from planned.domain.value_objects.query import DateQuery
+from planned.domain import entities, value_objects
 
 from .base import Command, CommandHandler
 
@@ -38,7 +37,7 @@ class UnscheduleDayHandler(CommandHandler[UnscheduleDayCommand, entities.Day]):
         """
         async with self._uow_factory.create(cmd.user_id) as uow:
             # Get all tasks for the date, filter for routine tasks, then delete them
-            tasks = await uow.tasks.search_query(DateQuery(date=cmd.date))
+            tasks = await uow.tasks.search_query(value_objects.DateQuery(date=cmd.date))
             routine_tasks = [t for t in tasks if t.routine_id is not None]
             if routine_tasks:
                 await asyncio.gather(

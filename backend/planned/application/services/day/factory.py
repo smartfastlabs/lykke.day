@@ -4,8 +4,7 @@ import datetime
 from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain import entities
-from planned.domain.value_objects.day import DayContext
+from planned.domain import entities, value_objects
 
 from .service import DayService
 

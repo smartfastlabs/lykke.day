@@ -44,8 +44,7 @@ from planned.application.queries.list_entities import (
 )
 from planned.application.queries.preview_day import PreviewDayHandler, PreviewDayQuery
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain import entities
-from planned.domain.value_objects.query import PagedQueryResponse
+from planned.domain import entities, value_objects
 
 # TypeVar for generic entity operations
 EntityT = TypeVar("EntityT")
@@ -102,10 +101,10 @@ class Mediator:
     # ========================================================================
 
     @overload
-    async def query(self, query: GetDayContextQuery) -> entities.DayContext: ...
+    async def query(self, query: GetDayContextQuery) -> value_objects.DayContext: ...
 
     @overload
-    async def query(self, query: PreviewDayQuery) -> entities.DayContext: ...
+    async def query(self, query: PreviewDayQuery) -> value_objects.DayContext: ...
 
     @overload
     async def query(self, query: GetEntityQuery[EntityT]) -> EntityT: ...
@@ -113,7 +112,7 @@ class Mediator:
     @overload
     async def query(
         self, query: ListEntitiesQuery[EntityT]
-    ) -> list[EntityT] | PagedQueryResponse[EntityT]: ...
+    ) -> list[EntityT] | value_objects.PagedQueryResponse[EntityT]: ...
 
     async def query(self, query: Query) -> Any:
         """Execute a query and return the result.
@@ -150,7 +149,7 @@ class Mediator:
     # ========================================================================
 
     @overload
-    async def execute(self, command: ScheduleDayCommand) -> entities.DayContext: ...
+    async def execute(self, command: ScheduleDayCommand) -> value_objects.DayContext: ...
 
     @overload
     async def execute(self, command: UpdateDayCommand) -> entities.Day: ...

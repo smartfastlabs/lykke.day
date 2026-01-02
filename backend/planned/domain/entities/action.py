@@ -3,11 +3,11 @@ from typing import Any
 
 from pydantic import Field
 
-from ..value_objects.action import ActionType
+from .. import value_objects
 from .base import BaseConfigObject
 
 
 class Action(BaseConfigObject):
-    type: ActionType
+    type: value_objects.ActionType
     data: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

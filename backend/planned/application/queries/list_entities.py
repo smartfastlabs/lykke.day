@@ -6,7 +6,7 @@ from uuid import UUID
 
 from planned.application.queries.base import Query, QueryHandler
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain.value_objects.query import BaseQuery, PagedQueryResponse
+from planned.domain import value_objects
 
 EntityT = TypeVar("EntityT")
 
@@ -26,7 +26,7 @@ class ListEntitiesQuery(Query, Generic[EntityT]):
 
     user_id: UUID
     repository_name: str
-    search_query: BaseQuery | None = None
+    search_query: value_objects.BaseQuery | None = None
     limit: int = 50
     offset: int = 0
     paginate: bool = True
@@ -34,7 +34,7 @@ class ListEntitiesQuery(Query, Generic[EntityT]):
 
 class ListEntitiesHandler(
     QueryHandler[
-        ListEntitiesQuery[EntityT], list[EntityT] | PagedQueryResponse[EntityT]
+        ListEntitiesQuery[EntityT], list[EntityT] | value_objects.PagedQueryResponse[EntityT]
     ]
 ):
     """Handles ListEntitiesQuery - lists entities with optional pagination."""
@@ -44,7 +44,7 @@ class ListEntitiesHandler(
 
     async def handle(
         self, query: ListEntitiesQuery[EntityT]
-    ) -> list[EntityT] | PagedQueryResponse[EntityT]:
+    ) -> list[EntityT] | value_objects.PagedQueryResponse[EntityT]:
         """Execute the query.
 
         Args:
@@ -75,7 +75,7 @@ class ListEntitiesHandler(
             end = start + query.limit
             paginated_items = items[start:end]
 
-            return PagedQueryResponse(
+            return value_objects.PagedQueryResponse(
                 items=paginated_items,
                 total=total,
                 limit=query.limit,

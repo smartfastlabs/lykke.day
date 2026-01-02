@@ -22,7 +22,7 @@ from planned.application.services.day import DayService
 from planned.application.services.day.factory import DayServiceFactory
 from planned.application.services.planning import PlanningService
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain import entities
+from planned.domain import entities, value_objects
 from planned.domain.services.notification import NotificationPayloadBuilder
 from planned.infrastructure.utils import templates, youtube
 from planned.infrastructure.utils.dates import get_current_date, get_current_time
@@ -169,18 +169,18 @@ class SheppardService(BaseService):
             logger.info(f"UPCOMING TASK {task.name}")
 
             # Update task status if needed
-            if task.status != entities.TaskStatus.PENDING:
+            if task.status != value_objects.TaskStatus.PENDING:
                 task.mark_pending()
                 tasks_to_update.append(task)
 
             # Check if this task needs a notification
             if not any(
-                action.type == entities.ActionType.NOTIFY for action in task.actions
+                action.type == value_objects.ActionType.NOTIFY for action in task.actions
             ):
                 tasks_to_notify.append(task)
                 task.record_action(
                     entities.Action(
-                        type=entities.ActionType.NOTIFY,
+                        type=value_objects.ActionType.NOTIFY,
                     )
                 )
 
@@ -208,13 +208,13 @@ class SheppardService(BaseService):
 
             # Check if this calendar entry needs a notification
             if not any(
-                action.type == entities.ActionType.NOTIFY
+                action.type == value_objects.ActionType.NOTIFY
                 for action in calendar_entry.actions
             ):
                 calendar_entries_to_notify.append(calendar_entry)
                 calendar_entry.actions.append(
                     entities.Action(
-                        type=entities.ActionType.NOTIFY,
+                        type=value_objects.ActionType.NOTIFY,
                     )
                 )
 
@@ -348,7 +348,7 @@ class SheppardService(BaseService):
 
         # Check if day needs to be scheduled
         day_ctx = await self.day_svc.load_context()
-        if day_ctx.day.status != entities.DayStatus.SCHEDULED:
+        if day_ctx.day.status != value_objects.DayStatus.SCHEDULED:
             await self.planning_service.schedule(self.day_svc.date)
 
     async def run(self) -> None:

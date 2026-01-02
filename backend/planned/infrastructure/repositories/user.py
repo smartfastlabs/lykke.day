@@ -2,8 +2,7 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from planned.domain import entities
-from planned.domain.value_objects.user import UserSetting
+from planned.domain import entities, value_objects
 from planned.infrastructure.database.tables import users_tbl
 from sqlalchemy import select
 
@@ -47,7 +46,7 @@ class UserRepository(BaseRepository[entities.User, BaseQuery]):
         if user.settings:
             row["settings"] = user.settings.model_dump(mode="json")
         else:
-            row["settings"] = UserSetting().model_dump(mode="json")
+            row["settings"] = value_objects.UserSetting().model_dump(mode="json")
 
         # Set timestamps
         if hasattr(user, "created_at") and user.created_at:
@@ -71,10 +70,12 @@ class UserRepository(BaseRepository[entities.User, BaseQuery]):
         # Handle settings - if stored as JSONB, deserialize it
         if "settings" in data and data["settings"] is not None:
             if isinstance(data["settings"], dict):
-                data["settings"] = UserSetting(**data["settings"])
+                data["settings"] = value_objects.UserSetting(**data["settings"])
             elif isinstance(data["settings"], str):
-                data["settings"] = UserSetting(**json.loads(data["settings"]))
+                data["settings"] = value_objects.UserSetting(
+                    **json.loads(data["settings"])
+                )
         else:
-            data["settings"] = UserSetting()
+            data["settings"] = value_objects.UserSetting()
 
         return entities.User.model_validate(data, from_attributes=True)

@@ -8,27 +8,7 @@ import pytest
 from dobles import allow
 from planned.application.services import PlanningService
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import (
-    Action,
-    CalendarEntry,
-    Day,
-    DayContext,
-    DayStatus,
-    DayTemplate,
-    Routine,
-    Task,
-    TaskDefinition,
-    User,
-)
-from planned.domain.value_objects.action import ActionType
-from planned.domain.value_objects.routine import DayOfWeek, RoutineSchedule, RoutineTask
-from planned.domain.value_objects.task import (
-    TaskCategory,
-    TaskFrequency,
-    TaskStatus,
-    TaskType,
-)
-from planned.domain.value_objects.user import UserSetting
+from planned.domain import entities, value_objects
 
 
 @pytest.mark.asyncio
@@ -49,29 +29,29 @@ async def test_preview_tasks(
     date = datetime.date(2024, 1, 1)  # Monday
 
     task_def_id = uuid4()
-    routine = Routine(
+    routine = entities.Routine(
         id=uuid4(),
         user_id=test_user_id,
         name="Morning Routine",
-        routine_schedule=RoutineSchedule(
-            weekdays=[DayOfWeek.MONDAY],
-            frequency=TaskFrequency.DAILY,
+        routine_schedule=value_objects.RoutineSchedule(
+            weekdays=[value_objects.DayOfWeek.MONDAY],
+            frequency=value_objects.TaskFrequency.DAILY,
         ),
         tasks=[
-            RoutineTask(
+            value_objects.RoutineTask(
                 task_definition_id=task_def_id,
                 name="Brush Teeth",
             ),
         ],
-        category=TaskCategory.HEALTH,
+        category=value_objects.TaskCategory.HEALTH,
     )
 
-    task_def = TaskDefinition(
+    task_def = entities.TaskDefinition(
         id=task_def_id,
         user_id=test_user_id,
         name="Brush Teeth",
         description="Brush teeth routine",
-        type=TaskType.CHORE,
+        type=value_objects.TaskType.CHORE,
     )
 
     allow(mock_routine_repo).all().and_return([routine])
@@ -87,7 +67,7 @@ async def test_preview_tasks(
     assert len(result) == 1
     assert result[0].name == "Brush Teeth"
     assert result[0].routine_id == routine.id
-    assert result[0].status == TaskStatus.NOT_STARTED
+    assert result[0].status == value_objects.TaskStatus.NOT_STARTED
 
 
 @pytest.mark.asyncio
@@ -108,21 +88,21 @@ async def test_preview_tasks_filters_inactive_routines(
     date = datetime.date(2024, 1, 1)  # Monday
 
     # Routine active on Tuesday (weekday 1)
-    routine = Routine(
+    routine = entities.Routine(
         id=uuid4(),
         user_id=test_user_id,
         name="Tuesday Routine",
-        routine_schedule=RoutineSchedule(
-            weekdays=[DayOfWeek.TUESDAY],
-            frequency=TaskFrequency.DAILY,
+        routine_schedule=value_objects.RoutineSchedule(
+            weekdays=[value_objects.DayOfWeek.TUESDAY],
+            frequency=value_objects.TaskFrequency.DAILY,
         ),
         tasks=[
-            RoutineTask(
+            value_objects.RoutineTask(
                 task_definition_id=uuid4(),
                 name="Tuesday Task",
             ),
         ],
-        category=TaskCategory.HEALTH,
+        category=value_objects.TaskCategory.HEALTH,
     )
 
     allow(mock_routine_repo).all().and_return([routine])
@@ -156,23 +136,23 @@ async def test_preview_creates_day_context(
     """Test preview creates a DayContext with tasks, events, and messages."""
     date = datetime.date(2024, 1, 1)
 
-    user = User(
+    user = entities.User(
         id=test_user_id,
         email="test@example.com",
         hashed_password="hash",
-        settings=UserSetting(template_defaults=["default"] * 7),
+        settings=value_objects.UserSetting(template_defaults=["default"] * 7),
     )
 
-    template = DayTemplate(
+    template = entities.DayTemplate(
         slug="default",
         user_id=test_user_id,
     )
 
-    calendar_entry = CalendarEntry(
+    calendar_entry = entities.CalendarEntry(
         id=uuid4(),
         user_id=test_user_id,
         name="Test Calendar Entry",
-        frequency=TaskFrequency.ONCE,
+        frequency=value_objects.TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="entry-1",
         platform="test",
@@ -194,7 +174,7 @@ async def test_preview_creates_day_context(
 
     result = await service.preview(date)
 
-    assert isinstance(result, DayContext)
+    assert isinstance(result, value_objects.DayContext)
     assert result.day.user_id == test_user_id
     assert result.day.date == date
     assert len(result.calendar_entries) == 1
@@ -218,15 +198,15 @@ async def test_preview_uses_existing_day_template(
     """Test preview uses template from existing day if available."""
     date = datetime.date(2024, 1, 1)
 
-    template = DayTemplate(
+    template = entities.DayTemplate(
         slug="custom",
         user_id=test_user_id,
     )
 
-    existing_day = Day(
+    existing_day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         template=template,
     )
 
@@ -265,49 +245,49 @@ async def test_unschedule_deletes_routine_tasks(
     date = datetime.date(2024, 1, 1)
 
     routine_id = uuid4()
-    routine_task = Task(
+    routine_task = entities.Task(
         id=uuid4(),
         user_id=test_user_id,
         name="Routine Task",
-        status=TaskStatus.NOT_STARTED,
+        status=value_objects.TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=TaskDefinition(
+        task_definition=entities.TaskDefinition(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
-            type=TaskType.CHORE,
+            type=value_objects.TaskType.CHORE,
         ),
-        category=TaskCategory.HOUSE,
-        frequency=TaskFrequency.ONCE,
+        category=value_objects.TaskCategory.HOUSE,
+        frequency=value_objects.TaskFrequency.ONCE,
         routine_id=routine_id,
     )
 
-    non_routine_task = Task(
+    non_routine_task = entities.Task(
         id=uuid4(),
         user_id=test_user_id,
         name="Manual Task",
-        status=TaskStatus.NOT_STARTED,
+        status=value_objects.TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=TaskDefinition(
+        task_definition=entities.TaskDefinition(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
-            type=TaskType.CHORE,
+            type=value_objects.TaskType.CHORE,
         ),
-        category=TaskCategory.HOUSE,
-        frequency=TaskFrequency.ONCE,
+        category=value_objects.TaskCategory.HOUSE,
+        frequency=value_objects.TaskFrequency.ONCE,
         routine_id=None,
     )
 
-    template = DayTemplate(
+    template = entities.DayTemplate(
         id=uuid4(),
         slug="default",
         user_id=test_user_id,
     )
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         template=template,
     )
 
@@ -318,16 +298,16 @@ async def test_unschedule_deletes_routine_tasks(
     allow(mock_day_repo).get(day.id).and_return(day)
     allow(mock_day_repo).put.and_return(day)
     allow(mock_user_repo).get(test_user_id).and_return(
-        User(
+        entities.User(
             id=test_user_id,
             email="test@example.com",
             hashed_password="hash",
-            settings=UserSetting(template_defaults=["default"] * 7),
+            settings=value_objects.UserSetting(template_defaults=["default"] * 7),
         )
     )
     allow(mock_day_template_repo).get_by_slug("default").and_return(template)
     allow(mock_day_template_repo).get.and_return(
-        DayTemplate(slug="default", id=uuid4(), user_id=test_user_id)
+        entities.DayTemplate(slug="default", id=uuid4(), user_id=test_user_id)
     )
 
     service = PlanningService(
@@ -359,14 +339,14 @@ async def test_schedule_creates_tasks_and_sets_status(
     """Test schedule creates tasks and sets day status to SCHEDULED."""
     date = datetime.date(2024, 1, 1)
 
-    user = User(
+    user = entities.User(
         id=test_user_id,
         email="test@example.com",
         hashed_password="hash",
-        settings=UserSetting(template_defaults=["default"] * 7),
+        settings=value_objects.UserSetting(template_defaults=["default"] * 7),
     )
 
-    template = DayTemplate(
+    template = entities.DayTemplate(
         slug="default",
         user_id=test_user_id,
     )
@@ -380,10 +360,10 @@ async def test_schedule_creates_tasks_and_sets_status(
     allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
     allow(mock_day_repo).put.and_return(
-        Day(
+        entities.Day(
             user_id=test_user_id,
             date=date,
-            status=DayStatus.SCHEDULED,
+            status=value_objects.DayStatus.SCHEDULED,
             template=template,
         )
     )
@@ -396,8 +376,8 @@ async def test_schedule_creates_tasks_and_sets_status(
 
     result = await service.schedule(date)
 
-    assert isinstance(result, DayContext)
-    assert result.day.status == DayStatus.SCHEDULED
+    assert isinstance(result, value_objects.DayContext)
+    assert result.day.status == value_objects.DayStatus.SCHEDULED
 
 
 @pytest.mark.asyncio
@@ -417,7 +397,7 @@ async def test_preview_with_template_id(
     """Test preview with explicit template_id."""
     date = datetime.date(2024, 1, 1)
 
-    template = DayTemplate(
+    template = entities.DayTemplate(
         slug="custom",
         user_id=test_user_id,
     )
@@ -455,7 +435,7 @@ async def test_schedule_with_template_id(
     """Test schedule with explicit template_id."""
     date = datetime.date(2024, 1, 1)
 
-    template = DayTemplate(
+    template = entities.DayTemplate(
         slug="custom",
         user_id=test_user_id,
     )
@@ -466,10 +446,10 @@ async def test_schedule_with_template_id(
     allow(mock_calendar_entry_repo).search_query.and_return([])
     allow(mock_message_repo).search_query.and_return([])
     allow(mock_day_repo).put.and_return(
-        Day(
+        entities.Day(
             user_id=test_user_id,
             date=date,
-            status=DayStatus.SCHEDULED,
+            status=value_objects.DayStatus.SCHEDULED,
             template=template,
         )
     )
@@ -482,7 +462,7 @@ async def test_schedule_with_template_id(
 
     result = await service.schedule(date, template_id=template.id)
 
-    assert result.day.status == DayStatus.SCHEDULED
+    assert result.day.status == value_objects.DayStatus.SCHEDULED
     assert result.day.template is not None
     assert result.day.template.id == template.id
 
@@ -505,29 +485,29 @@ async def test_preview_tasks_uses_routine_task_name(
     date = datetime.date(2024, 1, 1)  # Monday
     task_def_id = uuid4()
 
-    routine = Routine(
+    routine = entities.Routine(
         id=uuid4(),
         user_id=test_user_id,
         name="Morning Routine",
-        routine_schedule=RoutineSchedule(
-            weekdays=[DayOfWeek.MONDAY],
-            frequency=TaskFrequency.DAILY,
+        routine_schedule=value_objects.RoutineSchedule(
+            weekdays=[value_objects.DayOfWeek.MONDAY],
+            frequency=value_objects.TaskFrequency.DAILY,
         ),
         tasks=[
-            RoutineTask(
+            value_objects.RoutineTask(
                 task_definition_id=task_def_id,
                 name="Custom Task Name",
             ),
         ],
-        category=TaskCategory.HEALTH,
+        category=value_objects.TaskCategory.HEALTH,
     )
 
-    task_def = TaskDefinition(
+    task_def = entities.TaskDefinition(
         id=task_def_id,
         user_id=test_user_id,
         name="Task Definition Name",
         description="Task definition",
-        type=TaskType.CHORE,
+        type=value_objects.TaskType.CHORE,
     )
 
     allow(mock_routine_repo).all().and_return([routine])

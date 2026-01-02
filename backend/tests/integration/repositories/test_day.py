@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import Day, DayStatus
+from planned.domain import entities, value_objects
 from planned.infrastructure.utils.dates import get_current_datetime
 
 
@@ -20,10 +20,10 @@ async def test_get(
     if not default_template:
         pytest.skip("No templates available")
 
-    day = Day(
+    day = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
         template=default_template,
     )
@@ -32,7 +32,7 @@ async def test_get(
     result = await day_repo.get(day.id)
 
     assert result.date == test_date
-    assert result.status == DayStatus.SCHEDULED
+    assert result.status == value_objects.DayStatus.SCHEDULED
     assert result.user_id == test_user.id
 
 
@@ -54,17 +54,17 @@ async def test_put(
     if not default_template:
         pytest.skip("No templates available")
 
-    day = Day(
+    day = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
         template=default_template,
     )
 
     result = await day_repo.put(day)
 
     assert result.date == test_date
-    assert result.status == DayStatus.UNSCHEDULED
+    assert result.status == value_objects.DayStatus.UNSCHEDULED
     assert result.user_id == test_user.id
 
 
@@ -79,25 +79,25 @@ async def test_put_update(
     if not default_template:
         pytest.skip("No templates available")
 
-    day = Day(
+    day = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
         template=default_template,
     )
     await day_repo.put(day)
 
     # Update the day
-    day.status = DayStatus.SCHEDULED
+    day.status = value_objects.DayStatus.SCHEDULED
     day.scheduled_at = get_current_datetime()
     result = await day_repo.put(day)
 
-    assert result.status == DayStatus.SCHEDULED
+    assert result.status == value_objects.DayStatus.SCHEDULED
     assert result.scheduled_at is not None
 
     # Verify it was saved
     retrieved = await day_repo.get(day.id)
-    assert retrieved.status == DayStatus.SCHEDULED
+    assert retrieved.status == value_objects.DayStatus.SCHEDULED
 
 
 @pytest.mark.asyncio
@@ -116,17 +116,17 @@ async def test_all(
     if not default_template:
         pytest.skip("No templates available")
 
-    day1 = Day(
+    day1 = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
         template=default_template,
     )
-    day2 = Day(
+    day2 = entities.Day(
         user_id=test_user.id,
         date=test_date_tomorrow,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
         template=default_template,
     )
     await day_repo.put(day1)
@@ -155,17 +155,17 @@ async def test_search_query(
     if not default_template:
         pytest.skip("No templates available")
 
-    day1 = Day(
+    day1 = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
         template=default_template,
     )
-    day2 = Day(
+    day2 = entities.Day(
         user_id=test_user.id,
         date=test_date_tomorrow,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
         template=default_template,
     )
     await day_repo.put(day1)
@@ -197,10 +197,10 @@ async def test_user_isolation(
         pytest.skip("No templates available")
 
     # Create day for test_user
-    day1 = Day(
+    day1 = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
         template=default_template,
     )
@@ -230,10 +230,10 @@ async def test_delete(
     if not default_template:
         pytest.skip("No templates available")
 
-    day = Day(
+    day = entities.Day(
         user_id=test_user.id,
         date=test_date,
-        status=DayStatus.SCHEDULED,
+        status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
         template=default_template,
     )

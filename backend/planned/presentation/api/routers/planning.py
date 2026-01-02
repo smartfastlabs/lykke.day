@@ -8,7 +8,7 @@ from planned.application.commands import ScheduleDayCommand
 from planned.application.mediator import Mediator
 from planned.application.queries import PreviewDayQuery
 from planned.application.repositories import RoutineRepositoryProtocol
-from planned.domain import entities
+from planned.domain import entities, value_objects
 from planned.infrastructure.utils.dates import get_current_date, get_tomorrows_date
 
 from .dependencies.repositories import get_routine_repo
@@ -35,7 +35,7 @@ async def list_routines(
 async def preview_today(
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> entities.DayContext:
+) -> value_objects.DayContext:
     """Preview what today would look like if scheduled."""
     query = PreviewDayQuery(user_id=user.id, date=get_current_date())
     return await mediator.query(query)
@@ -45,7 +45,7 @@ async def preview_today(
 async def preview_tomorrow(
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> entities.DayContext:
+) -> value_objects.DayContext:
     """Preview what tomorrow would look like if scheduled."""
     query = PreviewDayQuery(user_id=user.id, date=get_tomorrows_date())
     return await mediator.query(query)
@@ -56,7 +56,7 @@ async def preview_date(
     date: datetime.date,
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> entities.DayContext:
+) -> value_objects.DayContext:
     """Preview what a specific date would look like if scheduled."""
     query = PreviewDayQuery(user_id=user.id, date=date)
     return await mediator.query(query)
@@ -71,7 +71,7 @@ async def preview_date(
 async def schedule_today(
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> entities.DayContext:
+) -> value_objects.DayContext:
     """Schedule today with tasks from routines."""
     cmd = ScheduleDayCommand(user_id=user.id, date=get_current_date())
     return await mediator.execute(cmd)
@@ -81,7 +81,7 @@ async def schedule_today(
 async def schedule_tomorrow(
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> entities.DayContext:
+) -> value_objects.DayContext:
     """Schedule tomorrow with tasks from routines."""
     cmd = ScheduleDayCommand(user_id=user.id, date=get_tomorrows_date())
     return await mediator.execute(cmd)
@@ -92,7 +92,7 @@ async def schedule_date(
     date: datetime.date,
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> entities.DayContext:
+) -> value_objects.DayContext:
     """Schedule a specific date with tasks from routines."""
     cmd = ScheduleDayCommand(user_id=user.id, date=date)
     return await mediator.execute(cmd)

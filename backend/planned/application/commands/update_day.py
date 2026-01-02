@@ -6,8 +6,7 @@ from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities
-from planned.domain.value_objects.day import DayStatus
+from planned.domain import entities, value_objects
 
 from .base import Command, CommandHandler
 
@@ -22,7 +21,7 @@ class UpdateDayCommand(Command):
 
     user_id: UUID
     date: date
-    status: DayStatus | None = None
+    status: value_objects.DayStatus | None = None
     template_id: UUID | None = None
 
 
@@ -70,18 +69,18 @@ class UpdateDayHandler(CommandHandler[UpdateDayCommand, entities.Day]):
             await uow.commit()
             return day
 
-    def _apply_status_transition(self, day: entities.Day, new_status: DayStatus) -> None:
+    def _apply_status_transition(self, day: entities.Day, new_status: value_objects.DayStatus) -> None:
         """Apply a status transition using domain methods.
 
         Args:
             day: The day to update
             new_status: The desired new status
         """
-        if new_status == DayStatus.SCHEDULED and day.template:
+        if new_status == value_objects.DayStatus.SCHEDULED and day.template:
             day.schedule(day.template)
-        elif new_status == DayStatus.UNSCHEDULED:
+        elif new_status == value_objects.DayStatus.UNSCHEDULED:
             day.unschedule()
-        elif new_status == DayStatus.COMPLETE:
+        elif new_status == value_objects.DayStatus.COMPLETE:
             day.complete()
         else:
             # For other statuses, set directly (maintains compatibility)

@@ -10,17 +10,7 @@ from dobles import allow
 from planned.application.services import DayService, SheppardService
 from planned.application.services.calendar import CalendarService
 from planned.application.services.planning import PlanningService
-from planned.domain.entities import (
-    CalendarEntry,
-    Day,
-    DayContext,
-    DayStatus,
-    PushSubscription,
-    Task,
-    TaskDefinition,
-    TaskStatus,
-)
-from planned.domain.value_objects.task import TaskCategory, TaskFrequency, TaskType
+from planned.domain import entities, value_objects
 
 
 def create_day_service(user, date, uow_factory):
@@ -66,29 +56,29 @@ async def test_build_notification_payload_single_task(
 ):
     """Test _build_notification_payload for a single task."""
     date = datetime.date(2024, 1, 1)
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
     )
-    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = value_objects.DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
-    task = Task(
+    task = entities.Task(
         id=uuid4(),
         user_id=test_user_id,
         name="Test Task",
-        status=TaskStatus.READY,
+        status=value_objects.TaskStatus.READY,
         scheduled_date=date,
-        task_definition=TaskDefinition(
+        task_definition=entities.TaskDefinition(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
-            type=TaskType.CHORE,
+            type=value_objects.TaskType.CHORE,
         ),
-        category=TaskCategory.HOUSE,
-        frequency=TaskFrequency.ONCE,
+        category=value_objects.TaskCategory.HOUSE,
+        frequency=value_objects.TaskFrequency.ONCE,
     )
 
     from planned.domain.services.notification import NotificationPayloadBuilder
@@ -113,44 +103,44 @@ async def test_build_notification_payload_multiple_tasks(
     """Test _build_notification_payload for multiple tasks."""
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
     )
-    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = value_objects.DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
-    task1 = Task(
+    task1 = entities.Task(
         id=uuid4(),
         user_id=test_user_id,
         name="Task 1",
-        status=TaskStatus.READY,
+        status=value_objects.TaskStatus.READY,
         scheduled_date=date,
-        task_definition=TaskDefinition(
+        task_definition=entities.TaskDefinition(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
-            type=TaskType.CHORE,
+            type=value_objects.TaskType.CHORE,
         ),
-        category=TaskCategory.HOUSE,
-        frequency=TaskFrequency.ONCE,
+        category=value_objects.TaskCategory.HOUSE,
+        frequency=value_objects.TaskFrequency.ONCE,
     )
-    task2 = Task(
+    task2 = entities.Task(
         id=uuid4(),
         user_id=test_user_id,
         name="Task 2",
-        status=TaskStatus.READY,
+        status=value_objects.TaskStatus.READY,
         scheduled_date=date,
-        task_definition=TaskDefinition(
+        task_definition=entities.TaskDefinition(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
-            type=TaskType.CHORE,
+            type=value_objects.TaskType.CHORE,
         ),
-        category=TaskCategory.HOUSE,
-        frequency=TaskFrequency.ONCE,
+        category=value_objects.TaskCategory.HOUSE,
+        frequency=value_objects.TaskFrequency.ONCE,
     )
 
     from planned.domain.services.notification import NotificationPayloadBuilder
@@ -174,20 +164,20 @@ async def test_build_event_notification_payload(
     """Test _build_event_notification_payload."""
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
     )
-    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = value_objects.DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
-    calendar_entry = CalendarEntry(
+    calendar_entry = entities.CalendarEntry(
         id=uuid4(),
         user_id=test_user_id,
         name="Test Calendar Entry",
-        frequency=TaskFrequency.ONCE,
+        frequency=value_objects.TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="entry-1",
         platform="test",
@@ -217,32 +207,32 @@ async def test_notify_for_tasks(
     """Test _notify_for_tasks sends notifications."""
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
     )
-    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = value_objects.DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
-    task = Task(
+    task = entities.Task(
         id=uuid4(),
         user_id=test_user_id,
         name="Test Task",
-        status=TaskStatus.READY,
+        status=value_objects.TaskStatus.READY,
         scheduled_date=date,
-        task_definition=TaskDefinition(
+        task_definition=entities.TaskDefinition(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
-            type=TaskType.CHORE,
+            type=value_objects.TaskType.CHORE,
         ),
-        category=TaskCategory.HOUSE,
-        frequency=TaskFrequency.ONCE,
+        category=value_objects.TaskCategory.HOUSE,
+        frequency=value_objects.TaskFrequency.ONCE,
     )
 
-    subscription = PushSubscription(
+    subscription = entities.PushSubscription(
         id=uuid4(),
         user_id=test_user_id,
         endpoint="https://example.com/push",
@@ -280,12 +270,12 @@ async def test_notify_for_tasks_empty_list(
     """Test _notify_for_tasks handles empty task list."""
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
     )
-    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = value_objects.DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
@@ -314,12 +304,12 @@ async def test_stop_sets_mode_to_stopping(
     """Test stop sets mode to stopping."""
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
     )
-    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = value_objects.DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
@@ -351,12 +341,12 @@ async def test_is_running_property(
     """Test is_running property returns correct value."""
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
     )
-    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = value_objects.DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
@@ -392,12 +382,12 @@ async def test_render_prompt(
 ):
     """Test _render_prompt renders template with context."""
     date = datetime.date(2024, 1, 1)
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
     )
-    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = value_objects.DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
@@ -439,12 +429,12 @@ async def test_morning_summary_prompt(
 ):
     """Test morning_summary_prompt renders morning summary template."""
     date = datetime.date(2024, 1, 1)
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
     )
-    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = value_objects.DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
@@ -481,12 +471,12 @@ async def test_evening_summary_prompt(
 ):
     """Test evening_summary_prompt renders evening summary template."""
     date = datetime.date(2024, 1, 1)
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
     )
-    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = value_objects.DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
@@ -524,20 +514,20 @@ async def test_notify_for_calendar_entries(
 ):
     """Test _notify_for_calendar_entries sends notifications for calendar entries."""
     date = datetime.date(2024, 1, 1)
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
     )
-    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = value_objects.DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
-    calendar_entry = CalendarEntry(
+    calendar_entry = entities.CalendarEntry(
         id=uuid4(),
         user_id=test_user_id,
         name="Test Calendar Entry",
-        frequency=TaskFrequency.ONCE,
+        frequency=value_objects.TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
         platform_id="entry-1",
         platform="test",
@@ -545,7 +535,7 @@ async def test_notify_for_calendar_entries(
         starts_at=test_datetime_noon,
     )
 
-    subscription = PushSubscription(
+    subscription = entities.PushSubscription(
         id=uuid4(),
         user_id=test_user_id,
         endpoint="https://example.com/push",
@@ -582,12 +572,12 @@ async def test_notify_for_events_empty_list(
 ):
     """Test _notify_for_calendar_entries handles empty calendar entry list."""
     date = datetime.date(2024, 1, 1)
-    day = Day(
+    day = entities.Day(
         user_id=test_user_id,
         date=date,
-        status=DayStatus.UNSCHEDULED,
+        status=value_objects.DayStatus.UNSCHEDULED,
     )
-    day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
+    day_ctx = value_objects.DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 

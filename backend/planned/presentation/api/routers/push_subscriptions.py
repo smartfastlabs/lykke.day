@@ -4,8 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, Depends
 
 from planned.application.repositories import PushSubscriptionRepositoryProtocol
-from planned.domain import entities
-from planned.domain.value_objects.base import BaseRequestObject, BaseValueObject
+from planned.domain import entities, value_objects
 from planned.infrastructure.gateways import web_push
 
 from .dependencies.repositories import get_push_subscription_repo
@@ -14,12 +13,12 @@ from .dependencies.user import get_current_user
 router = APIRouter()
 
 
-class Keys(BaseValueObject):
+class Keys(value_objects.BaseValueObject):
     p256dh: str
     auth: str
 
 
-class SubscriptionRequest(BaseRequestObject):
+class SubscriptionRequest(value_objects.BaseRequestObject):
     device_name: str
     endpoint: str
     keys: Keys

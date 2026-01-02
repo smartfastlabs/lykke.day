@@ -6,7 +6,7 @@ from uuid import UUID
 
 from loguru import logger
 from planned.application.unit_of_work import UnitOfWorkFactory, UnitOfWorkProtocol
-from planned.domain import entities
+from planned.domain import entities, value_objects
 from planned.domain.services.routine import RoutineService
 
 from .base import Query, QueryHandler
@@ -66,7 +66,7 @@ class PreviewTasksHandler(QueryHandler[PreviewTasksQuery, list[entities.Task]]):
                         task_definition=task_def,
                         schedule=routine_task.schedule,
                         scheduled_date=target_date,
-                        status=entities.TaskStatus.NOT_STARTED,
+                        status=value_objects.TaskStatus.NOT_STARTED,
                         category=routine.category,
                     )
                     result.append(task)

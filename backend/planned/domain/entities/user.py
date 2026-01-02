@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import Field
 
-from ..value_objects.user import UserSetting
+from .. import value_objects
 from .base import BaseEntityObject
 
 
@@ -16,6 +16,6 @@ class User(BaseEntityObject):
     is_active: bool = True
     is_superuser: bool = False
     is_verified: bool = False
-    settings: UserSetting = Field(default_factory=UserSetting)
+    settings: value_objects.UserSetting = Field(default_factory=value_objects.UserSetting)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime | None = None

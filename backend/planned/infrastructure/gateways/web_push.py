@@ -6,7 +6,7 @@ from webpush import WebPush, WebPushMessage, WebPushSubscription  # type: ignore
 from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from planned.core.config import settings
 from planned.core.exceptions import PushNotificationError
-from planned.domain import entities
+from planned.domain import entities, value_objects
 
 wp = WebPush(
     public_key=settings.VAPID_PUBLIC_KEY.encode("utf-8"),
@@ -17,9 +17,9 @@ wp = WebPush(
 
 async def send_notification(
     subscription: entities.PushSubscription,
-    content: str | dict | entities.NotificationPayload,
+    content: str | dict | value_objects.NotificationPayload,
 ) -> None:
-    if isinstance(content, entities.NotificationPayload):
+    if isinstance(content, value_objects.NotificationPayload):
         content = content.model_dump_json(exclude_none=True)
     elif isinstance(content, dict):
         content = json.dumps(content)
@@ -53,7 +53,7 @@ class WebPushGateway(WebPushGatewayProtocol):
     async def send_notification(
         self,
         subscription: entities.PushSubscription,
-        content: str | dict | entities.NotificationPayload,
+        content: str | dict | value_objects.NotificationPayload,
     ) -> None:
         """Send a push notification to a subscription."""
         await send_notification(

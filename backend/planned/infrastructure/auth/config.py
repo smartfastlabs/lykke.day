@@ -14,8 +14,7 @@ from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from planned.core.config import settings
-from planned.domain import entities
-from planned.domain.value_objects.user import UserSetting
+from planned.domain import entities, value_objects
 from planned.infrastructure.database.tables import User
 from planned.infrastructure.database.utils import get_engine
 from planned.infrastructure.repositories import DayTemplateRepository
@@ -88,7 +87,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         
         # Set custom fields
         user_dict["created_at"] = datetime.now(UTC)
-        user_dict["settings"] = UserSetting().model_dump(mode="json")
+        user_dict["settings"] = value_objects.UserSetting().model_dump(mode="json")
         
         # Create user
         user = await self.user_db.create(user_dict)

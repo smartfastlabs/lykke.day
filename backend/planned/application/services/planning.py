@@ -13,7 +13,7 @@ from planned.application.queries.preview_day import PreviewDayHandler, PreviewDa
 from planned.application.queries.preview_tasks import PreviewTasksHandler, PreviewTasksQuery
 from planned.application.services.base import BaseService
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain import entities
+from planned.domain import entities, value_objects
 
 
 class PlanningService(BaseService):
@@ -64,7 +64,7 @@ class PlanningService(BaseService):
         self,
         date: datetime.date,
         template_id: UUID | None = None,
-    ) -> entities.DayContext:
+    ) -> value_objects.DayContext:
         """Preview what a day would look like if scheduled.
 
         Args:
@@ -94,7 +94,7 @@ class PlanningService(BaseService):
         self,
         date: datetime.date,
         template_id: UUID | None = None,
-    ) -> entities.DayContext:
+    ) -> value_objects.DayContext:
         """Schedule a day with tasks from routines.
 
         Args:

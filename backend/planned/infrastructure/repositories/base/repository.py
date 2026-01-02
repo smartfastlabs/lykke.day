@@ -9,9 +9,9 @@ from typing import Any, ClassVar, Generic, TypeVar
 from uuid import UUID
 
 from planned.core.exceptions import NotFoundError
+from planned.domain import value_objects
 from planned.domain.entities.base import BaseEntityObject
 from planned.domain.events.base import BaseAggregateRoot, DomainEvent
-from planned.domain.value_objects.query import BaseQuery
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.database.transaction import get_transaction_connection
 from planned.infrastructure.repositories.base.utils import normalize_list_fields
@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.sql import Select
 
 ObjectType = TypeVar("ObjectType", bound=BaseEntityObject)
-QueryType = TypeVar("QueryType", bound=BaseQuery)
+QueryType = TypeVar("QueryType", bound=value_objects.BaseQuery)
 
 
 class BaseRepository(Generic[ObjectType, QueryType]):

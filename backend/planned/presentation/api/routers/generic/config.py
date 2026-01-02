@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 
-from planned.domain.value_objects.query import BaseQuery
+from planned.domain import value_objects
 
 
 @dataclass
@@ -30,7 +30,7 @@ class EntityRouterConfig:
     tags: list[str] | None = None
     enable_pagination: bool = True
     entity_type: type | None = field(init=False, default=None)
-    query_type: type[BaseQuery] | None = field(init=False, default=None)
+    query_type: type[value_objects.BaseQuery] | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
         """Extract entity type and query type from repository class."""

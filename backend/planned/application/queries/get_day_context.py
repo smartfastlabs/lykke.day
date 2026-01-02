@@ -6,7 +6,7 @@ from uuid import UUID
 
 from planned.application.utils.day_context_loader import DayContextLoader
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain import entities
+from planned.domain import entities, value_objects
 
 from .base import Query, QueryHandler
 
@@ -23,13 +23,13 @@ class GetDayContextQuery(Query):
     date: date
 
 
-class GetDayContextHandler(QueryHandler[GetDayContextQuery, entities.DayContext]):
+class GetDayContextHandler(QueryHandler[GetDayContextQuery, value_objects.DayContext]):
     """Handles GetDayContextQuery."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, query: GetDayContextQuery) -> entities.DayContext:
+    async def handle(self, query: GetDayContextQuery) -> value_objects.DayContext:
         """Load complete day context for the given date.
 
         Args:
