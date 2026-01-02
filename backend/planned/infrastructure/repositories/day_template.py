@@ -57,7 +57,7 @@ class DayTemplateRepository(UserScopedBaseRepository[entities.DayTemplate, DayTe
         """
         from planned.infrastructure.repositories.base.utils import normalize_list_fields
 
-        data = normalize_list_fields(dict(row), DayTemplate)
+        data = normalize_list_fields(dict(row), entities.DayTemplate)
 
         # Convert string UUIDs back to UUID objects for routine_ids
         if "routine_ids" in data and data["routine_ids"]:

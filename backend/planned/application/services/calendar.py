@@ -50,8 +50,8 @@ class CalendarService(BaseService):
         )
 
     async def sync(
-        self, calendar: Calendar
-    ) -> tuple[list[CalendarEntry], list[CalendarEntry]]:
+        self, calendar: entities.Calendar
+    ) -> tuple[list[entities.CalendarEntry], list[entities.CalendarEntry]]:
         """Sync a single calendar from its external provider.
 
         Args:

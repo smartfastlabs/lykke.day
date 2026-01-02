@@ -189,7 +189,7 @@ class EntityCrudOperations(Generic[EntityT]):
 async def handle_get(
     entity_id: UUID,
     repository_name: str,
-    user: User,
+    user: entities.User,
     mediator: Mediator,
 ) -> EntityT:
     """Handle GET request for a single entity.
@@ -217,7 +217,7 @@ async def handle_get(
 
 async def handle_list(
     repository_name: str,
-    user: User,
+    user: entities.User,
     mediator: Mediator,
     config: EntityRouterConfig,
     query: BaseQuery | None = None,
@@ -253,7 +253,7 @@ async def handle_list(
 async def handle_create(
     entity_data: EntityT,
     repository_name: str,
-    user: User,
+    user: entities.User,
     mediator: Mediator,
 ) -> EntityT:
     """Handle POST request for creating an entity.
@@ -280,7 +280,7 @@ async def handle_update(
     entity_id: UUID,
     entity_data: EntityT,
     repository_name: str,
-    user: User,
+    user: entities.User,
     mediator: Mediator,
 ) -> EntityT:
     """Handle PUT/PATCH request for updating an entity.
@@ -311,7 +311,7 @@ async def handle_update(
 async def handle_delete(
     entity_id: UUID,
     repository_name: str,
-    user: User,
+    user: entities.User,
     mediator: Mediator,
 ) -> None:
     """Handle DELETE request for an entity.
@@ -337,7 +337,7 @@ async def handle_delete(
 async def handle_bulk_create(
     entities: list[EntityT],
     repository_name: str,
-    user: User,
+    user: entities.User,
     mediator: Mediator,
 ) -> list[EntityT]:
     """Handle POST request for bulk creating entities.

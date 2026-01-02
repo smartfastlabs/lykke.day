@@ -59,10 +59,10 @@ async def get_context(
 @router.get("/{date}/preview")
 async def preview_day(
     date: datetime.date,
-    user: Annotated[User, Depends(get_current_user)],
+    user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
     template_id: UUID | None = None,
-) -> DayContext:
+) -> entities.DayContext:
     """Preview what a day would look like if scheduled."""
     query = PreviewDayQuery(user_id=user.id, date=date, template_id=template_id)
     return await mediator.query(query)
