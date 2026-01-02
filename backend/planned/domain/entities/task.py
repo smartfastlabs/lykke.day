@@ -1,16 +1,11 @@
-from datetime import UTC, date as dt_date, datetime
+from datetime import UTC
+from datetime import date as dt_date
+from datetime import datetime
 from uuid import UUID
 
+from planned.core.exceptions import DomainError
 from pydantic import Field
 
-from planned.core.exceptions import DomainError
-
-from ..events.base import BaseAggregateRoot
-from ..events.task_events import (
-    TaskActionRecordedEvent,
-    TaskCompletedEvent,
-    TaskStatusChangedEvent,
-)
 from ..value_objects.action import ActionType
 from ..value_objects.task import (
     TaskCategory,
@@ -24,7 +19,7 @@ from .base import BaseDateObject
 from .task_definition import TaskDefinition
 
 
-class Task(BaseDateObject, BaseAggregateRoot):
+class Task(BaseDateObject):
     user_id: UUID
     scheduled_date: dt_date
     name: str
@@ -46,15 +41,21 @@ class Task(BaseDateObject, BaseAggregateRoot):
         # This is required by BaseDateObject but not used since _get_date is implemented
         return datetime.combine(self.scheduled_date, datetime.min.time())
 
-    def record_action(self, action: Action) -> None:
+    def record_action(self, action: Action) -> TaskStatus:
         """Record an action on this task.
 
         This method handles action recording and status transitions based on
         the action type. It enforces business rules about which actions are
         valid in which states.
 
+        Note: This method should be called through the Day aggregate root,
+        which will raise domain events on behalf of the aggregate.
+
         Args:
             action: The action to record
+
+        Returns:
+            The old status before the change (for event raising by aggregate root)
 
         Raises:
             DomainError: If the action is invalid for the current state
@@ -69,12 +70,6 @@ class Task(BaseDateObject, BaseAggregateRoot):
                 raise DomainError("Task is already complete")
             self.status = TaskStatus.COMPLETE
             self.completed_at = datetime.now(UTC)
-            self._add_event(
-                TaskCompletedEvent(
-                    task_id=self.id,
-                    completed_at=self.completed_at.isoformat(),
-                )
-            )
         elif action.type == ActionType.PUNT:
             if self.status == TaskStatus.PUNT:
                 raise DomainError("Task is already punted")
@@ -86,61 +81,36 @@ class Task(BaseDateObject, BaseAggregateRoot):
             # Other action types don't change status
             pass
 
-        # Record status change event if status changed
-        if old_status != self.status:
-            self._add_event(
-                TaskStatusChangedEvent(
-                    task_id=self.id,
-                    old_status=old_status.value,
-                    new_status=self.status.value,
-                )
-            )
+        # Return the old status so the aggregate root can raise events if needed
+        return old_status
 
-        # Record action event
-        self._add_event(
-            TaskActionRecordedEvent(
-                task_id=self.id,
-                action_type=action.type.value,
-            )
-        )
-
-    def mark_pending(self) -> None:
+    def mark_pending(self) -> TaskStatus:
         """Mark the task as pending (ready to be worked on).
 
         This is typically called when a task's scheduled time arrives.
+
+        Returns:
+            The old status before the change
         """
         if self.status == TaskStatus.PENDING:
-            return  # Already pending
+            return self.status  # Already pending
 
         old_status = self.status
         self.status = TaskStatus.PENDING
+        return old_status
 
-        if old_status != self.status:
-            self._add_event(
-                TaskStatusChangedEvent(
-                    task_id=self.id,
-                    old_status=old_status.value,
-                    new_status=self.status.value,
-                )
-            )
-
-    def mark_ready(self) -> None:
+    def mark_ready(self) -> TaskStatus:
         """Mark the task as ready (available to be worked on).
 
         This is typically called when a task becomes available based on
         its schedule or dependencies.
+
+        Returns:
+            The old status before the change
         """
         if self.status == TaskStatus.READY:
-            return  # Already ready
+            return self.status  # Already ready
 
         old_status = self.status
         self.status = TaskStatus.READY
-
-        if old_status != self.status:
-            self._add_event(
-                TaskStatusChangedEvent(
-                    task_id=self.id,
-                    old_status=old_status.value,
-                    new_status=self.status.value,
-                )
-            )
+        return old_status

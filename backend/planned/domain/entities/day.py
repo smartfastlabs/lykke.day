@@ -8,9 +8,17 @@ from planned.core.exceptions import DomainError
 
 from ..events.base import BaseAggregateRoot
 from ..events.day_events import DayCompletedEvent, DayScheduledEvent, DayUnscheduledEvent
+from ..events.task_events import (
+    TaskActionRecordedEvent,
+    TaskCompletedEvent,
+    TaskStatusChangedEvent,
+)
+from ..value_objects.action import ActionType
 from ..value_objects.day import DayStatus, DayTag
+from .action import Action
 from .alarm import Alarm
 from .day_template import DayTemplate
+from .task import Task
 
 
 class Day(BaseAggregateRoot):
@@ -150,3 +158,64 @@ class Day(BaseAggregateRoot):
         # Update alarm if template has one
         if template.alarm:
             self.alarm = template.alarm
+
+    def record_task_action(self, task: Task, action: Action) -> Task:
+        """Record an action on a task within this day aggregate.
+
+        This method ensures all task modifications go through the Day aggregate root.
+        It validates the task belongs to this day, calls the task's domain method,
+        and raises domain events on behalf of the aggregate.
+
+        Args:
+            task: The task to record the action on
+            action: The action to record
+
+        Returns:
+            The updated Task entity
+
+        Raises:
+            DomainError: If the task doesn't belong to this day or if the action is invalid
+        """
+        # Validate task belongs to this day
+        if task.scheduled_date != self.date:
+            raise DomainError(
+                f"Task scheduled_date {task.scheduled_date} does not match day date {self.date}"
+            )
+        if task.user_id != self.user_id:
+            raise DomainError(
+                f"Task user_id {task.user_id} does not match day user_id {self.user_id}"
+            )
+
+        # Call task's domain method (business logic stays in Task)
+        # This mutates the task in place (modifies self.actions, self.status, etc.)
+        old_status = task.record_action(action)
+
+        # Raise domain events on behalf of the aggregate
+        if action.type == ActionType.COMPLETE and task.completed_at:
+            self._add_event(
+                TaskCompletedEvent(
+                    task_id=task.id,
+                    completed_at=task.completed_at.isoformat(),
+                )
+            )
+
+        # Record status change event if status changed
+        if old_status != task.status:
+            self._add_event(
+                TaskStatusChangedEvent(
+                    task_id=task.id,
+                    old_status=old_status.value,
+                    new_status=task.status.value,
+                )
+            )
+
+        # Record action event
+        self._add_event(
+            TaskActionRecordedEvent(
+                task_id=task.id,
+                action_type=action.type.value,
+            )
+        )
+
+        # Return the updated task (mutated in place by record_action)
+        return task
