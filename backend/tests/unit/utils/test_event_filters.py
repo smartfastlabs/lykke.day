@@ -153,6 +153,7 @@ def test_filter_upcoming_calendar_entries(test_user_id: str) -> None:
         platform_id="cal123",
         auth_token_id=auth_token_id,
     )
+    # Eligible entry starts at 12:00 UTC, which is within 3 hours of 10:00 UTC
     eligible_entry = entities.CalendarEntry(
         user_id=test_user_id,
         calendar_id=calendar.id,
@@ -189,7 +190,8 @@ def test_filter_upcoming_calendar_entries(test_user_id: str) -> None:
 
     entries = [eligible_entry, cancelled_entry, future_entry]
 
-    with freeze_time("2025-11-27 10:00:00-06:00", real_asyncio=True):
+    # Freeze time at 10:00 UTC (not local time) to match get_current_datetime() which returns UTC
+    with freeze_time("2025-11-27 10:00:00+00:00", real_asyncio=True):
         look_ahead = timedelta(hours=3)
         result = filter_upcoming_calendar_entries(entries, look_ahead)
         assert len(result) == 1
@@ -229,7 +231,8 @@ def test_filter_upcoming_calendar_entries_ongoing_events(
         frequency=value_objects.TaskFrequency.ONCE,
     )
 
-    with freeze_time("2025-11-27 10:00:00-06:00", real_asyncio=True):
+    # Freeze time at 10:00 UTC - event started at 9:00 UTC, so it's ongoing
+    with freeze_time("2025-11-27 10:00:00+00:00", real_asyncio=True):
         look_ahead = timedelta(hours=3)
         result = filter_upcoming_calendar_entries([ongoing_entry], look_ahead)
         assert len(result) == 1

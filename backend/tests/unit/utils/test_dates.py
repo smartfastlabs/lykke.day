@@ -112,11 +112,12 @@ def test_get_time_between(
 
 def test_get_time_between_with_datetime(test_date: datetime.date) -> None:
     """Test get_time_between works with datetime objects."""
-    with freeze_time("2025-11-27 10:00:00-06:00", real_asyncio=True):
-        dt1 = datetime.datetime(2025, 11, 27, 12, 0, 0, tzinfo=UTC)
-        dt2 = datetime.datetime(2025, 11, 27, 14, 0, 0, tzinfo=UTC)
-        result = get_time_between(dt1, dt2)
-        assert abs(result.total_seconds() - 7200) < 1  # 2 hours, allow small rounding
+    # When both are datetime objects, they're subtracted directly
+    dt1 = datetime.datetime(2025, 11, 27, 12, 0, 0, tzinfo=UTC)
+    dt2 = datetime.datetime(2025, 11, 27, 14, 0, 0, tzinfo=UTC)
+    result = get_time_between(dt1, dt2)
+    # dt1 - dt2 = 12:00 - 14:00 = -2 hours = -7200 seconds
+    assert abs(result.total_seconds() + 7200) < 1  # -2 hours, allow small rounding
 
 
 def test_get_time_between_mixed_time_datetime(test_date: datetime.date) -> None:

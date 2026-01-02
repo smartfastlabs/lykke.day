@@ -5,11 +5,6 @@ from uuid import uuid4
 import pytest
 from dobles import InstanceDouble
 
-from tests.fixtures.unit_of_work import (
-    InMemoryUnitOfWork,
-    InMemoryUnitOfWorkFactory,
-)
-
 
 # Mocked repository fixtures
 @pytest.fixture
@@ -139,20 +134,6 @@ def test_user(test_user_id):
 
 
 # UnitOfWork fixtures
-@pytest.fixture
-def in_memory_uow_factory():
-    """In-memory UnitOfWorkFactory for unit tests."""
-    return InMemoryUnitOfWorkFactory()
-
-
-@pytest.fixture
-async def in_memory_uow(test_user):
-    """In-memory UnitOfWork for unit tests."""
-    uow = InMemoryUnitOfWork(user_id=test_user.id)
-    async with uow:
-        yield uow
-
-
 @pytest.fixture
 def mock_uow_factory(
     mock_auth_token_repo,

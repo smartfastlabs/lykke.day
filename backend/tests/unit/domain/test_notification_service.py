@@ -6,9 +6,8 @@ from uuid import uuid4
 
 import pytest
 
-from planned.domain import entities
+from planned.domain import entities, value_objects
 from planned.domain.services.notification import NotificationPayloadBuilder
-from planned.domain.value_objects import task
 
 
 @pytest.fixture
@@ -18,16 +17,16 @@ def test_task(test_user_id: str) -> entities.Task:
         user_id=test_user_id,
         name="Test Task Definition",
         description="Test description",
-        type=task.TaskType.CHORE,
+        type=value_objects.TaskType.CHORE,
     )
     return entities.Task(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
-        status=task.TaskStatus.READY,
+        status=value_objects.TaskStatus.READY,
         task_definition=task_def,
-        category=task.TaskCategory.HYGIENE,
-        frequency=task.TaskFrequency.DAILY,
+        category=value_objects.TaskCategory.HYGIENE,
+        frequency=value_objects.TaskFrequency.DAILY,
     )
 
 
@@ -53,25 +52,25 @@ def test_build_for_tasks_multiple_tasks(test_user_id: str) -> None:
         user_id=test_user_id,
         name="Task Definition",
         description="Test description",
-        type=task.TaskType.CHORE,
+        type=value_objects.TaskType.CHORE,
     )
     task1 = entities.Task(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Task 1",
-        status=task.TaskStatus.READY,
+        status=value_objects.TaskStatus.READY,
         task_definition=task_def,
-        category=task.TaskCategory.HYGIENE,
-        frequency=task.TaskFrequency.DAILY,
+        category=value_objects.TaskCategory.HYGIENE,
+        frequency=value_objects.TaskFrequency.DAILY,
     )
     task2 = entities.Task(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Task 2",
-        status=task.TaskStatus.READY,
+        status=value_objects.TaskStatus.READY,
         task_definition=task_def,
-        category=task.TaskCategory.HYGIENE,
-        frequency=task.TaskFrequency.DAILY,
+        category=value_objects.TaskCategory.HYGIENE,
+        frequency=value_objects.TaskFrequency.DAILY,
     )
 
     payload = NotificationPayloadBuilder.build_for_tasks([task1, task2])

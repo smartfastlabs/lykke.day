@@ -130,6 +130,12 @@ def test_is_task_eligible_for_upcoming_available_time_before_now(
     test_user_id: str,
 ) -> None:
     """Test task with available_time before now is eligible."""
+    task_def = entities.TaskDefinition(
+        user_id=test_user_id,
+        name="Task Def",
+        description="Test",
+        type=value_objects.TaskType.CHORE,
+    )
     schedule = value_objects.TaskSchedule(
         available_time=datetime.time(8, 0),
         start_time=datetime.time(10, 0),
@@ -137,8 +143,12 @@ def test_is_task_eligible_for_upcoming_available_time_before_now(
     )
     task = entities.Task(
         user_id=test_user_id,
+        scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
         status=value_objects.TaskStatus.READY,
+        task_definition=task_def,
+        category=value_objects.TaskCategory.HYGIENE,
+        frequency=value_objects.TaskFrequency.DAILY,
         schedule=schedule,
     )
     with freeze_time("2025-11-27 09:00:00-06:00", real_asyncio=True):
@@ -152,6 +162,12 @@ def test_is_task_eligible_for_upcoming_available_time_after_now(
     test_user_id: str,
 ) -> None:
     """Test task with available_time after now is not eligible."""
+    task_def = entities.TaskDefinition(
+        user_id=test_user_id,
+        name="Task Def",
+        description="Test",
+        type=value_objects.TaskType.CHORE,
+    )
     schedule = value_objects.TaskSchedule(
         available_time=datetime.time(10, 0),
         start_time=datetime.time(11, 0),
@@ -159,8 +175,12 @@ def test_is_task_eligible_for_upcoming_available_time_after_now(
     )
     task = entities.Task(
         user_id=test_user_id,
+        scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
         status=value_objects.TaskStatus.READY,
+        task_definition=task_def,
+        category=value_objects.TaskCategory.HYGIENE,
+        frequency=value_objects.TaskFrequency.DAILY,
         schedule=schedule,
     )
     with freeze_time("2025-11-27 09:00:00-06:00", real_asyncio=True):
@@ -174,14 +194,24 @@ def test_is_task_eligible_for_upcoming_start_time_after_cutoff(
     test_user_id: str,
 ) -> None:
     """Test task with start_time after cutoff is not eligible."""
+    task_def = entities.TaskDefinition(
+        user_id=test_user_id,
+        name="Task Def",
+        description="Test",
+        type=value_objects.TaskType.CHORE,
+    )
     schedule = value_objects.TaskSchedule(
         start_time=datetime.time(13, 0),
         timing_type=value_objects.TimingType.FIXED_TIME,
     )
     task = entities.Task(
         user_id=test_user_id,
+        scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
         status=value_objects.TaskStatus.READY,
+        task_definition=task_def,
+        category=value_objects.TaskCategory.HYGIENE,
+        frequency=value_objects.TaskFrequency.DAILY,
         schedule=schedule,
     )
     with freeze_time("2025-11-27 09:00:00-06:00", real_asyncio=True):
@@ -195,6 +225,12 @@ def test_is_task_eligible_for_upcoming_end_time_passed(
     test_user_id: str,
 ) -> None:
     """Test task with end_time that has passed is not eligible."""
+    task_def = entities.TaskDefinition(
+        user_id=test_user_id,
+        name="Task Def",
+        description="Test",
+        type=value_objects.TaskType.CHORE,
+    )
     schedule = value_objects.TaskSchedule(
         start_time=datetime.time(8, 0),
         end_time=datetime.time(9, 0),
@@ -202,8 +238,12 @@ def test_is_task_eligible_for_upcoming_end_time_passed(
     )
     task = entities.Task(
         user_id=test_user_id,
+        scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
         status=value_objects.TaskStatus.READY,
+        task_definition=task_def,
+        category=value_objects.TaskCategory.HYGIENE,
+        frequency=value_objects.TaskFrequency.DAILY,
         schedule=schedule,
     )
     with freeze_time("2025-11-27 10:00:00-06:00", real_asyncio=True):

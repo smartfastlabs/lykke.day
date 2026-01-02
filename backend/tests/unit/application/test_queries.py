@@ -77,10 +77,11 @@ async def test_list_entities_handler_with_pagination(
     
     # Create 10 days
     create_handler = CreateEntityHandler(uow_factory)
+    base_date = datetime.date(2025, 11, 27)
     for i in range(10):
         day = entities.Day(
             user_id=test_user.id,
-            date=datetime.date(2025, 11, 27 + i),
+            date=base_date + datetime.timedelta(days=i),
             status=DayStatus.UNSCHEDULED,
         )
         await create_handler.handle(
