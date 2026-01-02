@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Annotated, Any, cast
 
 from fastapi import Depends
-from planned.domain.entities import User as UserEntity
+from planned.domain import entities
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.auth import current_active_user
 from planned.infrastructure.database.tables import User as UserDB
@@ -12,7 +12,7 @@ from planned.infrastructure.database.tables import User as UserDB
 
 async def get_current_user(
     user: Annotated[UserDB, Depends(current_active_user)],
-) -> UserEntity:
+) -> entities.User:
     """Get the current user from fastapi-users and convert to domain entity.
 
     Args:
@@ -26,7 +26,7 @@ async def get_current_user(
     settings = UserSetting(**settings_data) if settings_data else UserSetting()
 
     # Convert SQLAlchemy model to domain entity
-    return UserEntity(
+    return entities.User(
         id=user.id,
         email=user.email,
         phone_number=cast("str | None", user.phone_number),

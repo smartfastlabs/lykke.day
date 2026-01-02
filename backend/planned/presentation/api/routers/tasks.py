@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 from planned.application.commands import RecordTaskActionCommand
 from planned.application.mediator import Mediator
 from planned.application.repositories import TaskRepositoryProtocol
-from planned.domain.entities import Action, Task, User
+from planned.domain import entities
 from planned.domain.value_objects.query import DateQuery
 from planned.infrastructure.utils.dates import get_current_date
 
@@ -22,7 +22,7 @@ router = APIRouter()
 @router.get("/today")
 async def list_todays_tasks(
     task_repo: Annotated[TaskRepositoryProtocol, Depends(get_task_repo)],
-) -> list[Task]:
+) -> list[entities.Task]:
     """Get all tasks for today."""
     return await task_repo.search_query(DateQuery(date=get_current_date()))
 
@@ -31,10 +31,10 @@ async def list_todays_tasks(
 async def add_task_action(
     date: dt.date,
     _id: uuid.UUID,
-    action: Action,
-    user: Annotated[User, Depends(get_current_user)],
+    action: entities.Action,
+    user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> Task:
+) -> entities.Task:
     _ = date  # Path parameter kept for API compatibility
     """Record an action on a task."""
     cmd = RecordTaskActionCommand(

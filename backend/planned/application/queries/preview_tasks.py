@@ -5,10 +5,8 @@ from datetime import date
 from uuid import UUID
 
 from loguru import logger
-
 from planned.application.unit_of_work import UnitOfWorkFactory, UnitOfWorkProtocol
-from planned.domain import entities as objects
-from planned.domain.entities import Task, TaskStatus
+from planned.domain import entities
 from planned.domain.services.routine import RoutineService
 
 from .base import Query, QueryHandler
@@ -26,13 +24,13 @@ class PreviewTasksQuery(Query):
     date: date
 
 
-class PreviewTasksHandler(QueryHandler[PreviewTasksQuery, list[Task]]):
+class PreviewTasksHandler(QueryHandler[PreviewTasksQuery, list[entities.Task]]):
     """Handles PreviewTasksQuery."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, query: PreviewTasksQuery) -> list[Task]:
+    async def handle(self, query: PreviewTasksQuery) -> list[entities.Task]:
         """Preview tasks that would be created for a given date.
 
         Args:
@@ -49,9 +47,9 @@ class PreviewTasksHandler(QueryHandler[PreviewTasksQuery, list[Task]]):
         uow: UnitOfWorkProtocol,
         user_id: UUID,
         target_date: date,
-    ) -> list[Task]:
+    ) -> list[entities.Task]:
         """Generate preview tasks from routines."""
-        result: list[Task] = []
+        result: list[entities.Task] = []
 
         for routine in await uow.routines.all():
             logger.debug(f"Checking routine: {routine.name}")
@@ -60,7 +58,7 @@ class PreviewTasksHandler(QueryHandler[PreviewTasksQuery, list[Task]]):
                     task_def = await uow.task_definitions.get(
                         routine_task.task_definition_id,
                     )
-                    task = Task(
+                    task = entities.Task(
                         user_id=user_id,
                         name=routine_task.name or f"ROUTINE: {routine.name}",
                         frequency=routine.routine_schedule.frequency,
@@ -68,10 +66,9 @@ class PreviewTasksHandler(QueryHandler[PreviewTasksQuery, list[Task]]):
                         task_definition=task_def,
                         schedule=routine_task.schedule,
                         scheduled_date=target_date,
-                        status=TaskStatus.NOT_STARTED,
+                        status=entities.TaskStatus.NOT_STARTED,
                         category=routine.category,
                     )
                     result.append(task)
 
         return result
-

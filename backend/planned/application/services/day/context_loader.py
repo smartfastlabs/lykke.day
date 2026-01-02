@@ -13,7 +13,7 @@ from planned.application.repositories import (
 )
 from planned.core.constants import DEFAULT_END_OF_DAY_TIME
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities as objects
+from planned.domain import entities
 from planned.domain.value_objects.query import DateQuery
 
 
@@ -26,7 +26,7 @@ class DayContextLoader:
 
     def __init__(
         self,
-        user: objects.User,
+        user: entities.User,
         day_repo: DayRepositoryProtocol,
         day_template_repo: DayTemplateRepositoryProtocol,
         calendar_entry_repo: CalendarEntryRepositoryProtocol,
@@ -54,7 +54,7 @@ class DayContextLoader:
         self,
         date: datetime.date,
         user_id: UUID,
-    ) -> objects.DayContext:
+    ) -> entities.DayContext:
         """Load complete day context for the given date and user.
 
         Args:
@@ -64,14 +64,14 @@ class DayContextLoader:
         Returns:
             A DayContext with day, tasks, calendar entries, and messages loaded and sorted
         """
-        tasks: list[objects.Task] = []
-        calendar_entries: list[objects.CalendarEntry] = []
-        messages: list[objects.Message] = []
-        day: objects.Day
+        tasks: list[entities.Task] = []
+        calendar_entries: list[entities.CalendarEntry] = []
+        messages: list[entities.Message] = []
+        day: entities.Day
 
         try:
             # Try to load existing day and all related data
-            day_id = objects.Day.id_from_date_and_user(date, user_id)
+            day_id = entities.Day.id_from_date_and_user(date, user_id)
             tasks, calendar_entries, messages, day = await asyncio.gather(
                 self.task_repo.search_query(DateQuery(date=date)),
                 self.calendar_entry_repo.search_query(DateQuery(date=date)),
@@ -88,7 +88,7 @@ class DayContextLoader:
         self,
         date: datetime.date,
         user_id: UUID,
-    ) -> objects.Day:
+    ) -> entities.Day:
         """Create a preview day when no existing day is found.
 
         Args:
@@ -106,8 +106,8 @@ class DayContextLoader:
     def _base_day(
         date: datetime.date,
         user_id: UUID,
-        template: objects.DayTemplate,
-    ) -> objects.Day:
+        template: entities.DayTemplate,
+    ) -> entities.Day:
         """Create a base day entity.
 
         Args:
@@ -118,7 +118,7 @@ class DayContextLoader:
         Returns:
             A Day entity with default status
         """
-        return objects.Day.create_for_date(
+        return entities.Day.create_for_date(
             date,
             user_id=user_id,
             template=template,
@@ -126,11 +126,11 @@ class DayContextLoader:
 
     def _build_context(
         self,
-        day: objects.Day,
-        tasks: list[objects.Task],
-        calendar_entries: list[objects.CalendarEntry],
-        messages: list[objects.Message],
-    ) -> objects.DayContext:
+        day: entities.Day,
+        tasks: list[entities.Task],
+        calendar_entries: list[entities.CalendarEntry],
+        messages: list[entities.Message],
+    ) -> entities.DayContext:
         """Build a DayContext from loaded data.
 
         Args:
@@ -142,7 +142,7 @@ class DayContextLoader:
         Returns:
             A DayContext with sorted tasks and calendar entries
         """
-        return objects.DayContext(
+        return entities.DayContext(
             day=day,
             tasks=sorted(
                 tasks,

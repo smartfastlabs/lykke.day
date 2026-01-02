@@ -11,7 +11,7 @@ from planned.application.repositories import (
     CalendarRepositoryProtocol,
 )
 from planned.core.constants import OAUTH_STATE_EXPIRY
-from planned.domain.entities import AuthToken, Calendar, User
+from planned.domain import entities
 from planned.infrastructure.gateways.google import get_flow
 
 from .dependencies.repositories import get_auth_token_repo, get_calendar_repo
@@ -77,7 +77,7 @@ def verify_state(
 async def google_login_callback(
     state: str,
     code: str,
-    user: Annotated[User, Depends(get_current_user)],
+    user: Annotated[entities.User, Depends(get_current_user)],
     auth_token_repo: Annotated[AuthTokenRepositoryProtocol, Depends(get_auth_token_repo)],
     calendar_repo: Annotated[CalendarRepositoryProtocol, Depends(get_calendar_repo)],
 ) -> RedirectResponse:
@@ -90,8 +90,8 @@ async def google_login_callback(
     flow = get_flow("login")
     flow.fetch_token(code=code)
 
-    auth_token: AuthToken = await auth_token_repo.put(
-        AuthToken(
+    auth_token: entities.AuthToken = await auth_token_repo.put(
+        entities.AuthToken(
             user_id=user.id,
             client_id=flow.credentials.client_id,
             client_secret=flow.credentials.client_secret,
@@ -113,7 +113,7 @@ async def google_login_callback(
 
     for calendar in calendar_list.get("items", []):
         await calendar_repo.put(
-            Calendar(
+            entities.Calendar(
                 user_id=user.id,
                 name=calendar["summary"],
                 platform="google",

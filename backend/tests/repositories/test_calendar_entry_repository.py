@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import pytest_asyncio
 from planned import settings
-from planned.domain import entities as objects
+from planned.domain import entities
 from planned.domain.value_objects.query import DateQuery
 from planned.infrastructure.repositories import CalendarEntryRepository, UserRepository
 
@@ -21,7 +21,7 @@ async def calendar_entry_repo(test_date, test_user):
         datetime.time(hour=2),
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
-    calendar_entry_today = objects.CalendarEntry(
+    calendar_entry_today = entities.CalendarEntry(
         user_id=test_user.id,
         name="Test Calendar Entry",
         frequency="ONCE",
@@ -40,7 +40,7 @@ async def calendar_entry_repo(test_date, test_user):
         datetime.time(hour=2),
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
-    calendar_entry_next = objects.CalendarEntry(
+    calendar_entry_next = entities.CalendarEntry(
         user_id=test_user.id,
         name="Test Calendar Entry",
         frequency="ONCE",

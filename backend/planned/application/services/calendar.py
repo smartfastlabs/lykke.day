@@ -13,7 +13,7 @@ from planned.application.commands.sync_calendar import (
 from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from planned.application.services.base import BaseService
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain.entities import Calendar, CalendarEntry, User
+from planned.domain import entities
 
 
 class CalendarService(BaseService):
@@ -30,7 +30,7 @@ class CalendarService(BaseService):
 
     def __init__(
         self,
-        user: User,
+        user: entities.User,
         uow_factory: UnitOfWorkFactory,
         google_gateway: GoogleCalendarGatewayProtocol,
     ) -> None:

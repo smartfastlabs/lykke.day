@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends
 from passlib.context import CryptContext
 from planned.application.repositories import UserRepositoryProtocol
 from planned.core.exceptions import BadRequestError
-from planned.domain.entities import User
+from planned.domain import entities
 from planned.domain.value_objects.base import BaseRequestObject, BaseResponseObject
 
 from .dependencies.repositories import get_user_repo
@@ -34,7 +34,7 @@ class UpdatePasswordRequest(BaseRequestObject):
 @router.post("/set-password")
 async def set_password(
     data: UpdatePasswordRequest,
-    user: Annotated[User, Depends(get_current_user)],
+    user: Annotated[entities.User, Depends(get_current_user)],
     user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
 ) -> StatusResponse:
     """Update password for the current user."""

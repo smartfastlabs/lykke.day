@@ -1,14 +1,14 @@
 from typing import Any
 from uuid import UUID
 
-from planned.domain.entities import Day
+from planned.domain import entities
 
 from .base import BaseQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import days_tbl
 
 
-class DayRepository(UserScopedBaseRepository[Day, BaseQuery]):
-    Object = Day
+class DayRepository(UserScopedBaseRepository[entities.Day, BaseQuery]):
+    Object = entities.Day
     table = days_tbl
     QueryClass = BaseQuery
 
@@ -17,7 +17,7 @@ class DayRepository(UserScopedBaseRepository[Day, BaseQuery]):
         super().__init__(user_id=user_id)
 
     @staticmethod
-    def entity_to_row(day: Day) -> dict[str, Any]:
+    def entity_to_row(day: entities.Day) -> dict[str, Any]:
         """Convert a Day entity to a database row dict."""
         row: dict[str, Any] = {
             "id": day.id,

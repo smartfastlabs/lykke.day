@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from planned.application.mediator import Mediator
-from planned.domain.entities import User
+from planned.domain import entities
 from planned.presentation.api.routers.dependencies.services import get_mediator
 from planned.presentation.api.routers.dependencies.user import get_current_user
 
@@ -49,12 +49,10 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
         @router.get("/{uuid}")
         async def get_entity(
             uuid: UUID,
-            user: Annotated[User, Depends(get_current_user)],
+            user: Annotated[entities.User, Depends(get_current_user)],
             mediator: Annotated[Mediator, Depends(get_mediator)],
         ) -> entity_type:  # type: ignore
-            return await handle_get(
-                uuid, repository_name, user, mediator
-            )
+            return await handle_get(uuid, repository_name, user, mediator)
 
     # GET / - List entities
     if operations.enable_list:
@@ -66,7 +64,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
             @router.get("/")
             async def list_entities_with_query(
                 query: Annotated[query_type, Query()],  # type: ignore[valid-type]
-                user: Annotated[User, Depends(get_current_user)],
+                user: Annotated[entities.User, Depends(get_current_user)],
                 mediator: Annotated[Mediator, Depends(get_mediator)],
             ) -> Any:
                 query_limit = getattr(query, "limit", None) or 50
@@ -86,7 +84,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
 
             @router.get("/")
             async def list_entities(
-                user: Annotated[User, Depends(get_current_user)],
+                user: Annotated[entities.User, Depends(get_current_user)],
                 mediator: Annotated[Mediator, Depends(get_mediator)],
                 limit: Annotated[int, Query(ge=1, le=1000)] = 50,
                 offset: Annotated[int, Query(ge=0)] = 0,
@@ -106,12 +104,10 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
         @router.post("/")
         async def create_entity(
             entity_data: entity_type,  # type: ignore
-            user: Annotated[User, Depends(get_current_user)],
+            user: Annotated[entities.User, Depends(get_current_user)],
             mediator: Annotated[Mediator, Depends(get_mediator)],
         ) -> entity_type:  # type: ignore
-            return await handle_create(
-                entity_data, repository_name, user, mediator
-            )
+            return await handle_create(entity_data, repository_name, user, mediator)
 
     # POST /bulk - Bulk create entities
     if operations.enable_bulk_create:
@@ -119,7 +115,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
         @router.post("/bulk")
         async def bulk_create_entities(
             entities_data: list[dict],
-            user: Annotated[User, Depends(get_current_user)],
+            user: Annotated[entities.User, Depends(get_current_user)],
             mediator: Annotated[Mediator, Depends(get_mediator)],
         ) -> list[entity_type]:  # type: ignore
             # Convert dictionaries to entity objects, setting user_id
@@ -138,7 +134,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
         async def update_entity(
             uuid: UUID,
             entity_data: entity_type,  # type: ignore
-            user: Annotated[User, Depends(get_current_user)],
+            user: Annotated[entities.User, Depends(get_current_user)],
             mediator: Annotated[Mediator, Depends(get_mediator)],
         ) -> entity_type:  # type: ignore
             return await handle_update(
@@ -151,7 +147,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
         @router.delete("/{uuid}")
         async def delete_entity(
             uuid: UUID,
-            user: Annotated[User, Depends(get_current_user)],
+            user: Annotated[entities.User, Depends(get_current_user)],
             mediator: Annotated[Mediator, Depends(get_mediator)],
         ) -> None:
             await handle_delete(uuid, repository_name, user, mediator)

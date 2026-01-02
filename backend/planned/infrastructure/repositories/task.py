@@ -3,14 +3,14 @@ from uuid import UUID
 
 from sqlalchemy.sql import Select
 
-from planned.domain.entities import Task
+from planned.domain import entities
 
 from .base import DateQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import tasks_tbl
 
 
-class TaskRepository(UserScopedBaseRepository[Task, DateQuery]):
-    Object = Task
+class TaskRepository(UserScopedBaseRepository[entities.Task, DateQuery]):
+    Object = entities.Task
     table = tasks_tbl
     QueryClass = DateQuery
     # Exclude 'date' - it's a database-only field for querying (computed from scheduled_date)
@@ -31,7 +31,7 @@ class TaskRepository(UserScopedBaseRepository[Task, DateQuery]):
         return stmt
 
     @staticmethod
-    def entity_to_row(task: Task) -> dict[str, Any]:
+    def entity_to_row(task: entities.Task) -> dict[str, Any]:
         """Convert a Task entity to a database row dict."""
         row: dict[str, Any] = {
             "id": task.id,

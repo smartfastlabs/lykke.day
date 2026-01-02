@@ -19,7 +19,7 @@ from planned.application.commands import (
 )
 from planned.application.mediator import Mediator
 from planned.application.queries import GetEntityQuery, ListEntitiesQuery
-from planned.domain.entities import User
+from planned.domain import entities
 from planned.domain.value_objects.query import BaseQuery, PagedQueryResponse
 
 from .config import EntityRouterConfig
@@ -49,7 +49,7 @@ class EntityCrudOperations(Generic[EntityT]):
         self,
         mediator: Mediator,
         repository_name: str,
-        user: User,
+        user: entities.User,
     ) -> None:
         self._mediator = mediator
         self._repository_name = repository_name

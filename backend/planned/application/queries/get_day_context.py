@@ -6,7 +6,7 @@ from uuid import UUID
 
 from planned.application.services.day.context_loader import DayContextLoader
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain.entities import DayContext, User
+from planned.domain import entities
 
 from .base import Query, QueryHandler
 
@@ -19,17 +19,17 @@ class GetDayContextQuery(Query):
     If the day doesn't exist, returns a preview (unsaved) day.
     """
 
-    user: User
+    user: entities.User
     date: date
 
 
-class GetDayContextHandler(QueryHandler[GetDayContextQuery, DayContext]):
+class GetDayContextHandler(QueryHandler[GetDayContextQuery, entities.DayContext]):
     """Handles GetDayContextQuery."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, query: GetDayContextQuery) -> DayContext:
+    async def handle(self, query: GetDayContextQuery) -> entities.DayContext:
         """Load complete day context for the given date.
 
         Args:

@@ -1,10 +1,10 @@
 """Protocol for TaskRepository."""
 
 from planned.application.repositories.base import DateScopedCrudRepositoryProtocol
-from planned.domain.entities import Task
+from planned.domain import entities
 
 
-class TaskRepositoryProtocol(DateScopedCrudRepositoryProtocol[Task]):
+class TaskRepositoryProtocol(DateScopedCrudRepositoryProtocol[entities.Task]):
     """Protocol defining the interface for task repositories."""
     pass
 

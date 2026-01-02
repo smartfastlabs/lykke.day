@@ -8,7 +8,6 @@ in route handlers by bundling related dependencies together.
 from typing import Annotated
 
 from fastapi import Depends
-
 from planned.application.repositories import (
     AuthTokenRepositoryProtocol,
     CalendarEntryRepositoryProtocol,
@@ -22,7 +21,7 @@ from planned.application.repositories import (
     TaskRepositoryProtocol,
     UserRepositoryProtocol,
 )
-from planned.domain.entities import User
+from planned.domain import entities
 
 from .repositories import (
     get_auth_token_repo,
@@ -49,7 +48,7 @@ class RepositoryContainer:
 
     def __init__(
         self,
-        user: User,
+        user: entities.User,
         user_repo: UserRepositoryProtocol,
         day_repo: DayRepositoryProtocol,
         day_template_repo: DayTemplateRepositoryProtocol,
@@ -78,7 +77,7 @@ class RepositoryContainer:
 
 
 def get_repository_container(
-    user: Annotated[User, Depends(get_current_user)],
+    user: Annotated[entities.User, Depends(get_current_user)],
     user_repo: Annotated[UserRepositoryProtocol, Depends(get_user_repo)],
     day_repo: Annotated[DayRepositoryProtocol, Depends(get_day_repo)],
     day_template_repo: Annotated[

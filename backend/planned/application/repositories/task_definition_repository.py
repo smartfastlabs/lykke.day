@@ -1,10 +1,10 @@
 """Protocol for TaskDefinitionRepository."""
 
 from planned.application.repositories.base import SimpleReadRepositoryProtocol
-from planned.domain.entities import TaskDefinition
+from planned.domain import entities
 
 
-class TaskDefinitionRepositoryProtocol(SimpleReadRepositoryProtocol[TaskDefinition]):
+class TaskDefinitionRepositoryProtocol(SimpleReadRepositoryProtocol[entities.TaskDefinition]):
     """Protocol defining the interface for task definition repositories."""
     pass
 

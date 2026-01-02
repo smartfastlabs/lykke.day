@@ -7,8 +7,7 @@ from uuid import UUID
 
 from planned.application.queries.preview_day import PreviewDayHandler, PreviewDayQuery
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain import entities as objects
-from planned.domain.entities import DayContext
+from planned.domain import entities
 from planned.domain.value_objects.query import DateQuery
 
 from .base import Command, CommandHandler
@@ -26,14 +25,14 @@ class ScheduleDayCommand(Command):
     template_id: UUID | None = None
 
 
-class ScheduleDayHandler(CommandHandler[ScheduleDayCommand, DayContext]):
+class ScheduleDayHandler(CommandHandler[ScheduleDayCommand, entities.DayContext]):
     """Handles ScheduleDayCommand."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
         self._preview_handler = PreviewDayHandler(uow_factory)
 
-    async def handle(self, cmd: ScheduleDayCommand) -> DayContext:
+    async def handle(self, cmd: ScheduleDayCommand) -> entities.DayContext:
         """Schedule a day with tasks from routines.
 
         Args:
@@ -62,7 +61,7 @@ class ScheduleDayHandler(CommandHandler[ScheduleDayCommand, DayContext]):
             template = await uow.day_templates.get(preview_result.day.template.id)
 
             # Create and schedule the day
-            day = objects.Day.create_for_date(
+            day = entities.Day.create_for_date(
                 cmd.date,
                 user_id=cmd.user_id,
                 template=template,
@@ -79,7 +78,7 @@ class ScheduleDayHandler(CommandHandler[ScheduleDayCommand, DayContext]):
             )
             await uow.commit()
 
-            return DayContext(
+            return entities.DayContext(
                 day=day,
                 tasks=tasks,
                 calendar_entries=preview_result.calendar_entries,

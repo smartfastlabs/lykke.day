@@ -4,8 +4,7 @@ import datetime
 from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain import entities as objects
-from planned.domain.entities import User
+from planned.domain import entities
 from planned.domain.value_objects.day import DayContext
 
 from .service import DayService
@@ -23,7 +22,7 @@ class DayServiceFactory:
 
     def __init__(
         self,
-        user: User,
+        user: entities.User,
         uow_factory: UnitOfWorkFactory,
     ) -> None:
         """Initialize the factory with required dependencies.

@@ -14,7 +14,7 @@ from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from planned.core.config import settings
-from planned.domain.entities import DayTemplate
+from planned.domain import entities
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.database.tables import User
 from planned.infrastructure.database.utils import get_engine
@@ -107,10 +107,10 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         day_template_repo = DayTemplateRepository(user_id=user.id)
         
         default_templates = [
-            DayTemplate(user_id=user.id, slug="default", alarm=None, icon=None),
-            DayTemplate(user_id=user.id, slug="workday", alarm=None, icon=None),
-            DayTemplate(user_id=user.id, slug="weekday", alarm=None, icon=None),
-            DayTemplate(user_id=user.id, slug="weekend", alarm=None, icon=None),
+            entities.DayTemplate(user_id=user.id, slug="default", alarm=None, icon=None),
+            entities.DayTemplate(user_id=user.id, slug="workday", alarm=None, icon=None),
+            entities.DayTemplate(user_id=user.id, slug="weekday", alarm=None, icon=None),
+            entities.DayTemplate(user_id=user.id, slug="weekend", alarm=None, icon=None),
         ]
         
         # Insert all templates using insert_many for efficiency

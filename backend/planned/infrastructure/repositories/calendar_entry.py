@@ -3,14 +3,14 @@ from uuid import UUID
 
 from sqlalchemy.sql import Select
 
-from planned.domain.entities import CalendarEntry
+from planned.domain import entities
 
 from .base import DateQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import calendar_entries_tbl
 
 
-class CalendarEntryRepository(UserScopedBaseRepository[CalendarEntry, DateQuery]):
-    Object = CalendarEntry
+class CalendarEntryRepository(UserScopedBaseRepository[entities.CalendarEntry, DateQuery]):
+    Object = entities.CalendarEntry
     table = calendar_entries_tbl
     QueryClass = DateQuery
     # Exclude 'date' - it's a database-only field for querying (computed from starts_at)
@@ -31,7 +31,7 @@ class CalendarEntryRepository(UserScopedBaseRepository[CalendarEntry, DateQuery]
         return stmt
 
     @staticmethod
-    def entity_to_row(calendar_entry: CalendarEntry) -> dict[str, Any]:
+    def entity_to_row(calendar_entry: entities.CalendarEntry) -> dict[str, Any]:
         """Convert a CalendarEntry entity to a database row dict."""
         row: dict[str, Any] = {
             "id": calendar_entry.id,

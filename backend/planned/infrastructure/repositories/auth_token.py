@@ -3,16 +3,16 @@ from uuid import UUID
 
 from sqlalchemy.sql import Select
 
-from planned.domain.entities import AuthToken
+from planned.domain import entities
 from planned.infrastructure.database.tables import auth_tokens_tbl
 
 from .base import AuthTokenQuery, BaseRepository
 
 
-class AuthTokenRepository(BaseRepository[AuthToken, AuthTokenQuery]):
+class AuthTokenRepository(BaseRepository[entities.AuthToken, AuthTokenQuery]):
     """AuthTokenRepository is NOT user-scoped - it can be used for any user's auth tokens."""
 
-    Object = AuthToken
+    Object = entities.AuthToken
     table = auth_tokens_tbl
     QueryClass = AuthTokenQuery
 
@@ -32,12 +32,12 @@ class AuthTokenRepository(BaseRepository[AuthToken, AuthTokenQuery]):
 
         return stmt
 
-    async def get_by_user(self, user_id: UUID) -> list[AuthToken]:
+    async def get_by_user(self, user_id: UUID) -> list[entities.AuthToken]:
         """Get all auth tokens for a user."""
         return await self.search_query(AuthTokenQuery(user_id=user_id))
 
     @staticmethod
-    def entity_to_row(auth_token: AuthToken) -> dict[str, Any]:
+    def entity_to_row(auth_token: entities.AuthToken) -> dict[str, Any]:
         """Convert an AuthToken entity to a database row dict."""
         row: dict[str, Any] = {
             "id": auth_token.id,

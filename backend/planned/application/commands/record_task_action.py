@@ -5,7 +5,7 @@ from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import Action, Day, Task
+from planned.domain import entities
 
 from .base import Command, CommandHandler
 
@@ -20,16 +20,16 @@ class RecordTaskActionCommand(Command):
 
     user_id: UUID
     task_id: UUID
-    action: Action
+    action: entities.Action
 
 
-class RecordTaskActionHandler(CommandHandler[RecordTaskActionCommand, Task]):
+class RecordTaskActionHandler(CommandHandler[RecordTaskActionCommand, entities.Task]):
     """Handles RecordTaskActionCommand."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, cmd: RecordTaskActionCommand) -> Task:
+    async def handle(self, cmd: RecordTaskActionCommand) -> entities.Task:
         """Record an action on a task through the Day aggregate root.
 
         Args:
@@ -46,7 +46,9 @@ class RecordTaskActionHandler(CommandHandler[RecordTaskActionCommand, Task]):
             task = await uow.tasks.get(cmd.task_id)
 
             # Get the Day aggregate root using the task's scheduled_date
-            day_id = Day.id_from_date_and_user(task.scheduled_date, cmd.user_id)
+            day_id = entities.Day.id_from_date_and_user(
+                task.scheduled_date, cmd.user_id
+            )
             try:
                 day = await uow.days.get(day_id)
             except NotFoundError:
@@ -57,7 +59,7 @@ class RecordTaskActionHandler(CommandHandler[RecordTaskActionCommand, Task]):
                     task.scheduled_date.weekday()
                 ]
                 template = await uow.day_templates.get_by_slug(template_slug)
-                day = Day.create_for_date(
+                day = entities.Day.create_for_date(
                     task.scheduled_date,
                     user_id=cmd.user_id,
                     template=template,

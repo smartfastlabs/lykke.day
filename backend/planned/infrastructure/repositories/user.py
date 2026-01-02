@@ -2,7 +2,7 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from planned.domain.entities import User
+from planned.domain import entities
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.database.tables import users_tbl
 from sqlalchemy import select
@@ -10,10 +10,10 @@ from sqlalchemy import select
 from .base import BaseQuery, BaseRepository
 
 
-class UserRepository(BaseRepository[User, BaseQuery]):
+class UserRepository(BaseRepository[entities.User, BaseQuery]):
     """UserRepository is NOT user-scoped - it's used for user management."""
 
-    Object = User
+    Object = entities.User
     table = users_tbl
     QueryClass = BaseQuery
 
@@ -21,7 +21,7 @@ class UserRepository(BaseRepository[User, BaseQuery]):
         """Initialize UserRepository without user scoping."""
         super().__init__()
 
-    async def get_by_email(self, email: str) -> User | None:
+    async def get_by_email(self, email: str) -> entities.User | None:
         """Get a user by email address."""
         async with self._get_connection(for_write=False) as conn:
             stmt = select(self.table).where(self.table.c.email == email)
@@ -34,7 +34,7 @@ class UserRepository(BaseRepository[User, BaseQuery]):
             return self.row_to_entity(dict(row))
 
     @staticmethod
-    def entity_to_row(user: User) -> dict[str, Any]:
+    def entity_to_row(user: entities.User) -> dict[str, Any]:
         """Convert a User entity to a database row dict."""
         row: dict[str, Any] = {
             "id": user.id,
@@ -61,7 +61,7 @@ class UserRepository(BaseRepository[User, BaseQuery]):
         return row
 
     @staticmethod
-    def row_to_entity(row: dict[str, Any]) -> User:
+    def row_to_entity(row: dict[str, Any]) -> entities.User:
         """Convert a database row dict to a User entity."""
         data = dict(row)
 
@@ -77,4 +77,4 @@ class UserRepository(BaseRepository[User, BaseQuery]):
         else:
             data["settings"] = UserSetting()
 
-        return User.model_validate(data, from_attributes=True)
+        return entities.User.model_validate(data, from_attributes=True)

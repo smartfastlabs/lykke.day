@@ -4,8 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, Depends
 
 from planned.application.repositories import PushSubscriptionRepositoryProtocol
-from planned.domain import entities as objects
-from planned.domain.entities import User
+from planned.domain import entities
 from planned.domain.value_objects.base import BaseRequestObject, BaseValueObject
 from planned.infrastructure.gateways import web_push
 
@@ -31,7 +30,7 @@ async def list_subscriptions(
     push_subscription_repo: Annotated[PushSubscriptionRepositoryProtocol, Depends(
         get_push_subscription_repo
     )],
-) -> list[objects.PushSubscription]:
+) -> list[entities.PushSubscription]:
     return await push_subscription_repo.all()
 
 
@@ -49,13 +48,13 @@ async def delete_subscription(
 async def subscribe(
     background_tasks: BackgroundTasks,
     request: SubscriptionRequest,
-    user: Annotated[User, Depends(get_current_user)],
+    user: Annotated[entities.User, Depends(get_current_user)],
     push_subscription_repo: Annotated[PushSubscriptionRepositoryProtocol, Depends(
         get_push_subscription_repo
     )],
-) -> objects.PushSubscription:
-    result: objects.PushSubscription = await push_subscription_repo.put(
-        objects.PushSubscription(
+) -> entities.PushSubscription:
+    result: entities.PushSubscription = await push_subscription_repo.put(
+        entities.PushSubscription(
             user_id=user.id,
             device_name=request.device_name,
             endpoint=request.endpoint,

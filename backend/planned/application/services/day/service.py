@@ -26,7 +26,7 @@ from planned.application.queries.get_upcoming_items import (
 from planned.application.services.base import BaseService
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.constants import DEFAULT_LOOK_AHEAD
-from planned.domain.entities import CalendarEntry, Day, DayContext, Task, User
+from planned.domain import entities
 
 
 class DayService(BaseService):
@@ -45,7 +45,7 @@ class DayService(BaseService):
 
     def __init__(
         self,
-        user: User,
+        user: entities.User,
         date: datetime.date,
         uow_factory: UnitOfWorkFactory,
     ) -> None:
@@ -72,7 +72,7 @@ class DayService(BaseService):
         self,
         date: datetime.date | None = None,
         user_id: UUID | None = None,
-    ) -> DayContext:
+    ) -> entities.DayContext:
         """Load complete day context for the current or specified date.
 
         Args:
@@ -91,7 +91,7 @@ class DayService(BaseService):
     async def get_or_preview(
         self,
         date: datetime.date,
-    ) -> Day:
+    ) -> entities.Day:
         """Get an existing day or return a preview (unsaved) day.
 
         Args:
@@ -106,7 +106,7 @@ class DayService(BaseService):
     async def get_or_create(
         self,
         date: datetime.date,
-    ) -> Day:
+    ) -> entities.Day:
         """Get an existing day or create a new one.
 
         Args:
@@ -118,7 +118,7 @@ class DayService(BaseService):
         cmd = CreateOrGetDayCommand(user_id=self.user.id, date=date)
         return await self._create_or_get_day_handler.handle(cmd)
 
-    async def save(self, day: Day) -> None:
+    async def save(self, day: entities.Day) -> None:
         """Save a day to the database.
 
         Args:
@@ -130,7 +130,7 @@ class DayService(BaseService):
     async def get_upcoming_tasks(
         self,
         look_ahead: datetime.timedelta = DEFAULT_LOOK_AHEAD,
-    ) -> list[Task]:
+    ) -> list[entities.Task]:
         """Get tasks that are upcoming within the look-ahead window.
 
         Args:
@@ -147,7 +147,7 @@ class DayService(BaseService):
     async def get_upcoming_calendar_entries(
         self,
         look_ahead: datetime.timedelta = DEFAULT_LOOK_AHEAD,
-    ) -> list[CalendarEntry]:
+    ) -> list[entities.CalendarEntry]:
         """Get calendar entries that are upcoming within the look-ahead window.
 
         Args:

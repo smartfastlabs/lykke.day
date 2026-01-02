@@ -2,12 +2,12 @@
 
 import datetime
 
-from planned.domain import entities as objects
+from planned.domain import entities
 from planned.infrastructure.utils.dates import get_current_datetime
 
 
 def is_calendar_entry_eligible_for_upcoming(
-    calendar_entry: objects.CalendarEntry,
+    calendar_entry: entities.CalendarEntry,
     now: datetime.datetime,
     look_ahead: datetime.timedelta,
 ) -> bool:
@@ -42,9 +42,9 @@ def is_calendar_entry_eligible_for_upcoming(
 
 
 def filter_upcoming_calendar_entries(
-    calendar_entries: list[objects.CalendarEntry],
+    calendar_entries: list[entities.CalendarEntry],
     look_ahead: datetime.timedelta,
-) -> list[objects.CalendarEntry]:
+) -> list[entities.CalendarEntry]:
     """Filter calendar entries to only include those that are upcoming within the look-ahead window.
 
     Args:
@@ -55,7 +55,7 @@ def filter_upcoming_calendar_entries(
         List of calendar entries that are upcoming within the look-ahead window
     """
     now: datetime.datetime = get_current_datetime()
-    result: list[objects.CalendarEntry] = []
+    result: list[entities.CalendarEntry] = []
 
     for calendar_entry in calendar_entries:
         if is_calendar_entry_eligible_for_upcoming(calendar_entry, now, look_ahead):

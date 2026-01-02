@@ -10,8 +10,7 @@ from loguru import logger
 from planned.application.queries.preview_tasks import PreviewTasksHandler, PreviewTasksQuery
 from planned.application.unit_of_work import UnitOfWorkFactory, UnitOfWorkProtocol
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities as objects
-from planned.domain.entities import DayContext, DayTemplate
+from planned.domain import entities
 from planned.domain.value_objects.query import DateQuery
 
 from .base import Query, QueryHandler
@@ -30,14 +29,14 @@ class PreviewDayQuery(Query):
     template_id: UUID | None = None
 
 
-class PreviewDayHandler(QueryHandler[PreviewDayQuery, DayContext]):
+class PreviewDayHandler(QueryHandler[PreviewDayQuery, entities.DayContext]):
     """Handles PreviewDayQuery."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
         self._preview_tasks_handler = PreviewTasksHandler(uow_factory)
 
-    async def handle(self, query: PreviewDayQuery) -> DayContext:
+    async def handle(self, query: PreviewDayQuery) -> entities.DayContext:
         """Preview what a day would look like if scheduled.
 
         Args:
@@ -51,7 +50,7 @@ class PreviewDayHandler(QueryHandler[PreviewDayQuery, DayContext]):
             template = await self._get_template(uow, query)
 
             # Create preview day
-            day = objects.Day.create_for_date(
+            day = entities.Day.create_for_date(
                 query.date,
                 user_id=query.user_id,
                 template=template,
@@ -68,7 +67,7 @@ class PreviewDayHandler(QueryHandler[PreviewDayQuery, DayContext]):
                 uow.messages.search_query(DateQuery(date=query.date)),
             )
 
-            return DayContext(
+            return entities.DayContext(
                 day=day,
                 tasks=tasks,
                 calendar_entries=calendar_entries,
@@ -79,14 +78,14 @@ class PreviewDayHandler(QueryHandler[PreviewDayQuery, DayContext]):
         self,
         uow: UnitOfWorkProtocol,
         query: PreviewDayQuery,
-    ) -> DayTemplate:
+    ) -> entities.DayTemplate:
         """Get the template to use for the preview."""
         if query.template_id is not None:
             return await uow.day_templates.get(query.template_id)
 
         # Try to get from existing day
         try:
-            day_id = objects.Day.id_from_date_and_user(query.date, query.user_id)
+            day_id = entities.Day.id_from_date_and_user(query.date, query.user_id)
             existing_day = await uow.days.get(day_id)
             if existing_day.template:
                 return existing_day.template

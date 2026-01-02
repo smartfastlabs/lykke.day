@@ -3,14 +3,14 @@ from uuid import UUID
 
 from sqlalchemy.sql import Select
 
-from planned.domain.entities import DayTemplate
+from planned.domain import entities
 from planned.infrastructure.database.tables import day_templates_tbl
 
 from .base import DayTemplateQuery, UserScopedBaseRepository
 
 
-class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, DayTemplateQuery]):
-    Object = DayTemplate
+class DayTemplateRepository(UserScopedBaseRepository[entities.DayTemplate, DayTemplateQuery]):
+    Object = entities.DayTemplate
     table = day_templates_tbl
     QueryClass = DayTemplateQuery
 
@@ -28,7 +28,7 @@ class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, DayTemplateQue
         return stmt
 
     @staticmethod
-    def entity_to_row(template: DayTemplate) -> dict[str, Any]:
+    def entity_to_row(template: entities.DayTemplate) -> dict[str, Any]:
         """Convert a DayTemplate entity to a database row dict."""
         row: dict[str, Any] = {
             "id": template.id,
@@ -50,7 +50,7 @@ class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, DayTemplateQue
         return row
 
     @classmethod
-    def row_to_entity(cls, row: dict[str, Any]) -> DayTemplate:
+    def row_to_entity(cls, row: dict[str, Any]) -> entities.DayTemplate:
         """Convert a database row dict to a DayTemplate entity.
 
         Overrides base to handle UUID conversion for routine_ids stored as JSON strings.
@@ -66,8 +66,8 @@ class DayTemplateRepository(UserScopedBaseRepository[DayTemplate, DayTemplateQue
                 for routine_id in data["routine_ids"]
             ]
 
-        return DayTemplate.model_validate(data, from_attributes=True)
+        return entities.DayTemplate.model_validate(data, from_attributes=True)
 
-    async def get_by_slug(self, slug: str) -> DayTemplate:
+    async def get_by_slug(self, slug: str) -> entities.DayTemplate:
         """Get a DayTemplate by slug (must be scoped to a user)."""
         return await self.get_one(DayTemplateQuery(slug=slug))

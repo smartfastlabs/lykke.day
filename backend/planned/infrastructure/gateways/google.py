@@ -13,7 +13,7 @@ from loguru import logger
 from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from planned.core.config import settings
 from planned.core.exceptions import TokenExpiredError
-from planned.domain.entities import AuthToken, Calendar, CalendarEntry, TaskFrequency
+from planned.domain import entities
 
 if TYPE_CHECKING:
     pass
@@ -41,7 +41,7 @@ def get_flow(flow_name: str) -> Flow:
     )
 
 
-def get_google_calendar(calendar: Calendar, token: AuthToken) -> GoogleCalendar:
+def get_google_calendar(calendar: entities.Calendar, token: entities.AuthToken) -> GoogleCalendar:
     try:
         credentials = token.google_credentials()
         # Force a refresh check
@@ -60,7 +60,7 @@ def get_google_calendar(calendar: Calendar, token: AuthToken) -> GoogleCalendar:
         raise TokenExpiredError("User needs to re-authenticate")
 
 
-def parse_recurrence_frequency(recurrence: list[str] | None) -> TaskFrequency:
+def parse_recurrence_frequency(recurrence: list[str] | None) -> entities.TaskFrequency:
     """Parse Google Calendar recurrence rules to determine TaskFrequency.
 
     Args:
@@ -71,7 +71,7 @@ def parse_recurrence_frequency(recurrence: list[str] | None) -> TaskFrequency:
         The appropriate TaskFrequency enum value.
     """
     if not recurrence:
-        return TaskFrequency.ONCE
+        return entities.TaskFrequency.ONCE
 
     for rule in recurrence:
         if not rule.startswith("RRULE:"):
@@ -85,7 +85,7 @@ def parse_recurrence_frequency(recurrence: list[str] | None) -> TaskFrequency:
         freq = freq_match.group(1).upper()
 
         if freq == "DAILY":
-            return TaskFrequency.DAILY
+            return entities.TaskFrequency.DAILY
         elif freq == "WEEKLY":
             # Check if it's a custom weekly schedule (multiple specific days)
             byday_match = re.search(r"BYDAY=([A-Z,]+)", rule)
@@ -94,27 +94,27 @@ def parse_recurrence_frequency(recurrence: list[str] | None) -> TaskFrequency:
                 print(days)
                 # If more than one day specified, it's a custom weekly schedule
                 if days == {"MO", "TU", "WE", "TH", "FR"}:
-                    return TaskFrequency.WEEK_DAYS
+                    return entities.TaskFrequency.WEEK_DAYS
                 elif days == {"SA", "SU"}:
-                    return TaskFrequency.WEEKEND_DAYS
+                    return entities.TaskFrequency.WEEKEND_DAYS
                 elif len(days) == 1:
-                    return TaskFrequency.WEEKLY
+                    return entities.TaskFrequency.WEEKLY
                 elif len(days) == 2:
-                    return TaskFrequency.BI_WEEKLY
-                return TaskFrequency.CUSTOM_WEEKLY
+                    return entities.TaskFrequency.BI_WEEKLY
+                return entities.TaskFrequency.CUSTOM_WEEKLY
         elif freq == "MONTHLY":
-            return TaskFrequency.MONTHLY
+            return entities.TaskFrequency.MONTHLY
         elif freq == "YEARLY":
-            return TaskFrequency.YEARLY
+            return entities.TaskFrequency.YEARLY
 
-    return TaskFrequency.ONCE
+    return entities.TaskFrequency.ONCE
 
 
 def get_event_frequency(
     event: GoogleEvent,
     gc: GoogleCalendar,
-    frequency_cache: dict[str, TaskFrequency],
-) -> TaskFrequency:
+    frequency_cache: dict[str, entities.TaskFrequency],
+) -> entities.TaskFrequency:
     """Determine the frequency of an event, fetching parent event if necessary.
 
     Args:
@@ -145,7 +145,7 @@ def get_event_frequency(
         logger.warning(
             f"Failed to fetch parent event {event.recurring_event_id} for event {event.id}: {e}"
         )
-        frequency = TaskFrequency.ONCE
+        frequency = entities.TaskFrequency.ONCE
 
     # Cache the result
     frequency_cache[event.recurring_event_id] = frequency
@@ -166,13 +166,13 @@ def is_after(
 
 
 def _load_calendar_events_sync(
-    calendar: Calendar,
+    calendar: entities.Calendar,
     lookback: datetime,
-    token: AuthToken,
-) -> list[CalendarEntry]:
+    token: entities.AuthToken,
+) -> list[entities.CalendarEntry]:
     """Synchronous implementation of calendar entry loading."""
-    calendar_entries: list[CalendarEntry] = []
-    frequency_cache: dict[str, TaskFrequency] = {}
+    calendar_entries: list[entities.CalendarEntry] = []
+    frequency_cache: dict[str, entities.TaskFrequency] = {}
 
     logger.info(f"Loading calendar entries for calendar {calendar.name}...")
     gc = get_google_calendar(calendar, token)
@@ -193,7 +193,7 @@ def _load_calendar_events_sync(
             # Get frequency, fetching parent event if this is a recurring instance
             frequency = get_event_frequency(event, gc, frequency_cache)
             calendar_entries.append(
-                CalendarEntry.from_google(
+                entities.CalendarEntry.from_google(
                     calendar.user_id,
                     calendar.id,
                     event,
@@ -208,10 +208,10 @@ def _load_calendar_events_sync(
 
 
 async def load_calendar_events(
-    calendar: Calendar,
+    calendar: entities.Calendar,
     lookback: datetime,
-    token: AuthToken,
-) -> list[CalendarEntry]:
+    token: entities.AuthToken,
+) -> list[entities.CalendarEntry]:
     """Asynchronously load calendar entries by running the sync operation in a thread pool."""
     try:
         return await asyncio.to_thread(
@@ -229,10 +229,10 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
 
     async def load_calendar_events(
         self,
-        calendar: Calendar,
+        calendar: entities.Calendar,
         lookback: datetime,
-        token: AuthToken,
-    ) -> list[CalendarEntry]:
+        token: entities.AuthToken,
+    ) -> list[entities.CalendarEntry]:
         """Load calendar entries from Google Calendar."""
         return await load_calendar_events(
             calendar,
