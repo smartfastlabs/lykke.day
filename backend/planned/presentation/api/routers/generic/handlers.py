@@ -1,9 +1,20 @@
-"""Reusable handler functions for CRUD operations using CQRS pattern."""
+"""Reusable handler functions for CRUD operations using CQRS pattern.
+
+All operations are dispatched through the Mediator to ensure consistent
+transaction handling and domain event dispatching.
+"""
 
 from typing import Any
 from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.commands import (
+    BulkCreateEntitiesCommand,
+    CreateEntityCommand,
+    DeleteEntityCommand,
+    UpdateEntityCommand,
+)
+from planned.application.mediator import Mediator
+from planned.application.queries import GetEntityQuery, ListEntitiesQuery
 from planned.domain.entities import User
 from planned.domain.value_objects.query import BaseQuery, PagedQueryResponse
 
@@ -14,7 +25,7 @@ async def handle_get(
     entity_id: UUID,
     repository_name: str,
     user: User,
-    uow_factory: UnitOfWorkFactory,
+    mediator: Mediator,
 ) -> Any:
     """Handle GET request for a single entity.
 
@@ -22,7 +33,7 @@ async def handle_get(
         entity_id: UUID of the entity to retrieve
         repository_name: Name of the repository attribute on UoW
         user: Current user
-        uow_factory: Factory for creating UnitOfWork instances
+        mediator: Mediator for dispatching queries
 
     Returns:
         The entity
@@ -30,15 +41,19 @@ async def handle_get(
     Raises:
         NotFoundError: If entity not found
     """
-    async with uow_factory.create(user.id) as uow:
-        repo = getattr(uow, repository_name)
-        return await repo.get(entity_id)
+    return await mediator.query(
+        GetEntityQuery(
+            user_id=user.id,
+            entity_id=entity_id,
+            repository_name=repository_name,
+        )
+    )
 
 
 async def handle_list(
     repository_name: str,
     user: User,
-    uow_factory: UnitOfWorkFactory,
+    mediator: Mediator,
     config: EntityRouterConfig,
     query: BaseQuery | None = None,
     limit: int = 50,
@@ -49,7 +64,7 @@ async def handle_list(
     Args:
         repository_name: Name of the repository attribute on UoW
         user: Current user
-        uow_factory: Factory for creating UnitOfWork instances
+        mediator: Mediator for dispatching queries
         config: Router configuration
         query: Optional search query
         limit: Page size
@@ -58,41 +73,23 @@ async def handle_list(
     Returns:
         List of entities or PagedQueryResponse if pagination enabled
     """
-    async with uow_factory.create(user.id) as uow:
-        repo = getattr(uow, repository_name)
-
-        # Get items using query or all()
-        if query is not None and hasattr(repo, "search_query"):
-            items = await repo.search_query(query)
-        elif hasattr(repo, "all"):
-            items = await repo.all()
-        else:
-            raise ValueError(f"Repository {repository_name} does not support list")
-
-        if not config.enable_pagination:
-            return items  # type: ignore[no-any-return]
-
-        # Apply pagination
-        total = len(items)
-        start = offset
-        end = start + limit
-        paginated_items = items[start:end]
-
-        return PagedQueryResponse(
-            items=paginated_items,
-            total=total,
+    return await mediator.query(
+        ListEntitiesQuery(
+            user_id=user.id,
+            repository_name=repository_name,
+            search_query=query,
             limit=limit,
             offset=offset,
-            has_next=end < total,
-            has_previous=start > 0,
+            paginate=config.enable_pagination,
         )
+    )
 
 
 async def handle_create(
     entity_data: Any,
     repository_name: str,
     user: User,
-    uow_factory: UnitOfWorkFactory,
+    mediator: Mediator,
 ) -> Any:
     """Handle POST request for creating an entity.
 
@@ -100,16 +97,18 @@ async def handle_create(
         entity_data: Entity data to create
         repository_name: Name of the repository attribute on UoW
         user: Current user
-        uow_factory: Factory for creating UnitOfWork instances
+        mediator: Mediator for dispatching commands
 
     Returns:
         Created entity
     """
-    async with uow_factory.create(user.id) as uow:
-        repo = getattr(uow, repository_name)
-        entity = await repo.put(entity_data)
-        await uow.commit()
-        return entity
+    return await mediator.execute(
+        CreateEntityCommand(
+            user_id=user.id,
+            repository_name=repository_name,
+            entity=entity_data,
+        )
+    )
 
 
 async def handle_update(
@@ -117,7 +116,7 @@ async def handle_update(
     entity_data: Any,
     repository_name: str,
     user: User,
-    uow_factory: UnitOfWorkFactory,
+    mediator: Mediator,
 ) -> Any:
     """Handle PUT/PATCH request for updating an entity.
 
@@ -126,7 +125,7 @@ async def handle_update(
         entity_data: Updated entity data
         repository_name: Name of the repository attribute on UoW
         user: Current user
-        uow_factory: Factory for creating UnitOfWork instances
+        mediator: Mediator for dispatching commands
 
     Returns:
         Updated entity
@@ -134,34 +133,21 @@ async def handle_update(
     Raises:
         NotFoundError: If entity not found
     """
-    async with uow_factory.create(user.id) as uow:
-        repo = getattr(uow, repository_name)
-
-        # Get existing entity
-        existing = await repo.get(entity_id)
-
-        # Merge updates
-        if hasattr(existing, "model_copy") and hasattr(entity_data, "model_dump"):
-            updated = existing.model_copy(
-                update=entity_data.model_dump(exclude_unset=True)
-            )
-        else:
-            updated = entity_data
-
-        # Ensure ID matches
-        if hasattr(updated, "id"):
-            object.__setattr__(updated, "id", entity_id)
-
-        entity = await repo.put(updated)
-        await uow.commit()
-        return entity
+    return await mediator.execute(
+        UpdateEntityCommand(
+            user_id=user.id,
+            repository_name=repository_name,
+            entity_id=entity_id,
+            entity_data=entity_data,
+        )
+    )
 
 
 async def handle_delete(
     entity_id: UUID,
     repository_name: str,
     user: User,
-    uow_factory: UnitOfWorkFactory,
+    mediator: Mediator,
 ) -> None:
     """Handle DELETE request for an entity.
 
@@ -169,23 +155,25 @@ async def handle_delete(
         entity_id: UUID of the entity to delete
         repository_name: Name of the repository attribute on UoW
         user: Current user
-        uow_factory: Factory for creating UnitOfWork instances
+        mediator: Mediator for dispatching commands
 
     Raises:
         NotFoundError: If entity not found
     """
-    async with uow_factory.create(user.id) as uow:
-        repo = getattr(uow, repository_name)
-        entity = await repo.get(entity_id)
-        await repo.delete(entity)
-        await uow.commit()
+    await mediator.execute(
+        DeleteEntityCommand(
+            user_id=user.id,
+            repository_name=repository_name,
+            entity_id=entity_id,
+        )
+    )
 
 
 async def handle_bulk_create(
     entities: list[Any],
     repository_name: str,
     user: User,
-    uow_factory: UnitOfWorkFactory,
+    mediator: Mediator,
 ) -> list[Any]:
     """Handle POST request for bulk creating entities.
 
@@ -193,7 +181,7 @@ async def handle_bulk_create(
         entities: List of entity objects to create
         repository_name: Name of the repository attribute on UoW
         user: Current user
-        uow_factory: Factory for creating UnitOfWork instances
+        mediator: Mediator for dispatching commands
 
     Returns:
         List of created entities
@@ -201,8 +189,10 @@ async def handle_bulk_create(
     if not entities:
         return []
 
-    async with uow_factory.create(user.id) as uow:
-        repo = getattr(uow, repository_name)
-        created = await repo.insert_many(*entities)
-        await uow.commit()
-        return created  # type: ignore[no-any-return]
+    return await mediator.execute(
+        BulkCreateEntitiesCommand(
+            user_id=user.id,
+            repository_name=repository_name,
+            entities=tuple(entities),
+        )
+    )

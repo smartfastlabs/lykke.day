@@ -4,9 +4,21 @@ The mediator provides a clean interface for executing CQRS operations
 without the caller needing to know about specific handler implementations.
 """
 
-from typing import Any, cast, overload
+from typing import Any, overload
 
 from planned.application.commands.base import Command, CommandHandler
+from planned.application.commands.bulk_create_entities import (
+    BulkCreateEntitiesCommand,
+    BulkCreateEntitiesHandler,
+)
+from planned.application.commands.create_entity import (
+    CreateEntityCommand,
+    CreateEntityHandler,
+)
+from planned.application.commands.delete_entity import (
+    DeleteEntityCommand,
+    DeleteEntityHandler,
+)
 from planned.application.commands.record_task_action import (
     RecordTaskActionCommand,
     RecordTaskActionHandler,
@@ -16,14 +28,24 @@ from planned.application.commands.schedule_day import (
     ScheduleDayHandler,
 )
 from planned.application.commands.update_day import UpdateDayCommand, UpdateDayHandler
+from planned.application.commands.update_entity import (
+    UpdateEntityCommand,
+    UpdateEntityHandler,
+)
 from planned.application.queries.base import Query, QueryHandler
 from planned.application.queries.get_day_context import (
     GetDayContextHandler,
     GetDayContextQuery,
 )
+from planned.application.queries.get_entity import GetEntityHandler, GetEntityQuery
+from planned.application.queries.list_entities import (
+    ListEntitiesHandler,
+    ListEntitiesQuery,
+)
 from planned.application.queries.preview_day import PreviewDayHandler, PreviewDayQuery
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain.entities import Day, DayContext, Task
+from planned.domain.value_objects.query import PagedQueryResponse
 
 
 class Mediator:
@@ -48,16 +70,25 @@ class Mediator:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-        # Initialize handlers
+        # Initialize query handlers
         self._query_handlers: dict[type[Query], QueryHandler[Any, Any]] = {
             GetDayContextQuery: GetDayContextHandler(uow_factory),
             PreviewDayQuery: PreviewDayHandler(uow_factory),
+            # Generic CRUD queries
+            GetEntityQuery: GetEntityHandler(uow_factory),
+            ListEntitiesQuery: ListEntitiesHandler(uow_factory),
         }
 
+        # Initialize command handlers
         self._command_handlers: dict[type[Command], CommandHandler[Any, Any]] = {
             ScheduleDayCommand: ScheduleDayHandler(uow_factory),
             UpdateDayCommand: UpdateDayHandler(uow_factory),
             RecordTaskActionCommand: RecordTaskActionHandler(uow_factory),
+            # Generic CRUD commands
+            CreateEntityCommand: CreateEntityHandler(uow_factory),
+            UpdateEntityCommand: UpdateEntityHandler(uow_factory),
+            DeleteEntityCommand: DeleteEntityHandler(uow_factory),
+            BulkCreateEntitiesCommand: BulkCreateEntitiesHandler(uow_factory),
         }
 
     # ========================================================================
@@ -69,6 +100,14 @@ class Mediator:
 
     @overload
     async def query(self, query: PreviewDayQuery) -> DayContext: ...
+
+    @overload
+    async def query(self, query: GetEntityQuery) -> Any: ...
+
+    @overload
+    async def query(
+        self, query: ListEntitiesQuery
+    ) -> list[Any] | PagedQueryResponse[Any]: ...
 
     async def query(self, query: Query) -> Any:
         """Execute a query and return the result.
@@ -101,6 +140,18 @@ class Mediator:
 
     @overload
     async def execute(self, command: RecordTaskActionCommand) -> Task: ...
+
+    @overload
+    async def execute(self, command: CreateEntityCommand) -> Any: ...
+
+    @overload
+    async def execute(self, command: UpdateEntityCommand) -> Any: ...
+
+    @overload
+    async def execute(self, command: DeleteEntityCommand) -> None: ...
+
+    @overload
+    async def execute(self, command: BulkCreateEntitiesCommand) -> list[Any]: ...
 
     async def execute(self, command: Command) -> Any:
         """Execute a command and return the result.
