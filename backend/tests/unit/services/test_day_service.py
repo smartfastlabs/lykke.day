@@ -378,11 +378,11 @@ async def test_get_upcoming_tasks_123(
 ):
     """Test get_upcoming_tasks returns tasks within look_ahead window."""
     date = test_datetime_noon.date()
-    # Use frozen datetime from fixture
-    now = test_datetime_noon.replace(
-        year=2025, month=11, day=27, hour=12, minute=0, second=0
-    )
-    future_time = (now + timedelta(minutes=15)).time()
+    # Use frozen datetime from fixture - test_datetime_noon is 12:00:00-6:00 (18:00:00 UTC)
+    # get_current_time() will return 12:00:00 in local timezone
+    from datetime import time
+
+    future_time = time(12, 15)  # 15 minutes in the future
     template = DayTemplate(
         slug="default",
         user_id=test_user_id,
@@ -416,7 +416,7 @@ async def test_get_upcoming_tasks_123(
     )
 
     # Task that should be excluded (too far in future)
-    far_future_time = (now + timedelta(hours=2)).time()
+    far_future_time = time(14, 0)  # 2 hours in the future
     task2 = Task(
         id=uuid4(),
         user_id=test_user_id,
@@ -464,14 +464,21 @@ async def test_get_upcoming_tasks_123(
         messages=[],
     )
 
+    # Mock repositories for DayContextLoader
+    from planned.domain.value_objects.query import DateQuery
+
+    day_id = Day.id_from_date_and_user(date, test_user_id)
+    allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
+    allow(mock_day_template_repo).get_by_slug("default").and_return(template)
+    allow(mock_task_repo).search_query.and_return([task1, task2, task3])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
+    allow(mock_message_repo).search_query.and_return([])
+
     service = DayService(
         user=test_user,
         date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
-
-    # Mock load_context to return the day_ctx
-    allow(service).load_context.and_return(day_ctx)
 
     # Time is frozen by test_datetime_noon fixture
     result = await service.get_upcoming_tasks(look_ahead=timedelta(minutes=30))
@@ -580,14 +587,28 @@ async def test_get_upcoming_calendar_entries(
         messages=[],
     )
 
+    # Mock repositories for DayContextLoader
+    from planned.domain.value_objects.query import DateQuery
+
+    day_id = Day.id_from_date_and_user(date, test_user_id)
+    allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
+    allow(mock_day_template_repo).get_by_slug("default").and_return(template)
+    allow(mock_task_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return(
+        [
+            calendar_entry1,
+            calendar_entry2,
+            calendar_entry3,
+            calendar_entry4,
+        ]
+    )
+    allow(mock_message_repo).search_query.and_return([])
+
     service = DayService(
         user=test_user,
         date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
-
-    # Mock load_context to return the day_ctx
-    allow(service).load_context.and_return(day_ctx)
 
     # Time is frozen by test_datetime_noon fixture
     result = await service.get_upcoming_calendar_entries(
@@ -798,14 +819,19 @@ async def test_get_upcoming_tasks_with_available_time(
         day=day, tasks=[task1, task2], calendar_entries=[], messages=[]
     )
 
+    # Mock repositories for DayContextLoader
+    day_id = Day.id_from_date_and_user(date, test_user_id)
+    allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
+    allow(mock_day_template_repo).get_by_slug("default").and_return(template)
+    allow(mock_task_repo).search_query.and_return([task1, task2])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
+    allow(mock_message_repo).search_query.and_return([])
+
     service = DayService(
         user=test_user,
         date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
-
-    # Mock load_context to return the day_ctx
-    allow(service).load_context.and_return(day_ctx)
 
     # Time is frozen by test_datetime_noon fixture
     result = await service.get_upcoming_tasks(look_ahead=timedelta(minutes=30))
@@ -892,14 +918,19 @@ async def test_get_upcoming_tasks_with_end_time(
         day=day, tasks=[task1, task2], calendar_entries=[], messages=[]
     )
 
+    # Mock repositories for DayContextLoader
+    day_id = Day.id_from_date_and_user(date, test_user_id)
+    allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
+    allow(mock_day_template_repo).get_by_slug("default").and_return(template)
+    allow(mock_task_repo).search_query.and_return([task1, task2])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
+    allow(mock_message_repo).search_query.and_return([])
+
     service = DayService(
         user=test_user,
         date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
-
-    # Mock load_context to return the day_ctx
-    allow(service).load_context.and_return(day_ctx)
 
     # Time is frozen by test_datetime_noon fixture
     result = await service.get_upcoming_tasks(look_ahead=timedelta(minutes=30))
@@ -984,14 +1015,19 @@ async def test_get_upcoming_tasks_excludes_completed_at(
         day=day, tasks=[task1, task2], calendar_entries=[], messages=[]
     )
 
+    # Mock repositories for DayContextLoader
+    day_id = Day.id_from_date_and_user(date, test_user_id)
+    allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
+    allow(mock_day_template_repo).get_by_slug("default").and_return(template)
+    allow(mock_task_repo).search_query.and_return([task1, task2])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
+    allow(mock_message_repo).search_query.and_return([])
+
     service = DayService(
         user=test_user,
         date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
-
-    # Mock load_context to return the day_ctx
-    allow(service).load_context.and_return(day_ctx)
 
     # Time is frozen by test_datetime_noon fixture
     result = await service.get_upcoming_tasks(look_ahead=timedelta(minutes=30))

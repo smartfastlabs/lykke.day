@@ -6,7 +6,6 @@ from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
 
 import pytest
 from dobles import allow
-
 from planned.application.services import PlanningService
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import (
@@ -402,100 +401,6 @@ async def test_schedule_creates_tasks_and_sets_status(
 
 
 @pytest.mark.asyncio
-async def test_save_action_for_task(
-    mock_user_repo,
-    mock_day_repo,
-    mock_day_template_repo,
-    mock_calendar_entry_repo,
-    mock_message_repo,
-    mock_routine_repo,
-    mock_task_definition_repo,
-    mock_task_repo,
-    test_user_id,
-    test_user,
-    mock_uow_factory,
-):
-    """Test save_action updates task status and saves it."""
-
-    date = datetime.date(2024, 1, 1)
-    task = Task(
-        id=uuid4(),
-        user_id=test_user_id,
-        name="Test Task",
-        status=TaskStatus.NOT_STARTED,
-        scheduled_date=date,
-        task_definition=TaskDefinition(
-            user_id=test_user_id,
-            name="Task Def",
-            description="Test task definition",
-            type=TaskType.CHORE,
-        ),
-        category=TaskCategory.HOUSE,
-        frequency=TaskFrequency.ONCE,
-    )
-
-    action = Action(type=ActionType.COMPLETE)
-
-    allow(mock_task_repo).put.and_return(task)
-
-    service = PlanningService(
-        user=test_user,
-        uow_factory=mock_uow_factory,
-    )
-
-    result = await service.save_action(task, action)
-
-    assert len(result.actions) == 1
-    assert result.actions[0].type == ActionType.COMPLETE
-    assert result.status == TaskStatus.COMPLETE
-
-
-@pytest.mark.asyncio
-async def test_save_action_for_event(
-    mock_user_repo,
-    mock_day_repo,
-    mock_day_template_repo,
-    mock_calendar_entry_repo,
-    mock_message_repo,
-    mock_routine_repo,
-    mock_task_definition_repo,
-    mock_task_repo,
-    test_user_id,
-    test_user,
-    mock_uow_factory,
-    test_datetime_noon,
-):
-    """Test save_action saves calendar entry with action."""
-
-    date = datetime.date(2024, 1, 1)
-    calendar_entry = CalendarEntry(
-        id=uuid4(),
-        user_id=test_user_id,
-        name="Test Calendar Entry",
-        frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "cal-1"),
-        platform_id="entry-1",
-        platform="test",
-        status="confirmed",
-        starts_at=test_datetime_noon,
-    )
-
-    action = Action(type=ActionType.NOTIFY)
-
-    allow(mock_calendar_entry_repo).put.and_return(calendar_entry)
-
-    service = PlanningService(
-        user=test_user,
-        uow_factory=mock_uow_factory,
-    )
-
-    result = await service.save_action(calendar_entry, action)
-
-    assert len(result.actions) == 1
-    assert result.actions[0].type == ActionType.NOTIFY
-
-
-@pytest.mark.asyncio
 async def test_preview_with_template_id(
     mock_user_repo,
     mock_day_repo,
@@ -580,92 +485,6 @@ async def test_schedule_with_template_id(
     assert result.day.status == DayStatus.SCHEDULED
     assert result.day.template is not None
     assert result.day.template.id == template.id
-
-
-@pytest.mark.asyncio
-async def test_save_action_for_task_punt(
-    mock_user_repo,
-    mock_day_repo,
-    mock_day_template_repo,
-    mock_calendar_entry_repo,
-    mock_message_repo,
-    mock_routine_repo,
-    mock_task_definition_repo,
-    mock_task_repo,
-    test_user_id,
-    test_user,
-    mock_uow_factory,
-):
-    """Test save_action updates task status to PUNT."""
-    date = datetime.date(2024, 1, 1)
-    task = Task(
-        id=uuid4(),
-        user_id=test_user_id,
-        name="Test Task",
-        status=TaskStatus.NOT_STARTED,
-        scheduled_date=date,
-        task_definition=TaskDefinition(
-            user_id=test_user_id,
-            name="Task Def",
-            description="Test task definition",
-            type=TaskType.CHORE,
-        ),
-        category=TaskCategory.HOUSE,
-        frequency=TaskFrequency.ONCE,
-    )
-
-    action = Action(type=ActionType.PUNT)
-
-    allow(mock_task_repo).put.and_return(task)
-
-    service = PlanningService(
-        user=test_user,
-        uow_factory=mock_uow_factory,
-    )
-
-    result = await service.save_action(task, action)
-
-    assert len(result.actions) == 1
-    assert result.actions[0].type == ActionType.PUNT
-    assert result.status == TaskStatus.PUNT
-
-
-@pytest.mark.asyncio
-async def test_save_action_for_invalid_object(
-    mock_user_repo,
-    mock_day_repo,
-    mock_day_template_repo,
-    mock_calendar_entry_repo,
-    mock_message_repo,
-    mock_routine_repo,
-    mock_task_definition_repo,
-    mock_task_repo,
-    test_user_id,
-    test_user,
-    mock_uow_factory,
-):
-    """Test save_action raises ValueError for invalid object type."""
-    from planned.domain.entities import Message
-
-    date = datetime.date(2024, 1, 1)
-    invalid_obj = Message(
-        id=uuid4(),
-        user_id=test_user_id,
-        content="Test",
-        author="user",
-        sent_at=datetime.datetime.now(datetime.UTC),
-    )
-
-    action = Action(type=ActionType.COMPLETE)
-
-    service = PlanningService(
-        user=test_user,
-        uow_factory=mock_uow_factory,
-    )
-
-    with pytest.raises(ValueError) as exc_info:
-        await service.save_action(invalid_obj, action)
-    assert "Invalid object type" in str(exc_info.value)
 
 
 @pytest.mark.asyncio

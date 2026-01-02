@@ -91,21 +91,14 @@ async def test_build_notification_payload_single_task(
         frequency=TaskFrequency.ONCE,
     )
 
-    service = create_sheppard_service(
-        user=test_user,
-        day_svc=day_svc,
-        uow_factory=mock_uow_factory,
-        calendar_service=mock_calendar_service,
-        planning_service=mock_planning_service,
-        web_push_gateway=mock_web_push_gateway,
-    )
+    from planned.domain.services.notification import NotificationPayloadBuilder
 
-    payload = service._build_notification_payload([task])
+    payload = NotificationPayloadBuilder.build_for_tasks([task])
 
     assert payload.title == "Test Task"
     assert "Test Task" in payload.body
     assert len(payload.data["tasks"]) == 1
-    assert payload.data["tasks"][0]["id"] == task.id
+    assert payload.data["tasks"][0]["id"] == str(task.id)
 
 
 @pytest.mark.asyncio
@@ -160,16 +153,9 @@ async def test_build_notification_payload_multiple_tasks(
         frequency=TaskFrequency.ONCE,
     )
 
-    service = create_sheppard_service(
-        user=test_user,
-        day_svc=day_svc,
-        uow_factory=mock_uow_factory,
-        calendar_service=mock_calendar_service,
-        planning_service=mock_planning_service,
-        web_push_gateway=mock_web_push_gateway,
-    )
+    from planned.domain.services.notification import NotificationPayloadBuilder
 
-    payload = service._build_notification_payload([task1, task2])
+    payload = NotificationPayloadBuilder.build_for_tasks([task1, task2])
 
     assert "2 tasks ready" in payload.title
     assert len(payload.data["tasks"]) == 2
@@ -209,21 +195,14 @@ async def test_build_event_notification_payload(
         starts_at=test_datetime_noon,
     )
 
-    service = create_sheppard_service(
-        user=test_user,
-        day_svc=day_svc,
-        uow_factory=mock_uow_factory,
-        calendar_service=mock_calendar_service,
-        planning_service=mock_planning_service,
-        web_push_gateway=mock_web_push_gateway,
-    )
+    from planned.domain.services.notification import NotificationPayloadBuilder
 
-    payload = service._build_calendar_entry_notification_payload([calendar_entry])
+    payload = NotificationPayloadBuilder.build_for_calendar_entries([calendar_entry])
 
     assert payload.title == "Test Calendar Entry"
     assert "starting soon" in payload.body
     assert len(payload.data["calendar_entries"]) == 1
-    assert payload.data["calendar_entries"][0]["id"] == calendar_entry.id
+    assert payload.data["calendar_entries"][0]["id"] == str(calendar_entry.id)
 
 
 @pytest.mark.asyncio
