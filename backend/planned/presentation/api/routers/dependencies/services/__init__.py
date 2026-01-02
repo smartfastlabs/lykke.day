@@ -9,12 +9,10 @@ import datetime
 from typing import Annotated
 
 from fastapi import Depends, Request
-
 from planned.application.services import (
     CalendarService,
     DayService,
     PlanningService,
-    SheppardManager,
     SheppardService,
 )
 from planned.application.services.factories import DayServiceFactory
@@ -111,36 +109,50 @@ async def get_day_service_for_date(
 
 
 async def get_sheppard_service(
-    request: Request,
     user: Annotated[User, Depends(get_current_user)],
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    google_gateway: Annotated[
+        GoogleCalendarGatewayAdapter, Depends(get_google_gateway)
+    ],
+    web_push_gateway: Annotated[WebPushGatewayAdapter, Depends(get_web_push_gateway)],
+    day_service: Annotated[DayService, Depends(get_day_service_for_current_date)],
 ) -> SheppardService:
-    """Get the SheppardService instance for the logged-in user.
+    """Get a stateless SheppardService instance for the logged-in user.
 
     Args:
-        request: FastAPI request object (to access app state)
         user: Current user (from dependency)
+        uow_factory: Factory for creating UnitOfWork instances
+        google_gateway: Gateway for Google Calendar integration
+        web_push_gateway: Gateway for web push notifications
+        day_service: DayService instance for the current date
 
     Returns:
         SheppardService instance for the user
-
-    Raises:
-        RuntimeError: If SheppardManager is not available or service doesn't exist
     """
-    # Get SheppardManager from app state
-    manager: SheppardManager | None = getattr(
-        request.app.state, "sheppard_manager", None
+    # Load push subscriptions
+    uow = uow_factory.create(user.id)
+    async with uow:
+        push_subscriptions = await uow.push_subscriptions.all()
+
+    # Create services
+    calendar_service = CalendarService(
+        user=user,
+        uow_factory=uow_factory,
+        google_gateway=google_gateway,
     )
-    if manager is None:
-        raise ServerError(
-            "SheppardManager is not available. The service may not be initialized."
-        )
 
-    user_id = user.id
-    try:
-        service = await manager.ensure_service_for_user(user_id)
-    except RuntimeError as e:
-        raise ServerError(
-            f"SheppardService is not available for user {user_id}: {e}"
-        ) from e
+    planning_service = PlanningService(
+        user=user,
+        uow_factory=uow_factory,
+    )
 
-    return service
+    # Create and return stateless SheppardService
+    return SheppardService(
+        user=user,
+        day_svc=day_service,
+        uow_factory=uow_factory,
+        calendar_service=calendar_service,
+        planning_service=planning_service,
+        web_push_gateway=web_push_gateway,
+        push_subscriptions=push_subscriptions,
+    )

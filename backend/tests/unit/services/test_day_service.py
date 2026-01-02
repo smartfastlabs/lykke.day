@@ -75,14 +75,27 @@ async def test_set_date_changes_date_and_reloads_context(
     # Create service with old date
     service = DayService(
         user=test_user,
-        day_ctx=old_day_ctx,
+        date=old_date,
         uow_factory=mock_uow_factory,
     )
 
-    await service.set_date(new_date)
+    # Create new service for new date (stateless)
+    new_service = DayService(
+        user=test_user,
+        date=new_date,
+        uow_factory=mock_uow_factory,
+    )
 
-    assert service.date == new_date
-    assert service.day_ctx.day.date == new_date
+    # Mock load_context to return new_day context
+    allow(mock_day_repo).get(new_day.id).and_return(new_day)
+    allow(mock_task_repo).search_query.and_return([])
+    allow(mock_calendar_entry_repo).search_query.and_return([])
+    allow(mock_message_repo).search_query.and_return([])
+
+    day_ctx = await new_service.load_context()
+
+    assert new_service.date == new_date
+    assert day_ctx.day.date == new_date
 
 
 @pytest.mark.asyncio
@@ -127,13 +140,20 @@ async def test_set_date_with_user_id(
 
     service = DayService(
         user=test_user,
-        day_ctx=old_day_ctx,
+        date=old_date,
         uow_factory=mock_uow_factory,
     )
 
-    await service.set_date(new_date, user_id=test_user_id)
+    # Create new service for new date (stateless)
+    new_service = DayService(
+        user=test_user,
+        date=new_date,
+        uow_factory=mock_uow_factory,
+    )
 
-    assert service.date == new_date
+    day_ctx = await new_service.load_context(date=new_date, user_id=test_user_id)
+
+    assert new_service.date == new_date
 
 
 @pytest.mark.asyncio
@@ -170,7 +190,7 @@ async def test_get_or_preview_returns_existing_day(
     day_ctx = DayContext(day=day, tasks=[], calendar_entries=[], messages=[])
     day_svc = DayService(
         user=test_user,
-        day_ctx=day_ctx,
+        date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
 
@@ -228,7 +248,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     )
     day_svc = DayService(
         user=test_user,
-        day_ctx=day_ctx,
+        date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
 
@@ -295,7 +315,7 @@ async def test_get_or_create_creates_and_saves_day(
     )
     day_svc = DayService(
         user=test_user,
-        day_ctx=day_ctx,
+        date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
 
@@ -334,11 +354,11 @@ async def test_save(
 
     service = DayService(
         user=test_user,
-        day_ctx=day_ctx,
+        date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
 
-    await service.save()
+    await service.save(day)
 
     # Verify put was called
     assert True  # If we get here, no exception was raised
@@ -446,9 +466,12 @@ async def test_get_upcoming_tasks_123(
 
     service = DayService(
         user=test_user,
-        day_ctx=day_ctx,
+        date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
+
+    # Mock load_context to return the day_ctx
+    allow(service).load_context.and_return(day_ctx)
 
     # Time is frozen by test_datetime_noon fixture
     result = await service.get_upcoming_tasks(look_ahead=timedelta(minutes=30))
@@ -559,9 +582,12 @@ async def test_get_upcoming_calendar_entries(
 
     service = DayService(
         user=test_user,
-        day_ctx=day_ctx,
+        date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
+
+    # Mock load_context to return the day_ctx
+    allow(service).load_context.and_return(day_ctx)
 
     # Time is frozen by test_datetime_noon fixture
     result = await service.get_upcoming_calendar_entries(
@@ -614,7 +640,8 @@ async def test_for_date_creates_service(
     service = await factory.create(date, user_id=test_user_id)
 
     assert service.date == date
-    assert service.day_ctx.day.id == day.id
+    day_ctx = await service.load_context()
+    assert day_ctx.day.id == day.id
 
 
 @pytest.mark.asyncio
@@ -684,14 +711,15 @@ async def test_load_context_instance_method(
 
     service = DayService(
         user=test_user,
-        day_ctx=old_day_ctx,
+        date=old_day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
 
     day_ctx = await service.load_context()
 
     assert day_ctx.day.status == DayStatus.SCHEDULED
-    assert service.day_ctx.day.status == DayStatus.SCHEDULED
+    loaded_ctx = await service.load_context()
+    assert loaded_ctx.day.status == DayStatus.SCHEDULED
 
 
 @pytest.mark.asyncio
@@ -772,9 +800,12 @@ async def test_get_upcoming_tasks_with_available_time(
 
     service = DayService(
         user=test_user,
-        day_ctx=day_ctx,
+        date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
+
+    # Mock load_context to return the day_ctx
+    allow(service).load_context.and_return(day_ctx)
 
     # Time is frozen by test_datetime_noon fixture
     result = await service.get_upcoming_tasks(look_ahead=timedelta(minutes=30))
@@ -863,9 +894,12 @@ async def test_get_upcoming_tasks_with_end_time(
 
     service = DayService(
         user=test_user,
-        day_ctx=day_ctx,
+        date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
+
+    # Mock load_context to return the day_ctx
+    allow(service).load_context.and_return(day_ctx)
 
     # Time is frozen by test_datetime_noon fixture
     result = await service.get_upcoming_tasks(look_ahead=timedelta(minutes=30))
@@ -952,9 +986,12 @@ async def test_get_upcoming_tasks_excludes_completed_at(
 
     service = DayService(
         user=test_user,
-        day_ctx=day_ctx,
+        date=day_ctx.day.date,
         uow_factory=mock_uow_factory,
     )
+
+    # Mock load_context to return the day_ctx
+    allow(service).load_context.and_return(day_ctx)
 
     # Time is frozen by test_datetime_noon fixture
     result = await service.get_upcoming_tasks(look_ahead=timedelta(minutes=30))

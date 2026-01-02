@@ -8,7 +8,6 @@ from typing import Any, Literal
 from langchain.agents import create_agent
 from langchain_core.runnables import Runnable
 from loguru import logger
-
 from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from planned.application.services.base import BaseService
 from planned.application.services.calendar import CalendarService
@@ -116,20 +115,22 @@ class SheppardService(BaseService):
 
     async def _check_and_handle_day_transition(self) -> None:
         """Check if the day has changed and handle the transition."""
-        if get_current_date() != self.day_svc.date:
+        current_date = get_current_date()
+        if current_date != self.day_svc.date:
             await self.end_day()
             await self.start_day()
 
     async def _handle_alarm(self) -> None:
         """Check and trigger alarm if it's time."""
         current_time: datetime.time = get_current_time()
-        if alarm := self.day_svc.day_ctx.day.alarm:  # noqa
+        day_ctx = await self.day_svc.load_context()
+        if alarm := day_ctx.day.alarm:  # noqa
             if alarm.triggered_at is None and alarm.time < current_time:
                 alarm.triggered_at = current_time
                 logger.info(f"Triggering alarm: {alarm.name} at {alarm.time}")
 
                 youtube.play_audio("https://www.youtube.com/watch?v=Gcv7re2dEVg")
-                await self.day_svc.save()
+                await self.day_svc.save(day_ctx.day)
 
     async def _process_upcoming_tasks(
         self,
@@ -361,22 +362,23 @@ class SheppardService(BaseService):
                     f"Failed to send notification to {subscription.endpoint}: {e}"
                 )
 
-    def _render_prompt(self, template_name: str, **kwargs: Any) -> str:
+    async def _render_prompt(self, template_name: str, **kwargs: Any) -> str:
+        day_ctx = await self.day_svc.load_context()
         return templates.render(
             template_name,
             current_time=get_current_time(),
-            tasks=self.day_svc.day_ctx.tasks,
-            calendar_entries=self.day_svc.day_ctx.calendar_entries,
+            tasks=day_ctx.tasks,
+            calendar_entries=day_ctx.calendar_entries,
             **kwargs,
         )
 
-    def morning_summary_prompt(self) -> str:
-        return self._render_prompt(
+    async def morning_summary_prompt(self) -> str:
+        return await self._render_prompt(
             "morning-summary.md",
         )
 
-    def evening_summary_prompt(self) -> str:
-        return self._render_prompt(
+    async def evening_summary_prompt(self) -> str:
+        return await self._render_prompt(
             "evening-summary.md",
         )
 
@@ -393,9 +395,6 @@ class SheppardService(BaseService):
         """
         date = get_current_date()
 
-        # Unsubscribe old day service from events before replacing
-        self.day_svc.unsubscribe_from_events()
-
         # Create a DayService instance using the factory
         factory = DayServiceFactory(
             user=self.user,
@@ -403,17 +402,14 @@ class SheppardService(BaseService):
         )
         self.day_svc = await factory.create(date, user_id=self.user.id)
 
-        # Subscribe new day service to events
-        self.day_svc.subscribe_to_events()
-
-        if self.day_svc.day_ctx.day.status != objects.DayStatus.SCHEDULED:
+        # Check if day needs to be scheduled
+        day_ctx = await self.day_svc.load_context()
+        if day_ctx.day.status != objects.DayStatus.SCHEDULED:
             await self.planning_service.schedule(self.day_svc.date)
 
     async def run(self) -> None:
         logger.info("Starting Sheppard Service...")
         self.mode = "active"
-        # Subscribe to domain events to keep cache up to date
-        self.day_svc.subscribe_to_events()
         while self.is_running:
             wait_time: int = 30
             try:
@@ -436,10 +432,7 @@ class SheppardService(BaseService):
 
     def stop(self) -> None:
         self.mode = "stopping"
-        # Unsubscribe from domain events
-        self.day_svc.unsubscribe_from_events()
 
     @property
     def is_running(self) -> bool:
         return self.mode not in ("stopping", "starting")
-

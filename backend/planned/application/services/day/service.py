@@ -5,7 +5,6 @@ from uuid import UUID
 
 from loguru import logger
 from planned.application.services.base import BaseService
-from planned.application.services.event_handler import EventHandlerMixin
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.application.utils import (
     filter_upcoming_calendar_entries,
@@ -17,74 +16,31 @@ from planned.domain import entities as objects
 from planned.domain.entities import User
 
 from .context_loader import DayContextLoader
-from .event_handlers import DayEventHandler, TaskEventHandler
 
 
-class DayService(BaseService, EventHandlerMixin):
-    """Service for managing day context and operations.
+class DayService(BaseService):
+    """Stateless service for managing day context and operations."""
 
-    Subscribes to domain events to keep its cache (day_ctx) up to date.
-    """
-
-    day_ctx: objects.DayContext
     date: datetime.date
     uow_factory: UnitOfWorkFactory
 
     def __init__(
         self,
         user: User,
-        day_ctx: objects.DayContext,
+        date: datetime.date,
         uow_factory: UnitOfWorkFactory,
     ) -> None:
         """Initialize DayService.
 
         Args:
             user: The user for this service
-            day_ctx: The day context to manage
+            date: The date this service is for
             uow_factory: Factory for creating UnitOfWork instances
         """
         super().__init__(user)
-        self.day_ctx = day_ctx
-        self.date = day_ctx.day.date
+        self.date = date
         self.uow_factory = uow_factory
-
-        # Initialize event handler mixin
-        self._init_event_handlers()
-
-        # Register event handlers
-        self._register_handler(TaskEventHandler(uow_factory, user.id))
-        self._register_handler(DayEventHandler(uow_factory, user.id, self.date))
         logger.debug(f"DayService initialized for date {self.date}")
-
-    def subscribe_to_events(self) -> None:
-        """Subscribe to domain events to keep cache up to date."""
-        EventHandlerMixin.subscribe_to_events(self)
-        logger.debug(f"DayService subscribed to domain events for date {self.date}")
-
-    def unsubscribe_from_events(self) -> None:
-        """Unsubscribe from domain events."""
-        EventHandlerMixin.unsubscribe_from_events(self)
-        logger.debug(f"DayService unsubscribed from domain events for date {self.date}")
-
-    async def set_date(
-        self,
-        date: datetime.date,
-        user_id: UUID | None = None,
-    ) -> None:
-        """Set the date for this service and reload context.
-
-        Args:
-            date: The new date
-            user_id: Optional user ID (defaults to self.user.id)
-        """
-        if self.date != date:
-            self.date = date
-            user_id = user_id or self.user.id
-            self.day_ctx = await self.load_context(date=date, user_id=user_id)
-            # Update date in day event handler
-            for handler in self._event_handlers:
-                if isinstance(handler, DayEventHandler):
-                    handler.date = date
 
     async def load_context(
         self,
@@ -115,8 +71,8 @@ class DayService(BaseService, EventHandlerMixin):
                 task_repo=uow.tasks,
             )
 
-            self.day_ctx = await loader.load(date, user_id)
-        return self.day_ctx
+            day_ctx = await loader.load(date, user_id)
+        return day_ctx
 
     async def get_or_preview(
         self,
@@ -177,11 +133,15 @@ class DayService(BaseService, EventHandlerMixin):
                 await uow.commit()
                 return result
 
-    async def save(self) -> None:
-        """Save the current day context's day to the database."""
+    async def save(self, day: objects.Day) -> None:
+        """Save a day to the database.
+
+        Args:
+            day: The day entity to save
+        """
         uow = self.uow_factory.create(self.user.id)
         async with uow:
-            await uow.days.put(self.day_ctx.day)
+            await uow.days.put(day)
             await uow.commit()
 
     async def get_upcoming_tasks(
@@ -196,7 +156,8 @@ class DayService(BaseService, EventHandlerMixin):
         Returns:
             List of tasks that are upcoming within the look-ahead window
         """
-        return filter_upcoming_tasks(self.day_ctx.tasks, look_ahead)
+        day_ctx = await self.load_context()
+        return filter_upcoming_tasks(day_ctx.tasks, look_ahead)
 
     async def get_upcoming_calendar_entries(
         self,
@@ -210,6 +171,5 @@ class DayService(BaseService, EventHandlerMixin):
         Returns:
             List of calendar entries that are upcoming within the look-ahead window
         """
-        return filter_upcoming_calendar_entries(
-            self.day_ctx.calendar_entries, look_ahead
-        )
+        day_ctx = await self.load_context()
+        return filter_upcoming_calendar_entries(day_ctx.calendar_entries, look_ahead)

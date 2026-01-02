@@ -8,7 +8,6 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
-from planned.application.services import SheppardManager
 from planned.core.config import settings
 from planned.core.exceptions import BaseError
 from planned.infrastructure.auth import (
@@ -44,26 +43,8 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
     """
     Lifespan context manager for FastAPI application.
     """
-    manager = None
-    if not is_testing():
-        # Create and start SheppardManager (skip during testing)
-        uow_factory = SqlAlchemyUnitOfWorkFactory()
-        google_gateway = GoogleCalendarGatewayAdapter()
-        web_push_gateway = WebPushGatewayAdapter()
-        manager = SheppardManager(
-            uow_factory=uow_factory,
-            google_gateway=google_gateway,
-            web_push_gateway=web_push_gateway,
-        )
-        await manager.start()
-        # Store manager in app state for dependency injection
-        fastapi_app.state.sheppard_manager = manager
-
     yield  # type: ignore
 
-    # Stop manager and all services
-    if manager is not None:
-        await manager.stop()
     if not is_testing():
         youtube.kill_current_player()
 

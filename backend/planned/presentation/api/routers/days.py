@@ -34,22 +34,22 @@ async def schedule_today(
 async def get_context_today(
     day_service: Annotated[DayService, Depends(get_day_service_for_current_date)],
 ) -> DayContext:
-    return day_service.day_ctx
+    return await day_service.load_context()
 
 
 @router.get("/tomorrow/context")
 async def get_context_tomorrow(
     day_service: Annotated[DayService, Depends(get_day_service_for_tomorrow_date)],
 ) -> DayContext:
-    return day_service.day_ctx
+    return await day_service.load_context()
 
 
 @router.get("/{date}/context")
 async def get_context(
-    date: datetime.date,
+    date: datetime.date,  # Used by dependency injection
     day_service: Annotated[DayService, Depends(get_day_service_for_date)],
 ) -> DayContext:
-    return day_service.day_ctx
+    return await day_service.load_context()
 
 
 class UpdateDayRequest(BaseRequestObject):
