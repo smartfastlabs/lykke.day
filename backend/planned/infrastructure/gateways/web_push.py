@@ -3,6 +3,7 @@ import json
 import aiohttp
 from webpush import WebPush, WebPushMessage, WebPushSubscription  # type: ignore
 
+from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from planned.core.config import settings
 from planned.core.exceptions import PushNotificationError
 from planned.domain import entities as objects
@@ -44,3 +45,18 @@ async def send_notification(
             raise PushNotificationError(
                 f"Failed to send push notification: {response.status} {response.reason}",
             )
+
+
+class WebPushGateway(WebPushGatewayProtocol):
+    """Gateway that implements WebPushGatewayProtocol using infrastructure implementation."""
+
+    async def send_notification(
+        self,
+        subscription: objects.PushSubscription,
+        content: str | dict | objects.NotificationPayload,
+    ) -> None:
+        """Send a push notification to a subscription."""
+        await send_notification(
+            subscription=subscription,
+            content=content,
+        )

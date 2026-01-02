@@ -1,6 +1,7 @@
 import asyncio
 import re
 from datetime import UTC, date, datetime, timedelta
+from typing import TYPE_CHECKING
 
 from gcsa.event import Event as GoogleEvent
 from gcsa.google_calendar import GoogleCalendar
@@ -9,9 +10,13 @@ from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import Flow
 from loguru import logger
 
+from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from planned.core.config import settings
 from planned.core.exceptions import TokenExpiredError
 from planned.domain.entities import AuthToken, Calendar, CalendarEntry, TaskFrequency
+
+if TYPE_CHECKING:
+    pass
 
 # Google OAuth Flow
 CLIENT_SECRET_FILE = ".credentials.json"
@@ -217,3 +222,24 @@ async def load_calendar_events(
         )
     except RefreshError:
         raise TokenExpiredError("User needs to re-authenticate")
+
+
+class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
+    """Gateway that implements GoogleCalendarGatewayProtocol using infrastructure implementation."""
+
+    async def load_calendar_events(
+        self,
+        calendar: Calendar,
+        lookback: datetime,
+        token: AuthToken,
+    ) -> list[CalendarEntry]:
+        """Load calendar entries from Google Calendar."""
+        return await load_calendar_events(
+            calendar,
+            lookback=lookback,
+            token=token,
+        )
+
+    def get_flow(self, flow_name: str) -> Flow:
+        """Get OAuth flow for Google authentication."""
+        return get_flow(flow_name)

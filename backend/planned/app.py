@@ -19,9 +19,9 @@ from planned.infrastructure.auth import (
     auth_backend,
     fastapi_users,
 )
-from planned.infrastructure.gateways.adapters import (
-    GoogleCalendarGatewayAdapter,
-    WebPushGatewayAdapter,
+from planned.infrastructure.gateways import (
+    GoogleCalendarGateway,
+    WebPushGateway,
 )
 from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from planned.infrastructure.utils import youtube

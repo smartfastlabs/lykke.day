@@ -20,10 +20,7 @@ from planned.application.services.factories import DayServiceFactory
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import ServerError
 from planned.domain.entities import User
-from planned.infrastructure.gateways.adapters import (
-    GoogleCalendarGatewayAdapter,
-    WebPushGatewayAdapter,
-)
+from planned.infrastructure.gateways import GoogleCalendarGateway, WebPushGateway
 from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from planned.infrastructure.utils.dates import get_current_date, get_tomorrows_date
 
@@ -42,22 +39,20 @@ def get_mediator(
     return Mediator(uow_factory)
 
 
-def get_google_gateway() -> GoogleCalendarGatewayAdapter:
-    """Get a GoogleCalendarGatewayAdapter instance."""
-    return GoogleCalendarGatewayAdapter()
+def get_google_gateway() -> GoogleCalendarGateway:
+    """Get a GoogleCalendarGateway instance."""
+    return GoogleCalendarGateway()
 
 
-def get_web_push_gateway() -> WebPushGatewayAdapter:
-    """Get a WebPushGatewayAdapter instance."""
-    return WebPushGatewayAdapter()
+def get_web_push_gateway() -> WebPushGateway:
+    """Get a WebPushGateway instance."""
+    return WebPushGateway()
 
 
 def get_calendar_service(
     user: Annotated[User, Depends(get_current_user)],
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    google_gateway: Annotated[
-        GoogleCalendarGatewayAdapter, Depends(get_google_gateway)
-    ],
+    google_gateway: Annotated[GoogleCalendarGateway, Depends(get_google_gateway)],
 ) -> CalendarService:
     """Get an instance of CalendarService."""
     return CalendarService(
@@ -119,10 +114,8 @@ async def get_day_service_for_date(
 async def get_sheppard_service(
     user: Annotated[User, Depends(get_current_user)],
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    google_gateway: Annotated[
-        GoogleCalendarGatewayAdapter, Depends(get_google_gateway)
-    ],
-    web_push_gateway: Annotated[WebPushGatewayAdapter, Depends(get_web_push_gateway)],
+    google_gateway: Annotated[GoogleCalendarGateway, Depends(get_google_gateway)],
+    web_push_gateway: Annotated[WebPushGateway, Depends(get_web_push_gateway)],
     day_service: Annotated[DayService, Depends(get_day_service_for_current_date)],
 ) -> SheppardService:
     """Get a stateless SheppardService instance for the logged-in user.
