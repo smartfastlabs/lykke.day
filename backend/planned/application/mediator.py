@@ -4,7 +4,7 @@ The mediator provides a clean interface for executing CQRS operations
 without the caller needing to know about specific handler implementations.
 """
 
-from typing import Any, overload
+from typing import Any, TypeVar, overload
 
 from planned.application.commands.base import Command, CommandHandler
 from planned.application.commands.bulk_create_entities import (
@@ -47,6 +47,9 @@ from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain.entities import Day, DayContext, Task
 from planned.domain.value_objects.query import PagedQueryResponse
 
+# TypeVar for generic entity operations
+EntityT = TypeVar("EntityT")
+
 
 class Mediator:
     """Dispatches commands and queries to their appropriate handlers.
@@ -65,6 +68,9 @@ class Mediator:
 
         # Execute a command
         day = await mediator.execute(ScheduleDayCommand(user_id=user.id, date=today))
+
+        # Generic entity operations preserve types
+        template = await mediator.query(GetEntityQuery[DayTemplate](...))
     """
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
@@ -102,12 +108,12 @@ class Mediator:
     async def query(self, query: PreviewDayQuery) -> DayContext: ...
 
     @overload
-    async def query(self, query: GetEntityQuery) -> Any: ...
+    async def query(self, query: GetEntityQuery[EntityT]) -> EntityT: ...
 
     @overload
     async def query(
-        self, query: ListEntitiesQuery
-    ) -> list[Any] | PagedQueryResponse[Any]: ...
+        self, query: ListEntitiesQuery[EntityT]
+    ) -> list[EntityT] | PagedQueryResponse[EntityT]: ...
 
     async def query(self, query: Query) -> Any:
         """Execute a query and return the result.
@@ -121,7 +127,18 @@ class Mediator:
         Raises:
             KeyError: If no handler is registered for the query type
         """
-        handler = self._query_handlers.get(type(query))
+        handler = self._query_handlers.get(type(query).__mro__[0])
+        if handler is None:
+            # Try without generic parameter (for GetEntityQuery[T] -> GetEntityQuery)
+            for base in type(query).__mro__:
+                if hasattr(base, "__origin__"):
+                    handler = self._query_handlers.get(base.__origin__)
+                    if handler:
+                        break
+                else:
+                    handler = self._query_handlers.get(base)
+                    if handler:
+                        break
         if handler is None:
             raise KeyError(
                 f"No handler registered for query type: {type(query).__name__}"
@@ -142,16 +159,18 @@ class Mediator:
     async def execute(self, command: RecordTaskActionCommand) -> Task: ...
 
     @overload
-    async def execute(self, command: CreateEntityCommand) -> Any: ...
+    async def execute(self, command: CreateEntityCommand[EntityT]) -> EntityT: ...
 
     @overload
-    async def execute(self, command: UpdateEntityCommand) -> Any: ...
+    async def execute(self, command: UpdateEntityCommand[EntityT]) -> EntityT: ...
 
     @overload
     async def execute(self, command: DeleteEntityCommand) -> None: ...
 
     @overload
-    async def execute(self, command: BulkCreateEntitiesCommand) -> list[Any]: ...
+    async def execute(
+        self, command: BulkCreateEntitiesCommand[EntityT]
+    ) -> list[EntityT]: ...
 
     async def execute(self, command: Command) -> Any:
         """Execute a command and return the result.
@@ -165,7 +184,18 @@ class Mediator:
         Raises:
             KeyError: If no handler is registered for the command type
         """
-        handler = self._command_handlers.get(type(command))
+        handler = self._command_handlers.get(type(command).__mro__[0])
+        if handler is None:
+            # Try without generic parameter (for CreateEntityCommand[T] -> CreateEntityCommand)
+            for base in type(command).__mro__:
+                if hasattr(base, "__origin__"):
+                    handler = self._command_handlers.get(base.__origin__)
+                    if handler:
+                        break
+                else:
+                    handler = self._command_handlers.get(base)
+                    if handler:
+                        break
         if handler is None:
             raise KeyError(
                 f"No handler registered for command type: {type(command).__name__}"

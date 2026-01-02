@@ -1,16 +1,18 @@
 """Generic query to list entities with optional filtering and pagination."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Generic, TypeVar
 from uuid import UUID
 
 from planned.application.queries.base import Query, QueryHandler
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain.value_objects.query import BaseQuery, PagedQueryResponse
 
+EntityT = TypeVar("EntityT")
+
 
 @dataclass(frozen=True)
-class ListEntitiesQuery(Query):
+class ListEntitiesQuery(Query, Generic[EntityT]):
     """Query to list entities with optional filtering and pagination.
 
     Attributes:
@@ -30,15 +32,19 @@ class ListEntitiesQuery(Query):
     paginate: bool = True
 
 
-class ListEntitiesHandler(QueryHandler[ListEntitiesQuery, list[Any] | PagedQueryResponse[Any]]):
+class ListEntitiesHandler(
+    QueryHandler[
+        ListEntitiesQuery[EntityT], list[EntityT] | PagedQueryResponse[EntityT]
+    ]
+):
     """Handles ListEntitiesQuery - lists entities with optional pagination."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
     async def handle(
-        self, query: ListEntitiesQuery
-    ) -> list[Any] | PagedQueryResponse[Any]:
+        self, query: ListEntitiesQuery[EntityT]
+    ) -> list[EntityT] | PagedQueryResponse[EntityT]:
         """Execute the query.
 
         Args:
@@ -52,7 +58,7 @@ class ListEntitiesHandler(QueryHandler[ListEntitiesQuery, list[Any] | PagedQuery
 
             # Get items using search query or all()
             if query.search_query is not None and hasattr(repo, "search_query"):
-                items = await repo.search_query(query.search_query)
+                items: list[EntityT] = await repo.search_query(query.search_query)
             elif hasattr(repo, "all"):
                 items = await repo.all()
             else:
@@ -61,7 +67,7 @@ class ListEntitiesHandler(QueryHandler[ListEntitiesQuery, list[Any] | PagedQuery
                 )
 
             if not query.paginate:
-                return items  # type: ignore[no-any-return]
+                return items
 
             # Apply pagination
             total = len(items)
@@ -77,4 +83,3 @@ class ListEntitiesHandler(QueryHandler[ListEntitiesQuery, list[Any] | PagedQuery
                 has_next=end < total,
                 has_previous=start > 0,
             )
-

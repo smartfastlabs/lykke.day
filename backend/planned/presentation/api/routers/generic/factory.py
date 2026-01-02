@@ -52,7 +52,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
             user: Annotated[User, Depends(get_current_user)],
             mediator: Annotated[Mediator, Depends(get_mediator)],
         ) -> entity_type:  # type: ignore
-            return await handle_get(  # type: ignore[no-any-return]
+            return await handle_get(
                 uuid, repository_name, user, mediator
             )
 
@@ -109,7 +109,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
             user: Annotated[User, Depends(get_current_user)],
             mediator: Annotated[Mediator, Depends(get_mediator)],
         ) -> entity_type:  # type: ignore
-            return await handle_create(  # type: ignore[no-any-return]
+            return await handle_create(
                 entity_data, repository_name, user, mediator
             )
 
@@ -141,7 +141,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
             user: Annotated[User, Depends(get_current_user)],
             mediator: Annotated[Mediator, Depends(get_mediator)],
         ) -> entity_type:  # type: ignore
-            return await handle_update(  # type: ignore[no-any-return]
+            return await handle_update(
                 uuid, entity_data, repository_name, user, mediator
             )
 

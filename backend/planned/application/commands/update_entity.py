@@ -1,15 +1,17 @@
 """Generic command to update an existing entity."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Generic, TypeVar
 from uuid import UUID
 
 from planned.application.commands.base import Command, CommandHandler
 from planned.application.unit_of_work import UnitOfWorkFactory
 
+EntityT = TypeVar("EntityT")
+
 
 @dataclass(frozen=True)
-class UpdateEntityCommand(Command):
+class UpdateEntityCommand(Command, Generic[EntityT]):
     """Command to update an existing entity.
 
     Attributes:
@@ -22,16 +24,16 @@ class UpdateEntityCommand(Command):
     user_id: UUID
     repository_name: str
     entity_id: UUID
-    entity_data: Any
+    entity_data: EntityT
 
 
-class UpdateEntityHandler(CommandHandler[UpdateEntityCommand, Any]):
+class UpdateEntityHandler(CommandHandler[UpdateEntityCommand[EntityT], EntityT]):
     """Handles UpdateEntityCommand - updates an existing entity."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, command: UpdateEntityCommand) -> Any:
+    async def handle(self, command: UpdateEntityCommand[EntityT]) -> EntityT:
         """Execute the command.
 
         Args:
@@ -47,7 +49,7 @@ class UpdateEntityHandler(CommandHandler[UpdateEntityCommand, Any]):
             repo = getattr(uow, command.repository_name)
 
             # Get existing entity
-            existing = await repo.get(command.entity_id)
+            existing: EntityT = await repo.get(command.entity_id)
 
             # Merge updates
             if hasattr(existing, "model_copy") and hasattr(
@@ -63,7 +65,6 @@ class UpdateEntityHandler(CommandHandler[UpdateEntityCommand, Any]):
             if hasattr(updated, "id"):
                 object.__setattr__(updated, "id", command.entity_id)
 
-            entity = await repo.put(updated)
+            entity: EntityT = await repo.put(updated)
             await uow.commit()
             return entity
-

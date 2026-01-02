@@ -2,9 +2,13 @@
 
 All operations are dispatched through the Mediator to ensure consistent
 transaction handling and domain event dispatching.
+
+This module provides both:
+1. Standalone functions for use in route handlers
+2. A generic `EntityCrudOperations` class that provides typed methods
 """
 
-from typing import Any
+from typing import Generic, TypeVar
 from uuid import UUID
 
 from planned.application.commands import (
@@ -20,13 +24,174 @@ from planned.domain.value_objects.query import BaseQuery, PagedQueryResponse
 
 from .config import EntityRouterConfig
 
+EntityT = TypeVar("EntityT")
+
+
+class EntityCrudOperations(Generic[EntityT]):
+    """Typed CRUD operations for a specific entity type.
+
+    This class provides properly typed methods for all CRUD operations,
+    with the entity type flowing through all return values.
+
+    Example:
+        ops: EntityCrudOperations[DayTemplate] = EntityCrudOperations(
+            mediator=mediator,
+            repository_name="day_templates",
+            user=current_user,
+        )
+
+        template: DayTemplate = await ops.get(template_id)
+        templates: list[DayTemplate] = await ops.list_all()
+        created: DayTemplate = await ops.create(new_template)
+    """
+
+    def __init__(
+        self,
+        mediator: Mediator,
+        repository_name: str,
+        user: User,
+    ) -> None:
+        self._mediator = mediator
+        self._repository_name = repository_name
+        self._user = user
+
+    async def get(self, entity_id: UUID) -> EntityT:
+        """Get a single entity by ID.
+
+        Args:
+            entity_id: UUID of the entity to retrieve
+
+        Returns:
+            The entity
+
+        Raises:
+            NotFoundError: If entity not found
+        """
+        return await self._mediator.query(
+            GetEntityQuery[EntityT](
+                user_id=self._user.id,
+                entity_id=entity_id,
+                repository_name=self._repository_name,
+            )
+        )
+
+    async def list_all(
+        self,
+        query: BaseQuery | None = None,
+        limit: int = 50,
+        offset: int = 0,
+        paginate: bool = True,
+    ) -> list[EntityT] | PagedQueryResponse[EntityT]:
+        """List entities with optional filtering and pagination.
+
+        Args:
+            query: Optional search/filter query
+            limit: Maximum number of items to return
+            offset: Number of items to skip
+            paginate: Whether to return paginated response
+
+        Returns:
+            List of entities or PagedQueryResponse
+        """
+        return await self._mediator.query(
+            ListEntitiesQuery[EntityT](
+                user_id=self._user.id,
+                repository_name=self._repository_name,
+                search_query=query,
+                limit=limit,
+                offset=offset,
+                paginate=paginate,
+            )
+        )
+
+    async def create(self, entity: EntityT) -> EntityT:
+        """Create a new entity.
+
+        Args:
+            entity: The entity to create
+
+        Returns:
+            The created entity
+        """
+        return await self._mediator.execute(
+            CreateEntityCommand[EntityT](
+                user_id=self._user.id,
+                repository_name=self._repository_name,
+                entity=entity,
+            )
+        )
+
+    async def update(self, entity_id: UUID, entity_data: EntityT) -> EntityT:
+        """Update an existing entity.
+
+        Args:
+            entity_id: UUID of the entity to update
+            entity_data: Updated entity data
+
+        Returns:
+            The updated entity
+
+        Raises:
+            NotFoundError: If entity not found
+        """
+        return await self._mediator.execute(
+            UpdateEntityCommand[EntityT](
+                user_id=self._user.id,
+                repository_name=self._repository_name,
+                entity_id=entity_id,
+                entity_data=entity_data,
+            )
+        )
+
+    async def delete(self, entity_id: UUID) -> None:
+        """Delete an entity.
+
+        Args:
+            entity_id: UUID of the entity to delete
+
+        Raises:
+            NotFoundError: If entity not found
+        """
+        await self._mediator.execute(
+            DeleteEntityCommand(
+                user_id=self._user.id,
+                repository_name=self._repository_name,
+                entity_id=entity_id,
+            )
+        )
+
+    async def bulk_create(self, entities: list[EntityT]) -> list[EntityT]:
+        """Create multiple entities.
+
+        Args:
+            entities: List of entities to create
+
+        Returns:
+            List of created entities
+        """
+        if not entities:
+            return []
+
+        return await self._mediator.execute(
+            BulkCreateEntitiesCommand[EntityT](
+                user_id=self._user.id,
+                repository_name=self._repository_name,
+                entities=tuple(entities),
+            )
+        )
+
+
+# =============================================================================
+# Standalone handler functions (for backward compatibility with factory.py)
+# =============================================================================
+
 
 async def handle_get(
     entity_id: UUID,
     repository_name: str,
     user: User,
     mediator: Mediator,
-) -> Any:
+) -> EntityT:
     """Handle GET request for a single entity.
 
     Args:
@@ -58,7 +223,7 @@ async def handle_list(
     query: BaseQuery | None = None,
     limit: int = 50,
     offset: int = 0,
-) -> list[Any] | PagedQueryResponse[Any]:
+) -> list[EntityT] | PagedQueryResponse[EntityT]:
     """Handle GET request for listing entities with optional pagination.
 
     Args:
@@ -86,11 +251,11 @@ async def handle_list(
 
 
 async def handle_create(
-    entity_data: Any,
+    entity_data: EntityT,
     repository_name: str,
     user: User,
     mediator: Mediator,
-) -> Any:
+) -> EntityT:
     """Handle POST request for creating an entity.
 
     Args:
@@ -113,11 +278,11 @@ async def handle_create(
 
 async def handle_update(
     entity_id: UUID,
-    entity_data: Any,
+    entity_data: EntityT,
     repository_name: str,
     user: User,
     mediator: Mediator,
-) -> Any:
+) -> EntityT:
     """Handle PUT/PATCH request for updating an entity.
 
     Args:
@@ -170,11 +335,11 @@ async def handle_delete(
 
 
 async def handle_bulk_create(
-    entities: list[Any],
+    entities: list[EntityT],
     repository_name: str,
     user: User,
     mediator: Mediator,
-) -> list[Any]:
+) -> list[EntityT]:
     """Handle POST request for bulk creating entities.
 
     Args:
