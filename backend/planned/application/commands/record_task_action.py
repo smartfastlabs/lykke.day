@@ -5,7 +5,7 @@ from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import Action, Day, DayTemplate, Task, User
+from planned.domain.entities import Action, Day, Task
 
 from .base import Command, CommandHandler
 

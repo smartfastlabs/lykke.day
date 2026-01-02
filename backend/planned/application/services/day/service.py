@@ -1,28 +1,47 @@
-"""DayService for managing day context and operations."""
+"""DayService for managing day context and operations.
+
+This service acts as a facade that delegates to command and query handlers.
+It maintains backward compatibility while the codebase transitions to CQRS.
+"""
 
 import datetime
 from uuid import UUID
 
 from loguru import logger
+from planned.application.commands.create_or_get_day import (
+    CreateOrGetDayCommand,
+    CreateOrGetDayHandler,
+)
+from planned.application.commands.save_day import SaveDayCommand, SaveDayHandler
+from planned.application.queries.get_day_context import (
+    GetDayContextHandler,
+    GetDayContextQuery,
+)
+from planned.application.queries.get_upcoming_items import (
+    GetUpcomingCalendarEntriesHandler,
+    GetUpcomingCalendarEntriesQuery,
+    GetUpcomingTasksHandler,
+    GetUpcomingTasksQuery,
+)
 from planned.application.services.base import BaseService
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.application.utils import (
-    filter_upcoming_calendar_entries,
-    filter_upcoming_tasks,
-)
 from planned.core.constants import DEFAULT_LOOK_AHEAD
-from planned.core.exceptions import NotFoundError
-from planned.domain import entities as objects
-from planned.domain.entities import User
-
-from .context_loader import DayContextLoader
+from planned.domain.entities import CalendarEntry, Day, DayContext, Task, User
 
 
 class DayService(BaseService):
-    """Stateless service for managing day context and operations."""
+    """Stateless service for managing day context and operations.
+
+    This service acts as a facade that delegates to command and query handlers.
+    """
 
     date: datetime.date
     uow_factory: UnitOfWorkFactory
+    _get_day_context_handler: GetDayContextHandler
+    _get_upcoming_tasks_handler: GetUpcomingTasksHandler
+    _get_upcoming_calendar_entries_handler: GetUpcomingCalendarEntriesHandler
+    _create_or_get_day_handler: CreateOrGetDayHandler
+    _save_day_handler: SaveDayHandler
 
     def __init__(
         self,
@@ -40,13 +59,20 @@ class DayService(BaseService):
         super().__init__(user)
         self.date = date
         self.uow_factory = uow_factory
+        self._get_day_context_handler = GetDayContextHandler(uow_factory)
+        self._get_upcoming_tasks_handler = GetUpcomingTasksHandler(uow_factory)
+        self._get_upcoming_calendar_entries_handler = GetUpcomingCalendarEntriesHandler(
+            uow_factory
+        )
+        self._create_or_get_day_handler = CreateOrGetDayHandler(uow_factory)
+        self._save_day_handler = SaveDayHandler(uow_factory)
         logger.debug(f"DayService initialized for date {self.date}")
 
     async def load_context(
         self,
         date: datetime.date | None = None,
         user_id: UUID | None = None,
-    ) -> objects.DayContext:
+    ) -> DayContext:
         """Load complete day context for the current or specified date.
 
         Args:
@@ -59,25 +85,13 @@ class DayService(BaseService):
         date = date or self.date
         user_id = user_id or self.user.id
 
-        uow = self.uow_factory.create(user_id)
-        async with uow:
-            # Create loader and load context
-            loader = DayContextLoader(
-                user=self.user,
-                day_repo=uow.days,
-                day_template_repo=uow.day_templates,
-                calendar_entry_repo=uow.calendar_entries,
-                message_repo=uow.messages,
-                task_repo=uow.tasks,
-            )
-
-            day_ctx = await loader.load(date, user_id)
-        return day_ctx
+        query = GetDayContextQuery(user=self.user, date=date)
+        return await self._get_day_context_handler.handle(query)
 
     async def get_or_preview(
         self,
         date: datetime.date,
-    ) -> objects.Day:
+    ) -> Day:
         """Get an existing day or return a preview (unsaved) day.
 
         Args:
@@ -86,26 +100,13 @@ class DayService(BaseService):
         Returns:
             An existing Day if found, otherwise a preview Day (not saved)
         """
-        uow = self.uow_factory.create(self.user.id)
-        async with uow:
-            day_id = objects.Day.id_from_date_and_user(date, self.user.id)
-            try:
-                return await uow.days.get(day_id)
-            except NotFoundError:
-                # Day doesn't exist, create a preview
-                user = await uow.users.get(self.user.id)
-                template_slug = user.settings.template_defaults[date.weekday()]
-                template = await uow.day_templates.get_by_slug(template_slug)
-                return objects.Day.create_for_date(
-                    date,
-                    user_id=self.user.id,
-                    template=template,
-                )
+        day_ctx = await self.load_context(date=date)
+        return day_ctx.day
 
     async def get_or_create(
         self,
         date: datetime.date,
-    ) -> objects.Day:
+    ) -> Day:
         """Get an existing day or create a new one.
 
         Args:
@@ -114,40 +115,22 @@ class DayService(BaseService):
         Returns:
             An existing Day if found, otherwise a newly created and saved Day
         """
-        uow = self.uow_factory.create(self.user.id)
-        async with uow:
-            day_id = objects.Day.id_from_date_and_user(date, self.user.id)
-            try:
-                return await uow.days.get(day_id)
-            except NotFoundError:
-                # Day doesn't exist, create it
-                user = await uow.users.get(self.user.id)
-                template_slug = user.settings.template_defaults[date.weekday()]
-                template = await uow.day_templates.get_by_slug(template_slug)
-                day = objects.Day.create_for_date(
-                    date,
-                    user_id=self.user.id,
-                    template=template,
-                )
-                result = await uow.days.put(day)
-                await uow.commit()
-                return result
+        cmd = CreateOrGetDayCommand(user_id=self.user.id, date=date)
+        return await self._create_or_get_day_handler.handle(cmd)
 
-    async def save(self, day: objects.Day) -> None:
+    async def save(self, day: Day) -> None:
         """Save a day to the database.
 
         Args:
             day: The day entity to save
         """
-        uow = self.uow_factory.create(self.user.id)
-        async with uow:
-            await uow.days.put(day)
-            await uow.commit()
+        cmd = SaveDayCommand(user_id=self.user.id, day=day)
+        await self._save_day_handler.handle(cmd)
 
     async def get_upcoming_tasks(
         self,
         look_ahead: datetime.timedelta = DEFAULT_LOOK_AHEAD,
-    ) -> list[objects.Task]:
+    ) -> list[Task]:
         """Get tasks that are upcoming within the look-ahead window.
 
         Args:
@@ -156,13 +139,15 @@ class DayService(BaseService):
         Returns:
             List of tasks that are upcoming within the look-ahead window
         """
-        day_ctx = await self.load_context()
-        return filter_upcoming_tasks(day_ctx.tasks, look_ahead)
+        query = GetUpcomingTasksQuery(
+            user=self.user, date=self.date, look_ahead=look_ahead
+        )
+        return await self._get_upcoming_tasks_handler.handle(query)
 
     async def get_upcoming_calendar_entries(
         self,
         look_ahead: datetime.timedelta = DEFAULT_LOOK_AHEAD,
-    ) -> list[objects.CalendarEntry]:
+    ) -> list[CalendarEntry]:
         """Get calendar entries that are upcoming within the look-ahead window.
 
         Args:
@@ -171,5 +156,7 @@ class DayService(BaseService):
         Returns:
             List of calendar entries that are upcoming within the look-ahead window
         """
-        day_ctx = await self.load_context()
-        return filter_upcoming_calendar_entries(day_ctx.calendar_entries, look_ahead)
+        query = GetUpcomingCalendarEntriesQuery(
+            user=self.user, date=self.date, look_ahead=look_ahead
+        )
+        return await self._get_upcoming_calendar_entries_handler.handle(query)

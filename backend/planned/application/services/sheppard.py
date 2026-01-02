@@ -8,7 +8,14 @@ from typing import Any, Literal
 from langchain.agents import create_agent
 from langchain_core.runnables import Runnable
 from loguru import logger
+from planned.application.commands.save_day import SaveDayCommand, SaveDayHandler
 from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
+from planned.application.queries.get_upcoming_items import (
+    GetUpcomingCalendarEntriesHandler,
+    GetUpcomingCalendarEntriesQuery,
+    GetUpcomingTasksHandler,
+    GetUpcomingTasksQuery,
+)
 from planned.application.services.base import BaseService
 from planned.application.services.calendar import CalendarService
 from planned.application.services.day import DayService
@@ -16,6 +23,7 @@ from planned.application.services.day.factory import DayServiceFactory
 from planned.application.services.planning import PlanningService
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain import entities as objects
+from planned.domain.services.notification import NotificationPayloadBuilder
 from planned.infrastructure.utils import templates, youtube
 from planned.infrastructure.utils.dates import get_current_date, get_current_time
 
@@ -56,6 +64,9 @@ class SheppardService(BaseService):
     calendar_service: CalendarService
     planning_service: PlanningService
     web_push_gateway: WebPushGatewayProtocol
+    _get_upcoming_tasks_handler: GetUpcomingTasksHandler
+    _get_upcoming_calendar_entries_handler: GetUpcomingCalendarEntriesHandler
+    _save_day_handler: SaveDayHandler
 
     def __init__(
         self,
@@ -89,6 +100,11 @@ class SheppardService(BaseService):
         self.push_subscriptions = push_subscriptions or []
         self.last_run = None
         self.day_svc = day_svc
+        self._get_upcoming_tasks_handler = GetUpcomingTasksHandler(uow_factory)
+        self._get_upcoming_calendar_entries_handler = GetUpcomingCalendarEntriesHandler(
+            uow_factory
+        )
+        self._save_day_handler = SaveDayHandler(uow_factory)
         self.agent = create_agent(
             model="claude-sonnet-4-5",
             tools=[get_weather],
@@ -130,7 +146,8 @@ class SheppardService(BaseService):
                 logger.info(f"Triggering alarm: {alarm.name} at {alarm.time}")
 
                 youtube.play_audio("https://www.youtube.com/watch?v=Gcv7re2dEVg")
-                await self.day_svc.save(day_ctx.day)
+                cmd = SaveDayCommand(user_id=self.user.id, day=day_ctx.day)
+                await self._save_day_handler.handle(cmd)
 
     async def _process_upcoming_tasks(
         self,
@@ -143,7 +160,12 @@ class SheppardService(BaseService):
         tasks_to_notify: list[objects.Task] = []
         tasks_to_update: list[objects.Task] = []
 
-        for task in await self.day_svc.get_upcoming_tasks():
+        query = GetUpcomingTasksQuery(
+            user=self.user, date=self.day_svc.date
+        )
+        upcoming_tasks = await self._get_upcoming_tasks_handler.handle(query)
+
+        for task in upcoming_tasks:
             logger.info(f"UPCOMING TASK {task.name}")
 
             # Update task status if needed
@@ -174,7 +196,14 @@ class SheppardService(BaseService):
         """
         calendar_entries_to_notify: list[objects.CalendarEntry] = []
 
-        for calendar_entry in await self.day_svc.get_upcoming_calendar_entries():
+        query = GetUpcomingCalendarEntriesQuery(
+            user=self.user, date=self.day_svc.date
+        )
+        upcoming_calendar_entries = await self._get_upcoming_calendar_entries_handler.handle(
+            query
+        )
+
+        for calendar_entry in upcoming_calendar_entries:
             logger.info(f"UPCOMING CALENDAR ENTRY {calendar_entry.name}")
 
             # Check if this calendar entry needs a notification
@@ -225,46 +254,6 @@ class SheppardService(BaseService):
         if calendar_entries_to_notify:
             await self._notify_for_calendar_entries(calendar_entries_to_notify)
 
-    def _build_notification_payload(
-        self,
-        tasks: list[objects.Task],
-    ) -> objects.NotificationPayload:
-        """Build a notification payload for one or more tasks."""
-        if len(tasks) == 1:
-            task = tasks[0]
-            title = task.name
-            body = f"Task ready: {task.name}"
-        else:
-            title = f"{len(tasks)} tasks ready"
-            body = f"You have {len(tasks)} tasks ready"
-
-        # Include task information in the data field
-        task_data = [
-            {
-                "id": task.id,
-                "name": task.name,
-                "status": task.status.value,
-                "category": task.category.value,
-            }
-            for task in tasks
-        ]
-
-        return objects.NotificationPayload(
-            title=title,
-            body=body,
-            actions=[
-                objects.NotificationAction(
-                    action="view",
-                    title="View Tasks",
-                    icon="🔍",
-                ),
-            ],
-            data={
-                "type": "tasks",
-                "task_ids": [task.id for task in tasks],
-                "tasks": task_data,
-            },
-        )
 
     async def _notify_for_tasks(
         self,
@@ -274,7 +263,7 @@ class SheppardService(BaseService):
         if not tasks:
             return
 
-        payload = self._build_notification_payload(tasks)
+        payload = NotificationPayloadBuilder.build_for_tasks(tasks)
 
         for subscription in self.push_subscriptions:
             logger.info(
@@ -290,53 +279,6 @@ class SheppardService(BaseService):
                     f"Failed to send notification to {subscription.endpoint}: {e}"
                 )
 
-    def _build_calendar_entry_notification_payload(
-        self,
-        calendar_entries: list[objects.CalendarEntry],
-    ) -> objects.NotificationPayload:
-        """Build a notification payload for one or more calendar entries."""
-        if len(calendar_entries) == 1:
-            calendar_entry = calendar_entries[0]
-            title = calendar_entry.name
-            body = f"Event starting soon: {calendar_entry.name}"
-        else:
-            title = f"{len(calendar_entries)} events starting soon"
-            body = f"You have {len(calendar_entries)} events starting soon"
-
-        # Include calendar entry information in the data field
-        calendar_entry_data = [
-            {
-                "id": calendar_entry.id,
-                "name": calendar_entry.name,
-                "starts_at": calendar_entry.starts_at.isoformat(),
-                "ends_at": calendar_entry.ends_at.isoformat()
-                if calendar_entry.ends_at
-                else None,
-                "calendar_id": calendar_entry.calendar_id,
-                "platform_id": calendar_entry.platform_id,
-                "status": calendar_entry.status,
-            }
-            for calendar_entry in calendar_entries
-        ]
-
-        return objects.NotificationPayload(
-            title=title,
-            body=body,
-            actions=[
-                objects.NotificationAction(
-                    action="view",
-                    title="View Events",
-                    icon="📅",
-                ),
-            ],
-            data={
-                "type": "calendar_entries",
-                "calendar_entry_ids": [
-                    calendar_entry.id for calendar_entry in calendar_entries
-                ],
-                "calendar_entries": calendar_entry_data,
-            },
-        )
 
     async def _notify_for_calendar_entries(
         self,
@@ -346,7 +288,9 @@ class SheppardService(BaseService):
         if not calendar_entries:
             return
 
-        payload = self._build_calendar_entry_notification_payload(calendar_entries)
+        payload = NotificationPayloadBuilder.build_for_calendar_entries(
+            calendar_entries
+        )
 
         for subscription in self.push_subscriptions:
             logger.info(
