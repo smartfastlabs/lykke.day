@@ -4,7 +4,7 @@ The mediator provides a clean interface for executing CQRS operations
 without the caller needing to know about specific handler implementations.
 """
 
-from typing import Any
+from typing import Any, cast, overload
 
 from planned.application.commands.base import Command, CommandHandler
 from planned.application.commands.record_task_action import (
@@ -23,6 +23,7 @@ from planned.application.queries.get_day_context import (
 )
 from planned.application.queries.preview_day import PreviewDayHandler, PreviewDayQuery
 from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.domain.entities import Day, DayContext, Task
 
 
 class Mediator:
@@ -59,6 +60,16 @@ class Mediator:
             RecordTaskActionCommand: RecordTaskActionHandler(uow_factory),
         }
 
+    # ========================================================================
+    # Query overloads - each query type has a specific return type
+    # ========================================================================
+
+    @overload
+    async def query(self, query: GetDayContextQuery) -> DayContext: ...
+
+    @overload
+    async def query(self, query: PreviewDayQuery) -> DayContext: ...
+
     async def query(self, query: Query) -> Any:
         """Execute a query and return the result.
 
@@ -73,8 +84,23 @@ class Mediator:
         """
         handler = self._query_handlers.get(type(query))
         if handler is None:
-            raise KeyError(f"No handler registered for query type: {type(query).__name__}")
+            raise KeyError(
+                f"No handler registered for query type: {type(query).__name__}"
+            )
         return await handler.handle(query)
+
+    # ========================================================================
+    # Command overloads - each command type has a specific return type
+    # ========================================================================
+
+    @overload
+    async def execute(self, command: ScheduleDayCommand) -> DayContext: ...
+
+    @overload
+    async def execute(self, command: UpdateDayCommand) -> Day: ...
+
+    @overload
+    async def execute(self, command: RecordTaskActionCommand) -> Task: ...
 
     async def execute(self, command: Command) -> Any:
         """Execute a command and return the result.

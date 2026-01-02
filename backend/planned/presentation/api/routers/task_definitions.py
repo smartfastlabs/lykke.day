@@ -1,14 +1,10 @@
 """Router for TaskDefinition CRUD operations."""
 
 from fastapi import APIRouter
-
 from planned.infrastructure.data.default_task_definitions import (
     DEFAULT_TASK_DEFINITIONS,
 )
 from planned.infrastructure.repositories import TaskDefinitionRepository
-from planned.presentation.api.routers.dependencies.repositories import (
-    get_task_definition_repo,
-)
 from planned.presentation.api.routers.generic import create_crud_router
 from planned.presentation.api.routers.generic.config import (
     CRUDOperations,
@@ -33,8 +29,8 @@ async def get_available_task_definitions() -> list[dict]:
 crud_router = create_crud_router(
     EntityRouterConfig(
         entity_name="task-definitions",
-        repo_loader=get_task_definition_repo,
         repo_class=TaskDefinitionRepository,
+        repository_name="task_definitions",
         operations=CRUDOperations(
             enable_get=True,
             enable_list=True,

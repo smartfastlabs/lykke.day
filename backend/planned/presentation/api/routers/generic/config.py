@@ -1,6 +1,5 @@
 """Configuration classes for generic CRUD router factory."""
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from planned.domain.value_objects.query import BaseQuery
@@ -23,8 +22,10 @@ class EntityRouterConfig:
     """Configuration for creating a CRUD router for an entity."""
 
     entity_name: str
-    repo_loader: Callable
     repo_class: type
+    repository_name: (
+        str  # Name of the repository attribute on UoW (e.g., "days", "tasks")
+    )
     operations: CRUDOperations
     tags: list[str] | None = None
     enable_pagination: bool = True
