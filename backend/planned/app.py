@@ -4,10 +4,13 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Never
 
+# Import handlers module to trigger handler class registration via __init_subclass__
+import planned.application.events.handlers
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
+from planned.application.events import register_all_handlers
 from planned.core.config import settings
 from planned.core.exceptions import BaseError
 from planned.infrastructure.auth import (
@@ -24,24 +27,8 @@ from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from planned.infrastructure.utils import youtube
 from planned.presentation.api.routers import router
 
-from planned.application.events import TaskStatusLoggerHandler
-
 # Keep references to event handlers to prevent garbage collection
 _event_handlers: list = []
-
-
-def _register_event_handlers() -> None:
-    """Register all domain event handlers.
-
-    Handlers connect to the blinker signal on instantiation.
-    We keep references to prevent garbage collection.
-    """
-    _event_handlers.extend([
-        TaskStatusLoggerHandler(),
-        # Add more handlers here as needed:
-        # SendNotificationHandler(),
-        # UpdateAnalyticsHandler(),
-    ])
 
 
 def is_testing() -> bool:
@@ -62,8 +49,8 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
     """
     Lifespan context manager for FastAPI application.
     """
-    # Register event handlers at startup
-    _register_event_handlers()
+    # Auto-register all domain event handlers
+    _event_handlers.extend(register_all_handlers())
     logger.info(f"Registered {len(_event_handlers)} domain event handler(s)")
 
     yield  # type: ignore
