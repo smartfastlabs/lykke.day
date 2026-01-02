@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
-from planned.application.services.day.context_loader import DayContextLoader
+from planned.application.utils.day_context_loader import DayContextLoader
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain import entities
 
