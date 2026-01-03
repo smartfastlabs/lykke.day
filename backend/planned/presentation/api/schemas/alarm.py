@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from planned.domain.value_objects.alarm import AlarmType
 
 
-class Alarm(BaseModel):
+class AlarmSchema(BaseModel):
     """API schema for Alarm value object."""
 
     name: str

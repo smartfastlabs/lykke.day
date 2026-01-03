@@ -10,7 +10,7 @@ from planned.domain.value_objects.action import ActionType
 from .base import BaseEntitySchema
 
 
-class Action(BaseEntitySchema):
+class ActionSchema(BaseEntitySchema):
     """API schema for Action entity."""
 
     type: ActionType

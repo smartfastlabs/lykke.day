@@ -12,10 +12,10 @@ from planned.domain.value_objects.task import TaskFrequency
 from .base import BaseEntitySchema
 
 if TYPE_CHECKING:
-    from .action import Action
+    from .action import ActionSchema
 
 
-class CalendarEntry(BaseEntitySchema):
+class CalendarEntrySchema(BaseEntitySchema):
     """API schema for CalendarEntry entity."""
 
     user_id: UUID
@@ -29,6 +29,6 @@ class CalendarEntry(BaseEntitySchema):
     ends_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
-    actions: list["Action"] = Field(default_factory=list)
+    actions: list["ActionSchema"] = Field(default_factory=list)
     date: date  # Computed field from starts_at
 

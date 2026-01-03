@@ -13,7 +13,7 @@ from planned.application.mediator import Mediator
 from planned.application.queries import GetEntityQuery, ListEntitiesQuery
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity, DayTemplateEntity, UserEntity
-from planned.presentation.api import schemas
+from planned.presentation.api.schemas import DayTemplateSchema
 from planned.presentation.api.schemas.mappers import map_day_template_to_schema
 
 from .dependencies.services import get_mediator
@@ -22,12 +22,12 @@ from .dependencies.user import get_current_user
 router = APIRouter()
 
 
-@router.get("/{uuid}", response_model=schemas.DayTemplate)
+@router.get("/{uuid}", response_model=DayTemplateSchema)
 async def get_day_template(
     uuid: UUID,
     user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> schemas.DayTemplate:
+) -> DayTemplateSchema:
     """Get a single day template by ID."""
     query = GetEntityQuery[DayTemplateEntity](
         user_id=user.id,
@@ -38,13 +38,13 @@ async def get_day_template(
     return map_day_template_to_schema(day_template)
 
 
-@router.get("/", response_model=value_objects.PagedQueryResponse[schemas.DayTemplate])
+@router.get("/", response_model=value_objects.PagedQueryResponse[DayTemplateSchema])
 async def list_day_templates(
     user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
-) -> value_objects.PagedQueryResponse[schemas.DayTemplate]:
+) -> value_objects.PagedQueryResponse[DayTemplateSchema]:
     """List day templates with pagination."""
     query = ListEntitiesQuery[DayTemplateEntity](
         user_id=user.id,
@@ -54,9 +54,7 @@ async def list_day_templates(
         paginate=True,
     )
     result = await mediator.query(query)
-    paged_response = cast(
-        "value_objects.PagedQueryResponse[DayTemplateEntity]", result
-    )
+    paged_response = cast("value_objects.PagedQueryResponse[DayTemplateEntity]", result)
     # Convert entities to schemas
     template_schemas = [map_day_template_to_schema(dt) for dt in paged_response.items]
     return value_objects.PagedQueryResponse(
@@ -69,12 +67,12 @@ async def list_day_templates(
     )
 
 
-@router.post("/", response_model=schemas.DayTemplate)
+@router.post("/", response_model=DayTemplateSchema)
 async def create_day_template(
-    day_template_data: schemas.DayTemplate,
+    day_template_data: DayTemplateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> schemas.DayTemplate:
+) -> DayTemplateSchema:
     """Create a new day template."""
     # Convert schema to entity
     from planned.domain.value_objects.alarm import Alarm
@@ -106,13 +104,13 @@ async def create_day_template(
     return map_day_template_to_schema(created)
 
 
-@router.put("/{uuid}", response_model=schemas.DayTemplate)
+@router.put("/{uuid}", response_model=DayTemplateSchema)
 async def update_day_template(
     uuid: UUID,
-    day_template_data: schemas.DayTemplate,
+    day_template_data: DayTemplateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> schemas.DayTemplate:
+) -> DayTemplateSchema:
     """Update a day template."""
     # Convert schema to entity
     from planned.domain.value_objects.alarm import Alarm

@@ -6,7 +6,7 @@ from uuid import UUID
 from .base import BaseEntitySchema
 
 
-class PushSubscription(BaseEntitySchema):
+class PushSubscriptionSchema(BaseEntitySchema):
     """API schema for PushSubscription entity."""
 
     user_id: UUID

@@ -7,7 +7,7 @@ from planned.domain.value_objects.task import TaskType
 from .base import BaseEntitySchema
 
 
-class TaskDefinition(BaseEntitySchema):
+class TaskDefinitionSchema(BaseEntitySchema):
     """API schema for TaskDefinition entity."""
 
     user_id: UUID

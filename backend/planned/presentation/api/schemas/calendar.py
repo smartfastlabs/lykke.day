@@ -6,7 +6,7 @@ from uuid import UUID
 from .base import BaseEntitySchema
 
 
-class Calendar(BaseEntitySchema):
+class CalendarSchema(BaseEntitySchema):
     """API schema for Calendar entity."""
 
     user_id: UUID

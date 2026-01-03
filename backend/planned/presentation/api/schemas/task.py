@@ -18,11 +18,11 @@ from planned.domain.value_objects.task import (
 from .base import BaseEntitySchema, BaseSchema
 
 if TYPE_CHECKING:
-    from .action import Action
-    from .task_definition import TaskDefinition
+    from .action import ActionSchema
+    from .task_definition import TaskDefinitionSchema
 
 
-class TaskSchedule(BaseSchema):
+class TaskScheduleSchema(BaseSchema):
     """API schema for TaskSchedule value object."""
 
     available_time: time | None = None
@@ -31,19 +31,19 @@ class TaskSchedule(BaseSchema):
     timing_type: TimingType
 
 
-class Task(BaseEntitySchema):
+class TaskSchema(BaseEntitySchema):
     """API schema for Task entity."""
 
     user_id: UUID
     scheduled_date: date
     name: str
     status: TaskStatus
-    task_definition: "TaskDefinition"
+    task_definition: "TaskDefinitionSchema"
     category: TaskCategory
     frequency: TaskFrequency
     completed_at: datetime | None = None
-    schedule: Optional[TaskSchedule] = None
+    schedule: Optional[TaskScheduleSchema] = None
     routine_id: UUID | None = None
     tags: list[TaskTag] = Field(default_factory=list)
-    actions: list["Action"] = Field(default_factory=list)
+    actions: list["ActionSchema"] = Field(default_factory=list)
 

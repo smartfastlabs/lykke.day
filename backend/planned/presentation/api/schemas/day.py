@@ -12,18 +12,18 @@ from planned.domain.value_objects.day import DayStatus, DayTag
 from .base import BaseEntitySchema
 
 if TYPE_CHECKING:
-    from .alarm import Alarm
-    from .day_template import DayTemplate
+    from .alarm import AlarmSchema
+    from .day_template import DayTemplateSchema
 
 
-class Day(BaseEntitySchema):
+class DaySchema(BaseEntitySchema):
     """API schema for Day entity."""
 
     user_id: UUID
     date: date
-    alarm: Optional["Alarm"] = None
+    alarm: Optional["AlarmSchema"] = None
     status: DayStatus
     scheduled_at: datetime | None = None
     tags: list[DayTag] = Field(default_factory=list)
-    template: Optional["DayTemplate"] = None
+    template: Optional["DayTemplateSchema"] = None
 
