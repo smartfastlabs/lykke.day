@@ -3,7 +3,7 @@
 from uuid import uuid4
 
 import pytest
-from planned.domain.entities import Calendar
+from planned.domain.entities import CalendarEntity
 from planned.infrastructure import data_objects
 from planned.infrastructure.repositories import AuthTokenRepository, CalendarRepository
 
@@ -26,7 +26,7 @@ async def test_list_calendars(authenticated_client):
 
     # Create a calendar via repository
     calendar_repo = CalendarRepository(user_id=user.id)
-    calendar = Calendar(
+    calendar = CalendarEntity(
         user_id=user.id,
         name="Test Calendar",
         auth_token_id=auth_token.id,
@@ -66,7 +66,7 @@ async def test_get_calendar(authenticated_client):
 
     # Create a calendar via repository
     calendar_repo = CalendarRepository(user_id=user.id)
-    calendar = Calendar(
+    calendar = CalendarEntity(
         user_id=user.id,
         name="Get Test Calendar",
         auth_token_id=auth_token.id,
@@ -271,7 +271,7 @@ async def test_list_calendars_pagination(authenticated_client):
     # Create multiple calendars
     calendar_repo = CalendarRepository(user_id=user.id)
     for i in range(3):
-        calendar = Calendar(
+        calendar = CalendarEntity(
             user_id=user.id,
             name=f"Pagination Test {i}",
             auth_token_id=auth_token.id,

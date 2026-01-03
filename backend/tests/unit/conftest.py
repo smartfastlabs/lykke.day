@@ -122,10 +122,10 @@ def test_user_id():
 @pytest.fixture
 def test_user(test_user_id):
     """Test user entity for unit tests."""
-    from planned.domain.entities import User
+    from planned.domain.entities import UserEntity
     from planned.domain.value_objects.user import UserSetting
 
-    return User(
+    return UserEntity(
         id=test_user_id,
         email="test@example.com",
         hashed_password="hash",

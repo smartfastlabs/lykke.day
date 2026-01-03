@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import Calendar
+from planned.domain.entities import CalendarEntity
 from planned.infrastructure import data_objects
 from planned.infrastructure.repositories import CalendarRepository
 
@@ -23,7 +23,7 @@ async def test_get(calendar_repo, test_user, auth_token_repo):
     )
     auth_token = await auth_token_repo.put(auth_token)
     
-    calendar = Calendar(
+    calendar = CalendarEntity(
         user_id=test_user.id,
         name="Test Calendar",
         auth_token_id=str(auth_token.id),
@@ -56,7 +56,7 @@ async def test_put(calendar_repo, test_user, auth_token_repo):
         token="test_token",
     ))
     
-    calendar = Calendar(
+    calendar = CalendarEntity(
         user_id=test_user.id,
         name="New Calendar",
         auth_token_id=str(auth_token.id),
@@ -80,14 +80,14 @@ async def test_all(calendar_repo, test_user, auth_token_repo):
         token="test_token",
     ))
     
-    calendar1 = Calendar(
+    calendar1 = CalendarEntity(
         user_id=test_user.id,
         name="Calendar 1",
         auth_token_id=str(auth_token.id),
         platform="google",
         platform_id="platform-id-1",
     )
-    calendar2 = Calendar(
+    calendar2 = CalendarEntity(
         user_id=test_user.id,
         name="Calendar 2",
         auth_token_id=str(auth_token.id),
@@ -114,7 +114,7 @@ async def test_user_isolation(calendar_repo, test_user, create_test_user, auth_t
         token="test_token",
     ))
     
-    calendar = Calendar(
+    calendar = CalendarEntity(
         user_id=test_user.id,
         name="User1 Calendar",
         auth_token_id=str(auth_token.id),

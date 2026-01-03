@@ -9,7 +9,7 @@ import pytest
 
 from planned.core.config import settings
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import Message
+from planned.domain.entities import MessageEntity
 from planned.infrastructure.repositories import MessageRepository
 from planned.domain.value_objects.query import DateQuery
 
@@ -22,7 +22,7 @@ async def test_get(message_repo, test_user, test_date):
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
-    message = Message(
+    message = MessageEntity(
         id=uuid4(),
         user_id=test_user.id,
         author="system",
@@ -52,7 +52,7 @@ async def test_put(message_repo, test_user, test_date):
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
-    message = Message(
+    message = MessageEntity(
         id=uuid4(),
         user_id=test_user.id,
         author="user",
@@ -80,14 +80,14 @@ async def test_search_query(message_repo, test_user, test_date, test_date_tomorr
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
     
-    message1 = Message(
+    message1 = MessageEntity(
         id=uuid4(),
         user_id=test_user.id,
         author="system",
         content="Message Today",
         sent_at=sent_at1,
     )
-    message2 = Message(
+    message2 = MessageEntity(
         id=uuid4(),
         user_id=test_user.id,
         author="user",
@@ -113,7 +113,7 @@ async def test_user_isolation(message_repo, test_user, create_test_user, test_da
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
     
-    message = Message(
+    message = MessageEntity(
         id=uuid4(),
         user_id=test_user.id,
         author="system",

@@ -248,7 +248,7 @@ async def test_sync_all_successful_syncs(
         token="token2",
     )
 
-    calendar_entry1 = CalendarEntry(
+    calendar_entry1 = CalendarEntryEntity(
         user_id=calendar1.user_id,
         name="Calendar Entry 1",
         frequency=TaskFrequency.ONCE,
@@ -258,7 +258,7 @@ async def test_sync_all_successful_syncs(
         status="confirmed",
         starts_at=test_datetime_noon,
     )
-    calendar_entry2 = CalendarEntry(
+    calendar_entry2 = CalendarEntryEntity(
         user_id=calendar2.user_id,
         name="Calendar Entry 2",
         frequency=TaskFrequency.ONCE,

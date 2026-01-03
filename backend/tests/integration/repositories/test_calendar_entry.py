@@ -9,7 +9,7 @@ import pytest
 
 from planned.core.config import settings
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import CalendarEntry
+from planned.domain.entities import CalendarEntryEntity
 from planned.domain.value_objects.task import TaskFrequency
 from planned.infrastructure.repositories import CalendarEntryRepository
 from planned.domain.value_objects.query import DateQuery
@@ -23,7 +23,7 @@ async def test_get(calendar_entry_repo, test_user, test_date):
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
-    calendar_entry = CalendarEntry(
+    calendar_entry = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Test Calendar Entry",
@@ -58,7 +58,7 @@ async def test_put(calendar_entry_repo, test_user, test_date):
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
-    calendar_entry = CalendarEntry(
+    calendar_entry = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="New Calendar Entry",
@@ -85,7 +85,7 @@ async def test_put_update(calendar_entry_repo, test_user, test_date):
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
-    calendar_entry = CalendarEntry(
+    calendar_entry = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Original Calendar Entry",
@@ -123,7 +123,7 @@ async def test_all(calendar_entry_repo, test_user, test_date, test_date_tomorrow
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
     
-    calendar_entry1 = CalendarEntry(
+    calendar_entry1 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Calendar Entry 1",
@@ -134,7 +134,7 @@ async def test_all(calendar_entry_repo, test_user, test_date, test_date_tomorrow
         status="confirmed",
         starts_at=starts_at1,
     )
-    calendar_entry2 = CalendarEntry(
+    calendar_entry2 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Calendar Entry 2",
@@ -169,7 +169,7 @@ async def test_search_query(calendar_entry_repo, test_user, test_date, test_date
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
     
-    calendar_entry1 = CalendarEntry(
+    calendar_entry1 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Calendar Entry Today",
@@ -180,7 +180,7 @@ async def test_search_query(calendar_entry_repo, test_user, test_date, test_date
         status="confirmed",
         starts_at=starts_at1,
     )
-    calendar_entry2 = CalendarEntry(
+    calendar_entry2 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Calendar Entry Tomorrow",
@@ -210,7 +210,7 @@ async def test_delete(calendar_entry_repo, test_user, test_date):
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
-    calendar_entry = CalendarEntry(
+    calendar_entry = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Calendar Entry to Delete",
@@ -250,7 +250,7 @@ async def test_delete_many(calendar_entry_repo, test_user, test_date, test_date_
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
     
-    calendar_entry1 = CalendarEntry(
+    calendar_entry1 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Calendar Entry 1",
@@ -261,7 +261,7 @@ async def test_delete_many(calendar_entry_repo, test_user, test_date, test_date_
         status="confirmed",
         starts_at=starts_at1,
     )
-    calendar_entry2 = CalendarEntry(
+    calendar_entry2 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Calendar Entry 2",
@@ -272,7 +272,7 @@ async def test_delete_many(calendar_entry_repo, test_user, test_date, test_date_
         status="confirmed",
         starts_at=starts_at2,
     )
-    calendar_entry3 = CalendarEntry(
+    calendar_entry3 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Calendar Entry 3",
@@ -310,7 +310,7 @@ async def test_user_isolation(calendar_entry_repo, test_user, create_test_user, 
     ).astimezone(UTC)
     
     # Create calendar entry for test_user
-    calendar_entry = CalendarEntry(
+    calendar_entry = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="User1 Calendar Entry",

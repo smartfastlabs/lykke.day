@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from planned.core.config import settings
-from planned.domain.entities import CalendarEntry
+from planned.domain.entities import CalendarEntryEntity
 from planned.domain.value_objects.task import TaskFrequency
 from planned.infrastructure.repositories import CalendarEntryRepository
 
@@ -25,7 +25,7 @@ async def test_get_today(authenticated_client, test_date):
         datetime.time(hour=10),
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
-    calendar_entry = CalendarEntry(
+    calendar_entry = CalendarEntryEntity(
         id=uuid4(),
         user_id=user.id,
         name="Test Calendar Entry",

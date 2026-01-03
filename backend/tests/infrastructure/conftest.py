@@ -4,7 +4,7 @@ import pytest_asyncio
 
 from uuid import uuid4
 
-from planned.domain.entities import User
+from planned.domain.entities import UserEntity
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.repositories import DayRepository, TaskRepository, UserRepository
 
@@ -13,7 +13,7 @@ from planned.infrastructure.repositories import DayRepository, TaskRepository, U
 async def test_user():
     """Create a unique user for each test."""
     user_repo = UserRepository()
-    user = User(
+    user = UserEntity(
         id=uuid4(),
         email=f"test-{uuid4()}@example.com",
         hashed_password="test_hash",

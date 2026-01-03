@@ -10,7 +10,15 @@ from planned.application.services import DayService
 from planned.application.services.factories import DayServiceFactory
 from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
-from planned.domain.entities import CalendarEntity, CalendarEntryEntity, DayEntity, DayTemplateEntity, TaskDefinitionEntity, TaskEntity, UserEntity
+from planned.domain.entities import (
+    CalendarEntity,
+    CalendarEntryEntity,
+    DayEntity,
+    DayTemplateEntity,
+    TaskDefinitionEntity,
+    TaskEntity,
+    UserEntity,
+)
 
 
 @pytest.mark.asyncio
@@ -664,7 +672,7 @@ async def test_base_day_with_template(
     test_user,
 ):
     """Test Day.create_for_date creates day with specified template."""
-    from planned.domain.entities import Day
+    from planned.domain.entities import DayEntity
 
     date = datetime.date(2024, 1, 1)
     template = DayTemplateEntity(
@@ -672,7 +680,7 @@ async def test_base_day_with_template(
         user_id=test_user_id,
     )
 
-    day = Day.create_for_date(
+    day = DayEntity.create_for_date(
         date,
         user_id=test_user_id,
         template=template,

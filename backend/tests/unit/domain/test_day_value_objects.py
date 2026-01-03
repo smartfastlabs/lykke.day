@@ -56,9 +56,9 @@ def test_day_mode_values(mode: DayMode, expected_value: str) -> None:
 
 def test_day_context_creation(test_user_id: str) -> None:
     """Test DayContext can be created with a day."""
-    from planned.domain.entities import Day
+    from planned.domain.entities import DayEntity
 
-    day = Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=datetime.date(2025, 11, 27),
         status=DayStatus.UNSCHEDULED,
@@ -72,11 +72,11 @@ def test_day_context_creation(test_user_id: str) -> None:
 
 def test_day_context_defaults() -> None:
     """Test DayContext has default empty lists."""
-    from planned.domain.entities import Day
+    from planned.domain.entities import DayEntity
     from uuid import uuid4
 
     test_user_id = uuid4()
-    day = Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=datetime.date(2025, 11, 27),
         status=DayStatus.UNSCHEDULED,
