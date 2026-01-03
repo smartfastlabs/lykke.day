@@ -12,7 +12,7 @@ from planned.application.commands import (
 from planned.application.mediator import Mediator
 from planned.application.queries import GetEntityQuery, ListEntitiesQuery
 from planned.domain import value_objects
-from planned.domain.entities import DayEntity, DayTemplateEntity, UserEntity
+from planned.domain.entities import DayTemplateEntity, UserEntity
 from planned.presentation.api.schemas import DayTemplateSchema
 from planned.presentation.api.schemas.mappers import map_day_template_to_schema
 

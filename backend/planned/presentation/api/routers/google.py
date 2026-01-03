@@ -1,11 +1,14 @@
 import secrets
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from googleapiclient.discovery import build
 
+# TODO: Refactor OAuth flow to use commands/queries instead of direct repository access
+# This is a complex OAuth callback flow that creates multiple entities in a single transaction.
+# Consider creating a dedicated OAuthCallbackCommand to handle this flow properly.
 from planned.application.repositories import (
     AuthTokenRepositoryProtocol,
     CalendarRepositoryProtocol,
@@ -79,7 +82,9 @@ async def google_login_callback(
     state: str,
     code: str,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    auth_token_repo: Annotated[AuthTokenRepositoryProtocol, Depends(get_auth_token_repo)],
+    auth_token_repo: Annotated[
+        AuthTokenRepositoryProtocol, Depends(get_auth_token_repo)
+    ],
     calendar_repo: Annotated[CalendarRepositoryProtocol, Depends(get_calendar_repo)],
 ) -> RedirectResponse:
     if not code or not verify_state(state, "login"):

@@ -6,18 +6,15 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from planned.application.commands import ScheduleDayCommand
 from planned.application.mediator import Mediator
-from planned.application.queries import PreviewDayQuery
-from planned.application.repositories import RoutineRepositoryProtocol
+from planned.application.queries import ListEntitiesQuery, PreviewDayQuery
 from planned.core.utils.dates import get_current_date, get_tomorrows_date
-from planned.domain import value_objects
-from planned.domain.entities import UserEntity
+from planned.domain.entities import RoutineEntity, UserEntity
 from planned.presentation.api.schemas import DayContextSchema, RoutineSchema
 from planned.presentation.api.schemas.mappers import (
     map_day_context_to_schema,
     map_routine_to_schema,
 )
 
-from .dependencies.repositories import get_routine_repo
 from .dependencies.services import get_mediator
 from .dependencies.user import get_current_user
 
@@ -26,10 +23,17 @@ router = APIRouter()
 
 @router.get("/routines", response_model=list[RoutineSchema])
 async def list_routines(
-    routine_repo: Annotated[RoutineRepositoryProtocol, Depends(get_routine_repo)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> list[RoutineSchema]:
     """Get all routines for the current user."""
-    routines = await routine_repo.all()
+    query = ListEntitiesQuery[RoutineEntity](
+        user_id=user.id,
+        repository_name="routines",
+        paginate=False,
+    )
+    result = await mediator.query(query)
+    routines = result if isinstance(result, list) else result.items
     return [map_routine_to_schema(routine) for routine in routines]
 
 

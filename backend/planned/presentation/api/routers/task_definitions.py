@@ -12,7 +12,7 @@ from planned.application.commands import (
 )
 from planned.application.mediator import Mediator
 from planned.application.queries import GetEntityQuery, ListEntitiesQuery
-from planned.domain.entities import TaskDefinitionEntity, TaskEntity, UserEntity
+from planned.domain.entities import TaskDefinitionEntity, UserEntity
 from planned.infrastructure.data.default_task_definitions import (
     DEFAULT_TASK_DEFINITIONS,
 )
