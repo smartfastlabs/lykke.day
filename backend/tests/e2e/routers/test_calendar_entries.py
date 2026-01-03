@@ -9,6 +9,7 @@ import pytest
 
 from planned.core.config import settings
 from planned.domain.entities import CalendarEntry
+from planned.domain.value_objects.task import TaskFrequency
 from planned.infrastructure.repositories import CalendarEntryRepository
 
 
@@ -28,7 +29,7 @@ async def test_get_today(authenticated_client, test_date):
         id=uuid4(),
         user_id=user.id,
         name="Test Calendar Entry",
-        frequency="ONCE",
+        frequency=TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-id",
         platform="testing",

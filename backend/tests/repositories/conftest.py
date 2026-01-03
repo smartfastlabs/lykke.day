@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 import pytest_asyncio
 from planned import settings
 from planned.domain import entities
+from planned.domain.value_objects.task import TaskFrequency
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.repositories import UserRepository
 
@@ -37,7 +38,7 @@ async def test_calendar_entry(test_user, test_date):
     return entities.CalendarEntry(
         user_id=test_user.id,
         name="Test Calendar Entry",
-        frequency="ONCE",
+        frequency=TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-id",
         platform="testing",

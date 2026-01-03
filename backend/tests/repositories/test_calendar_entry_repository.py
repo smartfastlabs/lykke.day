@@ -7,6 +7,7 @@ import pytest
 import pytest_asyncio
 from planned import settings
 from planned.domain import entities
+from planned.domain.value_objects.task import TaskFrequency
 from planned.domain.value_objects.query import DateQuery
 from planned.infrastructure.repositories import CalendarEntryRepository, UserRepository
 
@@ -24,7 +25,7 @@ async def calendar_entry_repo(test_date, test_user):
     calendar_entry_today = entities.CalendarEntry(
         user_id=test_user.id,
         name="Test Calendar Entry",
-        frequency="ONCE",
+        frequency=TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
         platform_id="test-id",
         platform="testing",
@@ -43,7 +44,7 @@ async def calendar_entry_repo(test_date, test_user):
     calendar_entry_next = entities.CalendarEntry(
         user_id=test_user.id,
         name="Test Calendar Entry",
-        frequency="ONCE",
+        frequency=TaskFrequency.ONCE,
         calendar_id=uuid5(NAMESPACE_DNS, "test-calendar-2"),
         platform_id="test-id-2",
         platform="testing",

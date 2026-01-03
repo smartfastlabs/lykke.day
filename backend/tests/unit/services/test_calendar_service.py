@@ -9,6 +9,7 @@ from dobles import allow
 from planned.application.services import CalendarService
 from planned.core.exceptions import NotFoundError, TokenExpiredError
 from planned.domain.entities import AuthToken, Calendar, CalendarEntry
+from planned.domain.value_objects.task import TaskFrequency
 
 
 
@@ -42,7 +43,7 @@ async def test_sync(
     calendar_entry = CalendarEntry(
         user_id=calendar.user_id,
         name="Calendar Entry",
-        frequency="ONCE",
+        frequency=TaskFrequency.ONCE,
         calendar_id=calendar.id,
         platform_id="entry-id",
         platform="google",
@@ -136,7 +137,7 @@ async def test_sync_with_last_sync_at(
     calendar_entry = CalendarEntry(
         user_id=calendar.user_id,
         name="Calendar Entry",
-        frequency="ONCE",
+        frequency=TaskFrequency.ONCE,
         calendar_id=calendar.id,
         platform_id="entry-id",
         platform="google",
@@ -249,7 +250,7 @@ async def test_sync_all_successful_syncs(
     calendar_entry1 = CalendarEntry(
         user_id=calendar1.user_id,
         name="Calendar Entry 1",
-        frequency="ONCE",
+        frequency=TaskFrequency.ONCE,
         calendar_id=calendar1.id,
         platform_id="entry-id-1",
         platform="google",
@@ -259,7 +260,7 @@ async def test_sync_all_successful_syncs(
     calendar_entry2 = CalendarEntry(
         user_id=calendar2.user_id,
         name="Calendar Entry 2",
-        frequency="ONCE",
+        frequency=TaskFrequency.ONCE,
         calendar_id=calendar2.id,
         platform_id="entry-id-2",
         platform="google",

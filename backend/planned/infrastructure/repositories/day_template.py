@@ -67,6 +67,11 @@ class DayTemplateRepository(UserScopedBaseRepository[entities.DayTemplate, DayTe
                 UUID(routine_id) if isinstance(routine_id, str) else routine_id
                 for routine_id in data["routine_ids"]
             ]
+        
+        # Handle alarm - it comes as a dict from JSONB, need to convert to entity
+        if "alarm" in data and data["alarm"]:
+            if isinstance(data["alarm"], dict):
+                data["alarm"] = entities.Alarm(**data["alarm"])
 
         return entities.DayTemplate(**data)
 

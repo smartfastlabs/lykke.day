@@ -16,6 +16,7 @@ from planned.presentation.api.schemas.mappers import (
     map_day_template_to_schema,
     map_day_to_schema,
 )
+from pydantic import BaseModel
 
 from .dependencies.container import RepositoryContainer, get_repository_container
 from .dependencies.services import get_mediator
@@ -105,7 +106,7 @@ async def schedule_day(
     return map_day_context_to_schema(context)
 
 
-class UpdateDayRequest(value_objects.BaseRequestObject):
+class UpdateDayRequest(BaseModel):
     """Request body for updating a day."""
 
     status: value_objects.DayStatus | None = None
