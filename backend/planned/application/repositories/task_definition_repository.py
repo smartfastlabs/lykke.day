@@ -1,7 +1,7 @@
 """Protocol for TaskDefinitionRepository."""
 
 from planned.application.repositories.base import CrudRepositoryProtocol
-from planned.domain.entities import TaskDefinitionEntity, TaskEntity
+from planned.domain.entities import TaskDefinitionEntity
 
 
 class TaskDefinitionRepositoryProtocol(CrudRepositoryProtocol[TaskDefinitionEntity]):

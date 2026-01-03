@@ -4,8 +4,6 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Never
 
-# Import handlers module to trigger handler class registration via __init_subclass__
-import planned.application.events.handlers
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -19,11 +17,6 @@ from planned.infrastructure.auth import (
     auth_backend,
     fastapi_users,
 )
-from planned.infrastructure.gateways import (
-    GoogleCalendarGateway,
-    WebPushGateway,
-)
-from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from planned.core.utils import youtube
 from planned.presentation.api.routers import router
 

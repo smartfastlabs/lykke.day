@@ -3,7 +3,7 @@
 from typing import Protocol
 
 from planned.application.repositories.base import CrudRepositoryProtocol
-from planned.domain.entities import DayEntity, DayTemplateEntity
+from planned.domain.entities import DayTemplateEntity
 
 
 class DayTemplateRepositoryProtocol(CrudRepositoryProtocol[DayTemplateEntity], Protocol):

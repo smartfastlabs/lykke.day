@@ -1,4 +1,3 @@
-import uuid
 from dataclasses import dataclass, field
 from datetime import UTC
 from datetime import date as dt_date

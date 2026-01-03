@@ -2,7 +2,7 @@
 
 import datetime
 
-from planned.domain.entities import CalendarEntity, CalendarEntryEntity
+from planned.domain.entities import CalendarEntryEntity
 from planned.core.utils.dates import get_current_datetime
 
 

@@ -1,7 +1,7 @@
 """Protocol for CalendarEntryRepository."""
 
 from planned.application.repositories.base import DateScopedCrudRepositoryProtocol
-from planned.domain.entities import CalendarEntity, CalendarEntryEntity
+from planned.domain.entities import CalendarEntryEntity
 
 
 class CalendarEntryRepositoryProtocol(DateScopedCrudRepositoryProtocol[CalendarEntryEntity]):

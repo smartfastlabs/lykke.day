@@ -25,7 +25,6 @@ from planned.core.utils.dates import get_current_date, get_current_time
 from planned.domain import value_objects
 from planned.domain.entities import (
     ActionEntity,
-    CalendarEntity,
     CalendarEntryEntity,
     TaskEntity,
     UserEntity,

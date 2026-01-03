@@ -1,7 +1,7 @@
 """Base class for domain event handlers."""
 
 from abc import ABC, abstractmethod
-from typing import ClassVar, Type
+from typing import ClassVar
 
 # Import signal here to avoid circular imports
 from planned.application.events.signals import domain_event_signal

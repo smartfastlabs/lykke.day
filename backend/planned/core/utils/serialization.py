@@ -1,6 +1,6 @@
 """Utilities for serializing dataclasses to JSON-compatible formats."""
 
-from dataclasses import asdict, fields, is_dataclass
+from dataclasses import fields, is_dataclass
 from datetime import date, datetime, time
 from enum import Enum
 from typing import Any
