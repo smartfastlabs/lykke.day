@@ -1,5 +1,5 @@
 from .action import ActionType
-from .alarm import AlarmType
+from .alarm import Alarm, AlarmType
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .day import DayContext, DayMode, DayStatus, DayTag
 from .push import NotificationAction, NotificationPayload
@@ -18,6 +18,7 @@ from .user import UserSetting
 
 __all__ = [
     "ActionType",
+    "Alarm",
     "AlarmType",
     "BaseRequestObject",
     "BaseResponseObject",

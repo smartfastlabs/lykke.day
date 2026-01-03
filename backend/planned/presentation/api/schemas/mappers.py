@@ -11,8 +11,8 @@ def map_action_to_schema(action: entities.Action) -> schemas.Action:
     return schemas.Action(**asdict(action))
 
 
-def map_alarm_to_schema(alarm: entities.Alarm) -> schemas.Alarm:
-    """Convert Alarm entity to Alarm schema."""
+def map_alarm_to_schema(alarm: value_objects.Alarm) -> schemas.Alarm:
+    """Convert Alarm value object to Alarm schema."""
     return schemas.Alarm(**asdict(alarm))
 
 

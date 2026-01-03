@@ -20,7 +20,7 @@ class Calendar(BaseEntityObject):
         # Generate UUID5 based on platform and platform_id for deterministic IDs
         # Only generates if id was not explicitly provided
         # Check if id needs to be generated (mypy doesn't understand field override)
-        current_id = object.__getattribute__(self, "id")  # type: ignore[arg-type]
+        current_id = object.__getattribute__(self, "id")
         if current_id is None:
             namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "planned.day")
             name = f"{self.platform}:{self.platform_id}"

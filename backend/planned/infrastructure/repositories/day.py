@@ -1,7 +1,7 @@
 from typing import Any
 from uuid import UUID
 
-from planned.domain import entities
+from planned.domain import entities, value_objects
 
 from .base import BaseQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import days_tbl
@@ -72,15 +72,39 @@ class DayRepository(UserScopedBaseRepository[entities.Day, BaseQuery]):
                     template_data["id"] = UUID(template_data["id"])
                 if "user_id" in template_data and isinstance(template_data["user_id"], str):
                     template_data["user_id"] = UUID(template_data["user_id"])
-                # Convert nested alarm dict to Alarm entity if present
+                # Convert nested alarm dict to Alarm value object if present
                 if "alarm" in template_data and template_data["alarm"]:
                     if isinstance(template_data["alarm"], dict):
-                        template_data["alarm"] = entities.Alarm(**template_data["alarm"])
+                        alarm_data = dict(template_data["alarm"])
+                        # Convert time string back to time object if needed
+                        if "time" in alarm_data and isinstance(alarm_data["time"], str):
+                            from datetime import time as dt_time
+                            alarm_data["time"] = dt_time.fromisoformat(alarm_data["time"])
+                        # Convert type string to enum if needed
+                        if "type" in alarm_data and isinstance(alarm_data["type"], str):
+                            alarm_data["type"] = value_objects.AlarmType(alarm_data["type"])
+                        # Convert triggered_at string to time object if needed
+                        if "triggered_at" in alarm_data and alarm_data["triggered_at"] and isinstance(alarm_data["triggered_at"], str):
+                            from datetime import time as dt_time
+                            alarm_data["triggered_at"] = dt_time.fromisoformat(alarm_data["triggered_at"])
+                        template_data["alarm"] = value_objects.Alarm(**alarm_data)
                 data["template"] = entities.DayTemplate(**template_data)
         
-        # Handle alarm - it comes as a dict from JSONB, need to convert to entity
+        # Handle alarm - it comes as a dict from JSONB, need to convert to value object
         if "alarm" in data and data["alarm"]:
             if isinstance(data["alarm"], dict):
-                data["alarm"] = entities.Alarm(**data["alarm"])
+                alarm_data = dict(data["alarm"])
+                # Convert time string back to time object if needed
+                if "time" in alarm_data and isinstance(alarm_data["time"], str):
+                    from datetime import time as dt_time
+                    alarm_data["time"] = dt_time.fromisoformat(alarm_data["time"])
+                # Convert type string to enum if needed
+                if "type" in alarm_data and isinstance(alarm_data["type"], str):
+                    alarm_data["type"] = value_objects.AlarmType(alarm_data["type"])
+                # Convert triggered_at string to time object if needed
+                if "triggered_at" in alarm_data and alarm_data["triggered_at"] and isinstance(alarm_data["triggered_at"], str):
+                    from datetime import time as dt_time
+                    alarm_data["triggered_at"] = dt_time.fromisoformat(alarm_data["triggered_at"])
+                data["alarm"] = value_objects.Alarm(**alarm_data)
 
         return entities.Day(**data)

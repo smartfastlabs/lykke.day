@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass, field
 from uuid import UUID
 
-from .alarm import Alarm
+from .. import value_objects
 from .base import BaseEntityObject
 
 
@@ -10,7 +10,7 @@ from .base import BaseEntityObject
 class DayTemplate(BaseEntityObject):
     user_id: UUID
     slug: str
-    alarm: Alarm | None = None
+    alarm: value_objects.Alarm | None = None
     icon: str | None = None
     routine_ids: list[UUID] = field(default_factory=list)
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
@@ -23,7 +23,7 @@ class DayTemplate(BaseEntityObject):
         Only generates if id was not explicitly provided.
         """
         # Check if id needs to be generated (mypy doesn't understand field override)
-        current_id = object.__getattribute__(self, "id")  # type: ignore[arg-type]
+        current_id = object.__getattribute__(self, "id")
         if current_id is None:
             generated_id = self.id_from_slug_and_user(self.slug, self.user_id)
             object.__setattr__(self, "id", generated_id)

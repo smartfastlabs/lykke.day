@@ -3,7 +3,7 @@ from uuid import UUID
 
 from sqlalchemy.sql import Select
 
-from planned.domain import entities
+from planned.domain import entities, value_objects
 from planned.infrastructure.database.tables import day_templates_tbl
 
 from .base import DayTemplateQuery, UserScopedBaseRepository
@@ -68,10 +68,22 @@ class DayTemplateRepository(UserScopedBaseRepository[entities.DayTemplate, DayTe
                 for routine_id in data["routine_ids"]
             ]
         
-        # Handle alarm - it comes as a dict from JSONB, need to convert to entity
+        # Handle alarm - it comes as a dict from JSONB, need to convert to value object
         if "alarm" in data and data["alarm"]:
             if isinstance(data["alarm"], dict):
-                data["alarm"] = entities.Alarm(**data["alarm"])
+                alarm_data = dict(data["alarm"])
+                # Convert time string back to time object if needed
+                if "time" in alarm_data and isinstance(alarm_data["time"], str):
+                    from datetime import time as dt_time
+                    alarm_data["time"] = dt_time.fromisoformat(alarm_data["time"])
+                # Convert type string to enum if needed
+                if "type" in alarm_data and isinstance(alarm_data["type"], str):
+                    alarm_data["type"] = value_objects.AlarmType(alarm_data["type"])
+                # Convert triggered_at string to time object if needed
+                if "triggered_at" in alarm_data and alarm_data["triggered_at"] and isinstance(alarm_data["triggered_at"], str):
+                    from datetime import time as dt_time
+                    alarm_data["triggered_at"] = dt_time.fromisoformat(alarm_data["triggered_at"])
+                data["alarm"] = value_objects.Alarm(**alarm_data)
 
         return entities.DayTemplate(**data)
 

@@ -6,8 +6,8 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from planned.domain.entities import Alarm, DayTemplate, User
-from planned.domain.value_objects.alarm import AlarmType
+from planned.domain.entities import DayTemplate, User
+from planned.domain.value_objects.alarm import Alarm, AlarmType
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.repositories import (
     AuthTokenRepository,

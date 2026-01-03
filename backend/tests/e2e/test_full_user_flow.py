@@ -12,8 +12,8 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from planned.domain.entities import Alarm, DayTemplate
-from planned.domain.value_objects.alarm import AlarmType
+from planned.domain.entities import DayTemplate
+from planned.domain.value_objects.alarm import Alarm, AlarmType
 from planned.domain.value_objects.day import DayStatus
 from planned.infrastructure.database.utils import reset_engine
 from planned.infrastructure.repositories import (

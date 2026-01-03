@@ -20,7 +20,6 @@ from ..events.task_events import (
     TaskStatusChangedEvent,
 )
 from .action import Action
-from .alarm import Alarm
 from .day_template import DayTemplate
 from .task import Task
 
@@ -29,7 +28,7 @@ from .task import Task
 class Day(BaseAggregateRoot):
     user_id: UUID
     date: dt_date
-    alarm: Alarm | None = None
+    alarm: value_objects.Alarm | None = None
     status: value_objects.DayStatus = value_objects.DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
     tags: list[value_objects.DayTag] = field(default_factory=list)
@@ -44,7 +43,7 @@ class Day(BaseAggregateRoot):
         Only generates if id was not explicitly provided.
         """
         # Check if id needs to be generated (mypy doesn't understand field override)
-        current_id = object.__getattribute__(self, "id")  # type: ignore[arg-type]
+        current_id = object.__getattribute__(self, "id")
         if current_id is None:
             generated_id = self.id_from_date_and_user(self.date, self.user_id)
             object.__setattr__(self, "id", generated_id)

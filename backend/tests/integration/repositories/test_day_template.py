@@ -5,8 +5,8 @@ from datetime import time
 import pytest
 
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import Alarm, DayTemplate
-from planned.domain.value_objects.alarm import AlarmType
+from planned.domain.entities import DayTemplate
+from planned.domain.value_objects.alarm import Alarm, AlarmType
 from planned.infrastructure.repositories import DayTemplateRepository
 
 

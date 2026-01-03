@@ -1,15 +1,14 @@
 """Alarm schema."""
 
 from datetime import time as dt_time
-from uuid import UUID
+
+from pydantic import BaseModel
 
 from planned.domain.value_objects.alarm import AlarmType
 
-from .base import BaseEntitySchema
 
-
-class Alarm(BaseEntitySchema):
-    """API schema for Alarm entity."""
+class Alarm(BaseModel):
+    """API schema for Alarm value object."""
 
     name: str
     time: dt_time

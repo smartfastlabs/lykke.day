@@ -6,9 +6,9 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 from planned.app import app
-from planned.domain.entities import Alarm, DayTemplate
+from planned.domain.entities import DayTemplate
 from planned.domain.entities import User as UserEntity
-from planned.domain.value_objects.alarm import AlarmType
+from planned.domain.value_objects.alarm import Alarm, AlarmType
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.database.tables import User as UserDB
 from planned.infrastructure.database.utils import reset_engine

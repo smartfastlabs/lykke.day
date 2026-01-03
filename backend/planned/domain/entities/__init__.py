@@ -1,5 +1,4 @@
 from .action import Action
-from .alarm import Alarm
 from .auth_token import AuthToken
 from .base import BaseConfigObject, BaseDateObject, BaseEntityObject, BaseObject
 from .calendar import Calendar
@@ -16,7 +15,6 @@ from .user import User
 
 __all__ = [
     "Action",
-    "Alarm",
     "AuthToken",
     "BaseConfigObject",
     "BaseDateObject",

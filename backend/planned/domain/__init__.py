@@ -1,7 +1,6 @@
 # Re-export entities for easier imports
 from .entities import (
     Action,
-    Alarm,
     AuthToken,
     Calendar,
     CalendarEntry,
@@ -25,7 +24,6 @@ _DayContext.model_rebuild()
 __all__ = [
     # Entities
     "Action",
-    "Alarm",
     "AuthToken",
     "Calendar",
     "CalendarEntry",
