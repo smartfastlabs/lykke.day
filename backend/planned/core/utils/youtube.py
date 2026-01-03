@@ -37,3 +37,4 @@ def play_audio(url: str) -> None:
         stderr=subprocess.DEVNULL,
         start_new_session=True,  # Allows it to run independently
     )
+

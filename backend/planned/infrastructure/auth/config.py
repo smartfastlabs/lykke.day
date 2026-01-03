@@ -87,7 +87,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         
         # Set custom fields
         user_dict["created_at"] = datetime.now(UTC)
-        from planned.infrastructure.utils.serialization import dataclass_to_json_dict
+        from planned.core.utils.serialization import dataclass_to_json_dict
 
         user_dict["settings"] = dataclass_to_json_dict(value_objects.UserSetting())
         

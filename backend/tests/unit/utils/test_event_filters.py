@@ -6,7 +6,7 @@ from datetime import UTC, timedelta
 import pytest
 from freezegun import freeze_time
 
-from planned.application.utils.event_filters import (
+from planned.core.utils.event_filters import (
     filter_upcoming_calendar_entries,
     is_calendar_entry_eligible_for_upcoming,
 )

@@ -6,7 +6,7 @@ from datetime import UTC, timedelta
 import pytest
 from freezegun import freeze_time
 
-from planned.application.utils.task_filters import (
+from planned.core.utils.task_filters import (
     calculate_cutoff_time,
     filter_upcoming_tasks,
     is_task_eligible_for_upcoming,

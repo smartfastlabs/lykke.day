@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from planned.infrastructure.utils import youtube
+from planned.core.utils import youtube
 
 router = APIRouter()
 

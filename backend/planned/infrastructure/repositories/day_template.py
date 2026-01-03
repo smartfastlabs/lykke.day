@@ -38,7 +38,7 @@ class DayTemplateRepository(UserScopedBaseRepository[entities.DayTemplate, DayTe
         }
 
         # Handle JSONB fields
-        from planned.infrastructure.utils.serialization import dataclass_to_json_dict
+        from planned.core.utils.serialization import dataclass_to_json_dict
 
         if template.alarm:
             row["alarm"] = dataclass_to_json_dict(template.alarm)

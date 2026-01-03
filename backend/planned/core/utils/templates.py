@@ -22,3 +22,4 @@ env = Environment(
 def render(template_name: str, /, **kwargs: Any) -> str:
     template = env.get_template(template_name)
     return textwrap.dedent(template.render(**kwargs)).strip()
+

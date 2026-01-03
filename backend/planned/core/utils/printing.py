@@ -61,3 +61,4 @@ async def send_pdf_to_printer(
     if delete_after:
         with contextlib.suppress(FileExistsError):
             await aiofiles.os.remove(pdf_path)
+

@@ -47,7 +47,7 @@ class TaskRepository(UserScopedBaseRepository[entities.Task, DateQuery]):
         }
 
         # Handle JSONB fields - task_definition is required, others are optional
-        from planned.infrastructure.utils.serialization import dataclass_to_json_dict
+        from planned.core.utils.serialization import dataclass_to_json_dict
 
         row["task_definition"] = dataclass_to_json_dict(task.task_definition)
 

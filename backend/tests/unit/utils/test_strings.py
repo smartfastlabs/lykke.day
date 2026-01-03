@@ -1,7 +1,6 @@
 """Unit tests for strings utility functions."""
 
-
-from planned.infrastructure.utils.strings import slugify
+from planned.core.utils.strings import slugify
 
 
 def test_slugify_basic():
@@ -56,4 +55,3 @@ def test_slugify_numbers():
     """Test slugify preserves numbers."""
     result = slugify("Version 2.0 Release")
     assert result == "version-20-release"
-

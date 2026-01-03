@@ -52,3 +52,4 @@ def slugify(text: str) -> str:
     text = text.strip("-")
 
     return text
+

@@ -455,7 +455,7 @@ async def test_get_upcoming_tasks_123(
         messages=[],
     )
 
-    # Mock repositories for DayContextLoader
+    # Mock repositories for GetDayContextHandler
     from planned.domain.value_objects.query import DateQuery
 
     day_id = entities.Day.id_from_date_and_user(date, test_user_id)
@@ -579,7 +579,7 @@ async def test_get_upcoming_calendar_entries(
         messages=[],
     )
 
-    # Mock repositories for DayContextLoader
+    # Mock repositories for GetDayContextHandler
     from planned.domain.value_objects.query import DateQuery
 
     day_id = entities.Day.id_from_date_and_user(date, test_user_id)
@@ -814,7 +814,7 @@ async def test_get_upcoming_tasks_with_available_time(
         day=day, tasks=[task1, task2], calendar_entries=[], messages=[]
     )
 
-    # Mock repositories for DayContextLoader
+    # Mock repositories for GetDayContextHandler
     day_id = entities.Day.id_from_date_and_user(date, test_user_id)
     allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
     allow(mock_day_template_repo).get_by_slug("default").and_return(template)
@@ -914,7 +914,7 @@ async def test_get_upcoming_tasks_with_end_time(
         day=day, tasks=[task1, task2], calendar_entries=[], messages=[]
     )
 
-    # Mock repositories for DayContextLoader
+    # Mock repositories for GetDayContextHandler
     day_id = entities.Day.id_from_date_and_user(date, test_user_id)
     allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
     allow(mock_day_template_repo).get_by_slug("default").and_return(template)
@@ -1012,7 +1012,7 @@ async def test_get_upcoming_tasks_excludes_completed_at(
         day=day, tasks=[task1, task2], calendar_entries=[], messages=[]
     )
 
-    # Mock repositories for DayContextLoader
+    # Mock repositories for GetDayContextHandler
     day_id = entities.Day.id_from_date_and_user(date, test_user_id)
     allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
     allow(mock_day_template_repo).get_by_slug("default").and_return(template)

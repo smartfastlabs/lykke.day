@@ -3,7 +3,7 @@
 import pytest
 from dobles import expect
 
-from planned.infrastructure.utils import youtube
+from planned.core.utils import youtube
 
 
 @pytest.mark.asyncio

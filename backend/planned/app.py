@@ -24,7 +24,7 @@ from planned.infrastructure.gateways import (
     WebPushGateway,
 )
 from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
-from planned.infrastructure.utils import youtube
+from planned.core.utils import youtube
 from planned.presentation.api.routers import router
 
 # Keep references to event handlers to prevent garbage collection

@@ -50,7 +50,7 @@ class CalendarEntryRepository(UserScopedBaseRepository[entities.CalendarEntry, D
         }
 
         # Handle JSONB fields
-        from planned.infrastructure.utils.serialization import dataclass_to_json_dict
+        from planned.core.utils.serialization import dataclass_to_json_dict
 
         if calendar_entry.people:
             row["people"] = [dataclass_to_json_dict(person) for person in calendar_entry.people]

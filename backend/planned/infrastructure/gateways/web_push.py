@@ -19,7 +19,7 @@ async def send_notification(
     subscription: entities.PushSubscription,
     content: str | dict | value_objects.NotificationPayload,
 ) -> None:
-    from planned.infrastructure.utils.serialization import dataclass_to_json_dict
+    from planned.core.utils.serialization import dataclass_to_json_dict
 
     if isinstance(content, value_objects.NotificationPayload):
         content_dict = dataclass_to_json_dict(content)

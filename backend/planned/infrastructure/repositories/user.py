@@ -43,7 +43,7 @@ class UserRepository(BaseRepository[entities.User, BaseQuery]):
         }
 
         # Handle settings JSONB field
-        from planned.infrastructure.utils.serialization import dataclass_to_json_dict
+        from planned.core.utils.serialization import dataclass_to_json_dict
 
         if user.settings:
             row["settings"] = dataclass_to_json_dict(user.settings)
