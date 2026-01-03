@@ -5,7 +5,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from planned.application.commands import ScheduleDayHandler
-from planned.application.queries import ListEntitiesHandler, PreviewDayHandler
+from planned.application.queries import PreviewDayHandler
+from planned.application.queries.routine import ListRoutinesHandler
 from planned.core.utils.dates import get_current_date, get_tomorrows_date
 from planned.domain import value_objects
 from planned.domain.entities import RoutineEntity, UserEntity
@@ -16,7 +17,7 @@ from planned.presentation.api.schemas.mappers import (
 )
 
 from .dependencies.services import (
-    get_list_entities_handler,
+    get_list_routines_handler,
     get_preview_day_handler,
     get_schedule_day_handler,
 )
@@ -28,14 +29,11 @@ router = APIRouter()
 @router.get("/routines", response_model=list[RoutineSchema])
 async def list_routines(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[ListEntitiesHandler, Depends(get_list_entities_handler)],
+    handler: Annotated[ListRoutinesHandler, Depends(get_list_routines_handler)],
 ) -> list[RoutineSchema]:
     """Get all routines for the current user."""
-    result: (
-        list[RoutineEntity] | value_objects.PagedQueryResponse[RoutineEntity]
-    ) = await handler.list_entities(
+    result = await handler.list_routines(
         user_id=user.id,
-        repository_name="routines",
         paginate=False,
     )
     routines = result if isinstance(result, list) else result.items

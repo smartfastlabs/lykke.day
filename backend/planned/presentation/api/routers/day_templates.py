@@ -4,23 +4,26 @@ from typing import Annotated, cast
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
-from planned.application.commands import (
-    CreateEntityHandler,
-    DeleteEntityHandler,
-    UpdateEntityHandler,
+from planned.application.commands.day_template import (
+    CreateDayTemplateHandler,
+    DeleteDayTemplateHandler,
+    UpdateDayTemplateHandler,
 )
-from planned.application.queries import GetEntityHandler, ListEntitiesHandler
+from planned.application.queries.day_template import (
+    GetDayTemplateHandler,
+    ListDayTemplatesHandler,
+)
 from planned.domain import value_objects
 from planned.domain.entities import DayTemplateEntity, UserEntity
 from planned.presentation.api.schemas import DayTemplateSchema
 from planned.presentation.api.schemas.mappers import map_day_template_to_schema
 
 from .dependencies.services import (
-    get_create_entity_handler,
-    get_delete_entity_handler,
-    get_get_entity_handler,
-    get_list_entities_handler,
-    get_update_entity_handler,
+    get_create_day_template_handler,
+    get_delete_day_template_handler,
+    get_get_day_template_handler,
+    get_list_day_templates_handler,
+    get_update_day_template_handler,
 )
 from .dependencies.user import get_current_user
 
@@ -31,30 +34,25 @@ router = APIRouter()
 async def get_day_template(
     uuid: UUID,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[GetEntityHandler, Depends(get_get_entity_handler)],
+    handler: Annotated[GetDayTemplateHandler, Depends(get_get_day_template_handler)],
 ) -> DayTemplateSchema:
     """Get a single day template by ID."""
-    day_template: DayTemplateEntity = await handler.get_entity(
-        user_id=user.id,
-        repository_name="day_templates",
-        entity_id=uuid,
-    )
+    day_template = await handler.get_day_template(user_id=user.id, day_template_id=uuid)
     return map_day_template_to_schema(day_template)
 
 
 @router.get("/", response_model=value_objects.PagedQueryResponse[DayTemplateSchema])
 async def list_day_templates(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[ListEntitiesHandler, Depends(get_list_entities_handler)],
+    handler: Annotated[
+        ListDayTemplatesHandler, Depends(get_list_day_templates_handler)
+    ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> value_objects.PagedQueryResponse[DayTemplateSchema]:
     """List day templates with pagination."""
-    result: (
-        list[DayTemplateEntity] | value_objects.PagedQueryResponse[DayTemplateEntity]
-    ) = await handler.list_entities(
+    result = await handler.list_day_templates(
         user_id=user.id,
-        repository_name="day_templates",
         limit=limit,
         offset=offset,
         paginate=True,
@@ -76,7 +74,9 @@ async def list_day_templates(
 async def create_day_template(
     day_template_data: DayTemplateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[CreateEntityHandler, Depends(get_create_entity_handler)],
+    handler: Annotated[
+        CreateDayTemplateHandler, Depends(get_create_day_template_handler)
+    ],
 ) -> DayTemplateSchema:
     """Create a new day template."""
     # Convert schema to entity
@@ -100,10 +100,8 @@ async def create_day_template(
         icon=day_template_data.icon,
         routine_ids=day_template_data.routine_ids,
     )
-    created = await handler.create_entity(
-        user_id=user.id,
-        repository_name="day_templates",
-        entity=day_template,
+    created = await handler.create_day_template(
+        user_id=user.id, day_template=day_template
     )
     return map_day_template_to_schema(created)
 
@@ -113,7 +111,9 @@ async def update_day_template(
     uuid: UUID,
     day_template_data: DayTemplateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[UpdateEntityHandler, Depends(get_update_entity_handler)],
+    handler: Annotated[
+        UpdateDayTemplateHandler, Depends(get_update_day_template_handler)
+    ],
 ) -> DayTemplateSchema:
     """Update a day template."""
     # Convert schema to entity
@@ -137,11 +137,8 @@ async def update_day_template(
         icon=day_template_data.icon,
         routine_ids=day_template_data.routine_ids,
     )
-    updated = await handler.update_entity(
-        user_id=user.id,
-        repository_name="day_templates",
-        entity_id=uuid,
-        entity_data=day_template,
+    updated = await handler.update_day_template(
+        user_id=user.id, day_template_id=uuid, day_template_data=day_template
     )
     return map_day_template_to_schema(updated)
 
@@ -150,11 +147,9 @@ async def update_day_template(
 async def delete_day_template(
     uuid: UUID,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[DeleteEntityHandler, Depends(get_delete_entity_handler)],
+    handler: Annotated[
+        DeleteDayTemplateHandler, Depends(get_delete_day_template_handler)
+    ],
 ) -> None:
     """Delete a day template."""
-    await handler.delete_entity(
-        user_id=user.id,
-        repository_name="day_templates",
-        entity_id=uuid,
-    )
+    await handler.delete_day_template(user_id=user.id, day_template_id=uuid)

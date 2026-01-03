@@ -8,12 +8,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from passlib.context import CryptContext
-from planned.application.commands import UpdateEntityHandler
+from planned.application.commands.user import UpdateUserHandler
 from planned.core.exceptions import BadRequestError
 from planned.domain import value_objects
 from planned.domain.entities import UserEntity
 
-from .dependencies.services import get_update_entity_handler
+from .dependencies.services import get_update_user_handler
 from .dependencies.user import get_current_user
 
 router = APIRouter()
@@ -35,7 +35,7 @@ class UpdatePasswordRequest(value_objects.BaseRequestObject):
 async def set_password(
     data: UpdatePasswordRequest,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[UpdateEntityHandler, Depends(get_update_entity_handler)],
+    handler: Annotated[UpdateUserHandler, Depends(get_update_user_handler)],
 ) -> StatusResponse:
     """Update password for the current user."""
     if data.new_password != data.confirm_new_password:
@@ -44,11 +44,6 @@ async def set_password(
     # Hash and set new password
     user.hashed_password = pwd_context.hash(data.new_password)
 
-    await handler.update_entity(
-        user_id=user.id,
-        repository_name="users",
-        entity_id=user.id,
-        entity_data=user,
-    )
+    await handler.update_user(user_id=user.id, user_data=user)
 
     return StatusResponse()

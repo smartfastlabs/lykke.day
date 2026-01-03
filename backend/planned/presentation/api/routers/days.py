@@ -6,11 +6,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from planned.application.commands import ScheduleDayHandler, UpdateDayHandler
-from planned.application.queries import (
-    GetDayContextHandler,
-    ListEntitiesHandler,
-    PreviewDayHandler,
-)
+from planned.application.queries import GetDayContextHandler, PreviewDayHandler
+from planned.application.queries.day_template import ListDayTemplatesHandler
 from planned.core.utils.dates import get_current_date, get_tomorrows_date
 from planned.domain import value_objects
 from planned.domain.entities import DayTemplateEntity, UserEntity
@@ -28,7 +25,7 @@ from pydantic import BaseModel
 
 from .dependencies.services import (
     get_get_day_context_handler,
-    get_list_entities_handler,
+    get_list_day_templates_handler,
     get_preview_day_handler,
     get_schedule_day_handler,
     get_update_day_handler,
@@ -149,14 +146,13 @@ async def update_day(
 @router.get("/templates", response_model=list[DayTemplateSchema])
 async def get_templates(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[ListEntitiesHandler, Depends(get_list_entities_handler)],
+    handler: Annotated[
+        ListDayTemplatesHandler, Depends(get_list_day_templates_handler)
+    ],
 ) -> list[DayTemplateSchema]:
     """Get all available day templates."""
-    result: (
-        list[DayTemplateEntity] | value_objects.PagedQueryResponse[DayTemplateEntity]
-    ) = await handler.list_entities(
+    result = await handler.list_day_templates(
         user_id=user.id,
-        repository_name="day_templates",
         paginate=False,
     )
     templates = result if isinstance(result, list) else result.items

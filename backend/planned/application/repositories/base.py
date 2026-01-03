@@ -37,6 +37,10 @@ class CrudRepositoryProtocol(Protocol[T]):
         """Delete an object by key or by object."""
         ...
 
+    async def insert_many(self, *objs: T) -> list[T]:
+        """Insert multiple objects in a single transaction."""
+        ...
+
 
 class BasicCrudRepositoryProtocol(Protocol[T]):
     """Base protocol for basic CRUD repositories (get, put without all)."""
@@ -62,6 +66,10 @@ class DateScopedCrudRepositoryProtocol(Protocol[T]):
 
     async def put(self, obj: T) -> T:
         """Save or update an object."""
+        ...
+
+    async def all(self) -> list[T]:
+        """Get all objects."""
         ...
 
     async def search_query(self, query: object) -> list[T]:

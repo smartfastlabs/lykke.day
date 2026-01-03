@@ -6,7 +6,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from planned.application.commands import RecordTaskActionHandler
-from planned.application.queries import ListEntitiesHandler
+from planned.application.queries.task import ListTasksHandler
 from planned.core.utils.dates import get_current_date
 from planned.domain import value_objects
 from planned.domain.entities import ActionEntity, TaskEntity, UserEntity
@@ -14,7 +14,7 @@ from planned.presentation.api.schemas import TaskSchema
 from planned.presentation.api.schemas.mappers import map_task_to_schema
 
 from .dependencies.services import (
-    get_list_entities_handler,
+    get_list_tasks_handler,
     get_record_task_action_handler,
 )
 from .dependencies.user import get_current_user
@@ -25,14 +25,11 @@ router = APIRouter()
 @router.get("/today", response_model=list[TaskSchema])
 async def list_todays_tasks(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[ListEntitiesHandler, Depends(get_list_entities_handler)],
+    handler: Annotated[ListTasksHandler, Depends(get_list_tasks_handler)],
 ) -> list[TaskSchema]:
     """Get all tasks for today."""
-    result: (
-        list[TaskEntity] | value_objects.PagedQueryResponse[TaskEntity]
-    ) = await handler.list_entities(
+    result = await handler.list_tasks(
         user_id=user.id,
-        repository_name="tasks",
         search_query=value_objects.DateQuery(date=get_current_date()),
         paginate=False,
     )
