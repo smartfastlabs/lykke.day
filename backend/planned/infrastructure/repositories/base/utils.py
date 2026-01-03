@@ -45,7 +45,7 @@ def normalize_list_fields(data: dict[str, Any], model: type[Any]) -> dict[str, A
                 normalized[field.name] = []
         return normalized
     
-    # Handle Pydantic models (for backward compatibility)
+    # Handle Pydantic models
     if isinstance(model, type) and issubclass(model, pydantic.BaseModel):
         # Get the model's field annotations
         for field_name, field_info in model.model_fields.items():

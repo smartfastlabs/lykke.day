@@ -98,19 +98,6 @@ def mock_web_push_gateway():
     )
 
 
-# Mocked service fixtures
-@pytest.fixture
-def mock_calendar_service():
-    """Mocked CalendarService for unit tests."""
-    return InstanceDouble("planned.application.services.CalendarService")
-
-
-@pytest.fixture
-def mock_planning_service():
-    """Mocked PlanningService for unit tests."""
-    return InstanceDouble("planned.application.services.PlanningService")
-
-
 # Test user UUID fixture
 @pytest.fixture
 def test_user_id():

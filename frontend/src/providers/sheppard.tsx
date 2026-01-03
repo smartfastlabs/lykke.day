@@ -93,6 +93,3 @@ export function useSheppard(): SheppardContextValue {
   }
   return context;
 }
-
-// Backwards compatibility alias - can be removed later
-export const useSheppardManager = useSheppard;
