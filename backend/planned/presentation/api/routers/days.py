@@ -10,6 +10,14 @@ from planned.application.mediator import Mediator
 from planned.application.queries import GetDayContextQuery, PreviewDayQuery
 from planned.core.utils.dates import get_current_date, get_tomorrows_date
 from planned.domain import entities, value_objects
+from planned.presentation.api.schemas.day import DaySchema
+from planned.presentation.api.schemas.day_context import DayContextSchema
+from planned.presentation.api.schemas.day_template import DayTemplateSchema
+from planned.presentation.api.schemas.mappers import (
+    map_day_context_to_schema,
+    map_day_template_to_schema,
+    map_day_to_schema,
+)
 
 from .dependencies.container import RepositoryContainer, get_repository_container
 from .dependencies.services import get_mediator
@@ -23,47 +31,51 @@ router = APIRouter()
 # ============================================================================
 
 
-@router.get("/today/context")
+@router.get("/today/context", response_model=DayContextSchema)
 async def get_context_today(
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> value_objects.DayContext:
+) -> DayContextSchema:
     """Get the complete context for today."""
     query = GetDayContextQuery(user=user, date=get_current_date())
-    return await mediator.query(query)
+    context = await mediator.query(query)
+    return map_day_context_to_schema(context)
 
 
-@router.get("/tomorrow/context")
+@router.get("/tomorrow/context", response_model=DayContextSchema)
 async def get_context_tomorrow(
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> value_objects.DayContext:
+) -> DayContextSchema:
     """Get the complete context for tomorrow."""
     query = GetDayContextQuery(user=user, date=get_tomorrows_date())
-    return await mediator.query(query)
+    context = await mediator.query(query)
+    return map_day_context_to_schema(context)
 
 
-@router.get("/{date}/context")
+@router.get("/{date}/context", response_model=DayContextSchema)
 async def get_context(
     date: datetime.date,
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> value_objects.DayContext:
+) -> DayContextSchema:
     """Get the complete context for a specific date."""
     query = GetDayContextQuery(user=user, date=date)
-    return await mediator.query(query)
+    context = await mediator.query(query)
+    return map_day_context_to_schema(context)
 
 
-@router.get("/{date}/preview")
+@router.get("/{date}/preview", response_model=DayContextSchema)
 async def preview_day(
     date: datetime.date,
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
     template_id: UUID | None = None,
-) -> value_objects.DayContext:
+) -> DayContextSchema:
     """Preview what a day would look like if scheduled."""
     query = PreviewDayQuery(user_id=user.id, date=date, template_id=template_id)
-    return await mediator.query(query)
+    context = await mediator.query(query)
+    return map_day_context_to_schema(context)
 
 
 # ============================================================================
@@ -71,26 +83,28 @@ async def preview_day(
 # ============================================================================
 
 
-@router.put("/today/schedule")
+@router.put("/today/schedule", response_model=DayContextSchema)
 async def schedule_today(
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> value_objects.DayContext:
+) -> DayContextSchema:
     """Schedule today with tasks from routines."""
     cmd = ScheduleDayCommand(user_id=user.id, date=get_current_date())
-    return await mediator.execute(cmd)
+    context = await mediator.execute(cmd)
+    return map_day_context_to_schema(context)
 
 
-@router.put("/{date}/schedule")
+@router.put("/{date}/schedule", response_model=DayContextSchema)
 async def schedule_day(
     date: datetime.date,
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
     template_id: UUID | None = None,
-) -> value_objects.DayContext:
+) -> DayContextSchema:
     """Schedule a specific day with tasks from routines."""
     cmd = ScheduleDayCommand(user_id=user.id, date=date, template_id=template_id)
-    return await mediator.execute(cmd)
+    context = await mediator.execute(cmd)
+    return map_day_context_to_schema(context)
 
 
 class UpdateDayRequest(value_objects.BaseRequestObject):
@@ -100,13 +114,13 @@ class UpdateDayRequest(value_objects.BaseRequestObject):
     template_id: UUID | None = None
 
 
-@router.patch("/{date}")
+@router.patch("/{date}", response_model=DaySchema)
 async def update_day(
     date: datetime.date,
     request: UpdateDayRequest,
     user: Annotated[entities.User, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
-) -> entities.Day:
+) -> DaySchema:
     """Update a day's status or template."""
     cmd = UpdateDayCommand(
         user_id=user.id,
@@ -114,7 +128,8 @@ async def update_day(
         status=request.status,
         template_id=request.template_id,
     )
-    return await mediator.execute(cmd)
+    day = await mediator.execute(cmd)
+    return map_day_to_schema(day)
 
 
 # ============================================================================
@@ -122,9 +137,10 @@ async def update_day(
 # ============================================================================
 
 
-@router.get("/templates")
+@router.get("/templates", response_model=list[DayTemplateSchema])
 async def get_templates(
     repos: Annotated[RepositoryContainer, Depends(get_repository_container)],
-) -> list[entities.DayTemplate]:
+) -> list[DayTemplateSchema]:
     """Get all available day templates."""
-    return await repos.day_template_repo.all()
+    templates = await repos.day_template_repo.all()
+    return [map_day_template_to_schema(template) for template in templates]

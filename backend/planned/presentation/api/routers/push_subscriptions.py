@@ -6,6 +6,8 @@ from fastapi import APIRouter, BackgroundTasks, Depends
 from planned.application.repositories import PushSubscriptionRepositoryProtocol
 from planned.domain import entities, value_objects
 from planned.infrastructure.gateways import web_push
+from planned.presentation.api.schemas.mappers import map_push_subscription_to_schema
+from planned.presentation.api.schemas.push_subscription import PushSubscriptionSchema
 
 from .dependencies.repositories import get_push_subscription_repo
 from .dependencies.user import get_current_user
@@ -24,13 +26,16 @@ class SubscriptionRequest(value_objects.BaseRequestObject):
     keys: Keys
 
 
-@router.get("/subscriptions")
+@router.get("/subscriptions", response_model=list[PushSubscriptionSchema])
 async def list_subscriptions(
     push_subscription_repo: Annotated[PushSubscriptionRepositoryProtocol, Depends(
         get_push_subscription_repo
     )],
-) -> list[entities.PushSubscription]:
-    return await push_subscription_repo.all()
+) -> list[PushSubscriptionSchema]:
+    subscriptions = await push_subscription_repo.all()
+    return [
+        map_push_subscription_to_schema(sub) for sub in subscriptions
+    ]
 
 
 @router.delete("/subscriptions/{subscription_id}")
@@ -43,7 +48,7 @@ async def delete_subscription(
     await push_subscription_repo.delete(UUID(subscription_id))
 
 
-@router.post("/subscribe")
+@router.post("/subscribe", response_model=PushSubscriptionSchema)
 async def subscribe(
     background_tasks: BackgroundTasks,
     request: SubscriptionRequest,
@@ -51,7 +56,7 @@ async def subscribe(
     push_subscription_repo: Annotated[PushSubscriptionRepositoryProtocol, Depends(
         get_push_subscription_repo
     )],
-) -> entities.PushSubscription:
+) -> PushSubscriptionSchema:
     result: entities.PushSubscription = await push_subscription_repo.put(
         entities.PushSubscription(
             user_id=user.id,
@@ -71,4 +76,4 @@ async def subscribe(
         },
     )
 
-    return result
+    return map_push_subscription_to_schema(result)
