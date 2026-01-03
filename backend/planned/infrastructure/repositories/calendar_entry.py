@@ -62,3 +62,36 @@ class CalendarEntryRepository(UserScopedBaseRepository[entities.CalendarEntry, D
 
         return row
 
+    @classmethod
+    def row_to_entity(cls, row: dict[str, Any]) -> entities.CalendarEntry:
+        """Convert a database row dict to a CalendarEntry entity.
+        
+        Overrides base to handle enum conversion for frequency field.
+        """
+        from planned.infrastructure.repositories.base.utils import normalize_list_fields
+        from planned.domain import value_objects
+
+        data = normalize_list_fields(dict(row), entities.CalendarEntry)
+        
+        # Remove 'date' field - it's a computed property, not a constructor argument
+        data.pop("date", None)
+        
+        # Convert frequency string back to enum if needed
+        if "frequency" in data and isinstance(data["frequency"], str):
+            data["frequency"] = value_objects.TaskFrequency(data["frequency"])
+        
+        # Handle people and actions - they come as dicts from JSONB, need to convert to entities
+        if "people" in data and data["people"]:
+            data["people"] = [
+                entities.Person(**person) if isinstance(person, dict) else person
+                for person in data["people"]
+            ]
+        
+        if "actions" in data and data["actions"]:
+            data["actions"] = [
+                entities.Action(**action) if isinstance(action, dict) else action
+                for action in data["actions"]
+            ]
+
+        return entities.CalendarEntry(**data)
+

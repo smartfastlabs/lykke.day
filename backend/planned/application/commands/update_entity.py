@@ -52,15 +52,19 @@ class UpdateEntityHandler(CommandHandler[UpdateEntityCommand[EntityT], EntityT])
             existing: EntityT = await repo.get(command.entity_id)
 
             # Merge updates
-            from dataclasses import asdict, is_dataclass, replace
+            from dataclasses import asdict, fields, is_dataclass, replace
             from typing import Any, cast
 
             if is_dataclass(existing) and is_dataclass(command.entity_data):
                 # Both are dataclasses - use replace to merge updates
                 # Get all fields from entity_data that are not None
                 entity_data_dict: dict[str, Any] = asdict(command.entity_data)  # type: ignore[arg-type]
+                
+                # Filter out init=False fields (like _domain_events) - they can't be specified in replace()
+                init_false_fields = {f.name for f in fields(existing) if not f.init}
                 update_dict = {
-                    k: v for k, v in entity_data_dict.items() if v is not None
+                    k: v for k, v in entity_data_dict.items() 
+                    if v is not None and k not in init_false_fields
                 }
                 updated_any: Any = replace(existing, **update_dict)  # type: ignore[type-var]
                 updated = cast(EntityT, updated_any)
