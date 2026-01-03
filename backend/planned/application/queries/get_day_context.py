@@ -8,7 +8,8 @@ from uuid import UUID
 from planned.application.unit_of_work import UnitOfWorkFactory, UnitOfWorkProtocol
 from planned.core.constants import DEFAULT_END_OF_DAY_TIME
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity, DayEntity, MessageEntity, TaskEntity, UserEntity
 
 from .base import Query, QueryHandler
 
@@ -21,7 +22,7 @@ class GetDayContextQuery(Query):
     If the day doesn't exist, returns a preview (unsaved) day.
     """
 
-    user: entities.User
+    user: UserEntity
     date: date
 
 
@@ -41,14 +42,14 @@ class GetDayContextHandler(QueryHandler[GetDayContextQuery, value_objects.DayCon
             A DayContext with all related data
         """
         async with self._uow_factory.create(query.user.id) as uow:
-            tasks: list[entities.Task] = []
-            calendar_entries: list[entities.CalendarEntry] = []
-            messages: list[entities.Message] = []
-            day: entities.Day
+            tasks: list[TaskEntity] = []
+            calendar_entries: list[CalendarEntryEntity] = []
+            messages: list[MessageEntity] = []
+            day: DayEntity
 
             try:
                 # Try to load existing day and all related data
-                day_id = entities.Day.id_from_date_and_user(query.date, query.user.id)
+                day_id = DayEntity.id_from_date_and_user(query.date, query.user.id)
                 tasks, calendar_entries, messages, day = await asyncio.gather(
                     uow.tasks.search_query(value_objects.DateQuery(date=query.date)),
                     uow.calendar_entries.search_query(value_objects.DateQuery(date=query.date)),
@@ -66,8 +67,8 @@ class GetDayContextHandler(QueryHandler[GetDayContextQuery, value_objects.DayCon
         uow: UnitOfWorkProtocol,
         date: date,
         user_id: UUID,
-        user: entities.User,
-    ) -> entities.Day:
+        user: UserEntity,
+    ) -> DayEntity:
         """Create a preview day when no existing day is found.
 
         Args:
@@ -81,7 +82,7 @@ class GetDayContextHandler(QueryHandler[GetDayContextQuery, value_objects.DayCon
         """
         template_slug = user.settings.template_defaults[date.weekday()]
         template = await uow.day_templates.get_by_slug(template_slug)
-        return entities.Day.create_for_date(
+        return DayEntity.create_for_date(
             date,
             user_id=user_id,
             template=template,
@@ -89,10 +90,10 @@ class GetDayContextHandler(QueryHandler[GetDayContextQuery, value_objects.DayCon
 
     def _build_context(
         self,
-        day: entities.Day,
-        tasks: list[entities.Task],
-        calendar_entries: list[entities.CalendarEntry],
-        messages: list[entities.Message],
+        day: DayEntity,
+        tasks: list[TaskEntity],
+        calendar_entries: list[CalendarEntryEntity],
+        messages: list[MessageEntity],
     ) -> value_objects.DayContext:
         """Build a DayContext from loaded data.
 

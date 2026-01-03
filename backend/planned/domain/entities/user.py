@@ -7,7 +7,7 @@ from .base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class User(BaseEntityObject):
+class UserEntity(BaseEntityObject):
     """User entity compatible with fastapi-users."""
 
     email: str

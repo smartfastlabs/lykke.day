@@ -7,7 +7,8 @@ from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import DayEntity
 
 from .base import Command, CommandHandler
 
@@ -20,13 +21,13 @@ class UnscheduleDayCommand(Command):
     date: date
 
 
-class UnscheduleDayHandler(CommandHandler[UnscheduleDayCommand, entities.Day]):
+class UnscheduleDayHandler(CommandHandler[UnscheduleDayCommand, DayEntity]):
     """Handles UnscheduleDayCommand."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, cmd: UnscheduleDayCommand) -> entities.Day:
+    async def handle(self, cmd: UnscheduleDayCommand) -> DayEntity:
         """Unschedule a day, removing routine tasks and marking day as unscheduled.
 
         Args:
@@ -45,7 +46,7 @@ class UnscheduleDayHandler(CommandHandler[UnscheduleDayCommand, entities.Day]):
                 )
 
             # Get or create the day
-            day_id = entities.Day.id_from_date_and_user(cmd.date, cmd.user_id)
+            day_id = DayEntity.id_from_date_and_user(cmd.date, cmd.user_id)
             try:
                 day = await uow.days.get(day_id)
             except NotFoundError:
@@ -53,7 +54,7 @@ class UnscheduleDayHandler(CommandHandler[UnscheduleDayCommand, entities.Day]):
                 user = await uow.users.get(cmd.user_id)
                 template_slug = user.settings.template_defaults[cmd.date.weekday()]
                 template = await uow.day_templates.get_by_slug(template_slug)
-                day = entities.Day.create_for_date(
+                day = DayEntity.create_for_date(
                     cmd.date, user_id=cmd.user_id, template=template
                 )
 

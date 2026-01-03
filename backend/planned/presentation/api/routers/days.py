@@ -9,7 +9,8 @@ from planned.application.commands import ScheduleDayCommand, UpdateDayCommand
 from planned.application.mediator import Mediator
 from planned.application.queries import GetDayContextQuery, PreviewDayQuery
 from planned.core.utils.dates import get_current_date, get_tomorrows_date
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import UserEntity
 from planned.presentation.api import schemas
 from planned.presentation.api.schemas.mappers import (
     map_day_context_to_schema,
@@ -32,7 +33,7 @@ router = APIRouter()
 
 @router.get("/today/context", response_model=schemas.DayContext)
 async def get_context_today(
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.DayContext:
     """Get the complete context for today."""
@@ -43,7 +44,7 @@ async def get_context_today(
 
 @router.get("/tomorrow/context", response_model=schemas.DayContext)
 async def get_context_tomorrow(
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.DayContext:
     """Get the complete context for tomorrow."""
@@ -55,7 +56,7 @@ async def get_context_tomorrow(
 @router.get("/{date}/context", response_model=schemas.DayContext)
 async def get_context(
     date: datetime.date,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.DayContext:
     """Get the complete context for a specific date."""
@@ -67,7 +68,7 @@ async def get_context(
 @router.get("/{date}/preview", response_model=schemas.DayContext)
 async def preview_day(
     date: datetime.date,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
     template_id: UUID | None = None,
 ) -> schemas.DayContext:
@@ -84,7 +85,7 @@ async def preview_day(
 
 @router.put("/today/schedule", response_model=schemas.DayContext)
 async def schedule_today(
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.DayContext:
     """Schedule today with tasks from routines."""
@@ -96,7 +97,7 @@ async def schedule_today(
 @router.put("/{date}/schedule", response_model=schemas.DayContext)
 async def schedule_day(
     date: datetime.date,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
     template_id: UUID | None = None,
 ) -> schemas.DayContext:
@@ -117,7 +118,7 @@ class UpdateDayRequest(BaseModel):
 async def update_day(
     date: datetime.date,
     request: UpdateDayRequest,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.Day:
     """Update a day's status or template."""

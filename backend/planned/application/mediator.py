@@ -44,7 +44,8 @@ from planned.application.queries.list_entities import (
 )
 from planned.application.queries.preview_day import PreviewDayHandler, PreviewDayQuery
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import DayEntity, TaskEntity
 
 # TypeVar for generic entity operations
 EntityT = TypeVar("EntityT")
@@ -152,10 +153,10 @@ class Mediator:
     async def execute(self, command: ScheduleDayCommand) -> value_objects.DayContext: ...
 
     @overload
-    async def execute(self, command: UpdateDayCommand) -> entities.Day: ...
+    async def execute(self, command: UpdateDayCommand) -> DayEntity: ...
 
     @overload
-    async def execute(self, command: RecordTaskActionCommand) -> entities.Task: ...
+    async def execute(self, command: RecordTaskActionCommand) -> TaskEntity: ...
 
     @overload
     async def execute(self, command: CreateEntityCommand[EntityT]) -> EntityT: ...

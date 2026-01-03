@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain import entities
+from planned.domain.entities import DayEntity
 
 from .base import Command, CommandHandler
 
@@ -14,16 +14,16 @@ class SaveDayCommand(Command):
     """Command to save a day to the database."""
 
     user_id: UUID
-    day: entities.Day
+    day: DayEntity
 
 
-class SaveDayHandler(CommandHandler[SaveDayCommand, entities.Day]):
+class SaveDayHandler(CommandHandler[SaveDayCommand, DayEntity]):
     """Handles SaveDayCommand."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, cmd: SaveDayCommand) -> entities.Day:
+    async def handle(self, cmd: SaveDayCommand) -> DayEntity:
         """Save a day to the database.
 
         Args:

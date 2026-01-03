@@ -4,10 +4,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
-    from ..entities.calendar_entry import CalendarEntry
-    from ..entities.day import Day
-    from ..entities.message import Message
-    from ..entities.task import Task
+    from ..entities import CalendarEntryEntity, DayEntity, MessageEntity, TaskEntity
 
 
 class DayTag(str, Enum):
@@ -31,10 +28,10 @@ class DayMode(str, Enum):
 
 
 class DayContext(BaseModel):
-    day: "Day"
-    calendar_entries: list["CalendarEntry"] = Field(default_factory=list)
-    tasks: list["Task"] = Field(default_factory=list)
-    messages: list["Message"] = Field(default_factory=list)
+    day: "DayEntity"
+    calendar_entries: list["CalendarEntryEntity"] = Field(default_factory=list)
+    tasks: list["TaskEntity"] = Field(default_factory=list)
+    messages: list["MessageEntity"] = Field(default_factory=list)
 
 
 def _rebuild_day_context() -> None:
@@ -42,4 +39,3 @@ def _rebuild_day_context() -> None:
     # These imports are here to rebuild the model after all entities are defined
 
     DayContext.model_rebuild()
-

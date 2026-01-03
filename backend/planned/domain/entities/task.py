@@ -7,25 +7,25 @@ from uuid import UUID
 from planned.core.exceptions import DomainError
 
 from .. import value_objects
-from .action import Action
+from .action import ActionEntity
 from .base import BaseDateObject
-from .task_definition import TaskDefinition
+from .task_definition import TaskDefinitionEntity
 
 
 @dataclass(kw_only=True)
-class Task(BaseDateObject):
+class TaskEntity(BaseDateObject):
     user_id: UUID
     scheduled_date: dt_date
     name: str
     status: value_objects.TaskStatus
-    task_definition: TaskDefinition
+    task_definition: TaskDefinitionEntity
     category: value_objects.TaskCategory
     frequency: value_objects.TaskFrequency
     completed_at: datetime | None = None
     schedule: value_objects.TaskSchedule | None = None
     routine_id: UUID | None = None
     tags: list[value_objects.TaskTag] = field(default_factory=list)
-    actions: list[Action] = field(default_factory=list)
+    actions: list[ActionEntity] = field(default_factory=list)
 
     def _get_date(self) -> dt_date:
         return self.scheduled_date
@@ -35,7 +35,7 @@ class Task(BaseDateObject):
         # This is required by BaseDateObject but not used since _get_date is implemented
         return datetime.combine(self.scheduled_date, datetime.min.time())
 
-    def record_action(self, action: Action) -> value_objects.TaskStatus:
+    def record_action(self, action: ActionEntity) -> value_objects.TaskStatus:
         """Record an action on this task.
 
         This method handles action recording and status transitions based on

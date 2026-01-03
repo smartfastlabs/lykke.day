@@ -11,7 +11,8 @@ from planned.application.commands import (
 )
 from planned.application.mediator import Mediator
 from planned.application.queries import GetEntityQuery, ListEntitiesQuery
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import CalendarEntity, UserEntity
 from planned.presentation.api import schemas
 from planned.presentation.api.schemas.mappers import map_calendar_to_schema
 
@@ -24,11 +25,11 @@ router = APIRouter()
 @router.get("/{uuid}", response_model=schemas.Calendar)
 async def get_calendar(
     uuid: UUID,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.Calendar:
     """Get a single calendar by ID."""
-    query = GetEntityQuery[entities.Calendar](
+    query = GetEntityQuery[CalendarEntity](
         user_id=user.id,
         entity_id=uuid,
         repository_name="calendars",
@@ -39,13 +40,13 @@ async def get_calendar(
 
 @router.get("/", response_model=value_objects.PagedQueryResponse[schemas.Calendar])
 async def list_calendars(
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> value_objects.PagedQueryResponse[schemas.Calendar]:
     """List calendars with pagination."""
-    query = ListEntitiesQuery[entities.Calendar](
+    query = ListEntitiesQuery[CalendarEntity](
         user_id=user.id,
         repository_name="calendars",
         limit=limit,
@@ -53,7 +54,7 @@ async def list_calendars(
         paginate=True,
     )
     result = await mediator.query(query)
-    paged_response = cast("value_objects.PagedQueryResponse[entities.Calendar]", result)
+    paged_response = cast("value_objects.PagedQueryResponse[CalendarEntity]", result)
     # Convert entities to schemas
     calendar_schemas = [map_calendar_to_schema(c) for c in paged_response.items]
     return value_objects.PagedQueryResponse(
@@ -69,12 +70,12 @@ async def list_calendars(
 @router.post("/", response_model=schemas.Calendar)
 async def create_calendar(
     calendar_data: schemas.Calendar,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.Calendar:
     """Create a new calendar."""
     # Convert schema to entity (id is optional for create, entity will generate it if None)
-    calendar = entities.Calendar(
+    calendar = CalendarEntity(
         id=calendar_data.id if calendar_data.id else None,  # type: ignore[arg-type]
         user_id=user.id,
         name=calendar_data.name,
@@ -83,7 +84,7 @@ async def create_calendar(
         platform=calendar_data.platform,
         last_sync_at=calendar_data.last_sync_at,
     )
-    command = CreateEntityCommand[entities.Calendar](
+    command = CreateEntityCommand[CalendarEntity](
         user_id=user.id,
         repository_name="calendars",
         entity=calendar,
@@ -96,12 +97,12 @@ async def create_calendar(
 async def update_calendar(
     uuid: UUID,
     calendar_data: schemas.Calendar,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.Calendar:
     """Update a calendar."""
     # Convert schema to entity
-    calendar = entities.Calendar(
+    calendar = CalendarEntity(
         id=uuid,
         user_id=user.id,
         name=calendar_data.name,
@@ -110,7 +111,7 @@ async def update_calendar(
         platform=calendar_data.platform,
         last_sync_at=calendar_data.last_sync_at,
     )
-    command = UpdateEntityCommand[entities.Calendar](
+    command = UpdateEntityCommand[CalendarEntity](
         user_id=user.id,
         repository_name="calendars",
         entity_id=uuid,
@@ -123,7 +124,7 @@ async def update_calendar(
 @router.delete("/{uuid}", status_code=200)
 async def delete_calendar(
     uuid: UUID,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> None:
     """Delete a calendar."""

@@ -7,7 +7,7 @@ from .base import BaseConfigObject
 
 
 @dataclass(kw_only=True)
-class Action(BaseConfigObject):
+class ActionEntity(BaseConfigObject):
     type: value_objects.ActionType
     data: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))

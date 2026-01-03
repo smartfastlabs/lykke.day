@@ -3,14 +3,15 @@ from uuid import UUID
 
 from sqlalchemy.sql import Select
 
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import DayTemplateEntity
 from planned.infrastructure.database.tables import day_templates_tbl
 
 from .base import DayTemplateQuery, UserScopedBaseRepository
 
 
-class DayTemplateRepository(UserScopedBaseRepository[entities.DayTemplate, DayTemplateQuery]):
-    Object = entities.DayTemplate
+class DayTemplateRepository(UserScopedBaseRepository[DayTemplateEntity, DayTemplateQuery]):
+    Object = DayTemplateEntity
     table = day_templates_tbl
     QueryClass = DayTemplateQuery
 
@@ -28,7 +29,7 @@ class DayTemplateRepository(UserScopedBaseRepository[entities.DayTemplate, DayTe
         return stmt
 
     @staticmethod
-    def entity_to_row(template: entities.DayTemplate) -> dict[str, Any]:
+    def entity_to_row(template: DayTemplateEntity) -> dict[str, Any]:
         """Convert a DayTemplate entity to a database row dict."""
         row: dict[str, Any] = {
             "id": template.id,
@@ -52,14 +53,14 @@ class DayTemplateRepository(UserScopedBaseRepository[entities.DayTemplate, DayTe
         return row
 
     @classmethod
-    def row_to_entity(cls, row: dict[str, Any]) -> entities.DayTemplate:
+    def row_to_entity(cls, row: dict[str, Any]) -> DayTemplateEntity:
         """Convert a database row dict to a DayTemplate entity.
 
         Overrides base to handle UUID conversion for routine_ids stored as JSON strings.
         """
         from planned.infrastructure.repositories.base.utils import normalize_list_fields
 
-        data = normalize_list_fields(dict(row), entities.DayTemplate)
+        data = normalize_list_fields(dict(row), DayTemplateEntity)
 
         # Convert string UUIDs back to UUID objects for routine_ids
         if "routine_ids" in data and data["routine_ids"]:
@@ -85,8 +86,8 @@ class DayTemplateRepository(UserScopedBaseRepository[entities.DayTemplate, DayTe
                     alarm_data["triggered_at"] = dt_time.fromisoformat(alarm_data["triggered_at"])
                 data["alarm"] = value_objects.Alarm(**alarm_data)
 
-        return entities.DayTemplate(**data)
+        return DayTemplateEntity(**data)
 
-    async def get_by_slug(self, slug: str) -> entities.DayTemplate:
+    async def get_by_slug(self, slug: str) -> DayTemplateEntity:
         """Get a DayTemplate by slug (must be scoped to a user)."""
         return await self.get_one(DayTemplateQuery(slug=slug))

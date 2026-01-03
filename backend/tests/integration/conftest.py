@@ -6,7 +6,7 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from planned.domain.entities import DayTemplate, User
+from planned.domain.entities import DayTemplateEntity, UserEntity
 from planned.domain.value_objects.alarm import Alarm, AlarmType
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.repositories import (
@@ -28,12 +28,12 @@ from planned.infrastructure.repositories import (
 async def create_test_user():
     """Factory to create unique test users."""
 
-    async def _create_user(email: str | None = None, **kwargs) -> User:
+    async def _create_user(email: str | None = None, **kwargs) -> UserEntity:
         """Create a test user with unique email."""
         if email is None:
             email = f"test-{uuid4()}@example.com"
 
-        user = User(
+        user = UserEntity(
             email=email,
             hashed_password="test_hash",
             settings=kwargs.pop("settings", UserSetting()),
@@ -63,12 +63,12 @@ async def test_user(create_test_user):
     )
 
 
-async def _setup_day_templates_for_user(user: User) -> None:
+async def _setup_day_templates_for_user(user: UserEntity) -> None:
     """Helper function to create default day templates for a user."""
     repo = DayTemplateRepository(user_id=user.id)
 
     # Create default template (UUID will be auto-generated from slug + user_id)
-    default_template = DayTemplate(
+    default_template = DayTemplateEntity(
         user_id=user.id,
         slug="default",
         alarm=Alarm(
@@ -80,7 +80,7 @@ async def _setup_day_templates_for_user(user: User) -> None:
     await repo.put(default_template)
 
     # Create weekend template (UUID will be auto-generated from slug + user_id)
-    weekend_template = DayTemplate(
+    weekend_template = DayTemplateEntity(
         user_id=user.id,
         slug="weekend",
         alarm=Alarm(

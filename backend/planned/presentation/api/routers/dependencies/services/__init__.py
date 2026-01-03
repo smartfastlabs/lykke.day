@@ -20,7 +20,7 @@ from planned.application.services.factories import DayServiceFactory
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import ServerError
 from planned.core.utils.dates import get_current_date, get_tomorrows_date
-from planned.domain import entities
+from planned.domain.entities import UserEntity
 from planned.infrastructure.gateways import GoogleCalendarGateway, WebPushGateway
 from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 
@@ -50,7 +50,7 @@ def get_web_push_gateway() -> WebPushGateway:
 
 
 def get_calendar_service(
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
     google_gateway: Annotated[GoogleCalendarGateway, Depends(get_google_gateway)],
 ) -> CalendarService:
@@ -63,7 +63,7 @@ def get_calendar_service(
 
 
 def get_planning_service(
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> PlanningService:
     """Get a user-scoped instance of PlanningService."""
@@ -74,7 +74,7 @@ def get_planning_service(
 
 
 async def get_day_service_for_current_date(
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> DayService:
     """Get a user-scoped instance of DayService for today's date."""
@@ -86,7 +86,7 @@ async def get_day_service_for_current_date(
 
 
 async def get_day_service_for_tomorrow_date(
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> DayService:
     """Get a user-scoped instance of DayService for tomorrow's date."""
@@ -99,7 +99,7 @@ async def get_day_service_for_tomorrow_date(
 
 async def get_day_service_for_date(
     date: datetime.date,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
 ) -> DayService:
     """Get a user-scoped instance of DayService for a specific date."""
@@ -112,7 +112,7 @@ async def get_day_service_for_date(
 
 
 async def get_sheppard_service(
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
     google_gateway: Annotated[GoogleCalendarGateway, Depends(get_google_gateway)],
     web_push_gateway: Annotated[WebPushGateway, Depends(get_web_push_gateway)],

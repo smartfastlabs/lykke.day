@@ -1,10 +1,9 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-
 from planned.application.repositories import CalendarEntryRepositoryProtocol
 from planned.core.utils.dates import get_current_date
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
 from planned.presentation.api import schemas
 from planned.presentation.api.schemas.mappers import map_calendar_entry_to_schema
 
@@ -15,8 +14,11 @@ router = APIRouter()
 
 @router.get("/today", response_model=list[schemas.CalendarEntry])
 async def today(
-    calendar_entry_repo: Annotated[CalendarEntryRepositoryProtocol, Depends(get_calendar_entry_repo)],
+    calendar_entry_repo: Annotated[
+        CalendarEntryRepositoryProtocol, Depends(get_calendar_entry_repo)
+    ],
 ) -> list[schemas.CalendarEntry]:
-    entries = await calendar_entry_repo.search_query(value_objects.DateQuery(date=get_current_date()))
+    entries = await calendar_entry_repo.search_query(
+        value_objects.DateQuery(date=get_current_date())
+    )
     return [map_calendar_entry_to_schema(entry) for entry in entries]
-

@@ -10,7 +10,8 @@ from dobles import allow
 from planned.application.services import DayService, SheppardService
 from planned.application.services.calendar import CalendarService
 from planned.application.services.planning import PlanningService
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity, DayEntity, TaskDefinitionEntity, TaskEntity
 from planned.infrastructure import data_objects
 
 
@@ -57,7 +58,7 @@ async def test_build_notification_payload_single_task(
 ):
     """Test _build_notification_payload for a single task."""
     date = datetime.date(2024, 1, 1)
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -66,13 +67,13 @@ async def test_build_notification_payload_single_task(
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
-    task = entities.Task(
+    task = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Test Task",
         status=value_objects.TaskStatus.READY,
         scheduled_date=date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -104,7 +105,7 @@ async def test_build_notification_payload_multiple_tasks(
     """Test _build_notification_payload for multiple tasks."""
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -113,13 +114,13 @@ async def test_build_notification_payload_multiple_tasks(
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
-    task1 = entities.Task(
+    task1 = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Task 1",
         status=value_objects.TaskStatus.READY,
         scheduled_date=date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -128,13 +129,13 @@ async def test_build_notification_payload_multiple_tasks(
         category=value_objects.TaskCategory.HOUSE,
         frequency=value_objects.TaskFrequency.ONCE,
     )
-    task2 = entities.Task(
+    task2 = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Task 2",
         status=value_objects.TaskStatus.READY,
         scheduled_date=date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -165,7 +166,7 @@ async def test_build_event_notification_payload(
     """Test _build_event_notification_payload."""
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -174,7 +175,7 @@ async def test_build_event_notification_payload(
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
-    calendar_entry = entities.CalendarEntry(
+    calendar_entry = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Test Calendar Entry",
@@ -208,7 +209,7 @@ async def test_notify_for_tasks(
     """Test _notify_for_tasks sends notifications."""
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -217,13 +218,13 @@ async def test_notify_for_tasks(
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
-    task = entities.Task(
+    task = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Test Task",
         status=value_objects.TaskStatus.READY,
         scheduled_date=date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -271,7 +272,7 @@ async def test_notify_for_tasks_empty_list(
     """Test _notify_for_tasks handles empty task list."""
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -305,7 +306,7 @@ async def test_stop_sets_mode_to_stopping(
     """Test stop sets mode to stopping."""
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -342,7 +343,7 @@ async def test_is_running_property(
     """Test is_running property returns correct value."""
     date = datetime.date(2024, 1, 1)
     template_id = uuid4()
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -383,7 +384,7 @@ async def test_render_prompt(
 ):
     """Test _render_prompt renders template with context."""
     date = datetime.date(2024, 1, 1)
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -430,7 +431,7 @@ async def test_morning_summary_prompt(
 ):
     """Test morning_summary_prompt renders morning summary template."""
     date = datetime.date(2024, 1, 1)
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -472,7 +473,7 @@ async def test_evening_summary_prompt(
 ):
     """Test evening_summary_prompt renders evening summary template."""
     date = datetime.date(2024, 1, 1)
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -515,7 +516,7 @@ async def test_notify_for_calendar_entries(
 ):
     """Test _notify_for_calendar_entries sends notifications for calendar entries."""
     date = datetime.date(2024, 1, 1)
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -524,7 +525,7 @@ async def test_notify_for_calendar_entries(
 
     day_svc = create_day_service(test_user, date, mock_uow_factory)
 
-    calendar_entry = entities.CalendarEntry(
+    calendar_entry = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Test Calendar Entry",
@@ -573,7 +574,7 @@ async def test_notify_for_events_empty_list(
 ):
     """Test _notify_for_calendar_entries handles empty calendar entry list."""
     date = datetime.date(2024, 1, 1)
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,

@@ -7,7 +7,7 @@ from .base import BaseDateObject
 
 
 @dataclass(kw_only=True)
-class Message(BaseDateObject):
+class MessageEntity(BaseDateObject):
     user_id: UUID
     author: Literal["system", "agent", "user"]
     sent_at: datetime

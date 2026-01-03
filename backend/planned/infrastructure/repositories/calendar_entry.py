@@ -3,14 +3,14 @@ from uuid import UUID
 
 from sqlalchemy.sql import Select
 
-from planned.domain import entities
+from planned.domain.entities import ActionEntity, CalendarEntryEntity
 
 from .base import DateQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import calendar_entries_tbl
 
 
-class CalendarEntryRepository(UserScopedBaseRepository[entities.CalendarEntry, DateQuery]):
-    Object = entities.CalendarEntry
+class CalendarEntryRepository(UserScopedBaseRepository[CalendarEntryEntity, DateQuery]):
+    Object = CalendarEntryEntity
     table = calendar_entries_tbl
     QueryClass = DateQuery
     # Exclude 'date' - it's a database-only field for querying (computed from starts_at)
@@ -31,7 +31,7 @@ class CalendarEntryRepository(UserScopedBaseRepository[entities.CalendarEntry, D
         return stmt
 
     @staticmethod
-    def entity_to_row(calendar_entry: entities.CalendarEntry) -> dict[str, Any]:
+    def entity_to_row(calendar_entry: CalendarEntryEntity) -> dict[str, Any]:
         """Convert a CalendarEntry entity to a database row dict."""
         row: dict[str, Any] = {
             "id": calendar_entry.id,
@@ -60,7 +60,7 @@ class CalendarEntryRepository(UserScopedBaseRepository[entities.CalendarEntry, D
         return row
 
     @classmethod
-    def row_to_entity(cls, row: dict[str, Any]) -> entities.CalendarEntry:
+    def row_to_entity(cls, row: dict[str, Any]) -> CalendarEntryEntity:
         """Convert a database row dict to a CalendarEntry entity.
         
         Overrides base to handle enum conversion for frequency field.
@@ -68,7 +68,7 @@ class CalendarEntryRepository(UserScopedBaseRepository[entities.CalendarEntry, D
         from planned.infrastructure.repositories.base.utils import normalize_list_fields
         from planned.domain import value_objects
 
-        data = normalize_list_fields(dict(row), entities.CalendarEntry)
+        data = normalize_list_fields(dict(row), CalendarEntryEntity)
         
         # Remove 'date' field - it's a computed property, not a constructor argument
         data.pop("date", None)
@@ -80,9 +80,9 @@ class CalendarEntryRepository(UserScopedBaseRepository[entities.CalendarEntry, D
         # Handle actions - they come as dicts from JSONB, need to convert to entities
         if "actions" in data and data["actions"]:
             data["actions"] = [
-                entities.Action(**action) if isinstance(action, dict) else action
+                ActionEntity(**action) if isinstance(action, dict) else action
                 for action in data["actions"]
             ]
 
-        return entities.CalendarEntry(**data)
+        return CalendarEntryEntity(**data)
 

@@ -4,12 +4,13 @@ import datetime
 from zoneinfo import ZoneInfo
 
 from planned.core.config import settings
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import TaskEntity
 from planned.core.utils.dates import get_current_datetime, get_current_time
 
 
 def is_task_eligible_for_upcoming(
-    task: entities.Task,
+    task: TaskEntity,
     now: datetime.time,
     cutoff_time: datetime.time,
 ) -> bool:
@@ -73,9 +74,9 @@ def calculate_cutoff_time(look_ahead: datetime.timedelta) -> datetime.time:
 
 
 def filter_upcoming_tasks(
-    tasks: list[entities.Task],
+    tasks: list[TaskEntity],
     look_ahead: datetime.timedelta,
-) -> list[entities.Task]:
+) -> list[TaskEntity]:
     """Filter tasks to only include those that are upcoming within the look-ahead window.
 
     Args:
@@ -92,7 +93,7 @@ def filter_upcoming_tasks(
     if cutoff_time < now:
         return tasks
 
-    result: list[entities.Task] = []
+    result: list[TaskEntity] = []
     for task in tasks:
         if is_task_eligible_for_upcoming(task, now, cutoff_time):
             result.append(task)

@@ -6,7 +6,7 @@ from .base import BaseConfigObject
 
 
 @dataclass(kw_only=True)
-class Routine(BaseConfigObject):
+class RoutineEntity(BaseConfigObject):
     user_id: UUID
     name: str
 

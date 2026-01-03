@@ -2,12 +2,23 @@
 
 from dataclasses import asdict
 
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import (
+    ActionEntity,
+    CalendarEntity,
+    CalendarEntryEntity,
+    DayEntity,
+    DayTemplateEntity,
+    MessageEntity,
+    RoutineEntity,
+    TaskDefinitionEntity,
+    TaskEntity,
+)
 from planned.infrastructure import data_objects
 from planned.presentation.api import schemas
 
 
-def map_action_to_schema(action: entities.Action) -> schemas.Action:
+def map_action_to_schema(action: ActionEntity) -> schemas.Action:
     """Convert Action entity to Action schema."""
     return schemas.Action(**asdict(action))
 
@@ -18,7 +29,7 @@ def map_alarm_to_schema(alarm: value_objects.Alarm) -> schemas.Alarm:
 
 
 def map_task_definition_to_schema(
-    task_definition: entities.TaskDefinition,
+    task_definition: TaskDefinitionEntity,
 ) -> schemas.TaskDefinition:
     """Convert TaskDefinition entity to TaskDefinition schema."""
     return schemas.TaskDefinition(**asdict(task_definition))
@@ -34,7 +45,7 @@ def map_task_schedule_to_schema(
     return schemas.TaskSchedule.model_validate(schedule, from_attributes=True)
 
 
-def map_task_to_schema(task: entities.Task) -> schemas.Task:
+def map_task_to_schema(task: TaskEntity) -> schemas.Task:
     """Convert Task entity to Task schema."""
     # Convert nested entities
     task_definition_schema = map_task_definition_to_schema(task.task_definition)
@@ -59,7 +70,7 @@ def map_task_to_schema(task: entities.Task) -> schemas.Task:
 
 
 def map_day_template_to_schema(
-    template: entities.DayTemplate,
+    template: DayTemplateEntity,
 ) -> schemas.DayTemplate:
     """Convert DayTemplate entity to DayTemplate schema."""
     alarm_schema = map_alarm_to_schema(template.alarm) if template.alarm else None
@@ -74,7 +85,7 @@ def map_day_template_to_schema(
     )
 
 
-def map_day_to_schema(day: entities.Day) -> schemas.Day:
+def map_day_to_schema(day: DayEntity) -> schemas.Day:
     """Convert Day entity to Day schema."""
     alarm_schema = map_alarm_to_schema(day.alarm) if day.alarm else None
     template_schema = map_day_template_to_schema(day.template) if day.template else None
@@ -92,7 +103,7 @@ def map_day_to_schema(day: entities.Day) -> schemas.Day:
 
 
 def map_calendar_entry_to_schema(
-    entry: entities.CalendarEntry,
+    entry: CalendarEntryEntity,
 ) -> schemas.CalendarEntry:
     """Convert CalendarEntry entity to CalendarEntry schema."""
     action_schemas = [map_action_to_schema(action) for action in entry.actions]
@@ -115,7 +126,7 @@ def map_calendar_entry_to_schema(
     )
 
 
-def map_message_to_schema(message: entities.Message) -> schemas.Message:
+def map_message_to_schema(message: MessageEntity) -> schemas.Message:
     """Convert Message entity to Message schema."""
     return schemas.Message(
         id=message.id,
@@ -154,11 +165,11 @@ def map_push_subscription_to_schema(
     return schemas.PushSubscription(**asdict(subscription))
 
 
-def map_routine_to_schema(routine: entities.Routine) -> schemas.Routine:
+def map_routine_to_schema(routine: RoutineEntity) -> schemas.Routine:
     """Convert Routine entity to Routine schema."""
     return schemas.Routine(**asdict(routine))
 
 
-def map_calendar_to_schema(calendar: entities.Calendar) -> schemas.Calendar:
+def map_calendar_to_schema(calendar: CalendarEntity) -> schemas.Calendar:
     """Convert Calendar entity to Calendar schema."""
     return schemas.Calendar(**asdict(calendar))

@@ -1,6 +1,7 @@
 """Domain service for building notification payloads."""
 
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity, TaskEntity
 
 
 class NotificationPayloadBuilder:
@@ -11,7 +12,7 @@ class NotificationPayloadBuilder:
     """
 
     @staticmethod
-    def build_for_tasks(tasks: list[entities.Task]) -> value_objects.NotificationPayload:
+    def build_for_tasks(tasks: list[TaskEntity]) -> value_objects.NotificationPayload:
         """Build a notification payload for one or more tasks.
 
         Args:
@@ -58,7 +59,7 @@ class NotificationPayloadBuilder:
 
     @staticmethod
     def build_for_calendar_entries(
-        calendar_entries: list[entities.CalendarEntry],
+        calendar_entries: list[CalendarEntryEntity],
     ) -> value_objects.NotificationPayload:
         """Build a notification payload for one or more calendar entries.
 

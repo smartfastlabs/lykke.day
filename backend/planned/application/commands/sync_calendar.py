@@ -9,7 +9,7 @@ from planned.application.gateways.google_protocol import GoogleCalendarGatewayPr
 from planned.application.unit_of_work import UnitOfWorkFactory, UnitOfWorkProtocol
 from planned.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from planned.core.exceptions import TokenExpiredError
-from planned.domain import entities
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity
 from planned.infrastructure import data_objects
 
 from .base import Command, CommandHandler
@@ -39,7 +39,7 @@ class SyncAllCalendarsCommand(Command):
 class SyncCalendarHandler(
     CommandHandler[
         SyncCalendarCommand,
-        tuple[list[entities.CalendarEntry], list[entities.CalendarEntry]],
+        tuple[list[CalendarEntryEntity], list[CalendarEntryEntity]],
     ]
 ):
     """Handles SyncCalendarCommand."""
@@ -54,7 +54,7 @@ class SyncCalendarHandler(
 
     async def handle(
         self, cmd: SyncCalendarCommand
-    ) -> tuple[list[entities.CalendarEntry], list[entities.CalendarEntry]]:
+    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity]]:
         """Sync calendar entries from external provider.
 
         Args:
@@ -95,10 +95,10 @@ class SyncCalendarHandler(
 
     async def _sync_calendar_internal(
         self,
-        calendar: entities.Calendar,
+        calendar: CalendarEntity,
         token: data_objects.AuthToken,
         uow: UnitOfWorkProtocol,
-    ) -> tuple[list[entities.CalendarEntry], list[entities.CalendarEntry]]:
+    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity]]:
         """Internal method to sync a calendar (used by SyncAllCalendarsHandler).
 
         Args:

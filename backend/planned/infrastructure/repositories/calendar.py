@@ -1,14 +1,14 @@
 from typing import Any
 from uuid import UUID
 
-from planned.domain import entities
+from planned.domain.entities import CalendarEntity
 
 from .base import BaseQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import calendars_tbl
 
 
-class CalendarRepository(UserScopedBaseRepository[entities.Calendar, BaseQuery]):
-    Object = entities.Calendar
+class CalendarRepository(UserScopedBaseRepository[CalendarEntity, BaseQuery]):
+    Object = CalendarEntity
     table = calendars_tbl
     QueryClass = BaseQuery
 
@@ -17,7 +17,7 @@ class CalendarRepository(UserScopedBaseRepository[entities.Calendar, BaseQuery])
         super().__init__(user_id=user_id)
 
     @staticmethod
-    def entity_to_row(calendar: entities.Calendar) -> dict[str, Any]:
+    def entity_to_row(calendar: CalendarEntity) -> dict[str, Any]:
         """Convert a Calendar entity to a database row dict."""
         row: dict[str, Any] = {
             "id": calendar.id,

@@ -6,20 +6,21 @@ from uuid import uuid4
 
 import pytest
 
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity, TaskDefinitionEntity, TaskEntity
 from planned.domain.services.notification import NotificationPayloadBuilder
 
 
 @pytest.fixture
-def test_task(test_user_id: str) -> entities.Task:
+def test_task(test_user_id: str) -> TaskEntity:
     """Create a test task."""
-    task_def = entities.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user_id,
         name="Test Task Definition",
         description="Test description",
         type=value_objects.TaskType.CHORE,
     )
-    return entities.Task(
+    return TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
@@ -30,7 +31,7 @@ def test_task(test_user_id: str) -> entities.Task:
     )
 
 
-def test_build_for_tasks_single_task(test_task: entities.Task) -> None:
+def test_build_for_tasks_single_task(test_task: TaskEntity) -> None:
     """Test building notification payload for a single task."""
     payload = NotificationPayloadBuilder.build_for_tasks([test_task])
 
@@ -48,13 +49,13 @@ def test_build_for_tasks_single_task(test_task: entities.Task) -> None:
 
 def test_build_for_tasks_multiple_tasks(test_user_id: str) -> None:
     """Test building notification payload for multiple tasks."""
-    task_def = entities.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user_id,
         name="Task Definition",
         description="Test description",
         type=value_objects.TaskType.CHORE,
     )
-    task1 = entities.Task(
+    task1 = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Task 1",
@@ -63,7 +64,7 @@ def test_build_for_tasks_multiple_tasks(test_user_id: str) -> None:
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
     )
-    task2 = entities.Task(
+    task2 = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Task 2",
@@ -85,14 +86,14 @@ def test_build_for_calendar_entries_single(test_user_id: str) -> None:
     """Test building notification payload for a single calendar entry."""
     from uuid import uuid4
     
-    calendar = entities.Calendar(
+    calendar = CalendarEntity(
         user_id=test_user_id,
         name="Test Calendar",
         platform="google",
         platform_id="cal123",
         auth_token_id=uuid4(),
     )
-    entry = entities.CalendarEntry(
+    entry = CalendarEntryEntity(
         user_id=test_user_id,
         calendar_id=calendar.id,
         name="Test Event",
@@ -120,14 +121,14 @@ def test_build_for_calendar_entries_multiple(test_user_id: str) -> None:
     """Test building notification payload for multiple calendar entries."""
     from uuid import uuid4
     
-    calendar = entities.Calendar(
+    calendar = CalendarEntity(
         user_id=test_user_id,
         name="Test Calendar",
         platform="google",
         platform_id="cal123",
         auth_token_id=uuid4(),
     )
-    entry1 = entities.CalendarEntry(
+    entry1 = CalendarEntryEntity(
         user_id=test_user_id,
         calendar_id=calendar.id,
         name="Event 1",
@@ -138,7 +139,7 @@ def test_build_for_calendar_entries_multiple(test_user_id: str) -> None:
         status="confirmed",
         frequency=value_objects.TaskFrequency.ONCE,
     )
-    entry2 = entities.CalendarEntry(
+    entry2 = CalendarEntryEntity(
         user_id=test_user_id,
         calendar_id=calendar.id,
         name="Event 2",
@@ -164,14 +165,14 @@ def test_build_for_calendar_entries_no_ends_at(test_user_id: str) -> None:
     """Test building notification payload for calendar entry without ends_at."""
     from uuid import uuid4
     
-    calendar = entities.Calendar(
+    calendar = CalendarEntity(
         user_id=test_user_id,
         name="Test Calendar",
         platform="google",
         platform_id="cal123",
         auth_token_id=uuid4(),
     )
-    entry = entities.CalendarEntry(
+    entry = CalendarEntryEntity(
         user_id=test_user_id,
         calendar_id=calendar.id,
         name="All Day Event",

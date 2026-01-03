@@ -6,7 +6,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from planned.application.mediator import Mediator
 from planned.application.queries import GetEntityQuery, ListEntitiesQuery
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import RoutineEntity, UserEntity
 from planned.presentation.api import schemas
 from planned.presentation.api.schemas.mappers import map_routine_to_schema
 
@@ -19,11 +20,11 @@ router = APIRouter()
 @router.get("/{uuid}", response_model=schemas.Routine)
 async def get_routine(
     uuid: UUID,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.Routine:
     """Get a single routine by ID."""
-    query = GetEntityQuery[entities.Routine](
+    query = GetEntityQuery[RoutineEntity](
         user_id=user.id,
         entity_id=uuid,
         repository_name="routines",
@@ -34,13 +35,13 @@ async def get_routine(
 
 @router.get("/", response_model=value_objects.PagedQueryResponse[schemas.Routine])
 async def list_routines(
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> value_objects.PagedQueryResponse[schemas.Routine]:
     """List routines with pagination."""
-    query = ListEntitiesQuery[entities.Routine](
+    query = ListEntitiesQuery[RoutineEntity](
         user_id=user.id,
         repository_name="routines",
         limit=limit,
@@ -48,7 +49,7 @@ async def list_routines(
         paginate=True,
     )
     result = await mediator.query(query)
-    paged_response = cast("value_objects.PagedQueryResponse[entities.Routine]", result)
+    paged_response = cast("value_objects.PagedQueryResponse[RoutineEntity]", result)
     # Convert entities to schemas
     routine_schemas = [map_routine_to_schema(r) for r in paged_response.items]
     return value_objects.PagedQueryResponse(

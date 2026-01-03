@@ -7,7 +7,7 @@ from .base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class Calendar(BaseEntityObject):
+class CalendarEntity(BaseEntityObject):
     user_id: UUID
     name: str
     auth_token_id: UUID

@@ -8,7 +8,8 @@ from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.utils import filter_upcoming_calendar_entries, filter_upcoming_tasks
 from planned.core.constants import DEFAULT_LOOK_AHEAD
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity, TaskEntity, UserEntity
 
 from .base import Query, QueryHandler
 
@@ -17,7 +18,7 @@ from .base import Query, QueryHandler
 class GetUpcomingTasksQuery(Query):
     """Query to get tasks that are upcoming within a look-ahead window."""
 
-    user: entities.User
+    user: UserEntity
     date: date
     look_ahead: timedelta = DEFAULT_LOOK_AHEAD
 
@@ -26,18 +27,18 @@ class GetUpcomingTasksQuery(Query):
 class GetUpcomingCalendarEntriesQuery(Query):
     """Query to get calendar entries that are upcoming within a look-ahead window."""
 
-    user: entities.User
+    user: UserEntity
     date: date
     look_ahead: timedelta = DEFAULT_LOOK_AHEAD
 
 
-class GetUpcomingTasksHandler(QueryHandler[GetUpcomingTasksQuery, list[entities.Task]]):
+class GetUpcomingTasksHandler(QueryHandler[GetUpcomingTasksQuery, list[TaskEntity]]):
     """Handles GetUpcomingTasksQuery."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, query: GetUpcomingTasksQuery) -> list[entities.Task]:
+    async def handle(self, query: GetUpcomingTasksQuery) -> list[TaskEntity]:
         """Get tasks that are upcoming within the look-ahead window.
 
         Args:
@@ -52,7 +53,7 @@ class GetUpcomingTasksHandler(QueryHandler[GetUpcomingTasksQuery, list[entities.
 
 
 class GetUpcomingCalendarEntriesHandler(
-    QueryHandler[GetUpcomingCalendarEntriesQuery, list[entities.CalendarEntry]]
+    QueryHandler[GetUpcomingCalendarEntriesQuery, list[CalendarEntryEntity]]
 ):
     """Handles GetUpcomingCalendarEntriesQuery."""
 
@@ -61,7 +62,7 @@ class GetUpcomingCalendarEntriesHandler(
 
     async def handle(
         self, query: GetUpcomingCalendarEntriesQuery
-    ) -> list[entities.CalendarEntry]:
+    ) -> list[CalendarEntryEntity]:
         """Get calendar entries that are upcoming within the look-ahead window.
 
         Args:

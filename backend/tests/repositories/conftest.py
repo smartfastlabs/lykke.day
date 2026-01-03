@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 import pytest_asyncio
 from planned import settings
-from planned.domain import entities
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity, UserEntity
 from planned.domain.value_objects.task import TaskFrequency
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.repositories import UserRepository
@@ -17,7 +17,7 @@ from planned.infrastructure.repositories import UserRepository
 async def test_user():
     """Create a unique user for each test."""
     user_repo = UserRepository()
-    user = entities.User(
+    user = UserEntity(
         id=uuid4(),
         email=f"test-{uuid4()}@example.com",
         hashed_password="test_hash",
@@ -35,7 +35,7 @@ async def test_calendar_entry(test_user, test_date):
         datetime.time(hour=2),
         tzinfo=ZoneInfo(settings.TIMEZONE),
     ).astimezone(UTC)
-    return entities.CalendarEntry(
+    return CalendarEntryEntity(
         user_id=test_user.id,
         name="Test Calendar Entry",
         frequency=TaskFrequency.ONCE,

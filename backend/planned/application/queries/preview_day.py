@@ -10,7 +10,8 @@ from loguru import logger
 from planned.application.queries.preview_tasks import PreviewTasksHandler, PreviewTasksQuery
 from planned.application.unit_of_work import UnitOfWorkFactory, UnitOfWorkProtocol
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import DayEntity, DayTemplateEntity
 
 from .base import Query, QueryHandler
 
@@ -49,7 +50,7 @@ class PreviewDayHandler(QueryHandler[PreviewDayQuery, value_objects.DayContext])
             template = await self._get_template(uow, query)
 
             # Create preview day
-            day = entities.Day.create_for_date(
+            day = DayEntity.create_for_date(
                 query.date,
                 user_id=query.user_id,
                 template=template,
@@ -77,14 +78,14 @@ class PreviewDayHandler(QueryHandler[PreviewDayQuery, value_objects.DayContext])
         self,
         uow: UnitOfWorkProtocol,
         query: PreviewDayQuery,
-    ) -> entities.DayTemplate:
+    ) -> DayTemplateEntity:
         """Get the template to use for the preview."""
         if query.template_id is not None:
             return await uow.day_templates.get(query.template_id)
 
         # Try to get from existing day
         try:
-            day_id = entities.Day.id_from_date_and_user(query.date, query.user_id)
+            day_id = DayEntity.id_from_date_and_user(query.date, query.user_id)
             existing_day = await uow.days.get(day_id)
             if existing_day.template:
                 return existing_day.template

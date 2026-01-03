@@ -6,7 +6,8 @@ from uuid import UUID
 
 from loguru import logger
 from planned.application.unit_of_work import UnitOfWorkFactory, UnitOfWorkProtocol
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import TaskEntity
 from planned.domain.services.routine import RoutineService
 
 from .base import Query, QueryHandler
@@ -24,13 +25,13 @@ class PreviewTasksQuery(Query):
     date: date
 
 
-class PreviewTasksHandler(QueryHandler[PreviewTasksQuery, list[entities.Task]]):
+class PreviewTasksHandler(QueryHandler[PreviewTasksQuery, list[TaskEntity]]):
     """Handles PreviewTasksQuery."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, query: PreviewTasksQuery) -> list[entities.Task]:
+    async def handle(self, query: PreviewTasksQuery) -> list[TaskEntity]:
         """Preview tasks that would be created for a given date.
 
         Args:
@@ -47,9 +48,9 @@ class PreviewTasksHandler(QueryHandler[PreviewTasksQuery, list[entities.Task]]):
         uow: UnitOfWorkProtocol,
         user_id: UUID,
         target_date: date,
-    ) -> list[entities.Task]:
+    ) -> list[TaskEntity]:
         """Generate preview tasks from routines."""
-        result: list[entities.Task] = []
+        result: list[TaskEntity] = []
 
         for routine in await uow.routines.all():
             logger.debug(f"Checking routine: {routine.name}")
@@ -58,7 +59,7 @@ class PreviewTasksHandler(QueryHandler[PreviewTasksQuery, list[entities.Task]]):
                     task_def = await uow.task_definitions.get(
                         routine_task.task_definition_id,
                     )
-                    task = entities.Task(
+                    task = TaskEntity(
                         user_id=user_id,
                         name=routine_task.name or f"ROUTINE: {routine.name}",
                         frequency=routine.routine_schedule.frequency,

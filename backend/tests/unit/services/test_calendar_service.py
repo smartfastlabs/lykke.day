@@ -8,7 +8,7 @@ import pytest
 from dobles import allow
 from planned.application.services import CalendarService
 from planned.core.exceptions import NotFoundError, TokenExpiredError
-from planned.domain.entities import Calendar, CalendarEntry
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity
 from planned.infrastructure import data_objects
 from planned.domain.value_objects.task import TaskFrequency
 
@@ -26,7 +26,7 @@ async def test_sync(
     test_datetime_noon,
 ):
     """Test syncing a calendar."""
-    calendar = Calendar(
+    calendar = CalendarEntity(
         user_id=UUID(str(uuid4())),
         name="Test Calendar",
         auth_token_id=uuid4(),
@@ -41,7 +41,7 @@ async def test_sync(
         token="token",
     )
 
-    calendar_entry = CalendarEntry(
+    calendar_entry = CalendarEntryEntity(
         user_id=calendar.user_id,
         name="Calendar Entry",
         frequency=TaskFrequency.ONCE,
@@ -119,7 +119,7 @@ async def test_sync_with_last_sync_at(
     test_datetime_noon,
 ):
     """Test syncing a calendar with last_sync_at set uses it for lookback."""
-    calendar = Calendar(
+    calendar = CalendarEntity(
         user_id=UUID(str(uuid4())),
         name="Test Calendar",
         auth_token_id=uuid4(),
@@ -135,7 +135,7 @@ async def test_sync_with_last_sync_at(
         token="token",
     )
 
-    calendar_entry = CalendarEntry(
+    calendar_entry = CalendarEntryEntity(
         user_id=calendar.user_id,
         name="Calendar Entry",
         frequency=TaskFrequency.ONCE,
@@ -177,7 +177,7 @@ async def test_sync_unsupported_platform(
     mock_auth_token_repo, mock_calendar_repo, mock_calendar_entry_repo, mock_google_gateway, mock_uow_factory
 ):
     """Test syncing a calendar with unsupported platform raises NotImplementedError."""
-    calendar = Calendar(
+    calendar = CalendarEntity(
         user_id=UUID(str(uuid4())),
         name="Test Calendar",
         auth_token_id=uuid4(),

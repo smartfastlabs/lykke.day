@@ -1,10 +1,10 @@
 """Protocol for CalendarRepository."""
 
 from planned.application.repositories.base import CrudRepositoryProtocol
-from planned.domain import entities
+from planned.domain.entities import CalendarEntity
 
 
-class CalendarRepositoryProtocol(CrudRepositoryProtocol[entities.Calendar]):
+class CalendarRepositoryProtocol(CrudRepositoryProtocol[CalendarEntity]):
     """Protocol defining the interface for calendar repositories."""
     pass
 

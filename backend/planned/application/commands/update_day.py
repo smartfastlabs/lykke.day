@@ -6,7 +6,8 @@ from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import DayEntity
 
 from .base import Command, CommandHandler
 
@@ -25,13 +26,13 @@ class UpdateDayCommand(Command):
     template_id: UUID | None = None
 
 
-class UpdateDayHandler(CommandHandler[UpdateDayCommand, entities.Day]):
+class UpdateDayHandler(CommandHandler[UpdateDayCommand, DayEntity]):
     """Handles UpdateDayCommand."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, cmd: UpdateDayCommand) -> entities.Day:
+    async def handle(self, cmd: UpdateDayCommand) -> DayEntity:
         """Update a day's status and/or template.
 
         Args:
@@ -45,7 +46,7 @@ class UpdateDayHandler(CommandHandler[UpdateDayCommand, entities.Day]):
         """
         async with self._uow_factory.create(cmd.user_id) as uow:
             # Get the existing day
-            day_id = entities.Day.id_from_date_and_user(cmd.date, cmd.user_id)
+            day_id = DayEntity.id_from_date_and_user(cmd.date, cmd.user_id)
             try:
                 day = await uow.days.get(day_id)
             except NotFoundError:
@@ -53,7 +54,7 @@ class UpdateDayHandler(CommandHandler[UpdateDayCommand, entities.Day]):
                 user = await uow.users.get(cmd.user_id)
                 template_slug = user.settings.template_defaults[cmd.date.weekday()]
                 template = await uow.day_templates.get_by_slug(template_slug)
-                day = entities.Day.create_for_date(cmd.date, user_id=cmd.user_id, template=template)
+                day = DayEntity.create_for_date(cmd.date, user_id=cmd.user_id, template=template)
 
             # Apply status transition if requested
             if cmd.status is not None:
@@ -69,7 +70,7 @@ class UpdateDayHandler(CommandHandler[UpdateDayCommand, entities.Day]):
             await uow.commit()
             return day
 
-    def _apply_status_transition(self, day: entities.Day, new_status: value_objects.DayStatus) -> None:
+    def _apply_status_transition(self, day: DayEntity, new_status: value_objects.DayStatus) -> None:
         """Apply a status transition using domain methods.
 
         Args:

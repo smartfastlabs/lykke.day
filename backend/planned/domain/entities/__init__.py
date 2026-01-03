@@ -1,28 +1,28 @@
-from .action import Action
+from .action import ActionEntity
 from .base import BaseConfigObject, BaseDateObject, BaseEntityObject, BaseObject
-from .calendar import Calendar
-from .calendar_entry import CalendarEntry
-from .day import Day
-from .day_template import DayTemplate
-from .message import Message
-from .routine import Routine
-from .task import Task
-from .task_definition import TaskDefinition
-from .user import User
+from .calendar import CalendarEntity
+from .calendar_entry import CalendarEntryEntity
+from .day import DayEntity
+from .day_template import DayTemplateEntity
+from .message import MessageEntity
+from .routine import RoutineEntity
+from .task import TaskEntity
+from .task_definition import TaskDefinitionEntity
+from .user import UserEntity
 
 __all__ = [
-    "Action",
+    "ActionEntity",
     "BaseConfigObject",
     "BaseDateObject",
     "BaseEntityObject",
     "BaseObject",
-    "Calendar",
-    "CalendarEntry",
-    "Day",
-    "DayTemplate",
-    "Message",
-    "Routine",
-    "Task",
-    "TaskDefinition",
-    "User",
+    "CalendarEntity",
+    "CalendarEntryEntity",
+    "DayEntity",
+    "DayTemplateEntity",
+    "MessageEntity",
+    "RoutineEntity",
+    "TaskDefinitionEntity",
+    "TaskEntity",
+    "UserEntity",
 ]

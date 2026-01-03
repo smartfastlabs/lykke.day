@@ -7,7 +7,7 @@ from .base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class DayTemplate(BaseEntityObject):
+class DayTemplateEntity(BaseEntityObject):
     user_id: UUID
     slug: str
     alarm: value_objects.Alarm | None = None

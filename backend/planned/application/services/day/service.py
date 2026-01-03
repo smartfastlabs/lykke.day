@@ -26,7 +26,13 @@ from planned.application.queries.get_upcoming_items import (
 from planned.application.services.base import BaseService
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.constants import DEFAULT_LOOK_AHEAD
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import (
+    CalendarEntryEntity,
+    DayEntity,
+    TaskEntity,
+    UserEntity,
+)
 
 
 class DayService(BaseService):
@@ -45,7 +51,7 @@ class DayService(BaseService):
 
     def __init__(
         self,
-        user: entities.User,
+        user: UserEntity,
         date: datetime.date,
         uow_factory: UnitOfWorkFactory,
     ) -> None:
@@ -91,7 +97,7 @@ class DayService(BaseService):
     async def get_or_preview(
         self,
         date: datetime.date,
-    ) -> entities.Day:
+    ) -> DayEntity:
         """Get an existing day or return a preview (unsaved) day.
 
         Args:
@@ -106,7 +112,7 @@ class DayService(BaseService):
     async def get_or_create(
         self,
         date: datetime.date,
-    ) -> entities.Day:
+    ) -> DayEntity:
         """Get an existing day or create a new one.
 
         Args:
@@ -118,7 +124,7 @@ class DayService(BaseService):
         cmd = CreateOrGetDayCommand(user_id=self.user.id, date=date)
         return await self._create_or_get_day_handler.handle(cmd)
 
-    async def save(self, day: entities.Day) -> None:
+    async def save(self, day: DayEntity) -> None:
         """Save a day to the database.
 
         Args:
@@ -130,7 +136,7 @@ class DayService(BaseService):
     async def get_upcoming_tasks(
         self,
         look_ahead: datetime.timedelta = DEFAULT_LOOK_AHEAD,
-    ) -> list[entities.Task]:
+    ) -> list[TaskEntity]:
         """Get tasks that are upcoming within the look-ahead window.
 
         Args:
@@ -147,7 +153,7 @@ class DayService(BaseService):
     async def get_upcoming_calendar_entries(
         self,
         look_ahead: datetime.timedelta = DEFAULT_LOOK_AHEAD,
-    ) -> list[entities.CalendarEntry]:
+    ) -> list[CalendarEntryEntity]:
         """Get calendar entries that are upcoming within the look-ahead window.
 
         Args:

@@ -24,7 +24,8 @@ from planned.application.services.planning import PlanningService
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.utils import templates, youtube
 from planned.core.utils.dates import get_current_date, get_current_time
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import ActionEntity, CalendarEntity, CalendarEntryEntity, TaskEntity, UserEntity
 from planned.domain.services.notification import NotificationPayloadBuilder
 from planned.infrastructure import data_objects
 
@@ -38,7 +39,7 @@ def notifiy_user(message: str, urgency: Literal["low", "medium", "high"]) -> Non
     pass
 
 
-def filter_tasks(tasks: list[entities.Task]) -> list[entities.Task]:
+def filter_tasks(tasks: list[TaskEntity]) -> list[TaskEntity]:
     tasks = [t for t in tasks if t.status == "READY"]
     return tasks
 
@@ -71,7 +72,7 @@ class SheppardService(BaseService):
 
     def __init__(
         self,
-        user: entities.User,
+        user: UserEntity,
         day_svc: DayService,
         uow_factory: UnitOfWorkFactory,
         calendar_service: CalendarService,
@@ -152,14 +153,14 @@ class SheppardService(BaseService):
 
     async def _process_upcoming_tasks(
         self,
-    ) -> tuple[list[entities.Task], list[entities.Task]]:
+    ) -> tuple[list[TaskEntity], list[TaskEntity]]:
         """Process upcoming tasks and determine which need updates and notifications.
 
         Returns:
             Tuple of (tasks_to_update, tasks_to_notify)
         """
-        tasks_to_notify: list[entities.Task] = []
-        tasks_to_update: list[entities.Task] = []
+        tasks_to_notify: list[TaskEntity] = []
+        tasks_to_update: list[TaskEntity] = []
 
         query = GetUpcomingTasksQuery(user=self.user, date=self.day_svc.date)
         upcoming_tasks = await self._get_upcoming_tasks_handler.handle(query)
@@ -179,7 +180,7 @@ class SheppardService(BaseService):
             ):
                 tasks_to_notify.append(task)
                 task.record_action(
-                    entities.Action(
+                    ActionEntity(
                         type=value_objects.ActionType.NOTIFY,
                     )
                 )
@@ -188,13 +189,13 @@ class SheppardService(BaseService):
 
     async def _process_upcoming_calendar_entries(
         self,
-    ) -> list[entities.CalendarEntry]:
+    ) -> list[CalendarEntryEntity]:
         """Process upcoming calendar entries and determine which need notifications.
 
         Returns:
             List of calendar entries that need notifications
         """
-        calendar_entries_to_notify: list[entities.CalendarEntry] = []
+        calendar_entries_to_notify: list[CalendarEntryEntity] = []
 
         query = GetUpcomingCalendarEntriesQuery(user=self.user, date=self.day_svc.date)
         upcoming_calendar_entries = (
@@ -211,7 +212,7 @@ class SheppardService(BaseService):
             ):
                 calendar_entries_to_notify.append(calendar_entry)
                 calendar_entry.actions.append(
-                    entities.Action(
+                    ActionEntity(
                         type=value_objects.ActionType.NOTIFY,
                     )
                 )
@@ -220,9 +221,9 @@ class SheppardService(BaseService):
 
     async def _save_updates_and_send_notifications(
         self,
-        tasks_to_update: list[entities.Task],
-        tasks_to_notify: list[entities.Task],
-        calendar_entries_to_notify: list[entities.CalendarEntry],
+        tasks_to_update: list[TaskEntity],
+        tasks_to_notify: list[TaskEntity],
+        calendar_entries_to_notify: list[CalendarEntryEntity],
     ) -> None:
         """Save updates to database and send notifications.
 
@@ -254,7 +255,7 @@ class SheppardService(BaseService):
 
     async def _notify_for_tasks(
         self,
-        tasks: list[entities.Task],
+        tasks: list[TaskEntity],
     ) -> None:
         """Send notifications for the given tasks to all push subscriptions."""
         if not tasks:
@@ -278,7 +279,7 @@ class SheppardService(BaseService):
 
     async def _notify_for_calendar_entries(
         self,
-        calendar_entries: list[entities.CalendarEntry],
+        calendar_entries: list[CalendarEntryEntity],
     ) -> None:
         """Send notifications for the given calendar entries to all push subscriptions."""
         if not calendar_entries:

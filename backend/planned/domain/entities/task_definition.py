@@ -6,7 +6,7 @@ from .base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class TaskDefinition(BaseEntityObject):
+class TaskDefinitionEntity(BaseEntityObject):
     user_id: UUID
     name: str
     description: str

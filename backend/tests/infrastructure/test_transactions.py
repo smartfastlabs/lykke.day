@@ -4,7 +4,8 @@ from uuid import uuid4
 
 import pytest
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import DayEntity, TaskDefinitionEntity, TaskEntity
 from planned.infrastructure.database.transaction import (
     TransactionManager,
     get_transaction_connection,
@@ -15,7 +16,7 @@ from planned.core.utils.dates import get_current_datetime
 @pytest.mark.asyncio
 async def test_transaction_commits_on_success(test_date, test_user, day_repo):
     """Test that a transaction commits successfully when no exception occurs."""
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.SCHEDULED,
@@ -26,7 +27,7 @@ async def test_transaction_commits_on_success(test_date, test_user, day_repo):
         await day_repo.put(day)
 
     # After transaction commits, the day should be retrievable
-    day_id = entities.Day.id_from_date_and_user(test_date, test_user.id)
+    day_id = DayEntity.id_from_date_and_user(test_date, test_user.id)
     result = await day_repo.get(day_id)
     assert result.status == value_objects.DayStatus.SCHEDULED
 
@@ -34,7 +35,7 @@ async def test_transaction_commits_on_success(test_date, test_user, day_repo):
 @pytest.mark.asyncio
 async def test_transaction_rolls_back_on_exception(test_date, test_user, day_repo):
     """Test that a transaction rolls back when an exception occurs."""
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.SCHEDULED,
@@ -47,7 +48,7 @@ async def test_transaction_rolls_back_on_exception(test_date, test_user, day_rep
             raise ValueError("Test exception")
 
     # After rollback, the day should not be in the database
-    day_id = entities.Day.id_from_date_and_user(test_date, test_user.id)
+    day_id = DayEntity.id_from_date_and_user(test_date, test_user.id)
     with pytest.raises(NotFoundError):
         await day_repo.get(day_id)
 
@@ -55,7 +56,7 @@ async def test_transaction_rolls_back_on_exception(test_date, test_user, day_rep
 @pytest.mark.asyncio
 async def test_repository_works_without_transaction(test_date, test_user, day_repo):
     """Test that repositories work correctly without an active transaction."""
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.SCHEDULED,
@@ -65,7 +66,7 @@ async def test_repository_works_without_transaction(test_date, test_user, day_re
     # No transaction - should create its own connection
     await day_repo.put(day)
 
-    day_id = entities.Day.id_from_date_and_user(test_date, test_user.id)
+    day_id = DayEntity.id_from_date_and_user(test_date, test_user.id)
     result = await day_repo.get(day_id)
     assert result.status == value_objects.DayStatus.SCHEDULED
 
@@ -73,7 +74,7 @@ async def test_repository_works_without_transaction(test_date, test_user, day_re
 @pytest.mark.asyncio
 async def test_read_operations_see_uncommitted_changes(test_date, test_user, day_repo):
     """Test that read operations within a transaction see uncommitted changes."""
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.SCHEDULED,
@@ -106,21 +107,21 @@ async def test_multiple_operations_in_single_transaction(
     test_date, test_user, day_repo, task_repo
 ):
     """Test that multiple operations in a single transaction are atomic."""
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
     )
 
-    task = entities.Task(
+    task = TaskEntity(
         user_id=test_user.id,
         name="Test Task",
         status=value_objects.TaskStatus.NOT_STARTED,
         category=value_objects.TaskCategory.HOUSE,
         frequency=value_objects.TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user.id,
             name="Test Task",
             description="Test",
@@ -145,7 +146,7 @@ async def test_multiple_operations_in_single_transaction(
 @pytest.mark.asyncio
 async def test_nested_transactions_reuse_connection(test_date, test_user, day_repo):
     """Test that nested transactions reuse the same connection."""
-    day1 = entities.Day(
+    day1 = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.SCHEDULED,
@@ -184,7 +185,7 @@ async def test_transaction_connection_is_none_outside_transaction():
 @pytest.mark.asyncio
 async def test_transaction_rollback_on_nested_exception(test_date, test_user, day_repo):
     """Test that an exception in a nested transaction rolls back the entire transaction."""
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.SCHEDULED,

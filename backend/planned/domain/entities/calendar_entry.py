@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 from gcsa.event import Event as GoogleEvent
 
 from .. import value_objects
-from .action import Action
+from .action import ActionEntity
 from .base import BaseEntityObject
 
 
@@ -43,7 +43,7 @@ def get_datetime(
 
 
 @dataclass(kw_only=True)
-class CalendarEntry(BaseEntityObject):
+class CalendarEntryEntity(BaseEntityObject):
     user_id: UUID
     name: str
     calendar_id: UUID
@@ -55,7 +55,7 @@ class CalendarEntry(BaseEntityObject):
     ends_at: datetime | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    actions: list[Action] = field(default_factory=list)
+    actions: list[ActionEntity] = field(default_factory=list)
     timezone: str | None = field(default=None, repr=False)
 
     @property
@@ -79,7 +79,7 @@ class CalendarEntry(BaseEntityObject):
         google_event: GoogleEvent,
         frequency: value_objects.TaskFrequency,
         target_timezone: str,
-    ) -> "CalendarEntry":
+    ) -> "CalendarEntryEntity":
         """Create a CalendarEntry from a Google Calendar event.
 
         Args:

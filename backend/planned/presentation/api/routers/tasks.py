@@ -9,7 +9,8 @@ from planned.application.commands import RecordTaskActionCommand
 from planned.application.mediator import Mediator
 from planned.application.repositories import TaskRepositoryProtocol
 from planned.core.utils.dates import get_current_date
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import ActionEntity, UserEntity
 from planned.presentation.api import schemas
 from planned.presentation.api.schemas.mappers import map_task_to_schema
 
@@ -35,8 +36,8 @@ async def list_todays_tasks(
 async def add_task_action(
     date: dt.date,
     _id: uuid.UUID,
-    action: entities.Action,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    action: ActionEntity,
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.Task:
     """Record an action on a task."""

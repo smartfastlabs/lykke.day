@@ -12,7 +12,8 @@ from planned.application.queries.list_entities import (
     ListEntitiesQuery,
     ListEntitiesHandler,
 )
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import DayEntity
 from planned.domain.value_objects.day import DayStatus
 from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 
@@ -25,12 +26,12 @@ async def test_list_entities_handler_no_pagination(
     uow_factory = SqlAlchemyUnitOfWorkFactory()
     
     # Create some days
-    day1 = entities.Day(
+    day1 = DayEntity(
         user_id=test_user.id,
         date=datetime.date(2025, 11, 27),
         status=DayStatus.UNSCHEDULED,
     )
-    day2 = entities.Day(
+    day2 = DayEntity(
         user_id=test_user.id,
         date=datetime.date(2025, 11, 28),
         status=DayStatus.UNSCHEDULED,
@@ -79,7 +80,7 @@ async def test_list_entities_handler_with_pagination(
     create_handler = CreateEntityHandler(uow_factory)
     base_date = datetime.date(2025, 11, 27)
     for i in range(10):
-        day = entities.Day(
+        day = DayEntity(
             user_id=test_user.id,
             date=base_date + datetime.timedelta(days=i),
             status=DayStatus.UNSCHEDULED,
@@ -125,7 +126,7 @@ async def test_list_entities_handler_with_search_query(
     uow_factory = SqlAlchemyUnitOfWorkFactory()
     
     # Create a day
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=datetime.date(2025, 11, 27),
         status=DayStatus.UNSCHEDULED,

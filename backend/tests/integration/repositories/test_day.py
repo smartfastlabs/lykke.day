@@ -5,7 +5,8 @@ from uuid import UUID, uuid4
 import pytest
 
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import DayEntity
 from planned.core.utils.dates import get_current_datetime
 
 
@@ -20,7 +21,7 @@ async def test_get(
     if not default_template:
         pytest.skip("No templates available")
 
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.SCHEDULED,
@@ -54,7 +55,7 @@ async def test_put(
     if not default_template:
         pytest.skip("No templates available")
 
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -79,7 +80,7 @@ async def test_put_update(
     if not default_template:
         pytest.skip("No templates available")
 
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -116,14 +117,14 @@ async def test_all(
     if not default_template:
         pytest.skip("No templates available")
 
-    day1 = entities.Day(
+    day1 = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
         template=default_template,
     )
-    day2 = entities.Day(
+    day2 = DayEntity(
         user_id=test_user.id,
         date=test_date_tomorrow,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -155,14 +156,14 @@ async def test_search_query(
     if not default_template:
         pytest.skip("No templates available")
 
-    day1 = entities.Day(
+    day1 = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.SCHEDULED,
         scheduled_at=get_current_datetime(),
         template=default_template,
     )
-    day2 = entities.Day(
+    day2 = DayEntity(
         user_id=test_user.id,
         date=test_date_tomorrow,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -197,7 +198,7 @@ async def test_user_isolation(
         pytest.skip("No templates available")
 
     # Create day for test_user
-    day1 = entities.Day(
+    day1 = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.SCHEDULED,
@@ -230,7 +231,7 @@ async def test_delete(
     if not default_template:
         pytest.skip("No templates available")
 
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=test_date,
         status=value_objects.DayStatus.SCHEDULED,

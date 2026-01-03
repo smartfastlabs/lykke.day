@@ -1,10 +1,10 @@
 """Protocol for MessageRepository."""
 
 from planned.application.repositories.base import DateScopedCrudRepositoryProtocol
-from planned.domain import entities
+from planned.domain.entities import MessageEntity
 
 
-class MessageRepositoryProtocol(DateScopedCrudRepositoryProtocol[entities.Message]):
+class MessageRepositoryProtocol(DateScopedCrudRepositoryProtocol[MessageEntity]):
     """Protocol defining the interface for message repositories."""
     pass
 

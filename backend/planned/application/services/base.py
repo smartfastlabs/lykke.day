@@ -1,4 +1,4 @@
-from planned.domain import entities
+from planned.domain.entities import UserEntity
 
 
 class BaseService:
@@ -9,9 +9,9 @@ class BaseService:
     managing transactions directly.
     """
 
-    user: entities.User
+    user: UserEntity
 
-    def __init__(self, user: entities.User) -> None:
+    def __init__(self, user: UserEntity) -> None:
         """Initialize the service with a user.
 
         Args:

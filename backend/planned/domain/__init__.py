@@ -1,15 +1,15 @@
 # Re-export entities for easier imports
 from .entities import (
-    Action,
-    Calendar,
-    CalendarEntry,
-    Day,
-    DayTemplate,
-    Message,
-    Routine,
-    Task,
-    TaskDefinition,
-    User,
+    ActionEntity,
+    CalendarEntity,
+    CalendarEntryEntity,
+    DayEntity,
+    DayTemplateEntity,
+    MessageEntity,
+    RoutineEntity,
+    TaskEntity,
+    TaskDefinitionEntity,
+    UserEntity,
 )
 from .value_objects import BaseRequestObject, BaseResponseObject, BaseValueObject, UserSetting
 
@@ -20,16 +20,16 @@ _DayContext.model_rebuild()
 
 __all__ = [
     # Entities
-    "Action",
-    "Calendar",
-    "CalendarEntry",
-    "Day",
-    "DayTemplate",
-    "Message",
-    "Routine",
-    "Task",
-    "TaskDefinition",
-    "User",
+    "ActionEntity",
+    "CalendarEntity",
+    "CalendarEntryEntity",
+    "DayEntity",
+    "DayTemplateEntity",
+    "MessageEntity",
+    "RoutineEntity",
+    "TaskEntity",
+    "TaskDefinitionEntity",
+    "UserEntity",
     "UserSetting",
     # Value Objects
     "BaseRequestObject",

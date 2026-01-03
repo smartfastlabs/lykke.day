@@ -2,17 +2,18 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import UserEntity
 from planned.infrastructure.database.tables import users_tbl
 from sqlalchemy import select
 
 from .base import BaseQuery, BaseRepository
 
 
-class UserRepository(BaseRepository[entities.User, BaseQuery]):
+class UserRepository(BaseRepository[UserEntity, BaseQuery]):
     """UserRepository is NOT user-scoped - it's used for user management."""
 
-    Object = entities.User
+    Object = UserEntity
     table = users_tbl
     QueryClass = BaseQuery
 
@@ -20,7 +21,7 @@ class UserRepository(BaseRepository[entities.User, BaseQuery]):
         """Initialize UserRepository without user scoping."""
         super().__init__()
 
-    async def get_by_email(self, email: str) -> entities.User | None:
+    async def get_by_email(self, email: str) -> UserEntity | None:
         """Get a user by email address."""
         async with self._get_connection(for_write=False) as conn:
             stmt = select(self.table).where(self.table.c.email == email)
@@ -33,7 +34,7 @@ class UserRepository(BaseRepository[entities.User, BaseQuery]):
             return self.row_to_entity(dict(row))
 
     @staticmethod
-    def entity_to_row(user: entities.User) -> dict[str, Any]:
+    def entity_to_row(user: UserEntity) -> dict[str, Any]:
         """Convert a User entity to a database row dict."""
         row: dict[str, Any] = {
             "id": user.id,
@@ -62,7 +63,7 @@ class UserRepository(BaseRepository[entities.User, BaseQuery]):
         return row
 
     @staticmethod
-    def row_to_entity(row: dict[str, Any]) -> entities.User:
+    def row_to_entity(row: dict[str, Any]) -> UserEntity:
         """Convert a database row dict to a User entity."""
         data = dict(row)
 
@@ -80,4 +81,4 @@ class UserRepository(BaseRepository[entities.User, BaseQuery]):
         else:
             data["settings"] = value_objects.UserSetting()
 
-        return entities.User(**data)
+        return UserEntity(**data)

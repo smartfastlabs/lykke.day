@@ -9,7 +9,8 @@ from dobles import allow
 from planned.application.services import DayService
 from planned.application.services.factories import DayServiceFactory
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity, DayEntity, DayTemplateEntity, TaskDefinitionEntity, TaskEntity, UserEntity
 
 
 @pytest.mark.asyncio
@@ -26,18 +27,18 @@ async def test_set_date_changes_date_and_reloads_context(
     """Test that set_date changes the date and reloads context."""
     old_date = datetime.date(2024, 1, 1)
     new_date = datetime.date(2024, 1, 2)
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug="default",
         user_id=test_user_id,
     )
 
-    old_day = entities.Day(
+    old_day = DayEntity(
         user_id=test_user_id,
         date=old_date,
         status=value_objects.DayStatus.UNSCHEDULED,
         template=template,
     )
-    new_day = entities.Day(
+    new_day = DayEntity(
         user_id=test_user_id,
         date=new_date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -96,18 +97,18 @@ async def test_set_date_with_user_id(
     """Test set_date with explicit user_id."""
     old_date = datetime.date(2024, 1, 1)
     new_date = datetime.date(2024, 1, 2)
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug="default",
         user_id=test_user_id,
     )
 
-    old_day = entities.Day(
+    old_day = DayEntity(
         user_id=test_user_id,
         date=old_date,
         status=value_objects.DayStatus.UNSCHEDULED,
         template=template,
     )
-    new_day = entities.Day(
+    new_day = DayEntity(
         user_id=test_user_id,
         date=new_date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -156,11 +157,11 @@ async def test_get_or_preview_returns_existing_day(
 ):
     """Test get_or_preview returns existing day if found."""
     date = datetime.date(2024, 1, 1)
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug="default",
         user_id=test_user_id,
     )
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -203,14 +204,14 @@ async def test_get_or_preview_creates_base_day_if_not_found(
     date = datetime.date(2024, 1, 1)
     template_slug = "default"
 
-    user = entities.User(
+    user = UserEntity(
         id=test_user_id,
         email="test@example.com",
         hashed_password="hash",
         settings=value_objects.UserSetting(template_defaults=[template_slug] * 7),
     )
 
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug=template_slug,
         user_id=test_user_id,
     )
@@ -224,7 +225,7 @@ async def test_get_or_preview_creates_base_day_if_not_found(
 
     # Create a DayService instance
     day_ctx = value_objects.DayContext(
-        day=entities.Day(
+        day=DayEntity(
             user_id=test_user_id,
             date=date,
             status=value_objects.DayStatus.UNSCHEDULED,
@@ -262,19 +263,19 @@ async def test_get_or_create_creates_and_saves_day(
     date = datetime.date(2024, 1, 1)
     template_slug = "default"
 
-    user = entities.User(
+    user = UserEntity(
         id=test_user_id,
         email="test@example.com",
         hashed_password="hash",
         settings=value_objects.UserSetting(template_defaults=[template_slug] * 7),
     )
 
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug=template_slug,
         user_id=test_user_id,
     )
 
-    created_day = entities.Day(
+    created_day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -291,7 +292,7 @@ async def test_get_or_create_creates_and_saves_day(
 
     # Create a DayService instance
     day_ctx = value_objects.DayContext(
-        day=entities.Day(
+        day=DayEntity(
             user_id=test_user_id,
             date=date,
             status=value_objects.DayStatus.UNSCHEDULED,
@@ -326,11 +327,11 @@ async def test_save(
 ):
     """Test save persists the day."""
     date = datetime.date(2024, 1, 1)
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug="default",
         user_id=test_user_id,
     )
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -374,12 +375,12 @@ async def test_get_upcoming_tasks_123(
     from datetime import time
 
     future_time = time(12, 15)  # 15 minutes in the future
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug="default",
         user_id=test_user_id,
     )
 
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -387,13 +388,13 @@ async def test_get_upcoming_tasks_123(
     )
 
     # Task that should be included (within window)
-    task1 = entities.Task(
+    task1 = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Upcoming Task",
         status=value_objects.TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -408,13 +409,13 @@ async def test_get_upcoming_tasks_123(
 
     # Task that should be excluded (too far in future)
     far_future_time = time(14, 0)  # 2 hours in the future
-    task2 = entities.Task(
+    task2 = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Future Task",
         status=value_objects.TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -429,13 +430,13 @@ async def test_get_upcoming_tasks_123(
     )
 
     # Task that should be excluded (already completed)
-    task3 = entities.Task(
+    task3 = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Completed Task",
         status=value_objects.TaskStatus.COMPLETE,
         scheduled_date=date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -458,7 +459,7 @@ async def test_get_upcoming_tasks_123(
     # Mock repositories for GetDayContextHandler
     from planned.domain.value_objects.query import DateQuery
 
-    day_id = entities.Day.id_from_date_and_user(date, test_user_id)
+    day_id = DayEntity.id_from_date_and_user(date, test_user_id)
     allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
     allow(mock_day_template_repo).get_by_slug("default").and_return(template)
     allow(mock_task_repo).search_query.and_return([task1, task2, task3])
@@ -502,12 +503,12 @@ async def test_get_upcoming_calendar_entries(
     future_time = now + timedelta(minutes=15)
     far_future = now + timedelta(hours=2)
     past_time = now - timedelta(hours=1)
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug="default",
         user_id=test_user_id,
     )
 
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -515,7 +516,7 @@ async def test_get_upcoming_calendar_entries(
     )
 
     # CalendarEntry that should be included (within window)
-    calendar_entry1 = entities.CalendarEntry(
+    calendar_entry1 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Upcoming Calendar Entry",
@@ -528,7 +529,7 @@ async def test_get_upcoming_calendar_entries(
     )
 
     # CalendarEntry that should be excluded (too far in future)
-    calendar_entry2 = entities.CalendarEntry(
+    calendar_entry2 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Future Calendar Entry",
@@ -541,7 +542,7 @@ async def test_get_upcoming_calendar_entries(
     )
 
     # CalendarEntry that should be excluded (cancelled)
-    calendar_entry3 = entities.CalendarEntry(
+    calendar_entry3 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Cancelled Calendar Entry",
@@ -554,7 +555,7 @@ async def test_get_upcoming_calendar_entries(
     )
 
     # CalendarEntry that should be included (ongoing - started in past but not ended)
-    calendar_entry4 = entities.CalendarEntry(
+    calendar_entry4 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Ongoing Calendar Entry",
@@ -582,7 +583,7 @@ async def test_get_upcoming_calendar_entries(
     # Mock repositories for GetDayContextHandler
     from planned.domain.value_objects.query import DateQuery
 
-    day_id = entities.Day.id_from_date_and_user(date, test_user_id)
+    day_id = DayEntity.id_from_date_and_user(date, test_user_id)
     allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
     allow(mock_day_template_repo).get_by_slug("default").and_return(template)
     allow(mock_task_repo).search_query.and_return([])
@@ -627,11 +628,11 @@ async def test_for_date_creates_service(
 ):
     """Test for_date creates a DayService with loaded context."""
     date = datetime.date(2024, 1, 1)
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug="default",
         user_id=test_user_id,
     )
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -666,7 +667,7 @@ async def test_base_day_with_template(
     from planned.domain.entities import Day
 
     date = datetime.date(2024, 1, 1)
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug="custom",
         user_id=test_user_id,
     )
@@ -697,17 +698,17 @@ async def test_load_context_instance_method(
 ):
     """Test load_context instance method reloads context."""
     date = datetime.date(2024, 1, 1)
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug="default",
         user_id=test_user_id,
     )
-    old_day = entities.Day(
+    old_day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
         template=template,
     )
-    new_day = entities.Day(
+    new_day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.SCHEDULED,
@@ -756,12 +757,12 @@ async def test_get_upcoming_tasks_with_available_time(
     now = test_datetime_noon
     past_available_time = (now - timedelta(minutes=30)).time()
     future_available_time = (now + timedelta(minutes=30)).time()
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug="default",
         user_id=test_user_id,
     )
 
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -769,13 +770,13 @@ async def test_get_upcoming_tasks_with_available_time(
     )
 
     # Task with available_time in past (should be included)
-    task1 = entities.Task(
+    task1 = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Available Task",
         status=value_objects.TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -790,13 +791,13 @@ async def test_get_upcoming_tasks_with_available_time(
     )
 
     # Task with available_time in future (should be excluded)
-    task2 = entities.Task(
+    task2 = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Future Available Task",
         status=value_objects.TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -815,7 +816,7 @@ async def test_get_upcoming_tasks_with_available_time(
     )
 
     # Mock repositories for GetDayContextHandler
-    day_id = entities.Day.id_from_date_and_user(date, test_user_id)
+    day_id = DayEntity.id_from_date_and_user(date, test_user_id)
     allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
     allow(mock_day_template_repo).get_by_slug("default").and_return(template)
     allow(mock_task_repo).search_query.and_return([task1, task2])
@@ -854,12 +855,12 @@ async def test_get_upcoming_tasks_with_end_time(
     now = test_datetime_noon
     past_end_time = (now - timedelta(minutes=30)).time()
     future_start_time = (now + timedelta(minutes=15)).time()
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug="default",
         user_id=test_user_id,
     )
 
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -867,13 +868,13 @@ async def test_get_upcoming_tasks_with_end_time(
     )
 
     # Task with end_time in past (should be excluded)
-    task1 = entities.Task(
+    task1 = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Past End Time Task",
         status=value_objects.TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -889,13 +890,13 @@ async def test_get_upcoming_tasks_with_end_time(
     )
 
     # Task with end_time in future (should be included)
-    task2 = entities.Task(
+    task2 = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Valid Task",
         status=value_objects.TaskStatus.NOT_STARTED,
         scheduled_date=date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -915,7 +916,7 @@ async def test_get_upcoming_tasks_with_end_time(
     )
 
     # Mock repositories for GetDayContextHandler
-    day_id = entities.Day.id_from_date_and_user(date, test_user_id)
+    day_id = DayEntity.id_from_date_and_user(date, test_user_id)
     allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
     allow(mock_day_template_repo).get_by_slug("default").and_return(template)
     allow(mock_task_repo).search_query.and_return([task1, task2])
@@ -953,12 +954,12 @@ async def test_get_upcoming_tasks_excludes_completed_at(
     # Use frozen datetime from fixture
     now = test_datetime_noon
     future_time = (now + timedelta(minutes=15)).time()
-    template = entities.DayTemplate(
+    template = DayTemplateEntity(
         slug="default",
         user_id=test_user_id,
     )
 
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user_id,
         date=date,
         status=value_objects.DayStatus.UNSCHEDULED,
@@ -966,14 +967,14 @@ async def test_get_upcoming_tasks_excludes_completed_at(
     )
 
     # Task with completed_at (should be excluded even if status is PENDING)
-    task1 = entities.Task(
+    task1 = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Completed Task",
         status=value_objects.TaskStatus.PENDING,
         scheduled_date=date,
         completed_at=now,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -988,13 +989,13 @@ async def test_get_upcoming_tasks_excludes_completed_at(
     )
 
     # Task without completed_at (should be included)
-    task2 = entities.Task(
+    task2 = TaskEntity(
         id=uuid4(),
         user_id=test_user_id,
         name="Valid Task",
         status=value_objects.TaskStatus.PENDING,
         scheduled_date=date,
-        task_definition=entities.TaskDefinition(
+        task_definition=TaskDefinitionEntity(
             user_id=test_user_id,
             name="Task Def",
             description="Test task definition",
@@ -1013,7 +1014,7 @@ async def test_get_upcoming_tasks_excludes_completed_at(
     )
 
     # Mock repositories for GetDayContextHandler
-    day_id = entities.Day.id_from_date_and_user(date, test_user_id)
+    day_id = DayEntity.id_from_date_and_user(date, test_user_id)
     allow(mock_day_repo).get(day_id).and_raise(NotFoundError("Day not found"))
     allow(mock_day_template_repo).get_by_slug("default").and_return(template)
     allow(mock_task_repo).search_query.and_return([task1, task2])

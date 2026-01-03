@@ -11,19 +11,20 @@ from planned.core.utils.task_filters import (
     filter_upcoming_tasks,
     is_task_eligible_for_upcoming,
 )
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import TaskDefinitionEntity, TaskEntity
 
 
 @pytest.fixture
-def test_task_pending(test_user_id: str) -> entities.Task:
+def test_task_pending(test_user_id: str) -> TaskEntity:
     """Create a pending task for testing."""
-    task_def = entities.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user_id,
         name="Task Def",
         description="Test",
         type=value_objects.TaskType.CHORE,
     )
-    return entities.Task(
+    return TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
@@ -35,9 +36,9 @@ def test_task_pending(test_user_id: str) -> entities.Task:
 
 
 @pytest.fixture
-def test_task_with_schedule(test_user_id: str) -> entities.Task:
+def test_task_with_schedule(test_user_id: str) -> TaskEntity:
     """Create a task with schedule for testing."""
-    task_def = entities.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user_id,
         name="Task Def",
         description="Test",
@@ -48,7 +49,7 @@ def test_task_with_schedule(test_user_id: str) -> entities.Task:
         end_time=datetime.time(12, 0),
         timing_type=value_objects.TimingType.TIME_WINDOW,
     )
-    return entities.Task(
+    return TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Scheduled Task",
@@ -75,13 +76,13 @@ def test_is_task_eligible_for_upcoming_status(
     test_user_id: str, status: value_objects.TaskStatus, expected: bool
 ) -> None:
     """Test task eligibility based on status."""
-    task_def = entities.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user_id,
         name="Task Def",
         description="Test",
         type=value_objects.TaskType.CHORE,
     )
-    task = entities.Task(
+    task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
@@ -102,7 +103,7 @@ def test_is_task_eligible_for_upcoming_status(
 
 
 def test_is_task_eligible_for_upcoming_completed_task(
-    test_task_with_schedule: entities.Task,
+    test_task_with_schedule: TaskEntity,
 ) -> None:
     """Test completed tasks are not eligible."""
     test_task_with_schedule.completed_at = datetime.datetime.now(UTC)
@@ -116,7 +117,7 @@ def test_is_task_eligible_for_upcoming_completed_task(
 
 
 def test_is_task_eligible_for_upcoming_no_schedule(
-    test_task_pending: entities.Task,
+    test_task_pending: TaskEntity,
 ) -> None:
     """Test tasks without schedule are not eligible."""
     with freeze_time("2025-11-27 09:00:00-06:00", real_asyncio=True):
@@ -130,7 +131,7 @@ def test_is_task_eligible_for_upcoming_available_time_before_now(
     test_user_id: str,
 ) -> None:
     """Test task with available_time before now is eligible."""
-    task_def = entities.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user_id,
         name="Task Def",
         description="Test",
@@ -141,7 +142,7 @@ def test_is_task_eligible_for_upcoming_available_time_before_now(
         start_time=datetime.time(10, 0),
         timing_type=value_objects.TimingType.FLEXIBLE,
     )
-    task = entities.Task(
+    task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
@@ -162,7 +163,7 @@ def test_is_task_eligible_for_upcoming_available_time_after_now(
     test_user_id: str,
 ) -> None:
     """Test task with available_time after now is not eligible."""
-    task_def = entities.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user_id,
         name="Task Def",
         description="Test",
@@ -173,7 +174,7 @@ def test_is_task_eligible_for_upcoming_available_time_after_now(
         start_time=datetime.time(11, 0),
         timing_type=value_objects.TimingType.FLEXIBLE,
     )
-    task = entities.Task(
+    task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
@@ -194,7 +195,7 @@ def test_is_task_eligible_for_upcoming_start_time_after_cutoff(
     test_user_id: str,
 ) -> None:
     """Test task with start_time after cutoff is not eligible."""
-    task_def = entities.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user_id,
         name="Task Def",
         description="Test",
@@ -204,7 +205,7 @@ def test_is_task_eligible_for_upcoming_start_time_after_cutoff(
         start_time=datetime.time(13, 0),
         timing_type=value_objects.TimingType.FIXED_TIME,
     )
-    task = entities.Task(
+    task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
@@ -225,7 +226,7 @@ def test_is_task_eligible_for_upcoming_end_time_passed(
     test_user_id: str,
 ) -> None:
     """Test task with end_time that has passed is not eligible."""
-    task_def = entities.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user_id,
         name="Task Def",
         description="Test",
@@ -236,7 +237,7 @@ def test_is_task_eligible_for_upcoming_end_time_passed(
         end_time=datetime.time(9, 0),
         timing_type=value_objects.TimingType.TIME_WINDOW,
     )
-    task = entities.Task(
+    task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
@@ -275,13 +276,13 @@ def test_calculate_cutoff_time_crosses_midnight(test_date: datetime.date) -> Non
 
 def test_filter_upcoming_tasks(test_user_id: str) -> None:
     """Test filter_upcoming_tasks filters tasks correctly."""
-    task_def = entities.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user_id,
         name="Task Def",
         description="Test",
         type=value_objects.TaskType.CHORE,
     )
-    eligible_task = entities.Task(
+    eligible_task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Eligible Task",
@@ -294,7 +295,7 @@ def test_filter_upcoming_tasks(test_user_id: str) -> None:
             timing_type=value_objects.TimingType.FIXED_TIME,
         ),
     )
-    ineligible_task = entities.Task(
+    ineligible_task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Ineligible Task",
@@ -307,7 +308,7 @@ def test_filter_upcoming_tasks(test_user_id: str) -> None:
             timing_type=value_objects.TimingType.FIXED_TIME,
         ),
     )
-    no_schedule_task = entities.Task(
+    no_schedule_task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="No Schedule Task",
@@ -328,13 +329,13 @@ def test_filter_upcoming_tasks(test_user_id: str) -> None:
 
 def test_filter_upcoming_tasks_cutoff_before_now(test_user_id: str) -> None:
     """Test filter_upcoming_tasks returns all tasks when cutoff is before now."""
-    task_def = entities.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user_id,
         name="Task Def",
         description="Test",
         type=value_objects.TaskType.CHORE,
     )
-    task = entities.Task(
+    task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Task",

@@ -13,7 +13,7 @@ from planned.application.commands.sync_calendar import (
 from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from planned.application.services.base import BaseService
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain import entities
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity, UserEntity
 
 
 class CalendarService(BaseService):
@@ -30,7 +30,7 @@ class CalendarService(BaseService):
 
     def __init__(
         self,
-        user: entities.User,
+        user: UserEntity,
         uow_factory: UnitOfWorkFactory,
         google_gateway: GoogleCalendarGatewayProtocol,
     ) -> None:
@@ -50,8 +50,8 @@ class CalendarService(BaseService):
         )
 
     async def sync(
-        self, calendar: entities.Calendar
-    ) -> tuple[list[entities.CalendarEntry], list[entities.CalendarEntry]]:
+        self, calendar: CalendarEntity
+    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity]]:
         """Sync a single calendar from its external provider.
 
         Args:

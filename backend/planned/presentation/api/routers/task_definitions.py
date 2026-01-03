@@ -12,7 +12,7 @@ from planned.application.commands import (
 )
 from planned.application.mediator import Mediator
 from planned.application.queries import GetEntityQuery, ListEntitiesQuery
-from planned.domain import entities
+from planned.domain.entities import TaskDefinitionEntity, TaskEntity, UserEntity
 from planned.infrastructure.data.default_task_definitions import (
     DEFAULT_TASK_DEFINITIONS,
 )
@@ -38,11 +38,11 @@ async def get_available_task_definitions() -> list[dict]:
 @router.get("/{uuid}", response_model=schemas.TaskDefinition)
 async def get_task_definition(
     uuid: UUID,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.TaskDefinition:
     """Get a single task definition by ID."""
-    query = GetEntityQuery[entities.TaskDefinition](
+    query = GetEntityQuery[TaskDefinitionEntity](
         user_id=user.id,
         entity_id=uuid,
         repository_name="task_definitions",
@@ -53,13 +53,13 @@ async def get_task_definition(
 
 @router.get("/", response_model=list[schemas.TaskDefinition])
 async def list_task_definitions(
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[schemas.TaskDefinition]:
     """List task definitions with pagination."""
-    query = ListEntitiesQuery[entities.TaskDefinition](
+    query = ListEntitiesQuery[TaskDefinitionEntity](
         user_id=user.id,
         repository_name="task_definitions",
         limit=limit,
@@ -67,25 +67,25 @@ async def list_task_definitions(
         paginate=False,
     )
     result = await mediator.query(query)
-    task_definitions = cast("list[entities.TaskDefinition]", result)
+    task_definitions = cast("list[TaskDefinitionEntity]", result)
     return [map_task_definition_to_schema(td) for td in task_definitions]
 
 
 @router.post("/", response_model=schemas.TaskDefinition)
 async def create_task_definition(
     task_definition_data: schemas.TaskDefinition,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.TaskDefinition:
     """Create a new task definition."""
     # Convert schema to entity
-    task_definition = entities.TaskDefinition(
+    task_definition = TaskDefinitionEntity(
         user_id=user.id,
         name=task_definition_data.name,
         description=task_definition_data.description,
         type=task_definition_data.type,
     )
-    command = CreateEntityCommand[entities.TaskDefinition](
+    command = CreateEntityCommand[TaskDefinitionEntity](
         user_id=user.id,
         repository_name="task_definitions",
         entity=task_definition,
@@ -97,7 +97,7 @@ async def create_task_definition(
 @router.post("/bulk", response_model=list[schemas.TaskDefinition])
 async def bulk_create_task_definitions(
     task_definitions_data: list[dict],
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> list[schemas.TaskDefinition]:
     """Bulk create task definitions."""
@@ -106,10 +106,10 @@ async def bulk_create_task_definitions(
     for data in task_definitions_data:
         if "user_id" not in data:
             data["user_id"] = user.id
-        task_definition = entities.TaskDefinition(**data)
+        task_definition = TaskDefinitionEntity(**data)
         task_definitions.append(task_definition)
 
-    command = BulkCreateEntitiesCommand[entities.TaskDefinition](
+    command = BulkCreateEntitiesCommand[TaskDefinitionEntity](
         user_id=user.id,
         repository_name="task_definitions",
         entities=tuple(task_definitions),
@@ -122,19 +122,19 @@ async def bulk_create_task_definitions(
 async def update_task_definition(
     uuid: UUID,
     task_definition_data: schemas.TaskDefinition,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> schemas.TaskDefinition:
     """Update a task definition."""
     # Convert schema to entity
-    task_definition = entities.TaskDefinition(
+    task_definition = TaskDefinitionEntity(
         id=uuid,
         user_id=user.id,
         name=task_definition_data.name,
         description=task_definition_data.description,
         type=task_definition_data.type,
     )
-    command = UpdateEntityCommand[entities.TaskDefinition](
+    command = UpdateEntityCommand[TaskDefinitionEntity](
         user_id=user.id,
         repository_name="task_definitions",
         entity_id=uuid,
@@ -147,7 +147,7 @@ async def update_task_definition(
 @router.delete("/{uuid}", status_code=204)
 async def delete_task_definition(
     uuid: UUID,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     mediator: Annotated[Mediator, Depends(get_mediator)],
 ) -> None:
     """Delete a task definition."""

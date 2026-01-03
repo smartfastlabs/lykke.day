@@ -6,7 +6,7 @@ from uuid import uuid4, uuid5
 import pytest
 
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import Task, TaskDefinition
+from planned.domain.entities import TaskEntity, TaskDefinitionEntity
 from planned.domain.value_objects.query import DateQuery
 from planned.domain.value_objects.task import (
     TaskCategory,
@@ -26,7 +26,7 @@ def _create_task_definition(user_id, task_id=None):
     else:
         task_id = uuid5(user_id, task_id)
 
-    return TaskDefinition(
+    return TaskDefinitionEntity(
         user_id=user_id,
         id=task_id,
         name="Test Task",
@@ -38,7 +38,7 @@ def _create_task_definition(user_id, task_id=None):
 @pytest.mark.asyncio
 async def test_get(task_repo, test_user, test_date):
     """Test getting a task by ID."""
-    task = Task(
+    task = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Test Task",
@@ -67,7 +67,7 @@ async def test_get_not_found(task_repo):
 @pytest.mark.asyncio
 async def test_put(task_repo, test_user, test_date):
     """Test creating a new task."""
-    task = Task(
+    task = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="New Task",
@@ -88,7 +88,7 @@ async def test_put(task_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_put_update(task_repo, test_user, test_date):
     """Test updating an existing task."""
-    task = Task(
+    task = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Original Task",
@@ -184,7 +184,7 @@ async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow)
 @pytest.mark.asyncio
 async def test_delete(task_repo, test_user, test_date):
     """Test deleting a task."""
-    task = Task(
+    task = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Task to Delete",
@@ -208,7 +208,7 @@ async def test_delete(task_repo, test_user, test_date):
 async def test_user_isolation(task_repo, test_user, create_test_user, test_date):
     """Test that different users' tasks are properly isolated."""
     # Create task for test_user
-    task = Task(
+    task = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="User1 Task",
@@ -242,7 +242,7 @@ async def test_task_with_schedule(task_repo, test_user, test_date):
         end_time=datetime.time(12, 0),
     )
 
-    task = Task(
+    task = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Scheduled Task",

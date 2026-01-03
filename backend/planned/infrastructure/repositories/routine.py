@@ -1,14 +1,14 @@
 from typing import Any
 from uuid import UUID
 
-from planned.domain.entities.routine import Routine
+from planned.domain.entities import RoutineEntity
 
 from .base import BaseQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import routines_tbl
 
 
-class RoutineRepository(UserScopedBaseRepository[Routine, BaseQuery]):
-    Object = Routine
+class RoutineRepository(UserScopedBaseRepository[RoutineEntity, BaseQuery]):
+    Object = RoutineEntity
     table = routines_tbl
     QueryClass = BaseQuery
 
@@ -17,7 +17,7 @@ class RoutineRepository(UserScopedBaseRepository[Routine, BaseQuery]):
         super().__init__(user_id=user_id)
 
     @staticmethod
-    def entity_to_row(routine: Routine) -> dict[str, Any]:
+    def entity_to_row(routine: RoutineEntity) -> dict[str, Any]:
         """Convert a Routine entity to a database row dict."""
         row: dict[str, Any] = {
             "id": routine.id,

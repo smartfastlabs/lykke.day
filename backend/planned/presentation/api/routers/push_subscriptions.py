@@ -4,7 +4,8 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, Depends
 
 from planned.application.repositories import PushSubscriptionRepositoryProtocol
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import UserEntity
 from planned.infrastructure import data_objects
 from planned.infrastructure.gateways import web_push
 from planned.presentation.api import schemas
@@ -53,7 +54,7 @@ async def delete_subscription(
 async def subscribe(
     background_tasks: BackgroundTasks,
     request: SubscriptionRequest,
-    user: Annotated[entities.User, Depends(get_current_user)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
     push_subscription_repo: Annotated[PushSubscriptionRepositoryProtocol, Depends(
         get_push_subscription_repo
     )],

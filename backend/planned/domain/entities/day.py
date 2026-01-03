@@ -19,20 +19,20 @@ from ..events.task_events import (
     TaskCompletedEvent,
     TaskStatusChangedEvent,
 )
-from .action import Action
-from .day_template import DayTemplate
-from .task import Task
+from .action import ActionEntity
+from .day_template import DayTemplateEntity
+from .task import TaskEntity
 
 
 @dataclass(kw_only=True)
-class Day(BaseAggregateRoot):
+class DayEntity(BaseAggregateRoot):
     user_id: UUID
     date: dt_date
     alarm: value_objects.Alarm | None = None
     status: value_objects.DayStatus = value_objects.DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
     tags: list[value_objects.DayTag] = field(default_factory=list)
-    template: DayTemplate | None = None
+    template: DayTemplateEntity | None = None
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
@@ -65,8 +65,8 @@ class Day(BaseAggregateRoot):
         cls,
         date: dt_date,
         user_id: UUID,
-        template: DayTemplate,
-    ) -> "Day":
+        template: "DayTemplateEntity",
+    ) -> "DayEntity":
         """Create a new day for the given date and user.
 
         Factory method for creating days. This is the preferred way to create
@@ -88,7 +88,7 @@ class Day(BaseAggregateRoot):
             alarm=template.alarm,
         )
 
-    def schedule(self, template: DayTemplate) -> None:
+    def schedule(self, template: "DayTemplateEntity") -> None:
         """Schedule the day with the given template.
 
         This method enforces the business rule that only unscheduled days
@@ -155,7 +155,7 @@ class Day(BaseAggregateRoot):
         self.status = value_objects.DayStatus.COMPLETE
         self._add_event(DayCompletedEvent(day_id=self.id, date=self.date))
 
-    def update_template(self, template: DayTemplate) -> None:
+    def update_template(self, template: "DayTemplateEntity") -> None:
         """Update the day's template.
 
         Args:
@@ -166,7 +166,9 @@ class Day(BaseAggregateRoot):
         if template.alarm:
             self.alarm = template.alarm
 
-    def record_task_action(self, task: Task, action: Action) -> Task:
+    def record_task_action(
+        self, task: "TaskEntity", action: "ActionEntity"
+    ) -> "TaskEntity":
         """Record an action on a task within this day aggregate.
 
         This method ensures all task modifications go through the Day aggregate root.

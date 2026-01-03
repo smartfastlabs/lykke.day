@@ -3,14 +3,14 @@ from uuid import UUID
 
 from sqlalchemy.sql import Select
 
-from planned.domain import entities
+from planned.domain.entities import MessageEntity
 
 from .base import DateQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import messages_tbl
 
 
-class MessageRepository(UserScopedBaseRepository[entities.Message, DateQuery]):
-    Object = entities.Message
+class MessageRepository(UserScopedBaseRepository[MessageEntity, DateQuery]):
+    Object = MessageEntity
     table = messages_tbl
     QueryClass = DateQuery
     # Exclude 'date' - it's a database-only field for querying (computed from sent_at)
@@ -31,7 +31,7 @@ class MessageRepository(UserScopedBaseRepository[entities.Message, DateQuery]):
         return stmt
 
     @staticmethod
-    def entity_to_row(message: entities.Message) -> dict[str, Any]:
+    def entity_to_row(message: MessageEntity) -> dict[str, Any]:
         """Convert a Message entity to a database row dict."""
         row: dict[str, Any] = {
             "id": message.id,

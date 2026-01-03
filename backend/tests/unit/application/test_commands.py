@@ -22,7 +22,7 @@ from planned.application.queries.get_entity import (
     GetEntityHandler,
 )
 from planned.core.exceptions import NotFoundError
-from planned.domain import entities
+from planned.domain.entities import DayEntity
 from planned.domain.value_objects.day import DayStatus
 from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 
@@ -33,7 +33,7 @@ async def test_create_entity_handler(
 ) -> None:
     """Test CreateEntityHandler creates an entity."""
     uow_factory = SqlAlchemyUnitOfWorkFactory()
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=datetime.date(2025, 11, 27),
         status=DayStatus.UNSCHEDULED,
@@ -61,7 +61,7 @@ async def test_delete_entity_handler(
     uow_factory = SqlAlchemyUnitOfWorkFactory()
     
     # First create a day
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=datetime.date(2025, 11, 27),
         status=DayStatus.UNSCHEDULED,
@@ -107,7 +107,7 @@ async def test_get_entity_handler(
     uow_factory = SqlAlchemyUnitOfWorkFactory()
     
     # First create a day
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=datetime.date(2025, 11, 27),
         status=DayStatus.UNSCHEDULED,
@@ -164,7 +164,7 @@ async def test_update_entity_handler(
     uow_factory = SqlAlchemyUnitOfWorkFactory()
     
     # First create a day
-    day = entities.Day(
+    day = DayEntity(
         user_id=test_user.id,
         date=datetime.date(2025, 11, 27),
         status=DayStatus.UNSCHEDULED,
@@ -181,7 +181,7 @@ async def test_update_entity_handler(
     entity_id = created_day.id
     
     # Now update it
-    updated_day = entities.Day(
+    updated_day = DayEntity(
         id=entity_id,
         user_id=test_user.id,
         date=datetime.date(2025, 11, 27),

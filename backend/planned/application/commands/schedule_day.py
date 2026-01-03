@@ -7,7 +7,8 @@ from uuid import UUID
 
 from planned.application.queries.preview_day import PreviewDayHandler, PreviewDayQuery
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import DayEntity
 
 from .base import Command, CommandHandler
 
@@ -60,7 +61,7 @@ class ScheduleDayHandler(CommandHandler[ScheduleDayCommand, value_objects.DayCon
             template = await uow.day_templates.get(preview_result.day.template.id)
 
             # Create and schedule the day
-            day = entities.Day.create_for_date(
+            day = DayEntity.create_for_date(
                 cmd.date,
                 user_id=cmd.user_id,
                 template=template,

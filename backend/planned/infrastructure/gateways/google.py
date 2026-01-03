@@ -13,7 +13,8 @@ from loguru import logger
 from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from planned.core.config import settings
 from planned.core.exceptions import TokenExpiredError
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity
 from planned.infrastructure import data_objects
 
 if TYPE_CHECKING:
@@ -42,7 +43,7 @@ def get_flow(flow_name: str) -> Flow:
     )
 
 
-def get_google_calendar(calendar: entities.Calendar, token: data_objects.AuthToken) -> GoogleCalendar:
+def get_google_calendar(calendar: CalendarEntity, token: data_objects.AuthToken) -> GoogleCalendar:
     try:
         credentials = token.google_credentials()
         # Force a refresh check
@@ -167,12 +168,12 @@ def is_after(
 
 
 def _load_calendar_events_sync(
-    calendar: entities.Calendar,
+    calendar: CalendarEntity,
     lookback: datetime,
     token: data_objects.AuthToken,
-) -> list[entities.CalendarEntry]:
+) -> list[CalendarEntryEntity]:
     """Synchronous implementation of calendar entry loading."""
-    calendar_entries: list[entities.CalendarEntry] = []
+    calendar_entries: list[CalendarEntryEntity] = []
     frequency_cache: dict[str, value_objects.TaskFrequency] = {}
 
     logger.info(f"Loading calendar entries for calendar {calendar.name}...")
@@ -194,7 +195,7 @@ def _load_calendar_events_sync(
             # Get frequency, fetching parent event if this is a recurring instance
             frequency = get_event_frequency(event, gc, frequency_cache)
             calendar_entries.append(
-                entities.CalendarEntry.from_google(
+                CalendarEntryEntity.from_google(
                     calendar.user_id,
                     calendar.id,
                     event,
@@ -209,10 +210,10 @@ def _load_calendar_events_sync(
 
 
 async def load_calendar_events(
-    calendar: entities.Calendar,
+    calendar: CalendarEntity,
     lookback: datetime,
     token: data_objects.AuthToken,
-) -> list[entities.CalendarEntry]:
+) -> list[CalendarEntryEntity]:
     """Asynchronously load calendar entries by running the sync operation in a thread pool."""
     try:
         return await asyncio.to_thread(
@@ -230,10 +231,10 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
 
     async def load_calendar_events(
         self,
-        calendar: entities.Calendar,
+        calendar: CalendarEntity,
         lookback: datetime,
         token: data_objects.AuthToken,
-    ) -> list[entities.CalendarEntry]:
+    ) -> list[CalendarEntryEntity]:
         """Load calendar entries from Google Calendar."""
         return await load_calendar_events(
             calendar,

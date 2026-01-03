@@ -1,14 +1,14 @@
 from typing import Any
 from uuid import UUID
 
-from planned.domain import entities
+from planned.domain.entities import TaskDefinitionEntity
 from planned.infrastructure.database.tables import task_definitions_tbl
 
 from .base import BaseQuery, UserScopedBaseRepository
 
 
-class TaskDefinitionRepository(UserScopedBaseRepository[entities.TaskDefinition, BaseQuery]):
-    Object = entities.TaskDefinition
+class TaskDefinitionRepository(UserScopedBaseRepository[TaskDefinitionEntity, BaseQuery]):
+    Object = TaskDefinitionEntity
     table = task_definitions_tbl
     QueryClass = BaseQuery
 
@@ -17,7 +17,7 @@ class TaskDefinitionRepository(UserScopedBaseRepository[entities.TaskDefinition,
         super().__init__(user_id=user_id)
 
     @staticmethod
-    def entity_to_row(task_definition: entities.TaskDefinition) -> dict[str, Any]:
+    def entity_to_row(task_definition: TaskDefinitionEntity) -> dict[str, Any]:
         """Convert a TaskDefinition entity to a database row dict."""
         row: dict[str, Any] = {
             "id": task_definition.id,
