@@ -1,43 +1,30 @@
 """Generic command to update an existing entity."""
 
-from dataclasses import dataclass
-from typing import Generic, TypeVar
+from dataclasses import asdict, fields, is_dataclass, replace
+from typing import Any, TypeVar, cast
 from uuid import UUID
 
-from planned.application.commands.base import Command, CommandHandler
 from planned.application.unit_of_work import UnitOfWorkFactory
 
 EntityT = TypeVar("EntityT")
 
 
-@dataclass(frozen=True)
-class UpdateEntityCommand(Command, Generic[EntityT]):
-    """Command to update an existing entity.
-
-    Attributes:
-        user_id: The user making the request
-        repository_name: Name of the repository on UoW (e.g., "days", "tasks")
-        entity_id: The ID of the entity to update
-        entity_data: The updated entity data
-    """
-
-    user_id: UUID
-    repository_name: str
-    entity_id: UUID
-    entity_data: EntityT
-
-
-class UpdateEntityHandler(CommandHandler[UpdateEntityCommand[EntityT], EntityT]):
-    """Handles UpdateEntityCommand - updates an existing entity."""
+class UpdateEntityHandler:
+    """Updates an existing entity."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, command: UpdateEntityCommand[EntityT]) -> EntityT:
-        """Execute the command.
+    async def update_entity(
+        self, user_id: UUID, repository_name: str, entity_id: UUID, entity_data: EntityT
+    ) -> EntityT:
+        """Update an existing entity.
 
         Args:
-            command: The update command
+            user_id: The user making the request
+            repository_name: Name of the repository on UoW (e.g., "days", "tasks")
+            entity_id: The ID of the entity to update
+            entity_data: The updated entity data
 
         Returns:
             The updated entity
@@ -45,20 +32,17 @@ class UpdateEntityHandler(CommandHandler[UpdateEntityCommand[EntityT], EntityT])
         Raises:
             NotFoundError: If entity not found
         """
-        async with self._uow_factory.create(command.user_id) as uow:
-            repo = getattr(uow, command.repository_name)
+        async with self._uow_factory.create(user_id) as uow:
+            repo = getattr(uow, repository_name)
 
             # Get existing entity
-            existing: EntityT = await repo.get(command.entity_id)
+            existing: EntityT = await repo.get(entity_id)
 
             # Merge updates
-            from dataclasses import asdict, fields, is_dataclass, replace
-            from typing import Any, cast
-
-            if is_dataclass(existing) and is_dataclass(command.entity_data):
+            if is_dataclass(existing) and is_dataclass(entity_data):
                 # Both are dataclasses - use replace to merge updates
                 # Get all fields from entity_data that are not None
-                entity_data_dict: dict[str, Any] = asdict(command.entity_data)  # type: ignore[arg-type]
+                entity_data_dict: dict[str, Any] = asdict(entity_data)  # type: ignore[arg-type]
                 
                 # Filter out init=False fields (like _domain_events) - they can't be specified in replace()
                 init_false_fields = {f.name for f in fields(existing) if not f.init}
@@ -69,11 +53,11 @@ class UpdateEntityHandler(CommandHandler[UpdateEntityCommand[EntityT], EntityT])
                 updated_any: Any = replace(existing, **update_dict)  # type: ignore[type-var]
                 updated = cast(EntityT, updated_any)
             else:
-                updated = command.entity_data
+                updated = entity_data
 
             # Ensure ID matches
             if hasattr(updated, "id"):
-                object.__setattr__(updated, "id", command.entity_id)
+                object.__setattr__(updated, "id", entity_id)
 
             entity: EntityT = await repo.put(updated)
             await uow.commit()

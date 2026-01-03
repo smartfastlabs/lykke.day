@@ -8,20 +8,12 @@ import datetime
 from uuid import UUID
 
 from loguru import logger
-from planned.application.commands.create_or_get_day import (
-    CreateOrGetDayCommand,
-    CreateOrGetDayHandler,
-)
-from planned.application.commands.save_day import SaveDayCommand, SaveDayHandler
-from planned.application.queries.get_day_context import (
-    GetDayContextHandler,
-    GetDayContextQuery,
-)
+from planned.application.commands.create_or_get_day import CreateOrGetDayHandler
+from planned.application.commands.save_day import SaveDayHandler
+from planned.application.queries.get_day_context import GetDayContextHandler
 from planned.application.queries.get_upcoming_items import (
     GetUpcomingCalendarEntriesHandler,
-    GetUpcomingCalendarEntriesQuery,
     GetUpcomingTasksHandler,
-    GetUpcomingTasksQuery,
 )
 from planned.application.services.base import BaseService
 from planned.application.unit_of_work import UnitOfWorkFactory
@@ -91,8 +83,9 @@ class DayService(BaseService):
         date = date or self.date
         user_id = user_id or self.user.id
 
-        query = GetDayContextQuery(user=self.user, date=date)
-        return await self._get_day_context_handler.handle(query)
+        return await self._get_day_context_handler.get_day_context(
+            user=self.user, date=date
+        )
 
     async def get_or_preview(
         self,
@@ -121,8 +114,9 @@ class DayService(BaseService):
         Returns:
             An existing Day if found, otherwise a newly created and saved Day
         """
-        cmd = CreateOrGetDayCommand(user_id=self.user.id, date=date)
-        return await self._create_or_get_day_handler.handle(cmd)
+        return await self._create_or_get_day_handler.create_or_get_day(
+            user_id=self.user.id, date=date
+        )
 
     async def save(self, day: DayEntity) -> None:
         """Save a day to the database.
@@ -130,8 +124,7 @@ class DayService(BaseService):
         Args:
             day: The day entity to save
         """
-        cmd = SaveDayCommand(user_id=self.user.id, day=day)
-        await self._save_day_handler.handle(cmd)
+        await self._save_day_handler.save_day(user_id=self.user.id, day=day)
 
     async def get_upcoming_tasks(
         self,
@@ -145,10 +138,9 @@ class DayService(BaseService):
         Returns:
             List of tasks that are upcoming within the look-ahead window
         """
-        query = GetUpcomingTasksQuery(
+        return await self._get_upcoming_tasks_handler.get_upcoming_tasks(
             user=self.user, date=self.date, look_ahead=look_ahead
         )
-        return await self._get_upcoming_tasks_handler.handle(query)
 
     async def get_upcoming_calendar_entries(
         self,
@@ -162,7 +154,6 @@ class DayService(BaseService):
         Returns:
             List of calendar entries that are upcoming within the look-ahead window
         """
-        query = GetUpcomingCalendarEntriesQuery(
+        return await self._get_upcoming_calendar_entries_handler.get_upcoming_calendar_entries(
             user=self.user, date=self.date, look_ahead=look_ahead
         )
-        return await self._get_upcoming_calendar_entries_handler.handle(query)

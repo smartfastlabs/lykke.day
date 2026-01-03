@@ -5,22 +5,10 @@ from uuid import uuid4
 
 import pytest
 
-from planned.application.commands.create_entity import (
-    CreateEntityCommand,
-    CreateEntityHandler,
-)
-from planned.application.commands.delete_entity import (
-    DeleteEntityCommand,
-    DeleteEntityHandler,
-)
-from planned.application.commands.update_entity import (
-    UpdateEntityCommand,
-    UpdateEntityHandler,
-)
-from planned.application.queries.get_entity import (
-    GetEntityQuery,
-    GetEntityHandler,
-)
+from planned.application.commands.create_entity import CreateEntityHandler
+from planned.application.commands.delete_entity import DeleteEntityHandler
+from planned.application.commands.update_entity import UpdateEntityHandler
+from planned.application.queries.get_entity import GetEntityHandler
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import DayEntity
 from planned.domain.value_objects.day import DayStatus
@@ -40,13 +28,11 @@ async def test_create_entity_handler(
     )
 
     handler = CreateEntityHandler(uow_factory)
-    command = CreateEntityCommand(
+    result = await handler.create_entity(
         user_id=test_user.id,
         repository_name="days",
         entity=day,
     )
-
-    result = await handler.handle(command)
 
     assert result.id is not None
     assert result.date == datetime.date(2025, 11, 27)
@@ -68,34 +54,28 @@ async def test_delete_entity_handler(
     )
     
     create_handler = CreateEntityHandler(uow_factory)
-    created_day = await create_handler.handle(
-        CreateEntityCommand(
-            user_id=test_user.id,
-            repository_name="days",
-            entity=day,
-        )
+    created_day = await create_handler.create_entity(
+        user_id=test_user.id,
+        repository_name="days",
+        entity=day,
     )
     entity_id = created_day.id
 
     # Now delete it
     handler = DeleteEntityHandler(uow_factory)
-    command = DeleteEntityCommand(
+    await handler.delete_entity(
         user_id=test_user.id,
         repository_name="days",
         entity_id=entity_id,
     )
 
-    await handler.handle(command)
-
     # Verify it's deleted
     get_handler = GetEntityHandler(uow_factory)
     with pytest.raises(NotFoundError):
-        await get_handler.handle(
-            GetEntityQuery(
-                user_id=test_user.id,
-                repository_name="days",
-                entity_id=entity_id,
-            )
+        await get_handler.get_entity(
+            user_id=test_user.id,
+            repository_name="days",
+            entity_id=entity_id,
         )
 
 
@@ -114,23 +94,19 @@ async def test_get_entity_handler(
     )
     
     create_handler = CreateEntityHandler(uow_factory)
-    created_day = await create_handler.handle(
-        CreateEntityCommand(
-            user_id=test_user.id,
-            repository_name="days",
-            entity=day,
-        )
+    created_day = await create_handler.create_entity(
+        user_id=test_user.id,
+        repository_name="days",
+        entity=day,
     )
     entity_id = created_day.id
 
     handler = GetEntityHandler(uow_factory)
-    query = GetEntityQuery(
+    result = await handler.get_entity(
         user_id=test_user.id,
         repository_name="days",
         entity_id=entity_id,
     )
-
-    result = await handler.handle(query)
 
     assert result.id == entity_id
     assert result.date == datetime.date(2025, 11, 27)
@@ -146,14 +122,12 @@ async def test_get_entity_handler_not_found(
     entity_id = uuid4()
 
     handler = GetEntityHandler(uow_factory)
-    query = GetEntityQuery(
-        user_id=test_user.id,
-        repository_name="days",
-        entity_id=entity_id,
-    )
-
     with pytest.raises(NotFoundError):
-        await handler.handle(query)
+        await handler.get_entity(
+            user_id=test_user.id,
+            repository_name="days",
+            entity_id=entity_id,
+        )
 
 
 @pytest.mark.asyncio
@@ -171,12 +145,10 @@ async def test_update_entity_handler(
     )
     
     create_handler = CreateEntityHandler(uow_factory)
-    created_day = await create_handler.handle(
-        CreateEntityCommand(
-            user_id=test_user.id,
-            repository_name="days",
-            entity=day,
-        )
+    created_day = await create_handler.create_entity(
+        user_id=test_user.id,
+        repository_name="days",
+        entity=day,
     )
     entity_id = created_day.id
     
@@ -189,14 +161,12 @@ async def test_update_entity_handler(
     )
 
     handler = UpdateEntityHandler(uow_factory)
-    command = UpdateEntityCommand(
+    result = await handler.update_entity(
         user_id=test_user.id,
         repository_name="days",
         entity_id=entity_id,
         entity_data=updated_day,
     )
-
-    result = await handler.handle(command)
 
     assert result.status == DayStatus.SCHEDULED
     assert result.id == entity_id

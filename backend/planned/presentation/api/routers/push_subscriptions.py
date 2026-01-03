@@ -2,9 +2,8 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends
-from planned.application.commands import CreateEntityCommand, DeleteEntityCommand
-from planned.application.mediator import Mediator
-from planned.application.queries import ListEntitiesQuery
+from planned.application.commands import CreateEntityHandler, DeleteEntityHandler
+from planned.application.queries import ListEntitiesHandler
 from planned.domain import value_objects
 from planned.domain.entities import UserEntity
 from planned.infrastructure import data_objects
@@ -12,7 +11,11 @@ from planned.infrastructure.gateways import web_push
 from planned.presentation.api.schemas import PushSubscriptionSchema
 from planned.presentation.api.schemas.mappers import map_push_subscription_to_schema
 
-from .dependencies.services import get_mediator
+from .dependencies.services import (
+    get_create_entity_handler,
+    get_delete_entity_handler,
+    get_list_entities_handler,
+)
 from .dependencies.user import get_current_user
 
 router = APIRouter()
@@ -32,14 +35,16 @@ class SubscriptionRequest(value_objects.BaseRequestObject):
 @router.get("/subscriptions", response_model=list[PushSubscriptionSchema])
 async def list_subscriptions(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    mediator: Annotated[Mediator, Depends(get_mediator)],
+    handler: Annotated[ListEntitiesHandler, Depends(get_list_entities_handler)],
 ) -> list[PushSubscriptionSchema]:
-    query = ListEntitiesQuery[data_objects.PushSubscription](
+    result: (
+        list[data_objects.PushSubscription]
+        | value_objects.PagedQueryResponse[data_objects.PushSubscription]
+    ) = await handler.list_entities(
         user_id=user.id,
         repository_name="push_subscriptions",
         paginate=False,
     )
-    result = await mediator.query(query)
     subscriptions = result if isinstance(result, list) else result.items
     return [map_push_subscription_to_schema(sub) for sub in subscriptions]
 
@@ -48,14 +53,13 @@ async def list_subscriptions(
 async def delete_subscription(
     subscription_id: str,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    mediator: Annotated[Mediator, Depends(get_mediator)],
+    handler: Annotated[DeleteEntityHandler, Depends(get_delete_entity_handler)],
 ) -> None:
-    command = DeleteEntityCommand(
+    await handler.delete_entity(
         user_id=user.id,
         repository_name="push_subscriptions",
         entity_id=UUID(subscription_id),
     )
-    await mediator.execute(command)
 
 
 @router.post("/subscribe", response_model=PushSubscriptionSchema)
@@ -63,7 +67,7 @@ async def subscribe(
     background_tasks: BackgroundTasks,
     request: SubscriptionRequest,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    mediator: Annotated[Mediator, Depends(get_mediator)],
+    handler: Annotated[CreateEntityHandler, Depends(get_create_entity_handler)],
 ) -> PushSubscriptionSchema:
     subscription = data_objects.PushSubscription(
         user_id=user.id,
@@ -72,12 +76,11 @@ async def subscribe(
         p256dh=request.keys.p256dh,
         auth=request.keys.auth,
     )
-    command = CreateEntityCommand[data_objects.PushSubscription](
+    result: data_objects.PushSubscription = await handler.create_entity(
         user_id=user.id,
         repository_name="push_subscriptions",
         entity=subscription,
     )
-    result = await mediator.execute(command)
 
     background_tasks.add_task(
         web_push.send_notification,

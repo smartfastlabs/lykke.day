@@ -1,39 +1,29 @@
 """Command to save a day to the database."""
 
-from dataclasses import dataclass
 from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain.entities import DayEntity
 
-from .base import Command, CommandHandler
 
-
-@dataclass(frozen=True)
-class SaveDayCommand(Command):
-    """Command to save a day to the database."""
-
-    user_id: UUID
-    day: DayEntity
-
-
-class SaveDayHandler(CommandHandler[SaveDayCommand, DayEntity]):
-    """Handles SaveDayCommand."""
+class SaveDayHandler:
+    """Saves a day to the database."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, cmd: SaveDayCommand) -> DayEntity:
+    async def save_day(self, user_id: UUID, day: DayEntity) -> DayEntity:
         """Save a day to the database.
 
         Args:
-            cmd: The save command
+            user_id: The user ID
+            day: The day entity to save
 
         Returns:
             The saved Day entity
         """
-        async with self._uow_factory.create(cmd.user_id) as uow:
-            await uow.days.put(cmd.day)
+        async with self._uow_factory.create(user_id) as uow:
+            await uow.days.put(day)
             await uow.commit()
-            return cmd.day
+            return day
 

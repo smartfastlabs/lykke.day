@@ -1,6 +1,5 @@
 """Command to sync calendar entries from external calendar providers."""
 
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -12,37 +11,9 @@ from planned.core.exceptions import TokenExpiredError
 from planned.domain.entities import CalendarEntity, CalendarEntryEntity
 from planned.infrastructure import data_objects
 
-from .base import Command, CommandHandler
 
-
-@dataclass(frozen=True)
-class SyncCalendarCommand(Command):
-    """Command to sync a single calendar from its external provider.
-
-    Fetches calendar entries from the external provider and saves them.
-    """
-
-    user_id: UUID
-    calendar_id: UUID
-
-
-@dataclass(frozen=True)
-class SyncAllCalendarsCommand(Command):
-    """Command to sync all calendars for a user.
-
-    Iterates through all user calendars and syncs each one.
-    """
-
-    user_id: UUID
-
-
-class SyncCalendarHandler(
-    CommandHandler[
-        SyncCalendarCommand,
-        tuple[list[CalendarEntryEntity], list[CalendarEntryEntity]],
-    ]
-):
-    """Handles SyncCalendarCommand."""
+class SyncCalendarHandler:
+    """Syncs calendar entries from external provider."""
 
     def __init__(
         self,
@@ -52,20 +23,21 @@ class SyncCalendarHandler(
         self._uow_factory = uow_factory
         self._google_gateway = google_gateway
 
-    async def handle(
-        self, cmd: SyncCalendarCommand
+    async def sync_calendar(
+        self, user_id: UUID, calendar_id: UUID
     ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity]]:
         """Sync calendar entries from external provider.
 
         Args:
-            cmd: The sync command
+            user_id: The user ID
+            calendar_id: The calendar ID to sync
 
         Returns:
             Tuple of (calendar_entries, deleted_calendar_entries)
         """
-        uow = self._uow_factory.create(cmd.user_id)
+        uow = self._uow_factory.create(user_id)
         async with uow:
-            calendar = await uow.calendars.get(cmd.calendar_id)
+            calendar = await uow.calendars.get(calendar_id)
             token = await uow.auth_tokens.get(calendar.auth_token_id)
 
             # Calculate lookback time
@@ -135,8 +107,8 @@ class SyncCalendarHandler(
         return calendar_entries, deleted_calendar_entries
 
 
-class SyncAllCalendarsHandler(CommandHandler[SyncAllCalendarsCommand, None]):
-    """Handles SyncAllCalendarsCommand."""
+class SyncAllCalendarsHandler:
+    """Syncs all calendars for a user."""
 
     def __init__(
         self,
@@ -146,13 +118,13 @@ class SyncAllCalendarsHandler(CommandHandler[SyncAllCalendarsCommand, None]):
         self._uow_factory = uow_factory
         self._google_gateway = google_gateway
 
-    async def handle(self, cmd: SyncAllCalendarsCommand) -> None:
+    async def sync_all_calendars(self, user_id: UUID) -> None:
         """Sync all calendars for the user.
 
         Args:
-            cmd: The sync all command
+            user_id: The user ID
         """
-        uow = self._uow_factory.create(cmd.user_id)
+        uow = self._uow_factory.create(user_id)
         async with uow:
             calendars = await uow.calendars.all()
             sync_handler = SyncCalendarHandler(self._uow_factory, self._google_gateway)

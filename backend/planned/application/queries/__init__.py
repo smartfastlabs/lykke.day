@@ -1,24 +1,24 @@
 """Query handlers for read-only operations.
 
-Queries are immutable request objects that describe what data to fetch.
-Query handlers execute the query and return data without side effects.
+Query handlers execute read operations and return data without side effects.
 """
 
-from .base import Query, QueryHandler
-from .get_day_context import GetDayContextHandler, GetDayContextQuery
-from .get_entity import GetEntityHandler, GetEntityQuery
-from .list_entities import ListEntitiesHandler, ListEntitiesQuery
-from .preview_day import PreviewDayHandler, PreviewDayQuery
+from .get_day_context import GetDayContextHandler
+from .get_entity import GetEntityHandler
+from .get_upcoming_items import (
+    GetUpcomingCalendarEntriesHandler,
+    GetUpcomingTasksHandler,
+)
+from .list_entities import ListEntitiesHandler
+from .preview_day import PreviewDayHandler
+from .preview_tasks import PreviewTasksHandler
 
 __all__ = [
     "GetDayContextHandler",
-    "GetDayContextQuery",
     "GetEntityHandler",
-    "GetEntityQuery",
+    "GetUpcomingCalendarEntriesHandler",
+    "GetUpcomingTasksHandler",
     "ListEntitiesHandler",
-    "ListEntitiesQuery",
     "PreviewDayHandler",
-    "PreviewDayQuery",
-    "Query",
-    "QueryHandler",
+    "PreviewTasksHandler",
 ]

@@ -1,7 +1,6 @@
 """Query to get the complete context for a day."""
 
 import asyncio
-from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
@@ -9,39 +8,28 @@ from planned.application.unit_of_work import UnitOfWorkFactory, UnitOfWorkProtoc
 from planned.core.constants import DEFAULT_END_OF_DAY_TIME
 from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
-from planned.domain.entities import CalendarEntity, CalendarEntryEntity, DayEntity, MessageEntity, TaskEntity, UserEntity
-
-from .base import Query, QueryHandler
+from planned.domain.entities import CalendarEntryEntity, DayEntity, MessageEntity, TaskEntity, UserEntity
 
 
-@dataclass(frozen=True)
-class GetDayContextQuery(Query):
-    """Query to get the complete context for a specific day.
-
-    Returns a DayContext with day, tasks, calendar entries, and messages.
-    If the day doesn't exist, returns a preview (unsaved) day.
-    """
-
-    user: UserEntity
-    date: date
-
-
-class GetDayContextHandler(QueryHandler[GetDayContextQuery, value_objects.DayContext]):
-    """Handles GetDayContextQuery."""
+class GetDayContextHandler:
+    """Gets the complete context for a day."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, query: GetDayContextQuery) -> value_objects.DayContext:
+    async def get_day_context(
+        self, user: UserEntity, date: date
+    ) -> value_objects.DayContext:
         """Load complete day context for the given date.
 
         Args:
-            query: The query containing user and date
+            user: The user entity
+            date: The date to get context for
 
         Returns:
             A DayContext with all related data
         """
-        async with self._uow_factory.create(query.user.id) as uow:
+        async with self._uow_factory.create(user.id) as uow:
             tasks: list[TaskEntity] = []
             calendar_entries: list[CalendarEntryEntity] = []
             messages: list[MessageEntity] = []
@@ -49,16 +37,16 @@ class GetDayContextHandler(QueryHandler[GetDayContextQuery, value_objects.DayCon
 
             try:
                 # Try to load existing day and all related data
-                day_id = DayEntity.id_from_date_and_user(query.date, query.user.id)
+                day_id = DayEntity.id_from_date_and_user(date, user.id)
                 tasks, calendar_entries, messages, day = await asyncio.gather(
-                    uow.tasks.search_query(value_objects.DateQuery(date=query.date)),
-                    uow.calendar_entries.search_query(value_objects.DateQuery(date=query.date)),
-                    uow.messages.search_query(value_objects.DateQuery(date=query.date)),
+                    uow.tasks.search_query(value_objects.DateQuery(date=date)),
+                    uow.calendar_entries.search_query(value_objects.DateQuery(date=date)),
+                    uow.messages.search_query(value_objects.DateQuery(date=date)),
                     uow.days.get(day_id),
                 )
             except NotFoundError:
                 # Day doesn't exist, create a preview day using default template
-                day = await self._create_preview_day(uow, query.date, query.user.id, query.user)
+                day = await self._create_preview_day(uow, date, user.id, user)
 
             return self._build_context(day, tasks, calendar_entries, messages)
 

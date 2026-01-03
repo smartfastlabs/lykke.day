@@ -8,13 +8,11 @@ from typing import Any, Literal
 from langchain.agents import create_agent
 from langchain_core.runnables import Runnable
 from loguru import logger
-from planned.application.commands.save_day import SaveDayCommand, SaveDayHandler
+from planned.application.commands.save_day import SaveDayHandler
 from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from planned.application.queries.get_upcoming_items import (
     GetUpcomingCalendarEntriesHandler,
-    GetUpcomingCalendarEntriesQuery,
     GetUpcomingTasksHandler,
-    GetUpcomingTasksQuery,
 )
 from planned.application.services.base import BaseService
 from planned.application.services.calendar import CalendarService
@@ -25,7 +23,13 @@ from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.utils import templates, youtube
 from planned.core.utils.dates import get_current_date, get_current_time
 from planned.domain import value_objects
-from planned.domain.entities import ActionEntity, CalendarEntity, CalendarEntryEntity, TaskEntity, UserEntity
+from planned.domain.entities import (
+    ActionEntity,
+    CalendarEntity,
+    CalendarEntryEntity,
+    TaskEntity,
+    UserEntity,
+)
 from planned.domain.services.notification import NotificationPayloadBuilder
 from planned.infrastructure import data_objects
 
@@ -148,8 +152,9 @@ class SheppardService(BaseService):
                 logger.info(f"Triggering alarm: {alarm.name} at {alarm.time}")
 
                 youtube.play_audio("https://www.youtube.com/watch?v=Gcv7re2dEVg")
-                cmd = SaveDayCommand(user_id=self.user.id, day=day_ctx.day)
-                await self._save_day_handler.handle(cmd)
+                await self._save_day_handler.save_day(
+                    user_id=self.user.id, day=day_ctx.day
+                )
 
     async def _process_upcoming_tasks(
         self,
@@ -162,8 +167,9 @@ class SheppardService(BaseService):
         tasks_to_notify: list[TaskEntity] = []
         tasks_to_update: list[TaskEntity] = []
 
-        query = GetUpcomingTasksQuery(user=self.user, date=self.day_svc.date)
-        upcoming_tasks = await self._get_upcoming_tasks_handler.handle(query)
+        upcoming_tasks = await self._get_upcoming_tasks_handler.get_upcoming_tasks(
+            user=self.user, date=self.day_svc.date
+        )
 
         for task in upcoming_tasks:
             logger.info(f"UPCOMING TASK {task.name}")
@@ -197,9 +203,8 @@ class SheppardService(BaseService):
         """
         calendar_entries_to_notify: list[CalendarEntryEntity] = []
 
-        query = GetUpcomingCalendarEntriesQuery(user=self.user, date=self.day_svc.date)
-        upcoming_calendar_entries = (
-            await self._get_upcoming_calendar_entries_handler.handle(query)
+        upcoming_calendar_entries = await self._get_upcoming_calendar_entries_handler.get_upcoming_calendar_entries(
+            user=self.user, date=self.day_svc.date
         )
 
         for calendar_entry in upcoming_calendar_entries:

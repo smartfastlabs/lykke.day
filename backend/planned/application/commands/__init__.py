@@ -1,33 +1,31 @@
 """Command handlers for state-changing operations.
 
-Commands are immutable request objects that describe an intent to change state.
-Command handlers execute the command, persist changes, and return results.
+Command handlers execute operations that change state, persist changes, and return results.
 """
 
-from .base import Command, CommandHandler
-from .bulk_create_entities import BulkCreateEntitiesCommand, BulkCreateEntitiesHandler
-from .create_entity import CreateEntityCommand, CreateEntityHandler
-from .delete_entity import DeleteEntityCommand, DeleteEntityHandler
-from .record_task_action import RecordTaskActionCommand, RecordTaskActionHandler
-from .schedule_day import ScheduleDayCommand, ScheduleDayHandler
-from .update_day import UpdateDayCommand, UpdateDayHandler
-from .update_entity import UpdateEntityCommand, UpdateEntityHandler
+from .bulk_create_entities import BulkCreateEntitiesHandler
+from .create_entity import CreateEntityHandler
+from .create_or_get_day import CreateOrGetDayHandler
+from .delete_entity import DeleteEntityHandler
+from .record_task_action import RecordTaskActionHandler
+from .save_day import SaveDayHandler
+from .schedule_day import ScheduleDayHandler
+from .sync_calendar import SyncAllCalendarsHandler, SyncCalendarHandler
+from .unschedule_day import UnscheduleDayHandler
+from .update_day import UpdateDayHandler
+from .update_entity import UpdateEntityHandler
 
 __all__ = [
-    "BulkCreateEntitiesCommand",
     "BulkCreateEntitiesHandler",
-    "Command",
-    "CommandHandler",
-    "CreateEntityCommand",
     "CreateEntityHandler",
-    "DeleteEntityCommand",
+    "CreateOrGetDayHandler",
     "DeleteEntityHandler",
-    "RecordTaskActionCommand",
     "RecordTaskActionHandler",
-    "ScheduleDayCommand",
+    "SaveDayHandler",
     "ScheduleDayHandler",
-    "UpdateDayCommand",
+    "SyncAllCalendarsHandler",
+    "SyncCalendarHandler",
+    "UnscheduleDayHandler",
     "UpdateDayHandler",
-    "UpdateEntityCommand",
     "UpdateEntityHandler",
 ]

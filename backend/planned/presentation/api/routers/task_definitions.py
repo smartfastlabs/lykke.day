@@ -5,13 +5,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from planned.application.commands import (
-    BulkCreateEntitiesCommand,
-    CreateEntityCommand,
-    DeleteEntityCommand,
-    UpdateEntityCommand,
+    BulkCreateEntitiesHandler,
+    CreateEntityHandler,
+    DeleteEntityHandler,
+    UpdateEntityHandler,
 )
-from planned.application.mediator import Mediator
-from planned.application.queries import GetEntityQuery, ListEntitiesQuery
+from planned.application.queries import GetEntityHandler, ListEntitiesHandler
+from planned.domain import value_objects
 from planned.domain.entities import TaskDefinitionEntity, UserEntity
 from planned.infrastructure.data.default_task_definitions import (
     DEFAULT_TASK_DEFINITIONS,
@@ -19,7 +19,14 @@ from planned.infrastructure.data.default_task_definitions import (
 from planned.presentation.api.schemas import TaskDefinitionSchema
 from planned.presentation.api.schemas.mappers import map_task_definition_to_schema
 
-from .dependencies.services import get_mediator
+from .dependencies.services import (
+    get_bulk_create_entities_handler,
+    get_create_entity_handler,
+    get_delete_entity_handler,
+    get_get_entity_handler,
+    get_list_entities_handler,
+    get_update_entity_handler,
+)
 from .dependencies.user import get_current_user
 
 router = APIRouter()
@@ -39,35 +46,38 @@ async def get_available_task_definitions() -> list[dict]:
 async def get_task_definition(
     uuid: UUID,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    mediator: Annotated[Mediator, Depends(get_mediator)],
+    handler: Annotated[GetEntityHandler, Depends(get_get_entity_handler)],
 ) -> TaskDefinitionSchema:
     """Get a single task definition by ID."""
-    query = GetEntityQuery[TaskDefinitionEntity](
+    task_definition: TaskDefinitionEntity = await handler.get_entity(
         user_id=user.id,
-        entity_id=uuid,
         repository_name="task_definitions",
+        entity_id=uuid,
     )
-    task_definition = await mediator.query(query)
     return map_task_definition_to_schema(task_definition)
 
 
 @router.get("/", response_model=list[TaskDefinitionSchema])
 async def list_task_definitions(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    mediator: Annotated[Mediator, Depends(get_mediator)],
+    handler: Annotated[ListEntitiesHandler, Depends(get_list_entities_handler)],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[TaskDefinitionSchema]:
     """List task definitions with pagination."""
-    query = ListEntitiesQuery[TaskDefinitionEntity](
+    result: (
+        list[TaskDefinitionEntity]
+        | value_objects.PagedQueryResponse[TaskDefinitionEntity]
+    ) = await handler.list_entities(
         user_id=user.id,
         repository_name="task_definitions",
         limit=limit,
         offset=offset,
         paginate=False,
     )
-    result = await mediator.query(query)
-    task_definitions = cast("list[TaskDefinitionEntity]", result)
+    task_definitions: list[TaskDefinitionEntity] = (
+        result if isinstance(result, list) else result.items
+    )
     return [map_task_definition_to_schema(td) for td in task_definitions]
 
 
@@ -75,7 +85,7 @@ async def list_task_definitions(
 async def create_task_definition(
     task_definition_data: TaskDefinitionSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    mediator: Annotated[Mediator, Depends(get_mediator)],
+    handler: Annotated[CreateEntityHandler, Depends(get_create_entity_handler)],
 ) -> TaskDefinitionSchema:
     """Create a new task definition."""
     # Convert schema to entity
@@ -85,12 +95,11 @@ async def create_task_definition(
         description=task_definition_data.description,
         type=task_definition_data.type,
     )
-    command = CreateEntityCommand[TaskDefinitionEntity](
+    created = await handler.create_entity(
         user_id=user.id,
         repository_name="task_definitions",
         entity=task_definition,
     )
-    created = await mediator.execute(command)
     return map_task_definition_to_schema(created)
 
 
@@ -98,7 +107,9 @@ async def create_task_definition(
 async def bulk_create_task_definitions(
     task_definitions_data: list[dict],
     user: Annotated[UserEntity, Depends(get_current_user)],
-    mediator: Annotated[Mediator, Depends(get_mediator)],
+    handler: Annotated[
+        BulkCreateEntitiesHandler, Depends(get_bulk_create_entities_handler)
+    ],
 ) -> list[TaskDefinitionSchema]:
     """Bulk create task definitions."""
     # Convert dictionaries to entities
@@ -109,12 +120,11 @@ async def bulk_create_task_definitions(
         task_definition = TaskDefinitionEntity(**data)
         task_definitions.append(task_definition)
 
-    command = BulkCreateEntitiesCommand[TaskDefinitionEntity](
+    created = await handler.bulk_create_entities(
         user_id=user.id,
         repository_name="task_definitions",
         entities=tuple(task_definitions),
     )
-    created = await mediator.execute(command)
     return [map_task_definition_to_schema(td) for td in created]
 
 
@@ -123,7 +133,7 @@ async def update_task_definition(
     uuid: UUID,
     task_definition_data: TaskDefinitionSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    mediator: Annotated[Mediator, Depends(get_mediator)],
+    handler: Annotated[UpdateEntityHandler, Depends(get_update_entity_handler)],
 ) -> TaskDefinitionSchema:
     """Update a task definition."""
     # Convert schema to entity
@@ -134,13 +144,12 @@ async def update_task_definition(
         description=task_definition_data.description,
         type=task_definition_data.type,
     )
-    command = UpdateEntityCommand[TaskDefinitionEntity](
+    updated = await handler.update_entity(
         user_id=user.id,
         repository_name="task_definitions",
         entity_id=uuid,
         entity_data=task_definition,
     )
-    updated = await mediator.execute(command)
     return map_task_definition_to_schema(updated)
 
 
@@ -148,12 +157,11 @@ async def update_task_definition(
 async def delete_task_definition(
     uuid: UUID,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    mediator: Annotated[Mediator, Depends(get_mediator)],
+    handler: Annotated[DeleteEntityHandler, Depends(get_delete_entity_handler)],
 ) -> None:
     """Delete a task definition."""
-    command = DeleteEntityCommand(
+    await handler.delete_entity(
         user_id=user.id,
         repository_name="task_definitions",
         entity_id=uuid,
     )
-    await mediator.execute(command)

@@ -1,7 +1,6 @@
 """Command to unschedule a day, removing routine tasks."""
 
 import asyncio
-from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
@@ -10,35 +9,26 @@ from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity
 
-from .base import Command, CommandHandler
 
-
-@dataclass(frozen=True)
-class UnscheduleDayCommand(Command):
-    """Command to unschedule a day, removing routine tasks and marking day as unscheduled."""
-
-    user_id: UUID
-    date: date
-
-
-class UnscheduleDayHandler(CommandHandler[UnscheduleDayCommand, DayEntity]):
-    """Handles UnscheduleDayCommand."""
+class UnscheduleDayHandler:
+    """Unschedules a day, removing routine tasks."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, cmd: UnscheduleDayCommand) -> DayEntity:
+    async def unschedule_day(self, user_id: UUID, date: date) -> DayEntity:
         """Unschedule a day, removing routine tasks and marking day as unscheduled.
 
         Args:
-            cmd: The unschedule command
+            user_id: The user ID
+            date: The date to unschedule
 
         Returns:
             The updated Day entity
         """
-        async with self._uow_factory.create(cmd.user_id) as uow:
+        async with self._uow_factory.create(user_id) as uow:
             # Get all tasks for the date, filter for routine tasks, then delete them
-            tasks = await uow.tasks.search_query(value_objects.DateQuery(date=cmd.date))
+            tasks = await uow.tasks.search_query(value_objects.DateQuery(date=date))
             routine_tasks = [t for t in tasks if t.routine_id is not None]
             if routine_tasks:
                 await asyncio.gather(
@@ -46,16 +36,16 @@ class UnscheduleDayHandler(CommandHandler[UnscheduleDayCommand, DayEntity]):
                 )
 
             # Get or create the day
-            day_id = DayEntity.id_from_date_and_user(cmd.date, cmd.user_id)
+            day_id = DayEntity.id_from_date_and_user(date, user_id)
             try:
                 day = await uow.days.get(day_id)
             except NotFoundError:
                 # Day doesn't exist, create it
-                user = await uow.users.get(cmd.user_id)
-                template_slug = user.settings.template_defaults[cmd.date.weekday()]
+                user = await uow.users.get(user_id)
+                template_slug = user.settings.template_defaults[date.weekday()]
                 template = await uow.day_templates.get_by_slug(template_slug)
                 day = DayEntity.create_for_date(
-                    cmd.date, user_id=cmd.user_id, template=template
+                    date, user_id=user_id, template=template
                 )
 
             # Unschedule the day using domain method

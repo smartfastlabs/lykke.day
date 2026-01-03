@@ -5,9 +5,7 @@ It maintains backward compatibility while the codebase transitions to CQRS.
 """
 
 from planned.application.commands.sync_calendar import (
-    SyncAllCalendarsCommand,
     SyncAllCalendarsHandler,
-    SyncCalendarCommand,
     SyncCalendarHandler,
 )
 from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
@@ -60,11 +58,11 @@ class CalendarService(BaseService):
         Returns:
             Tuple of (calendar_entries, deleted_calendar_entries)
         """
-        cmd = SyncCalendarCommand(user_id=self.user.id, calendar_id=calendar.id)
-        return await self._sync_calendar_handler.handle(cmd)
+        return await self._sync_calendar_handler.sync_calendar(
+            user_id=self.user.id, calendar_id=calendar.id
+        )
 
     async def sync_all(self) -> None:
         """Sync all calendars for the user."""
-        cmd = SyncAllCalendarsCommand(user_id=self.user.id)
-        await self._sync_all_calendars_handler.handle(cmd)
+        await self._sync_all_calendars_handler.sync_all_calendars(user_id=self.user.id)
 

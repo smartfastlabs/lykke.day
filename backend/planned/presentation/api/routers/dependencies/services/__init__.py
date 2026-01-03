@@ -9,7 +9,29 @@ import datetime
 from typing import Annotated
 
 from fastapi import Depends, Request
-from planned.application.mediator import Mediator
+from planned.application.commands import (
+    BulkCreateEntitiesHandler,
+    CreateEntityHandler,
+    CreateOrGetDayHandler,
+    DeleteEntityHandler,
+    RecordTaskActionHandler,
+    SaveDayHandler,
+    ScheduleDayHandler,
+    SyncAllCalendarsHandler,
+    SyncCalendarHandler,
+    UnscheduleDayHandler,
+    UpdateDayHandler,
+    UpdateEntityHandler,
+)
+from planned.application.queries import (
+    GetDayContextHandler,
+    GetEntityHandler,
+    GetUpcomingCalendarEntriesHandler,
+    GetUpcomingTasksHandler,
+    ListEntitiesHandler,
+    PreviewDayHandler,
+    PreviewTasksHandler,
+)
 from planned.application.services import (
     CalendarService,
     DayService,
@@ -32,11 +54,125 @@ def get_unit_of_work_factory() -> UnitOfWorkFactory:
     return SqlAlchemyUnitOfWorkFactory()
 
 
-def get_mediator(
+# Query Handler Dependencies
+def get_get_day_context_handler(
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-) -> Mediator:
-    """Get a Mediator instance for dispatching commands and queries."""
-    return Mediator(uow_factory)
+) -> GetDayContextHandler:
+    """Get a GetDayContextHandler instance."""
+    return GetDayContextHandler(uow_factory)
+
+
+def get_preview_day_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> PreviewDayHandler:
+    """Get a PreviewDayHandler instance."""
+    return PreviewDayHandler(uow_factory)
+
+
+def get_preview_tasks_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> PreviewTasksHandler:
+    """Get a PreviewTasksHandler instance."""
+    return PreviewTasksHandler(uow_factory)
+
+
+def get_get_entity_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> GetEntityHandler:
+    """Get a GetEntityHandler instance."""
+    return GetEntityHandler(uow_factory)
+
+
+def get_list_entities_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> ListEntitiesHandler:
+    """Get a ListEntitiesHandler instance."""
+    return ListEntitiesHandler(uow_factory)
+
+
+def get_get_upcoming_tasks_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> GetUpcomingTasksHandler:
+    """Get a GetUpcomingTasksHandler instance."""
+    return GetUpcomingTasksHandler(uow_factory)
+
+
+def get_get_upcoming_calendar_entries_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> GetUpcomingCalendarEntriesHandler:
+    """Get a GetUpcomingCalendarEntriesHandler instance."""
+    return GetUpcomingCalendarEntriesHandler(uow_factory)
+
+
+# Command Handler Dependencies
+def get_schedule_day_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> ScheduleDayHandler:
+    """Get a ScheduleDayHandler instance."""
+    return ScheduleDayHandler(uow_factory)
+
+
+def get_update_day_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> UpdateDayHandler:
+    """Get an UpdateDayHandler instance."""
+    return UpdateDayHandler(uow_factory)
+
+
+def get_record_task_action_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> RecordTaskActionHandler:
+    """Get a RecordTaskActionHandler instance."""
+    return RecordTaskActionHandler(uow_factory)
+
+
+def get_create_entity_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> CreateEntityHandler:
+    """Get a CreateEntityHandler instance."""
+    return CreateEntityHandler(uow_factory)
+
+
+def get_update_entity_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> UpdateEntityHandler:
+    """Get an UpdateEntityHandler instance."""
+    return UpdateEntityHandler(uow_factory)
+
+
+def get_delete_entity_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> DeleteEntityHandler:
+    """Get a DeleteEntityHandler instance."""
+    return DeleteEntityHandler(uow_factory)
+
+
+def get_bulk_create_entities_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> BulkCreateEntitiesHandler:
+    """Get a BulkCreateEntitiesHandler instance."""
+    return BulkCreateEntitiesHandler(uow_factory)
+
+
+def get_create_or_get_day_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> CreateOrGetDayHandler:
+    """Get a CreateOrGetDayHandler instance."""
+    return CreateOrGetDayHandler(uow_factory)
+
+
+def get_unschedule_day_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> UnscheduleDayHandler:
+    """Get an UnscheduleDayHandler instance."""
+    return UnscheduleDayHandler(uow_factory)
+
+
+def get_save_day_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+) -> SaveDayHandler:
+    """Get a SaveDayHandler instance."""
+    return SaveDayHandler(uow_factory)
 
 
 def get_google_gateway() -> GoogleCalendarGateway:
@@ -47,6 +183,22 @@ def get_google_gateway() -> GoogleCalendarGateway:
 def get_web_push_gateway() -> WebPushGateway:
     """Get a WebPushGateway instance."""
     return WebPushGateway()
+
+
+def get_sync_calendar_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    google_gateway: Annotated[GoogleCalendarGateway, Depends(get_google_gateway)],
+) -> SyncCalendarHandler:
+    """Get a SyncCalendarHandler instance."""
+    return SyncCalendarHandler(uow_factory, google_gateway)
+
+
+def get_sync_all_calendars_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    google_gateway: Annotated[GoogleCalendarGateway, Depends(get_google_gateway)],
+) -> SyncAllCalendarsHandler:
+    """Get a SyncAllCalendarsHandler instance."""
+    return SyncAllCalendarsHandler(uow_factory, google_gateway)
 
 
 def get_calendar_service(

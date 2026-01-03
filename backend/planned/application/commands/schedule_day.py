@@ -1,57 +1,43 @@
 """Command to schedule a day with tasks from routines."""
 
 import asyncio
-from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
-from planned.application.queries.preview_day import PreviewDayHandler, PreviewDayQuery
+from planned.application.queries.preview_day import PreviewDayHandler
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity
 
-from .base import Command, CommandHandler
 
-
-@dataclass(frozen=True)
-class ScheduleDayCommand(Command):
-    """Command to schedule a day with tasks from routines.
-
-    Creates tasks based on active routines and marks the day as scheduled.
-    """
-
-    user_id: UUID
-    date: date
-    template_id: UUID | None = None
-
-
-class ScheduleDayHandler(CommandHandler[ScheduleDayCommand, value_objects.DayContext]):
-    """Handles ScheduleDayCommand."""
+class ScheduleDayHandler:
+    """Schedules a day with tasks from routines."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
         self._preview_handler = PreviewDayHandler(uow_factory)
 
-    async def handle(self, cmd: ScheduleDayCommand) -> value_objects.DayContext:
+    async def schedule_day(
+        self, user_id: UUID, date: date, template_id: UUID | None = None
+    ) -> value_objects.DayContext:
         """Schedule a day with tasks from routines.
 
         Args:
-            cmd: The schedule command
+            user_id: The user ID
+            date: The date to schedule
+            template_id: Optional template ID to use
 
         Returns:
             A DayContext with the scheduled day and tasks
         """
-        async with self._uow_factory.create(cmd.user_id) as uow:
+        async with self._uow_factory.create(user_id) as uow:
             # Delete existing tasks for this date
-            await uow.tasks.delete_many(value_objects.DateQuery(date=cmd.date))
+            await uow.tasks.delete_many(value_objects.DateQuery(date=date))
 
             # Get preview of what the day would look like
-            preview_query = PreviewDayQuery(
-                user_id=cmd.user_id,
-                date=cmd.date,
-                template_id=cmd.template_id,
+            preview_result = await self._preview_handler.preview_day(
+                user_id, date, template_id
             )
-            preview_result = await self._preview_handler.handle(preview_query)
 
             # Validate template exists
             if preview_result.day.template is None:
@@ -62,8 +48,8 @@ class ScheduleDayHandler(CommandHandler[ScheduleDayCommand, value_objects.DayCon
 
             # Create and schedule the day
             day = DayEntity.create_for_date(
-                cmd.date,
-                user_id=cmd.user_id,
+                date,
+                user_id=user_id,
                 template=template,
             )
             day.schedule(template)

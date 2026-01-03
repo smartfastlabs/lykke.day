@@ -4,14 +4,8 @@ import datetime
 
 import pytest
 
-from planned.application.commands.create_entity import (
-    CreateEntityCommand,
-    CreateEntityHandler,
-)
-from planned.application.queries.list_entities import (
-    ListEntitiesQuery,
-    ListEntitiesHandler,
-)
+from planned.application.commands.create_entity import CreateEntityHandler
+from planned.application.queries.list_entities import ListEntitiesHandler
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity
 from planned.domain.value_objects.day import DayStatus
@@ -38,29 +32,23 @@ async def test_list_entities_handler_no_pagination(
     )
     
     create_handler = CreateEntityHandler(uow_factory)
-    await create_handler.handle(
-        CreateEntityCommand(
-            user_id=test_user.id,
-            repository_name="days",
-            entity=day1,
-        )
+    await create_handler.create_entity(
+        user_id=test_user.id,
+        repository_name="days",
+        entity=day1,
     )
-    await create_handler.handle(
-        CreateEntityCommand(
-            user_id=test_user.id,
-            repository_name="days",
-            entity=day2,
-        )
+    await create_handler.create_entity(
+        user_id=test_user.id,
+        repository_name="days",
+        entity=day2,
     )
 
     handler = ListEntitiesHandler(uow_factory)
-    query = ListEntitiesQuery(
+    result = await handler.list_entities(
         user_id=test_user.id,
         repository_name="days",
         paginate=False,
     )
-
-    result = await handler.handle(query)
 
     assert isinstance(result, list)
     assert len(result) >= 2
@@ -85,24 +73,20 @@ async def test_list_entities_handler_with_pagination(
             date=base_date + datetime.timedelta(days=i),
             status=DayStatus.UNSCHEDULED,
         )
-        await create_handler.handle(
-            CreateEntityCommand(
-                user_id=test_user.id,
-                repository_name="days",
-                entity=day,
-            )
+        await create_handler.create_entity(
+            user_id=test_user.id,
+            repository_name="days",
+            entity=day,
         )
 
     handler = ListEntitiesHandler(uow_factory)
-    query = ListEntitiesQuery(
+    result = await handler.list_entities(
         user_id=test_user.id,
         repository_name="days",
         limit=5,
         offset=0,
         paginate=True,
     )
-
-    result = await handler.handle(query)
 
     assert hasattr(result, "items")
     assert hasattr(result, "total")
@@ -133,24 +117,20 @@ async def test_list_entities_handler_with_search_query(
     )
     
     create_handler = CreateEntityHandler(uow_factory)
-    await create_handler.handle(
-        CreateEntityCommand(
-            user_id=test_user.id,
-            repository_name="days",
-            entity=day,
-        )
+    await create_handler.create_entity(
+        user_id=test_user.id,
+        repository_name="days",
+        entity=day,
     )
 
     handler = ListEntitiesHandler(uow_factory)
     search_query = value_objects.DateQuery(date=datetime.date(2025, 11, 27))
-    query = ListEntitiesQuery(
+    result = await handler.list_entities(
         user_id=test_user.id,
         repository_name="days",
         search_query=search_query,
         paginate=False,
     )
-
-    result = await handler.handle(query)
 
     assert len(result) >= 1
     assert any(d.date == datetime.date(2025, 11, 27) for d in result)

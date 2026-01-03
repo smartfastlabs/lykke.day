@@ -1,6 +1,5 @@
 """Command to update a day's status or template."""
 
-from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
@@ -9,34 +8,27 @@ from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity
 
-from .base import Command, CommandHandler
 
-
-@dataclass(frozen=True)
-class UpdateDayCommand(Command):
-    """Command to update a day's status and/or template.
-
-    Applies status transitions using domain methods to ensure
-    business rules are enforced.
-    """
-
-    user_id: UUID
-    date: date
-    status: value_objects.DayStatus | None = None
-    template_id: UUID | None = None
-
-
-class UpdateDayHandler(CommandHandler[UpdateDayCommand, DayEntity]):
-    """Handles UpdateDayCommand."""
+class UpdateDayHandler:
+    """Updates a day's status or template."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, cmd: UpdateDayCommand) -> DayEntity:
+    async def update_day(
+        self,
+        user_id: UUID,
+        date: date,
+        status: value_objects.DayStatus | None = None,
+        template_id: UUID | None = None,
+    ) -> DayEntity:
         """Update a day's status and/or template.
 
         Args:
-            cmd: The update command
+            user_id: The user ID
+            date: The date of the day to update
+            status: Optional new status
+            template_id: Optional new template ID
 
         Returns:
             The updated Day entity
@@ -44,25 +36,25 @@ class UpdateDayHandler(CommandHandler[UpdateDayCommand, DayEntity]):
         Raises:
             NotFoundError: If the day doesn't exist
         """
-        async with self._uow_factory.create(cmd.user_id) as uow:
+        async with self._uow_factory.create(user_id) as uow:
             # Get the existing day
-            day_id = DayEntity.id_from_date_and_user(cmd.date, cmd.user_id)
+            day_id = DayEntity.id_from_date_and_user(date, user_id)
             try:
                 day = await uow.days.get(day_id)
             except NotFoundError:
                 # Create a new day if it doesn't exist
-                user = await uow.users.get(cmd.user_id)
-                template_slug = user.settings.template_defaults[cmd.date.weekday()]
+                user = await uow.users.get(user_id)
+                template_slug = user.settings.template_defaults[date.weekday()]
                 template = await uow.day_templates.get_by_slug(template_slug)
-                day = DayEntity.create_for_date(cmd.date, user_id=cmd.user_id, template=template)
+                day = DayEntity.create_for_date(date, user_id=user_id, template=template)
 
             # Apply status transition if requested
-            if cmd.status is not None:
-                self._apply_status_transition(day, cmd.status)
+            if status is not None:
+                self._apply_status_transition(day, status)
 
             # Update template if requested
-            if cmd.template_id is not None:
-                template = await uow.day_templates.get(cmd.template_id)
+            if template_id is not None:
+                template = await uow.day_templates.get(template_id)
                 day.update_template(template)
 
             # Save and commit

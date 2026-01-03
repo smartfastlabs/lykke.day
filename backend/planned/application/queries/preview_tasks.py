@@ -1,6 +1,5 @@
 """Query to preview tasks that would be created for a given date."""
 
-from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
@@ -10,38 +9,25 @@ from planned.domain import value_objects
 from planned.domain.entities import TaskEntity
 from planned.domain.services.routine import RoutineService
 
-from .base import Query, QueryHandler
 
-
-@dataclass(frozen=True)
-class PreviewTasksQuery(Query):
-    """Query to preview tasks that would be created for a given date.
-
-    Returns a list of tasks that would be created from active routines.
-    These tasks are not saved to the database.
-    """
-
-    user_id: UUID
-    date: date
-
-
-class PreviewTasksHandler(QueryHandler[PreviewTasksQuery, list[TaskEntity]]):
-    """Handles PreviewTasksQuery."""
+class PreviewTasksHandler:
+    """Previews tasks that would be created for a given date."""
 
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def handle(self, query: PreviewTasksQuery) -> list[TaskEntity]:
+    async def preview_tasks(self, user_id: UUID, date: date) -> list[TaskEntity]:
         """Preview tasks that would be created for a given date.
 
         Args:
-            query: The preview tasks query
+            user_id: The user ID
+            date: The date to preview tasks for
 
         Returns:
             List of tasks that would be created
         """
-        async with self._uow_factory.create(query.user_id) as uow:
-            return await self._preview_tasks(uow, query.user_id, query.date)
+        async with self._uow_factory.create(user_id) as uow:
+            return await self._preview_tasks(uow, user_id, date)
 
     async def _preview_tasks(
         self,

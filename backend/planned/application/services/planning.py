@@ -7,10 +7,10 @@ It maintains backward compatibility while the codebase transitions to CQRS.
 import datetime
 from uuid import UUID
 
-from planned.application.commands.schedule_day import ScheduleDayCommand, ScheduleDayHandler
-from planned.application.commands.unschedule_day import UnscheduleDayCommand, UnscheduleDayHandler
-from planned.application.queries.preview_day import PreviewDayHandler, PreviewDayQuery
-from planned.application.queries.preview_tasks import PreviewTasksHandler, PreviewTasksQuery
+from planned.application.commands.schedule_day import ScheduleDayHandler
+from planned.application.commands.unschedule_day import UnscheduleDayHandler
+from planned.application.queries.preview_day import PreviewDayHandler
+from planned.application.queries.preview_tasks import PreviewTasksHandler
 from planned.application.services.base import BaseService
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain import value_objects
@@ -58,8 +58,9 @@ class PlanningService(BaseService):
         Returns:
             List of tasks that would be created
         """
-        query = PreviewTasksQuery(user_id=self.user_id, date=date)
-        return await self._preview_tasks_handler.handle(query)
+        return await self._preview_tasks_handler.preview_tasks(
+            user_id=self.user_id, date=date
+        )
 
     async def preview(
         self,
@@ -75,12 +76,11 @@ class PlanningService(BaseService):
         Returns:
             A DayContext with preview data (not saved)
         """
-        query = PreviewDayQuery(
+        return await self._preview_day_handler.preview_day(
             user_id=self.user_id,
             date=date,
             template_id=template_id,
         )
-        return await self._preview_day_handler.handle(query)
 
     async def unschedule(self, date: datetime.date) -> None:
         """Unschedule a day, removing routine tasks and marking day as unscheduled.
@@ -88,8 +88,9 @@ class PlanningService(BaseService):
         Args:
             date: The date to unschedule
         """
-        cmd = UnscheduleDayCommand(user_id=self.user_id, date=date)
-        await self._unschedule_day_handler.handle(cmd)
+        await self._unschedule_day_handler.unschedule_day(
+            user_id=self.user_id, date=date
+        )
 
     async def schedule(
         self,
@@ -105,10 +106,9 @@ class PlanningService(BaseService):
         Returns:
             A DayContext with the scheduled day and tasks
         """
-        cmd = ScheduleDayCommand(
+        return await self._schedule_day_handler.schedule_day(
             user_id=self.user_id,
             date=date,
             template_id=template_id,
         )
-        return await self._schedule_day_handler.handle(cmd)
 
