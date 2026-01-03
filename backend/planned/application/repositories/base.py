@@ -4,50 +4,15 @@ from typing import Protocol, TypeVar
 from uuid import UUID
 
 T = TypeVar("T")
-T_co = TypeVar(
-    "T_co", covariant=True
-)  # Covariant type variable for read-only protocols
 
 
-# Read-Only Base Protocols
+class ReadOnlyRepositoryProtocol(Protocol[T]):
+    """Base protocol for read-only repositories.
 
-
-class SimpleReadRepositoryProtocol(Protocol[T]):
-    """Base protocol for simple read-only repositories (get by key, get all)."""
-
-    async def get(self, key: UUID) -> T:
-        """Get an object by key."""
-        ...
-
-    async def all(self) -> list[T]:
-        """Get all objects."""
-        ...
-
-
-class ReadOnlyCrudRepositoryProtocol(Protocol[T]):
-    """Base protocol for read-only CRUD repositories (get, all)."""
-
-    async def get(self, key: UUID) -> T:
-        """Get an object by key."""
-        ...
-
-    async def all(self) -> list[T]:
-        """Get all objects."""
-        ...
-
-
-class ReadOnlyBasicCrudRepositoryProtocol(Protocol[T_co]):
-    """Base protocol for read-only basic CRUD repositories (get only)."""
-
-    async def get(self, key: UUID) -> T_co:
-        """Get an object by key."""
-        ...
-
-
-class ReadOnlyDateScopedRepositoryProtocol(Protocol[T]):
-    """Base protocol for read-only date-scoped repositories (get, all, search_query).
-
-    Note: Date filtering should be done using query objects with date fields.
+    Provides all read operations that repositories may need:
+    - get: Retrieve a single object by key
+    - all: Retrieve all objects
+    - search_query: Search objects based on a query object (for date-scoped queries)
     """
 
     async def get(self, key: UUID) -> T:
@@ -59,23 +24,25 @@ class ReadOnlyDateScopedRepositoryProtocol(Protocol[T]):
         ...
 
     async def search_query(self, query: object) -> list[T]:
-        """Search for objects based on a query object."""
+        """Search for objects based on a query object.
+
+        Note: Date filtering should be done using query objects with date fields.
+        """
         ...
 
 
-class ReadOnlySimpleDateScopedRepositoryProtocol(Protocol[T_co]):
-    """Base protocol for read-only simple date-scoped repositories (get only)."""
+class ReadWriteRepositoryProtocol(Protocol[T]):
+    """Base protocol for read-write repositories.
 
-    async def get(self, key: UUID) -> T_co:
-        """Get an object by key."""
-        ...
-
-
-# Read-Write Base Protocols
-
-
-class CrudRepositoryProtocol(Protocol[T]):
-    """Base protocol for CRUD repositories (get, put, all, delete)."""
+    Provides all read and write operations that repositories may need:
+    - get: Retrieve a single object by key
+    - put: Save or update an object
+    - all: Retrieve all objects
+    - delete: Delete an object by key or by object
+    - insert_many: Insert multiple objects in a single transaction
+    - search_query: Search objects based on a query object (for date-scoped queries)
+    - delete_many: Delete objects matching a query
+    """
 
     async def get(self, key: UUID) -> T:
         """Get an object by key."""
@@ -97,57 +64,13 @@ class CrudRepositoryProtocol(Protocol[T]):
         """Insert multiple objects in a single transaction."""
         ...
 
-
-class BasicCrudRepositoryProtocol(Protocol[T]):
-    """Base protocol for basic CRUD repositories (get, put without all)."""
-
-    async def get(self, key: UUID) -> T:
-        """Get an object by key."""
-        ...
-
-    async def put(self, obj: T) -> T:
-        """Save or update an object."""
-        ...
-
-
-class DateScopedCrudRepositoryProtocol(Protocol[T]):
-    """Base protocol for date-scoped CRUD repositories (get by key, put, search_query, delete).
-
-    Note: Date filtering should be done using query objects with date fields.
-    """
-
-    async def get(self, key: UUID) -> T:
-        """Get an object by key."""
-        ...
-
-    async def put(self, obj: T) -> T:
-        """Save or update an object."""
-        ...
-
-    async def all(self) -> list[T]:
-        """Get all objects."""
-        ...
-
     async def search_query(self, query: object) -> list[T]:
-        """Search for objects based on a query object."""
-        ...
+        """Search for objects based on a query object.
 
-    async def delete(self, obj: T) -> None:
-        """Delete an object."""
+        Note: Date filtering should be done using query objects with date fields.
+        """
         ...
 
     async def delete_many(self, query: object) -> None:
         """Delete objects matching a query."""
-        ...
-
-
-class SimpleDateScopedRepositoryProtocol(Protocol[T]):
-    """Base protocol for simple date-scoped repositories (get by key, put)."""
-
-    async def get(self, key: UUID) -> T:
-        """Get an object by key."""
-        ...
-
-    async def put(self, obj: T) -> T:
-        """Save or update an object."""
         ...

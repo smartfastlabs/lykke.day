@@ -1,18 +1,16 @@
 """Protocol for CalendarEntryRepository."""
 
 from planned.application.repositories.base import (
-    DateScopedCrudRepositoryProtocol,
-    ReadOnlyDateScopedRepositoryProtocol,
+    ReadOnlyRepositoryProtocol,
+    ReadWriteRepositoryProtocol,
 )
 from planned.domain.entities import CalendarEntryEntity
 
 
-class CalendarEntryRepositoryReadOnlyProtocol(ReadOnlyDateScopedRepositoryProtocol[CalendarEntryEntity]):
+class CalendarEntryRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[CalendarEntryEntity]):
     """Read-only protocol defining the interface for calendar entry repositories."""
-    pass
 
 
-class CalendarEntryRepositoryReadWriteProtocol(DateScopedCrudRepositoryProtocol[CalendarEntryEntity]):
+class CalendarEntryRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[CalendarEntryEntity]):
     """Read-write protocol defining the interface for calendar entry repositories."""
-    pass
 

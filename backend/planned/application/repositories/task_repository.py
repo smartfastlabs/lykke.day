@@ -1,18 +1,16 @@
 """Protocol for TaskRepository."""
 
 from planned.application.repositories.base import (
-    DateScopedCrudRepositoryProtocol,
-    ReadOnlyDateScopedRepositoryProtocol,
+    ReadOnlyRepositoryProtocol,
+    ReadWriteRepositoryProtocol,
 )
 from planned.domain.entities import TaskEntity
 
 
-class TaskRepositoryReadOnlyProtocol(ReadOnlyDateScopedRepositoryProtocol[TaskEntity]):
+class TaskRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[TaskEntity]):
     """Read-only protocol defining the interface for task repositories."""
-    pass
 
 
-class TaskRepositoryReadWriteProtocol(DateScopedCrudRepositoryProtocol[TaskEntity]):
+class TaskRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[TaskEntity]):
     """Read-write protocol defining the interface for task repositories."""
-    pass
 

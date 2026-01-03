@@ -3,13 +3,13 @@
 from typing import Protocol
 
 from planned.application.repositories.base import (
-    CrudRepositoryProtocol,
-    ReadOnlyCrudRepositoryProtocol,
+    ReadOnlyRepositoryProtocol,
+    ReadWriteRepositoryProtocol,
 )
 from planned.domain.entities import DayTemplateEntity
 
 
-class DayTemplateRepositoryReadOnlyProtocol(ReadOnlyCrudRepositoryProtocol[DayTemplateEntity], Protocol):
+class DayTemplateRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[DayTemplateEntity], Protocol):
     """Read-only protocol defining the interface for day template repositories."""
     
     async def get_by_slug(self, slug: str) -> DayTemplateEntity:
@@ -17,7 +17,7 @@ class DayTemplateRepositoryReadOnlyProtocol(ReadOnlyCrudRepositoryProtocol[DayTe
         ...
 
 
-class DayTemplateRepositoryReadWriteProtocol(CrudRepositoryProtocol[DayTemplateEntity], Protocol):
+class DayTemplateRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[DayTemplateEntity], Protocol):
     """Read-write protocol defining the interface for day template repositories."""
     
     async def get_by_slug(self, slug: str) -> DayTemplateEntity:
