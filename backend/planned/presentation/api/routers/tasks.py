@@ -25,10 +25,10 @@ router = APIRouter()
 @router.get("/today", response_model=list[TaskSchema])
 async def list_todays_tasks(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[ListTasksHandler, Depends(get_list_tasks_handler)],
+    list_tasks_handler: Annotated[ListTasksHandler, Depends(get_list_tasks_handler)],
 ) -> list[TaskSchema]:
     """Get all tasks for today."""
-    result = await handler.list_tasks(
+    result = await list_tasks_handler.run(
         user_id=user.id,
         search_query=value_objects.DateQuery(date=get_current_date()),
         paginate=False,

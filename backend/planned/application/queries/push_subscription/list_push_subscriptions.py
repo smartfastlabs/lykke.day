@@ -12,7 +12,7 @@ class ListPushSubscriptionsHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def list_push_subscriptions(
+    async def run(
         self, user_id: UUID
     ) -> list[data_objects.PushSubscription]:
         """List push subscriptions.

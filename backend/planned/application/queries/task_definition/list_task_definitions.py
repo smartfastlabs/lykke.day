@@ -13,7 +13,7 @@ class ListTaskDefinitionsHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def list_task_definitions(
+    async def run(
         self,
         user_id: UUID,
         limit: int = 50,

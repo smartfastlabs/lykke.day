@@ -49,12 +49,12 @@ async def get_available_task_definitions() -> list[dict]:
 async def get_task_definition(
     uuid: UUID,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    get_task_definition_handler: Annotated[
         GetTaskDefinitionHandler, Depends(get_get_task_definition_handler)
     ],
 ) -> TaskDefinitionSchema:
     """Get a single task definition by ID."""
-    task_definition = await handler.get_task_definition(
+    task_definition = await get_task_definition_handler.run(
         user_id=user.id, task_definition_id=uuid
     )
     return map_task_definition_to_schema(task_definition)
@@ -63,14 +63,14 @@ async def get_task_definition(
 @router.get("/", response_model=list[TaskDefinitionSchema])
 async def list_task_definitions(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    list_task_definitions_handler: Annotated[
         ListTaskDefinitionsHandler, Depends(get_list_task_definitions_handler)
     ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[TaskDefinitionSchema]:
     """List task definitions with pagination."""
-    result = await handler.list_task_definitions(
+    result = await list_task_definitions_handler.run(
         user_id=user.id,
         limit=limit,
         offset=offset,
@@ -86,7 +86,7 @@ async def list_task_definitions(
 async def create_task_definition(
     task_definition_data: TaskDefinitionSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    create_task_definition_handler: Annotated[
         CreateTaskDefinitionHandler, Depends(get_create_task_definition_handler)
     ],
 ) -> TaskDefinitionSchema:
@@ -98,7 +98,7 @@ async def create_task_definition(
         description=task_definition_data.description,
         type=task_definition_data.type,
     )
-    created = await handler.create_task_definition(
+    created = await create_task_definition_handler.run(
         user_id=user.id, task_definition=task_definition
     )
     return map_task_definition_to_schema(created)
@@ -108,7 +108,7 @@ async def create_task_definition(
 async def bulk_create_task_definitions(
     task_definitions_data: list[dict],
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    bulk_create_task_definitions_handler: Annotated[
         BulkCreateTaskDefinitionsHandler,
         Depends(get_bulk_create_task_definitions_handler),
     ],
@@ -122,7 +122,7 @@ async def bulk_create_task_definitions(
         task_definition = TaskDefinitionEntity(**data)
         task_definitions.append(task_definition)
 
-    created = await handler.bulk_create_task_definitions(
+    created = await bulk_create_task_definitions_handler.run(
         user_id=user.id, task_definitions=tuple(task_definitions)
     )
     return [map_task_definition_to_schema(td) for td in created]
@@ -133,7 +133,7 @@ async def update_task_definition(
     uuid: UUID,
     task_definition_data: TaskDefinitionSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    update_task_definition_handler: Annotated[
         UpdateTaskDefinitionHandler, Depends(get_update_task_definition_handler)
     ],
 ) -> TaskDefinitionSchema:
@@ -146,7 +146,7 @@ async def update_task_definition(
         description=task_definition_data.description,
         type=task_definition_data.type,
     )
-    updated = await handler.update_task_definition(
+    updated = await update_task_definition_handler.run(
         user_id=user.id,
         task_definition_id=uuid,
         task_definition_data=task_definition,
@@ -158,9 +158,9 @@ async def update_task_definition(
 async def delete_task_definition(
     uuid: UUID,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    delete_task_definition_handler: Annotated[
         DeleteTaskDefinitionHandler, Depends(get_delete_task_definition_handler)
     ],
 ) -> None:
     """Delete a task definition."""
-    await handler.delete_task_definition(user_id=user.id, task_definition_id=uuid)
+    await delete_task_definition_handler.run(user_id=user.id, task_definition_id=uuid)

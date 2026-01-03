@@ -12,7 +12,7 @@ class BulkCreateTaskDefinitionsHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def bulk_create_task_definitions(
+    async def run(
         self, user_id: UUID, task_definitions: tuple[TaskDefinitionEntity, ...]
     ) -> list[TaskDefinitionEntity]:
         """Create multiple task definitions.

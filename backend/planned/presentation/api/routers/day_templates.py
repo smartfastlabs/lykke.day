@@ -34,24 +34,28 @@ router = APIRouter()
 async def get_day_template(
     uuid: UUID,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[GetDayTemplateHandler, Depends(get_get_day_template_handler)],
+    get_day_template_handler: Annotated[
+        GetDayTemplateHandler, Depends(get_get_day_template_handler)
+    ],
 ) -> DayTemplateSchema:
     """Get a single day template by ID."""
-    day_template = await handler.get_day_template(user_id=user.id, day_template_id=uuid)
+    day_template = await get_day_template_handler.run(
+        user_id=user.id, day_template_id=uuid
+    )
     return map_day_template_to_schema(day_template)
 
 
 @router.get("/", response_model=value_objects.PagedQueryResponse[DayTemplateSchema])
 async def list_day_templates(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    list_day_templates_handler: Annotated[
         ListDayTemplatesHandler, Depends(get_list_day_templates_handler)
     ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> value_objects.PagedQueryResponse[DayTemplateSchema]:
     """List day templates with pagination."""
-    result = await handler.list_day_templates(
+    result = await list_day_templates_handler.run(
         user_id=user.id,
         limit=limit,
         offset=offset,
@@ -74,7 +78,7 @@ async def list_day_templates(
 async def create_day_template(
     day_template_data: DayTemplateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    create_day_template_handler: Annotated[
         CreateDayTemplateHandler, Depends(get_create_day_template_handler)
     ],
 ) -> DayTemplateSchema:
@@ -100,7 +104,7 @@ async def create_day_template(
         icon=day_template_data.icon,
         routine_ids=day_template_data.routine_ids,
     )
-    created = await handler.create_day_template(
+    created = await create_day_template_handler.run(
         user_id=user.id, day_template=day_template
     )
     return map_day_template_to_schema(created)
@@ -111,7 +115,7 @@ async def update_day_template(
     uuid: UUID,
     day_template_data: DayTemplateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    update_day_template_handler: Annotated[
         UpdateDayTemplateHandler, Depends(get_update_day_template_handler)
     ],
 ) -> DayTemplateSchema:
@@ -137,7 +141,7 @@ async def update_day_template(
         icon=day_template_data.icon,
         routine_ids=day_template_data.routine_ids,
     )
-    updated = await handler.update_day_template(
+    updated = await update_day_template_handler.run(
         user_id=user.id, day_template_id=uuid, day_template_data=day_template
     )
     return map_day_template_to_schema(updated)
@@ -147,9 +151,9 @@ async def update_day_template(
 async def delete_day_template(
     uuid: UUID,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    delete_day_template_handler: Annotated[
         DeleteDayTemplateHandler, Depends(get_delete_day_template_handler)
     ],
 ) -> None:
     """Delete a day template."""
-    await handler.delete_day_template(user_id=user.id, day_template_id=uuid)
+    await delete_day_template_handler.run(user_id=user.id, day_template_id=uuid)

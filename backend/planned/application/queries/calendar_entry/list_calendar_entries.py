@@ -13,7 +13,7 @@ class ListCalendarEntriesHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def list_calendar_entries(
+    async def run(
         self,
         user_id: UUID,
         search_query: value_objects.BaseQuery | None = None,

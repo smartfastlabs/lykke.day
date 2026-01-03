@@ -146,12 +146,12 @@ async def update_day(
 @router.get("/templates", response_model=list[DayTemplateSchema])
 async def get_templates(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    list_day_templates_handler: Annotated[
         ListDayTemplatesHandler, Depends(get_list_day_templates_handler)
     ],
 ) -> list[DayTemplateSchema]:
     """Get all available day templates."""
-    result = await handler.list_day_templates(
+    result = await list_day_templates_handler.run(
         user_id=user.id,
         paginate=False,
     )

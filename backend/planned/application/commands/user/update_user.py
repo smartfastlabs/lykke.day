@@ -14,7 +14,7 @@ class UpdateUserHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def update_user(
+    async def run(
         self, user_id: UUID, user_data: UserEntity
     ) -> UserEntity:
         """Update an existing user.

@@ -35,7 +35,7 @@ class UpdatePasswordRequest(value_objects.BaseRequestObject):
 async def set_password(
     data: UpdatePasswordRequest,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[UpdateUserHandler, Depends(get_update_user_handler)],
+    update_user_handler: Annotated[UpdateUserHandler, Depends(get_update_user_handler)],
 ) -> StatusResponse:
     """Update password for the current user."""
     if data.new_password != data.confirm_new_password:
@@ -44,6 +44,6 @@ async def set_password(
     # Hash and set new password
     user.hashed_password = pwd_context.hash(data.new_password)
 
-    await handler.update_user(user_id=user.id, user_data=user)
+    await update_user_handler.run(user_id=user.id, user_data=user)
 
     return StatusResponse()

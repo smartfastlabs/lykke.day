@@ -12,7 +12,7 @@ class CreateDayTemplateHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def create_day_template(
+    async def run(
         self, user_id: UUID, day_template: DayTemplateEntity
     ) -> DayTemplateEntity:
         """Create a new day template.

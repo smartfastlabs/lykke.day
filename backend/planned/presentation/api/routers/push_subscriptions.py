@@ -38,11 +38,11 @@ class SubscriptionRequest(value_objects.BaseRequestObject):
 @router.get("/subscriptions", response_model=list[PushSubscriptionSchema])
 async def list_subscriptions(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    list_push_subscriptions_handler: Annotated[
         ListPushSubscriptionsHandler, Depends(get_list_push_subscriptions_handler)
     ],
 ) -> list[PushSubscriptionSchema]:
-    subscriptions = await handler.list_push_subscriptions(user_id=user.id)
+    subscriptions = await list_push_subscriptions_handler.run(user_id=user.id)
     return [map_push_subscription_to_schema(sub) for sub in subscriptions]
 
 
@@ -50,11 +50,11 @@ async def list_subscriptions(
 async def delete_subscription(
     subscription_id: str,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    delete_push_subscription_handler: Annotated[
         DeletePushSubscriptionHandler, Depends(get_delete_push_subscription_handler)
     ],
 ) -> None:
-    await handler.delete_push_subscription(
+    await delete_push_subscription_handler.run(
         user_id=user.id, subscription_id=UUID(subscription_id)
     )
 
@@ -64,7 +64,7 @@ async def subscribe(
     background_tasks: BackgroundTasks,
     request: SubscriptionRequest,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    create_push_subscription_handler: Annotated[
         CreatePushSubscriptionHandler, Depends(get_create_push_subscription_handler)
     ],
 ) -> PushSubscriptionSchema:
@@ -75,7 +75,7 @@ async def subscribe(
         p256dh=request.keys.p256dh,
         auth=request.keys.auth,
     )
-    result = await handler.create_push_subscription(
+    result = await create_push_subscription_handler.run(
         user_id=user.id, subscription=subscription
     )
 

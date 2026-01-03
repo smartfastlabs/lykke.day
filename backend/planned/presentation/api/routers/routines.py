@@ -20,22 +20,24 @@ router = APIRouter()
 async def get_routine(
     uuid: UUID,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[GetRoutineHandler, Depends(get_get_routine_handler)],
+    get_routine_handler: Annotated[GetRoutineHandler, Depends(get_get_routine_handler)],
 ) -> RoutineSchema:
     """Get a single routine by ID."""
-    routine = await handler.get_routine(user_id=user.id, routine_id=uuid)
+    routine = await get_routine_handler.run(user_id=user.id, routine_id=uuid)
     return map_routine_to_schema(routine)
 
 
 @router.get("/", response_model=value_objects.PagedQueryResponse[RoutineSchema])
 async def list_routines(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[ListRoutinesHandler, Depends(get_list_routines_handler)],
+    list_routines_handler: Annotated[
+        ListRoutinesHandler, Depends(get_list_routines_handler)
+    ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> value_objects.PagedQueryResponse[RoutineSchema]:
     """List routines with pagination."""
-    result = await handler.list_routines(
+    result = await list_routines_handler.run(
         user_id=user.id,
         limit=limit,
         offset=offset,

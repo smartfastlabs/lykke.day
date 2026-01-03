@@ -12,7 +12,7 @@ class GetRoutineHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def get_routine(self, user_id: UUID, routine_id: UUID) -> RoutineEntity:
+    async def run(self, user_id: UUID, routine_id: UUID) -> RoutineEntity:
         """Get a single routine by ID.
 
         Args:

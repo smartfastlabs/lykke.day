@@ -14,7 +14,7 @@ class UpdateCalendarHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def update_calendar(
+    async def run(
         self, user_id: UUID, calendar_id: UUID, calendar_data: CalendarEntity
     ) -> CalendarEntity:
         """Update an existing calendar.

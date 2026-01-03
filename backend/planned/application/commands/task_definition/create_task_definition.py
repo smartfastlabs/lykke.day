@@ -12,7 +12,7 @@ class CreateTaskDefinitionHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def create_task_definition(
+    async def run(
         self, user_id: UUID, task_definition: TaskDefinitionEntity
     ) -> TaskDefinitionEntity:
         """Create a new task definition.
@@ -28,4 +28,3 @@ class CreateTaskDefinitionHandler:
             created_task_definition = await uow.task_definitions.put(task_definition)
             await uow.commit()
             return created_task_definition
-

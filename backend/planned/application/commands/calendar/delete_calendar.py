@@ -11,7 +11,7 @@ class DeleteCalendarHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def delete_calendar(self, user_id: UUID, calendar_id: UUID) -> None:
+    async def run(self, user_id: UUID, calendar_id: UUID) -> None:
         """Delete a calendar.
 
         Args:

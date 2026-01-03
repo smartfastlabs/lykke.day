@@ -11,7 +11,7 @@ class DeletePushSubscriptionHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def delete_push_subscription(
+    async def run(
         self, user_id: UUID, subscription_id: UUID
     ) -> None:
         """Delete a push subscription.

@@ -17,11 +17,11 @@ router = APIRouter()
 @router.get("/today", response_model=list[CalendarEntrySchema])
 async def today(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[
+    list_calendar_entries_handler: Annotated[
         ListCalendarEntriesHandler, Depends(get_list_calendar_entries_handler)
     ],
 ) -> list[CalendarEntrySchema]:
-    result = await handler.list_calendar_entries(
+    result = await list_calendar_entries_handler.run(
         user_id=user.id,
         search_query=value_objects.DateQuery(date=get_current_date()),
         paginate=False,

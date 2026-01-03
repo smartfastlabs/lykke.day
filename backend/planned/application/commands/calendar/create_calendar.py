@@ -12,7 +12,7 @@ class CreateCalendarHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def create_calendar(
+    async def run(
         self, user_id: UUID, calendar: CalendarEntity
     ) -> CalendarEntity:
         """Create a new calendar.

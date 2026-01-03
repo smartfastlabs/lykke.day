@@ -29,10 +29,12 @@ router = APIRouter()
 @router.get("/routines", response_model=list[RoutineSchema])
 async def list_routines(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[ListRoutinesHandler, Depends(get_list_routines_handler)],
+    list_routines_handler: Annotated[
+        ListRoutinesHandler, Depends(get_list_routines_handler)
+    ],
 ) -> list[RoutineSchema]:
     """Get all routines for the current user."""
-    result = await handler.list_routines(
+    result = await list_routines_handler.run(
         user_id=user.id,
         paginate=False,
     )

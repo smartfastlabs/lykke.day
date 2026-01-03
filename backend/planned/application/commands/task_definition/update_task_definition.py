@@ -14,7 +14,7 @@ class UpdateTaskDefinitionHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def update_task_definition(
+    async def run(
         self,
         user_id: UUID,
         task_definition_id: UUID,

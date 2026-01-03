@@ -34,22 +34,26 @@ router = APIRouter()
 async def get_calendar(
     uuid: UUID,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[GetCalendarHandler, Depends(get_get_calendar_handler)],
+    get_calendar_handler: Annotated[
+        GetCalendarHandler, Depends(get_get_calendar_handler)
+    ],
 ) -> CalendarSchema:
     """Get a single calendar by ID."""
-    calendar = await handler.get_calendar(user_id=user.id, calendar_id=uuid)
+    calendar = await get_calendar_handler.run(user_id=user.id, calendar_id=uuid)
     return map_calendar_to_schema(calendar)
 
 
 @router.get("/", response_model=value_objects.PagedQueryResponse[CalendarSchema])
 async def list_calendars(
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[ListCalendarsHandler, Depends(get_list_calendars_handler)],
+    list_calendars_handler: Annotated[
+        ListCalendarsHandler, Depends(get_list_calendars_handler)
+    ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> value_objects.PagedQueryResponse[CalendarSchema]:
     """List calendars with pagination."""
-    result = await handler.list_calendars(
+    result = await list_calendars_handler.run(
         user_id=user.id,
         limit=limit,
         offset=offset,
@@ -72,7 +76,9 @@ async def list_calendars(
 async def create_calendar(
     calendar_data: CalendarSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[CreateCalendarHandler, Depends(get_create_calendar_handler)],
+    create_calendar_handler: Annotated[
+        CreateCalendarHandler, Depends(get_create_calendar_handler)
+    ],
 ) -> CalendarSchema:
     """Create a new calendar."""
     # Convert schema to entity (id is optional for create, entity will generate it if None)
@@ -85,7 +91,7 @@ async def create_calendar(
         platform=calendar_data.platform,
         last_sync_at=calendar_data.last_sync_at,
     )
-    created = await handler.create_calendar(user_id=user.id, calendar=calendar)
+    created = await create_calendar_handler.run(user_id=user.id, calendar=calendar)
     return map_calendar_to_schema(created)
 
 
@@ -94,7 +100,9 @@ async def update_calendar(
     uuid: UUID,
     calendar_data: CalendarSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[UpdateCalendarHandler, Depends(get_update_calendar_handler)],
+    update_calendar_handler: Annotated[
+        UpdateCalendarHandler, Depends(get_update_calendar_handler)
+    ],
 ) -> CalendarSchema:
     """Update a calendar."""
     # Convert schema to entity
@@ -107,7 +115,7 @@ async def update_calendar(
         platform=calendar_data.platform,
         last_sync_at=calendar_data.last_sync_at,
     )
-    updated = await handler.update_calendar(
+    updated = await update_calendar_handler.run(
         user_id=user.id, calendar_id=uuid, calendar_data=calendar
     )
     return map_calendar_to_schema(updated)
@@ -117,7 +125,9 @@ async def update_calendar(
 async def delete_calendar(
     uuid: UUID,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    handler: Annotated[DeleteCalendarHandler, Depends(get_delete_calendar_handler)],
+    delete_calendar_handler: Annotated[
+        DeleteCalendarHandler, Depends(get_delete_calendar_handler)
+    ],
 ) -> None:
     """Delete a calendar."""
-    await handler.delete_calendar(user_id=user.id, calendar_id=uuid)
+    await delete_calendar_handler.run(user_id=user.id, calendar_id=uuid)

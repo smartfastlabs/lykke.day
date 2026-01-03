@@ -12,7 +12,7 @@ class GetCalendarHandler:
     def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
         self._uow_factory = uow_factory
 
-    async def get_calendar(self, user_id: UUID, calendar_id: UUID) -> CalendarEntity:
+    async def run(self, user_id: UUID, calendar_id: UUID) -> CalendarEntity:
         """Get a single calendar by ID.
 
         Args:
