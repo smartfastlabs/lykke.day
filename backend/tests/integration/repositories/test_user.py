@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import User
+from planned.domain.entities import UserEntity
 from planned.domain.value_objects.user import UserSetting
 
 
@@ -33,7 +33,7 @@ async def test_get_not_found(user_repo):
 @pytest.mark.asyncio
 async def test_put(user_repo):
     """Test creating a new user."""
-    user = User(
+    user = UserEntity(
         id=uuid4(),
         email=f"test-{uuid4()}@example.com",
         hashed_password="hashed_password",
@@ -130,7 +130,7 @@ async def test_user_with_custom_settings(user_repo):
             "custom",
         ],
     )
-    user = User(
+    user = UserEntity(
         id=uuid4(),
         email=f"test-{uuid4()}@example.com",
         hashed_password="hash",

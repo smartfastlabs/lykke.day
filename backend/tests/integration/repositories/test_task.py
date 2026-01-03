@@ -117,7 +117,7 @@ async def test_put_update(task_repo, test_user, test_date):
 @pytest.mark.asyncio
 async def test_all(task_repo, test_user, test_date, test_date_tomorrow):
     """Test getting all tasks."""
-    task1 = Task(
+    task1 = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Task 1",
@@ -127,7 +127,7 @@ async def test_all(task_repo, test_user, test_date, test_date_tomorrow):
         scheduled_date=test_date,
         task_definition=_create_task_definition(test_user.id, "task1"),
     )
-    task2 = Task(
+    task2 = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Task 2",
@@ -150,7 +150,7 @@ async def test_all(task_repo, test_user, test_date, test_date_tomorrow):
 @pytest.mark.asyncio
 async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow):
     """Test searching tasks with DateQuery."""
-    task1 = Task(
+    task1 = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Task Today",
@@ -160,7 +160,7 @@ async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow)
         scheduled_date=test_date,
         task_definition=_create_task_definition(test_user.id, "task1"),
     )
-    task2 = Task(
+    task2 = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Task Tomorrow",

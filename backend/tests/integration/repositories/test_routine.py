@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import Routine
+from planned.domain.entities import RoutineEntity
 from planned.infrastructure.repositories import RoutineRepository
 from planned.domain.value_objects.routine import RoutineSchedule
 from planned.domain.value_objects.task import TaskCategory, TaskFrequency
@@ -14,7 +14,7 @@ from planned.domain.value_objects.task import TaskCategory, TaskFrequency
 @pytest.mark.asyncio
 async def test_get(routine_repo, test_user):
     """Test getting a routine by ID."""
-    routine = Routine(
+    routine = RoutineEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Test Routine",
@@ -41,7 +41,7 @@ async def test_get_not_found(routine_repo):
 @pytest.mark.asyncio
 async def test_put(routine_repo, test_user):
     """Test creating a new routine."""
-    routine = Routine(
+    routine = RoutineEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="New Routine",
@@ -60,7 +60,7 @@ async def test_put(routine_repo, test_user):
 @pytest.mark.asyncio
 async def test_all(routine_repo, test_user):
     """Test getting all routines."""
-    routine1 = Routine(
+    routine1 = RoutineEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Routine 1",
@@ -69,7 +69,7 @@ async def test_all(routine_repo, test_user):
         routine_schedule=RoutineSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
-    routine2 = Routine(
+    routine2 = RoutineEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Routine 2",
@@ -91,7 +91,7 @@ async def test_all(routine_repo, test_user):
 @pytest.mark.asyncio
 async def test_user_isolation(routine_repo, test_user, create_test_user):
     """Test that different users' routines are properly isolated."""
-    routine = Routine(
+    routine = RoutineEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="User1 Routine",

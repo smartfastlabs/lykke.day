@@ -77,14 +77,14 @@ async def test_sync_all(
     mock_auth_token_repo, mock_calendar_repo, mock_calendar_entry_repo, mock_google_gateway, mock_uow_factory
 ):
     """Test syncing all calendars."""
-    calendar1 = Calendar(
+    calendar1 = CalendarEntity(
         user_id=UUID(str(uuid4())),
         name="Calendar 1",
         auth_token_id=uuid4(),
         platform="google",
         platform_id="platform-id-1",
     )
-    calendar2 = Calendar(
+    calendar2 = CalendarEntity(
         user_id=UUID(str(uuid4())),
         name="Calendar 2",
         auth_token_id=uuid4(),
@@ -220,14 +220,14 @@ async def test_sync_all_successful_syncs(
     test_datetime_noon,
 ):
     """Test syncing all calendars with successful syncs."""
-    calendar1 = Calendar(
+    calendar1 = CalendarEntity(
         user_id=UUID(str(uuid4())),
         name="Calendar 1",
         auth_token_id=uuid4(),
         platform="google",
         platform_id="platform-id-1",
     )
-    calendar2 = Calendar(
+    calendar2 = CalendarEntity(
         user_id=UUID(str(uuid4())),
         name="Calendar 2",
         auth_token_id=uuid4(),
@@ -309,14 +309,14 @@ async def test_sync_all_with_exception_during_sync(
     mock_auth_token_repo, mock_calendar_repo, mock_calendar_entry_repo, mock_google_gateway, mock_uow_factory
 ):
     """Test syncing all calendars handles exceptions during sync."""
-    calendar1 = Calendar(
+    calendar1 = CalendarEntity(
         user_id=UUID(str(uuid4())),
         name="Calendar 1",
         auth_token_id=uuid4(),
         platform="google",
         platform_id="platform-id-1",
     )
-    calendar2 = Calendar(
+    calendar2 = CalendarEntity(
         user_id=UUID(str(uuid4())),
         name="Calendar 2",
         auth_token_id=uuid4(),

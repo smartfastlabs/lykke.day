@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from planned.domain.entities import Routine
+from planned.domain.entities import RoutineEntity
 from planned.domain.value_objects.routine import RoutineSchedule
 from planned.domain.value_objects.task import TaskCategory, TaskFrequency
 from planned.infrastructure.repositories import RoutineRepository
@@ -17,7 +17,7 @@ async def test_list_routines(authenticated_client):
 
     # Create a routine via repository (since router is read-only)
     routine_repo = RoutineRepository(user_id=user.id)
-    routine = Routine(
+    routine = RoutineEntity(
         id=uuid4(),
         user_id=user.id,
         name="Test Routine",
@@ -48,7 +48,7 @@ async def test_get_routine(authenticated_client):
 
     # Create a routine via repository
     routine_repo = RoutineRepository(user_id=user.id)
-    routine = Routine(
+    routine = RoutineEntity(
         id=uuid4(),
         user_id=user.id,
         name="Get Test Routine",
@@ -107,7 +107,7 @@ async def test_update_routine_not_allowed(authenticated_client):
 
     # Create a routine via repository
     routine_repo = RoutineRepository(user_id=user.id)
-    routine = Routine(
+    routine = RoutineEntity(
         id=uuid4(),
         user_id=user.id,
         name="Test Routine",
@@ -140,7 +140,7 @@ async def test_delete_routine_not_allowed(authenticated_client):
 
     # Create a routine via repository
     routine_repo = RoutineRepository(user_id=user.id)
-    routine = Routine(
+    routine = RoutineEntity(
         id=uuid4(),
         user_id=user.id,
         name="Test Routine",
@@ -165,7 +165,7 @@ async def test_list_routines_pagination(authenticated_client):
     # Create multiple routines via repository
     routine_repo = RoutineRepository(user_id=user.id)
     for i in range(3):
-        routine = Routine(
+        routine = RoutineEntity(
             id=uuid4(),
             user_id=user.id,
             name=f"Pagination Test {i}",
