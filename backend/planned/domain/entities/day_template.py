@@ -13,17 +13,21 @@ class DayTemplate(BaseEntityObject):
     alarm: Alarm | None = None
     icon: str | None = None
     routine_ids: list[UUID] = field(default_factory=list)
-    id: UUID = field(init=False)
+    id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         """Generate deterministic UUID5 based on slug and user_id.
 
         This ensures that DayTemplates with the same slug and user_id always have
         the same ID, making lookups stable and deterministic.
+        Only generates if id was not explicitly provided.
         """
-        object.__setattr__(
-            self, "id", self.id_from_slug_and_user(self.slug, self.user_id)
-        )
+        # Check if id needs to be generated (mypy doesn't understand field override)
+        current_id = object.__getattribute__(self, "id")  # type: ignore[arg-type]
+        if current_id is None:
+            generated_id = self.id_from_slug_and_user(self.slug, self.user_id)
+            object.__setattr__(self, "id", generated_id)
+        # After this point, self.id is guaranteed to be a UUID
 
     @classmethod
     def id_from_slug_and_user(cls, slug: str, user_id: UUID) -> UUID:

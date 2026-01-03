@@ -1,7 +1,7 @@
 """Utilities for serializing dataclasses to JSON-compatible formats."""
 
 from dataclasses import asdict, fields, is_dataclass
-from datetime import date, datetime
+from datetime import date, datetime, time
 from enum import Enum
 from typing import Any
 from uuid import UUID
@@ -14,7 +14,7 @@ def dataclass_to_json_dict(obj: Any) -> dict[str, Any] | Any:
     - Nested dataclasses
     - Enums (converted to their values)
     - UUIDs (converted to strings)
-    - Dates and datetimes (converted to ISO strings)
+    - Dates, datetimes, and times (converted to ISO strings)
     - Lists and dicts (recursively processed)
     - None values (preserved)
 
@@ -49,7 +49,7 @@ def _serialize_value(value: Any) -> Any:
     if value is None:
         return None
 
-    if isinstance(value, (datetime, date)):
+    if isinstance(value, (datetime, date, time)):
         return value.isoformat()
 
     if isinstance(value, UUID):

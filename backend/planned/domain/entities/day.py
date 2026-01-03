@@ -34,17 +34,21 @@ class Day(BaseAggregateRoot):
     scheduled_at: datetime | None = None
     tags: list[value_objects.DayTag] = field(default_factory=list)
     template: DayTemplate | None = None
-    id: UUID = field(init=False)
+    id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         """Generate deterministic UUID5 based on date and user_id.
 
         This ensures that Days with the same date and user_id always have
         the same ID, making lookups stable and deterministic.
+        Only generates if id was not explicitly provided.
         """
-        object.__setattr__(
-            self, "id", self.id_from_date_and_user(self.date, self.user_id)
-        )
+        # Check if id needs to be generated (mypy doesn't understand field override)
+        current_id = object.__getattribute__(self, "id")  # type: ignore[arg-type]
+        if current_id is None:
+            generated_id = self.id_from_date_and_user(self.date, self.user_id)
+            object.__setattr__(self, "id", generated_id)
+        # After this point, self.id is guaranteed to be a UUID
 
     @classmethod
     def id_from_date_and_user(cls, date: dt_date, user_id: UUID) -> UUID:

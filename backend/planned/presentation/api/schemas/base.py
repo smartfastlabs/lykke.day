@@ -1,6 +1,6 @@
 """Base schema classes."""
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -15,6 +15,7 @@ class BaseSchema(BaseModel):
         json_encoders={
             datetime: lambda v: v.isoformat(),
             date: lambda v: v.isoformat(),
+            time: lambda v: v.isoformat(),
         },
     )
 
