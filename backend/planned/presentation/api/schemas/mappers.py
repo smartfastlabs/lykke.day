@@ -1,6 +1,6 @@
 """Mapper functions to convert domain entities to API schemas."""
 
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict
 
 from planned.domain import entities, value_objects
 from planned.presentation.api import schemas
@@ -8,60 +8,24 @@ from planned.presentation.api import schemas
 
 def map_action_to_schema(action: entities.Action) -> schemas.Action:
     """Convert Action entity to Action schema."""
-    if is_dataclass(action):
-        return schemas.Action(**asdict(action))
-    # Fallback for non-dataclass (shouldn't happen but defensive)
-    return schemas.Action(
-        id=action.id,
-        type=action.type,
-        data=action.data,
-        created_at=action.created_at,
-    )
+    return schemas.Action(**asdict(action))
 
 
 def map_alarm_to_schema(alarm: entities.Alarm) -> schemas.Alarm:
     """Convert Alarm entity to Alarm schema."""
-    if is_dataclass(alarm):
-        return schemas.Alarm(**asdict(alarm))
-    # Fallback for non-dataclass (shouldn't happen but defensive)
-    return schemas.Alarm(
-        id=alarm.id,
-        name=alarm.name,
-        time=alarm.time,
-        type=alarm.type,
-        description=alarm.description,
-        triggered_at=alarm.triggered_at,
-    )
+    return schemas.Alarm(**asdict(alarm))
 
 
 def map_person_to_schema(person: entities.Person) -> schemas.Person:
     """Convert Person entity to Person schema."""
-    if is_dataclass(person):
-        return schemas.Person(**asdict(person))
-    # Fallback for non-dataclass (shouldn't happen but defensive)
-    return schemas.Person(
-        id=person.id,
-        name=person.name,
-        email=person.email,
-        phone_number=person.phone_number,
-        relationship=person.relationship,
-    )
+    return schemas.Person(**asdict(person))
 
 
 def map_task_definition_to_schema(
     task_definition: entities.TaskDefinition,
 ) -> schemas.TaskDefinition:
     """Convert TaskDefinition entity to TaskDefinition schema."""
-    if is_dataclass(task_definition):
-        return schemas.TaskDefinition(**asdict(task_definition))
-    # Fallback for non-dataclass (shouldn't happen but defensive)
-    return schemas.TaskDefinition(
-        id=task_definition.id,
-        user_id=task_definition.user_id,
-        name=task_definition.name,
-        description=task_definition.description,
-        type=task_definition.type,
-    )
+    return schemas.TaskDefinition(**asdict(task_definition))
 
 
 def map_task_schedule_to_schema(
@@ -102,9 +66,7 @@ def map_day_template_to_schema(
     template: entities.DayTemplate,
 ) -> schemas.DayTemplate:
     """Convert DayTemplate entity to DayTemplate schema."""
-    alarm_schema = (
-        map_alarm_to_schema(template.alarm) if template.alarm else None
-    )
+    alarm_schema = map_alarm_to_schema(template.alarm) if template.alarm else None
 
     return schemas.DayTemplate(
         id=template.id,
@@ -119,9 +81,7 @@ def map_day_template_to_schema(
 def map_day_to_schema(day: entities.Day) -> schemas.Day:
     """Convert Day entity to Day schema."""
     alarm_schema = map_alarm_to_schema(day.alarm) if day.alarm else None
-    template_schema = (
-        map_day_template_to_schema(day.template) if day.template else None
-    )
+    template_schema = map_day_template_to_schema(day.template) if day.template else None
 
     return schemas.Day(
         id=day.id,
@@ -183,9 +143,7 @@ def map_day_context_to_schema(
         map_calendar_entry_to_schema(entry) for entry in context.calendar_entries
     ]
     task_schemas = [map_task_to_schema(task) for task in context.tasks]
-    message_schemas = [
-        map_message_to_schema(message) for message in context.messages
-    ]
+    message_schemas = [map_message_to_schema(message) for message in context.messages]
 
     return schemas.DayContext(
         day=day_schema,
@@ -199,31 +157,9 @@ def map_push_subscription_to_schema(
     subscription: entities.PushSubscription,
 ) -> schemas.PushSubscription:
     """Convert PushSubscription entity to PushSubscription schema."""
-    if is_dataclass(subscription):
-        return schemas.PushSubscription(**asdict(subscription))
-    # Fallback for non-dataclass (shouldn't happen but defensive)
-    return schemas.PushSubscription(
-        id=subscription.id,
-        user_id=subscription.user_id,
-        device_name=subscription.device_name,
-        endpoint=subscription.endpoint,
-        p256dh=subscription.p256dh,
-        auth=subscription.auth,
-        created_at=subscription.created_at,
-    )
+    return schemas.PushSubscription(**asdict(subscription))
 
 
 def map_routine_to_schema(routine: entities.Routine) -> schemas.Routine:
     """Convert Routine entity to Routine schema."""
-    if is_dataclass(routine):
-        return schemas.Routine(**asdict(routine))
-    # Fallback for non-dataclass (shouldn't happen but defensive)
-    return schemas.Routine(
-        id=routine.id,
-        user_id=routine.user_id,
-        name=routine.name,
-        category=routine.category,
-        routine_schedule=routine.routine_schedule,
-        description=routine.description,
-        tasks=routine.tasks,
-    )
+    return schemas.Routine(**asdict(routine))
