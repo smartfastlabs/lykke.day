@@ -12,6 +12,7 @@ from planned.application.repositories import (
 )
 from planned.core.constants import OAUTH_STATE_EXPIRY
 from planned.domain import entities
+from planned.infrastructure import data_objects
 from planned.infrastructure.gateways.google import get_flow
 
 from .dependencies.repositories import get_auth_token_repo, get_calendar_repo
@@ -90,8 +91,8 @@ async def google_login_callback(
     flow = get_flow("login")
     flow.fetch_token(code=code)
 
-    auth_token: entities.AuthToken = await auth_token_repo.put(
-        entities.AuthToken(
+    auth_token: data_objects.AuthToken = await auth_token_repo.put(
+        data_objects.AuthToken(
             user_id=user.id,
             client_id=flow.credentials.client_id,
             client_secret=flow.credentials.client_secret,

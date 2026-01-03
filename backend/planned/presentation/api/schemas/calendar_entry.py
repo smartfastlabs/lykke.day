@@ -13,7 +13,6 @@ from .base import BaseEntitySchema
 
 if TYPE_CHECKING:
     from .action import Action
-    from .person import Person
 
 
 class CalendarEntry(BaseEntitySchema):
@@ -30,7 +29,6 @@ class CalendarEntry(BaseEntitySchema):
     ends_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
-    people: list["Person"] = Field(default_factory=list)
     actions: list["Action"] = Field(default_factory=list)
     date: date  # Computed field from starts_at
 

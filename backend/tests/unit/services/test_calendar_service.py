@@ -8,7 +8,8 @@ import pytest
 from dobles import allow
 from planned.application.services import CalendarService
 from planned.core.exceptions import NotFoundError, TokenExpiredError
-from planned.domain.entities import AuthToken, Calendar, CalendarEntry
+from planned.domain.entities import Calendar, CalendarEntry
+from planned.infrastructure import data_objects
 from planned.domain.value_objects.task import TaskFrequency
 
 
@@ -33,7 +34,7 @@ async def test_sync(
         platform_id="platform-id",
     )
 
-    token = AuthToken(
+    token = data_objects.AuthToken(
         id=calendar.auth_token_id,
         user_id=calendar.user_id,
         platform="google",
@@ -127,7 +128,7 @@ async def test_sync_with_last_sync_at(
         last_sync_at=test_datetime_noon - timedelta(hours=1),
     )
 
-    token = AuthToken(
+    token = data_objects.AuthToken(
         id=calendar.auth_token_id,
         user_id=calendar.user_id,
         platform="google",
@@ -184,7 +185,7 @@ async def test_sync_unsupported_platform(
         platform_id="platform-id",
     )
 
-    token = AuthToken(
+    token = data_objects.AuthToken(
         id=calendar.auth_token_id,
         user_id=calendar.user_id,
         platform="outlook",
@@ -234,13 +235,13 @@ async def test_sync_all_successful_syncs(
         platform_id="platform-id-2",
     )
 
-    token1 = AuthToken(
+    token1 = data_objects.AuthToken(
         id=calendar1.auth_token_id,
         user_id=calendar1.user_id,
         platform="google",
         token="token1",
     )
-    token2 = AuthToken(
+    token2 = data_objects.AuthToken(
         id=calendar2.auth_token_id,
         user_id=calendar2.user_id,
         platform="google",
@@ -323,13 +324,13 @@ async def test_sync_all_with_exception_during_sync(
         platform_id="platform-id-2",
     )
 
-    token1 = AuthToken(
+    token1 = data_objects.AuthToken(
         id=calendar1.auth_token_id,
         user_id=calendar1.user_id,
         platform="google",
         token="token1",
     )
-    token2 = AuthToken(
+    token2 = data_objects.AuthToken(
         id=calendar2.auth_token_id,
         user_id=calendar2.user_id,
         platform="google",

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from uuid import UUID
 
-from .base import BaseEntityObject
+from planned.domain.entities.base import BaseEntityObject
 
 
 @dataclass(kw_only=True)

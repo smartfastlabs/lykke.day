@@ -14,6 +14,7 @@ from planned.application.gateways.google_protocol import GoogleCalendarGatewayPr
 from planned.core.config import settings
 from planned.core.exceptions import TokenExpiredError
 from planned.domain import entities, value_objects
+from planned.infrastructure import data_objects
 
 if TYPE_CHECKING:
     pass
@@ -41,7 +42,7 @@ def get_flow(flow_name: str) -> Flow:
     )
 
 
-def get_google_calendar(calendar: entities.Calendar, token: entities.AuthToken) -> GoogleCalendar:
+def get_google_calendar(calendar: entities.Calendar, token: data_objects.AuthToken) -> GoogleCalendar:
     try:
         credentials = token.google_credentials()
         # Force a refresh check
@@ -168,7 +169,7 @@ def is_after(
 def _load_calendar_events_sync(
     calendar: entities.Calendar,
     lookback: datetime,
-    token: entities.AuthToken,
+    token: data_objects.AuthToken,
 ) -> list[entities.CalendarEntry]:
     """Synchronous implementation of calendar entry loading."""
     calendar_entries: list[entities.CalendarEntry] = []
@@ -210,7 +211,7 @@ def _load_calendar_events_sync(
 async def load_calendar_events(
     calendar: entities.Calendar,
     lookback: datetime,
-    token: entities.AuthToken,
+    token: data_objects.AuthToken,
 ) -> list[entities.CalendarEntry]:
     """Asynchronously load calendar entries by running the sync operation in a thread pool."""
     try:
@@ -231,7 +232,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         self,
         calendar: entities.Calendar,
         lookback: datetime,
-        token: entities.AuthToken,
+        token: data_objects.AuthToken,
     ) -> list[entities.CalendarEntry]:
         """Load calendar entries from Google Calendar."""
         return await load_calendar_events(

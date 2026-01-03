@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
 
 from planned.domain import entities
+from planned.infrastructure import data_objects
 
 if TYPE_CHECKING:
     from google_auth_oauthlib.flow import Flow
@@ -16,7 +17,7 @@ class GoogleCalendarGatewayProtocol(Protocol):
         self,
         calendar: entities.Calendar,
         lookback: datetime,
-        token: entities.AuthToken,
+        token: data_objects.AuthToken,
     ) -> list[entities.CalendarEntry]:
         """Load calendar entries from Google Calendar.
 

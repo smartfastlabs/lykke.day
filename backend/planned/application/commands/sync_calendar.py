@@ -10,6 +10,7 @@ from planned.application.unit_of_work import UnitOfWorkFactory, UnitOfWorkProtoc
 from planned.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from planned.core.exceptions import TokenExpiredError
 from planned.domain import entities
+from planned.infrastructure import data_objects
 
 from .base import Command, CommandHandler
 
@@ -95,7 +96,7 @@ class SyncCalendarHandler(
     async def _sync_calendar_internal(
         self,
         calendar: entities.Calendar,
-        token: entities.AuthToken,
+        token: data_objects.AuthToken,
         uow: UnitOfWorkProtocol,
     ) -> tuple[list[entities.CalendarEntry], list[entities.CalendarEntry]]:
         """Internal method to sync a calendar (used by SyncAllCalendarsHandler).

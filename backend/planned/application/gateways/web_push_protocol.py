@@ -2,7 +2,8 @@
 
 from typing import Protocol
 
-from planned.domain import entities, value_objects
+from planned.domain import value_objects
+from planned.infrastructure import data_objects
 
 
 class WebPushGatewayProtocol(Protocol):
@@ -10,7 +11,7 @@ class WebPushGatewayProtocol(Protocol):
 
     async def send_notification(
         self,
-        subscription: entities.PushSubscription,
+        subscription: data_objects.PushSubscription,
         content: str | dict | value_objects.NotificationPayload,
     ) -> None:
         """Send a push notification to a subscription.

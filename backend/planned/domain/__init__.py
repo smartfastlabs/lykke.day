@@ -1,14 +1,11 @@
 # Re-export entities for easier imports
 from .entities import (
     Action,
-    AuthToken,
     Calendar,
     CalendarEntry,
     Day,
     DayTemplate,
     Message,
-    Person,
-    PushSubscription,
     Routine,
     Task,
     TaskDefinition,
@@ -24,14 +21,11 @@ _DayContext.model_rebuild()
 __all__ = [
     # Entities
     "Action",
-    "AuthToken",
     "Calendar",
     "CalendarEntry",
     "Day",
     "DayTemplate",
     "Message",
-    "Person",
-    "PushSubscription",
     "Routine",
     "Task",
     "TaskDefinition",

@@ -5,14 +5,14 @@ from uuid import uuid4
 import pytest
 
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import PushSubscription
+from planned.infrastructure import data_objects
 from planned.infrastructure.repositories import PushSubscriptionRepository
 
 
 @pytest.mark.asyncio
 async def test_get(push_subscription_repo, test_user):
     """Test getting a push subscription by ID."""
-    subscription = PushSubscription(
+    subscription = data_objects.PushSubscription(
         id=uuid4(),
         user_id=test_user.id,
         device_name="Test Device",
@@ -38,7 +38,7 @@ async def test_get_not_found(push_subscription_repo):
 @pytest.mark.asyncio
 async def test_put(push_subscription_repo, test_user):
     """Test creating a new push subscription."""
-    subscription = PushSubscription(
+    subscription = data_objects.PushSubscription(
         id=uuid4(),
         user_id=test_user.id,
         device_name="New Device",
@@ -56,7 +56,7 @@ async def test_put(push_subscription_repo, test_user):
 @pytest.mark.asyncio
 async def test_all(push_subscription_repo, test_user):
     """Test getting all push subscriptions."""
-    sub1 = PushSubscription(
+    sub1 = data_objects.PushSubscription(
         id=uuid4(),
         user_id=test_user.id,
         device_name="Device 1",
@@ -64,7 +64,7 @@ async def test_all(push_subscription_repo, test_user):
         p256dh="p256dh_key1",
         auth="auth_key1",
     )
-    sub2 = PushSubscription(
+    sub2 = data_objects.PushSubscription(
         id=uuid4(),
         user_id=test_user.id,
         device_name="Device 2",
@@ -85,7 +85,7 @@ async def test_all(push_subscription_repo, test_user):
 @pytest.mark.asyncio
 async def test_user_isolation(push_subscription_repo, test_user, create_test_user):
     """Test that different users' push subscriptions are properly isolated."""
-    subscription = PushSubscription(
+    subscription = data_objects.PushSubscription(
         id=uuid4(),
         user_id=test_user.id,
         device_name="User1 Device",

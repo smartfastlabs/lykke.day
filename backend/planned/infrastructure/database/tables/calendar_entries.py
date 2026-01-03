@@ -24,7 +24,6 @@ class CalendarEntry(Base):
     ends_at = Column(DateTime)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=False)
-    people = Column(JSONB)  # list[Person]
     actions = Column(JSONB)  # list[Action]
 
     __table_args__ = (

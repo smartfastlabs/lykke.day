@@ -3,6 +3,7 @@
 from dataclasses import asdict
 
 from planned.domain import entities, value_objects
+from planned.infrastructure import data_objects
 from planned.presentation.api import schemas
 
 
@@ -14,11 +15,6 @@ def map_action_to_schema(action: entities.Action) -> schemas.Action:
 def map_alarm_to_schema(alarm: value_objects.Alarm) -> schemas.Alarm:
     """Convert Alarm value object to Alarm schema."""
     return schemas.Alarm(**asdict(alarm))
-
-
-def map_person_to_schema(person: entities.Person) -> schemas.Person:
-    """Convert Person entity to Person schema."""
-    return schemas.Person(**asdict(person))
 
 
 def map_task_definition_to_schema(
@@ -99,7 +95,6 @@ def map_calendar_entry_to_schema(
     entry: entities.CalendarEntry,
 ) -> schemas.CalendarEntry:
     """Convert CalendarEntry entity to CalendarEntry schema."""
-    person_schemas = [map_person_to_schema(person) for person in entry.people]
     action_schemas = [map_action_to_schema(action) for action in entry.actions]
 
     return schemas.CalendarEntry(
@@ -115,7 +110,6 @@ def map_calendar_entry_to_schema(
         ends_at=entry.ends_at,
         created_at=entry.created_at,
         updated_at=entry.updated_at,
-        people=person_schemas,
         actions=action_schemas,
         date=entry.date,  # Computed field
     )
@@ -154,7 +148,7 @@ def map_day_context_to_schema(
 
 
 def map_push_subscription_to_schema(
-    subscription: entities.PushSubscription,
+    subscription: data_objects.PushSubscription,
 ) -> schemas.PushSubscription:
     """Convert PushSubscription entity to PushSubscription schema."""
     return schemas.PushSubscription(**asdict(subscription))

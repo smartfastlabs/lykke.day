@@ -7,7 +7,6 @@ from .day import Day
 from .day_context import DayContext
 from .day_template import DayTemplate
 from .message import Message
-from .person import Person
 from .push_subscription import PushSubscription
 from .routine import Routine
 from .task import Task, TaskSchedule
@@ -28,7 +27,6 @@ __all__ = [
     "DayContext",
     "DayTemplate",
     "Message",
-    "Person",
     "PushSubscription",
     "Routine",
     "Task",

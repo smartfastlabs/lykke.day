@@ -1,11 +1,10 @@
-import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from uuid import UUID
 
 from google.oauth2.credentials import Credentials
 
-from .base import BaseEntityObject
+from planned.domain.entities.base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
@@ -34,3 +33,4 @@ class AuthToken(BaseEntityObject):
             client_secret=self.client_secret,
             scopes=self.scopes,
         )
+

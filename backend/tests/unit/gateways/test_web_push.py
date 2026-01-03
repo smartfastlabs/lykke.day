@@ -3,13 +3,13 @@
 
 import pytest
 
-from planned.domain.entities import PushSubscription
+from planned.infrastructure import data_objects
 
 
 @pytest.mark.asyncio
 async def test_send_notification(mock_web_push_gateway, test_user_id):
     """Test sending a push notification."""
-    subscription = PushSubscription(
+    subscription = data_objects.PushSubscription(
         user_id=test_user_id,
         device_name="Test Device",
         endpoint="https://example.com",

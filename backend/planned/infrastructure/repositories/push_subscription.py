@@ -1,14 +1,14 @@
 from typing import Any
 from uuid import UUID
 
-from planned.domain import entities
+from planned.infrastructure import data_objects
 
 from .base import BaseQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import push_subscriptions_tbl
 
 
-class PushSubscriptionRepository(UserScopedBaseRepository[entities.PushSubscription, BaseQuery]):
-    Object = entities.PushSubscription
+class PushSubscriptionRepository(UserScopedBaseRepository[data_objects.PushSubscription, BaseQuery]):
+    Object = data_objects.PushSubscription
     table = push_subscriptions_tbl
     QueryClass = BaseQuery
 
@@ -17,7 +17,7 @@ class PushSubscriptionRepository(UserScopedBaseRepository[entities.PushSubscript
         super().__init__(user_id=user_id)
 
     @staticmethod
-    def entity_to_row(push_subscription: entities.PushSubscription) -> dict[str, Any]:
+    def entity_to_row(push_subscription: data_objects.PushSubscription) -> dict[str, Any]:
         """Convert a PushSubscription entity to a database row dict."""
         row: dict[str, Any] = {
             "id": push_subscription.id,

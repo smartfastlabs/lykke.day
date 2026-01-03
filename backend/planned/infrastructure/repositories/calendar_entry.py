@@ -52,9 +52,6 @@ class CalendarEntryRepository(UserScopedBaseRepository[entities.CalendarEntry, D
         # Handle JSONB fields
         from planned.core.utils.serialization import dataclass_to_json_dict
 
-        if calendar_entry.people:
-            row["people"] = [dataclass_to_json_dict(person) for person in calendar_entry.people]
-
         if calendar_entry.actions:
             row["actions"] = [
                 dataclass_to_json_dict(action) for action in calendar_entry.actions
@@ -80,13 +77,7 @@ class CalendarEntryRepository(UserScopedBaseRepository[entities.CalendarEntry, D
         if "frequency" in data and isinstance(data["frequency"], str):
             data["frequency"] = value_objects.TaskFrequency(data["frequency"])
         
-        # Handle people and actions - they come as dicts from JSONB, need to convert to entities
-        if "people" in data and data["people"]:
-            data["people"] = [
-                entities.Person(**person) if isinstance(person, dict) else person
-                for person in data["people"]
-            ]
-        
+        # Handle actions - they come as dicts from JSONB, need to convert to entities
         if "actions" in data and data["actions"]:
             data["actions"] = [
                 entities.Action(**action) if isinstance(action, dict) else action

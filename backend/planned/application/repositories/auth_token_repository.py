@@ -1,10 +1,10 @@
 """Protocol for AuthTokenRepository."""
 
 from planned.application.repositories.base import BasicCrudRepositoryProtocol
-from planned.domain import entities
+from planned.infrastructure import data_objects
 
 
-class AuthTokenRepositoryProtocol(BasicCrudRepositoryProtocol[entities.AuthToken]):
+class AuthTokenRepositoryProtocol(BasicCrudRepositoryProtocol[data_objects.AuthToken]):
     """Protocol defining the interface for auth token repositories."""
     pass
 

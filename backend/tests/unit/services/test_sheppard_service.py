@@ -11,6 +11,7 @@ from planned.application.services import DayService, SheppardService
 from planned.application.services.calendar import CalendarService
 from planned.application.services.planning import PlanningService
 from planned.domain import entities, value_objects
+from planned.infrastructure import data_objects
 
 
 def create_day_service(user, date, uow_factory):
@@ -232,7 +233,7 @@ async def test_notify_for_tasks(
         frequency=value_objects.TaskFrequency.ONCE,
     )
 
-    subscription = entities.PushSubscription(
+    subscription = data_objects.PushSubscription(
         id=uuid4(),
         user_id=test_user_id,
         endpoint="https://example.com/push",
@@ -535,7 +536,7 @@ async def test_notify_for_calendar_entries(
         starts_at=test_datetime_noon,
     )
 
-    subscription = entities.PushSubscription(
+    subscription = data_objects.PushSubscription(
         id=uuid4(),
         user_id=test_user_id,
         endpoint="https://example.com/push",

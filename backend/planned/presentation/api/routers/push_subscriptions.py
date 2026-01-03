@@ -5,6 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends
 
 from planned.application.repositories import PushSubscriptionRepositoryProtocol
 from planned.domain import entities, value_objects
+from planned.infrastructure import data_objects
 from planned.infrastructure.gateways import web_push
 from planned.presentation.api import schemas
 from planned.presentation.api.schemas.mappers import map_push_subscription_to_schema
@@ -57,8 +58,8 @@ async def subscribe(
         get_push_subscription_repo
     )],
 ) -> schemas.PushSubscription:
-    result: entities.PushSubscription = await push_subscription_repo.put(
-        entities.PushSubscription(
+    result: data_objects.PushSubscription = await push_subscription_repo.put(
+        data_objects.PushSubscription(
             user_id=user.id,
             device_name=request.device_name,
             endpoint=request.endpoint,

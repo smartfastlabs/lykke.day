@@ -11,7 +11,6 @@ from gcsa.event import Event as GoogleEvent
 from .. import value_objects
 from .action import Action
 from .base import BaseEntityObject
-from .person import Person
 
 
 def get_datetime(
@@ -56,7 +55,6 @@ class CalendarEntry(BaseEntityObject):
     ends_at: datetime | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    people: list[Person] = field(default_factory=list)
     actions: list[Action] = field(default_factory=list)
     timezone: str | None = field(default=None, repr=False)
 
@@ -119,13 +117,6 @@ class CalendarEntry(BaseEntityObject):
             platform="google",
             created_at=google_event.created.astimezone(UTC),
             updated_at=google_event.updated.astimezone(UTC),
-            people=[
-                Person(
-                    name=a.display_name or None,
-                    email=a.email,
-                )
-                for a in google_event.attendees
-            ],
             timezone=target_timezone,
         )
         return calendar_entry

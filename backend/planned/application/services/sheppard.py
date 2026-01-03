@@ -22,10 +22,11 @@ from planned.application.services.day import DayService
 from planned.application.services.day.factory import DayServiceFactory
 from planned.application.services.planning import PlanningService
 from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.domain import entities, value_objects
-from planned.domain.services.notification import NotificationPayloadBuilder
 from planned.core.utils import templates, youtube
 from planned.core.utils.dates import get_current_date, get_current_time
+from planned.domain import entities, value_objects
+from planned.domain.services.notification import NotificationPayloadBuilder
+from planned.infrastructure import data_objects
 
 
 def get_weather(city: str) -> str:
@@ -59,7 +60,7 @@ class SheppardService(BaseService):
     day_svc: DayService
     mode: SheppardMode
     last_run: datetime.datetime | None = None
-    push_subscriptions: list[entities.PushSubscription] = []
+    push_subscriptions: list[data_objects.PushSubscription] = []
     uow_factory: UnitOfWorkFactory
     calendar_service: CalendarService
     planning_service: PlanningService
@@ -76,7 +77,7 @@ class SheppardService(BaseService):
         calendar_service: CalendarService,
         planning_service: PlanningService,
         web_push_gateway: WebPushGatewayProtocol,
-        push_subscriptions: list[entities.PushSubscription] | None = None,
+        push_subscriptions: list[data_objects.PushSubscription] | None = None,
         mode: SheppardMode = "starting",
     ) -> None:
         """Initialize SheppardService.
@@ -160,9 +161,7 @@ class SheppardService(BaseService):
         tasks_to_notify: list[entities.Task] = []
         tasks_to_update: list[entities.Task] = []
 
-        query = GetUpcomingTasksQuery(
-            user=self.user, date=self.day_svc.date
-        )
+        query = GetUpcomingTasksQuery(user=self.user, date=self.day_svc.date)
         upcoming_tasks = await self._get_upcoming_tasks_handler.handle(query)
 
         for task in upcoming_tasks:
@@ -175,7 +174,8 @@ class SheppardService(BaseService):
 
             # Check if this task needs a notification
             if not any(
-                action.type == value_objects.ActionType.NOTIFY for action in task.actions
+                action.type == value_objects.ActionType.NOTIFY
+                for action in task.actions
             ):
                 tasks_to_notify.append(task)
                 task.record_action(
@@ -196,11 +196,9 @@ class SheppardService(BaseService):
         """
         calendar_entries_to_notify: list[entities.CalendarEntry] = []
 
-        query = GetUpcomingCalendarEntriesQuery(
-            user=self.user, date=self.day_svc.date
-        )
-        upcoming_calendar_entries = await self._get_upcoming_calendar_entries_handler.handle(
-            query
+        query = GetUpcomingCalendarEntriesQuery(user=self.user, date=self.day_svc.date)
+        upcoming_calendar_entries = (
+            await self._get_upcoming_calendar_entries_handler.handle(query)
         )
 
         for calendar_entry in upcoming_calendar_entries:
@@ -254,7 +252,6 @@ class SheppardService(BaseService):
         if calendar_entries_to_notify:
             await self._notify_for_calendar_entries(calendar_entries_to_notify)
 
-
     async def _notify_for_tasks(
         self,
         tasks: list[entities.Task],
@@ -278,7 +275,6 @@ class SheppardService(BaseService):
                 logger.exception(
                     f"Failed to send notification to {subscription.endpoint}: {e}"
                 )
-
 
     async def _notify_for_calendar_entries(
         self,
@@ -380,4 +376,3 @@ class SheppardService(BaseService):
     @property
     def is_running(self) -> bool:
         return self.mode not in ("stopping", "starting")
-
