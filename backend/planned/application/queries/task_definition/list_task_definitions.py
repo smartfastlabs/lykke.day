@@ -32,7 +32,7 @@ class ListTaskDefinitionsHandler:
             List of task definitions or PagedQueryResponse
         """
         async with self._uow_factory.create(user_id) as uow:
-            items = await uow.task_definitions.all()
+            items = await uow.task_definition_ro_repo.all()
 
             if not paginate:
                 return items

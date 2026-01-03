@@ -31,7 +31,7 @@ class UpdateUserHandler:
         """
         async with self._uow_factory.create(user_id) as uow:
             # Get existing user
-            existing = await uow.users.get(user_id)
+            existing = await uow.user_rw_repo.get(user_id)
 
             # Merge updates - both entities are dataclasses
             # Get all fields from user_data that are not None
@@ -51,7 +51,7 @@ class UpdateUserHandler:
             if hasattr(updated, "id"):
                 object.__setattr__(updated, "id", user_id)
 
-            user = await uow.users.put(updated)
+            user = await uow.user_rw_repo.put(updated)
             await uow.commit()
             return user
 

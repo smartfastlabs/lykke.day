@@ -28,5 +28,5 @@ class GetDayTemplateHandler:
             NotFoundError: If day template not found
         """
         async with self._uow_factory.create(user_id) as uow:
-            return await uow.day_templates.get(day_template_id)
+            return await uow.day_template_ro_repo.get(day_template_id)
 

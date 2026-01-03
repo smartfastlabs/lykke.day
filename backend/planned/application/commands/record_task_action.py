@@ -31,20 +31,20 @@ class RecordTaskActionHandler:
         """
         async with self._uow_factory.create(user_id) as uow:
             # Get the task to find its scheduled_date
-            task = await uow.tasks.get(task_id)
+            task = await uow.task_rw_repo.get(task_id)
 
             # Get the Day aggregate root using the task's scheduled_date
             day_id = DayEntity.id_from_date_and_user(task.scheduled_date, user_id)
             try:
-                day = await uow.days.get(day_id)
+                day = await uow.day_rw_repo.get(day_id)
             except NotFoundError:
                 # Day doesn't exist yet - this shouldn't happen if task exists
                 # but we'll create it to maintain consistency
-                user = await uow.users.get(user_id)
+                user = await uow.user_rw_repo.get(user_id)
                 template_slug = user.settings.template_defaults[
                     task.scheduled_date.weekday()
                 ]
-                template = await uow.day_templates.get_by_slug(template_slug)
+                template = await uow.day_template_rw_repo.get_by_slug(template_slug)
                 day = DayEntity.create_for_date(
                     task.scheduled_date,
                     user_id=user_id,
@@ -57,8 +57,8 @@ class RecordTaskActionHandler:
             updated_task = day.record_task_action(task, action)
 
             # Save both Day (for events) and Task (for state changes)
-            await uow.days.put(day)
-            await uow.tasks.put(updated_task)
+            await uow.day_rw_repo.put(day)
+            await uow.task_rw_repo.put(updated_task)
             await uow.commit()
 
             return updated_task

@@ -22,7 +22,7 @@ class DeleteCalendarHandler:
             NotFoundError: If calendar not found
         """
         async with self._uow_factory.create(user_id) as uow:
-            calendar = await uow.calendars.get(calendar_id)
-            await uow.calendars.delete(calendar)
+            calendar = await uow.calendar_rw_repo.get(calendar_id)
+            await uow.calendar_rw_repo.delete(calendar)
             await uow.commit()
 

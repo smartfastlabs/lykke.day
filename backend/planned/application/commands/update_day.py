@@ -40,12 +40,12 @@ class UpdateDayHandler:
             # Get the existing day
             day_id = DayEntity.id_from_date_and_user(date, user_id)
             try:
-                day = await uow.days.get(day_id)
+                day = await uow.day_rw_repo.get(day_id)
             except NotFoundError:
                 # Create a new day if it doesn't exist
-                user = await uow.users.get(user_id)
+                user = await uow.user_rw_repo.get(user_id)
                 template_slug = user.settings.template_defaults[date.weekday()]
-                template = await uow.day_templates.get_by_slug(template_slug)
+                template = await uow.day_template_rw_repo.get_by_slug(template_slug)
                 day = DayEntity.create_for_date(date, user_id=user_id, template=template)
 
             # Apply status transition if requested
@@ -54,11 +54,11 @@ class UpdateDayHandler:
 
             # Update template if requested
             if template_id is not None:
-                template = await uow.day_templates.get(template_id)
+                template = await uow.day_template_rw_repo.get(template_id)
                 day.update_template(template)
 
             # Save and commit
-            await uow.days.put(day)
+            await uow.day_rw_repo.put(day)
             await uow.commit()
             return day
 

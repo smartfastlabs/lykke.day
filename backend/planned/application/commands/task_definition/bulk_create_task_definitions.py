@@ -28,7 +28,7 @@ class BulkCreateTaskDefinitionsHandler:
             return []
 
         async with self._uow_factory.create(user_id) as uow:
-            created = await uow.task_definitions.insert_many(*task_definitions)
+            created = await uow.task_definition_rw_repo.insert_many(*task_definitions)
             await uow.commit()
             return created
 

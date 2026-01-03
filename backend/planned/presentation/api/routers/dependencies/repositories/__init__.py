@@ -10,17 +10,17 @@ from typing import Annotated, cast
 from fastapi import Depends
 
 from planned.application.repositories import (
-    AuthTokenRepositoryProtocol,
-    CalendarEntryRepositoryProtocol,
-    CalendarRepositoryProtocol,
-    DayRepositoryProtocol,
-    DayTemplateRepositoryProtocol,
-    MessageRepositoryProtocol,
-    PushSubscriptionRepositoryProtocol,
-    RoutineRepositoryProtocol,
-    TaskDefinitionRepositoryProtocol,
-    TaskRepositoryProtocol,
-    UserRepositoryProtocol,
+    AuthTokenRepositoryReadWriteProtocol,
+    CalendarEntryRepositoryReadWriteProtocol,
+    CalendarRepositoryReadWriteProtocol,
+    DayRepositoryReadWriteProtocol,
+    DayTemplateRepositoryReadWriteProtocol,
+    MessageRepositoryReadWriteProtocol,
+    PushSubscriptionRepositoryReadWriteProtocol,
+    RoutineRepositoryReadWriteProtocol,
+    TaskDefinitionRepositoryReadWriteProtocol,
+    TaskRepositoryReadWriteProtocol,
+    UserRepositoryReadWriteProtocol,
 )
 from planned.domain.entities import UserEntity
 from planned.infrastructure.repositories import (
@@ -42,86 +42,86 @@ from ..user import get_current_user
 
 def get_auth_token_repo(
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> AuthTokenRepositoryProtocol:
+) -> AuthTokenRepositoryReadWriteProtocol:
     """Get an instance of AuthTokenRepository (not user-scoped)."""
     return cast(
-        "AuthTokenRepositoryProtocol", AuthTokenRepository()
+        "AuthTokenRepositoryReadWriteProtocol", AuthTokenRepository()
     )
 
 
 def get_calendar_entry_repo(
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> CalendarEntryRepositoryProtocol:
+) -> CalendarEntryRepositoryReadWriteProtocol:
     """Get a user-scoped instance of CalendarEntryRepository."""
-    return cast("CalendarEntryRepositoryProtocol", CalendarEntryRepository(user_id=user.id))
+    return cast("CalendarEntryRepositoryReadWriteProtocol", CalendarEntryRepository(user_id=user.id))
 
 
 def get_calendar_repo(
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> CalendarRepositoryProtocol:
+) -> CalendarRepositoryReadWriteProtocol:
     """Get a user-scoped instance of CalendarRepository."""
     return cast(
-        "CalendarRepositoryProtocol", CalendarRepository(user_id=user.id)
+        "CalendarRepositoryReadWriteProtocol", CalendarRepository(user_id=user.id)
     )
 
 
 def get_day_repo(
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> DayRepositoryProtocol:
+) -> DayRepositoryReadWriteProtocol:
     """Get a user-scoped instance of DayRepository."""
-    return cast("DayRepositoryProtocol", DayRepository(user_id=user.id))
+    return cast("DayRepositoryReadWriteProtocol", DayRepository(user_id=user.id))
 
 
 def get_day_template_repo(
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> DayTemplateRepositoryProtocol:
+) -> DayTemplateRepositoryReadWriteProtocol:
     """Get a user-scoped instance of DayTemplateRepository."""
     return cast(
-        "DayTemplateRepositoryProtocol", DayTemplateRepository(user_id=user.id)
+        "DayTemplateRepositoryReadWriteProtocol", DayTemplateRepository(user_id=user.id)
     )
 
 
 def get_message_repo(
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> MessageRepositoryProtocol:
+) -> MessageRepositoryReadWriteProtocol:
     """Get a user-scoped instance of MessageRepository."""
-    return cast("MessageRepositoryProtocol", MessageRepository(user_id=user.id))
+    return cast("MessageRepositoryReadWriteProtocol", MessageRepository(user_id=user.id))
 
 
 def get_push_subscription_repo(
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> PushSubscriptionRepositoryProtocol:
+) -> PushSubscriptionRepositoryReadWriteProtocol:
     """Get a user-scoped instance of PushSubscriptionRepository."""
     return cast(
-        "PushSubscriptionRepositoryProtocol",
+        "PushSubscriptionRepositoryReadWriteProtocol",
         PushSubscriptionRepository(user_id=user.id),
     )
 
 
 def get_routine_repo(
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> RoutineRepositoryProtocol:
+) -> RoutineRepositoryReadWriteProtocol:
     """Get a user-scoped instance of RoutineRepository."""
-    return cast("RoutineRepositoryProtocol", RoutineRepository(user_id=user.id))
+    return cast("RoutineRepositoryReadWriteProtocol", RoutineRepository(user_id=user.id))
 
 
 def get_task_repo(
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> TaskRepositoryProtocol:
+) -> TaskRepositoryReadWriteProtocol:
     """Get a user-scoped instance of TaskRepository."""
-    return cast("TaskRepositoryProtocol", TaskRepository(user_id=user.id))
+    return cast("TaskRepositoryReadWriteProtocol", TaskRepository(user_id=user.id))
 
 
 def get_task_definition_repo(
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> TaskDefinitionRepositoryProtocol:
+) -> TaskDefinitionRepositoryReadWriteProtocol:
     """Get a user-scoped instance of TaskDefinitionRepository."""
     return cast(
-        "TaskDefinitionRepositoryProtocol",
+        "TaskDefinitionRepositoryReadWriteProtocol",
         TaskDefinitionRepository(user_id=user.id),
     )
 
 
-def get_user_repo() -> UserRepositoryProtocol:
+def get_user_repo() -> UserRepositoryReadWriteProtocol:
     """Get an instance of UserRepository (not user-scoped)."""
-    return cast("UserRepositoryProtocol", UserRepository())
+    return cast("UserRepositoryReadWriteProtocol", UserRepository())

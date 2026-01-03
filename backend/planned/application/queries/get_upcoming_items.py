@@ -29,7 +29,7 @@ class GetUpcomingTasksHandler:
             List of tasks that are upcoming within the look-ahead window
         """
         async with self._uow_factory.create(user.id) as uow:
-            tasks = await uow.tasks.search_query(value_objects.DateQuery(date=date))
+            tasks = await uow.task_ro_repo.search_query(value_objects.DateQuery(date=date))
             return filter_upcoming_tasks(tasks, look_ahead)
 
 
@@ -53,7 +53,7 @@ class GetUpcomingCalendarEntriesHandler:
             List of calendar entries that are upcoming within the look-ahead window
         """
         async with self._uow_factory.create(user.id) as uow:
-            calendar_entries = await uow.calendar_entries.search_query(
+            calendar_entries = await uow.calendar_entry_ro_repo.search_query(
                 value_objects.DateQuery(date=date)
             )
             return filter_upcoming_calendar_entries(calendar_entries, look_ahead)

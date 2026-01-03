@@ -32,7 +32,7 @@ class ListDayTemplatesHandler:
             List of day templates or PagedQueryResponse
         """
         async with self._uow_factory.create(user_id) as uow:
-            items = await uow.day_templates.all()
+            items = await uow.day_template_ro_repo.all()
 
             if not paginate:
                 return items

@@ -39,10 +39,10 @@ class GetDayContextHandler:
                 # Try to load existing day and all related data
                 day_id = DayEntity.id_from_date_and_user(date, user.id)
                 tasks, calendar_entries, messages, day = await asyncio.gather(
-                    uow.tasks.search_query(value_objects.DateQuery(date=date)),
-                    uow.calendar_entries.search_query(value_objects.DateQuery(date=date)),
-                    uow.messages.search_query(value_objects.DateQuery(date=date)),
-                    uow.days.get(day_id),
+                    uow.task_ro_repo.search_query(value_objects.DateQuery(date=date)),
+                    uow.calendar_entry_ro_repo.search_query(value_objects.DateQuery(date=date)),
+                    uow.message_ro_repo.search_query(value_objects.DateQuery(date=date)),
+                    uow.day_ro_repo.get(day_id),
                 )
             except NotFoundError:
                 # Day doesn't exist, create a preview day using default template
@@ -69,7 +69,7 @@ class GetDayContextHandler:
             A Day entity (not saved to database)
         """
         template_slug = user.settings.template_defaults[date.weekday()]
-        template = await uow.day_templates.get_by_slug(template_slug)
+        template = await uow.day_template_ro_repo.get_by_slug(template_slug)
         return DayEntity.create_for_date(
             date,
             user_id=user_id,

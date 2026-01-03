@@ -35,9 +35,9 @@ class ListCalendarEntriesHandler:
         """
         async with self._uow_factory.create(user_id) as uow:
             if search_query is not None:
-                items = await uow.calendar_entries.search_query(search_query)
+                items = await uow.calendar_entry_ro_repo.search_query(search_query)
             else:
-                items = await uow.calendar_entries.all()
+                items = await uow.calendar_entry_ro_repo.all()
 
             if not paginate:
                 return items

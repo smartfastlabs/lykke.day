@@ -35,7 +35,7 @@ class UpdateDayTemplateHandler:
         """
         async with self._uow_factory.create(user_id) as uow:
             # Get existing day template
-            existing = await uow.day_templates.get(day_template_id)
+            existing = await uow.day_template_rw_repo.get(day_template_id)
 
             # Merge updates - both entities are dataclasses
             # Get all fields from day_template_data that are not None
@@ -55,7 +55,7 @@ class UpdateDayTemplateHandler:
             if hasattr(updated, "id"):
                 object.__setattr__(updated, "id", day_template_id)
 
-            day_template = await uow.day_templates.put(updated)
+            day_template = await uow.day_template_rw_repo.put(updated)
             await uow.commit()
             return day_template
 

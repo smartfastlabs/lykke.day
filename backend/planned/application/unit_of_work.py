@@ -11,17 +11,28 @@ from typing import Protocol, Self
 from uuid import UUID
 
 from planned.application.repositories import (
-    AuthTokenRepositoryProtocol,
-    CalendarEntryRepositoryProtocol,
-    CalendarRepositoryProtocol,
-    DayRepositoryProtocol,
-    DayTemplateRepositoryProtocol,
-    MessageRepositoryProtocol,
-    PushSubscriptionRepositoryProtocol,
-    RoutineRepositoryProtocol,
-    TaskDefinitionRepositoryProtocol,
-    TaskRepositoryProtocol,
-    UserRepositoryProtocol,
+    AuthTokenRepositoryReadOnlyProtocol,
+    AuthTokenRepositoryReadWriteProtocol,
+    CalendarEntryRepositoryReadOnlyProtocol,
+    CalendarEntryRepositoryReadWriteProtocol,
+    CalendarRepositoryReadOnlyProtocol,
+    CalendarRepositoryReadWriteProtocol,
+    DayRepositoryReadOnlyProtocol,
+    DayRepositoryReadWriteProtocol,
+    DayTemplateRepositoryReadOnlyProtocol,
+    DayTemplateRepositoryReadWriteProtocol,
+    MessageRepositoryReadOnlyProtocol,
+    MessageRepositoryReadWriteProtocol,
+    PushSubscriptionRepositoryReadOnlyProtocol,
+    PushSubscriptionRepositoryReadWriteProtocol,
+    RoutineRepositoryReadOnlyProtocol,
+    RoutineRepositoryReadWriteProtocol,
+    TaskDefinitionRepositoryReadOnlyProtocol,
+    TaskDefinitionRepositoryReadWriteProtocol,
+    TaskRepositoryReadOnlyProtocol,
+    TaskRepositoryReadWriteProtocol,
+    UserRepositoryReadOnlyProtocol,
+    UserRepositoryReadWriteProtocol,
 )
 
 
@@ -30,20 +41,34 @@ class UnitOfWorkProtocol(Protocol):
 
     Provides access to all repositories scoped to a single transaction.
     All repositories share the same database connection and transaction context.
+    Provides both read-only and read-write repositories with explicit naming.
     """
 
-    # Repository properties
-    auth_tokens: AuthTokenRepositoryProtocol
-    calendar_entries: CalendarEntryRepositoryProtocol
-    calendars: CalendarRepositoryProtocol
-    days: DayRepositoryProtocol
-    day_templates: DayTemplateRepositoryProtocol
-    messages: MessageRepositoryProtocol
-    push_subscriptions: PushSubscriptionRepositoryProtocol
-    routines: RoutineRepositoryProtocol
-    task_definitions: TaskDefinitionRepositoryProtocol
-    tasks: TaskRepositoryProtocol
-    users: UserRepositoryProtocol
+    # Read-only repository properties (for query handlers)
+    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
+    push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    user_ro_repo: UserRepositoryReadOnlyProtocol
+
+    # Read-write repository properties (for command handlers)
+    auth_token_rw_repo: AuthTokenRepositoryReadWriteProtocol
+    calendar_entry_rw_repo: CalendarEntryRepositoryReadWriteProtocol
+    calendar_rw_repo: CalendarRepositoryReadWriteProtocol
+    day_rw_repo: DayRepositoryReadWriteProtocol
+    day_template_rw_repo: DayTemplateRepositoryReadWriteProtocol
+    message_rw_repo: MessageRepositoryReadWriteProtocol
+    push_subscription_rw_repo: PushSubscriptionRepositoryReadWriteProtocol
+    routine_rw_repo: RoutineRepositoryReadWriteProtocol
+    task_definition_rw_repo: TaskDefinitionRepositoryReadWriteProtocol
+    task_rw_repo: TaskRepositoryReadWriteProtocol
+    user_rw_repo: UserRepositoryReadWriteProtocol
 
     async def __aenter__(self) -> Self:
         """Enter the unit of work context.

@@ -32,7 +32,7 @@ class ListRoutinesHandler:
             List of routines or PagedQueryResponse
         """
         async with self._uow_factory.create(user_id) as uow:
-            items = await uow.routines.all()
+            items = await uow.routine_ro_repo.all()
 
             if not paginate:
                 return items

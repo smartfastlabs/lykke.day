@@ -35,7 +35,7 @@ class UpdateTaskDefinitionHandler:
         """
         async with self._uow_factory.create(user_id) as uow:
             # Get existing task definition
-            existing = await uow.task_definitions.get(task_definition_id)
+            existing = await uow.task_definition_rw_repo.get(task_definition_id)
 
             # Merge updates - both entities are dataclasses
             # Get all fields from task_definition_data that are not None
@@ -55,7 +55,7 @@ class UpdateTaskDefinitionHandler:
             if hasattr(updated, "id"):
                 object.__setattr__(updated, "id", task_definition_id)
 
-            task_definition = await uow.task_definitions.put(updated)
+            task_definition = await uow.task_definition_rw_repo.put(updated)
             await uow.commit()
             return task_definition
 

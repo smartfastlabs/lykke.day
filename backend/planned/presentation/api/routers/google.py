@@ -10,8 +10,8 @@ from googleapiclient.discovery import build
 # This is a complex OAuth callback flow that creates multiple entities in a single transaction.
 # Consider creating a dedicated OAuthCallbackCommand to handle this flow properly.
 from planned.application.repositories import (
-    AuthTokenRepositoryProtocol,
-    CalendarRepositoryProtocol,
+    AuthTokenRepositoryReadWriteProtocol,
+    CalendarRepositoryReadWriteProtocol,
 )
 from planned.core.constants import OAUTH_STATE_EXPIRY
 from planned.domain.entities import CalendarEntity, UserEntity
@@ -83,9 +83,11 @@ async def google_login_callback(
     code: str,
     user: Annotated[UserEntity, Depends(get_current_user)],
     auth_token_repo: Annotated[
-        AuthTokenRepositoryProtocol, Depends(get_auth_token_repo)
+        AuthTokenRepositoryReadWriteProtocol, Depends(get_auth_token_repo)
     ],
-    calendar_repo: Annotated[CalendarRepositoryProtocol, Depends(get_calendar_repo)],
+    calendar_repo: Annotated[
+        CalendarRepositoryReadWriteProtocol, Depends(get_calendar_repo)
+    ],
 ) -> RedirectResponse:
     if not code or not verify_state(state, "login"):
         raise HTTPException(

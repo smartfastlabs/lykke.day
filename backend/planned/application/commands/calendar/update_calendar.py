@@ -32,7 +32,7 @@ class UpdateCalendarHandler:
         """
         async with self._uow_factory.create(user_id) as uow:
             # Get existing calendar
-            existing = await uow.calendars.get(calendar_id)
+            existing = await uow.calendar_rw_repo.get(calendar_id)
 
             # Merge updates - both entities are dataclasses
             # Get all fields from calendar_data that are not None
@@ -52,7 +52,7 @@ class UpdateCalendarHandler:
             if hasattr(updated, "id"):
                 object.__setattr__(updated, "id", calendar_id)
 
-            calendar = await uow.calendars.put(updated)
+            calendar = await uow.calendar_rw_repo.put(updated)
             await uow.commit()
             return calendar
 

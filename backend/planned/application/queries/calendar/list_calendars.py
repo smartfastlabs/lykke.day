@@ -32,7 +32,7 @@ class ListCalendarsHandler:
             List of calendars or PagedQueryResponse
         """
         async with self._uow_factory.create(user_id) as uow:
-            items = await uow.calendars.all()
+            items = await uow.calendar_ro_repo.all()
 
             if not paginate:
                 return items

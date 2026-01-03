@@ -35,9 +35,9 @@ class ListTasksHandler:
         """
         async with self._uow_factory.create(user_id) as uow:
             if search_query is not None:
-                items = await uow.tasks.search_query(search_query)
+                items = await uow.task_ro_repo.search_query(search_query)
             else:
-                items = await uow.tasks.all()
+                items = await uow.task_ro_repo.all()
 
             if not paginate:
                 return items

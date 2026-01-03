@@ -24,7 +24,7 @@ class DeleteTaskDefinitionHandler:
             NotFoundError: If task definition not found
         """
         async with self._uow_factory.create(user_id) as uow:
-            task_definition = await uow.task_definitions.get(task_definition_id)
-            await uow.task_definitions.delete(task_definition)
+            task_definition = await uow.task_definition_rw_repo.get(task_definition_id)
+            await uow.task_definition_rw_repo.delete(task_definition)
             await uow.commit()
 

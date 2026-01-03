@@ -26,5 +26,5 @@ class GetCalendarHandler:
             NotFoundError: If calendar not found
         """
         async with self._uow_factory.create(user_id) as uow:
-            return await uow.calendars.get(calendar_id)
+            return await uow.calendar_ro_repo.get(calendar_id)
 

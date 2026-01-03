@@ -28,29 +28,29 @@ class UnscheduleDayHandler:
         """
         async with self._uow_factory.create(user_id) as uow:
             # Get all tasks for the date, filter for routine tasks, then delete them
-            tasks = await uow.tasks.search_query(value_objects.DateQuery(date=date))
+            tasks = await uow.task_rw_repo.search_query(value_objects.DateQuery(date=date))
             routine_tasks = [t for t in tasks if t.routine_id is not None]
             if routine_tasks:
                 await asyncio.gather(
-                    *[uow.tasks.delete(task) for task in routine_tasks]
+                    *[uow.task_rw_repo.delete(task) for task in routine_tasks]
                 )
 
             # Get or create the day
             day_id = DayEntity.id_from_date_and_user(date, user_id)
             try:
-                day = await uow.days.get(day_id)
+                day = await uow.day_rw_repo.get(day_id)
             except NotFoundError:
                 # Day doesn't exist, create it
-                user = await uow.users.get(user_id)
+                user = await uow.user_rw_repo.get(user_id)
                 template_slug = user.settings.template_defaults[date.weekday()]
-                template = await uow.day_templates.get_by_slug(template_slug)
+                template = await uow.day_template_rw_repo.get_by_slug(template_slug)
                 day = DayEntity.create_for_date(
                     date, user_id=user_id, template=template
                 )
 
             # Unschedule the day using domain method
             day.unschedule()
-            await uow.days.put(day)
+            await uow.day_rw_repo.put(day)
             await uow.commit()
             return day
 

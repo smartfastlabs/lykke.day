@@ -24,5 +24,5 @@ class ListPushSubscriptionsHandler:
             List of push subscription entities
         """
         async with self._uow_factory.create(user_id) as uow:
-            return await uow.push_subscriptions.all()
+            return await uow.push_subscription_ro_repo.all()
 

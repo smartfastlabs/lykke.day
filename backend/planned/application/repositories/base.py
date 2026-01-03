@@ -4,6 +4,12 @@ from typing import Protocol, TypeVar
 from uuid import UUID
 
 T = TypeVar("T")
+T_co = TypeVar(
+    "T_co", covariant=True
+)  # Covariant type variable for read-only protocols
+
+
+# Read-Only Base Protocols
 
 
 class SimpleReadRepositoryProtocol(Protocol[T]):
@@ -16,6 +22,56 @@ class SimpleReadRepositoryProtocol(Protocol[T]):
     async def all(self) -> list[T]:
         """Get all objects."""
         ...
+
+
+class ReadOnlyCrudRepositoryProtocol(Protocol[T]):
+    """Base protocol for read-only CRUD repositories (get, all)."""
+
+    async def get(self, key: UUID) -> T:
+        """Get an object by key."""
+        ...
+
+    async def all(self) -> list[T]:
+        """Get all objects."""
+        ...
+
+
+class ReadOnlyBasicCrudRepositoryProtocol(Protocol[T_co]):
+    """Base protocol for read-only basic CRUD repositories (get only)."""
+
+    async def get(self, key: UUID) -> T_co:
+        """Get an object by key."""
+        ...
+
+
+class ReadOnlyDateScopedRepositoryProtocol(Protocol[T]):
+    """Base protocol for read-only date-scoped repositories (get, all, search_query).
+
+    Note: Date filtering should be done using query objects with date fields.
+    """
+
+    async def get(self, key: UUID) -> T:
+        """Get an object by key."""
+        ...
+
+    async def all(self) -> list[T]:
+        """Get all objects."""
+        ...
+
+    async def search_query(self, query: object) -> list[T]:
+        """Search for objects based on a query object."""
+        ...
+
+
+class ReadOnlySimpleDateScopedRepositoryProtocol(Protocol[T_co]):
+    """Base protocol for read-only simple date-scoped repositories (get only)."""
+
+    async def get(self, key: UUID) -> T_co:
+        """Get an object by key."""
+        ...
+
+
+# Read-Write Base Protocols
 
 
 class CrudRepositoryProtocol(Protocol[T]):

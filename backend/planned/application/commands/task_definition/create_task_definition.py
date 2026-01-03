@@ -25,6 +25,8 @@ class CreateTaskDefinitionHandler:
             The created task definition entity
         """
         async with self._uow_factory.create(user_id) as uow:
-            created_task_definition = await uow.task_definitions.put(task_definition)
+            created_task_definition = await uow.task_definition_rw_repo.put(
+                task_definition
+            )
             await uow.commit()
             return created_task_definition

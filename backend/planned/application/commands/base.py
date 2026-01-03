@@ -35,7 +35,7 @@ class CommandHandler(ABC, Generic[CommandT, ResultT]):
                 async with self.uow_factory.create(cmd.user_id) as uow:
                     day = await self._create_day(uow, cmd)
                     day.schedule(template)
-                    await uow.days.put(day)
+                    await uow.day_rw_repo.put(day)
                     await uow.commit()
                     return day_context
     """

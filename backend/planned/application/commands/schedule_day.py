@@ -32,7 +32,7 @@ class ScheduleDayHandler:
         """
         async with self._uow_factory.create(user_id) as uow:
             # Delete existing tasks for this date
-            await uow.tasks.delete_many(value_objects.DateQuery(date=date))
+            await uow.task_rw_repo.delete_many(value_objects.DateQuery(date=date))
 
             # Get preview of what the day would look like
             preview_result = await self._preview_handler.preview_day(
@@ -44,7 +44,7 @@ class ScheduleDayHandler:
                 raise ValueError("Day template is required to schedule")
 
             # Re-fetch template to ensure it's in the current UoW context
-            template = await uow.day_templates.get(preview_result.day.template.id)
+            template = await uow.day_template_rw_repo.get(preview_result.day.template.id)
 
             # Create and schedule the day
             day = DayEntity.create_for_date(
@@ -59,8 +59,8 @@ class ScheduleDayHandler:
 
             # Save day and tasks
             await asyncio.gather(
-                uow.days.put(day),
-                *[uow.tasks.put(task) for task in tasks],
+                uow.day_rw_repo.put(day),
+                *[uow.task_rw_repo.put(task) for task in tasks],
             )
             await uow.commit()
 

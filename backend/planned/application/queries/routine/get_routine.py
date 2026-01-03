@@ -26,5 +26,5 @@ class GetRoutineHandler:
             NotFoundError: If routine not found
         """
         async with self._uow_factory.create(user_id) as uow:
-            return await uow.routines.get(routine_id)
+            return await uow.routine_ro_repo.get(routine_id)
 

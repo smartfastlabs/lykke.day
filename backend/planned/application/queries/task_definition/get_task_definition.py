@@ -28,5 +28,5 @@ class GetTaskDefinitionHandler:
             NotFoundError: If task definition not found
         """
         async with self._uow_factory.create(user_id) as uow:
-            return await uow.task_definitions.get(task_definition_id)
+            return await uow.task_definition_ro_repo.get(task_definition_id)
 

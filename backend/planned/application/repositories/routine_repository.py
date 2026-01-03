@@ -4,7 +4,12 @@ from planned.application.repositories.base import SimpleReadRepositoryProtocol
 from planned.domain.entities import RoutineEntity
 
 
-class RoutineRepositoryProtocol(SimpleReadRepositoryProtocol[RoutineEntity]):
-    """Protocol defining the interface for routine repositories."""
+class RoutineRepositoryReadOnlyProtocol(SimpleReadRepositoryProtocol[RoutineEntity]):
+    """Read-only protocol defining the interface for routine repositories."""
+    pass
+
+
+class RoutineRepositoryReadWriteProtocol(SimpleReadRepositoryProtocol[RoutineEntity]):
+    """Read-write protocol defining the interface for routine repositories."""
     pass
 

@@ -38,11 +38,11 @@ class PreviewTasksHandler:
         """Generate preview tasks from routines."""
         result: list[TaskEntity] = []
 
-        for routine in await uow.routines.all():
+        for routine in await uow.routine_ro_repo.all():
             logger.debug(f"Checking routine: {routine.name}")
             if RoutineService.is_routine_active(routine.routine_schedule, target_date):
                 for routine_task in routine.tasks:
-                    task_def = await uow.task_definitions.get(
+                    task_def = await uow.task_definition_ro_repo.get(
                         routine_task.task_definition_id,
                     )
                     task = TaskEntity(

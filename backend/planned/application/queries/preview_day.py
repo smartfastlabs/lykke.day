@@ -45,8 +45,8 @@ class PreviewDayHandler:
             # Load preview tasks and existing data in parallel
             tasks, calendar_entries, messages = await asyncio.gather(
                 self._preview_tasks_handler.preview_tasks(user_id, date),
-                uow.calendar_entries.search_query(value_objects.DateQuery(date=date)),
-                uow.messages.search_query(value_objects.DateQuery(date=date)),
+                uow.calendar_entry_ro_repo.search_query(value_objects.DateQuery(date=date)),
+                uow.message_ro_repo.search_query(value_objects.DateQuery(date=date)),
             )
 
             return value_objects.DayContext(
@@ -65,19 +65,19 @@ class PreviewDayHandler:
     ) -> DayTemplateEntity:
         """Get the template to use for the preview."""
         if template_id is not None:
-            return await uow.day_templates.get(template_id)
+            return await uow.day_template_ro_repo.get(template_id)
 
         # Try to get from existing day
         try:
             day_id = DayEntity.id_from_date_and_user(date, user_id)
-            existing_day = await uow.days.get(day_id)
+            existing_day = await uow.day_ro_repo.get(day_id)
             if existing_day.template:
                 return existing_day.template
         except NotFoundError:
             pass
 
         # Fall back to user's default template
-        user = await uow.users.get(user_id)
+        user = await uow.user_ro_repo.get(user_id)
         template_slug = user.settings.template_defaults[date.weekday()]
-        return await uow.day_templates.get_by_slug(template_slug)
+        return await uow.day_template_ro_repo.get_by_slug(template_slug)
 

@@ -4,29 +4,74 @@ These protocols define the interface that repositories must implement,
 allowing services to depend on abstractions rather than concrete implementations.
 """
 
-from .auth_token_repository import AuthTokenRepositoryProtocol
-from .calendar_entry_repository import CalendarEntryRepositoryProtocol
-from .calendar_repository import CalendarRepositoryProtocol
-from .day_repository import DayRepositoryProtocol
-from .day_template_repository import DayTemplateRepositoryProtocol
-from .message_repository import MessageRepositoryProtocol
-from .push_subscription_repository import PushSubscriptionRepositoryProtocol
-from .routine_repository import RoutineRepositoryProtocol
-from .task_definition_repository import TaskDefinitionRepositoryProtocol
-from .task_repository import TaskRepositoryProtocol
-from .user_repository import UserRepositoryProtocol
+from .auth_token_repository import (
+    AuthTokenRepositoryReadOnlyProtocol,
+    AuthTokenRepositoryReadWriteProtocol,
+)
+from .calendar_entry_repository import (
+    CalendarEntryRepositoryReadOnlyProtocol,
+    CalendarEntryRepositoryReadWriteProtocol,
+)
+from .calendar_repository import (
+    CalendarRepositoryReadOnlyProtocol,
+    CalendarRepositoryReadWriteProtocol,
+)
+from .day_repository import (
+    DayRepositoryReadOnlyProtocol,
+    DayRepositoryReadWriteProtocol,
+)
+from .day_template_repository import (
+    DayTemplateRepositoryReadOnlyProtocol,
+    DayTemplateRepositoryReadWriteProtocol,
+)
+from .message_repository import (
+    MessageRepositoryReadOnlyProtocol,
+    MessageRepositoryReadWriteProtocol,
+)
+from .push_subscription_repository import (
+    PushSubscriptionRepositoryReadOnlyProtocol,
+    PushSubscriptionRepositoryReadWriteProtocol,
+)
+from .routine_repository import (
+    RoutineRepositoryReadOnlyProtocol,
+    RoutineRepositoryReadWriteProtocol,
+)
+from .task_definition_repository import (
+    TaskDefinitionRepositoryReadOnlyProtocol,
+    TaskDefinitionRepositoryReadWriteProtocol,
+)
+from .task_repository import (
+    TaskRepositoryReadOnlyProtocol,
+    TaskRepositoryReadWriteProtocol,
+)
+from .user_repository import (
+    UserRepositoryReadOnlyProtocol,
+    UserRepositoryReadWriteProtocol,
+)
 
 __all__ = [
-    "AuthTokenRepositoryProtocol",
-    "CalendarEntryRepositoryProtocol",
-    "CalendarRepositoryProtocol",
-    "DayRepositoryProtocol",
-    "DayTemplateRepositoryProtocol",
-    "MessageRepositoryProtocol",
-    "PushSubscriptionRepositoryProtocol",
-    "RoutineRepositoryProtocol",
-    "TaskDefinitionRepositoryProtocol",
-    "TaskRepositoryProtocol",
-    "UserRepositoryProtocol",
+    # Read-only protocols
+    "AuthTokenRepositoryReadOnlyProtocol",
+    "CalendarEntryRepositoryReadOnlyProtocol",
+    "CalendarRepositoryReadOnlyProtocol",
+    "DayRepositoryReadOnlyProtocol",
+    "DayTemplateRepositoryReadOnlyProtocol",
+    "MessageRepositoryReadOnlyProtocol",
+    "PushSubscriptionRepositoryReadOnlyProtocol",
+    "RoutineRepositoryReadOnlyProtocol",
+    "TaskDefinitionRepositoryReadOnlyProtocol",
+    "TaskRepositoryReadOnlyProtocol",
+    "UserRepositoryReadOnlyProtocol",
+    # Read-write protocols
+    "AuthTokenRepositoryReadWriteProtocol",
+    "CalendarEntryRepositoryReadWriteProtocol",
+    "CalendarRepositoryReadWriteProtocol",
+    "DayRepositoryReadWriteProtocol",
+    "DayTemplateRepositoryReadWriteProtocol",
+    "MessageRepositoryReadWriteProtocol",
+    "PushSubscriptionRepositoryReadWriteProtocol",
+    "RoutineRepositoryReadWriteProtocol",
+    "TaskDefinitionRepositoryReadWriteProtocol",
+    "TaskRepositoryReadWriteProtocol",
+    "UserRepositoryReadWriteProtocol",
 ]
-

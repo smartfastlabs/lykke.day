@@ -8,17 +8,28 @@ from uuid import UUID
 
 from planned.application.events import send_domain_events
 from planned.application.repositories import (
-    AuthTokenRepositoryProtocol,
-    CalendarEntryRepositoryProtocol,
-    CalendarRepositoryProtocol,
-    DayRepositoryProtocol,
-    DayTemplateRepositoryProtocol,
-    MessageRepositoryProtocol,
-    PushSubscriptionRepositoryProtocol,
-    RoutineRepositoryProtocol,
-    TaskDefinitionRepositoryProtocol,
-    TaskRepositoryProtocol,
-    UserRepositoryProtocol,
+    AuthTokenRepositoryReadOnlyProtocol,
+    AuthTokenRepositoryReadWriteProtocol,
+    CalendarEntryRepositoryReadOnlyProtocol,
+    CalendarEntryRepositoryReadWriteProtocol,
+    CalendarRepositoryReadOnlyProtocol,
+    CalendarRepositoryReadWriteProtocol,
+    DayRepositoryReadOnlyProtocol,
+    DayRepositoryReadWriteProtocol,
+    DayTemplateRepositoryReadOnlyProtocol,
+    DayTemplateRepositoryReadWriteProtocol,
+    MessageRepositoryReadOnlyProtocol,
+    MessageRepositoryReadWriteProtocol,
+    PushSubscriptionRepositoryReadOnlyProtocol,
+    PushSubscriptionRepositoryReadWriteProtocol,
+    RoutineRepositoryReadOnlyProtocol,
+    RoutineRepositoryReadWriteProtocol,
+    TaskDefinitionRepositoryReadOnlyProtocol,
+    TaskDefinitionRepositoryReadWriteProtocol,
+    TaskRepositoryReadOnlyProtocol,
+    TaskRepositoryReadWriteProtocol,
+    UserRepositoryReadOnlyProtocol,
+    UserRepositoryReadWriteProtocol,
 )
 from planned.application.unit_of_work import UnitOfWorkProtocol
 from planned.domain.events.base import DomainEvent
@@ -54,18 +65,31 @@ class SqlAlchemyUnitOfWork:
     scoped to that transaction. All repositories share the same connection.
     """
 
-    # Repository type annotations for protocol compatibility
-    auth_tokens: AuthTokenRepositoryProtocol
-    calendar_entries: CalendarEntryRepositoryProtocol
-    calendars: CalendarRepositoryProtocol
-    days: DayRepositoryProtocol
-    day_templates: DayTemplateRepositoryProtocol
-    messages: MessageRepositoryProtocol
-    push_subscriptions: PushSubscriptionRepositoryProtocol
-    routines: RoutineRepositoryProtocol
-    task_definitions: TaskDefinitionRepositoryProtocol
-    tasks: TaskRepositoryProtocol
-    users: UserRepositoryProtocol
+    # Read-only repository type annotations
+    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
+    push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    user_ro_repo: UserRepositoryReadOnlyProtocol
+
+    # Read-write repository type annotations
+    auth_token_rw_repo: AuthTokenRepositoryReadWriteProtocol
+    calendar_entry_rw_repo: CalendarEntryRepositoryReadWriteProtocol
+    calendar_rw_repo: CalendarRepositoryReadWriteProtocol
+    day_rw_repo: DayRepositoryReadWriteProtocol
+    day_template_rw_repo: DayTemplateRepositoryReadWriteProtocol
+    message_rw_repo: MessageRepositoryReadWriteProtocol
+    push_subscription_rw_repo: PushSubscriptionRepositoryReadWriteProtocol
+    routine_rw_repo: RoutineRepositoryReadWriteProtocol
+    task_definition_rw_repo: TaskDefinitionRepositoryReadWriteProtocol
+    task_rw_repo: TaskRepositoryReadWriteProtocol
+    user_rw_repo: UserRepositoryReadWriteProtocol
 
     def __init__(self, user_id: UUID) -> None:
         """Initialize the unit of work for a specific user.
@@ -103,39 +127,92 @@ class SqlAlchemyUnitOfWork:
 
         # Initialize all repositories with user scoping (where applicable)
         # UserRepository and AuthTokenRepository are not user-scoped
-        # Use cast to satisfy type checker - concrete repos implement protocols
-        self.users = cast("UserRepositoryProtocol", UserRepository())
-        self.auth_tokens = cast("AuthTokenRepositoryProtocol", AuthTokenRepository())
+        # Use cast to satisfy type checker - concrete repos implement both protocols
+        # We assign the same instance to both ro and rw since they implement both
+        user_repo = cast("UserRepositoryReadWriteProtocol", UserRepository())
+        self.user_ro_repo = cast("UserRepositoryReadOnlyProtocol", user_repo)
+        self.user_rw_repo = user_repo
+
+        auth_token_repo = cast(
+            "AuthTokenRepositoryReadWriteProtocol", AuthTokenRepository()
+        )
+        self.auth_token_ro_repo = cast(
+            "AuthTokenRepositoryReadOnlyProtocol", auth_token_repo
+        )
+        self.auth_token_rw_repo = auth_token_repo
 
         # All other repositories are user-scoped
-        self.calendars = cast(
-            "CalendarRepositoryProtocol", CalendarRepository(user_id=self.user_id)
+        calendar_repo = cast(
+            "CalendarRepositoryReadWriteProtocol",
+            CalendarRepository(user_id=self.user_id),
         )
-        self.days = cast("DayRepositoryProtocol", DayRepository(user_id=self.user_id))
-        self.day_templates = cast(
-            "DayTemplateRepositoryProtocol", DayTemplateRepository(user_id=self.user_id)
+        self.calendar_ro_repo = cast(
+            "CalendarRepositoryReadOnlyProtocol", calendar_repo
         )
-        self.calendar_entries = cast(
-            "CalendarEntryRepositoryProtocol",
+        self.calendar_rw_repo = calendar_repo
+
+        day_repo = cast(
+            "DayRepositoryReadWriteProtocol", DayRepository(user_id=self.user_id)
+        )
+        self.day_ro_repo = cast("DayRepositoryReadOnlyProtocol", day_repo)
+        self.day_rw_repo = day_repo
+
+        day_template_repo = cast(
+            "DayTemplateRepositoryReadWriteProtocol",
+            DayTemplateRepository(user_id=self.user_id),
+        )
+        self.day_template_ro_repo = cast(
+            "DayTemplateRepositoryReadOnlyProtocol", day_template_repo
+        )
+        self.day_template_rw_repo = day_template_repo
+
+        calendar_entry_repo = cast(
+            "CalendarEntryRepositoryReadWriteProtocol",
             CalendarEntryRepository(user_id=self.user_id),
         )
-        self.messages = cast(
-            "MessageRepositoryProtocol", MessageRepository(user_id=self.user_id)
+        self.calendar_entry_ro_repo = cast(
+            "CalendarEntryRepositoryReadOnlyProtocol", calendar_entry_repo
         )
-        self.push_subscriptions = cast(
-            "PushSubscriptionRepositoryProtocol",
+        self.calendar_entry_rw_repo = calendar_entry_repo
+
+        message_repo = cast(
+            "MessageRepositoryReadWriteProtocol",
+            MessageRepository(user_id=self.user_id),
+        )
+        self.message_ro_repo = cast("MessageRepositoryReadOnlyProtocol", message_repo)
+        self.message_rw_repo = message_repo
+
+        push_subscription_repo = cast(
+            "PushSubscriptionRepositoryReadWriteProtocol",
             PushSubscriptionRepository(user_id=self.user_id),
         )
-        self.routines = cast(
-            "RoutineRepositoryProtocol", RoutineRepository(user_id=self.user_id)
+        self.push_subscription_ro_repo = cast(
+            "PushSubscriptionRepositoryReadOnlyProtocol", push_subscription_repo
         )
-        self.task_definitions = cast(
-            "TaskDefinitionRepositoryProtocol",
+        self.push_subscription_rw_repo = push_subscription_repo
+
+        routine_repo = cast(
+            "RoutineRepositoryReadWriteProtocol",
+            RoutineRepository(user_id=self.user_id),
+        )
+        self.routine_ro_repo = cast("RoutineRepositoryReadOnlyProtocol", routine_repo)
+        self.routine_rw_repo = routine_repo
+
+        task_definition_repo = cast(
+            "TaskDefinitionRepositoryReadWriteProtocol",
             TaskDefinitionRepository(user_id=self.user_id),
         )
-        self.tasks = cast(
-            "TaskRepositoryProtocol", TaskRepository(user_id=self.user_id)
+        self.task_definition_ro_repo = cast(
+            "TaskDefinitionRepositoryReadOnlyProtocol", task_definition_repo
         )
+        self.task_definition_rw_repo = task_definition_repo
+
+        task_repo = cast(
+            "TaskRepositoryReadWriteProtocol",
+            TaskRepository(user_id=self.user_id),
+        )
+        self.task_ro_repo = cast("TaskRepositoryReadOnlyProtocol", task_repo)
+        self.task_rw_repo = task_repo
 
         return self
 
@@ -216,18 +293,19 @@ class SqlAlchemyUnitOfWork:
 
         # Collect events from all repositories that track aggregates
         # Each repository tracks aggregates saved via put() that had pending events
+        # Use read-write repos since they're the ones that handle writes
         repositories = [
-            self.days,
-            self.day_templates,
-            self.calendar_entries,
-            self.messages,
-            self.tasks,
-            self.routines,
-            self.calendars,
-            self.users,
-            self.auth_tokens,
-            self.task_definitions,
-            self.push_subscriptions,
+            self.day_rw_repo,
+            self.day_template_rw_repo,
+            self.calendar_entry_rw_repo,
+            self.message_rw_repo,
+            self.task_rw_repo,
+            self.routine_rw_repo,
+            self.calendar_rw_repo,
+            self.user_rw_repo,
+            self.auth_token_rw_repo,
+            self.task_definition_rw_repo,
+            self.push_subscription_rw_repo,
         ]
 
         for repo in repositories:
