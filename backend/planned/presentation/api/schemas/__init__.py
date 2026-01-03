@@ -2,6 +2,7 @@
 
 from .action import Action
 from .alarm import Alarm
+from .calendar import Calendar
 from .calendar_entry import CalendarEntry
 from .day import Day
 from .day_context import DayContext
@@ -13,6 +14,7 @@ from .task import Task, TaskSchedule
 from .task_definition import TaskDefinition
 
 # Rebuild models with forward references after all classes are defined
+Calendar.model_rebuild()
 CalendarEntry.model_rebuild()
 Day.model_rebuild()
 DayTemplate.model_rebuild()
@@ -22,6 +24,7 @@ DayContext.model_rebuild()
 __all__ = [
     "Action",
     "Alarm",
+    "Calendar",
     "CalendarEntry",
     "Day",
     "DayContext",

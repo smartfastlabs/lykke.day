@@ -23,7 +23,7 @@ class BaseSchema(BaseModel):
 class BaseEntitySchema(BaseSchema):
     """Base schema for entities with ID."""
 
-    id: UUID
+    id: UUID | None = None
 
 
 class BaseDateSchema(BaseEntitySchema):

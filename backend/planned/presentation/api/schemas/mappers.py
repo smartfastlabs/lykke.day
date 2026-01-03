@@ -157,3 +157,8 @@ def map_push_subscription_to_schema(
 def map_routine_to_schema(routine: entities.Routine) -> schemas.Routine:
     """Convert Routine entity to Routine schema."""
     return schemas.Routine(**asdict(routine))
+
+
+def map_calendar_to_schema(calendar: entities.Calendar) -> schemas.Calendar:
+    """Convert Calendar entity to Calendar schema."""
+    return schemas.Calendar(**asdict(calendar))
