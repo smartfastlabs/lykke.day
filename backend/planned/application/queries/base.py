@@ -24,12 +24,16 @@ class QueryHandler(ABC, Generic[QueryT, ResultT]):
 
     Each handler processes exactly one type of query and returns data.
     Query handlers must be side-effect free - they only read data.
+    Query handlers receive read-only repositories directly and do not have
+    access to write operations or unit of work.
 
     Example:
-        class GetDayContextHandler(QueryHandler[GetDayContextQuery, DayContext]):
-            async def handle(self, query: GetDayContextQuery) -> DayContext:
-                async with self.uow_factory.create(query.user_id) as uow:
-                    return await self._load_context(uow, query.date)
+        class GetDayTemplateHandler:
+            def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
+                self._ro_repos = ro_repos
+
+            async def run(self, user_id: UUID, template_id: UUID) -> DayTemplateEntity:
+                return await self._ro_repos.day_template_ro_repo.get(template_id)
     """
 
     @abstractmethod

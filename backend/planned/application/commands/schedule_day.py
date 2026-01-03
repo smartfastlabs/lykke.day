@@ -5,7 +5,10 @@ from datetime import date
 from uuid import UUID
 
 from planned.application.queries.preview_day import PreviewDayHandler
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.unit_of_work import (
+    ReadOnlyRepositoryFactory,
+    UnitOfWorkFactory,
+)
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity
 
@@ -13,9 +16,18 @@ from planned.domain.entities import DayEntity
 class ScheduleDayHandler:
     """Schedules a day with tasks from routines."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
+    def __init__(
+        self,
+        uow_factory: UnitOfWorkFactory,
+        ro_repo_factory: ReadOnlyRepositoryFactory,
+    ) -> None:
         self._uow_factory = uow_factory
-        self._preview_handler = PreviewDayHandler(uow_factory)
+        self._ro_repo_factory = ro_repo_factory
+
+    def _get_preview_handler(self, user_id: UUID) -> PreviewDayHandler:
+        """Create a PreviewDayHandler with read-only repositories for the user."""
+        ro_repos = self._ro_repo_factory.create(user_id)
+        return PreviewDayHandler(ro_repos)
 
     async def schedule_day(
         self, user_id: UUID, date: date, template_id: UUID | None = None
@@ -35,7 +47,8 @@ class ScheduleDayHandler:
             await uow.task_rw_repo.delete_many(value_objects.DateQuery(date=date))
 
             # Get preview of what the day would look like
-            preview_result = await self._preview_handler.preview_day(
+            preview_handler = self._get_preview_handler(user_id)
+            preview_result = await preview_handler.preview_day(
                 user_id, date, template_id
             )
 

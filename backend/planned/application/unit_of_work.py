@@ -122,3 +122,44 @@ class UnitOfWorkFactory(Protocol):
             A new UnitOfWork instance (not yet entered).
         """
         ...
+
+
+class ReadOnlyRepositories(Protocol):
+    """Protocol for providing read-only repositories.
+
+    This is used by query handlers to access read-only repositories
+    without the ability to perform writes. Each repository manages
+    its own database connections for read operations.
+    """
+
+    # Read-only repository properties
+    auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
+    push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    user_ro_repo: UserRepositoryReadOnlyProtocol
+
+
+class ReadOnlyRepositoryFactory(Protocol):
+    """Factory protocol for creating ReadOnlyRepositories instances.
+
+    This allows query handlers to access read-only repositories without
+    the ability to perform writes.
+    """
+
+    def create(self, user_id: UUID) -> ReadOnlyRepositories:
+        """Create read-only repositories for the given user.
+
+        Args:
+            user_id: The UUID of the user to scope the repositories to.
+
+        Returns:
+            Read-only repositories scoped to the user.
+        """
+        ...

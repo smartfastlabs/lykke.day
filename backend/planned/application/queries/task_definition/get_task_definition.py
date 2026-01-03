@@ -2,15 +2,15 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.unit_of_work import ReadOnlyRepositories
 from planned.domain.entities import TaskDefinitionEntity
 
 
 class GetTaskDefinitionHandler:
     """Retrieves a single task definition by ID."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
-        self._uow_factory = uow_factory
+    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
+        self._ro_repos = ro_repos
 
     async def run(
         self, user_id: UUID, task_definition_id: UUID
@@ -27,6 +27,5 @@ class GetTaskDefinitionHandler:
         Raises:
             NotFoundError: If task definition not found
         """
-        async with self._uow_factory.create(user_id) as uow:
-            return await uow.task_definition_ro_repo.get(task_definition_id)
+        return await self._ro_repos.task_definition_ro_repo.get(task_definition_id)
 

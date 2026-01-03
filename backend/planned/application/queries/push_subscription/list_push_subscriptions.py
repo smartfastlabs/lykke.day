@@ -2,15 +2,15 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.unit_of_work import ReadOnlyRepositories
 from planned.infrastructure import data_objects
 
 
 class ListPushSubscriptionsHandler:
     """Lists push subscriptions."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
-        self._uow_factory = uow_factory
+    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
+        self._ro_repos = ro_repos
 
     async def run(
         self, user_id: UUID
@@ -23,6 +23,5 @@ class ListPushSubscriptionsHandler:
         Returns:
             List of push subscription entities
         """
-        async with self._uow_factory.create(user_id) as uow:
-            return await uow.push_subscription_ro_repo.all()
+        return await self._ro_repos.push_subscription_ro_repo.all()
 

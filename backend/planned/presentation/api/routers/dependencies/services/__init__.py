@@ -14,8 +14,15 @@ from planned.application.commands import (
     UpdateDayHandler,
 )
 from planned.application.queries import GetDayContextHandler, PreviewDayHandler
-from planned.application.unit_of_work import UnitOfWorkFactory
-from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
+from planned.application.unit_of_work import (
+    ReadOnlyRepositoryFactory,
+    UnitOfWorkFactory,
+)
+from planned.domain.entities import UserEntity
+from planned.infrastructure.unit_of_work import (
+    SqlAlchemyReadOnlyRepositoryFactory,
+    SqlAlchemyUnitOfWorkFactory,
+)
 
 from ..user import get_current_user
 
@@ -25,27 +32,43 @@ def get_unit_of_work_factory() -> UnitOfWorkFactory:
     return SqlAlchemyUnitOfWorkFactory()
 
 
+def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
+    """Get a ReadOnlyRepositoryFactory instance."""
+    return SqlAlchemyReadOnlyRepositoryFactory()
+
+
 # Query Handler Dependencies
 def get_get_day_context_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
 ) -> GetDayContextHandler:
     """Get a GetDayContextHandler instance."""
-    return GetDayContextHandler(uow_factory)
+    ro_repos = ro_repo_factory.create(user.id)
+    return GetDayContextHandler(ro_repos)
 
 
 def get_preview_day_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
 ) -> PreviewDayHandler:
     """Get a PreviewDayHandler instance."""
-    return PreviewDayHandler(uow_factory)
+    ro_repos = ro_repo_factory.create(user.id)
+    return PreviewDayHandler(ro_repos)
 
 
 # Command Handler Dependencies
 def get_schedule_day_handler(
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
 ) -> ScheduleDayHandler:
     """Get a ScheduleDayHandler instance."""
-    return ScheduleDayHandler(uow_factory)
+    return ScheduleDayHandler(uow_factory, ro_repo_factory)
 
 
 def get_update_day_handler(

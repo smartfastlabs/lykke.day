@@ -7,21 +7,31 @@ from planned.application.queries.calendar import (
     GetCalendarHandler,
     ListCalendarsHandler,
 )
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.unit_of_work import ReadOnlyRepositoryFactory
+from planned.domain.entities import UserEntity
 
-from ..services import get_unit_of_work_factory
+from ..services import get_read_only_repository_factory
+from ..user import get_current_user
 
 
 def get_get_calendar_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
 ) -> GetCalendarHandler:
     """Get a GetCalendarHandler instance."""
-    return GetCalendarHandler(uow_factory)
+    ro_repos = ro_repo_factory.create(user.id)
+    return GetCalendarHandler(ro_repos)
 
 
 def get_list_calendars_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
 ) -> ListCalendarsHandler:
     """Get a ListCalendarsHandler instance."""
-    return ListCalendarsHandler(uow_factory)
+    ro_repos = ro_repo_factory.create(user.id)
+    return ListCalendarsHandler(ro_repos)
 

@@ -31,7 +31,11 @@ from planned.application.repositories import (
     UserRepositoryReadOnlyProtocol,
     UserRepositoryReadWriteProtocol,
 )
-from planned.application.unit_of_work import UnitOfWorkProtocol
+from planned.application.unit_of_work import (
+    ReadOnlyRepositories,
+    ReadOnlyRepositoryFactory,
+    UnitOfWorkProtocol,
+)
 from planned.domain.events.base import DomainEvent
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.database.transaction import (
@@ -355,3 +359,97 @@ class SqlAlchemyUnitOfWorkFactory:
             A new UnitOfWork instance (not yet entered).
         """
         return SqlAlchemyUnitOfWork(user_id=user_id)
+
+
+class SqlAlchemyReadOnlyRepositories:
+    """SQLAlchemy implementation of ReadOnlyRepositories.
+
+    Provides read-only access to repositories without write capabilities.
+    Each repository manages its own database connections for read operations.
+    """
+
+    def __init__(self, user_id: UUID) -> None:
+        """Initialize read-only repositories for a specific user.
+
+        Args:
+            user_id: The UUID of the user to scope repositories to.
+        """
+        self.user_id = user_id
+
+        # Initialize all read-only repositories with user scoping (where applicable)
+        # UserRepository and AuthTokenRepository are not user-scoped
+        user_repo = cast("UserRepositoryReadOnlyProtocol", UserRepository())
+        self.user_ro_repo = user_repo
+
+        auth_token_repo = cast(
+            "AuthTokenRepositoryReadOnlyProtocol", AuthTokenRepository()
+        )
+        self.auth_token_ro_repo = auth_token_repo
+
+        # All other repositories are user-scoped
+        calendar_repo = cast(
+            "CalendarRepositoryReadOnlyProtocol",
+            CalendarRepository(user_id=self.user_id),
+        )
+        self.calendar_ro_repo = calendar_repo
+
+        day_repo = cast(
+            "DayRepositoryReadOnlyProtocol", DayRepository(user_id=self.user_id)
+        )
+        self.day_ro_repo = day_repo
+
+        day_template_repo = cast(
+            "DayTemplateRepositoryReadOnlyProtocol",
+            DayTemplateRepository(user_id=self.user_id),
+        )
+        self.day_template_ro_repo = day_template_repo
+
+        calendar_entry_repo = cast(
+            "CalendarEntryRepositoryReadOnlyProtocol",
+            CalendarEntryRepository(user_id=self.user_id),
+        )
+        self.calendar_entry_ro_repo = calendar_entry_repo
+
+        message_repo = cast(
+            "MessageRepositoryReadOnlyProtocol",
+            MessageRepository(user_id=self.user_id),
+        )
+        self.message_ro_repo = message_repo
+
+        push_subscription_repo = cast(
+            "PushSubscriptionRepositoryReadOnlyProtocol",
+            PushSubscriptionRepository(user_id=self.user_id),
+        )
+        self.push_subscription_ro_repo = push_subscription_repo
+
+        routine_repo = cast(
+            "RoutineRepositoryReadOnlyProtocol",
+            RoutineRepository(user_id=self.user_id),
+        )
+        self.routine_ro_repo = routine_repo
+
+        task_definition_repo = cast(
+            "TaskDefinitionRepositoryReadOnlyProtocol",
+            TaskDefinitionRepository(user_id=self.user_id),
+        )
+        self.task_definition_ro_repo = task_definition_repo
+
+        task_repo = cast(
+            "TaskRepositoryReadOnlyProtocol", TaskRepository(user_id=self.user_id)
+        )
+        self.task_ro_repo = task_repo
+
+
+class SqlAlchemyReadOnlyRepositoryFactory:
+    """Factory for creating SqlAlchemyReadOnlyRepositories instances."""
+
+    def create(self, user_id: UUID) -> ReadOnlyRepositories:
+        """Create read-only repositories for the given user.
+
+        Args:
+            user_id: The UUID of the user to scope the repositories to.
+
+        Returns:
+            Read-only repositories scoped to the user.
+        """
+        return SqlAlchemyReadOnlyRepositories(user_id=user_id)

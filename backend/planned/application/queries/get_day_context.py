@@ -4,7 +4,7 @@ import asyncio
 from datetime import date
 from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory, UnitOfWorkProtocol
+from planned.application.unit_of_work import ReadOnlyRepositories
 from planned.core.constants import DEFAULT_END_OF_DAY_TIME
 from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
@@ -14,8 +14,8 @@ from planned.domain.entities import CalendarEntryEntity, DayEntity, MessageEntit
 class GetDayContextHandler:
     """Gets the complete context for a day."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
-        self._uow_factory = uow_factory
+    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
+        self._ro_repos = ro_repos
 
     async def get_day_context(
         self, user: UserEntity, date: date
@@ -29,30 +29,28 @@ class GetDayContextHandler:
         Returns:
             A DayContext with all related data
         """
-        async with self._uow_factory.create(user.id) as uow:
-            tasks: list[TaskEntity] = []
-            calendar_entries: list[CalendarEntryEntity] = []
-            messages: list[MessageEntity] = []
-            day: DayEntity
+        tasks: list[TaskEntity] = []
+        calendar_entries: list[CalendarEntryEntity] = []
+        messages: list[MessageEntity] = []
+        day: DayEntity
 
-            try:
-                # Try to load existing day and all related data
-                day_id = DayEntity.id_from_date_and_user(date, user.id)
-                tasks, calendar_entries, messages, day = await asyncio.gather(
-                    uow.task_ro_repo.search_query(value_objects.DateQuery(date=date)),
-                    uow.calendar_entry_ro_repo.search_query(value_objects.DateQuery(date=date)),
-                    uow.message_ro_repo.search_query(value_objects.DateQuery(date=date)),
-                    uow.day_ro_repo.get(day_id),
-                )
-            except NotFoundError:
-                # Day doesn't exist, create a preview day using default template
-                day = await self._create_preview_day(uow, date, user.id, user)
+        try:
+            # Try to load existing day and all related data
+            day_id = DayEntity.id_from_date_and_user(date, user.id)
+            tasks, calendar_entries, messages, day = await asyncio.gather(
+                self._ro_repos.task_ro_repo.search_query(value_objects.DateQuery(date=date)),
+                self._ro_repos.calendar_entry_ro_repo.search_query(value_objects.DateQuery(date=date)),
+                self._ro_repos.message_ro_repo.search_query(value_objects.DateQuery(date=date)),
+                self._ro_repos.day_ro_repo.get(day_id),
+            )
+        except NotFoundError:
+            # Day doesn't exist, create a preview day using default template
+            day = await self._create_preview_day(date, user.id, user)
 
-            return self._build_context(day, tasks, calendar_entries, messages)
+        return self._build_context(day, tasks, calendar_entries, messages)
 
     async def _create_preview_day(
         self,
-        uow: UnitOfWorkProtocol,
         date: date,
         user_id: UUID,
         user: UserEntity,
@@ -60,7 +58,6 @@ class GetDayContextHandler:
         """Create a preview day when no existing day is found.
 
         Args:
-            uow: The unit of work
             date: The date for the preview day
             user_id: The user ID for the preview day
             user: The user entity
@@ -69,7 +66,7 @@ class GetDayContextHandler:
             A Day entity (not saved to database)
         """
         template_slug = user.settings.template_defaults[date.weekday()]
-        template = await uow.day_template_ro_repo.get_by_slug(template_slug)
+        template = await self._ro_repos.day_template_ro_repo.get_by_slug(template_slug)
         return DayEntity.create_for_date(
             date,
             user_id=user_id,

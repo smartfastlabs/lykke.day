@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.unit_of_work import ReadOnlyRepositories
 from planned.domain import value_objects
 from planned.domain.entities import TaskDefinitionEntity
 
@@ -10,8 +10,8 @@ from planned.domain.entities import TaskDefinitionEntity
 class ListTaskDefinitionsHandler:
     """Lists task definitions with optional pagination."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
-        self._uow_factory = uow_factory
+    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
+        self._ro_repos = ro_repos
 
     async def run(
         self,
@@ -31,24 +31,23 @@ class ListTaskDefinitionsHandler:
         Returns:
             List of task definitions or PagedQueryResponse
         """
-        async with self._uow_factory.create(user_id) as uow:
-            items = await uow.task_definition_ro_repo.all()
+        items = await self._ro_repos.task_definition_ro_repo.all()
 
-            if not paginate:
-                return items
+        if not paginate:
+            return items
 
-            # Apply pagination
-            total = len(items)
-            start = offset
-            end = start + limit
-            paginated_items = items[start:end]
+        # Apply pagination
+        total = len(items)
+        start = offset
+        end = start + limit
+        paginated_items = items[start:end]
 
-            return value_objects.PagedQueryResponse(
-                items=paginated_items,
-                total=total,
-                limit=limit,
-                offset=offset,
-                has_next=end < total,
-                has_previous=start > 0,
-            )
+        return value_objects.PagedQueryResponse(
+            items=paginated_items,
+            total=total,
+            limit=limit,
+            offset=offset,
+            has_next=end < total,
+            has_previous=start > 0,
+        )
 

@@ -4,14 +4,20 @@ from typing import Annotated
 
 from fastapi import Depends
 from planned.application.queries.task import ListTasksHandler
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.unit_of_work import ReadOnlyRepositoryFactory
+from planned.domain.entities import UserEntity
 
-from ..services import get_unit_of_work_factory
+from ..services import get_read_only_repository_factory
+from ..user import get_current_user
 
 
 def get_list_tasks_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
 ) -> ListTasksHandler:
     """Get a ListTasksHandler instance."""
-    return ListTasksHandler(uow_factory)
+    ro_repos = ro_repo_factory.create(user.id)
+    return ListTasksHandler(ro_repos)
 

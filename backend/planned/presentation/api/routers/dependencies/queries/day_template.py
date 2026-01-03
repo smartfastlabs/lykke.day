@@ -7,21 +7,31 @@ from planned.application.queries.day_template import (
     GetDayTemplateHandler,
     ListDayTemplatesHandler,
 )
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.unit_of_work import ReadOnlyRepositoryFactory
+from planned.domain.entities import UserEntity
 
-from ..services import get_unit_of_work_factory
+from ..services import get_read_only_repository_factory
+from ..user import get_current_user
 
 
 def get_get_day_template_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
 ) -> GetDayTemplateHandler:
     """Get a GetDayTemplateHandler instance."""
-    return GetDayTemplateHandler(uow_factory)
+    ro_repos = ro_repo_factory.create(user.id)
+    return GetDayTemplateHandler(ro_repos)
 
 
 def get_list_day_templates_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
 ) -> ListDayTemplatesHandler:
     """Get a ListDayTemplatesHandler instance."""
-    return ListDayTemplatesHandler(uow_factory)
+    ro_repos = ro_repo_factory.create(user.id)
+    return ListDayTemplatesHandler(ro_repos)
 

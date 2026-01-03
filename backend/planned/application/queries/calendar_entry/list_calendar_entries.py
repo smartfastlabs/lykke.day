@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.unit_of_work import ReadOnlyRepositories
 from planned.domain import value_objects
 from planned.domain.entities import CalendarEntryEntity
 
@@ -10,8 +10,8 @@ from planned.domain.entities import CalendarEntryEntity
 class ListCalendarEntriesHandler:
     """Lists calendar entries with optional pagination."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
-        self._uow_factory = uow_factory
+    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
+        self._ro_repos = ro_repos
 
     async def run(
         self,
@@ -33,27 +33,26 @@ class ListCalendarEntriesHandler:
         Returns:
             List of calendar entries or PagedQueryResponse
         """
-        async with self._uow_factory.create(user_id) as uow:
-            if search_query is not None:
-                items = await uow.calendar_entry_ro_repo.search_query(search_query)
-            else:
-                items = await uow.calendar_entry_ro_repo.all()
+        if search_query is not None:
+            items = await self._ro_repos.calendar_entry_ro_repo.search_query(search_query)
+        else:
+            items = await self._ro_repos.calendar_entry_ro_repo.all()
 
-            if not paginate:
-                return items
+        if not paginate:
+            return items
 
-            # Apply pagination
-            total = len(items)
-            start = offset
-            end = start + limit
-            paginated_items = items[start:end]
+        # Apply pagination
+        total = len(items)
+        start = offset
+        end = start + limit
+        paginated_items = items[start:end]
 
-            return value_objects.PagedQueryResponse(
-                items=paginated_items,
-                total=total,
-                limit=limit,
-                offset=offset,
-                has_next=end < total,
-                has_previous=start > 0,
-            )
+        return value_objects.PagedQueryResponse(
+            items=paginated_items,
+            total=total,
+            limit=limit,
+            offset=offset,
+            has_next=end < total,
+            has_previous=start > 0,
+        )
 
