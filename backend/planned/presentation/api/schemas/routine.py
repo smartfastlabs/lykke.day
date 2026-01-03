@@ -10,7 +10,7 @@ from planned.domain.value_objects.task import TaskCategory
 from .base import BaseEntitySchema
 
 
-class RoutineSchema(BaseEntitySchema):
+class Routine(BaseEntitySchema):
     """API schema for Routine entity."""
 
     user_id: UUID

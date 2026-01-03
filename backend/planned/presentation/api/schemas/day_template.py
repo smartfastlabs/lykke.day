@@ -1,19 +1,23 @@
 """DayTemplate schema."""
 
+from typing import TYPE_CHECKING, Optional
+
 from uuid import UUID
 
 from pydantic import Field
 
-from .alarm import AlarmSchema
 from .base import BaseEntitySchema
 
+if TYPE_CHECKING:
+    from .alarm import Alarm
 
-class DayTemplateSchema(BaseEntitySchema):
+
+class DayTemplate(BaseEntitySchema):
     """API schema for DayTemplate entity."""
 
     user_id: UUID
     slug: str
-    alarm: AlarmSchema | None = None
+    alarm: Optional["Alarm"] = None
     icon: str | None = None
     routine_ids: list[UUID] = Field(default_factory=list)
 

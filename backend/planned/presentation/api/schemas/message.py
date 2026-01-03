@@ -7,7 +7,7 @@ from uuid import UUID
 from .base import BaseDateSchema
 
 
-class MessageSchema(BaseDateSchema):
+class Message(BaseDateSchema):
     """API schema for Message entity."""
 
     user_id: UUID

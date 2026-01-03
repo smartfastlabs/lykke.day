@@ -8,7 +8,7 @@ from planned.domain.value_objects.alarm import AlarmType
 from .base import BaseEntitySchema
 
 
-class AlarmSchema(BaseEntitySchema):
+class Alarm(BaseEntitySchema):
     """API schema for Alarm entity."""
 
     name: str

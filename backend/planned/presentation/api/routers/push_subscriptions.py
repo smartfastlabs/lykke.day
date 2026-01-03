@@ -6,8 +6,8 @@ from fastapi import APIRouter, BackgroundTasks, Depends
 from planned.application.repositories import PushSubscriptionRepositoryProtocol
 from planned.domain import entities, value_objects
 from planned.infrastructure.gateways import web_push
+from planned.presentation.api import schemas
 from planned.presentation.api.schemas.mappers import map_push_subscription_to_schema
-from planned.presentation.api.schemas.push_subscription import PushSubscriptionSchema
 
 from .dependencies.repositories import get_push_subscription_repo
 from .dependencies.user import get_current_user
@@ -26,12 +26,12 @@ class SubscriptionRequest(value_objects.BaseRequestObject):
     keys: Keys
 
 
-@router.get("/subscriptions", response_model=list[PushSubscriptionSchema])
+@router.get("/subscriptions", response_model=list[schemas.PushSubscription])
 async def list_subscriptions(
     push_subscription_repo: Annotated[PushSubscriptionRepositoryProtocol, Depends(
         get_push_subscription_repo
     )],
-) -> list[PushSubscriptionSchema]:
+) -> list[schemas.PushSubscription]:
     subscriptions = await push_subscription_repo.all()
     return [
         map_push_subscription_to_schema(sub) for sub in subscriptions
@@ -48,7 +48,7 @@ async def delete_subscription(
     await push_subscription_repo.delete(UUID(subscription_id))
 
 
-@router.post("/subscribe", response_model=PushSubscriptionSchema)
+@router.post("/subscribe", response_model=schemas.PushSubscription)
 async def subscribe(
     background_tasks: BackgroundTasks,
     request: SubscriptionRequest,
@@ -56,7 +56,7 @@ async def subscribe(
     push_subscription_repo: Annotated[PushSubscriptionRepositoryProtocol, Depends(
         get_push_subscription_repo
     )],
-) -> PushSubscriptionSchema:
+) -> schemas.PushSubscription:
     result: entities.PushSubscription = await push_subscription_repo.put(
         entities.PushSubscription(
             user_id=user.id,

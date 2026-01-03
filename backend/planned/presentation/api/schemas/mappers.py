@@ -1,63 +1,51 @@
 """Mapper functions to convert domain entities to API schemas."""
 
 from planned.domain import entities, value_objects
-
-from .action import ActionSchema
-from .alarm import AlarmSchema
-from .calendar_entry import CalendarEntrySchema
-from .day import DaySchema
-from .day_context import DayContextSchema
-from .day_template import DayTemplateSchema
-from .message import MessageSchema
-from .person import PersonSchema
-from .push_subscription import PushSubscriptionSchema
-from .routine import RoutineSchema
-from .task import TaskSchema, TaskScheduleSchema
-from .task_definition import TaskDefinitionSchema
+from planned.presentation.api import schemas
 
 
-def map_action_to_schema(action: entities.Action) -> ActionSchema:
-    """Convert Action entity to ActionSchema."""
-    return ActionSchema.model_validate(action, from_attributes=True)
+def map_action_to_schema(action: entities.Action) -> schemas.Action:
+    """Convert Action entity to Action schema."""
+    return schemas.Action.model_validate(action, from_attributes=True)
 
 
-def map_alarm_to_schema(alarm: entities.Alarm) -> AlarmSchema:
-    """Convert Alarm entity to AlarmSchema."""
-    return AlarmSchema.model_validate(alarm, from_attributes=True)
+def map_alarm_to_schema(alarm: entities.Alarm) -> schemas.Alarm:
+    """Convert Alarm entity to Alarm schema."""
+    return schemas.Alarm.model_validate(alarm, from_attributes=True)
 
 
-def map_person_to_schema(person: entities.Person) -> PersonSchema:
-    """Convert Person entity to PersonSchema."""
-    return PersonSchema.model_validate(person, from_attributes=True)
+def map_person_to_schema(person: entities.Person) -> schemas.Person:
+    """Convert Person entity to Person schema."""
+    return schemas.Person.model_validate(person, from_attributes=True)
 
 
 def map_task_definition_to_schema(
     task_definition: entities.TaskDefinition,
-) -> TaskDefinitionSchema:
-    """Convert TaskDefinition entity to TaskDefinitionSchema."""
-    return TaskDefinitionSchema.model_validate(
+) -> schemas.TaskDefinition:
+    """Convert TaskDefinition entity to TaskDefinition schema."""
+    return schemas.TaskDefinition.model_validate(
         task_definition, from_attributes=True
     )
 
 
 def map_task_schedule_to_schema(
     schedule: value_objects.TaskSchedule | None,
-) -> TaskScheduleSchema | None:
-    """Convert TaskSchedule value object to TaskScheduleSchema."""
+) -> schemas.TaskSchedule | None:
+    """Convert TaskSchedule value object to TaskSchedule schema."""
     if schedule is None:
         return None
     # TaskSchedule is already a Pydantic model, so we can validate it directly
-    return TaskScheduleSchema.model_validate(schedule, from_attributes=True)
+    return schemas.TaskSchedule.model_validate(schedule, from_attributes=True)
 
 
-def map_task_to_schema(task: entities.Task) -> TaskSchema:
-    """Convert Task entity to TaskSchema."""
+def map_task_to_schema(task: entities.Task) -> schemas.Task:
+    """Convert Task entity to Task schema."""
     # Convert nested entities
     task_definition_schema = map_task_definition_to_schema(task.task_definition)
     action_schemas = [map_action_to_schema(action) for action in task.actions]
     schedule_schema = map_task_schedule_to_schema(task.schedule)
 
-    return TaskSchema(
+    return schemas.Task(
         id=task.id,
         user_id=task.user_id,
         scheduled_date=task.scheduled_date,
@@ -76,13 +64,13 @@ def map_task_to_schema(task: entities.Task) -> TaskSchema:
 
 def map_day_template_to_schema(
     template: entities.DayTemplate,
-) -> DayTemplateSchema:
-    """Convert DayTemplate entity to DayTemplateSchema."""
+) -> schemas.DayTemplate:
+    """Convert DayTemplate entity to DayTemplate schema."""
     alarm_schema = (
         map_alarm_to_schema(template.alarm) if template.alarm else None
     )
 
-    return DayTemplateSchema(
+    return schemas.DayTemplate(
         id=template.id,
         user_id=template.user_id,
         slug=template.slug,
@@ -92,14 +80,14 @@ def map_day_template_to_schema(
     )
 
 
-def map_day_to_schema(day: entities.Day) -> DaySchema:
-    """Convert Day entity to DaySchema."""
+def map_day_to_schema(day: entities.Day) -> schemas.Day:
+    """Convert Day entity to Day schema."""
     alarm_schema = map_alarm_to_schema(day.alarm) if day.alarm else None
     template_schema = (
         map_day_template_to_schema(day.template) if day.template else None
     )
 
-    return DaySchema(
+    return schemas.Day(
         id=day.id,
         user_id=day.user_id,
         date=day.date,
@@ -113,12 +101,12 @@ def map_day_to_schema(day: entities.Day) -> DaySchema:
 
 def map_calendar_entry_to_schema(
     entry: entities.CalendarEntry,
-) -> CalendarEntrySchema:
-    """Convert CalendarEntry entity to CalendarEntrySchema."""
+) -> schemas.CalendarEntry:
+    """Convert CalendarEntry entity to CalendarEntry schema."""
     person_schemas = [map_person_to_schema(person) for person in entry.people]
     action_schemas = [map_action_to_schema(action) for action in entry.actions]
 
-    return CalendarEntrySchema(
+    return schemas.CalendarEntry(
         id=entry.id,
         user_id=entry.user_id,
         name=entry.name,
@@ -137,9 +125,9 @@ def map_calendar_entry_to_schema(
     )
 
 
-def map_message_to_schema(message: entities.Message) -> MessageSchema:
-    """Convert Message entity to MessageSchema."""
-    return MessageSchema(
+def map_message_to_schema(message: entities.Message) -> schemas.Message:
+    """Convert Message entity to Message schema."""
+    return schemas.Message(
         id=message.id,
         user_id=message.user_id,
         author=message.author,
@@ -152,8 +140,8 @@ def map_message_to_schema(message: entities.Message) -> MessageSchema:
 
 def map_day_context_to_schema(
     context: value_objects.DayContext,
-) -> DayContextSchema:
-    """Convert DayContext value object to DayContextSchema."""
+) -> schemas.DayContext:
+    """Convert DayContext value object to DayContext schema."""
     day_schema = map_day_to_schema(context.day)
     calendar_entry_schemas = [
         map_calendar_entry_to_schema(entry) for entry in context.calendar_entries
@@ -163,7 +151,7 @@ def map_day_context_to_schema(
         map_message_to_schema(message) for message in context.messages
     ]
 
-    return DayContextSchema(
+    return schemas.DayContext(
         day=day_schema,
         calendar_entries=calendar_entry_schemas,
         tasks=task_schemas,
@@ -173,14 +161,13 @@ def map_day_context_to_schema(
 
 def map_push_subscription_to_schema(
     subscription: entities.PushSubscription,
-) -> PushSubscriptionSchema:
-    """Convert PushSubscription entity to PushSubscriptionSchema."""
-    return PushSubscriptionSchema.model_validate(
+) -> schemas.PushSubscription:
+    """Convert PushSubscription entity to PushSubscription schema."""
+    return schemas.PushSubscription.model_validate(
         subscription, from_attributes=True
     )
 
 
-def map_routine_to_schema(routine: entities.Routine) -> RoutineSchema:
-    """Convert Routine entity to RoutineSchema."""
-    return RoutineSchema.model_validate(routine, from_attributes=True)
-
+def map_routine_to_schema(routine: entities.Routine) -> schemas.Routine:
+    """Convert Routine entity to Routine schema."""
+    return schemas.Routine.model_validate(routine, from_attributes=True)

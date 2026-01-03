@@ -1,5 +1,7 @@
 """CalendarEntry schema."""
 
+from typing import TYPE_CHECKING
+
 from datetime import date, datetime
 from uuid import UUID
 
@@ -7,12 +9,14 @@ from pydantic import Field
 
 from planned.domain.value_objects.task import TaskFrequency
 
-from .action import ActionSchema
 from .base import BaseEntitySchema
-from .person import PersonSchema
+
+if TYPE_CHECKING:
+    from .action import Action
+    from .person import Person
 
 
-class CalendarEntrySchema(BaseEntitySchema):
+class CalendarEntry(BaseEntitySchema):
     """API schema for CalendarEntry entity."""
 
     user_id: UUID
@@ -26,7 +30,7 @@ class CalendarEntrySchema(BaseEntitySchema):
     ends_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
-    people: list[PersonSchema] = Field(default_factory=list)
-    actions: list[ActionSchema] = Field(default_factory=list)
+    people: list["Person"] = Field(default_factory=list)
+    actions: list["Action"] = Field(default_factory=list)
     date: date  # Computed field from starts_at
 

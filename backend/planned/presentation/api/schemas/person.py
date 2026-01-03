@@ -5,7 +5,7 @@ from uuid import UUID
 from .base import BaseEntitySchema
 
 
-class PersonSchema(BaseEntitySchema):
+class Person(BaseEntitySchema):
     """API schema for Person entity."""
 
     name: str | None = None
