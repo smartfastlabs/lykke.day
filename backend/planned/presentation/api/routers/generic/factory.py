@@ -123,7 +123,7 @@ def create_crud_router(config: EntityRouterConfig) -> APIRouter:
             for data in entities_data:
                 if "user_id" not in data:
                     data["user_id"] = user.id
-                entity = entity_type.model_validate(data)  # type: ignore
+                entity = entity_type(**data)
                 entities.append(entity)
             return await handle_bulk_create(entities, repository_name, user, mediator)
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date as dt_date, datetime
 from typing import Generic, TypeVar
 from uuid import UUID
@@ -66,6 +67,7 @@ class PagedQueryRequest(BaseRequestObject, Generic[T]):
 EntityType = TypeVar("EntityType")
 
 
+@dataclass(kw_only=True)
 class PagedQueryResponse(BaseResponseObject, Generic[EntityType]):
     """Response wrapper for paginated query results."""
 

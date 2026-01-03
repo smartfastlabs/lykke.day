@@ -1,14 +1,13 @@
 """Base classes for domain events and aggregate roots."""
 
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any
 
-from pydantic import Field, PrivateAttr
-
-from ..entities.base import BaseEntityObject, BaseObject
+from ..entities.base import BaseEntityObject
 
 
-class DomainEvent(BaseObject):
+@dataclass(frozen=True, kw_only=True)
+class DomainEvent:
     """Base class for all domain events.
 
     Domain events represent something important that happened in the domain.
@@ -16,13 +15,10 @@ class DomainEvent(BaseObject):
     what happened.
     """
 
-    occurred_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-
-    model_config = {
-        "frozen": True,  # Domain events are immutable
-    }
+    occurred_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
+@dataclass(kw_only=True)
 class BaseAggregateRoot(BaseEntityObject):
     """Base class for aggregate roots with domain event support.
 
@@ -36,7 +32,7 @@ class BaseAggregateRoot(BaseEntityObject):
     3. Only expose methods that maintain consistency
     """
 
-    _domain_events: list[DomainEvent] = PrivateAttr(default_factory=list)
+    _domain_events: list[DomainEvent] = field(init=False, default_factory=list)
 
     def _add_event(self, event: DomainEvent) -> None:
         """Add a domain event to be dispatched after commit.
@@ -63,4 +59,3 @@ class BaseAggregateRoot(BaseEntityObject):
             True if there are pending events, False otherwise.
         """
         return len(self._domain_events) > 0
-

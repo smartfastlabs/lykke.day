@@ -1,31 +1,31 @@
 """Mapper functions to convert domain entities to API schemas."""
 
+from dataclasses import asdict
+
 from planned.domain import entities, value_objects
 from planned.presentation.api import schemas
 
 
 def map_action_to_schema(action: entities.Action) -> schemas.Action:
     """Convert Action entity to Action schema."""
-    return schemas.Action.model_validate(action, from_attributes=True)
+    return schemas.Action(**asdict(action))
 
 
 def map_alarm_to_schema(alarm: entities.Alarm) -> schemas.Alarm:
     """Convert Alarm entity to Alarm schema."""
-    return schemas.Alarm.model_validate(alarm, from_attributes=True)
+    return schemas.Alarm(**asdict(alarm))
 
 
 def map_person_to_schema(person: entities.Person) -> schemas.Person:
     """Convert Person entity to Person schema."""
-    return schemas.Person.model_validate(person, from_attributes=True)
+    return schemas.Person(**asdict(person))
 
 
 def map_task_definition_to_schema(
     task_definition: entities.TaskDefinition,
 ) -> schemas.TaskDefinition:
     """Convert TaskDefinition entity to TaskDefinition schema."""
-    return schemas.TaskDefinition.model_validate(
-        task_definition, from_attributes=True
-    )
+    return schemas.TaskDefinition(**asdict(task_definition))
 
 
 def map_task_schedule_to_schema(
@@ -163,11 +163,9 @@ def map_push_subscription_to_schema(
     subscription: entities.PushSubscription,
 ) -> schemas.PushSubscription:
     """Convert PushSubscription entity to PushSubscription schema."""
-    return schemas.PushSubscription.model_validate(
-        subscription, from_attributes=True
-    )
+    return schemas.PushSubscription(**asdict(subscription))
 
 
 def map_routine_to_schema(routine: entities.Routine) -> schemas.Routine:
     """Convert Routine entity to Routine schema."""
-    return schemas.Routine.model_validate(routine, from_attributes=True)
+    return schemas.Routine(**asdict(routine))

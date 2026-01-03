@@ -47,15 +47,17 @@ class TaskRepository(UserScopedBaseRepository[entities.Task, DateQuery]):
         }
 
         # Handle JSONB fields - task_definition is required, others are optional
-        row["task_definition"] = task.task_definition.model_dump(mode="json")
+        from planned.infrastructure.utils.serialization import dataclass_to_json_dict
+
+        row["task_definition"] = dataclass_to_json_dict(task.task_definition)
 
         if task.schedule:
-            row["schedule"] = task.schedule.model_dump(mode="json")
+            row["schedule"] = dataclass_to_json_dict(task.schedule)
 
         if task.tags:
             row["tags"] = [tag.value for tag in task.tags]
 
         if task.actions:
-            row["actions"] = [action.model_dump(mode="json") for action in task.actions]
+            row["actions"] = [dataclass_to_json_dict(action) for action in task.actions]
 
         return row

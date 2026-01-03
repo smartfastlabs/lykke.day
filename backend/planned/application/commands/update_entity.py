@@ -52,12 +52,18 @@ class UpdateEntityHandler(CommandHandler[UpdateEntityCommand[EntityT], EntityT])
             existing: EntityT = await repo.get(command.entity_id)
 
             # Merge updates
-            if hasattr(existing, "model_copy") and hasattr(
-                command.entity_data, "model_dump"
-            ):
-                updated = existing.model_copy(
-                    update=command.entity_data.model_dump(exclude_unset=True)
-                )
+            from dataclasses import asdict, is_dataclass, replace
+            from typing import Any, cast
+
+            if is_dataclass(existing) and is_dataclass(command.entity_data):
+                # Both are dataclasses - use replace to merge updates
+                # Get all fields from entity_data that are not None
+                entity_data_dict: dict[str, Any] = asdict(command.entity_data)  # type: ignore[arg-type]
+                update_dict = {
+                    k: v for k, v in entity_data_dict.items() if v is not None
+                }
+                updated_any: Any = replace(existing, **update_dict)  # type: ignore[type-var]
+                updated = cast(EntityT, updated_any)
             else:
                 updated = command.entity_data
 

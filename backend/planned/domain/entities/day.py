@@ -1,11 +1,11 @@
 import uuid
+from dataclasses import dataclass, field
 from datetime import UTC
 from datetime import date as dt_date
 from datetime import datetime
 from uuid import UUID
 
 from planned.core.exceptions import DomainError
-from pydantic import Field, model_validator
 
 from .. import value_objects
 from ..events.base import BaseAggregateRoot
@@ -25,26 +25,26 @@ from .day_template import DayTemplate
 from .task import Task
 
 
+@dataclass(kw_only=True)
 class Day(BaseAggregateRoot):
-    id: UUID = Field(default_factory=uuid.uuid4)
     user_id: UUID
     date: dt_date
     alarm: Alarm | None = None
     status: value_objects.DayStatus = value_objects.DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
-
-    tags: list[value_objects.DayTag] = Field(default_factory=list)
+    tags: list[value_objects.DayTag] = field(default_factory=list)
     template: DayTemplate | None = None
+    id: UUID = field(init=False)
 
-    @model_validator(mode="after")
-    def generate_id(self) -> "Day":
+    def __post_init__(self) -> None:
         """Generate deterministic UUID5 based on date and user_id.
 
         This ensures that Days with the same date and user_id always have
         the same ID, making lookups stable and deterministic.
         """
-        self.id = self.id_from_date_and_user(self.date, self.user_id)
-        return self
+        object.__setattr__(
+            self, "id", self.id_from_date_and_user(self.date, self.user_id)
+        )
 
     @classmethod
     def id_from_date_and_user(cls, date: dt_date, user_id: UUID) -> UUID:

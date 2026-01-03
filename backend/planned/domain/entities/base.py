@@ -1,34 +1,29 @@
+from dataclasses import dataclass, field, replace
 from datetime import date as dt_date, datetime
 from typing import Any, Self
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-import pydantic
 
-
-class BaseObject(pydantic.BaseModel):
-    model_config = pydantic.ConfigDict(
-        from_attributes=True,
-        populate_by_name=True,
-        extra="forbid",
-        # TODO: Enable immutability once all entity modifications are refactored
-        # to use model_copy(update={...}) instead of direct assignment.
-        # This requires updating all code that modifies entities (services, etc.)
-        # frozen=True,
-    )
+@dataclass(kw_only=True)
+class BaseObject:
+    """Base class for all domain objects."""
 
     def clone(self, **kwargs: dict[str, Any]) -> Self:
-        return self.model_copy(update=kwargs)
+        return replace(self, **kwargs)
 
 
+@dataclass(kw_only=True)
 class BaseEntityObject(BaseObject):
-    id: UUID = pydantic.Field(default_factory=uuid4)
+    id: UUID = field(default_factory=uuid4)
 
 
+@dataclass(kw_only=True)
 class BaseConfigObject(BaseEntityObject):
     pass
 
 
+@dataclass(kw_only=True)
 class BaseDateObject(BaseEntityObject):
     """Base class for entities that have a date associated with them.
 
@@ -36,9 +31,8 @@ class BaseDateObject(BaseEntityObject):
     or implement _get_datetime() and provide a timezone to convert to date.
     """
 
-    timezone: str | None = pydantic.Field(default=None, exclude=True)
+    timezone: str | None = field(default=None, repr=False)
 
-    @pydantic.computed_field  # mypy: ignore
     @property
     def date(self) -> dt_date:
         """Get the date for this entity.

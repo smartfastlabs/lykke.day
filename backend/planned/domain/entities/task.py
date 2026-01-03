@@ -1,10 +1,10 @@
+from dataclasses import dataclass, field
 from datetime import UTC
 from datetime import date as dt_date
 from datetime import datetime
 from uuid import UUID
 
 from planned.core.exceptions import DomainError
-from pydantic import Field
 
 from .. import value_objects
 from .action import Action
@@ -12,6 +12,7 @@ from .base import BaseDateObject
 from .task_definition import TaskDefinition
 
 
+@dataclass(kw_only=True)
 class Task(BaseDateObject):
     user_id: UUID
     scheduled_date: dt_date
@@ -23,8 +24,8 @@ class Task(BaseDateObject):
     completed_at: datetime | None = None
     schedule: value_objects.TaskSchedule | None = None
     routine_id: UUID | None = None
-    tags: list[value_objects.TaskTag] = Field(default_factory=list)
-    actions: list[Action] = Field(default_factory=list)
+    tags: list[value_objects.TaskTag] = field(default_factory=list)
+    actions: list[Action] = field(default_factory=list)
 
     def _get_date(self) -> dt_date:
         return self.scheduled_date

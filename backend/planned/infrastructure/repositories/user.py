@@ -43,10 +43,12 @@ class UserRepository(BaseRepository[entities.User, BaseQuery]):
         }
 
         # Handle settings JSONB field
+        from planned.infrastructure.utils.serialization import dataclass_to_json_dict
+
         if user.settings:
-            row["settings"] = user.settings.model_dump(mode="json")
+            row["settings"] = dataclass_to_json_dict(user.settings)
         else:
-            row["settings"] = value_objects.UserSetting().model_dump(mode="json")
+            row["settings"] = dataclass_to_json_dict(value_objects.UserSetting())
 
         # Set timestamps
         if hasattr(user, "created_at") and user.created_at:
@@ -78,4 +80,4 @@ class UserRepository(BaseRepository[entities.User, BaseQuery]):
         else:
             data["settings"] = value_objects.UserSetting()
 
-        return entities.User.model_validate(data, from_attributes=True)
+        return entities.User(**data)

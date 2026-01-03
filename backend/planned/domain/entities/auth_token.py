@@ -1,21 +1,15 @@
 import uuid
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from uuid import UUID
 
 from google.oauth2.credentials import Credentials
-from pydantic import ConfigDict, Field
 
 from .base import BaseEntityObject
 
 
+@dataclass(kw_only=True)
 class AuthToken(BaseEntityObject):
-    model_config = ConfigDict(
-        populate_by_name=True,
-        validate_by_alias=False,
-        validate_by_name=True,
-        # frozen=True,
-    )
-    id: UUID = Field(default_factory=uuid.uuid4)
     user_id: UUID
     platform: str
     token: str
@@ -25,7 +19,7 @@ class AuthToken(BaseEntityObject):
     client_secret: str | None = None
     scopes: list | None = None
     expires_at: datetime | None = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def google_credentials(self) -> Credentials:
         """

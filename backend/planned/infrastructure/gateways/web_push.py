@@ -19,8 +19,15 @@ async def send_notification(
     subscription: entities.PushSubscription,
     content: str | dict | value_objects.NotificationPayload,
 ) -> None:
+    from planned.infrastructure.utils.serialization import dataclass_to_json_dict
+
     if isinstance(content, value_objects.NotificationPayload):
-        content = content.model_dump_json(exclude_none=True)
+        content_dict = dataclass_to_json_dict(content)
+        # Filter out None values for JSON
+        filtered_content = {
+            k: v for k, v in content_dict.items() if v is not None
+        }
+        content = json.dumps(filtered_content)
     elif isinstance(content, dict):
         content = json.dumps(content)
 

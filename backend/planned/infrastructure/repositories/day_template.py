@@ -38,8 +38,10 @@ class DayTemplateRepository(UserScopedBaseRepository[entities.DayTemplate, DayTe
         }
 
         # Handle JSONB fields
+        from planned.infrastructure.utils.serialization import dataclass_to_json_dict
+
         if template.alarm:
-            row["alarm"] = template.alarm.model_dump(mode="json")
+            row["alarm"] = dataclass_to_json_dict(template.alarm)
         
         # Handle list fields - convert UUIDs to strings for JSON serialization
         if template.routine_ids:
@@ -66,7 +68,7 @@ class DayTemplateRepository(UserScopedBaseRepository[entities.DayTemplate, DayTe
                 for routine_id in data["routine_ids"]
             ]
 
-        return entities.DayTemplate.model_validate(data, from_attributes=True)
+        return entities.DayTemplate(**data)
 
     async def get_by_slug(self, slug: str) -> entities.DayTemplate:
         """Get a DayTemplate by slug (must be scoped to a user)."""

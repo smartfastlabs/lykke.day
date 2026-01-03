@@ -28,10 +28,12 @@ class RoutineRepository(UserScopedBaseRepository[Routine, BaseQuery]):
         }
 
         # Handle JSONB fields
+        from planned.infrastructure.utils.serialization import dataclass_to_json_dict
+
         if routine.routine_schedule:
-            row["routine_schedule"] = routine.routine_schedule.model_dump(mode="json")
+            row["routine_schedule"] = dataclass_to_json_dict(routine.routine_schedule)
 
         if routine.tasks:
-            row["tasks"] = [task.model_dump(mode="json") for task in routine.tasks]
+            row["tasks"] = [dataclass_to_json_dict(task) for task in routine.tasks]
 
         return row

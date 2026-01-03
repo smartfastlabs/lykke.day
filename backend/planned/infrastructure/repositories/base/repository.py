@@ -72,7 +72,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         Default implementation that:
         1. Filters out fields listed in `excluded_row_fields`
         2. Normalizes None values to [] for list-typed fields
-        3. Validates via Pydantic's model_validate
+        3. Constructs entity from dict using dataclass initialization
 
         Override this method in subclasses that need custom deserialization
         logic (e.g., handling JSONB fields that need special parsing).
@@ -92,7 +92,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         # Normalize None values to [] for list-typed fields
         data = normalize_list_fields(data, cls.Object)
 
-        return cls.Object.model_validate(data, from_attributes=True)
+        return cls.Object(**data)
 
     @property
     def _is_user_scoped(self) -> bool:

@@ -13,6 +13,13 @@ from .routine import Routine
 from .task import Task, TaskSchedule
 from .task_definition import TaskDefinition
 
+# Rebuild models with forward references after all classes are defined
+CalendarEntry.model_rebuild()
+Day.model_rebuild()
+DayTemplate.model_rebuild()
+Task.model_rebuild()
+DayContext.model_rebuild()
+
 __all__ = [
     "Action",
     "Alarm",
@@ -25,7 +32,6 @@ __all__ = [
     "PushSubscription",
     "Routine",
     "Task",
-    "TaskSchedule",
     "TaskDefinition",
+    "TaskSchedule",
 ]
-

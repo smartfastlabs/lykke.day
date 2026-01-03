@@ -28,13 +28,15 @@ class DayRepository(UserScopedBaseRepository[entities.Day, BaseQuery]):
         }
 
         # Handle JSONB fields
+        from planned.infrastructure.utils.serialization import dataclass_to_json_dict
+
         if day.tags:
             row["tags"] = [tag.value for tag in day.tags]
 
         if day.alarm:
-            row["alarm"] = day.alarm.model_dump(mode="json")
+            row["alarm"] = dataclass_to_json_dict(day.alarm)
 
         if day.template:
-            row["template"] = day.template.model_dump(mode="json")
+            row["template"] = dataclass_to_json_dict(day.template)
 
         return row

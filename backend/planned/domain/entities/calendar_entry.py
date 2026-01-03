@@ -1,4 +1,5 @@
 import uuid
+from dataclasses import dataclass, field
 from datetime import UTC
 from datetime import date as dt_date
 from datetime import datetime, time
@@ -6,7 +7,6 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from gcsa.event import Event as GoogleEvent
-from pydantic import Field, computed_field
 
 from .. import value_objects
 from .action import Action
@@ -43,8 +43,8 @@ def get_datetime(
     )
 
 
+@dataclass(kw_only=True)
 class CalendarEntry(BaseEntityObject):
-    id: UUID = Field(default_factory=uuid.uuid4)
     user_id: UUID
     name: str
     calendar_id: UUID
@@ -54,13 +54,12 @@ class CalendarEntry(BaseEntityObject):
     starts_at: datetime
     frequency: value_objects.TaskFrequency
     ends_at: datetime | None = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    people: list[Person] = Field(default_factory=list)
-    actions: list[Action] = Field(default_factory=list)
-    timezone: str | None = Field(default=None, exclude=True)
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    people: list[Person] = field(default_factory=list)
+    actions: list[Action] = field(default_factory=list)
+    timezone: str | None = field(default=None, repr=False)
 
-    @computed_field  # mypy: ignore
     @property
     def date(self) -> dt_date:
         """Get the date for this calendar entry."""
