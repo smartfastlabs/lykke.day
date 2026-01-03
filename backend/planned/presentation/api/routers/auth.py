@@ -13,7 +13,7 @@ from planned.core.exceptions import BadRequestError
 from planned.domain import value_objects
 from planned.domain.entities import UserEntity
 
-from .dependencies.services import get_update_user_handler
+from .dependencies.commands.user import get_update_user_handler
 from .dependencies.user import get_current_user
 
 router = APIRouter()

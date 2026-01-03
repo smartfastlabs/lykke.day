@@ -23,9 +23,9 @@ from planned.presentation.api.schemas.mappers import (
 )
 from pydantic import BaseModel
 
+from .dependencies.queries.day_template import get_list_day_templates_handler
 from .dependencies.services import (
     get_get_day_context_handler,
-    get_list_day_templates_handler,
     get_preview_day_handler,
     get_schedule_day_handler,
     get_update_day_handler,

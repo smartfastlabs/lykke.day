@@ -10,7 +10,10 @@ from planned.domain.entities import RoutineEntity, UserEntity
 from planned.presentation.api.schemas import RoutineSchema
 from planned.presentation.api.schemas.mappers import map_routine_to_schema
 
-from .dependencies.services import get_get_routine_handler, get_list_routines_handler
+from .dependencies.queries.routine import (
+    get_get_routine_handler,
+    get_list_routines_handler,
+)
 from .dependencies.user import get_current_user
 
 router = APIRouter()

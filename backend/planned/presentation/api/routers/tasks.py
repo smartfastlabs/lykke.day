@@ -13,10 +13,8 @@ from planned.domain.entities import ActionEntity, TaskEntity, UserEntity
 from planned.presentation.api.schemas import TaskSchema
 from planned.presentation.api.schemas.mappers import map_task_to_schema
 
-from .dependencies.services import (
-    get_list_tasks_handler,
-    get_record_task_action_handler,
-)
+from .dependencies.queries.task import get_list_tasks_handler
+from .dependencies.services import get_record_task_action_handler
 from .dependencies.user import get_current_user
 
 router = APIRouter()

@@ -18,12 +18,14 @@ from planned.domain.entities import DayTemplateEntity, UserEntity
 from planned.presentation.api.schemas import DayTemplateSchema
 from planned.presentation.api.schemas.mappers import map_day_template_to_schema
 
-from .dependencies.services import (
+from .dependencies.commands.day_template import (
     get_create_day_template_handler,
     get_delete_day_template_handler,
+    get_update_day_template_handler,
+)
+from .dependencies.queries.day_template import (
     get_get_day_template_handler,
     get_list_day_templates_handler,
-    get_update_day_template_handler,
 )
 from .dependencies.user import get_current_user
 

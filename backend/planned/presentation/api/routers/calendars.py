@@ -18,12 +18,14 @@ from planned.domain.entities import CalendarEntity, UserEntity
 from planned.presentation.api.schemas import CalendarSchema
 from planned.presentation.api.schemas.mappers import map_calendar_to_schema
 
-from .dependencies.services import (
+from .dependencies.commands.calendar import (
     get_create_calendar_handler,
     get_delete_calendar_handler,
+    get_update_calendar_handler,
+)
+from .dependencies.queries.calendar import (
     get_get_calendar_handler,
     get_list_calendars_handler,
-    get_update_calendar_handler,
 )
 from .dependencies.user import get_current_user
 

@@ -22,13 +22,15 @@ from planned.infrastructure.data.default_task_definitions import (
 from planned.presentation.api.schemas import TaskDefinitionSchema
 from planned.presentation.api.schemas.mappers import map_task_definition_to_schema
 
-from .dependencies.services import (
+from .dependencies.commands.task_definition import (
     get_bulk_create_task_definitions_handler,
     get_create_task_definition_handler,
     get_delete_task_definition_handler,
+    get_update_task_definition_handler,
+)
+from .dependencies.queries.task_definition import (
     get_get_task_definition_handler,
     get_list_task_definitions_handler,
-    get_update_task_definition_handler,
 )
 from .dependencies.user import get_current_user
 

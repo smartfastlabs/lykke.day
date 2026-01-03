@@ -16,11 +16,8 @@ from planned.presentation.api.schemas.mappers import (
     map_routine_to_schema,
 )
 
-from .dependencies.services import (
-    get_list_routines_handler,
-    get_preview_day_handler,
-    get_schedule_day_handler,
-)
+from .dependencies.queries.routine import get_list_routines_handler
+from .dependencies.services import get_preview_day_handler, get_schedule_day_handler
 from .dependencies.user import get_current_user
 
 router = APIRouter()

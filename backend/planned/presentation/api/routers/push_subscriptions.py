@@ -14,11 +14,11 @@ from planned.infrastructure.gateways import web_push
 from planned.presentation.api.schemas import PushSubscriptionSchema
 from planned.presentation.api.schemas.mappers import map_push_subscription_to_schema
 
-from .dependencies.services import (
+from .dependencies.commands.push_subscription import (
     get_create_push_subscription_handler,
     get_delete_push_subscription_handler,
-    get_list_push_subscriptions_handler,
 )
+from .dependencies.queries.push_subscription import get_list_push_subscriptions_handler
 from .dependencies.user import get_current_user
 
 router = APIRouter()

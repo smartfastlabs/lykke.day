@@ -8,7 +8,7 @@ from planned.domain.entities import CalendarEntryEntity, UserEntity
 from planned.presentation.api.schemas import CalendarEntrySchema
 from planned.presentation.api.schemas.mappers import map_calendar_entry_to_schema
 
-from .dependencies.services import get_list_calendar_entries_handler
+from .dependencies.queries.calendar_entry import get_list_calendar_entries_handler
 from .dependencies.user import get_current_user
 
 router = APIRouter()
