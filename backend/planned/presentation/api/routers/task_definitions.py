@@ -74,9 +74,7 @@ async def list_task_definitions(
     """List task definitions with pagination."""
     result = await list_task_definitions_handler.run(
         user_id=user.id,
-        limit=limit,
-        offset=offset,
-        paginate=False,
+        search_query=value_objects.TaskDefinitionQuery(limit=limit, offset=offset),
     )
     task_definitions: list[TaskDefinitionEntity] = (
         result if isinstance(result, list) else result.items

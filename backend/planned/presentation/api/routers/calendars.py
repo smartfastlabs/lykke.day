@@ -57,9 +57,7 @@ async def list_calendars(
     """List calendars with pagination."""
     result = await list_calendars_handler.run(
         user_id=user.id,
-        limit=limit,
-        offset=offset,
-        paginate=True,
+        search_query=value_objects.CalendarQuery(limit=limit, offset=offset),
     )
     paged_response = cast("value_objects.PagedQueryResponse[CalendarEntity]", result)
     # Convert entities to schemas

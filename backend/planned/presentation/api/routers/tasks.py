@@ -28,8 +28,7 @@ async def list_todays_tasks(
     """Get all tasks for today."""
     result = await list_tasks_handler.run(
         user_id=user.id,
-        search_query=value_objects.DateQuery(date=get_current_date()),
-        paginate=False,
+        search_query=value_objects.TaskQuery(date=get_current_date()),
     )
     tasks = result if isinstance(result, list) else result.items
     return [map_task_to_schema(task) for task in tasks]

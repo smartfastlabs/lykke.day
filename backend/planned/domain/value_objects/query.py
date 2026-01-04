@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date as dt_date, datetime
+from datetime import date as dt_date
+from datetime import datetime
 from typing import Generic, TypeVar
 from uuid import UUID
 
@@ -53,6 +54,38 @@ class AuthTokenQuery(BaseQuery):
     platform: str | None = None
 
 
+class CalendarQuery(BaseQuery):
+    """Query class for Calendar entities."""
+
+
+class CalendarEntryQuery(DateQuery):
+    """Query class for CalendarEntry entities."""
+
+
+class DayQuery(DateQuery):
+    """Query class for Day entities."""
+
+
+class MessageQuery(BaseQuery):
+    """Query class for Message entities."""
+
+
+class PushSubscriptionQuery(BaseQuery):
+    """Query class for PushSubscription entities."""
+
+
+class RoutineQuery(BaseQuery):
+    """Query class for Routine entities."""
+
+
+class TaskQuery(DateQuery):
+    """Query class for Task entities."""
+
+
+class TaskDefinitionQuery(BaseQuery):
+    """Query class for TaskDefinition entities."""
+
+
 T = TypeVar("T", bound=BaseQuery)
 
 
@@ -77,4 +110,3 @@ class PagedQueryResponse(BaseResponseObject, Generic[EntityType]):
     offset: int
     has_next: bool
     has_previous: bool
-

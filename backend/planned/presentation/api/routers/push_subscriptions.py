@@ -42,7 +42,8 @@ async def list_subscriptions(
         ListPushSubscriptionsHandler, Depends(get_list_push_subscriptions_handler)
     ],
 ) -> list[PushSubscriptionSchema]:
-    subscriptions = await list_push_subscriptions_handler.run(user_id=user.id)
+    result = await list_push_subscriptions_handler.run(user_id=user.id)
+    subscriptions = result if isinstance(result, list) else result.items
     return [map_push_subscription_to_schema(sub) for sub in subscriptions]
 
 

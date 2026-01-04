@@ -1,14 +1,14 @@
-"""Query to list day templates with optional pagination."""
+"""Query to list auth tokens with optional pagination."""
 
 from uuid import UUID
 
 from planned.application.unit_of_work import ReadOnlyRepositories
 from planned.domain import value_objects
-from planned.domain.entities import DayTemplateEntity
+from planned.infrastructure import data_objects
 
 
-class ListDayTemplatesHandler:
-    """Lists day templates with optional pagination."""
+class ListAuthTokensHandler:
+    """Lists auth tokens with optional pagination."""
 
     def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
         self._ro_repos = ro_repos
@@ -16,19 +16,19 @@ class ListDayTemplatesHandler:
     async def run(
         self,
         user_id: UUID,
-        search_query: value_objects.DayTemplateQuery | None = None,
-    ) -> list[DayTemplateEntity] | value_objects.PagedQueryResponse[DayTemplateEntity]:
-        """List day templates with optional pagination.
+        search_query: value_objects.AuthTokenQuery | None = None,
+    ) -> list[data_objects.AuthToken] | value_objects.PagedQueryResponse[data_objects.AuthToken]:
+        """List auth tokens with optional pagination.
 
         Args:
             user_id: The user making the request
             search_query: Optional search/filter query object with pagination info
 
         Returns:
-            List of day templates or PagedQueryResponse if pagination is requested
+            List of auth tokens or PagedQueryResponse if pagination is requested
         """
         if search_query is not None:
-            items = await self._ro_repos.day_template_ro_repo.search_query(search_query)
+            items = await self._ro_repos.auth_token_ro_repo.search_query(search_query)
             # Check if pagination is requested
             if search_query.limit is not None or search_query.offset is not None:
                 limit = search_query.limit or 50
@@ -48,4 +48,5 @@ class ListDayTemplatesHandler:
                 )
             return items
         else:
-            return await self._ro_repos.day_template_ro_repo.all()
+            return await self._ro_repos.auth_token_ro_repo.all()
+

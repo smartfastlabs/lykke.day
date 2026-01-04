@@ -59,9 +59,7 @@ async def list_day_templates(
     """List day templates with pagination."""
     result = await list_day_templates_handler.run(
         user_id=user.id,
-        limit=limit,
-        offset=offset,
-        paginate=True,
+        search_query=value_objects.DayTemplateQuery(limit=limit, offset=offset),
     )
     paged_response = cast("value_objects.PagedQueryResponse[DayTemplateEntity]", result)
     # Convert entities to schemas

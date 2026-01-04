@@ -23,8 +23,7 @@ async def today(
 ) -> list[CalendarEntrySchema]:
     result = await list_calendar_entries_handler.run(
         user_id=user.id,
-        search_query=value_objects.DateQuery(date=get_current_date()),
-        paginate=False,
+        search_query=value_objects.CalendarEntryQuery(date=get_current_date()),
     )
     entries = result if isinstance(result, list) else result.items
     return [map_calendar_entry_to_schema(entry) for entry in entries]

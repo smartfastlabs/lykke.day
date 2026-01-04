@@ -33,7 +33,6 @@ async def list_routines(
     """Get all routines for the current user."""
     result = await list_routines_handler.run(
         user_id=user.id,
-        paginate=False,
     )
     routines = result if isinstance(result, list) else result.items
     return [map_routine_to_schema(routine) for routine in routines]

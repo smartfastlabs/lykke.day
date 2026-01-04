@@ -42,9 +42,7 @@ async def list_routines(
     """List routines with pagination."""
     result = await list_routines_handler.run(
         user_id=user.id,
-        limit=limit,
-        offset=offset,
-        paginate=True,
+        search_query=value_objects.RoutineQuery(limit=limit, offset=offset),
     )
     paged_response = cast("value_objects.PagedQueryResponse[RoutineEntity]", result)
     # Convert entities to schemas

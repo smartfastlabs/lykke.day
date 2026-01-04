@@ -153,7 +153,6 @@ async def get_templates(
     """Get all available day templates."""
     result = await list_day_templates_handler.run(
         user_id=user.id,
-        paginate=False,
     )
     templates = result if isinstance(result, list) else result.items
     return [map_day_template_to_schema(template) for template in templates]
