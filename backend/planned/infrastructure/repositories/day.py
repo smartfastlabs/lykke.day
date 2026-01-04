@@ -102,6 +102,13 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                                 alarm_data["triggered_at"]
                             )
                         template_data["alarm"] = value_objects.Alarm(**alarm_data)
+                from planned.infrastructure.repositories.base.utils import (
+                    filter_init_false_fields,
+                )
+
+                template_data = filter_init_false_fields(
+                    template_data, DayTemplateEntity
+                )
                 data["template"] = DayTemplateEntity(**template_data)
 
         # Handle alarm - it comes as a dict from JSONB, need to convert to value object
@@ -129,4 +136,9 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                     )
                 data["alarm"] = value_objects.Alarm(**alarm_data)
 
+        from planned.infrastructure.repositories.base.utils import (
+            filter_init_false_fields,
+        )
+
+        data = filter_init_false_fields(data, DayEntity)
         return DayEntity(**data)

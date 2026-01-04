@@ -8,7 +8,6 @@ from uuid import UUID
 from planned.core.exceptions import DomainError
 
 from .. import value_objects
-from ..events.base import BaseAggregateRoot
 from ..events.day_events import (
     DayCompletedEvent,
     DayScheduledEvent,
@@ -20,12 +19,13 @@ from ..events.task_events import (
     TaskStatusChangedEvent,
 )
 from .action import ActionEntity
+from .base import BaseEntityObject
 from .day_template import DayTemplateEntity
 from .task import TaskEntity
 
 
 @dataclass(kw_only=True)
-class DayEntity(BaseAggregateRoot):
+class DayEntity(BaseEntityObject):
     user_id: UUID
     date: dt_date
     alarm: value_objects.Alarm | None = None

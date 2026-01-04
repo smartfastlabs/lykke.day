@@ -79,10 +79,15 @@ class CalendarEntryRepository(UserScopedBaseRepository[CalendarEntryEntity, Date
         
         # Handle actions - they come as dicts from JSONB, need to convert to entities
         if "actions" in data and data["actions"]:
+            from planned.infrastructure.repositories.base.utils import filter_init_false_fields
             data["actions"] = [
-                ActionEntity(**action) if isinstance(action, dict) else action
+                ActionEntity(**filter_init_false_fields(action, ActionEntity))
+                if isinstance(action, dict)
+                else action
                 for action in data["actions"]
             ]
 
+        from planned.infrastructure.repositories.base.utils import filter_init_false_fields
+        data = filter_init_false_fields(data, CalendarEntryEntity)
         return CalendarEntryEntity(**data)
 

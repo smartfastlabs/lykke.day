@@ -6,6 +6,26 @@ from typing import Any, get_origin, get_type_hints
 import pydantic
 
 
+def filter_init_false_fields(data: dict[str, Any], entity_class: type[Any]) -> dict[str, Any]:
+    """Filter out fields with init=False from a dictionary.
+    
+    When deserializing from the database, fields with init=False (like _domain_events)
+    should not be passed to the entity constructor.
+    
+    Args:
+        data: Dictionary containing data to filter
+        entity_class: The entity class to check for init=False fields
+        
+    Returns:
+        Filtered dictionary with init=False fields removed
+    """
+    if not is_dataclass(entity_class):
+        return data
+    
+    init_false_fields = {f.name for f in fields(entity_class) if not f.init}
+    return {k: v for k, v in data.items() if k not in init_false_fields}
+
+
 def normalize_list_fields(data: dict[str, Any], model: type[Any]) -> dict[str, Any]:
     """Normalize None values to empty lists for list-typed fields.
     

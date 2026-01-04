@@ -81,4 +81,9 @@ class UserRepository(BaseRepository[UserEntity, BaseQuery]):
         else:
             data["settings"] = value_objects.UserSetting()
 
+        from planned.infrastructure.repositories.base.utils import (
+            filter_init_false_fields,
+        )
+
+        data = filter_init_false_fields(data, UserEntity)
         return UserEntity(**data)

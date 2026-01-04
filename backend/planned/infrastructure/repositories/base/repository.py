@@ -11,7 +11,7 @@ from uuid import UUID
 from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
 from planned.domain.entities.base import BaseEntityObject
-from planned.domain.events.base import BaseAggregateRoot, DomainEvent
+from planned.domain.events.base import DomainEvent
 from planned.infrastructure.database import get_engine
 from planned.infrastructure.database.transaction import get_transaction_connection
 from planned.infrastructure.repositories.base.utils import normalize_list_fields
@@ -63,7 +63,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         self.user_id = user_id
         # Track aggregates that were saved during this repository's lifetime
         # Used for collecting domain events before transaction commit
-        self._saved_aggregates: list[BaseAggregateRoot] = []
+        self._saved_aggregates: list[BaseEntityObject] = []
 
     @classmethod
     def row_to_entity(cls, row: dict[str, Any]) -> ObjectType:
@@ -83,6 +83,10 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         Returns:
             An instance of the entity class.
         """
+        from planned.infrastructure.repositories.base.utils import (
+            filter_init_false_fields,
+        )
+
         # Filter out excluded fields (e.g., database-only computed columns)
         if cls.excluded_row_fields:
             data = {k: v for k, v in row.items() if k not in cls.excluded_row_fields}
@@ -91,6 +95,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
         # Normalize None values to [] for list-typed fields
         data = normalize_list_fields(data, cls.Object)
+
+        # Filter out fields with init=False (e.g., _domain_events)
+        data = filter_init_false_fields(data, cls.Object)
 
         return cls.Object(**data)
 
@@ -339,7 +346,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             await conn.execute(upsert_stmt)
 
         # Track aggregate for domain event collection if it has pending events
-        if isinstance(obj, BaseAggregateRoot) and obj.has_events():
+        if isinstance(obj, BaseEntityObject) and obj.has_events():
             self._saved_aggregates.append(obj)
 
         return obj
