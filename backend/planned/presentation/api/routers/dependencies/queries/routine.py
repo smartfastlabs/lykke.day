@@ -22,7 +22,7 @@ def get_get_routine_handler(
 ) -> GetRoutineHandler:
     """Get a GetRoutineHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return GetRoutineHandler(ro_repos)
+    return GetRoutineHandler(ro_repos, user.id)
 
 
 def get_list_routines_handler(
@@ -33,5 +33,5 @@ def get_list_routines_handler(
 ) -> ListRoutinesHandler:
     """Get a ListRoutinesHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ListRoutinesHandler(ro_repos)
+    return ListRoutinesHandler(ro_repos, user.id)
 

@@ -22,7 +22,7 @@ def get_get_day_template_handler(
 ) -> GetDayTemplateHandler:
     """Get a GetDayTemplateHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return GetDayTemplateHandler(ro_repos)
+    return GetDayTemplateHandler(ro_repos, user.id)
 
 
 def get_list_day_templates_handler(
@@ -33,5 +33,5 @@ def get_list_day_templates_handler(
 ) -> ListDayTemplatesHandler:
     """Get a ListDayTemplatesHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ListDayTemplatesHandler(ro_repos)
+    return ListDayTemplatesHandler(ro_repos, user.id)
 

@@ -10,18 +10,17 @@ from planned.domain.entities import UserEntity
 class ListUsersHandler:
     """Lists users with optional pagination."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
+    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
         self._ro_repos = ro_repos
+        self.user_id = user_id
 
     async def run(
         self,
-        user_id: UUID,
         search_query: value_objects.UserQuery | None = None,
     ) -> list[UserEntity] | value_objects.PagedQueryResponse[UserEntity]:
         """List users with optional pagination.
 
         Args:
-            user_id: The user making the request
             search_query: Optional search/filter query object with pagination info
 
         Returns:

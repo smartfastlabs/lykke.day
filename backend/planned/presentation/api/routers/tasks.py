@@ -27,7 +27,6 @@ async def list_todays_tasks(
 ) -> list[TaskSchema]:
     """Get all tasks for today."""
     result = await list_tasks_handler.run(
-        user_id=user.id,
         search_query=value_objects.TaskQuery(date=get_current_date()),
     )
     tasks = result if isinstance(result, list) else result.items
@@ -47,7 +46,6 @@ async def add_task_action(
     """Record an action on a task."""
     _ = date  # Path parameter kept for API compatibility
     task = await handler.record_task_action(
-        user_id=user.id,
         task_id=_id,
         action=action,
     )

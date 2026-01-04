@@ -9,20 +9,20 @@ from planned.domain.entities import DayEntity
 class SaveDayHandler:
     """Saves a day to the database."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
+    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
         self._uow_factory = uow_factory
+        self.user_id = user_id
 
-    async def save_day(self, user_id: UUID, day: DayEntity) -> DayEntity:
+    async def save_day(self, day: DayEntity) -> DayEntity:
         """Save a day to the database.
 
         Args:
-            user_id: The user ID
             day: The day entity to save
 
         Returns:
             The saved Day entity
         """
-        async with self._uow_factory.create(user_id) as uow:
+        async with self._uow_factory.create(self.user_id) as uow:
             await uow.day_rw_repo.put(day)
             await uow.commit()
             return day

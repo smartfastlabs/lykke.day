@@ -19,5 +19,5 @@ def get_list_push_subscriptions_handler(
 ) -> ListPushSubscriptionsHandler:
     """Get a ListPushSubscriptionsHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ListPushSubscriptionsHandler(ro_repos)
+    return ListPushSubscriptionsHandler(ro_repos, user.id)
 

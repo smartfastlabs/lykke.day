@@ -22,7 +22,7 @@ def get_get_calendar_handler(
 ) -> GetCalendarHandler:
     """Get a GetCalendarHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return GetCalendarHandler(ro_repos)
+    return GetCalendarHandler(ro_repos, user.id)
 
 
 def get_list_calendars_handler(
@@ -33,5 +33,5 @@ def get_list_calendars_handler(
 ) -> ListCalendarsHandler:
     """Get a ListCalendarsHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ListCalendarsHandler(ro_repos)
+    return ListCalendarsHandler(ro_repos, user.id)
 

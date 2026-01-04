@@ -8,20 +8,20 @@ from planned.application.unit_of_work import UnitOfWorkFactory
 class DeleteCalendarHandler:
     """Deletes a calendar."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
+    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
         self._uow_factory = uow_factory
+        self.user_id = user_id
 
-    async def run(self, user_id: UUID, calendar_id: UUID) -> None:
+    async def run(self, calendar_id: UUID) -> None:
         """Delete a calendar.
 
         Args:
-            user_id: The user making the request
             calendar_id: The ID of the calendar to delete
 
         Raises:
             NotFoundError: If calendar not found
         """
-        async with self._uow_factory.create(user_id) as uow:
+        async with self._uow_factory.create(self.user_id) as uow:
             calendar = await uow.calendar_rw_repo.get(calendar_id)
             await uow.calendar_rw_repo.delete(calendar)
             await uow.commit()

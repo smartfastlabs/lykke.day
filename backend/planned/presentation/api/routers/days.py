@@ -45,7 +45,7 @@ async def get_context_today(
     handler: Annotated[GetDayContextHandler, Depends(get_get_day_context_handler)],
 ) -> DayContextSchema:
     """Get the complete context for today."""
-    context = await handler.get_day_context(user=user, date=get_current_date())
+    context = await handler.get_day_context(date=get_current_date())
     return map_day_context_to_schema(context)
 
 
@@ -55,7 +55,7 @@ async def get_context_tomorrow(
     handler: Annotated[GetDayContextHandler, Depends(get_get_day_context_handler)],
 ) -> DayContextSchema:
     """Get the complete context for tomorrow."""
-    context = await handler.get_day_context(user=user, date=get_tomorrows_date())
+    context = await handler.get_day_context(date=get_tomorrows_date())
     return map_day_context_to_schema(context)
 
 
@@ -66,7 +66,7 @@ async def get_context(
     handler: Annotated[GetDayContextHandler, Depends(get_get_day_context_handler)],
 ) -> DayContextSchema:
     """Get the complete context for a specific date."""
-    context = await handler.get_day_context(user=user, date=date)
+    context = await handler.get_day_context(date=date)
     return map_day_context_to_schema(context)
 
 
@@ -78,9 +78,7 @@ async def preview_day(
     template_id: UUID | None = None,
 ) -> DayContextSchema:
     """Preview what a day would look like if scheduled."""
-    context = await handler.preview_day(
-        user_id=user.id, date=date, template_id=template_id
-    )
+    context = await handler.preview_day(date=date, template_id=template_id)
     return map_day_context_to_schema(context)
 
 
@@ -95,7 +93,7 @@ async def schedule_today(
     handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
 ) -> DayContextSchema:
     """Schedule today with tasks from routines."""
-    context = await handler.schedule_day(user_id=user.id, date=get_current_date())
+    context = await handler.schedule_day(date=get_current_date())
     return map_day_context_to_schema(context)
 
 
@@ -107,9 +105,7 @@ async def schedule_day(
     template_id: UUID | None = None,
 ) -> DayContextSchema:
     """Schedule a specific day with tasks from routines."""
-    context = await handler.schedule_day(
-        user_id=user.id, date=date, template_id=template_id
-    )
+    context = await handler.schedule_day(date=date, template_id=template_id)
     return map_day_context_to_schema(context)
 
 
@@ -143,7 +139,6 @@ async def update_day(
         template_id=update_data.template_id,
     )
     day = await handler.update_day(
-        user_id=user.id,
         date=date,
         update_data=update_object,
     )
@@ -163,8 +158,6 @@ async def get_templates(
     ],
 ) -> list[DayTemplateSchema]:
     """Get all available day templates."""
-    result = await list_day_templates_handler.run(
-        user_id=user.id,
-    )
+    result = await list_day_templates_handler.run()
     templates = result if isinstance(result, list) else result.items
     return [map_day_template_to_schema(template) for template in templates]

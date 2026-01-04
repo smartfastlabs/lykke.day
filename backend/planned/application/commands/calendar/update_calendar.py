@@ -12,16 +12,16 @@ from planned.domain.value_objects import CalendarUpdateObject
 class UpdateCalendarHandler:
     """Updates an existing calendar."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
+    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
         self._uow_factory = uow_factory
+        self.user_id = user_id
 
     async def run(
-        self, user_id: UUID, calendar_id: UUID, update_data: CalendarUpdateObject
+        self, calendar_id: UUID, update_data: CalendarUpdateObject
     ) -> CalendarEntity:
         """Update an existing calendar.
 
         Args:
-            user_id: The user making the request
             calendar_id: The ID of the calendar to update
             update_data: The update data containing optional fields to update
 
@@ -31,7 +31,7 @@ class UpdateCalendarHandler:
         Raises:
             NotFoundError: If calendar not found
         """
-        async with self._uow_factory.create(user_id) as uow:
+        async with self._uow_factory.create(self.user_id) as uow:
             # Convert update_data to dict and filter out None values
             update_data_dict: dict[str, Any] = asdict(update_data)
             update_dict = {k: v for k, v in update_data_dict.items() if v is not None}

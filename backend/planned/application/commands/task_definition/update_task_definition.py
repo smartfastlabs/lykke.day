@@ -12,19 +12,18 @@ from planned.domain.value_objects import TaskDefinitionUpdateObject
 class UpdateTaskDefinitionHandler:
     """Updates an existing task definition."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
+    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
         self._uow_factory = uow_factory
+        self.user_id = user_id
 
     async def run(
         self,
-        user_id: UUID,
         task_definition_id: UUID,
         update_data: TaskDefinitionUpdateObject,
     ) -> TaskDefinitionEntity:
         """Update an existing task definition.
 
         Args:
-            user_id: The user making the request
             task_definition_id: The ID of the task definition to update
             update_data: The update data containing optional fields to update
 
@@ -34,7 +33,7 @@ class UpdateTaskDefinitionHandler:
         Raises:
             NotFoundError: If task definition not found
         """
-        async with self._uow_factory.create(user_id) as uow:
+        async with self._uow_factory.create(self.user_id) as uow:
             # Convert update_data to dict and filter out None values
             update_data_dict: dict[str, Any] = asdict(update_data)
             update_dict = {k: v for k, v in update_data_dict.items() if v is not None}

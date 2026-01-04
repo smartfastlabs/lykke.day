@@ -9,16 +9,16 @@ from planned.domain.entities import TaskDefinitionEntity
 class BulkCreateTaskDefinitionsHandler:
     """Creates multiple task definitions."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
+    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
         self._uow_factory = uow_factory
+        self.user_id = user_id
 
     async def run(
-        self, user_id: UUID, task_definitions: tuple[TaskDefinitionEntity, ...]
+        self, task_definitions: tuple[TaskDefinitionEntity, ...]
     ) -> list[TaskDefinitionEntity]:
         """Create multiple task definitions.
 
         Args:
-            user_id: The user making the request
             task_definitions: Tuple of task definition entities to create
 
         Returns:
@@ -27,7 +27,7 @@ class BulkCreateTaskDefinitionsHandler:
         if not task_definitions:
             return []
 
-        async with self._uow_factory.create(user_id) as uow:
+        async with self._uow_factory.create(self.user_id) as uow:
             created = await uow.task_definition_rw_repo.insert_many(*task_definitions)
             await uow.commit()
             return created

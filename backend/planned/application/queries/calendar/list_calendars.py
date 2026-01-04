@@ -10,18 +10,17 @@ from planned.domain.entities import CalendarEntity
 class ListCalendarsHandler:
     """Lists calendars with optional pagination."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
+    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
         self._ro_repos = ro_repos
+        self.user_id = user_id
 
     async def run(
         self,
-        user_id: UUID,
         search_query: value_objects.CalendarQuery | None = None,
     ) -> list[CalendarEntity] | value_objects.PagedQueryResponse[CalendarEntity]:
         """List calendars with optional pagination.
 
         Args:
-            user_id: The user making the request
             search_query: Optional search/filter query object with pagination info
 
         Returns:

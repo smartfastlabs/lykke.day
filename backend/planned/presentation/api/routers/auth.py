@@ -48,6 +48,6 @@ async def set_password(
     # Create update object
     update_object = UserUpdateObject(hashed_password=hashed_password)
 
-    await update_user_handler.run(user_id=user.id, update_data=update_object)
+    await update_user_handler.run(update_data=update_object)
 
     return StatusResponse()

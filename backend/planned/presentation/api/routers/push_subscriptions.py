@@ -42,7 +42,7 @@ async def list_subscriptions(
         ListPushSubscriptionsHandler, Depends(get_list_push_subscriptions_handler)
     ],
 ) -> list[PushSubscriptionSchema]:
-    result = await list_push_subscriptions_handler.run(user_id=user.id)
+    result = await list_push_subscriptions_handler.run()
     subscriptions = result if isinstance(result, list) else result.items
     return [map_push_subscription_to_schema(sub) for sub in subscriptions]
 
@@ -55,9 +55,7 @@ async def delete_subscription(
         DeletePushSubscriptionHandler, Depends(get_delete_push_subscription_handler)
     ],
 ) -> None:
-    await delete_push_subscription_handler.run(
-        user_id=user.id, subscription_id=UUID(subscription_id)
-    )
+    await delete_push_subscription_handler.run(subscription_id=UUID(subscription_id))
 
 
 @router.post("/subscribe", response_model=PushSubscriptionSchema)
@@ -76,9 +74,7 @@ async def subscribe(
         p256dh=request.keys.p256dh,
         auth=request.keys.auth,
     )
-    result = await create_push_subscription_handler.run(
-        user_id=user.id, subscription=subscription
-    )
+    result = await create_push_subscription_handler.run(subscription=subscription)
 
     background_tasks.add_task(
         web_push.send_notification,

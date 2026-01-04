@@ -9,16 +9,16 @@ from planned.domain.entities import TaskDefinitionEntity
 class GetTaskDefinitionHandler:
     """Retrieves a single task definition by ID."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
+    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
         self._ro_repos = ro_repos
+        self.user_id = user_id
 
     async def run(
-        self, user_id: UUID, task_definition_id: UUID
+        self, task_definition_id: UUID
     ) -> TaskDefinitionEntity:
         """Get a single task definition by ID.
 
         Args:
-            user_id: The user making the request
             task_definition_id: The ID of the task definition to retrieve
 
         Returns:

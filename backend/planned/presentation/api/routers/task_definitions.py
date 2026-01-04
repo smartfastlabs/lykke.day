@@ -59,9 +59,7 @@ async def get_task_definition(
     ],
 ) -> TaskDefinitionSchema:
     """Get a single task definition by ID."""
-    task_definition = await get_task_definition_handler.run(
-        user_id=user.id, task_definition_id=uuid
-    )
+    task_definition = await get_task_definition_handler.run(task_definition_id=uuid)
     return map_task_definition_to_schema(task_definition)
 
 
@@ -76,7 +74,6 @@ async def list_task_definitions(
 ) -> list[TaskDefinitionSchema]:
     """List task definitions with pagination."""
     result = await list_task_definitions_handler.run(
-        user_id=user.id,
         search_query=value_objects.TaskDefinitionQuery(limit=limit, offset=offset),
     )
     task_definitions: list[TaskDefinitionEntity] = (
@@ -101,9 +98,7 @@ async def create_task_definition(
         description=task_definition_data.description,
         type=task_definition_data.type,
     )
-    created = await create_task_definition_handler.run(
-        user_id=user.id, task_definition=task_definition
-    )
+    created = await create_task_definition_handler.run(task_definition=task_definition)
     return map_task_definition_to_schema(created)
 
 
@@ -126,7 +121,7 @@ async def bulk_create_task_definitions(
         task_definitions.append(task_definition)
 
     created = await bulk_create_task_definitions_handler.run(
-        user_id=user.id, task_definitions=tuple(task_definitions)
+        task_definitions=tuple(task_definitions)
     )
     return [map_task_definition_to_schema(td) for td in created]
 
@@ -150,7 +145,6 @@ async def update_task_definition(
         type=update_data.type,
     )
     updated = await update_task_definition_handler.run(
-        user_id=user.id,
         task_definition_id=uuid,
         update_data=update_object,
     )
@@ -166,4 +160,4 @@ async def delete_task_definition(
     ],
 ) -> None:
     """Delete a task definition."""
-    await delete_task_definition_handler.run(user_id=user.id, task_definition_id=uuid)
+    await delete_task_definition_handler.run(task_definition_id=uuid)

@@ -19,23 +19,24 @@ class SyncCalendarHandler:
         self,
         uow_factory: UnitOfWorkFactory,
         google_gateway: GoogleCalendarGatewayProtocol,
+        user_id: UUID,
     ) -> None:
         self._uow_factory = uow_factory
         self._google_gateway = google_gateway
+        self.user_id = user_id
 
     async def sync_calendar(
-        self, user_id: UUID, calendar_id: UUID
+        self, calendar_id: UUID
     ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity]]:
         """Sync calendar entries from external provider.
 
         Args:
-            user_id: The user ID
             calendar_id: The calendar ID to sync
 
         Returns:
             Tuple of (calendar_entries, deleted_calendar_entries)
         """
-        uow = self._uow_factory.create(user_id)
+        uow = self._uow_factory.create(self.user_id)
         async with uow:
             calendar = await uow.calendar_rw_repo.get(calendar_id)
             token = await uow.auth_token_rw_repo.get(calendar.auth_token_id)
@@ -114,20 +115,20 @@ class SyncAllCalendarsHandler:
         self,
         uow_factory: UnitOfWorkFactory,
         google_gateway: GoogleCalendarGatewayProtocol,
+        user_id: UUID,
     ) -> None:
         self._uow_factory = uow_factory
         self._google_gateway = google_gateway
+        self.user_id = user_id
 
-    async def sync_all_calendars(self, user_id: UUID) -> None:
-        """Sync all calendars for the user.
-
-        Args:
-            user_id: The user ID
-        """
-        uow = self._uow_factory.create(user_id)
+    async def sync_all_calendars(self) -> None:
+        """Sync all calendars for the user."""
+        uow = self._uow_factory.create(self.user_id)
         async with uow:
             calendars = await uow.calendar_rw_repo.all()
-            sync_handler = SyncCalendarHandler(self._uow_factory, self._google_gateway)
+            sync_handler = SyncCalendarHandler(
+                self._uow_factory, self._google_gateway, self.user_id
+            )
 
             for calendar in calendars:
                 try:

@@ -19,5 +19,5 @@ def get_list_calendar_entries_handler(
 ) -> ListCalendarEntriesHandler:
     """Get a ListCalendarEntriesHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ListCalendarEntriesHandler(ro_repos)
+    return ListCalendarEntriesHandler(ro_repos, user.id)
 

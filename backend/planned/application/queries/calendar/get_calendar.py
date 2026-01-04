@@ -9,14 +9,14 @@ from planned.domain.entities import CalendarEntity
 class GetCalendarHandler:
     """Retrieves a single calendar by ID."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
+    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
         self._ro_repos = ro_repos
+        self.user_id = user_id
 
-    async def run(self, user_id: UUID, calendar_id: UUID) -> CalendarEntity:
+    async def run(self, calendar_id: UUID) -> CalendarEntity:
         """Get a single calendar by ID.
 
         Args:
-            user_id: The user making the request
             calendar_id: The ID of the calendar to retrieve
 
         Returns:

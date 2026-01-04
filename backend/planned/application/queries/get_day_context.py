@@ -14,16 +14,16 @@ from planned.domain.entities import CalendarEntryEntity, DayEntity, MessageEntit
 class GetDayContextHandler:
     """Gets the complete context for a day."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
+    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
         self._ro_repos = ro_repos
+        self.user_id = user_id
 
     async def get_day_context(
-        self, user: UserEntity, date: date
+        self, date: date
     ) -> value_objects.DayContext:
         """Load complete day context for the given date.
 
         Args:
-            user: The user entity
             date: The date to get context for
 
         Returns:
@@ -36,7 +36,7 @@ class GetDayContextHandler:
 
         try:
             # Try to load existing day and all related data
-            day_id = DayEntity.id_from_date_and_user(date, user.id)
+            day_id = DayEntity.id_from_date_and_user(date, self.user_id)
             tasks, calendar_entries, messages, day = await asyncio.gather(
                 self._ro_repos.task_ro_repo.search_query(value_objects.DateQuery(date=date)),
                 self._ro_repos.calendar_entry_ro_repo.search_query(value_objects.DateQuery(date=date)),
@@ -45,21 +45,20 @@ class GetDayContextHandler:
             )
         except NotFoundError:
             # Day doesn't exist, create a preview day using default template
-            day = await self._create_preview_day(date, user.id, user)
+            user = await self._ro_repos.user_ro_repo.get(self.user_id)
+            day = await self._create_preview_day(date, user)
 
         return self._build_context(day, tasks, calendar_entries, messages)
 
     async def _create_preview_day(
         self,
         date: date,
-        user_id: UUID,
         user: UserEntity,
     ) -> DayEntity:
         """Create a preview day when no existing day is found.
 
         Args:
             date: The date for the preview day
-            user_id: The user ID for the preview day
             user: The user entity
 
         Returns:
@@ -69,7 +68,7 @@ class GetDayContextHandler:
         template = await self._ro_repos.day_template_ro_repo.get_by_slug(template_slug)
         return DayEntity.create_for_date(
             date,
-            user_id=user_id,
+            user_id=self.user_id,
             template=template,
         )
 

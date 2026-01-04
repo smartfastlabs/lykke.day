@@ -22,7 +22,7 @@ def get_get_task_definition_handler(
 ) -> GetTaskDefinitionHandler:
     """Get a GetTaskDefinitionHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return GetTaskDefinitionHandler(ro_repos)
+    return GetTaskDefinitionHandler(ro_repos, user.id)
 
 
 def get_list_task_definitions_handler(
@@ -33,5 +33,5 @@ def get_list_task_definitions_handler(
 ) -> ListTaskDefinitionsHandler:
     """Get a ListTaskDefinitionsHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ListTaskDefinitionsHandler(ro_repos)
+    return ListTaskDefinitionsHandler(ro_repos, user.id)
 

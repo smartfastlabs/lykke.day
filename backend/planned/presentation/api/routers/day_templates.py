@@ -41,9 +41,7 @@ async def get_day_template(
     ],
 ) -> DayTemplateSchema:
     """Get a single day template by ID."""
-    day_template = await get_day_template_handler.run(
-        user_id=user.id, day_template_id=uuid
-    )
+    day_template = await get_day_template_handler.run(day_template_id=uuid)
     return map_day_template_to_schema(day_template)
 
 
@@ -58,7 +56,6 @@ async def list_day_templates(
 ) -> value_objects.PagedQueryResponse[DayTemplateSchema]:
     """List day templates with pagination."""
     result = await list_day_templates_handler.run(
-        user_id=user.id,
         search_query=value_objects.DayTemplateQuery(limit=limit, offset=offset),
     )
     paged_response = cast("value_objects.PagedQueryResponse[DayTemplateEntity]", result)
@@ -104,9 +101,7 @@ async def create_day_template(
         icon=day_template_data.icon,
         routine_ids=day_template_data.routine_ids,
     )
-    created = await create_day_template_handler.run(
-        user_id=user.id, day_template=day_template
-    )
+    created = await create_day_template_handler.run(day_template=day_template)
     return map_day_template_to_schema(created)
 
 
@@ -141,7 +136,7 @@ async def update_day_template(
         routine_ids=update_data.routine_ids,
     )
     updated = await update_day_template_handler.run(
-        user_id=user.id, day_template_id=uuid, update_data=update_object
+        day_template_id=uuid, update_data=update_object
     )
     return map_day_template_to_schema(updated)
 
@@ -155,4 +150,4 @@ async def delete_day_template(
     ],
 ) -> None:
     """Delete a day template."""
-    await delete_day_template_handler.run(user_id=user.id, day_template_id=uuid)
+    await delete_day_template_handler.run(day_template_id=uuid)

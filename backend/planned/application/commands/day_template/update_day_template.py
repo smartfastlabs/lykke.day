@@ -12,19 +12,18 @@ from planned.domain.value_objects import DayTemplateUpdateObject
 class UpdateDayTemplateHandler:
     """Updates an existing day template."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory) -> None:
+    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
         self._uow_factory = uow_factory
+        self.user_id = user_id
 
     async def run(
         self,
-        user_id: UUID,
         day_template_id: UUID,
         update_data: DayTemplateUpdateObject,
     ) -> DayTemplateEntity:
         """Update an existing day template.
 
         Args:
-            user_id: The user making the request
             day_template_id: The ID of the day template to update
             update_data: The update data containing optional fields to update
 
@@ -34,7 +33,7 @@ class UpdateDayTemplateHandler:
         Raises:
             NotFoundError: If day template not found
         """
-        async with self._uow_factory.create(user_id) as uow:
+        async with self._uow_factory.create(self.user_id) as uow:
             # Convert update_data to dict and filter out None values
             update_data_dict: dict[str, Any] = asdict(update_data)
             update_dict = {k: v for k, v in update_data_dict.items() if v is not None}

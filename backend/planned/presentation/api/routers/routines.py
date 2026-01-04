@@ -26,7 +26,7 @@ async def get_routine(
     get_routine_handler: Annotated[GetRoutineHandler, Depends(get_get_routine_handler)],
 ) -> RoutineSchema:
     """Get a single routine by ID."""
-    routine = await get_routine_handler.run(user_id=user.id, routine_id=uuid)
+    routine = await get_routine_handler.run(routine_id=uuid)
     return map_routine_to_schema(routine)
 
 
@@ -41,7 +41,6 @@ async def list_routines(
 ) -> value_objects.PagedQueryResponse[RoutineSchema]:
     """List routines with pagination."""
     result = await list_routines_handler.run(
-        user_id=user.id,
         search_query=value_objects.RoutineQuery(limit=limit, offset=offset),
     )
     paged_response = cast("value_objects.PagedQueryResponse[RoutineEntity]", result)

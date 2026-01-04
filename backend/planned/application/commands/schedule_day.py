@@ -20,36 +20,37 @@ class ScheduleDayHandler:
         self,
         uow_factory: UnitOfWorkFactory,
         ro_repo_factory: ReadOnlyRepositoryFactory,
+        user_id: UUID,
     ) -> None:
         self._uow_factory = uow_factory
         self._ro_repo_factory = ro_repo_factory
+        self.user_id = user_id
 
-    def _get_preview_handler(self, user_id: UUID) -> PreviewDayHandler:
+    def _get_preview_handler(self) -> PreviewDayHandler:
         """Create a PreviewDayHandler with read-only repositories for the user."""
-        ro_repos = self._ro_repo_factory.create(user_id)
-        return PreviewDayHandler(ro_repos)
+        ro_repos = self._ro_repo_factory.create(self.user_id)
+        return PreviewDayHandler(ro_repos, self.user_id)
 
     async def schedule_day(
-        self, user_id: UUID, date: date, template_id: UUID | None = None
+        self, date: date, template_id: UUID | None = None
     ) -> value_objects.DayContext:
         """Schedule a day with tasks from routines.
 
         Args:
-            user_id: The user ID
             date: The date to schedule
             template_id: Optional template ID to use
 
         Returns:
             A DayContext with the scheduled day and tasks
         """
-        async with self._uow_factory.create(user_id) as uow:
+        async with self._uow_factory.create(self.user_id) as uow:
             # Delete existing tasks for this date
             await uow.task_rw_repo.delete_many(value_objects.DateQuery(date=date))
 
             # Get preview of what the day would look like
-            preview_handler = self._get_preview_handler(user_id)
+            preview_handler = self._get_preview_handler()
             preview_result = await preview_handler.preview_day(
-                user_id, date, template_id
+                date, template_id
             )
 
             # Validate template exists
@@ -62,7 +63,7 @@ class ScheduleDayHandler:
             # Create and schedule the day
             day = DayEntity.create_for_date(
                 date,
-                user_id=user_id,
+                user_id=self.user_id,
                 template=template,
             )
             day.schedule(template)

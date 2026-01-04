@@ -19,5 +19,5 @@ def get_list_tasks_handler(
 ) -> ListTasksHandler:
     """Get a ListTasksHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ListTasksHandler(ro_repos)
+    return ListTasksHandler(ro_repos, user.id)
 

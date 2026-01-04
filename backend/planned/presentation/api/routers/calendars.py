@@ -41,7 +41,7 @@ async def get_calendar(
     ],
 ) -> CalendarSchema:
     """Get a single calendar by ID."""
-    calendar = await get_calendar_handler.run(user_id=user.id, calendar_id=uuid)
+    calendar = await get_calendar_handler.run(calendar_id=uuid)
     return map_calendar_to_schema(calendar)
 
 
@@ -56,7 +56,6 @@ async def list_calendars(
 ) -> value_objects.PagedQueryResponse[CalendarSchema]:
     """List calendars with pagination."""
     result = await list_calendars_handler.run(
-        user_id=user.id,
         search_query=value_objects.CalendarQuery(limit=limit, offset=offset),
     )
     paged_response = cast("value_objects.PagedQueryResponse[CalendarEntity]", result)
@@ -91,7 +90,7 @@ async def create_calendar(
         platform=calendar_data.platform,
         last_sync_at=calendar_data.last_sync_at,
     )
-    created = await create_calendar_handler.run(user_id=user.id, calendar=calendar)
+    created = await create_calendar_handler.run(calendar=calendar)
     return map_calendar_to_schema(created)
 
 
@@ -114,7 +113,7 @@ async def update_calendar(
         last_sync_at=update_data.last_sync_at,
     )
     updated = await update_calendar_handler.run(
-        user_id=user.id, calendar_id=uuid, update_data=update_object
+        calendar_id=uuid, update_data=update_object
     )
     return map_calendar_to_schema(updated)
 
@@ -128,4 +127,4 @@ async def delete_calendar(
     ],
 ) -> None:
     """Delete a calendar."""
-    await delete_calendar_handler.run(user_id=user.id, calendar_id=uuid)
+    await delete_calendar_handler.run(calendar_id=uuid)

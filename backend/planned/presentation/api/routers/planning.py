@@ -31,9 +31,7 @@ async def list_routines(
     ],
 ) -> list[RoutineSchema]:
     """Get all routines for the current user."""
-    result = await list_routines_handler.run(
-        user_id=user.id,
-    )
+    result = await list_routines_handler.run()
     routines = result if isinstance(result, list) else result.items
     return [map_routine_to_schema(routine) for routine in routines]
 
@@ -49,7 +47,7 @@ async def preview_today(
     handler: Annotated[PreviewDayHandler, Depends(get_preview_day_handler)],
 ) -> DayContextSchema:
     """Preview what today would look like if scheduled."""
-    context = await handler.preview_day(user_id=user.id, date=get_current_date())
+    context = await handler.preview_day(date=get_current_date())
     return map_day_context_to_schema(context)
 
 
@@ -59,7 +57,7 @@ async def preview_tomorrow(
     handler: Annotated[PreviewDayHandler, Depends(get_preview_day_handler)],
 ) -> DayContextSchema:
     """Preview what tomorrow would look like if scheduled."""
-    context = await handler.preview_day(user_id=user.id, date=get_tomorrows_date())
+    context = await handler.preview_day(date=get_tomorrows_date())
     return map_day_context_to_schema(context)
 
 
@@ -70,7 +68,7 @@ async def preview_date(
     handler: Annotated[PreviewDayHandler, Depends(get_preview_day_handler)],
 ) -> DayContextSchema:
     """Preview what a specific date would look like if scheduled."""
-    context = await handler.preview_day(user_id=user.id, date=date)
+    context = await handler.preview_day(date=date)
     return map_day_context_to_schema(context)
 
 
@@ -85,7 +83,7 @@ async def schedule_today(
     handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
 ) -> DayContextSchema:
     """Schedule today with tasks from routines."""
-    context = await handler.schedule_day(user_id=user.id, date=get_current_date())
+    context = await handler.schedule_day(date=get_current_date())
     return map_day_context_to_schema(context)
 
 
@@ -95,7 +93,7 @@ async def schedule_tomorrow(
     handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
 ) -> DayContextSchema:
     """Schedule tomorrow with tasks from routines."""
-    context = await handler.schedule_day(user_id=user.id, date=get_tomorrows_date())
+    context = await handler.schedule_day(date=get_tomorrows_date())
     return map_day_context_to_schema(context)
 
 
@@ -106,5 +104,5 @@ async def schedule_date(
     handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
 ) -> DayContextSchema:
     """Schedule a specific date with tasks from routines."""
-    context = await handler.schedule_day(user_id=user.id, date=date)
+    context = await handler.schedule_day(date=date)
     return map_day_context_to_schema(context)
