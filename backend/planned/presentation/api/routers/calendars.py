@@ -15,7 +15,7 @@ from planned.application.queries.calendar import (
 )
 from planned.domain import value_objects
 from planned.domain.entities import CalendarEntity, UserEntity
-from planned.presentation.api.schemas import CalendarSchema
+from planned.presentation.api.schemas import CalendarSchema, CalendarUpdateSchema
 from planned.presentation.api.schemas.mappers import map_calendar_to_schema
 
 from .dependencies.commands.calendar import (
@@ -98,25 +98,23 @@ async def create_calendar(
 @router.put("/{uuid}", response_model=CalendarSchema)
 async def update_calendar(
     uuid: UUID,
-    calendar_data: CalendarSchema,
+    update_data: CalendarUpdateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
     update_calendar_handler: Annotated[
         UpdateCalendarHandler, Depends(get_update_calendar_handler)
     ],
 ) -> CalendarSchema:
     """Update a calendar."""
-    # Convert schema to entity
-    calendar = CalendarEntity(
-        id=uuid,
-        user_id=user.id,
-        name=calendar_data.name,
-        auth_token_id=calendar_data.auth_token_id,
-        platform_id=calendar_data.platform_id,
-        platform=calendar_data.platform,
-        last_sync_at=calendar_data.last_sync_at,
+    # Convert schema to update object
+    from planned.domain.value_objects import CalendarUpdateObject
+
+    update_object = CalendarUpdateObject(
+        name=update_data.name,
+        auth_token_id=update_data.auth_token_id,
+        last_sync_at=update_data.last_sync_at,
     )
     updated = await update_calendar_handler.run(
-        user_id=user.id, calendar_id=uuid, calendar_data=calendar
+        user_id=user.id, calendar_id=uuid, update_data=update_object
     )
     return map_calendar_to_schema(updated)
 

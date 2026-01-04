@@ -2,23 +2,27 @@
 
 from .action import ActionSchema
 from .alarm import AlarmSchema
-from .calendar import CalendarSchema
+from .calendar import CalendarSchema, CalendarUpdateSchema
 from .calendar_entry import CalendarEntrySchema
-from .day import DaySchema
+from .day import DaySchema, DayUpdateSchema
 from .day_context import DayContextSchema
-from .day_template import DayTemplateSchema
+from .day_template import DayTemplateSchema, DayTemplateUpdateSchema
 from .message import MessageSchema
 from .push_subscription import PushSubscriptionSchema
 from .routine import RoutineSchema
 from .task import TaskScheduleSchema, TaskSchema
-from .task_definition import TaskDefinitionSchema
+from .task_definition import TaskDefinitionSchema, TaskDefinitionUpdateSchema
 
 # Rebuild models with forward references after all classes are defined
 CalendarSchema.model_rebuild()
 CalendarEntrySchema.model_rebuild()
+CalendarUpdateSchema.model_rebuild()
 DaySchema.model_rebuild()
 DayTemplateSchema.model_rebuild()
+DayTemplateUpdateSchema.model_rebuild()
+DayUpdateSchema.model_rebuild()
 TaskSchema.model_rebuild()
+TaskDefinitionUpdateSchema.model_rebuild()
 DayContextSchema.model_rebuild()
 
 __all__ = [
@@ -26,13 +30,17 @@ __all__ = [
     "AlarmSchema",
     "CalendarEntrySchema",
     "CalendarSchema",
+    "CalendarUpdateSchema",
     "DayContextSchema",
     "DaySchema",
     "DayTemplateSchema",
+    "DayTemplateUpdateSchema",
+    "DayUpdateSchema",
     "MessageSchema",
     "PushSubscriptionSchema",
     "RoutineSchema",
     "TaskDefinitionSchema",
+    "TaskDefinitionUpdateSchema",
     "TaskScheduleSchema",
     "TaskSchema",
 ]

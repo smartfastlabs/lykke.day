@@ -9,19 +9,18 @@ from planned.application.commands import ScheduleDayHandler, UpdateDayHandler
 from planned.application.queries import GetDayContextHandler, PreviewDayHandler
 from planned.application.queries.day_template import ListDayTemplatesHandler
 from planned.core.utils.dates import get_current_date, get_tomorrows_date
-from planned.domain import value_objects
-from planned.domain.entities import DayTemplateEntity, UserEntity
+from planned.domain.entities import UserEntity
 from planned.presentation.api.schemas import (
     DayContextSchema,
     DaySchema,
     DayTemplateSchema,
+    DayUpdateSchema,
 )
 from planned.presentation.api.schemas.mappers import (
     map_day_context_to_schema,
     map_day_template_to_schema,
     map_day_to_schema,
 )
-from pydantic import BaseModel
 
 from .dependencies.queries.day_template import get_list_day_templates_handler
 from .dependencies.services import (
@@ -114,26 +113,39 @@ async def schedule_day(
     return map_day_context_to_schema(context)
 
 
-class UpdateDayRequest(BaseModel):
-    """Request body for updating a day."""
-
-    status: value_objects.DayStatus | None = None
-    template_id: UUID | None = None
-
-
 @router.patch("/{date}", response_model=DaySchema)
 async def update_day(
     date: datetime.date,
-    request: UpdateDayRequest,
+    update_data: DayUpdateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
     handler: Annotated[UpdateDayHandler, Depends(get_update_day_handler)],
 ) -> DaySchema:
     """Update a day's status or template."""
+    # Convert schema to update object
+    from planned.domain.value_objects import DayUpdateObject
+    from planned.domain.value_objects.alarm import Alarm
+
+    alarm = None
+    if update_data.alarm:
+        alarm = Alarm(
+            name=update_data.alarm.name,
+            time=update_data.alarm.time,
+            type=update_data.alarm.type,
+            description=update_data.alarm.description,
+            triggered_at=update_data.alarm.triggered_at,
+        )
+
+    update_object = DayUpdateObject(
+        alarm=alarm,
+        status=update_data.status,
+        scheduled_at=update_data.scheduled_at,
+        tags=update_data.tags,
+        template_id=update_data.template_id,
+    )
     day = await handler.update_day(
         user_id=user.id,
         date=date,
-        status=request.status,
-        template_id=request.template_id,
+        update_data=update_object,
     )
     return map_day_to_schema(day)
 

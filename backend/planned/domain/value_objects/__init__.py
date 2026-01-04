@@ -29,6 +29,14 @@ from .task import (
     TaskType,
     TimingType,
 )
+from .update import (
+    BaseUpdateObject,
+    CalendarUpdateObject,
+    DayTemplateUpdateObject,
+    DayUpdateObject,
+    TaskDefinitionUpdateObject,
+    UserUpdateObject,
+)
 from .user import UserSetting
 
 __all__ = [
@@ -37,11 +45,15 @@ __all__ = [
     "AlarmType",
     "BaseRequestObject",
     "BaseResponseObject",
+    "BaseUpdateObject",
     "BaseValueObject",
+    "CalendarUpdateObject",
     "DayContext",
     "DayMode",
     "DayStatus",
     "DayTag",
+    "DayTemplateUpdateObject",
+    "DayUpdateObject",
     "NotificationAction",
     "NotificationPayload",
     "AuthTokenQuery",
@@ -56,8 +68,10 @@ __all__ = [
     "PushSubscriptionQuery",
     "RoutineQuery",
     "TaskDefinitionQuery",
+    "TaskDefinitionUpdateObject",
     "TaskQuery",
     "UserQuery",
+    "UserUpdateObject",
     "DayOfWeek",
     "RoutineSchedule",
     "RoutineTask",

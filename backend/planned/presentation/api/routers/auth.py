@@ -12,6 +12,7 @@ from planned.application.commands.user import UpdateUserHandler
 from planned.core.exceptions import BadRequestError
 from planned.domain import value_objects
 from planned.domain.entities import UserEntity
+from planned.domain.value_objects import UserUpdateObject
 
 from .dependencies.commands.user import get_update_user_handler
 from .dependencies.user import get_current_user
@@ -42,8 +43,11 @@ async def set_password(
         raise BadRequestError("Passwords do not match")
 
     # Hash and set new password
-    user.hashed_password = pwd_context.hash(data.new_password)
+    hashed_password = pwd_context.hash(data.new_password)
 
-    await update_user_handler.run(user_id=user.id, user_data=user)
+    # Create update object
+    update_object = UserUpdateObject(hashed_password=hashed_password)
+
+    await update_user_handler.run(user_id=user.id, update_data=update_object)
 
     return StatusResponse()

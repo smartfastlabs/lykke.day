@@ -15,7 +15,7 @@ from planned.application.queries.day_template import (
 )
 from planned.domain import value_objects
 from planned.domain.entities import DayTemplateEntity, UserEntity
-from planned.presentation.api.schemas import DayTemplateSchema
+from planned.presentation.api.schemas import DayTemplateSchema, DayTemplateUpdateSchema
 from planned.presentation.api.schemas.mappers import map_day_template_to_schema
 
 from .dependencies.commands.day_template import (
@@ -113,36 +113,35 @@ async def create_day_template(
 @router.put("/{uuid}", response_model=DayTemplateSchema)
 async def update_day_template(
     uuid: UUID,
-    day_template_data: DayTemplateSchema,
+    update_data: DayTemplateUpdateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
     update_day_template_handler: Annotated[
         UpdateDayTemplateHandler, Depends(get_update_day_template_handler)
     ],
 ) -> DayTemplateSchema:
     """Update a day template."""
-    # Convert schema to entity
+    # Convert schema to update object
+    from planned.domain.value_objects import DayTemplateUpdateObject
     from planned.domain.value_objects.alarm import Alarm
 
     alarm = None
-    if day_template_data.alarm:
+    if update_data.alarm:
         alarm = Alarm(
-            name=day_template_data.alarm.name,
-            time=day_template_data.alarm.time,
-            type=day_template_data.alarm.type,
-            description=day_template_data.alarm.description,
-            triggered_at=day_template_data.alarm.triggered_at,
+            name=update_data.alarm.name,
+            time=update_data.alarm.time,
+            type=update_data.alarm.type,
+            description=update_data.alarm.description,
+            triggered_at=update_data.alarm.triggered_at,
         )
 
-    day_template = DayTemplateEntity(
-        id=uuid,
-        user_id=user.id,
-        slug=day_template_data.slug,
+    update_object = DayTemplateUpdateObject(
+        slug=update_data.slug,
         alarm=alarm,
-        icon=day_template_data.icon,
-        routine_ids=day_template_data.routine_ids,
+        icon=update_data.icon,
+        routine_ids=update_data.routine_ids,
     )
     updated = await update_day_template_handler.run(
-        user_id=user.id, day_template_id=uuid, day_template_data=day_template
+        user_id=user.id, day_template_id=uuid, update_data=update_object
     )
     return map_day_template_to_schema(updated)
 

@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from .base import BaseEntitySchema
+from .base import BaseEntitySchema, BaseSchema
 
 
 class CalendarSchema(BaseEntitySchema):
@@ -14,5 +14,13 @@ class CalendarSchema(BaseEntitySchema):
     auth_token_id: UUID
     platform_id: str
     platform: str
+    last_sync_at: datetime | None = None
+
+
+class CalendarUpdateSchema(BaseSchema):
+    """API schema for Calendar update requests."""
+
+    name: str | None = None
+    auth_token_id: UUID | None = None
     last_sync_at: datetime | None = None
 

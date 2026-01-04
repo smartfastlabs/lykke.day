@@ -1,11 +1,12 @@
 """Command to update an existing task definition."""
 
-from dataclasses import asdict, fields, replace
-from typing import Any, cast
+from dataclasses import asdict
+from typing import Any
 from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain.entities import TaskDefinitionEntity
+from planned.domain.value_objects import TaskDefinitionUpdateObject
 
 
 class UpdateTaskDefinitionHandler:
@@ -18,14 +19,14 @@ class UpdateTaskDefinitionHandler:
         self,
         user_id: UUID,
         task_definition_id: UUID,
-        task_definition_data: TaskDefinitionEntity,
+        update_data: TaskDefinitionUpdateObject,
     ) -> TaskDefinitionEntity:
         """Update an existing task definition.
 
         Args:
             user_id: The user making the request
             task_definition_id: The ID of the task definition to update
-            task_definition_data: The updated task definition data
+            update_data: The update data containing optional fields to update
 
         Returns:
             The updated task definition entity
@@ -34,28 +35,13 @@ class UpdateTaskDefinitionHandler:
             NotFoundError: If task definition not found
         """
         async with self._uow_factory.create(user_id) as uow:
-            # Get existing task definition
-            existing = await uow.task_definition_rw_repo.get(task_definition_id)
+            # Convert update_data to dict and filter out None values
+            update_data_dict: dict[str, Any] = asdict(update_data)
+            update_dict = {k: v for k, v in update_data_dict.items() if v is not None}
 
-            # Merge updates - both entities are dataclasses
-            # Get all fields from task_definition_data that are not None
-            task_definition_data_dict: dict[str, Any] = asdict(task_definition_data)
-
-            # Filter out init=False fields (like _domain_events) - they can't be specified in replace()
-            init_false_fields = {f.name for f in fields(existing) if not f.init}
-            update_dict = {
-                k: v
-                for k, v in task_definition_data_dict.items()
-                if v is not None and k not in init_false_fields
-            }
-            updated_any: Any = replace(existing, **update_dict)
-            updated = cast(TaskDefinitionEntity, updated_any)
-
-            # Ensure ID matches
-            if hasattr(updated, "id"):
-                object.__setattr__(updated, "id", task_definition_id)
-
-            task_definition = await uow.task_definition_rw_repo.put(updated)
+            # Apply updates directly to the database
+            task_definition = await uow.task_definition_rw_repo.apply_updates(
+                task_definition_id, **update_dict
+            )
             await uow.commit()
             return task_definition
-

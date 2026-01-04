@@ -7,6 +7,7 @@ from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity
+from planned.domain.value_objects import DayUpdateObject
 
 
 class UpdateDayHandler:
@@ -19,16 +20,14 @@ class UpdateDayHandler:
         self,
         user_id: UUID,
         date: date,
-        status: value_objects.DayStatus | None = None,
-        template_id: UUID | None = None,
+        update_data: DayUpdateObject,
     ) -> DayEntity:
         """Update a day's status and/or template.
 
         Args:
             user_id: The user ID
             date: The date of the day to update
-            status: Optional new status
-            template_id: Optional new template ID
+            update_data: The update data containing optional fields to update
 
         Returns:
             The updated Day entity
@@ -49,13 +48,21 @@ class UpdateDayHandler:
                 day = DayEntity.create_for_date(date, user_id=user_id, template=template)
 
             # Apply status transition if requested
-            if status is not None:
-                self._apply_status_transition(day, status)
+            if update_data.status is not None:
+                self._apply_status_transition(day, update_data.status)
 
             # Update template if requested
-            if template_id is not None:
-                template = await uow.day_template_rw_repo.get(template_id)
+            if update_data.template_id is not None:
+                template = await uow.day_template_rw_repo.get(update_data.template_id)
                 day.update_template(template)
+
+            # Update other fields if provided
+            if update_data.alarm is not None:
+                day.alarm = update_data.alarm
+            if update_data.scheduled_at is not None:
+                day.scheduled_at = update_data.scheduled_at
+            if update_data.tags is not None:
+                day.tags = update_data.tags
 
             # Save and commit
             await uow.day_rw_repo.put(day)

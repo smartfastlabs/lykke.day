@@ -9,7 +9,7 @@ from pydantic import Field
 
 from planned.domain.value_objects.day import DayStatus, DayTag
 
-from .base import BaseEntitySchema
+from .base import BaseEntitySchema, BaseSchema
 
 if TYPE_CHECKING:
     from .alarm import AlarmSchema
@@ -26,4 +26,14 @@ class DaySchema(BaseEntitySchema):
     scheduled_at: datetime | None = None
     tags: list[DayTag] = Field(default_factory=list)
     template: Optional["DayTemplateSchema"] = None
+
+
+class DayUpdateSchema(BaseSchema):
+    """API schema for Day update requests."""
+
+    alarm: Optional["AlarmSchema"] = None
+    status: DayStatus | None = None
+    scheduled_at: datetime | None = None
+    tags: list[DayTag] | None = None
+    template_id: UUID | None = None
 

@@ -1,6 +1,6 @@
 """Router for TaskDefinition CRUD operations."""
 
-from typing import Annotated, cast
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -19,7 +19,10 @@ from planned.domain.entities import TaskDefinitionEntity, UserEntity
 from planned.infrastructure.data.default_task_definitions import (
     DEFAULT_TASK_DEFINITIONS,
 )
-from planned.presentation.api.schemas import TaskDefinitionSchema
+from planned.presentation.api.schemas import (
+    TaskDefinitionSchema,
+    TaskDefinitionUpdateSchema,
+)
 from planned.presentation.api.schemas.mappers import map_task_definition_to_schema
 
 from .dependencies.commands.task_definition import (
@@ -131,25 +134,25 @@ async def bulk_create_task_definitions(
 @router.put("/{uuid}", response_model=TaskDefinitionSchema)
 async def update_task_definition(
     uuid: UUID,
-    task_definition_data: TaskDefinitionSchema,
+    update_data: TaskDefinitionUpdateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
     update_task_definition_handler: Annotated[
         UpdateTaskDefinitionHandler, Depends(get_update_task_definition_handler)
     ],
 ) -> TaskDefinitionSchema:
     """Update a task definition."""
-    # Convert schema to entity
-    task_definition = TaskDefinitionEntity(
-        id=uuid,
-        user_id=user.id,
-        name=task_definition_data.name,
-        description=task_definition_data.description,
-        type=task_definition_data.type,
+    # Convert schema to update object
+    from planned.domain.value_objects import TaskDefinitionUpdateObject
+
+    update_object = TaskDefinitionUpdateObject(
+        name=update_data.name,
+        description=update_data.description,
+        type=update_data.type,
     )
     updated = await update_task_definition_handler.run(
         user_id=user.id,
         task_definition_id=uuid,
-        task_definition_data=task_definition,
+        update_data=update_object,
     )
     return map_task_definition_to_schema(updated)
 

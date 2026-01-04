@@ -1,11 +1,12 @@
 """Command to update an existing user."""
 
-from dataclasses import asdict, fields, replace
-from typing import Any, cast
+from dataclasses import asdict
+from typing import Any
 from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain.entities import UserEntity
+from planned.domain.value_objects import UserUpdateObject
 
 
 class UpdateUserHandler:
@@ -15,13 +16,13 @@ class UpdateUserHandler:
         self._uow_factory = uow_factory
 
     async def run(
-        self, user_id: UUID, user_data: UserEntity
+        self, user_id: UUID, update_data: UserUpdateObject
     ) -> UserEntity:
         """Update an existing user.
 
         Args:
             user_id: The user making the request (and the ID of the user to update)
-            user_data: The updated user data
+            update_data: The update data containing optional fields to update
 
         Returns:
             The updated user entity
@@ -30,28 +31,12 @@ class UpdateUserHandler:
             NotFoundError: If user not found
         """
         async with self._uow_factory.create(user_id) as uow:
-            # Get existing user
-            existing = await uow.user_rw_repo.get(user_id)
+            # Convert update_data to dict and filter out None values
+            update_data_dict: dict[str, Any] = asdict(update_data)
+            update_dict = {k: v for k, v in update_data_dict.items() if v is not None}
 
-            # Merge updates - both entities are dataclasses
-            # Get all fields from user_data that are not None
-            user_data_dict: dict[str, Any] = asdict(user_data)
-
-            # Filter out init=False fields (like _domain_events) - they can't be specified in replace()
-            init_false_fields = {f.name for f in fields(existing) if not f.init}
-            update_dict = {
-                k: v
-                for k, v in user_data_dict.items()
-                if v is not None and k not in init_false_fields
-            }
-            updated_any: Any = replace(existing, **update_dict)
-            updated = cast(UserEntity, updated_any)
-
-            # Ensure ID matches
-            if hasattr(updated, "id"):
-                object.__setattr__(updated, "id", user_id)
-
-            user = await uow.user_rw_repo.put(updated)
+            # Apply updates directly to the database
+            user = await uow.user_rw_repo.apply_updates(user_id, **update_dict)
             await uow.commit()
             return user
 
