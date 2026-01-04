@@ -149,7 +149,7 @@ def map_message_to_schema(message: MessageEntity) -> MessageSchema:
         sent_at=message.sent_at,
         content=message.content,
         read_at=message.read_at,
-        date=message.date,  # Computed field
+        date=message.sent_at.date(),  # Extract date from sent_at
     )
 
 

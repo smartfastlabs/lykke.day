@@ -8,12 +8,12 @@ from planned.core.exceptions import DomainError
 
 from .. import value_objects
 from .action import ActionEntity
-from .base import BaseDateObject
+from .base import BaseEntityObject
 from .task_definition import TaskDefinitionEntity
 
 
 @dataclass(kw_only=True)
-class TaskEntity(BaseDateObject):
+class TaskEntity(BaseEntityObject):
     user_id: UUID
     scheduled_date: dt_date
     name: str
@@ -26,14 +26,6 @@ class TaskEntity(BaseDateObject):
     routine_id: UUID | None = None
     tags: list[value_objects.TaskTag] = field(default_factory=list)
     actions: list[ActionEntity] = field(default_factory=list)
-
-    def _get_date(self) -> dt_date:
-        return self.scheduled_date
-
-    def _get_datetime(self) -> datetime:
-        """Get datetime for this task (not used since _get_date is implemented)."""
-        # This is required by BaseDateObject but not used since _get_date is implemented
-        return datetime.combine(self.scheduled_date, datetime.min.time())
 
     def record_action(self, action: ActionEntity) -> value_objects.TaskStatus:
         """Record an action on this task.
