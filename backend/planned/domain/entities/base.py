@@ -95,7 +95,7 @@ class BaseEntityObject(BaseObject, Generic[UpdateObjectType, UpdateEventType]):
         This method:
         1. Converts the update object to a dict, filtering out None values
         2. Applies the updates to the entity using clone()
-        3. Records a domain event with the update object and new entity value
+        3. Records a domain event with the update object
 
         Args:
             update_object: The update object containing optional fields to update
@@ -113,13 +113,12 @@ class BaseEntityObject(BaseObject, Generic[UpdateObjectType, UpdateEventType]):
         # At runtime, this is definitely a BaseEntityObject since self is one
         updated_entity = self.clone(**update_dict)
 
-        # Record domain event with update object and new entity value
-        # The event class should accept update_object and entity as parameters
+        # Record domain event with update object
+        # The event class should accept update_object as a parameter
         from planned.domain.events.base import EntityUpdatedEvent
 
         event = update_event_class(
             update_object=update_object,
-            entity=updated_entity,
         )
         # Type checker limitation: clone() returns Self from BaseObject, but we know it's BaseEntityObject
         updated_entity._add_event(event)

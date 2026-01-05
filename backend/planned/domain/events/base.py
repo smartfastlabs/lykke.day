@@ -7,18 +7,14 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 if TYPE_CHECKING:
-    from planned.domain.entities.base import BaseEntityObject
     from planned.domain.value_objects.update import BaseUpdateObject
     _BaseUpdateObject = BaseUpdateObject
-    _BaseEntityObject = BaseEntityObject
 else:
     # At runtime, we don't need the actual types for TypeVar bounds
     # The bounds are only used for type checking
     _BaseUpdateObject = Any
-    _BaseEntityObject = Any
 
 UpdateObjectType = TypeVar("UpdateObjectType", bound=_BaseUpdateObject)
-EntityType = TypeVar("EntityType", bound=_BaseEntityObject)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -34,16 +30,14 @@ class DomainEvent:
 
 
 @dataclass(frozen=True, kw_only=True)
-class EntityUpdatedEvent(DomainEvent, Generic[UpdateObjectType, EntityType]):
+class EntityUpdatedEvent(DomainEvent, Generic[UpdateObjectType]):
     """Base class for entity update events.
 
     This event is raised when an entity is updated via apply_update().
-    It contains the update object that was applied and the new entity state.
+    It contains the update object that was applied.
 
     Type parameters:
         UpdateObjectType: The type of update object (e.g., DayUpdateObject)
-        EntityType: The type of entity that was updated (e.g., DayEntity)
     """
 
     update_object: UpdateObjectType
-    entity: EntityType

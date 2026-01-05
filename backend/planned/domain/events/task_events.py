@@ -3,15 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 from uuid import UUID
 
 from planned.domain.value_objects.update import TaskDefinitionUpdateObject
 
 from .base import DomainEvent, EntityUpdatedEvent
-
-if TYPE_CHECKING:
-    from planned.domain.entities.task_definition import TaskDefinitionEntity
 
 __all__ = [
     "TaskActionRecordedEvent",
@@ -57,7 +53,5 @@ class TaskActionRecordedEvent(DomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class TaskDefinitionUpdatedEvent(
-    EntityUpdatedEvent[TaskDefinitionUpdateObject, "TaskDefinitionEntity"]
-):
+class TaskDefinitionUpdatedEvent(EntityUpdatedEvent[TaskDefinitionUpdateObject]):
     """Event raised when a task definition is updated via apply_update()."""

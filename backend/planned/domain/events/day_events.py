@@ -11,9 +11,6 @@ from planned.domain.value_objects.update import DayUpdateObject
 
 from .base import DomainEvent, EntityUpdatedEvent
 
-if TYPE_CHECKING:
-    from planned.domain.entities.day import DayEntity
-
 __all__ = [
     "DayCompletedEvent",
     "DayScheduledEvent",
@@ -48,5 +45,5 @@ class DayUnscheduledEvent(DomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class DayUpdatedEvent(EntityUpdatedEvent[DayUpdateObject, "DayEntity"]):
+class DayUpdatedEvent(EntityUpdatedEvent[DayUpdateObject]):
     """Event raised when a day is updated via apply_update()."""
