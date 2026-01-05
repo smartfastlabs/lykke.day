@@ -17,7 +17,6 @@ from planned.application.repositories import (
     CalendarRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
-    MessageRepositoryReadOnlyProtocol,
     PushSubscriptionRepositoryReadOnlyProtocol,
     RoutineRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
@@ -52,7 +51,6 @@ class UnitOfWorkProtocol(Protocol):
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
-    message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
@@ -172,7 +170,6 @@ class ReadOnlyRepositories(Protocol):
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
-    message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol

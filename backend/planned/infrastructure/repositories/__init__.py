@@ -3,7 +3,6 @@ from .calendar import CalendarRepository
 from .calendar_entry import CalendarEntryRepository
 from .day import DayRepository
 from .day_template import DayTemplateRepository
-from .message import MessageRepository
 from .push_subscription import PushSubscriptionRepository
 from .routine import RoutineRepository
 from .task import TaskRepository
@@ -16,7 +15,6 @@ __all__ = [
     "CalendarRepository",
     "DayRepository",
     "DayTemplateRepository",
-    "MessageRepository",
     "PushSubscriptionRepository",
     "RoutineRepository",
     "TaskDefinitionRepository",

@@ -7,7 +7,6 @@ from .calendar_entry import CalendarEntrySchema
 from .day import DaySchema, DayUpdateSchema
 from .day_context import DayContextSchema
 from .day_template import DayTemplateSchema, DayTemplateUpdateSchema
-from .message import MessageSchema
 from .push_subscription import PushSubscriptionSchema
 from .routine import RoutineSchema
 from .task import TaskScheduleSchema, TaskSchema
@@ -36,7 +35,6 @@ __all__ = [
     "DayTemplateSchema",
     "DayTemplateUpdateSchema",
     "DayUpdateSchema",
-    "MessageSchema",
     "PushSubscriptionSchema",
     "RoutineSchema",
     "TaskDefinitionSchema",

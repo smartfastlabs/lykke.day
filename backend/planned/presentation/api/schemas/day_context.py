@@ -9,7 +9,6 @@ from .base import BaseSchema
 if TYPE_CHECKING:
     from .calendar_entry import CalendarEntrySchema
     from .day import DaySchema
-    from .message import MessageSchema
     from .task import TaskSchema
 
 
@@ -19,5 +18,4 @@ class DayContextSchema(BaseSchema):
     day: "DaySchema"
     calendar_entries: list["CalendarEntrySchema"] = Field(default_factory=list)
     tasks: list["TaskSchema"] = Field(default_factory=list)
-    messages: list["MessageSchema"] = Field(default_factory=list)
 

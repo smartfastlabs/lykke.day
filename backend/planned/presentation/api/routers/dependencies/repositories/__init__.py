@@ -15,7 +15,6 @@ from planned.application.repositories import (
     CalendarRepositoryReadWriteProtocol,
     DayRepositoryReadWriteProtocol,
     DayTemplateRepositoryReadWriteProtocol,
-    MessageRepositoryReadWriteProtocol,
     PushSubscriptionRepositoryReadWriteProtocol,
     RoutineRepositoryReadWriteProtocol,
     TaskDefinitionRepositoryReadWriteProtocol,
@@ -29,7 +28,6 @@ from planned.infrastructure.repositories import (
     CalendarRepository,
     DayRepository,
     DayTemplateRepository,
-    MessageRepository,
     PushSubscriptionRepository,
     RoutineRepository,
     TaskDefinitionRepository,
@@ -79,13 +77,6 @@ def get_day_template_repo(
     return cast(
         "DayTemplateRepositoryReadWriteProtocol", DayTemplateRepository(user_id=user.id)
     )
-
-
-def get_message_repo(
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> MessageRepositoryReadWriteProtocol:
-    """Get a user-scoped instance of MessageRepository."""
-    return cast("MessageRepositoryReadWriteProtocol", MessageRepository(user_id=user.id))
 
 
 def get_push_subscription_repo(

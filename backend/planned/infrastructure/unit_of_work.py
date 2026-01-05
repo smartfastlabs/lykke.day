@@ -18,8 +18,6 @@ from planned.application.repositories import (
     DayRepositoryReadWriteProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadWriteProtocol,
-    MessageRepositoryReadOnlyProtocol,
-    MessageRepositoryReadWriteProtocol,
     PushSubscriptionRepositoryReadOnlyProtocol,
     PushSubscriptionRepositoryReadWriteProtocol,
     RoutineRepositoryReadOnlyProtocol,
@@ -42,7 +40,6 @@ from planned.domain.entities import (
     CalendarEntryEntity,
     DayEntity,
     DayTemplateEntity,
-    MessageEntity,
     RoutineEntity,
     TaskDefinitionEntity,
     TaskEntity,
@@ -68,7 +65,6 @@ from planned.infrastructure.repositories import (
     CalendarRepository,
     DayRepository,
     DayTemplateRepository,
-    MessageRepository,
     PushSubscriptionRepository,
     RoutineRepository,
     TaskDefinitionRepository,
@@ -98,7 +94,6 @@ class SqlAlchemyUnitOfWork:
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
-    message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
@@ -125,7 +120,6 @@ class SqlAlchemyUnitOfWork:
         self._calendar_rw_repo: CalendarRepositoryReadWriteProtocol | None = None
         self._day_rw_repo: DayRepositoryReadWriteProtocol | None = None
         self._day_template_rw_repo: DayTemplateRepositoryReadWriteProtocol | None = None
-        self._message_rw_repo: MessageRepositoryReadWriteProtocol | None = None
         self._push_subscription_rw_repo: (
             PushSubscriptionRepositoryReadWriteProtocol | None
         ) = None
@@ -208,13 +202,6 @@ class SqlAlchemyUnitOfWork:
             "CalendarEntryRepositoryReadOnlyProtocol", calendar_entry_repo
         )
         self._calendar_entry_rw_repo = calendar_entry_repo
-
-        message_repo = cast(
-            "MessageRepositoryReadWriteProtocol",
-            MessageRepository(user_id=self.user_id),
-        )
-        self.message_ro_repo = cast("MessageRepositoryReadOnlyProtocol", message_repo)
-        self._message_rw_repo = message_repo
 
         push_subscription_repo = cast(
             "PushSubscriptionRepositoryReadWriteProtocol",
@@ -399,8 +386,6 @@ class SqlAlchemyUnitOfWork:
             return self._calendar_entry_rw_repo
         elif entity_type == CalendarEntity:
             return self._calendar_rw_repo
-        elif entity_type == MessageEntity:
-            return self._message_rw_repo
         elif entity_type == TaskEntity:
             return self._task_rw_repo
         elif entity_type == RoutineEntity:
@@ -439,8 +424,6 @@ class SqlAlchemyUnitOfWork:
             return self.calendar_entry_ro_repo
         elif entity_type == CalendarEntity:
             return self.calendar_ro_repo
-        elif entity_type == MessageEntity:
-            return self.message_ro_repo
         elif entity_type == TaskEntity:
             return self.task_ro_repo
         elif entity_type == RoutineEntity:
@@ -606,12 +589,6 @@ class SqlAlchemyReadOnlyRepositories:
             CalendarEntryRepository(user_id=self.user_id),
         )
         self.calendar_entry_ro_repo = calendar_entry_repo
-
-        message_repo = cast(
-            "MessageRepositoryReadOnlyProtocol",
-            MessageRepository(user_id=self.user_id),
-        )
-        self.message_ro_repo = message_repo
 
         push_subscription_repo = cast(
             "PushSubscriptionRepositoryReadOnlyProtocol",

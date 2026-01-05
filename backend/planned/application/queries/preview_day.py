@@ -10,7 +10,6 @@ from planned.application.repositories import (
     CalendarEntryRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
-    MessageRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
 )
 from planned.application.unit_of_work import ReadOnlyRepositories
@@ -25,7 +24,6 @@ class PreviewDayHandler(BaseQueryHandler):
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
-    message_ro_repo: MessageRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
     def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
@@ -55,17 +53,15 @@ class PreviewDayHandler(BaseQueryHandler):
         )
 
         # Load preview tasks and existing data in parallel
-        tasks, calendar_entries, messages = await asyncio.gather(
+        tasks, calendar_entries = await asyncio.gather(
             self._preview_tasks_handler.preview_tasks(date),
             self.calendar_entry_ro_repo.search_query(value_objects.DateQuery(date=date)),
-            self.message_ro_repo.search_query(value_objects.DateQuery(date=date)),
         )
 
         return value_objects.DayContext(
             day=day,
             tasks=tasks,
             calendar_entries=calendar_entries,
-            messages=messages,
         )
 
     async def _get_template(

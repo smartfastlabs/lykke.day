@@ -67,5 +67,4 @@ class ScheduleDayHandler(BaseCommandHandler):
                 day=day,
                 tasks=tasks,
                 calendar_entries=preview_result.calendar_entries,
-                messages=preview_result.messages,
             )

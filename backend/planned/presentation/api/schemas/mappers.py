@@ -9,7 +9,6 @@ from planned.domain.entities import (
     CalendarEntryEntity,
     DayEntity,
     DayTemplateEntity,
-    MessageEntity,
     RoutineEntity,
     TaskDefinitionEntity,
     TaskEntity,
@@ -23,7 +22,6 @@ from planned.presentation.api.schemas import (
     DayContextSchema,
     DaySchema,
     DayTemplateSchema,
-    MessageSchema,
     PushSubscriptionSchema,
     RoutineSchema,
     TaskDefinitionSchema,
@@ -140,19 +138,6 @@ def map_calendar_entry_to_schema(
     )
 
 
-def map_message_to_schema(message: MessageEntity) -> MessageSchema:
-    """Convert Message entity to Message schema."""
-    return MessageSchema(
-        id=message.id,
-        user_id=message.user_id,
-        author=message.author,
-        sent_at=message.sent_at,
-        content=message.content,
-        read_at=message.read_at,
-        date=message.sent_at.date(),  # Extract date from sent_at
-    )
-
-
 def map_day_context_to_schema(
     context: value_objects.DayContext,
 ) -> DayContextSchema:
@@ -162,13 +147,11 @@ def map_day_context_to_schema(
         map_calendar_entry_to_schema(entry) for entry in context.calendar_entries
     ]
     task_schemas = [map_task_to_schema(task) for task in context.tasks]
-    message_schemas = [map_message_to_schema(message) for message in context.messages]
 
     return DayContextSchema(
         day=day_schema,
         calendar_entries=calendar_entry_schemas,
         tasks=task_schemas,
-        messages=message_schemas,
     )
 
 

@@ -6,7 +6,6 @@ from .calendar_entries import CalendarEntry
 from .calendars import Calendar
 from .day_templates import DayTemplate
 from .days import Day
-from .messages import Message
 from .push_subscriptions import PushSubscription
 from .routines import Routine
 from .task_definitions import TaskDefinition
@@ -19,7 +18,6 @@ calendar_entries_tbl = CalendarEntry.__table__
 calendars_tbl = Calendar.__table__
 day_templates_tbl = DayTemplate.__table__
 days_tbl = Day.__table__
-messages_tbl = Message.__table__
 push_subscriptions_tbl = PushSubscription.__table__
 routines_tbl = Routine.__table__
 task_definitions_tbl = TaskDefinition.__table__
@@ -36,7 +34,6 @@ __all__ = [
     "CalendarEntry",
     "Day",
     "DayTemplate",
-    "Message",
     "PushSubscription",
     "Routine",
     "Task",
@@ -48,7 +45,6 @@ __all__ = [
     "calendars_tbl",
     "day_templates_tbl",
     "days_tbl",
-    "messages_tbl",
     "push_subscriptions_tbl",
     "routines_tbl",
     "task_definitions_tbl",

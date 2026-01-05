@@ -66,10 +66,6 @@ class DayQuery(DateQuery):
     """Query class for Day entities."""
 
 
-class MessageQuery(BaseQuery):
-    """Query class for Message entities."""
-
-
 class PushSubscriptionQuery(BaseQuery):
     """Query class for PushSubscription entities."""
 

@@ -125,7 +125,6 @@ export interface DayContext {
   day: Day;
   events?: Event[];
   tasks?: Task[];
-  messages?: Message[];
 }
 export interface Event {
   id?: string;
@@ -188,21 +187,6 @@ export interface TaskSchedule {
   start_time?: string | null;
   end_time?: string | null;
   timing_type: TimingType;
-}
-export interface Message {
-  id?: string;
-  user_id: string;
-  author: "system" | "agent" | "user";
-  sent_at: string;
-  content: string;
-  read_at?: string | null;
-  /**
-   * Get the date for this entity.
-   *
-   * If _get_date() is implemented, it takes precedence.
-   * Otherwise, uses _get_datetime() with the configured timezone.
-   */
-  date: string;
 }
 export interface DayTemplate {
   id?: string;

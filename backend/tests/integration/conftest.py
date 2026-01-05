@@ -15,7 +15,6 @@ from planned.infrastructure.repositories import (
     CalendarRepository,
     DayRepository,
     DayTemplateRepository,
-    MessageRepository,
     PushSubscriptionRepository,
     RoutineRepository,
     TaskDefinitionRepository,
@@ -139,12 +138,6 @@ async def calendar_repo(test_user):
 async def auth_token_repo(test_user):
     """AuthTokenRepository (not user-scoped)."""
     return AuthTokenRepository()
-
-
-@pytest_asyncio.fixture
-async def message_repo(test_user):
-    """MessageRepository scoped to test_user."""
-    return MessageRepository(user_id=test_user.id)
 
 
 @pytest_asyncio.fixture

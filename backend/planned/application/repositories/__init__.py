@@ -24,10 +24,6 @@ from .day_template_repository import (
     DayTemplateRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadWriteProtocol,
 )
-from .message_repository import (
-    MessageRepositoryReadOnlyProtocol,
-    MessageRepositoryReadWriteProtocol,
-)
 from .push_subscription_repository import (
     PushSubscriptionRepositoryReadOnlyProtocol,
     PushSubscriptionRepositoryReadWriteProtocol,
@@ -56,7 +52,6 @@ __all__ = [
     "CalendarRepositoryReadOnlyProtocol",
     "DayRepositoryReadOnlyProtocol",
     "DayTemplateRepositoryReadOnlyProtocol",
-    "MessageRepositoryReadOnlyProtocol",
     "PushSubscriptionRepositoryReadOnlyProtocol",
     "RoutineRepositoryReadOnlyProtocol",
     "TaskDefinitionRepositoryReadOnlyProtocol",
@@ -68,7 +63,6 @@ __all__ = [
     "CalendarRepositoryReadWriteProtocol",
     "DayRepositoryReadWriteProtocol",
     "DayTemplateRepositoryReadWriteProtocol",
-    "MessageRepositoryReadWriteProtocol",
     "PushSubscriptionRepositoryReadWriteProtocol",
     "RoutineRepositoryReadWriteProtocol",
     "TaskDefinitionRepositoryReadWriteProtocol",

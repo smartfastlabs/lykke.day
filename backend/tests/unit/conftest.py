@@ -54,12 +54,6 @@ def mock_auth_token_repo():
 
 
 @pytest.fixture
-def mock_message_repo():
-    """Mocked MessageRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.MessageRepositoryProtocol")
-
-
-@pytest.fixture
 def mock_push_subscription_repo():
     """Mocked PushSubscriptionRepositoryProtocol for unit tests."""
     return InstanceDouble(
