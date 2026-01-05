@@ -17,22 +17,20 @@ from planned.application.unit_of_work import (
 def register_all_handlers(
     ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
     uow_factory: UnitOfWorkFactory | None = None,
-) -> list[DomainEventHandler]:
-    """Instantiate and register all domain event handlers.
+) -> None:
+    """Register all domain event handler classes.
 
     All subclasses of DomainEventHandler are automatically tracked
-    and will be instantiated when this function is called.
+    and will be registered when this function is called. Handler instances
+    are created per user when events are dispatched.
 
     Args:
-        ro_repo_factory: Optional factory for creating read-only repositories.
+        ro_repo_factory: Factory for creating read-only repositories.
             Required if any handler needs to inject repositories or handlers.
-        uow_factory: Optional factory for creating UnitOfWork instances.
+        uow_factory: Factory for creating UnitOfWork instances.
             Required if any handler needs to inject command handlers.
-
-    Returns:
-        List of instantiated handler instances
     """
-    return DomainEventHandler.register_all_handlers(
+    DomainEventHandler.register_all_handlers(
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
     )

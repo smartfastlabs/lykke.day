@@ -24,9 +24,6 @@ from planned.infrastructure.unit_of_work import (
 )
 from planned.presentation.api.routers import router
 
-# Keep references to event handlers to prevent garbage collection
-_event_handlers: list = []
-
 
 def is_testing() -> bool:
     """Check if the application is running in a test environment."""
@@ -49,13 +46,12 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
     # Auto-register all domain event handlers
     ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
     uow_factory = SqlAlchemyUnitOfWorkFactory()
-    _event_handlers.extend(
-        register_all_handlers(
-            ro_repo_factory=ro_repo_factory,
-            uow_factory=uow_factory,
-        )
+    register_all_handlers(
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
     )
-    logger.info(f"Registered {len(_event_handlers)} domain event handler(s)")
+    from planned.application.events.handlers.base import DomainEventHandler
+    logger.info(f"Registered {len(DomainEventHandler._handler_classes)} domain event handler class(es)")
 
     yield  # type: ignore
 
