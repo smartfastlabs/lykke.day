@@ -3,7 +3,18 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from .base import DomainEvent
+from planned.domain.entities.task_definition import TaskDefinitionEntity
+from planned.domain.value_objects.update import TaskDefinitionUpdateObject
+
+from .base import DomainEvent, EntityUpdatedEvent
+
+__all__ = [
+    "TaskActionRecordedEvent",
+    "TaskCompletedEvent",
+    "TaskCreatedEvent",
+    "TaskDefinitionUpdatedEvent",
+    "TaskStatusChangedEvent",
+]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -38,3 +49,10 @@ class TaskActionRecordedEvent(DomainEvent):
 
     task_id: UUID
     action_type: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class TaskDefinitionUpdatedEvent(
+    EntityUpdatedEvent[TaskDefinitionUpdateObject, TaskDefinitionEntity]
+):
+    """Event raised when a task definition is updated via apply_update()."""

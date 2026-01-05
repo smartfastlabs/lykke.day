@@ -3,11 +3,13 @@ from dataclasses import dataclass, field
 from uuid import UUID
 
 from .. import value_objects
+from ..events.day_template_events import DayTemplateUpdatedEvent
+from ..value_objects.update import DayTemplateUpdateObject
 from .base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class DayTemplateEntity(BaseEntityObject):
+class DayTemplateEntity(BaseEntityObject[DayTemplateUpdateObject, DayTemplateUpdatedEvent]):
     user_id: UUID
     slug: str
     alarm: value_objects.Alarm | None = None

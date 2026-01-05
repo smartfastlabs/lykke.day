@@ -3,11 +3,13 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from .. import value_objects
+from ..events.user_events import UserUpdatedEvent
+from ..value_objects.update import UserUpdateObject
 from .base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class UserEntity(BaseEntityObject):
+class UserEntity(BaseEntityObject[UserUpdateObject, UserUpdatedEvent]):
     """User entity compatible with fastapi-users."""
 
     email: str

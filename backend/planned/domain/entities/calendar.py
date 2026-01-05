@@ -3,11 +3,13 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID
 
+from ..events.calendar_events import CalendarUpdatedEvent
+from ..value_objects.update import CalendarUpdateObject
 from .base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class CalendarEntity(BaseEntityObject):
+class CalendarEntity(BaseEntityObject[CalendarUpdateObject, CalendarUpdatedEvent]):
     user_id: UUID
     name: str
     auth_token_id: UUID

@@ -4,7 +4,17 @@ from dataclasses import dataclass
 from datetime import date as dt_date
 from uuid import UUID
 
-from .base import DomainEvent
+from planned.domain.entities.day import DayEntity
+from planned.domain.value_objects.update import DayUpdateObject
+
+from .base import DomainEvent, EntityUpdatedEvent
+
+__all__ = [
+    "DayCompletedEvent",
+    "DayScheduledEvent",
+    "DayUnscheduledEvent",
+    "DayUpdatedEvent",
+]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,3 +40,8 @@ class DayUnscheduledEvent(DomainEvent):
 
     day_id: UUID
     date: dt_date
+
+
+@dataclass(frozen=True, kw_only=True)
+class DayUpdatedEvent(EntityUpdatedEvent[DayUpdateObject, DayEntity]):
+    """Event raised when a day is updated via apply_update()."""

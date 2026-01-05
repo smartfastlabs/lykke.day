@@ -12,7 +12,9 @@ from ..events.day_events import (
     DayCompletedEvent,
     DayScheduledEvent,
     DayUnscheduledEvent,
+    DayUpdatedEvent,
 )
+from ..value_objects.update import DayUpdateObject
 from ..events.task_events import (
     TaskActionRecordedEvent,
     TaskCompletedEvent,
@@ -25,7 +27,7 @@ from .task import TaskEntity
 
 
 @dataclass(kw_only=True)
-class DayEntity(BaseEntityObject):
+class DayEntity(BaseEntityObject[DayUpdateObject, DayUpdatedEvent]):
     user_id: UUID
     date: dt_date
     alarm: value_objects.Alarm | None = None
