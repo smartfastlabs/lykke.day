@@ -18,6 +18,10 @@ from planned.infrastructure.auth import (
     fastapi_users,
 )
 from planned.core.utils import youtube
+from planned.infrastructure.unit_of_work import (
+    SqlAlchemyReadOnlyRepositoryFactory,
+    SqlAlchemyUnitOfWorkFactory,
+)
 from planned.presentation.api.routers import router
 
 # Keep references to event handlers to prevent garbage collection
@@ -43,7 +47,14 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
     Lifespan context manager for FastAPI application.
     """
     # Auto-register all domain event handlers
-    _event_handlers.extend(register_all_handlers())
+    ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
+    uow_factory = SqlAlchemyUnitOfWorkFactory()
+    _event_handlers.extend(
+        register_all_handlers(
+            ro_repo_factory=ro_repo_factory,
+            uow_factory=uow_factory,
+        )
+    )
     logger.info(f"Registered {len(_event_handlers)} domain event handler(s)")
 
     yield  # type: ignore
