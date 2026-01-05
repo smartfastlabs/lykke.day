@@ -23,6 +23,5 @@ class DeleteCalendarHandler:
         """
         async with self._uow_factory.create(self.user_id) as uow:
             calendar = await uow.calendar_ro_repo.get(calendar_id)
-            calendar.delete()  # Mark for deletion
-            uow.add(calendar)
+            await uow.delete(calendar)
 

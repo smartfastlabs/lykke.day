@@ -36,6 +36,7 @@ from planned.application.unit_of_work import (
     ReadOnlyRepositoryFactory,
     UnitOfWorkProtocol,
 )
+from planned.core.exceptions import BadRequestError, NotFoundError
 from planned.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
@@ -297,6 +298,55 @@ class SqlAlchemyUnitOfWork:
         """
         self._added_entities.append(entity)
 
+    async def create(self, entity: BaseEntityObject) -> None:
+        """Create a new entity.
+
+        This method:
+        1. Verifies the entity does not already exist
+        2. Calls entity.create() to mark it as newly created
+        3. Adds the entity to be tracked for persistence
+
+        Args:
+            entity: The entity to create
+
+        Raises:
+            BadRequestError: If the entity already exists
+        """
+        repo = self._get_read_only_repository_for_entity(entity)
+        try:
+            # Try to get the entity - if it exists, raise an error
+            await repo.get(entity.id)
+            raise BadRequestError(f"Entity with id {entity.id} already exists")
+        except NotFoundError:
+            # Entity doesn't exist, which is what we want for create
+            pass
+
+        # Mark as newly created and add to tracking
+        entity.create()
+        self.add(entity)
+
+    async def delete(self, entity: BaseEntityObject) -> None:
+        """Delete an existing entity.
+
+        This method:
+        1. Verifies the entity exists
+        2. Calls entity.delete() to mark it for deletion
+        3. Adds the entity to be tracked for persistence
+
+        Args:
+            entity: The entity to delete
+
+        Raises:
+            NotFoundError: If the entity does not exist
+        """
+        repo = self._get_read_only_repository_for_entity(entity)
+        # Verify entity exists - this will raise NotFoundError if it doesn't
+        await repo.get(entity.id)
+
+        # Mark for deletion and add to tracking
+        entity.delete()
+        self.add(entity)
+
     async def commit(self) -> None:
         """Commit the current transaction.
 
@@ -363,6 +413,46 @@ class SqlAlchemyUnitOfWork:
             return self._push_subscription_rw_repo
         elif entity_type == data_objects.AuthToken:
             return self._auth_token_rw_repo
+        else:
+            raise ValueError(f"No repository found for entity type {entity_type}")
+
+    def _get_read_only_repository_for_entity(self, entity: BaseEntityObject) -> Any:
+        """Get the appropriate read-only repository for an entity type.
+
+        Args:
+            entity: The entity to get a repository for.
+
+        Returns:
+            The read-only repository for the entity type.
+
+        Raises:
+            ValueError: If no repository is found for the entity type.
+        """
+        entity_type = type(entity)
+
+        # Map entity types to their read-only repositories
+        if entity_type == DayEntity:
+            return self.day_ro_repo
+        elif entity_type == DayTemplateEntity:
+            return self.day_template_ro_repo
+        elif entity_type == CalendarEntryEntity:
+            return self.calendar_entry_ro_repo
+        elif entity_type == CalendarEntity:
+            return self.calendar_ro_repo
+        elif entity_type == MessageEntity:
+            return self.message_ro_repo
+        elif entity_type == TaskEntity:
+            return self.task_ro_repo
+        elif entity_type == RoutineEntity:
+            return self.routine_ro_repo
+        elif entity_type == TaskDefinitionEntity:
+            return self.task_definition_ro_repo
+        elif entity_type == UserEntity:
+            return self.user_ro_repo
+        elif entity_type == data_objects.PushSubscription:
+            return self.push_subscription_ro_repo
+        elif entity_type == data_objects.AuthToken:
+            return self.auth_token_ro_repo
         else:
             raise ValueError(f"No repository found for entity type {entity_type}")
 

@@ -140,12 +140,10 @@ class SyncAllCalendarsHandler:
 
                     # Save calendar entries
                     for calendar_entry in calendar_entries:
-                        calendar_entry.create()  # Mark as newly created
-                        uow.add(calendar_entry)
+                        await uow.create(calendar_entry)
                     for calendar_entry in deleted_calendar_entries:
                         logger.info(f"DELETING CALENDAR ENTRY: {calendar_entry.name}")
-                        calendar_entry.delete()  # Mark for deletion
-                        uow.add(calendar_entry)
+                        await uow.delete(calendar_entry)
 
                     # Update calendar last_sync_at (just set attribute, no event needed)
                     uow.add(calendar)

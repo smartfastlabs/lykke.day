@@ -47,7 +47,7 @@ class UpdateDayHandler:
                 day = DayEntity.create_for_date(
                     date, user_id=self.user_id, template=template
                 )
-                day.create()  # Mark as newly created
+                await uow.create(day)
 
             # Apply status transition if requested
             if update_data.status is not None:

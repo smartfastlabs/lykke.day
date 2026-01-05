@@ -25,6 +25,5 @@ class DeletePushSubscriptionHandler:
         """
         async with self._uow_factory.create(self.user_id) as uow:
             subscription = await uow.push_subscription_ro_repo.get(subscription_id)
-            subscription.delete()  # Mark for deletion
-            uow.add(subscription)
+            await uow.delete(subscription)
 

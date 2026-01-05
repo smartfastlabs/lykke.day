@@ -50,8 +50,7 @@ class ScheduleDayHandler:
                 value_objects.DateQuery(date=date)
             )
             for task in existing_tasks:
-                task.delete()  # Mark for deletion
-                uow.add(task)
+                await uow.delete(task)
 
             # Get preview of what the day would look like
             preview_handler = self._get_preview_handler()
@@ -73,14 +72,12 @@ class ScheduleDayHandler:
                 template=template,
             )
             day.schedule(template)
-            day.create()  # Mark as newly created
-            uow.add(day)
+            await uow.create(day)
 
-            # Get tasks from preview and mark them as newly created
+            # Get tasks from preview and create them
             tasks = preview_result.tasks
             for task in tasks:
-                task.create()  # Mark as newly created
-                uow.add(task)
+                await uow.create(task)
 
             return value_objects.DayContext(
                 day=day,

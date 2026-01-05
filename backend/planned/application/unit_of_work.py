@@ -11,8 +11,6 @@ The Unit of Work pattern provides a way to:
 from typing import Protocol, Self
 from uuid import UUID
 
-from planned.domain.entities.base import BaseEntityObject
-
 from planned.application.repositories import (
     AuthTokenRepositoryReadOnlyProtocol,
     CalendarEntryRepositoryReadOnlyProtocol,
@@ -26,6 +24,7 @@ from planned.application.repositories import (
     TaskRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
 )
+from planned.domain.entities.base import BaseEntityObject
 
 
 class UnitOfWorkProtocol(Protocol):
@@ -89,6 +88,38 @@ class UnitOfWorkProtocol(Protocol):
 
         Args:
             entity: The entity to track for persistence.
+        """
+        ...
+
+    async def create(self, entity: BaseEntityObject) -> None:
+        """Create a new entity.
+
+        This method:
+        1. Verifies the entity does not already exist
+        2. Calls entity.create() to mark it as newly created
+        3. Adds the entity to be tracked for persistence
+
+        Args:
+            entity: The entity to create
+
+        Raises:
+            BadRequestError: If the entity already exists
+        """
+        ...
+
+    async def delete(self, entity: BaseEntityObject) -> None:
+        """Delete an existing entity.
+
+        This method:
+        1. Verifies the entity exists
+        2. Calls entity.delete() to mark it for deletion
+        3. Adds the entity to be tracked for persistence
+
+        Args:
+            entity: The entity to delete
+
+        Raises:
+            NotFoundError: If the entity does not exist
         """
         ...
 

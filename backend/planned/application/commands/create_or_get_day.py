@@ -38,7 +38,6 @@ class CreateOrGetDayHandler:
                     user_id=self.user_id,
                     template=template,
                 )
-                day.create()  # Mark as newly created
-                uow.add(day)
+                await uow.create(day)
                 return day
 

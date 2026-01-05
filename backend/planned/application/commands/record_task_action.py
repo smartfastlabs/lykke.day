@@ -35,6 +35,7 @@ class RecordTaskActionHandler:
 
             # Get the Day aggregate root using the task's scheduled_date
             day_id = DayEntity.id_from_date_and_user(task.scheduled_date, self.user_id)
+            day_was_created = False
             try:
                 day = await uow.day_ro_repo.get(day_id)
             except NotFoundError:
@@ -50,7 +51,8 @@ class RecordTaskActionHandler:
                     user_id=self.user_id,
                     template=template,
                 )
-                day.create()  # Mark as newly created
+                await uow.create(day)
+                day_was_created = True
 
             # Use Day aggregate root method to record action
             # This ensures proper aggregate boundaries and domain event handling
@@ -58,7 +60,9 @@ class RecordTaskActionHandler:
             updated_task = day.record_task_action(task, action)
 
             # Add both Day (for events) and Task (for state changes) to UoW
-            uow.add(day)
+            # Only add day if we didn't create it (create() already adds it)
+            if not day_was_created:
+                uow.add(day)
             uow.add(updated_task)
 
             return updated_task

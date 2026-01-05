@@ -23,6 +23,5 @@ class CreateCalendarHandler:
             The created calendar entity
         """
         async with self._uow_factory.create(self.user_id) as uow:
-            calendar.create()  # Mark as newly created
-            uow.add(calendar)
+            await uow.create(calendar)
             return calendar

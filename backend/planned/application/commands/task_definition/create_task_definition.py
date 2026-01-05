@@ -23,6 +23,5 @@ class CreateTaskDefinitionHandler:
             The created task definition entity
         """
         async with self._uow_factory.create(self.user_id) as uow:
-            task_definition.create()  # Mark as newly created
-            uow.add(task_definition)
+            await uow.create(task_definition)
             return task_definition

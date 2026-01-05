@@ -35,8 +35,7 @@ class CommandHandler(ABC, Generic[CommandT, ResultT]):
                 async with self.uow_factory.create(cmd.user_id) as uow:
                     day = await self._create_day(uow, cmd)
                     day.schedule(template)
-                    day.create()  # Mark as newly created
-                    uow.add(day)
+                    await uow.create(day)
                     return day_context
     """
 

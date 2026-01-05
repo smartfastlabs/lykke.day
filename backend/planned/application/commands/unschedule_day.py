@@ -31,11 +31,11 @@ class UnscheduleDayHandler:
             tasks = await uow.task_ro_repo.search_query(value_objects.DateQuery(date=date))
             routine_tasks = [t for t in tasks if t.routine_id is not None]
             for task in routine_tasks:
-                task.delete()  # Mark for deletion
-                uow.add(task)
+                await uow.delete(task)
 
             # Get or create the day
             day_id = DayEntity.id_from_date_and_user(date, self.user_id)
+            day_was_created = False
             try:
                 day = await uow.day_ro_repo.get(day_id)
             except NotFoundError:
@@ -46,10 +46,13 @@ class UnscheduleDayHandler:
                 day = DayEntity.create_for_date(
                     date, user_id=self.user_id, template=template
                 )
-                day.create()  # Mark as newly created
+                await uow.create(day)
+                day_was_created = True
 
             # Unschedule the day using domain method
             day.unschedule()
-            uow.add(day)
+            # Only add if we didn't create it (create() already adds it)
+            if not day_was_created:
+                uow.add(day)
             return day
 
