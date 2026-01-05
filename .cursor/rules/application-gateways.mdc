@@ -1,0 +1,61 @@
+---
+globs: backend/planned/application/gateways/**/*.py
+alwaysApply: false
+---
+
+# Application Gateway Protocols Rules
+
+Gateway protocols define the interface for external services. They are defined in `application/gateways/`.
+
+---
+
+## Protocol Definition
+
+Gateway protocols use Python `Protocol`:
+
+```python
+from typing import Protocol
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity
+from planned.infrastructure import data_objects
+
+class GoogleCalendarGatewayProtocol(Protocol):
+    """Protocol for Google Calendar gateway."""
+    
+    async def load_calendar_events(
+        self,
+        calendar: CalendarEntity,
+        lookback: datetime,
+        token: data_objects.AuthToken,
+    ) -> list[CalendarEntryEntity]:
+        """Load calendar entries from Google Calendar."""
+        ...
+    
+    def get_flow(self, flow_name: str) -> Flow:
+        """Get OAuth flow for Google authentication."""
+        ...
+```
+
+---
+
+## Key Rules for Gateways
+
+1. **Use Protocol type** - Use Python `Protocol` for interface definitions
+2. **Return domain objects** - Methods return domain entities or value objects
+3. **Accept domain objects** - Methods accept domain entities or value objects
+4. **No implementation** - Protocols define interface only
+5. **Can use infrastructure types** - Can use data objects for external APIs (e.g., `AuthToken`)
+
+---
+
+## Common Patterns
+
+### Gateway Protocol Pattern
+
+```python
+class MyExternalGatewayProtocol(Protocol):
+    """Protocol for MyExternal service gateway."""
+    
+    async def fetch_data(self, params: Params) -> list[Entity]:
+        """Fetch data from external service."""
+        ...
+```

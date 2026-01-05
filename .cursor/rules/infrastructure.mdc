@@ -1,0 +1,653 @@
+---
+globs: backend/planned/infrastructure/**/*.py
+alwaysApply: false
+---
+
+# Infrastructure Layer Rules
+
+The Infrastructure layer implements the protocols defined in the application layer. It handles all I/O operations including database persistence, external API calls, and data serialization.
+
+---
+
+## Layer Structure
+
+```
+infrastructure/
+├── repositories/      # Repository implementations
+│   ├── base/          # BaseRepository, UserScopedBaseRepository
+│   │   ├── repository.py # Base repository implementation
+│   │   └── utils.py   # Repository utilities
+│   ├── task.py        # TaskRepository
+│   ├── day.py         # DayRepository
+│   └── ...
+├── gateways/          # External service implementations
+│   ├── google.py      # GoogleCalendarGateway
+│   └── web_push.py    # WebPushGateway
+├── database/          # SQLAlchemy database layer
+│   ├── tables/        # Table definitions
+│   ├── transaction.py # Transaction management
+│   └── utils.py       # Database utilities
+├── unit_of_work.py    # SqlAlchemyUnitOfWork implementation
+├── auth/              # Authentication infrastructure
+│   ├── config.py      # Auth configuration
+│   └── schemas.py     # Auth schemas
+├── data_objects/      # Data transfer objects for external APIs
+│   ├── auth_token.py  # AuthToken data object
+│   └── push_subscription.py # PushSubscription data object
+└── utils/             # Infrastructure utilities
+```
+
+---
+
+## Import Rules
+
+**Allowed Imports:**
+- Standard library
+- Third-party libraries (SQLAlchemy, Google APIs, etc.)
+- `planned.application.*` - Application layer protocols
+- `planned.domain.*` - Domain layer (entities, value objects)
+- `planned.core.*` - Core layer (config, constants, exceptions, utils)
+- Other infrastructure layer modules
+
+**Forbidden Imports:**
+- `planned.presentation.*` - Presentation layer
+
+---
+
+## Repositories
+
+Repositories implement the repository protocols defined in the application layer. They handle database persistence using SQLAlchemy Core.
+
+### Base Repository Classes
+
+Repositories extend base classes:
+
+- `BaseRepository[Entity, Query]` - Base repository for entities without user scoping
+- `UserScopedBaseRepository[Entity, Query]` - Base repository for user-scoped entities
+
+Most repositories use `UserScopedBaseRepository`:
+
+```python
+from planned.domain.entities import TaskEntity
+from planned.domain.value_objects.query import DateQuery
+from planned.infrastructure.database.tables import tasks_tbl
+from planned.infrastructure.repositories.base import UserScopedBaseRepository
+
+class TaskRepository(UserScopedBaseRepository[TaskEntity, DateQuery]):
+    Object = TaskEntity  # Entity class
+    table = tasks_tbl  # SQLAlchemy table
+    QueryClass = DateQuery  # Query object type
+    excluded_row_fields = {"date"}  # DB-only fields to exclude
+    
+    def __init__(self, user_id: UUID) -> None:
+        super().__init__(user_id=user_id)
+```
+
+### Key Rules for Repositories
+
+1. **Extend base classes** - Use `UserScopedBaseRepository` or `BaseRepository`
+2. **Set class variables** - Set `Object`, `table`, `QueryClass`
+3. **User scoping** - Pass `user_id` to base `__init__()` for user-scoped repos
+4. **Implement conversion methods** - Implement `entity_to_row()` and optionally `row_to_entity()`
+5. **Override `build_query()`** - Override to add custom query logic
+6. **Handle JSONB fields** - Serialize/deserialize JSONB fields using `dataclass_to_json_dict()`
+7. **Handle enums** - Convert enums to/from string values
+8. **Handle UUIDs** - Convert UUIDs to/from strings for JSONB storage
+
+### Entity to Row Conversion
+
+Repositories must implement `entity_to_row()` to convert entities to database rows:
+
+```python
+@staticmethod
+def entity_to_row(task: TaskEntity) -> dict[str, Any]:
+    """Convert a Task entity to a database row dict."""
+    from planned.core.utils.serialization import dataclass_to_json_dict
+    
+    row: dict[str, Any] = {
+        "id": task.id,
+        "user_id": task.user_id,
+        "scheduled_date": task.scheduled_date,
+        "name": task.name,
+        "status": task.status.value,  # Convert enum to string
+        "category": task.category.value,
+        "frequency": task.frequency.value,
+        "completed_at": task.completed_at,
+        "routine_id": task.routine_id,
+    }
+    
+    # Handle JSONB fields - serialize nested objects
+    row["task_definition"] = dataclass_to_json_dict(task.task_definition)
+    
+    if task.schedule:
+        row["schedule"] = dataclass_to_json_dict(task.schedule)
+    
+    if task.tags:
+        row["tags"] = [tag.value for tag in task.tags]
+    
+    if task.actions:
+        row["actions"] = [dataclass_to_json_dict(action) for action in task.actions]
+    
+    return row
+```
+
+### Row to Entity Conversion
+
+Repositories can override `row_to_entity()` for custom deserialization:
+
+```python
+@classmethod
+def row_to_entity(cls, row: dict[str, Any]) -> TaskEntity:
+    """Convert a database row dict to a Task entity."""
+    from planned.infrastructure.repositories.base.utils import (
+        filter_init_false_fields,
+        normalize_list_fields,
+    )
+    
+    # Filter out init=False fields (like _domain_events)
+    data = filter_init_false_fields(dict(row), TaskEntity)
+    
+    # Normalize None to [] for list fields
+    data = normalize_list_fields(data, TaskEntity)
+    
+    # Convert enum strings to enums
+    if "status" in data and isinstance(data["status"], str):
+        data["status"] = TaskStatus(data["status"])
+    
+    # Convert JSONB fields - deserialize nested objects
+    if data.get("task_definition"):
+        data["task_definition"] = TaskDefinitionEntity(**data["task_definition"])
+    
+    if data.get("schedule"):
+        data["schedule"] = TaskSchedule(**data["schedule"])
+    
+    # Convert tag strings to enum values
+    if data.get("tags"):
+        data["tags"] = [TaskTag(tag) if isinstance(tag, str) else tag for tag in data["tags"]]
+    
+    return TaskEntity(**data)
+```
+
+### Query Building
+
+Repositories can override `build_query()` to add custom query logic:
+
+```python
+def build_query(self, query: DateQuery) -> Select[tuple]:
+    """Build a SQLAlchemy Core select statement from a query object."""
+    stmt = super().build_query(query)  # Base query with user scoping
+    
+    # Add date filtering
+    if query.date is not None:
+        stmt = stmt.where(self.table.c.date == query.date)
+    
+    # Add pagination
+    if query.limit is not None:
+        stmt = stmt.limit(query.limit)
+    if query.offset is not None:
+        stmt = stmt.offset(query.offset)
+    
+    return stmt
+```
+
+### Excluded Row Fields
+
+Some repositories have database-only fields that shouldn't be included in entity-to-row conversion:
+
+```python
+class TaskRepository(UserScopedBaseRepository[TaskEntity, DateQuery]):
+    excluded_row_fields = {"date"}  # DB-only field for querying
+    # The base repository will exclude these fields when converting
+```
+
+---
+
+## Gateways
+
+Gateways implement the gateway protocols defined in the application layer. They handle external API calls.
+
+### Gateway Implementation
+
+Gateways implement gateway protocols:
+
+```python
+from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity
+from planned.infrastructure import data_objects
+
+class GoogleCalendarGateway:
+    """Implementation of GoogleCalendarGatewayProtocol."""
+    
+    async def load_calendar_events(
+        self,
+        calendar: CalendarEntity,
+        lookback: datetime,
+        token: data_objects.AuthToken,
+    ) -> list[CalendarEntryEntity]:
+        """Load calendar entries from Google Calendar."""
+        google_cal = get_google_calendar(calendar, token)
+        events = google_cal.get_events(time_min=lookback)
+        
+        # Convert Google events to domain entities
+        calendar_entries = [
+            self._google_event_to_entity(event, calendar) for event in events
+        ]
+        
+        return calendar_entries
+    
+    def get_flow(self, flow_name: str) -> Flow:
+        """Get OAuth flow for Google authentication."""
+        return get_flow(flow_name)
+    
+    def _google_event_to_entity(
+        self, event: GoogleEvent, calendar: CalendarEntity
+    ) -> CalendarEntryEntity:
+        """Convert Google Calendar event to CalendarEntryEntity."""
+        # Conversion logic
+        ...
+```
+
+### Key Rules for Gateways
+
+1. **Implement protocols** - Gateways implement gateway protocols from application layer
+2. **Return domain objects** - Methods return domain entities or value objects
+3. **Accept domain objects** - Methods accept domain entities or value objects
+4. **Handle external APIs** - Use third-party libraries for external API calls
+5. **Error handling** - Convert external API errors to domain exceptions
+6. **Data conversion** - Convert external API data to domain objects
+
+---
+
+## Unit of Work
+
+The Unit of Work implementation manages database transactions and coordinates repository operations.
+
+### SqlAlchemyUnitOfWork
+
+The Unit of Work implementation is in `infrastructure/unit_of_work.py`:
+
+```python
+from planned.application.unit_of_work import UnitOfWorkProtocol
+from planned.infrastructure.repositories import TaskRepository, DayRepository, ...
+
+class SqlAlchemyUnitOfWork:
+    """SQLAlchemy implementation of UnitOfWorkProtocol."""
+    
+    # Read-only repository properties (public API)
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    # ... other repos
+    
+    def __init__(self, user_id: UUID) -> None:
+        self.user_id = user_id
+        self._connection: AsyncConnection | None = None
+        self._added_entities: list[BaseEntityObject] = []
+        # Internal read-write repositories
+    
+    async def __aenter__(self) -> Self:
+        """Enter transaction context."""
+        # Create connection and transaction
+        # Initialize repositories with connection
+        return self
+    
+    async def __aexit__(self, ...) -> None:
+        """Exit transaction context."""
+        # Commit or rollback transaction
+        # Close connection
+    
+    def add(self, entity: BaseEntityObject) -> None:
+        """Track entity for persistence."""
+        self._added_entities.append(entity)
+    
+    async def commit(self) -> None:
+        """Commit transaction and dispatch events."""
+        # Process added entities (create/update/delete based on events)
+        # Collect domain events
+        # Commit transaction
+        # Dispatch domain events
+```
+
+### Key Rules for Unit of Work
+
+1. **Implement protocol** - Must implement `UnitOfWorkProtocol`
+2. **Transaction management** - Manage database transactions via async context manager
+3. **Repository coordination** - Provide repositories that share the same connection
+4. **Entity tracking** - Track entities via `add()` method
+5. **Event collection** - Collect domain events from tracked entities
+6. **Event dispatching** - Dispatch events after transaction commit
+7. **Nested transactions** - Support nested UoW (use existing connection if present)
+
+---
+
+## Database Tables
+
+Database tables are defined using SQLAlchemy Core in `infrastructure/database/tables/`.
+
+### Table Definition
+
+Tables are defined using SQLAlchemy Core:
+
+```python
+from sqlalchemy import Table, Column, String, Date, UUID, JSONB
+from planned.infrastructure.database import metadata
+
+tasks_tbl = Table(
+    "tasks",
+    metadata,
+    Column("id", UUID, primary_key=True),
+    Column("user_id", UUID, nullable=False, index=True),
+    Column("date", Date, nullable=False, index=True),  # Computed column for querying
+    Column("scheduled_date", Date, nullable=False),
+    Column("name", String, nullable=False),
+    Column("status", String, nullable=False),
+    Column("category", String, nullable=False),
+    Column("frequency", String, nullable=False),
+    Column("task_definition", JSONB, nullable=False),
+    Column("schedule", JSONB, nullable=True),
+    Column("tags", JSONB, nullable=True),
+    Column("actions", JSONB, nullable=True),
+)
+```
+
+### Key Rules for Tables
+
+1. **Use SQLAlchemy Core** - Use `Table` objects, not ORM models
+2. **Use metadata** - All tables must use shared metadata from `infrastructure.database`
+3. **Index foreign keys** - Index foreign keys and commonly queried fields
+4. **Use JSONB for complex types** - Store nested objects as JSONB
+5. **Use UUID for IDs** - Use UUID type for primary keys
+6. **Add computed columns** - Add computed columns for querying (e.g., `date` from `scheduled_date`)
+
+---
+
+## Data Objects
+
+Data objects are used for external API communication. They are defined in `infrastructure/data_objects/`.
+
+### Data Object Definition
+
+Data objects are simple classes for external API data:
+
+```python
+from dataclasses import dataclass
+from google.oauth2.credentials import Credentials
+
+@dataclass
+class AuthToken:
+    """Data object for authentication tokens."""
+    
+    user_id: UUID
+    provider: str
+    access_token: str
+    refresh_token: str | None
+    expires_at: datetime | None
+    
+    def google_credentials(self) -> Credentials:
+        """Convert to Google Credentials object."""
+        return Credentials(
+            token=self.access_token,
+            refresh_token=self.refresh_token,
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=settings.GOOGLE_CLIENT_ID,
+            client_secret=settings.GOOGLE_CLIENT_SECRET,
+        )
+```
+
+### Key Rules for Data Objects
+
+1. **Simple classes** - Use dataclasses or simple classes
+2. **External API data** - Represent data from external APIs
+3. **Conversion methods** - Provide methods to convert to external API types
+4. **No business logic** - Data objects contain no business logic
+
+---
+
+## Gotchas
+
+### 1. JSONB Field Serialization
+
+**Issue:** JSONB fields must be serialized/deserialized correctly. Use `dataclass_to_json_dict()` for serialization.
+
+```python
+# Serialization
+row["task_definition"] = dataclass_to_json_dict(task.task_definition)
+
+# Deserialization
+if data.get("task_definition"):
+    data["task_definition"] = TaskDefinitionEntity(**data["task_definition"])
+```
+
+### 2. Enum Conversion
+
+**Issue:** Enums must be converted to/from string values for database storage.
+
+```python
+# Entity to row
+row["status"] = task.status.value  # Convert enum to string
+
+# Row to entity
+if "status" in data and isinstance(data["status"], str):
+    data["status"] = TaskStatus(data["status"])  # Convert string to enum
+```
+
+### 3. UUID Conversion in JSONB
+
+**Issue:** UUIDs in JSONB are stored as strings and must be converted back.
+
+```python
+# JSONB stores UUIDs as strings
+if "id" in template_data and isinstance(template_data["id"], str):
+    template_data["id"] = UUID(template_data["id"])
+```
+
+### 4. None to Empty List Normalization
+
+**Issue:** Database may return None for JSONB array fields, but entities expect empty lists.
+
+```python
+from planned.infrastructure.repositories.base.utils import normalize_list_fields
+
+# Normalize None to [] for list fields
+data = normalize_list_fields(dict(row), Entity)
+```
+
+### 5. Init=False Fields
+
+**Issue:** Entities have fields like `_domain_events` that shouldn't be passed to constructors.
+
+```python
+from planned.infrastructure.repositories.base.utils import filter_init_false_fields
+
+# Filter out init=False fields
+data = filter_init_false_fields(dict(row), Entity)
+```
+
+### 6. User Scoping in Queries
+
+**Issue:** All user-scoped repositories automatically filter by `user_id`. Don't add it manually.
+
+```python
+# Base repository automatically adds user_id filter
+# Don't add it in build_query()
+def build_query(self, query: DateQuery) -> Select[tuple]:
+    stmt = super().build_query(query)  # Already filtered by user_id
+    # Add additional filters only
+    if query.date is not None:
+        stmt = stmt.where(self.table.c.date == query.date)
+    return stmt
+```
+
+### 7. Connection Sharing in Unit of Work
+
+**Issue:** All repositories in a UoW must share the same connection for transaction consistency.
+
+```python
+# UoW ensures all repos share the same connection
+async with uow:
+    task = await uow.task_ro_repo.get(task_id)  # Uses UoW connection
+    day = await uow.day_ro_repo.get(day_id)  # Uses same connection
+    # Both operations are in the same transaction
+```
+
+---
+
+## Testing Guidance
+
+### Integration Testing Repositories
+
+Test repository implementations with a real database:
+
+```python
+@pytest.mark.asyncio
+async def test_task_repository_get(task_repo, test_user, test_date):
+    """Test getting a task by ID."""
+    task = TaskEntity(
+        id=uuid4(),
+        user_id=test_user.id,
+        name="Test Task",
+        status=TaskStatus.READY,
+        category=TaskCategory.HOUSE,
+        frequency=TaskFrequency.DAILY,
+        scheduled_date=test_date,
+        task_definition=create_task_definition(test_user.id),
+    )
+    await task_repo.put(task)
+    
+    result = await task_repo.get(task.id)
+    
+    assert result.id == task.id
+    assert result.name == "Test Task"
+    assert result.user_id == test_user.id
+```
+
+### Testing Gateway Implementations
+
+Test gateway implementations with mocked external APIs or VCR cassettes:
+
+```python
+@pytest.mark.vcr
+@pytest.mark.asyncio
+async def test_google_calendar_gateway(google_gateway, calendar, token):
+    """Test loading calendar events from Google Calendar."""
+    events = await google_gateway.load_calendar_events(
+        calendar=calendar,
+        lookback=datetime.now(UTC),
+        token=token,
+    )
+    
+    assert len(events) > 0
+    assert all(isinstance(e, CalendarEntryEntity) for e in events)
+```
+
+### Testing Unit of Work
+
+Test Unit of Work with real database:
+
+```python
+@pytest.mark.asyncio
+async def test_unit_of_work_commit(uow_factory, test_user_id):
+    """Test that UoW commits transactions correctly."""
+    async with uow_factory.create(test_user_id) as uow:
+        task = TaskEntity(...)
+        task.create()
+        uow.add(task)
+        # commit() is called automatically on exit
+    
+    # Verify task was saved
+    async with uow_factory.create(test_user_id) as uow:
+        saved_task = await uow.task_ro_repo.get(task.id)
+        assert saved_task.name == task.name
+```
+
+### Test Location
+
+Infrastructure layer tests go in:
+- `tests/integration/repositories/` - Repository integration tests
+- `tests/integration/services/` - Service integration tests
+- `tests/unit/gateways/` - Gateway unit tests (with mocks/VCR)
+- `tests/infrastructure/` - Infrastructure-specific tests
+
+### Test Patterns
+
+1. **Use real database** - Integration tests use real database
+2. **Test serialization** - Verify entity-to-row and row-to-entity conversion
+3. **Test query building** - Verify custom query logic
+4. **Test error handling** - Verify error cases (not found, validation errors)
+5. **Use fixtures** - Use repository fixtures from `tests/fixtures/`
+
+---
+
+## Common Patterns
+
+### Simple Repository Pattern
+
+```python
+class SimpleRepository(UserScopedBaseRepository[Entity, BaseQuery]):
+    Object = Entity
+    table = entity_tbl
+    QueryClass = BaseQuery
+    
+    def __init__(self, user_id: UUID) -> None:
+        super().__init__(user_id=user_id)
+    
+    @staticmethod
+    def entity_to_row(entity: Entity) -> dict[str, Any]:
+        return {
+            "id": entity.id,
+            "user_id": entity.user_id,
+            "name": entity.name,
+            # ... other fields
+        }
+```
+
+### Repository with JSONB Fields
+
+```python
+@staticmethod
+def entity_to_row(entity: Entity) -> dict[str, Any]:
+    from planned.core.utils.serialization import dataclass_to_json_dict
+    
+    row = {
+        "id": entity.id,
+        "user_id": entity.user_id,
+        # ... simple fields
+    }
+    
+    # JSONB fields
+    row["nested_object"] = dataclass_to_json_dict(entity.nested_object)
+    if entity.optional_list:
+        row["optional_list"] = [item.value for item in entity.optional_list]
+    
+    return row
+
+@classmethod
+def row_to_entity(cls, row: dict[str, Any]) -> Entity:
+    from planned.infrastructure.repositories.base.utils import (
+        filter_init_false_fields,
+        normalize_list_fields,
+    )
+    
+    data = filter_init_false_fields(dict(row), Entity)
+    data = normalize_list_fields(data, Entity)
+    
+    # Deserialize JSONB fields
+    if data.get("nested_object"):
+        data["nested_object"] = NestedObject(**data["nested_object"])
+    
+    return Entity(**data)
+```
+
+### Repository with Custom Queries
+
+```python
+def build_query(self, query: DateQuery) -> Select[tuple]:
+    stmt = super().build_query(query)
+    
+    if query.date is not None:
+        stmt = stmt.where(self.table.c.date == query.date)
+    
+    if query.status is not None:
+        stmt = stmt.where(self.table.c.status == query.status.value)
+    
+    return stmt.order_by(self.table.c.created_at.desc())
+```

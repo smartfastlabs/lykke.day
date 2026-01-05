@@ -1,0 +1,107 @@
+---
+globs: backend/planned/domain/value_objects/**/*.py
+alwaysApply: false
+---
+
+# Domain Value Objects Rules
+
+Value objects are immutable types with no identity. They represent concepts in the domain.
+
+---
+
+## Base Classes
+
+Value objects extend `BaseValueObject`:
+
+```python
+from planned.domain.value_objects.base import BaseValueObject
+
+@dataclass(frozen=True, kw_only=True)
+class TaskStatus(BaseValueObject):
+    # Use frozen=True for immutability
+    value: str
+```
+
+---
+
+## Key Rules
+
+1. **Use `@dataclass(frozen=True, kw_only=True)`** - Value objects are immutable
+2. **Prefer Enums for fixed sets** - Use Python enums for status types, categories, etc.
+3. **Query objects extend `BaseQuery`** - Used for filtering/searching
+4. **Update objects extend `BaseUpdateObject`** - Used for partial updates
+5. **Request/Response objects extend base classes** - For DTOs
+
+---
+
+## Common Patterns
+
+**Enum-based Value Objects:**
+```python
+from enum import Enum
+
+class TaskStatus(str, Enum):
+    NOT_STARTED = "not_started"
+    PENDING = "pending"
+    READY = "ready"
+    COMPLETE = "complete"
+    PUNT = "punt"
+```
+
+**Query Objects:**
+```python
+from planned.domain.value_objects.query import BaseQuery
+
+@dataclass(frozen=True, kw_only=True)
+class DateQuery(BaseQuery):
+    date: dt_date | None = None
+    limit: int | None = None
+    offset: int | None = None
+```
+
+**Update Objects:**
+```python
+from planned.domain.value_objects.update import BaseUpdateObject
+
+@dataclass(frozen=True, kw_only=True)
+class TaskUpdateObject(BaseUpdateObject):
+    name: str | None = None
+    status: TaskStatus | None = None
+```
+
+---
+
+## Gotchas
+
+### 1. Frozen Value Objects
+
+**Issue:** Value objects are frozen (`frozen=True`), so you cannot modify them. Create new instances instead.
+
+```python
+# Wrong
+status.value = "new_value"  # Raises FrozenInstanceError
+
+# Right
+new_status = TaskStatus(value="new_value")
+```
+
+---
+
+## Testing Guidance
+
+### Testing Value Objects
+
+Test value object behavior:
+
+```python
+def test_task_status_enum():
+    """Test TaskStatus enum values."""
+    assert TaskStatus.COMPLETE.value == "complete"
+    assert TaskStatus.NOT_STARTED.value == "not_started"
+```
+
+### Test Location
+
+Value object tests go in:
+- `tests/unit/domain/test_*.py` - Value object tests
+- No mocking needed (pure data structures)

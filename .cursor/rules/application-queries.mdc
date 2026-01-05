@@ -1,0 +1,157 @@
+---
+globs: backend/planned/application/queries/**/*.py
+alwaysApply: false
+---
+
+# Application Queries Rules
+
+Queries handle read operations that don't change system state. They use read-only repositories.
+
+---
+
+## Query Handlers
+
+Query handlers are classes that process queries:
+
+```python
+class GetDayContextHandler:
+    """Gets the complete context for a day."""
+
+    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
+        self._ro_repos = ro_repos
+        self.user_id = user_id
+
+    async def get_day_context(self, date: date) -> value_objects.DayContext:
+        """Load complete day context for the given date."""
+        tasks = await self._ro_repos.task_ro_repo.search_query(
+            value_objects.DateQuery(date=date)
+        )
+        calendar_entries = await self._ro_repos.calendar_entry_ro_repo.search_query(
+            value_objects.DateQuery(date=date)
+        )
+        day = await self._ro_repos.day_ro_repo.get(day_id)
+
+        return value_objects.DayContext(
+            day=day,
+            tasks=tasks,
+            calendar_entries=calendar_entries,
+            messages=[],
+        )
+```
+
+---
+
+## Key Rules for Queries
+
+1. **Use ReadOnlyRepositories** - Never use Unit of Work in queries
+2. **No mutations** - Queries must not modify state
+3. **No `uow.add()`** - Queries don't track entities for persistence
+4. **Return domain objects** - Return entities or value objects
+5. **Use query objects** - Use value objects like `DateQuery` for filtering
+6. **Side-effect free** - Queries should not trigger side effects
+
+---
+
+## Read-Only Repositories
+
+Queries use read-only repositories from `ReadOnlyRepositories`:
+
+```python
+def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
+    self._ro_repos = ro_repos  # Read-only repositories
+    self.user_id = user_id
+
+async def get_data(self, date: date) -> list[TaskEntity]:
+    # Use ro_repo properties - they're read-only
+    tasks = await self._ro_repos.task_ro_repo.search_query(
+        value_objects.DateQuery(date=date)
+    )
+    return tasks
+```
+
+---
+
+## Gotchas
+
+### 1. Queries Must Use Read-Only Repositories
+
+**Issue:** Queries must use `ReadOnlyRepositories`, not Unit of Work.
+
+```python
+# Wrong
+async with self._uow_factory.create(self.user_id) as uow:
+    tasks = await uow.task_ro_repo.search_query(query)
+
+# Right
+tasks = await self._ro_repos.task_ro_repo.search_query(query)
+```
+
+### 2. Read-Only Repositories Are Not Transactional
+
+**Issue:** Read-only repositories don't participate in transactions. Each repository call uses its own connection.
+
+```python
+# Queries use separate connections for each repo
+tasks = await self._ro_repos.task_ro_repo.search_query(query1)
+days = await self._ro_repos.day_ro_repo.search_query(query2)
+# These may see different database states if called between commits
+```
+
+---
+
+## Testing Guidance
+
+### Unit Testing Queries
+
+Test query handlers with mocked read-only repositories:
+
+```python
+@pytest.mark.asyncio
+async def test_get_day_context(mock_ro_repos, test_user_id):
+    """Test get_day_context query."""
+    handler = GetDayContextHandler(ro_repos=mock_ro_repos, user_id=test_user_id)
+
+    # Mock repository calls
+    allow(mock_ro_repos.task_ro_repo).search_query(...).and_return([task1, task2])
+    allow(mock_ro_repos.day_ro_repo).get(...).and_return(day)
+
+    result = await handler.get_day_context(date(2025, 1, 1))
+
+    assert len(result.tasks) == 2
+    assert result.day == day
+```
+
+### Test Location
+
+Query handler tests go in:
+
+- `tests/unit/application/queries/` - Query handler tests
+- Use `dobles` for mocking protocols
+- Mock all dependencies (repositories)
+
+### Test Patterns
+
+1. **Mock protocols** - Use `dobles` to mock protocol methods
+2. **Test business logic** - Verify handlers orchestrate correctly
+3. **Test error cases** - Verify error handling
+4. **Test side-effect free** - Verify queries don't modify state
+
+---
+
+## Common Patterns
+
+### Query Handler Pattern
+
+```python
+class MyQueryHandler:
+    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
+        self._ro_repos = ro_repos
+        self.user_id = user_id
+
+    async def execute(self, ...) -> list[Entity]:
+        # Read entities
+        entities = await self._ro_repos.entity_ro_repo.search_query(query)
+
+        # Transform/filter (no mutations)
+        return sorted(entities, key=lambda e: e.created_at)
+```

@@ -1,0 +1,79 @@
+---
+globs: backend/planned/application/events/**/*.py
+alwaysApply: false
+---
+
+# Application Domain Events Rules
+
+Domain events are handled in `application/events/`. Event handlers process domain events after transaction commit.
+
+---
+
+## Event Handlers
+
+Event handlers extend `DomainEventHandler`:
+
+```python
+from planned.application.events.handlers.base import DomainEventHandler
+from planned.domain.events.task_events import TaskCompletedEvent
+
+class TaskStatusLogger(DomainEventHandler):
+    """Logs task status changes."""
+    
+    handles = [TaskCompletedEvent]  # Declare which events to handle
+    
+    async def handle(self, event: DomainEvent) -> None:
+        """Handle the domain event."""
+        if isinstance(event, TaskCompletedEvent):
+            logger.info(f"Task {event.task_id} was completed")
+```
+
+---
+
+## Key Rules for Event Handlers
+
+1. **Extend DomainEventHandler** - Use base class for handler registration
+2. **Declare handles** - Set `handles` class variable with event types
+3. **Implement handle()** - Implement async `handle()` method
+4. **Auto-registration** - Handlers are automatically registered at startup
+5. **No direct calls** - Don't call handlers directly; they're invoked via signal
+
+---
+
+## Event Registration
+
+Event handlers are automatically registered via `register_all_handlers()`:
+
+```python
+from planned.application.events import register_all_handlers
+
+# At application startup
+handlers = register_all_handlers()  # Returns list of handler instances
+```
+
+---
+
+## Testing Guidance
+
+### Testing Event Handlers
+
+Test event handlers with events:
+
+```python
+@pytest.mark.asyncio
+async def test_task_completed_handler():
+    """Test task completed event handler."""
+    handler = TaskStatusLogger()
+    
+    event = TaskCompletedEvent(task_id=uuid4())
+    
+    # Handler should log the event
+    await handler.handle(event)
+    
+    # Verify logging (use mock logger or check logs)
+```
+
+### Test Location
+
+Event handler tests go in:
+- `tests/unit/application/events/` - Event handler tests

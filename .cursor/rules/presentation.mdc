@@ -1,0 +1,657 @@
+---
+globs: backend/planned/presentation/**/*.py
+alwaysApply: false
+---
+
+# Presentation Layer Rules
+
+The Presentation layer is the HTTP API layer that translates between HTTP requests/responses and the application layer. It uses FastAPI for routing, request validation, and response serialization.
+
+---
+
+## Layer Structure
+
+```
+presentation/
+├── api/
+│   ├── routers/           # FastAPI route handlers
+│   │   ├── tasks.py       # Task routes
+│   │   ├── days.py        # Day routes
+│   │   ├── day_templates.py # DayTemplate routes
+│   │   ├── dependencies/  # Dependency injection functions
+│   │   │   ├── commands/  # Command handler DI functions
+│   │   │   ├── queries/   # Query handler DI functions
+│   │   │   ├── repositories/ # Repository DI functions
+│   │   │   ├── services/  # Service DI functions
+│   │   │   └── user.py    # User DI function
+│   │   └── ...
+│   └── schemas/           # Pydantic request/response models
+│       ├── base.py        # BaseSchema, BaseEntitySchema
+│       ├── task.py        # TaskSchema, TaskUpdateSchema
+│       ├── day.py         # DaySchema, DayUpdateSchema
+│       ├── mappers.py     # Functions to convert entities to schemas
+│       └── ...
+└── middlewares/           # HTTP middlewares
+```
+
+---
+
+## Import Rules
+
+**Allowed Imports:**
+- Standard library
+- FastAPI and related libraries
+- `planned.application.*` - Application layer (commands, queries, protocols)
+- `planned.domain.*` - Domain layer (entities, value objects)
+- `planned.infrastructure.*` - Infrastructure layer (for dependency creation)
+- `planned.core.*` - Core layer (config, constants, exceptions, utils)
+- Other presentation layer modules
+
+**Forbidden Imports:**
+- None (presentation is the outermost layer)
+
+---
+
+## Routers
+
+Routers are FastAPI route handlers that define API endpoints. They should be **thin** and delegate to application layer handlers.
+
+### Router Structure
+
+Routers define routes using FastAPI:
+
+```python
+from fastapi import APIRouter, Depends
+from typing import Annotated
+from uuid import UUID
+from planned.application.commands.day_template import CreateDayTemplateHandler
+from planned.application.queries.day_template import GetDayTemplateHandler
+from planned.domain.entities import UserEntity
+from planned.presentation.api.schemas import DayTemplateSchema
+from planned.presentation.api.schemas.mappers import map_day_template_to_schema
+
+from .dependencies.commands.day_template import get_create_day_template_handler
+from .dependencies.queries.day_template import get_get_day_template_handler
+from .dependencies.user import get_current_user
+
+router = APIRouter()
+
+@router.get("/{uuid}", response_model=DayTemplateSchema)
+async def get_day_template(
+    uuid: UUID,
+    get_day_template_handler: Annotated[
+        GetDayTemplateHandler, Depends(get_get_day_template_handler)
+    ],
+) -> DayTemplateSchema:
+    """Get a single day template by ID."""
+    day_template = await get_day_template_handler.run(day_template_id=uuid)
+    return map_day_template_to_schema(day_template)
+
+@router.post("/", response_model=DayTemplateSchema)
+async def create_day_template(
+    day_template_data: DayTemplateSchema,
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    create_day_template_handler: Annotated[
+        CreateDayTemplateHandler, Depends(get_create_day_template_handler)
+    ],
+) -> DayTemplateSchema:
+    """Create a new day template."""
+    # Convert schema to entity
+    day_template = DayTemplateEntity(
+        id=day_template_data.id if day_template_data.id else None,
+        user_id=user.id,
+        slug=day_template_data.slug,
+        alarm=day_template_data.alarm,
+        icon=day_template_data.icon,
+        routine_ids=day_template_data.routine_ids,
+    )
+    created = await create_day_template_handler.run(day_template=day_template)
+    return map_day_template_to_schema(created)
+```
+
+### Key Rules for Routers
+
+1. **Keep routers thin** - Routers should only handle HTTP concerns
+2. **Delegate to handlers** - All business logic goes in command/query handlers
+3. **Use dependency injection** - Use FastAPI `Depends()` for handler injection
+4. **Convert schemas to entities** - Convert request schemas to domain entities
+5. **Convert entities to schemas** - Use mapper functions to convert entities to response schemas
+6. **Return schemas** - Always return Pydantic schemas, not domain entities
+7. **Handle HTTP errors** - Map domain exceptions to HTTP status codes
+8. **Use type annotations** - Use `Annotated` with `Depends()` for dependency injection
+
+### HTTP Status Codes
+
+Routers should return appropriate HTTP status codes:
+
+- `200 OK` - Successful GET, PUT, DELETE
+- `201 Created` - Successful POST (for creation)
+- `204 No Content` - Successful operation with no response body
+- `400 Bad Request` - Invalid request data
+- `401 Unauthorized` - Authentication required
+- `403 Forbidden` - Insufficient permissions
+- `404 Not Found` - Resource not found
+- `500 Internal Server Error` - Server error
+
+### Error Handling
+
+Routers should handle exceptions and map them to HTTP status codes:
+
+```python
+from planned.core.exceptions import NotFoundError, DomainError
+from fastapi import HTTPException
+
+@router.get("/{uuid}")
+async def get_day_template(...):
+    try:
+        day_template = await get_day_template_handler.run(day_template_id=uuid)
+        return map_day_template_to_schema(day_template)
+    except NotFoundError:
+        raise HTTPException(status_code=404, detail="Day template not found")
+    except DomainError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+```
+
+**Note:** FastAPI will automatically handle many exceptions, but you may want to add custom exception handlers at the application level.
+
+---
+
+## Schemas
+
+Schemas are Pydantic models that define request and response structures. They provide validation and serialization.
+
+### Schema Definition
+
+Schemas extend base classes:
+
+```python
+from planned.presentation.api.schemas.base import BaseEntitySchema
+from pydantic import Field
+from uuid import UUID
+from datetime import date
+
+class DayTemplateSchema(BaseEntitySchema):
+    """Schema for DayTemplate entity."""
+    
+    user_id: UUID
+    slug: str = Field(..., min_length=1, max_length=100)
+    alarm: AlarmSchema | None = None
+    icon: str | None = None
+    routine_ids: list[UUID] = Field(default_factory=list)
+
+class DayTemplateUpdateSchema(BaseSchema):
+    """Schema for updating a DayTemplate."""
+    
+    slug: str | None = Field(None, min_length=1, max_length=100)
+    alarm: AlarmSchema | None = None
+    icon: str | None = None
+    routine_ids: list[UUID] | None = None
+```
+
+### Base Schema Classes
+
+Base schemas provide common functionality:
+
+- `BaseSchema` - Base schema with common configuration
+- `BaseEntitySchema` - Schema for entities with ID
+- `BaseDateSchema` - Schema for entities with a date
+
+### Key Rules for Schemas
+
+1. **Extend base classes** - Use `BaseSchema`, `BaseEntitySchema`, or `BaseDateSchema`
+2. **Use Field()** - Use Pydantic `Field()` for validation and documentation
+3. **Optional fields** - Use `| None` for optional fields
+4. **Default values** - Use `default_factory` for list defaults
+5. **Validation** - Add validation rules (min_length, max_length, etc.)
+6. **Documentation** - Add docstrings for schema descriptions
+7. **Separate update schemas** - Create separate schemas for updates (all fields optional)
+
+### Schema Configuration
+
+Base schemas include common configuration:
+
+```python
+class BaseSchema(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True,  # Allow creation from ORM objects
+        populate_by_name=True,  # Allow both field name and alias
+        json_encoders={
+            datetime: lambda v: v.isoformat(),
+            date: lambda v: v.isoformat(),
+            time: lambda v: v.isoformat(),
+        },
+    )
+```
+
+---
+
+## Schema Mappers
+
+Schema mappers convert domain entities to API schemas. They are defined in `presentation/api/schemas/mappers.py`.
+
+### Mapper Functions
+
+Mapper functions convert entities to schemas:
+
+```python
+from planned.domain.entities import TaskEntity
+from planned.presentation.api.schemas import TaskSchema, TaskDefinitionSchema
+from planned.presentation.api.schemas.mappers import map_task_definition_to_schema
+
+def map_task_to_schema(task: TaskEntity) -> TaskSchema:
+    """Convert Task entity to Task schema."""
+    # Convert nested entities
+    task_definition_schema = map_task_definition_to_schema(task.task_definition)
+    action_schemas = [map_action_to_schema(action) for action in task.actions]
+    schedule_schema = map_task_schedule_to_schema(task.schedule)
+    
+    return TaskSchema(
+        id=task.id,
+        user_id=task.user_id,
+        scheduled_date=task.scheduled_date,
+        name=task.name,
+        status=task.status,
+        task_definition=task_definition_schema,
+        category=task.category,
+        frequency=task.frequency,
+        completed_at=task.completed_at,
+        schedule=schedule_schema,
+        routine_id=task.routine_id,
+        tags=task.tags,
+        actions=action_schemas,
+    )
+```
+
+### Key Rules for Mappers
+
+1. **Pure functions** - Mappers should be pure functions with no side effects
+2. **Handle nested entities** - Use recursive mapper calls for nested entities
+3. **Handle None values** - Check for None before mapping nested objects
+4. **Use `asdict()` for simple cases** - Use `dataclasses.asdict()` for simple conversions
+5. **Handle value objects** - Map value objects to schemas explicitly
+6. **Document mappers** - Add docstrings explaining what is mapped
+
+### Simple Mappers
+
+For simple entities, use `asdict()`:
+
+```python
+from dataclasses import asdict
+
+def map_action_to_schema(action: ActionEntity) -> ActionSchema:
+    """Convert Action entity to Action schema."""
+    return ActionSchema(**asdict(action))
+```
+
+---
+
+## Dependency Injection
+
+Dependency injection functions create handler instances with their dependencies. They are defined in `presentation/api/routers/dependencies/`.
+
+### Dependency Functions
+
+Dependency functions use FastAPI `Depends()`:
+
+```python
+from typing import Annotated
+from fastapi import Depends
+from planned.application.commands.day_template import CreateDayTemplateHandler
+from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.domain.entities import UserEntity
+
+from ..services import get_unit_of_work_factory
+from ..user import get_current_user
+
+def get_create_day_template_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> CreateDayTemplateHandler:
+    """Get a CreateDayTemplateHandler instance."""
+    return CreateDayTemplateHandler(uow_factory, user.id)
+```
+
+### Key Rules for Dependencies
+
+1. **Use `Annotated` with `Depends()`** - Use type annotations for dependency injection
+2. **Create handler instances** - Return handler instances, not classes
+3. **Inject dependencies** - Use `Depends()` for handler dependencies
+4. **Use user from dependencies** - Get user from `get_current_user` dependency
+5. **Document dependencies** - Add docstrings explaining what is returned
+
+### Service Dependencies
+
+Service dependencies create infrastructure services:
+
+```python
+from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
+
+def get_unit_of_work_factory() -> UnitOfWorkFactory:
+    """Get UnitOfWorkFactory instance."""
+    return SqlAlchemyUnitOfWorkFactory()
+
+def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
+    """Get ReadOnlyRepositoryFactory instance."""
+    return SqlAlchemyReadOnlyRepositoryFactory()
+```
+
+### User Dependency
+
+User dependency converts database user to domain entity:
+
+```python
+from planned.domain.entities import UserEntity
+from planned.infrastructure.auth import current_active_user
+from planned.infrastructure.database.tables import User as UserDB
+
+async def get_current_user(
+    user: Annotated[UserDB, Depends(current_active_user)],
+) -> UserEntity:
+    """Get the current user from fastapi-users and convert to domain entity."""
+    # Convert SQLAlchemy model to domain entity
+    settings_data = cast("dict[str, Any] | None", user.settings)
+    settings = value_objects.UserSetting(**settings_data) if settings_data else value_objects.UserSetting()
+    
+    return UserEntity(
+        id=user.id,
+        email=user.email,
+        phone_number=cast("str | None", user.phone_number),
+        hashed_password=user.hashed_password,
+        is_active=user.is_active,
+        is_superuser=user.is_superuser,
+        is_verified=user.is_verified,
+        settings=settings,
+        created_at=cast("datetime", user.created_at),
+        updated_at=cast("datetime | None", user.updated_at),
+    )
+```
+
+---
+
+## Middlewares
+
+Middlewares handle cross-cutting concerns like logging, error handling, and request/response processing.
+
+### Middleware Structure
+
+Middlewares are FastAPI middlewares:
+
+```python
+from fastapi import Request
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class MyMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Pre-process request
+        response = await call_next(request)
+        # Post-process response
+        return response
+```
+
+### Key Rules for Middlewares
+
+1. **Extend BaseHTTPMiddleware** - Use FastAPI/Starlette middleware base class
+2. **Implement dispatch** - Implement `dispatch` method
+3. **Call next** - Always call `call_next(request)` to continue request processing
+4. **Return response** - Return the response from `call_next`
+5. **Handle errors** - Handle exceptions and return appropriate responses
+
+---
+
+## Gotchas
+
+### 1. Schema to Entity Conversion
+
+**Issue:** Routers must convert request schemas to domain entities before passing to handlers.
+
+```python
+# Wrong - passing schema directly
+created = await create_handler.run(day_template_data)  # DayTemplateSchema
+
+# Right - convert to entity
+day_template = DayTemplateEntity(
+    id=day_template_data.id if day_template_data.id else None,
+    user_id=user.id,
+    slug=day_template_data.slug,
+    alarm=day_template_data.alarm,
+    icon=day_template_data.icon,
+    routine_ids=day_template_data.routine_ids,
+)
+created = await create_handler.run(day_template=day_template)
+```
+
+### 2. Entity to Schema Conversion
+
+**Issue:** Routers must convert domain entities to schemas before returning.
+
+```python
+# Wrong - returning entity directly
+return day_template  # DayTemplateEntity
+
+# Right - convert to schema
+return map_day_template_to_schema(day_template)
+```
+
+### 3. Update Schema Conversion
+
+**Issue:** Update schemas need to be converted to update objects, not entities.
+
+```python
+# Wrong - converting update schema to entity
+update_obj = DayTemplateEntity(**update_data.dict())
+
+# Right - converting to update object
+update_obj = DayTemplateUpdateObject(
+    slug=update_data.slug,
+    alarm=update_data.alarm,
+    icon=update_data.icon,
+    routine_ids=update_data.routine_ids,
+)
+```
+
+### 4. Dependency Injection Type Annotations
+
+**Issue:** Use `Annotated` with `Depends()` for dependency injection, not just `Depends()`.
+
+```python
+# Wrong - missing type annotation
+def get_handler(handler: Depends(get_handler_factory)): ...
+
+# Right - use Annotated
+def get_handler(
+    handler: Annotated[Handler, Depends(get_handler_factory)]
+): ...
+```
+
+### 5. Optional Fields in Schemas
+
+**Issue:** Use `| None` for optional fields, not `Optional[]` (Python 3.10+).
+
+```python
+# Wrong - using Optional (older style)
+from typing import Optional
+slug: Optional[str] = None
+
+# Right - using | None (Python 3.10+)
+slug: str | None = None
+```
+
+### 6. List Defaults
+
+**Issue:** Use `Field(default_factory=list)` for list defaults, not `= []`.
+
+```python
+# Wrong - mutable default
+routine_ids: list[UUID] = []
+
+# Right - default_factory
+routine_ids: list[UUID] = Field(default_factory=list)
+```
+
+### 7. UUID String Conversion
+
+**Issue:** UUIDs in request bodies come as strings, but schemas should handle them automatically via Pydantic.
+
+```python
+# Pydantic automatically converts string UUIDs to UUID objects
+class MySchema(BaseSchema):
+    id: UUID  # Accepts both UUID objects and strings
+```
+
+---
+
+## Testing Guidance
+
+### E2E Testing Routers
+
+Test routers with full HTTP client:
+
+```python
+@pytest.mark.asyncio
+async def test_get_day_template(authenticated_client):
+    """Test getting a single day template by UUID."""
+    client, user = await authenticated_client()
+    
+    # First, list templates to get a UUID
+    list_response = client.get("/day-templates/")
+    assert list_response.status_code == 200
+    templates = list_response.json()["items"]
+    template_id = templates[0]["id"]
+    
+    # Get the specific template
+    response = client.get(f"/day-templates/{template_id}")
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == template_id
+    assert "slug" in data
+    assert "user_id" in data
+```
+
+### Testing Error Cases
+
+Test error handling:
+
+```python
+@pytest.mark.asyncio
+async def test_get_day_template_not_found(authenticated_client):
+    """Test getting a non-existent day template returns 404."""
+    client, user = await authenticated_client()
+    
+    fake_id = uuid4()
+    response = client.get(f"/day-templates/{fake_id}")
+    
+    assert response.status_code == 404
+```
+
+### Testing Schema Validation
+
+Test schema validation with invalid data:
+
+```python
+@pytest.mark.asyncio
+async def test_create_day_template_invalid_data(authenticated_client):
+    """Test creating day template with invalid data returns 422."""
+    client, user = await authenticated_client()
+    
+    invalid_data = {
+        "slug": "",  # Empty slug should fail validation
+    }
+    
+    response = client.post("/day-templates/", json=invalid_data)
+    
+    assert response.status_code == 422  # Validation error
+```
+
+### Test Location
+
+Presentation layer tests go in:
+- `tests/e2e/routers/` - Router E2E tests
+- Use `TestClient` from FastAPI for testing
+- Use authentication fixtures for authenticated requests
+
+### Test Patterns
+
+1. **Test HTTP status codes** - Verify correct status codes
+2. **Test response schemas** - Verify response structure matches schemas
+3. **Test error handling** - Verify error responses
+4. **Test validation** - Verify request validation
+5. **Use fixtures** - Use authenticated client fixtures
+
+---
+
+## Common Patterns
+
+### CRUD Router Pattern
+
+```python
+router = APIRouter()
+
+@router.get("/{uuid}", response_model=EntitySchema)
+async def get_entity(
+    uuid: UUID,
+    handler: Annotated[GetHandler, Depends(get_get_handler)],
+) -> EntitySchema:
+    entity = await handler.run(entity_id=uuid)
+    return map_entity_to_schema(entity)
+
+@router.post("/", response_model=EntitySchema)
+async def create_entity(
+    data: EntitySchema,
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    handler: Annotated[CreateHandler, Depends(get_create_handler)],
+) -> EntitySchema:
+    entity = EntityEntity(
+        id=data.id if data.id else None,
+        user_id=user.id,
+        # ... other fields
+    )
+    created = await handler.run(entity=entity)
+    return map_entity_to_schema(created)
+
+@router.put("/{uuid}", response_model=EntitySchema)
+async def update_entity(
+    uuid: UUID,
+    data: EntityUpdateSchema,
+    handler: Annotated[UpdateHandler, Depends(get_update_handler)],
+) -> EntitySchema:
+    update_obj = EntityUpdateObject(**data.model_dump(exclude_unset=True))
+    updated = await handler.run(entity_id=uuid, update_data=update_obj)
+    return map_entity_to_schema(updated)
+
+@router.delete("/{uuid}", status_code=204)
+async def delete_entity(
+    uuid: UUID,
+    handler: Annotated[DeleteHandler, Depends(get_delete_handler)],
+) -> None:
+    await handler.run(entity_id=uuid)
+```
+
+### Schema Mapping Pattern
+
+```python
+def map_entity_to_schema(entity: EntityEntity) -> EntitySchema:
+    """Convert Entity entity to Entity schema."""
+    # Handle nested entities
+    nested_schema = map_nested_to_schema(entity.nested) if entity.nested else None
+    
+    return EntitySchema(
+        id=entity.id,
+        user_id=entity.user_id,
+        name=entity.name,
+        nested=nested_schema,
+        # ... other fields
+    )
+```
+
+### Dependency Injection Pattern
+
+```python
+def get_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> Handler:
+    """Get Handler instance."""
+    return Handler(uow_factory, user.id)
+```

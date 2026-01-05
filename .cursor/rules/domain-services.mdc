@@ -1,0 +1,64 @@
+---
+globs: backend/planned/domain/services/**/*.py
+alwaysApply: false
+---
+
+# Domain Services Rules
+
+Domain services contain pure business logic that doesn't naturally belong to a single entity. They have no I/O operations.
+
+---
+
+## Key Rules
+
+1. **No I/O operations** - No database, HTTP, file system access
+2. **Pure functions** - Deterministic, side-effect-free
+3. **Business logic only** - Calculations, validations, transformations
+4. **Use value objects and entities** - Operate on domain objects
+
+---
+
+## Example
+
+```python
+class NotificationService:
+    """Domain service for notification logic."""
+    
+    @staticmethod
+    def should_send_notification(task: TaskEntity, current_time: datetime) -> bool:
+        """Determine if a notification should be sent."""
+        if task.status == TaskStatus.COMPLETE:
+            return False
+        if not task.schedule or not task.schedule.start_time:
+            return False
+        return current_time >= task.schedule.start_time
+```
+
+---
+
+## Testing Guidance
+
+### Testing Domain Services
+
+Test domain services as pure functions:
+
+```python
+def test_should_send_notification():
+    """Test notification service logic."""
+    task = TaskEntity(
+        status=TaskStatus.PENDING,
+        schedule=TaskSchedule(start_time=datetime(2025, 1, 1, 10, 0)),
+        ...
+    )
+    current_time = datetime(2025, 1, 1, 10, 0)
+    
+    result = NotificationService.should_send_notification(task, current_time)
+    
+    assert result is True
+```
+
+### Test Location
+
+Domain service tests go in:
+- `tests/unit/domain/test_*.py` - Service tests
+- No mocking needed (pure business logic)

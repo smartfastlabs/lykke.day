@@ -1,0 +1,236 @@
+---
+globs: backend/planned/application/commands/**/*.py
+alwaysApply: false
+---
+
+# Application Commands Rules
+
+Commands handle write operations (mutations) that change system state. They use Unit of Work for transaction management.
+
+---
+
+## Command Handlers
+
+Command handlers are classes that process commands:
+
+```python
+class ScheduleDayHandler:
+    """Schedules a day with tasks from routines."""
+    
+    def __init__(
+        self,
+        uow_factory: UnitOfWorkFactory,
+        ro_repo_factory: ReadOnlyRepositoryFactory,
+        user_id: UUID,
+    ) -> None:
+        self._uow_factory = uow_factory
+        self._ro_repo_factory = ro_repo_factory
+        self.user_id = user_id
+    
+    async def schedule_day(
+        self, date: date, template_id: UUID | None = None
+    ) -> value_objects.DayContext:
+        """Schedule a day with tasks from routines."""
+        async with self._uow_factory.create(self.user_id) as uow:
+            # Use uow.ro_repo properties for reading
+            existing_tasks = await uow.task_ro_repo.search_query(
+                value_objects.DateQuery(date=date)
+            )
+            
+            # Create/modify entities
+            day = DayEntity.create_for_date(date, user_id=self.user_id, template=template)
+            day.create()  # Mark as newly created
+            
+            # Track entities via uow.add()
+            uow.add(day)
+            uow.add(task)
+            
+            # commit() will persist changes and dispatch events
+            return day_context
+```
+
+---
+
+## Key Rules for Commands
+
+1. **Use Unit of Work** - Always use `UnitOfWorkFactory` to create transaction-scoped UoW
+2. **Read via `uow.ro_repo` properties** - Use read-only repositories from UoW
+3. **Track entities via `uow.add()`** - Only entities added via `add()` are persisted
+4. **Call `commit()` explicitly** - Or use async context manager (auto-commit on exit)
+5. **Use domain entities** - Work with domain entities, not database models
+6. **Mark entities** - Call `create()`, `update()`, or `delete()` on entities
+7. **Return domain objects** - Return entities or value objects, not infrastructure types
+
+---
+
+## Unit of Work Pattern
+
+Commands use Unit of Work for transaction management:
+
+```python
+async with self._uow_factory.create(self.user_id) as uow:
+    # All operations share the same transaction
+    day = await uow.day_ro_repo.get(day_id)
+    task = await uow.task_ro_repo.get(task_id)
+    
+    # Modify entities
+    day.record_task_action(task, action)
+    
+    # Track entities
+    uow.add(day)
+    uow.add(task)
+    
+    # commit() is called automatically when exiting context
+    # Or call uow.commit() explicitly for early commit
+```
+
+**Important:** The `commit()` method:
+1. Processes all added entities (create, update, delete based on domain events)
+2. Collects domain events from all aggregates
+3. Commits the database transaction
+4. Dispatches domain events to handlers
+
+---
+
+## Entity Lifecycle Methods
+
+Entities must be marked with lifecycle methods:
+
+```python
+# New entity
+day = DayEntity.create_for_date(date, user_id=user_id, template=template)
+day.create()  # Marks as newly created, adds EntityCreatedEvent
+uow.add(day)
+
+# Update entity
+update_obj = DayUpdateObject(status=DayStatus.SCHEDULED)
+day.update(update_obj)  # Marks as updated, adds EntityUpdatedEvent
+uow.add(day)
+
+# Delete entity
+day.delete()  # Marks as deleted, adds EntityDeletedEvent
+uow.add(day)
+```
+
+---
+
+## Gotchas
+
+### 1. Commands Must Use Unit of Work
+
+**Issue:** Commands must use `UnitOfWorkFactory` to create UoW. Don't create repositories directly.
+
+```python
+# Wrong
+repo = TaskRepository(user_id=self.user_id)
+task = await repo.get(task_id)
+
+# Right
+async with self._uow_factory.create(self.user_id) as uow:
+    task = await uow.task_ro_repo.get(task_id)
+```
+
+### 2. Entities Must Be Added to UoW
+
+**Issue:** Only entities added via `uow.add()` are persisted. Creating an entity is not enough.
+
+```python
+# Wrong
+day = DayEntity.create_for_date(date, user_id=user_id, template=template)
+day.create()
+# Entity won't be saved!
+
+# Right
+day = DayEntity.create_for_date(date, user_id=user_id, template=template)
+day.create()
+uow.add(day)  # Must add to UoW
+```
+
+### 3. Commits Dispatch Events
+
+**Issue:** Domain events are dispatched after `commit()`, not when `_add_event()` is called.
+
+```python
+async with uow:
+    task.complete()  # Adds TaskCompletedEvent to task._domain_events
+    uow.add(task)
+    # Event is NOT dispatched yet
+    await uow.commit()
+    # Event is dispatched NOW
+```
+
+---
+
+## Testing Guidance
+
+### Unit Testing Commands
+
+Test command handlers with mocked Unit of Work:
+
+```python
+from dobles import allow, expect
+
+@pytest.mark.asyncio
+async def test_schedule_day(mock_uow_factory, mock_uow, test_user_id):
+    """Test schedule_day command."""
+    handler = ScheduleDayHandler(
+        uow_factory=mock_uow_factory,
+        ro_repo_factory=mock_ro_repo_factory,
+        user_id=test_user_id,
+    )
+    
+    # Mock UoW creation
+    allow(mock_uow_factory).create(test_user_id).and_return(mock_uow)
+    
+    # Mock repository calls
+    allow(mock_uow).task_ro_repo.search_query(...).and_return([])
+    
+    # Mock UoW context manager
+    allow(mock_uow).__aenter__().and_return(mock_uow)
+    allow(mock_uow).__aexit__(...).and_return(None)
+    
+    result = await handler.schedule_day(date(2025, 1, 1))
+    
+    # Verify results
+    assert result.day.date == date(2025, 1, 1)
+```
+
+### Test Location
+
+Command handler tests go in:
+- `tests/unit/application/commands/` - Command handler tests
+- Use `dobles` for mocking protocols
+- Mock all dependencies (UoW, repositories)
+
+### Test Patterns
+
+1. **Mock protocols** - Use `dobles` to mock protocol methods
+2. **Test business logic** - Verify handlers orchestrate correctly
+3. **Test error cases** - Verify error handling
+4. **Test transaction boundaries** - Verify UoW usage
+
+---
+
+## Common Patterns
+
+### Command Handler Pattern
+
+```python
+class MyCommandHandler:
+    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
+        self._uow_factory = uow_factory
+        self.user_id = user_id
+    
+    async def execute(self, ...) -> Entity:
+        async with self._uow_factory.create(self.user_id) as uow:
+            # Read entities
+            entity = await uow.entity_ro_repo.get(id)
+            
+            # Modify entities
+            entity.doSomething()
+            
+            # Track entities
+            uow.add(entity)
+            
+            return entity
+```

@@ -1,0 +1,597 @@
+---
+globs: backend/planned/core/**/*.py
+alwaysApply: false
+---
+
+# Core Layer Rules
+
+The Core layer provides shared utilities, configuration, and cross-cutting concerns used by all layers. It contains no business logic and no layer-specific code.
+
+---
+
+## Layer Structure
+
+```
+core/
+├── config.py         # Application settings and configuration
+├── constants.py      # Application-wide constants
+├── exceptions.py     # Base exception classes
+└── utils/            # Stateless utility functions
+    ├── dates.py      # Date/time utilities
+    ├── serialization.py # Serialization utilities
+    ├── strings.py    # String utilities
+    ├── task_filters.py # Task filtering utilities
+    ├── event_filters.py # Event filtering utilities
+    ├── templates.py  # Template rendering utilities
+    ├── printing.py   # Printing utilities
+    └── youtube.py    # YouTube player utilities
+```
+
+---
+
+## Import Rules
+
+**Allowed Imports:**
+- Standard library
+- Third-party libraries (Pydantic, Jinja2, etc.)
+- Other core layer modules
+
+**Forbidden Imports:**
+- `planned.domain.*` - Domain layer
+- `planned.application.*` - Application layer
+- `planned.infrastructure.*` - Infrastructure layer
+- `planned.presentation.*` - Presentation layer
+
+**Exception:** Core utilities may be used by all layers, but core itself should not depend on other layers.
+
+---
+
+## Configuration
+
+Configuration is managed using Pydantic Settings in `core/config.py`.
+
+### Settings Class
+
+Settings class uses Pydantic Settings:
+
+```python
+from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+
+class Settings(BaseSettings):
+    """Application settings."""
+    
+    API_PREFIX: str = ""
+    TIMEZONE: str = "America/Chicago"
+    DEBUG: bool = False
+    DATABASE_URL: str = "postgresql+psycopg://localhost/planned"
+    VAPID_SECRET_KEY: str = ""
+    VAPID_PUBLIC_KEY: str = ""
+    ENVIRONMENT: str = "development"
+    # ... other settings
+    
+    model_config = SettingsConfigDict(
+        env_file=os.getenv("ENV_FILE", ".env"),
+        case_sensitive=True,
+    )
+
+settings = Settings()
+```
+
+### Key Rules for Configuration
+
+1. **Use Pydantic Settings** - Use `BaseSettings` for configuration management
+2. **Environment variables** - Settings load from environment variables via `.env` file
+3. **Type hints** - All settings should have type hints
+4. **Default values** - Provide sensible default values
+5. **Single instance** - Export a single `settings` instance
+6. **No business logic** - Configuration contains no business logic
+
+### Accessing Settings
+
+Settings are accessed via the `settings` instance:
+
+```python
+from planned.core.config import settings
+
+database_url = settings.DATABASE_URL
+api_prefix = settings.API_PREFIX
+```
+
+---
+
+## Constants
+
+Constants are application-wide values defined in `core/constants.py`.
+
+### Constant Definition
+
+Constants are simple module-level variables:
+
+```python
+from datetime import timedelta, time
+
+# Date/time constants
+DEFAULT_LOOK_AHEAD: timedelta = timedelta(days=7)
+DEFAULT_END_OF_DAY_TIME: time = time(23, 59, 59)
+
+# API constants
+MAX_PAGE_SIZE: int = 1000
+DEFAULT_PAGE_SIZE: int = 50
+
+# Other constants
+DEFAULT_TEMPLATE_SLUG: str = "default"
+```
+
+### Key Rules for Constants
+
+1. **Use type hints** - All constants should have type hints
+2. **UPPERCASE names** - Use UPPERCASE for constant names
+3. **Documentation** - Add docstrings or comments for complex constants
+4. **Group related constants** - Group related constants together
+5. **No business logic** - Constants contain no business logic
+
+### Using Constants
+
+Constants are imported directly:
+
+```python
+from planned.core.constants import DEFAULT_LOOK_AHEAD, DEFAULT_END_OF_DAY_TIME
+
+look_ahead = DEFAULT_LOOK_AHEAD
+end_time = DEFAULT_END_OF_DAY_TIME
+```
+
+---
+
+## Exceptions
+
+Exceptions are base exception classes defined in `core/exceptions.py`. They provide a hierarchy for error handling.
+
+### Exception Hierarchy
+
+Exceptions form a hierarchy:
+
+```python
+class BaseError(Exception):
+    """Base exception for all application errors."""
+    status_code: int = 400
+    _message: str = "An error occurred"
+    
+    def __init__(self, message: str | None = None) -> None:
+        self.message = message or self._message
+        super().__init__(self.message)
+
+class NotFoundError(BaseError):
+    """Error raised when a resource is not found."""
+    status_code = 404
+    _message = "Resource not found"
+
+class DomainError(BaseError):
+    """Error raised when a domain invariant is violated."""
+    status_code = 400
+    _message = "Domain rule violation"
+
+class BadRequestError(BaseError):
+    """Error raised when a request is invalid."""
+    status_code = 400
+    _message = "Invalid request"
+
+class AuthenticationError(BaseError):
+    """Error raised when authentication fails."""
+    status_code = 403
+    _message = "Authentication failed"
+
+class AuthorizationError(BaseError):
+    """Error raised when authorization fails."""
+    status_code = 401
+    _message = "Access denied"
+```
+
+### Key Rules for Exceptions
+
+1. **Extend BaseError** - All exceptions should extend `BaseError`
+2. **Status codes** - Exceptions should have `status_code` attribute
+3. **Default messages** - Exceptions should have `_message` class variable
+4. **Custom messages** - Exceptions accept custom messages via `__init__`
+5. **Documentation** - Add docstrings explaining when exceptions are raised
+6. **Export in __all__** - Export exceptions in `__all__` for public API
+
+### Using Exceptions
+
+Exceptions are raised and caught:
+
+```python
+from planned.core.exceptions import NotFoundError, DomainError
+
+# Raising exceptions
+if entity is None:
+    raise NotFoundError("Entity not found")
+
+if invalid_state:
+    raise DomainError("Invalid state for this operation")
+
+# Catching exceptions
+try:
+    entity = await repo.get(id)
+except NotFoundError:
+    # Handle not found
+    pass
+```
+
+---
+
+## Utilities
+
+Utilities are stateless helper functions defined in `core/utils/`. They provide reusable functionality used across layers.
+
+### Utility Functions
+
+Utility functions are pure functions:
+
+```python
+from datetime import UTC, date, datetime
+
+def get_current_date() -> date:
+    """Get the current date in UTC."""
+    return datetime.now(UTC).date()
+
+def get_current_datetime() -> datetime:
+    """Get the current datetime in UTC."""
+    return datetime.now(UTC)
+
+def normalize_email(email: str) -> str:
+    """Normalize email address to lowercase and strip whitespace."""
+    return email.lower().strip()
+
+def slugify(text: str) -> str:
+    """Convert text to a URL-friendly slug."""
+    # Implementation
+    ...
+```
+
+### Key Rules for Utilities
+
+1. **Stateless** - Utility functions should be stateless (no side effects)
+2. **Pure functions** - Prefer pure functions (deterministic, no side effects)
+3. **Type hints** - All functions should have type hints
+4. **Documentation** - Add docstrings explaining what functions do
+5. **Group by domain** - Group related utilities in the same module
+6. **No business logic** - Utilities contain no business logic
+7. **Reusable** - Utilities should be reusable across layers
+
+### Serialization Utilities
+
+Serialization utilities convert objects to JSON-serializable formats:
+
+```python
+from dataclasses import asdict, is_dataclass
+from datetime import date, datetime, time
+from typing import Any
+from uuid import UUID
+
+def dataclass_to_json_dict(obj: Any) -> dict[str, Any] | Any:
+    """Convert a dataclass to a JSON-serializable dictionary.
+    
+    Handles nested dataclasses, enums, dates, times, UUIDs, etc.
+    """
+    if is_dataclass(obj):
+        return {k: dataclass_to_json_dict(v) for k, v in asdict(obj).items()}
+    elif isinstance(obj, (date, datetime, time)):
+        return obj.isoformat()
+    elif isinstance(obj, UUID):
+        return str(obj)
+    elif isinstance(obj, Enum):
+        return obj.value
+    # ... other types
+    return obj
+```
+
+### Date/Time Utilities
+
+Date/time utilities provide consistent date/time operations:
+
+```python
+from datetime import UTC, date, datetime
+
+def get_current_date() -> date:
+    """Get the current date in UTC."""
+    return datetime.now(UTC).date()
+
+def get_current_datetime() -> datetime:
+    """Get the current datetime in UTC."""
+    return datetime.now(UTC)
+
+def get_tomorrows_date() -> date:
+    """Get tomorrow's date."""
+    return get_current_date() + timedelta(days=1)
+```
+
+### String Utilities
+
+String utilities provide string manipulation functions:
+
+```python
+def normalize_email(email: str) -> str:
+    """Normalize email address to lowercase and strip whitespace."""
+    return email.lower().strip()
+
+def normalize_phone_number(phone_number: str) -> str:
+    """Normalize phone number by removing non-digit characters."""
+    return "".join(c for c in phone_number if c.isdigit())
+
+def slugify(text: str) -> str:
+    """Convert text to a URL-friendly slug."""
+    # Convert to lowercase and replace spaces with hyphens
+    slug = text.lower().strip()
+    slug = "".join(c if c.isalnum() or c in "-_" else "-" for c in slug)
+    slug = "-".join(s for s in slug.split("-") if s)
+    return slug
+```
+
+### Filter Utilities
+
+Filter utilities provide filtering logic:
+
+```python
+from datetime import datetime, timedelta, time
+
+def filter_upcoming_tasks(
+    tasks: list[TaskEntity],
+    look_ahead: timedelta,
+) -> list[TaskEntity]:
+    """Filter tasks that are upcoming within the look-ahead window."""
+    cutoff_time = calculate_cutoff_time(look_ahead)
+    return [
+        task for task in tasks
+        if is_task_eligible_for_upcoming(task, cutoff_time)
+    ]
+
+def is_task_eligible_for_upcoming(
+    task: TaskEntity,
+    cutoff_time: time,
+) -> bool:
+    """Check if a task is eligible for upcoming filtering."""
+    if not task.schedule or not task.schedule.start_time:
+        return False
+    return task.schedule.start_time <= cutoff_time
+```
+
+---
+
+## Gotchas
+
+### 1. Settings Are Global
+
+**Issue:** Settings are a global singleton. Changes affect all code using settings.
+
+```python
+# Settings are loaded once at import time
+from planned.core.config import settings
+
+# Changing settings affects all code
+settings.DEBUG = True  # Affects all code using settings
+```
+
+**Solution:** Don't modify settings at runtime. Use environment variables to change configuration.
+
+### 2. Exception Status Codes
+
+**Issue:** Exception status codes are class variables, not instance variables. They can be overridden per exception type.
+
+```python
+# Status code is a class variable
+class NotFoundError(BaseError):
+    status_code = 404
+
+# All NotFoundError instances have status_code = 404
+error = NotFoundError("Not found")
+assert error.status_code == 404  # Always 404
+```
+
+### 3. Utility Functions Should Be Stateless
+
+**Issue:** Utility functions should be stateless and have no side effects.
+
+```python
+# Wrong - has side effects
+_cached_value = None
+
+def get_value():
+    global _cached_value
+    if _cached_value is None:
+        _cached_value = expensive_computation()
+    return _cached_value
+
+# Right - stateless
+def compute_value(input_data):
+    return expensive_computation(input_data)
+```
+
+### 4. Constants vs Configuration
+
+**Issue:** Constants are compile-time values, configuration is runtime values.
+
+```python
+# Constants - fixed values
+DEFAULT_LOOK_AHEAD = timedelta(days=7)
+
+# Configuration - runtime values from environment
+DATABASE_URL: str = "postgresql+psycopg://localhost/planned"
+```
+
+**Solution:** Use constants for fixed values, configuration for runtime values.
+
+### 5. Exception Messages
+
+**Issue:** Exceptions accept custom messages, but have default messages if not provided.
+
+```python
+# Default message
+error = NotFoundError()  # message = "Resource not found"
+
+# Custom message
+error = NotFoundError("Custom message")  # message = "Custom message"
+```
+
+---
+
+## Testing Guidance
+
+### Testing Configuration
+
+Test configuration loading:
+
+```python
+import os
+from planned.core.config import Settings
+
+def test_settings_loads_from_env(monkeypatch):
+    """Test that settings load from environment variables."""
+    monkeypatch.setenv("DATABASE_URL", "postgresql://test/test")
+    settings = Settings()
+    assert settings.DATABASE_URL == "postgresql://test/test"
+```
+
+### Testing Constants
+
+Test constants are correct:
+
+```python
+from planned.core.constants import DEFAULT_LOOK_AHEAD, DEFAULT_END_OF_DAY_TIME
+
+def test_default_look_ahead():
+    """Test default look-ahead constant."""
+    assert DEFAULT_LOOK_AHEAD == timedelta(days=7)
+
+def test_default_end_of_day_time():
+    """Test default end of day time constant."""
+    assert DEFAULT_END_OF_DAY_TIME == time(23, 59, 59)
+```
+
+### Testing Exceptions
+
+Test exception behavior:
+
+```python
+from planned.core.exceptions import NotFoundError, DomainError
+
+def test_not_found_error():
+    """Test NotFoundError exception."""
+    error = NotFoundError()
+    assert error.status_code == 404
+    assert error.message == "Resource not found"
+
+def test_not_found_error_custom_message():
+    """Test NotFoundError with custom message."""
+    error = NotFoundError("Custom message")
+    assert error.message == "Custom message"
+
+def test_domain_error():
+    """Test DomainError exception."""
+    error = DomainError("Invalid state")
+    assert error.status_code == 400
+    assert error.message == "Invalid state"
+```
+
+### Testing Utilities
+
+Test utility functions:
+
+```python
+from planned.core.utils.dates import get_current_date
+from planned.core.utils.strings import normalize_email, slugify
+from freezegun import freeze_time
+
+@freeze_time("2025-01-01 12:00:00")
+def test_get_current_date():
+    """Test get_current_date utility."""
+    current_date = get_current_date()
+    assert current_date == date(2025, 1, 1)
+
+def test_normalize_email():
+    """Test normalize_email utility."""
+    assert normalize_email("  Test@Example.COM  ") == "test@example.com"
+
+def test_slugify():
+    """Test slugify utility."""
+    assert slugify("Hello World") == "hello-world"
+    assert slugify("Test 123") == "test-123"
+```
+
+### Test Location
+
+Core layer tests go in:
+- `tests/unit/utils/` - Utility function tests
+- Test configuration, constants, and exceptions in unit tests
+
+### Test Patterns
+
+1. **Test pure functions** - Test utilities as pure functions
+2. **Test edge cases** - Test edge cases (empty strings, None values, etc.)
+3. **Test type conversions** - Test serialization utilities with various types
+4. **Use freezegun** - Use `freezegun` for time-dependent tests
+5. **Test exception behavior** - Test exception status codes and messages
+
+---
+
+## Common Patterns
+
+### Configuration Pattern
+
+```python
+from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+
+class Settings(BaseSettings):
+    """Application settings."""
+    
+    SETTING_NAME: str = "default_value"
+    
+    model_config = SettingsConfigDict(
+        env_file=os.getenv("ENV_FILE", ".env"),
+        case_sensitive=True,
+    )
+
+settings = Settings()
+```
+
+### Exception Pattern
+
+```python
+from planned.core.exceptions import BaseError
+
+class MyError(BaseError):
+    """Error raised when something goes wrong."""
+    status_code = 400
+    _message = "Something went wrong"
+```
+
+### Utility Function Pattern
+
+```python
+def utility_function(input_value: InputType) -> OutputType:
+    """Brief description of what the function does.
+    
+    Args:
+        input_value: Description of input
+        
+    Returns:
+        Description of output
+    """
+    # Implementation
+    return output_value
+```
+
+### Serialization Pattern
+
+```python
+from dataclasses import asdict, is_dataclass
+
+def serialize_object(obj: Any) -> dict[str, Any] | Any:
+    """Serialize an object to JSON-serializable format."""
+    if is_dataclass(obj):
+        return {k: serialize_object(v) for k, v in asdict(obj).items()}
+    # ... handle other types
+    return obj
+```

@@ -1,0 +1,53 @@
+---
+globs: backend/planned/domain/events/**/*.py
+alwaysApply: false
+---
+
+# Domain Events Rules
+
+Domain events represent something important that happened in the domain. They are immutable and contain all information needed to understand what happened.
+
+---
+
+## Base Classes
+
+All events extend `DomainEvent`:
+
+```python
+from planned.domain.events.base import DomainEvent
+
+@dataclass(frozen=True, kw_only=True)
+class TaskCompletedEvent(DomainEvent):
+    task_id: UUID
+    completed_at: datetime
+```
+
+---
+
+## Key Rules
+
+1. **Immutable (`frozen=True`)** - Events cannot be modified after creation
+2. **Contains context** - Include all data needed by handlers
+3. **Use specific event types** - Don't use generic events with type fields
+4. **Timestamp auto-set** - `occurred_at` is automatically set to current time
+
+---
+
+## Event Types
+
+The base classes provide standard event types:
+
+- `EntityCreatedEvent` - Automatically added when `create()` is called
+- `EntityUpdatedEvent` - Automatically added when `update()` is called
+- `EntityDeletedEvent` - Automatically added when `delete()` is called
+- Custom events - Extend `DomainEvent` for domain-specific events
+
+---
+
+## Testing Guidance
+
+### Test Location
+
+Domain event tests go in:
+- `tests/unit/domain/test_*.py` - Event tests
+- No mocking needed (pure data structures)
