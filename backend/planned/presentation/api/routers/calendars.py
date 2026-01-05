@@ -35,7 +35,6 @@ router = APIRouter()
 @router.get("/{uuid}", response_model=CalendarSchema)
 async def get_calendar(
     uuid: UUID,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     get_calendar_handler: Annotated[
         GetCalendarHandler, Depends(get_get_calendar_handler)
     ],
@@ -47,7 +46,6 @@ async def get_calendar(
 
 @router.get("/", response_model=value_objects.PagedQueryResponse[CalendarSchema])
 async def list_calendars(
-    user: Annotated[UserEntity, Depends(get_current_user)],
     list_calendars_handler: Annotated[
         SearchCalendarsHandler, Depends(get_list_calendars_handler)
     ],
@@ -98,7 +96,6 @@ async def create_calendar(
 async def update_calendar(
     uuid: UUID,
     update_data: CalendarUpdateSchema,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     update_calendar_handler: Annotated[
         UpdateCalendarHandler, Depends(get_update_calendar_handler)
     ],
@@ -121,7 +118,6 @@ async def update_calendar(
 @router.delete("/{uuid}", status_code=200)
 async def delete_calendar(
     uuid: UUID,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     delete_calendar_handler: Annotated[
         DeleteCalendarHandler, Depends(get_delete_calendar_handler)
     ],

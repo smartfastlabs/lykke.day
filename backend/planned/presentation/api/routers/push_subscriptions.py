@@ -37,7 +37,6 @@ class SubscriptionRequest(value_objects.BaseRequestObject):
 
 @router.get("/subscriptions", response_model=list[PushSubscriptionSchema])
 async def list_subscriptions(
-    user: Annotated[UserEntity, Depends(get_current_user)],
     list_push_subscriptions_handler: Annotated[
         SearchPushSubscriptionsHandler, Depends(get_list_push_subscriptions_handler)
     ],
@@ -49,7 +48,6 @@ async def list_subscriptions(
 @router.delete("/subscriptions/{subscription_id}")
 async def delete_subscription(
     subscription_id: str,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     delete_push_subscription_handler: Annotated[
         DeletePushSubscriptionHandler, Depends(get_delete_push_subscription_handler)
     ],

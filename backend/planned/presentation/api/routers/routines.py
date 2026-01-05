@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from planned.application.queries.routine import GetRoutineHandler, SearchRoutinesHandler
 from planned.domain import value_objects
-from planned.domain.entities import RoutineEntity, UserEntity
+from planned.domain.entities import RoutineEntity
 from planned.presentation.api.schemas import RoutineSchema
 from planned.presentation.api.schemas.mappers import map_routine_to_schema
 
@@ -14,7 +14,6 @@ from .dependencies.queries.routine import (
     get_get_routine_handler,
     get_list_routines_handler,
 )
-from .dependencies.user import get_current_user
 
 router = APIRouter()
 
@@ -22,7 +21,6 @@ router = APIRouter()
 @router.get("/{uuid}", response_model=RoutineSchema)
 async def get_routine(
     uuid: UUID,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     get_routine_handler: Annotated[GetRoutineHandler, Depends(get_get_routine_handler)],
 ) -> RoutineSchema:
     """Get a single routine by ID."""
@@ -32,7 +30,6 @@ async def get_routine(
 
 @router.get("/", response_model=value_objects.PagedQueryResponse[RoutineSchema])
 async def list_routines(
-    user: Annotated[UserEntity, Depends(get_current_user)],
     list_routines_handler: Annotated[
         SearchRoutinesHandler, Depends(get_list_routines_handler)
     ],

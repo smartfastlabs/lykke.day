@@ -9,7 +9,6 @@ from planned.application.commands import ScheduleDayHandler, UpdateDayHandler
 from planned.application.queries import GetDayContextHandler, PreviewDayHandler
 from planned.application.queries.day_template import SearchDayTemplatesHandler
 from planned.core.utils.dates import get_current_date, get_tomorrows_date
-from planned.domain.entities import UserEntity
 from planned.presentation.api.schemas import (
     DayContextSchema,
     DaySchema,
@@ -29,7 +28,6 @@ from .dependencies.services import (
     get_schedule_day_handler,
     get_update_day_handler,
 )
-from .dependencies.user import get_current_user
 
 router = APIRouter()
 
@@ -41,7 +39,6 @@ router = APIRouter()
 
 @router.get("/today/context", response_model=DayContextSchema)
 async def get_context_today(
-    user: Annotated[UserEntity, Depends(get_current_user)],
     handler: Annotated[GetDayContextHandler, Depends(get_get_day_context_handler)],
 ) -> DayContextSchema:
     """Get the complete context for today."""
@@ -51,7 +48,6 @@ async def get_context_today(
 
 @router.get("/tomorrow/context", response_model=DayContextSchema)
 async def get_context_tomorrow(
-    user: Annotated[UserEntity, Depends(get_current_user)],
     handler: Annotated[GetDayContextHandler, Depends(get_get_day_context_handler)],
 ) -> DayContextSchema:
     """Get the complete context for tomorrow."""
@@ -62,7 +58,6 @@ async def get_context_tomorrow(
 @router.get("/{date}/context", response_model=DayContextSchema)
 async def get_context(
     date: datetime.date,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     handler: Annotated[GetDayContextHandler, Depends(get_get_day_context_handler)],
 ) -> DayContextSchema:
     """Get the complete context for a specific date."""
@@ -73,7 +68,6 @@ async def get_context(
 @router.get("/{date}/preview", response_model=DayContextSchema)
 async def preview_day(
     date: datetime.date,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     handler: Annotated[PreviewDayHandler, Depends(get_preview_day_handler)],
     template_id: UUID | None = None,
 ) -> DayContextSchema:
@@ -89,7 +83,6 @@ async def preview_day(
 
 @router.put("/today/schedule", response_model=DayContextSchema)
 async def schedule_today(
-    user: Annotated[UserEntity, Depends(get_current_user)],
     handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
 ) -> DayContextSchema:
     """Schedule today with tasks from routines."""
@@ -100,7 +93,6 @@ async def schedule_today(
 @router.put("/{date}/schedule", response_model=DayContextSchema)
 async def schedule_day(
     date: datetime.date,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
     template_id: UUID | None = None,
 ) -> DayContextSchema:
@@ -113,7 +105,6 @@ async def schedule_day(
 async def update_day(
     date: datetime.date,
     update_data: DayUpdateSchema,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     handler: Annotated[UpdateDayHandler, Depends(get_update_day_handler)],
 ) -> DaySchema:
     """Update a day's status or template."""
@@ -152,7 +143,6 @@ async def update_day(
 
 @router.get("/templates", response_model=list[DayTemplateSchema])
 async def get_templates(
-    user: Annotated[UserEntity, Depends(get_current_user)],
     list_day_templates_handler: Annotated[
         SearchDayTemplatesHandler, Depends(get_list_day_templates_handler)
     ],

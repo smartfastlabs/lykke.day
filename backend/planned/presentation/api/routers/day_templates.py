@@ -35,7 +35,6 @@ router = APIRouter()
 @router.get("/{uuid}", response_model=DayTemplateSchema)
 async def get_day_template(
     uuid: UUID,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     get_day_template_handler: Annotated[
         GetDayTemplateHandler, Depends(get_get_day_template_handler)
     ],
@@ -47,7 +46,6 @@ async def get_day_template(
 
 @router.get("/", response_model=value_objects.PagedQueryResponse[DayTemplateSchema])
 async def list_day_templates(
-    user: Annotated[UserEntity, Depends(get_current_user)],
     list_day_templates_handler: Annotated[
         SearchDayTemplatesHandler, Depends(get_list_day_templates_handler)
     ],
@@ -109,7 +107,6 @@ async def create_day_template(
 async def update_day_template(
     uuid: UUID,
     update_data: DayTemplateUpdateSchema,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     update_day_template_handler: Annotated[
         UpdateDayTemplateHandler, Depends(get_update_day_template_handler)
     ],
@@ -144,7 +141,6 @@ async def update_day_template(
 @router.delete("/{uuid}", status_code=200)
 async def delete_day_template(
     uuid: UUID,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     delete_day_template_handler: Annotated[
         DeleteDayTemplateHandler, Depends(get_delete_day_template_handler)
     ],

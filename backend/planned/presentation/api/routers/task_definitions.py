@@ -53,7 +53,6 @@ async def get_available_task_definitions() -> list[dict]:
 @router.get("/{uuid}", response_model=TaskDefinitionSchema)
 async def get_task_definition(
     uuid: UUID,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     get_task_definition_handler: Annotated[
         GetTaskDefinitionHandler, Depends(get_get_task_definition_handler)
     ],
@@ -65,7 +64,6 @@ async def get_task_definition(
 
 @router.get("/", response_model=list[TaskDefinitionSchema])
 async def list_task_definitions(
-    user: Annotated[UserEntity, Depends(get_current_user)],
     list_task_definitions_handler: Annotated[
         SearchTaskDefinitionsHandler, Depends(get_list_task_definitions_handler)
     ],
@@ -127,7 +125,6 @@ async def bulk_create_task_definitions(
 async def update_task_definition(
     uuid: UUID,
     update_data: TaskDefinitionUpdateSchema,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     update_task_definition_handler: Annotated[
         UpdateTaskDefinitionHandler, Depends(get_update_task_definition_handler)
     ],
@@ -151,7 +148,6 @@ async def update_task_definition(
 @router.delete("/{uuid}", status_code=204)
 async def delete_task_definition(
     uuid: UUID,
-    user: Annotated[UserEntity, Depends(get_current_user)],
     delete_task_definition_handler: Annotated[
         DeleteTaskDefinitionHandler, Depends(get_delete_task_definition_handler)
     ],
