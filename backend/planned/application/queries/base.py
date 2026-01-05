@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Generic, TypeVar, get_type_hints
+from typing import Generic, TypeVar
 from uuid import UUID
 
 from planned.application.unit_of_work import ReadOnlyRepositories
@@ -23,38 +23,22 @@ class Query:
 
 
 class BaseQueryHandler:
-    """Base class for query handlers that automatically injects requested repositories.
-
-    Subclasses should declare which repositories they need as class attributes
-    with type annotations. Only the declared repositories will be extracted from
-    ReadOnlyRepositories and made available as instance attributes.
-
-    Example:
-        class SearchCalendarsHandler(BaseQueryHandler):
-            calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
-
-            async def run(self, query: CalendarQuery) -> list[CalendarEntity]:
-                return await self.calendar_ro_repo.search_query(query)
-    """
+    """Base class for query handlers with explicit dependency wiring."""
 
     def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        """Initialize the query handler with requested repositories.
-
-        Args:
-            ro_repos: All available read-only repositories
-            user_id: The user ID for this query context
-        """
+        """Initialize the query handler with its dependencies."""
         self.user_id = user_id
-
-        # Get type hints from the class (including from base classes)
-        annotations = get_type_hints(self.__class__, include_extras=True)
-
-        # Extract only the repositories that this handler has declared
-        for attr_name, _attr_type in annotations.items():
-            # Check if this is a repository attribute (not a method or other attribute)
-            if not attr_name.startswith("_") and hasattr(ro_repos, attr_name):
-                # Extract the repository from ro_repos and set it as an instance attribute
-                setattr(self, attr_name, getattr(ro_repos, attr_name))
+        # Explicitly expose read-only repositories
+        self.auth_token_ro_repo = ro_repos.auth_token_ro_repo
+        self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
+        self.calendar_ro_repo = ro_repos.calendar_ro_repo
+        self.day_ro_repo = ro_repos.day_ro_repo
+        self.day_template_ro_repo = ro_repos.day_template_ro_repo
+        self.push_subscription_ro_repo = ro_repos.push_subscription_ro_repo
+        self.routine_ro_repo = ro_repos.routine_ro_repo
+        self.task_definition_ro_repo = ro_repos.task_definition_ro_repo
+        self.task_ro_repo = ro_repos.task_ro_repo
+        self.user_ro_repo = ro_repos.user_ro_repo
 
 
 class QueryHandler(ABC, Generic[QueryT, ResultT]):

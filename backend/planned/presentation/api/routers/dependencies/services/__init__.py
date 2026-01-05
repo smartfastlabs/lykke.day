@@ -66,11 +66,12 @@ def get_schedule_day_handler(
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
+    preview_day_handler: Annotated[PreviewDayHandler, Depends(get_preview_day_handler)],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> ScheduleDayHandler:
     """Get a ScheduleDayHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ScheduleDayHandler(ro_repos, uow_factory, user.id, ro_repo_factory)
+    return ScheduleDayHandler(ro_repos, uow_factory, user.id, preview_day_handler)
 
 
 def get_update_day_handler(
@@ -82,7 +83,7 @@ def get_update_day_handler(
 ) -> UpdateDayHandler:
     """Get an UpdateDayHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return UpdateDayHandler(ro_repos, uow_factory, user.id, ro_repo_factory)
+    return UpdateDayHandler(ro_repos, uow_factory, user.id)
 
 
 def get_record_task_action_handler(
@@ -94,4 +95,4 @@ def get_record_task_action_handler(
 ) -> RecordTaskActionHandler:
     """Get a RecordTaskActionHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return RecordTaskActionHandler(ro_repos, uow_factory, user.id, ro_repo_factory)
+    return RecordTaskActionHandler(ro_repos, uow_factory, user.id)

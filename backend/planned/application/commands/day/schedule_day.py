@@ -5,6 +5,7 @@ from uuid import UUID
 
 from planned.application.commands.base import BaseCommandHandler
 from planned.application.queries.preview_day import PreviewDayHandler
+from planned.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity
 
@@ -12,7 +13,15 @@ from planned.domain.entities import DayEntity
 class ScheduleDayHandler(BaseCommandHandler):
     """Schedules a day with tasks from routines."""
 
-    preview_day_handler: PreviewDayHandler
+    def __init__(
+        self,
+        ro_repos: ReadOnlyRepositories,
+        uow_factory: UnitOfWorkFactory,
+        user_id: UUID,
+        preview_day_handler: PreviewDayHandler,
+    ) -> None:
+        super().__init__(ro_repos, uow_factory, user_id)
+        self.preview_day_handler = preview_day_handler
 
     async def schedule_day(
         self, date: date, template_id: UUID | None = None

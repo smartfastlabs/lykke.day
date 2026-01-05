@@ -1,13 +1,11 @@
 """Base class for domain event handlers."""
 
-import inspect
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, get_type_hints
+from typing import ClassVar
 from uuid import UUID
 
 # Import signal here to avoid circular imports
 from planned.application.events.signals import domain_event_signal
-from planned.application.queries.base import BaseQueryHandler
 from planned.application.unit_of_work import (
     ReadOnlyRepositories,
     ReadOnlyRepositoryFactory,
@@ -17,18 +15,15 @@ from planned.domain.events.base import DomainEvent
 
 
 class DomainEventHandler(ABC):
-    """Base class for domain event handlers that automatically injects requested repositories and handlers.
+    """Base class for domain event handlers with explicit dependency wiring.
 
     Subclasses declare which event types they handle via the `handles`
     class variable. Handlers are automatically registered and instantiated
     per user when events are dispatched.
 
-    Subclasses can also declare which repositories and handlers they need as class attributes
-    with type annotations. These will be made available as instance attributes, created
-    at initialization time (same pattern as BaseCommandHandler).
-
     All concrete subclasses are automatically tracked and can be registered
-    via `register_all_handlers()`.
+    via `register_all_handlers()`. Repositories are exposed explicitly from the
+    provided `ReadOnlyRepositories` instance.
 
     Example:
         class MyHandler(DomainEventHandler):
@@ -68,97 +63,24 @@ class DomainEventHandler(ABC):
     def __init__(
         self,
         ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory | None,
         user_id: UUID,
-        ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
+        uow_factory: UnitOfWorkFactory | None = None,
     ) -> None:
-        """Initialize the event handler with requested repositories and handlers.
-
-        Args:
-            ro_repos: All available read-only repositories for this user
-            uow_factory: Factory for creating UnitOfWork instances.
-                Required if the handler needs to inject command handlers.
-            user_id: The user ID for this handler instance
-            ro_repo_factory: Optional factory for creating read-only repositories.
-                Required if the handler needs to inject other handlers.
-        """
+        """Initialize the event handler with explicit dependencies."""
         self.user_id = user_id
-        self._uow_factory = uow_factory  # Instance variable
+        self._uow_factory = uow_factory
         self._ro_repos = ro_repos
-        self._ro_repo_factory = ro_repo_factory  # Instance variable
-
-        # Get type hints from the class (including from base classes)
-        annotations = get_type_hints(self.__class__, include_extras=True)
-
-        # Extract repositories and handlers that this handler has declared
-        for attr_name, attr_type in annotations.items():
-            # Skip private attributes and methods
-            if attr_name.startswith("_") or attr_name in ("handles",):
-                continue
-
-            # Check if this is a repository attribute
-            if hasattr(ro_repos, attr_name):
-                # Extract the repository from ro_repos and set it as an instance attribute
-                setattr(self, attr_name, getattr(ro_repos, attr_name))
-            # Check if this is a handler type
-            elif self._is_handler_type(attr_type):
-                handler_instance = self._create_handler(attr_type, attr_name)
-                setattr(self, attr_name, handler_instance)
-
-    def _is_handler_type(self, attr_type: type) -> bool:
-        """Check if a type is a handler (BaseCommandHandler or BaseQueryHandler subclass).
-
-        Args:
-            attr_type: The type to check
-
-        Returns:
-            True if the type is a handler, False otherwise
-        """
-        if not inspect.isclass(attr_type):
-            return False
-
-        # Check if it's a subclass of BaseCommandHandler or BaseQueryHandler
-        mro = inspect.getmro(attr_type)
-        # Import here to avoid circular imports
-        from planned.application.commands.base import BaseCommandHandler
-
-        return BaseCommandHandler in mro or BaseQueryHandler in mro
-
-    def _create_handler(self, handler_class: type, attr_name: str) -> Any:
-        """Create an instance of a handler.
-
-        Args:
-            handler_class: The handler class to instantiate
-            attr_name: The attribute name (for error messages)
-
-        Returns:
-            An instance of the handler
-
-        Raises:
-            ValueError: If required factories are not provided
-        """
-        # Import here to avoid circular imports
-        from planned.application.commands.base import BaseCommandHandler
-
-        mro = inspect.getmro(handler_class)
-        if BaseCommandHandler in mro:
-            # Command handlers need: ro_repos, uow_factory, user_id, ro_repo_factory
-            if self._ro_repo_factory is None or self._uow_factory is None:
-                raise ValueError(
-                    f"ro_repo_factory and uow_factory are required to inject {attr_name} "
-                    f"({handler_class.__name__})"
-                )
-            return handler_class(
-                self._ro_repos,
-                self._uow_factory,
-                self.user_id,
-                self._ro_repo_factory,
-            )
-        elif issubclass(handler_class, BaseQueryHandler):
-            # Query handlers need: ro_repos, user_id
-            return handler_class(self._ro_repos, self.user_id)
-        else:
-            raise ValueError(f"Unknown handler type: {handler_class}")
+        # Explicitly expose read-only repositories for convenience
+        self.auth_token_ro_repo = ro_repos.auth_token_ro_repo
+        self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
+        self.calendar_ro_repo = ro_repos.calendar_ro_repo
+        self.day_ro_repo = ro_repos.day_ro_repo
+        self.day_template_ro_repo = ro_repos.day_template_ro_repo
+        self.push_subscription_ro_repo = ro_repos.push_subscription_ro_repo
+        self.routine_ro_repo = ro_repos.routine_ro_repo
+        self.task_definition_ro_repo = ro_repos.task_definition_ro_repo
+        self.task_ro_repo = ro_repos.task_ro_repo
+        self.user_ro_repo = ro_repos.user_ro_repo
 
     @classmethod
     def _extract_user_id(cls, event: DomainEvent) -> UUID | None:
@@ -213,9 +135,8 @@ class DomainEventHandler(ABC):
                 ro_repos = cls._class_ro_repo_factory.create(user_id)
                 handler_instance = handler_class(
                     ro_repos=ro_repos,
-                    uow_factory=cls._class_uow_factory,
                     user_id=user_id,
-                    ro_repo_factory=cls._class_ro_repo_factory,
+                    uow_factory=cls._class_uow_factory,
                 )
                 await handler_instance.handle(event)
 
