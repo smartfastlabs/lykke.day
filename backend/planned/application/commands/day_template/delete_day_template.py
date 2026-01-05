@@ -2,15 +2,11 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.commands.base import BaseCommandHandler
 
 
-class DeleteDayTemplateHandler:
+class DeleteDayTemplateHandler(BaseCommandHandler):
     """Deletes a day template."""
-
-    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
-        self._uow_factory = uow_factory
-        self.user_id = user_id
 
     async def run(self, day_template_id: UUID) -> None:
         """Delete a day template.
@@ -21,6 +17,6 @@ class DeleteDayTemplateHandler:
         Raises:
             NotFoundError: If day template not found
         """
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self.new_uow() as uow:
             day_template = await uow.day_template_ro_repo.get(day_template_id)
             await uow.delete(day_template)

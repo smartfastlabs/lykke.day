@@ -69,20 +69,29 @@ def get_schedule_day_handler(
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> ScheduleDayHandler:
     """Get a ScheduleDayHandler instance."""
-    return ScheduleDayHandler(uow_factory, ro_repo_factory, user.id)
+    ro_repos = ro_repo_factory.create(user.id)
+    return ScheduleDayHandler(ro_repos, uow_factory, user.id, ro_repo_factory)
 
 
 def get_update_day_handler(
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> UpdateDayHandler:
     """Get an UpdateDayHandler instance."""
-    return UpdateDayHandler(uow_factory, user.id)
+    ro_repos = ro_repo_factory.create(user.id)
+    return UpdateDayHandler(ro_repos, uow_factory, user.id)
 
 
 def get_record_task_action_handler(
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> RecordTaskActionHandler:
     """Get a RecordTaskActionHandler instance."""
-    return RecordTaskActionHandler(uow_factory, user.id)
+    ro_repos = ro_repo_factory.create(user.id)
+    return RecordTaskActionHandler(ro_repos, uow_factory, user.id)

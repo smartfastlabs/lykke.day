@@ -2,18 +2,17 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.commands.base import BaseCommandHandler
+from planned.application.repositories import CalendarRepositoryReadOnlyProtocol
 from planned.domain.entities import CalendarEntity
 from planned.domain.events.calendar_events import CalendarUpdatedEvent
 from planned.domain.value_objects import CalendarUpdateObject
 
 
-class UpdateCalendarHandler:
+class UpdateCalendarHandler(BaseCommandHandler):
     """Updates an existing calendar."""
 
-    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
-        self._uow_factory = uow_factory
-        self.user_id = user_id
+    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
 
     async def run(
         self, calendar_id: UUID, update_data: CalendarUpdateObject
@@ -30,7 +29,7 @@ class UpdateCalendarHandler:
         Raises:
             NotFoundError: If calendar not found
         """
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self.new_uow() as uow:
             # Get the existing calendar
             calendar = await uow.calendar_ro_repo.get(calendar_id)
 

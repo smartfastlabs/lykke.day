@@ -2,18 +2,14 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.commands.base import BaseCommandHandler
 from planned.domain.entities import DayTemplateEntity
 from planned.domain.events.day_template_events import DayTemplateUpdatedEvent
 from planned.domain.value_objects import DayTemplateUpdateObject
 
 
-class UpdateDayTemplateHandler:
+class UpdateDayTemplateHandler(BaseCommandHandler):
     """Updates an existing day template."""
-
-    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
-        self._uow_factory = uow_factory
-        self.user_id = user_id
 
     async def run(
         self,
@@ -32,7 +28,7 @@ class UpdateDayTemplateHandler:
         Raises:
             NotFoundError: If day template not found
         """
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self.new_uow() as uow:
             # Get the existing day template
             day_template = await uow.day_template_ro_repo.get(day_template_id)
 

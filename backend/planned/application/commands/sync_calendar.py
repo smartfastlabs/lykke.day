@@ -4,26 +4,39 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from loguru import logger
+from planned.application.commands.base import BaseCommandHandler
 from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from planned.application.unit_of_work import UnitOfWorkFactory, UnitOfWorkProtocol
+from planned.application.unit_of_work import (
+    ReadOnlyRepositories,
+    UnitOfWorkFactory,
+    UnitOfWorkProtocol,
+)
 from planned.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from planned.core.exceptions import TokenExpiredError
 from planned.domain.entities import CalendarEntity, CalendarEntryEntity
 from planned.infrastructure import data_objects
 
 
-class SyncCalendarHandler:
+class SyncCalendarHandler(BaseCommandHandler):
     """Syncs calendar entries from external provider."""
 
     def __init__(
         self,
+        ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        google_gateway: GoogleCalendarGatewayProtocol,
         user_id: UUID,
+        google_gateway: GoogleCalendarGatewayProtocol,
     ) -> None:
-        self._uow_factory = uow_factory
+        """Initialize SyncCalendarHandler.
+
+        Args:
+            ro_repos: Read-only repositories (from BaseCommandHandler)
+            uow_factory: UnitOfWork factory (from BaseCommandHandler)
+            user_id: User ID (from BaseCommandHandler)
+            google_gateway: Google Calendar gateway
+        """
+        super().__init__(ro_repos, uow_factory, user_id)
         self._google_gateway = google_gateway
-        self.user_id = user_id
 
     async def sync_calendar(
         self, calendar_id: UUID
@@ -36,7 +49,7 @@ class SyncCalendarHandler:
         Returns:
             Tuple of (calendar_entries, deleted_calendar_entries)
         """
-        uow = self._uow_factory.create(self.user_id)
+        uow = self.new_uow()
         async with uow:
             calendar = await uow.calendar_ro_repo.get(calendar_id)
             token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
@@ -108,26 +121,37 @@ class SyncCalendarHandler:
         return calendar_entries, deleted_calendar_entries
 
 
-class SyncAllCalendarsHandler:
+class SyncAllCalendarsHandler(BaseCommandHandler):
     """Syncs all calendars for a user."""
 
     def __init__(
         self,
+        ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        google_gateway: GoogleCalendarGatewayProtocol,
         user_id: UUID,
+        google_gateway: GoogleCalendarGatewayProtocol,
     ) -> None:
-        self._uow_factory = uow_factory
+        """Initialize SyncAllCalendarsHandler.
+
+        Args:
+            ro_repos: Read-only repositories (from BaseCommandHandler)
+            uow_factory: UnitOfWork factory (from BaseCommandHandler)
+            user_id: User ID (from BaseCommandHandler)
+            google_gateway: Google Calendar gateway
+        """
+        super().__init__(ro_repos, uow_factory, user_id)
         self._google_gateway = google_gateway
-        self.user_id = user_id
 
     async def sync_all_calendars(self) -> None:
         """Sync all calendars for the user."""
-        uow = self._uow_factory.create(self.user_id)
+        uow = self.new_uow()
         async with uow:
             calendars = await uow.calendar_ro_repo.all()
             sync_handler = SyncCalendarHandler(
-                self._uow_factory, self._google_gateway, self.user_id
+                ro_repos=self._ro_repos,
+                uow_factory=self._uow_factory,
+                user_id=self.user_id,
+                google_gateway=self._google_gateway,
             )
 
             for calendar in calendars:

@@ -2,15 +2,11 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.commands.base import BaseCommandHandler
 
 
-class DeletePushSubscriptionHandler:
+class DeletePushSubscriptionHandler(BaseCommandHandler):
     """Deletes a push subscription."""
-
-    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
-        self._uow_factory = uow_factory
-        self.user_id = user_id
 
     async def run(
         self, subscription_id: UUID
@@ -23,7 +19,7 @@ class DeletePushSubscriptionHandler:
         Raises:
             NotFoundError: If push subscription not found
         """
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self.new_uow() as uow:
             subscription = await uow.push_subscription_ro_repo.get(subscription_id)
             await uow.delete(subscription)
 

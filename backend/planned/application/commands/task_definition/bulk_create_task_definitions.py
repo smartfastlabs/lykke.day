@@ -1,17 +1,11 @@
 """Command to bulk create task definitions."""
 
-from uuid import UUID
-
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.commands.base import BaseCommandHandler
 from planned.domain.entities import TaskDefinitionEntity
 
 
-class BulkCreateTaskDefinitionsHandler:
+class BulkCreateTaskDefinitionsHandler(BaseCommandHandler):
     """Creates multiple task definitions."""
-
-    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
-        self._uow_factory = uow_factory
-        self.user_id = user_id
 
     async def run(
         self, task_definitions: tuple[TaskDefinitionEntity, ...]
@@ -27,7 +21,7 @@ class BulkCreateTaskDefinitionsHandler:
         if not task_definitions:
             return []
 
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self.new_uow() as uow:
             # Create each task definition
             for task_definition in task_definitions:
                 await uow.create(task_definition)

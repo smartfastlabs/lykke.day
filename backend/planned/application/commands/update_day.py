@@ -1,21 +1,16 @@
 """Command to update a day's status or template."""
 
 from datetime import date
-from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.commands.base import BaseCommandHandler
 from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity
 from planned.domain.value_objects import DayUpdateObject
 
 
-class UpdateDayHandler:
+class UpdateDayHandler(BaseCommandHandler):
     """Updates a day's status or template."""
-
-    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
-        self._uow_factory = uow_factory
-        self.user_id = user_id
 
     async def update_day(
         self,
@@ -34,7 +29,7 @@ class UpdateDayHandler:
         Raises:
             NotFoundError: If the day doesn't exist
         """
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self.new_uow() as uow:
             # Get the existing day
             day_id = DayEntity.id_from_date_and_user(date, self.user_id)
             try:

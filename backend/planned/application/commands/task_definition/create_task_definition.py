@@ -1,17 +1,11 @@
 """Command to create a new task definition."""
 
-from uuid import UUID
-
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.commands.base import BaseCommandHandler
 from planned.domain.entities import TaskDefinitionEntity
 
 
-class CreateTaskDefinitionHandler:
+class CreateTaskDefinitionHandler(BaseCommandHandler):
     """Creates a new task definition."""
-
-    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
-        self._uow_factory = uow_factory
-        self.user_id = user_id
 
     async def run(self, task_definition: TaskDefinitionEntity) -> TaskDefinitionEntity:
         """Create a new task definition.
@@ -22,6 +16,6 @@ class CreateTaskDefinitionHandler:
         Returns:
             The created task definition entity
         """
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self.new_uow() as uow:
             await uow.create(task_definition)
             return task_definition

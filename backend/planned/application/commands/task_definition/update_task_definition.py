@@ -2,17 +2,13 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.commands.base import BaseCommandHandler
 from planned.domain.entities import TaskDefinitionEntity
 from planned.domain.value_objects import TaskDefinitionUpdateObject
 
 
-class UpdateTaskDefinitionHandler:
+class UpdateTaskDefinitionHandler(BaseCommandHandler):
     """Updates an existing task definition."""
-
-    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
-        self._uow_factory = uow_factory
-        self.user_id = user_id
 
     async def run(
         self,
@@ -31,7 +27,7 @@ class UpdateTaskDefinitionHandler:
         Raises:
             NotFoundError: If task definition not found
         """
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self.new_uow() as uow:
             # Get the existing task definition
             task_definition = await uow.task_definition_ro_repo.get(task_definition_id)
 

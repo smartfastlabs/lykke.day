@@ -1,18 +1,12 @@
 """Command to update an existing user."""
 
-from uuid import UUID
-
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.commands.base import BaseCommandHandler
 from planned.domain.entities import UserEntity
 from planned.domain.value_objects import UserUpdateObject
 
 
-class UpdateUserHandler:
+class UpdateUserHandler(BaseCommandHandler):
     """Updates an existing user."""
-
-    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
-        self._uow_factory = uow_factory
-        self.user_id = user_id
 
     async def run(
         self, update_data: UserUpdateObject
@@ -28,7 +22,7 @@ class UpdateUserHandler:
         Raises:
             NotFoundError: If user not found
         """
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self.new_uow() as uow:
             # Get the existing user
             user = await uow.user_ro_repo.get(self.user_id)
 

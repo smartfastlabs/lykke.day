@@ -1,11 +1,12 @@
 """Command to schedule a day with tasks from routines."""
 
-import asyncio
 from datetime import date
 from uuid import UUID
 
+from planned.application.commands.base import BaseCommandHandler
 from planned.application.queries.preview_day import PreviewDayHandler
 from planned.application.unit_of_work import (
+    ReadOnlyRepositories,
     ReadOnlyRepositoryFactory,
     UnitOfWorkFactory,
 )
@@ -13,18 +14,26 @@ from planned.domain import value_objects
 from planned.domain.entities import DayEntity
 
 
-class ScheduleDayHandler:
+class ScheduleDayHandler(BaseCommandHandler):
     """Schedules a day with tasks from routines."""
 
     def __init__(
         self,
+        ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
-        ro_repo_factory: ReadOnlyRepositoryFactory,
         user_id: UUID,
+        ro_repo_factory: ReadOnlyRepositoryFactory,
     ) -> None:
-        self._uow_factory = uow_factory
+        """Initialize ScheduleDayHandler.
+
+        Args:
+            ro_repos: Read-only repositories (from BaseCommandHandler)
+            uow_factory: UnitOfWork factory (from BaseCommandHandler)
+            user_id: User ID (from BaseCommandHandler)
+            ro_repo_factory: Factory for creating read-only repositories for PreviewDayHandler
+        """
+        super().__init__(ro_repos, uow_factory, user_id)
         self._ro_repo_factory = ro_repo_factory
-        self.user_id = user_id
 
     def _get_preview_handler(self) -> PreviewDayHandler:
         """Create a PreviewDayHandler with read-only repositories for the user."""
@@ -43,7 +52,7 @@ class ScheduleDayHandler:
         Returns:
             A DayContext with the scheduled day and tasks
         """
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self.new_uow() as uow:
             # Delete existing tasks for this date
             # Get all tasks for the date and mark them for deletion
             existing_tasks = await uow.task_ro_repo.search_query(
@@ -54,16 +63,16 @@ class ScheduleDayHandler:
 
             # Get preview of what the day would look like
             preview_handler = self._get_preview_handler()
-            preview_result = await preview_handler.preview_day(
-                date, template_id
-            )
+            preview_result = await preview_handler.preview_day(date, template_id)
 
             # Validate template exists
             if preview_result.day.template is None:
                 raise ValueError("Day template is required to schedule")
 
             # Re-fetch template to ensure it's in the current UoW context
-            template = await uow.day_template_ro_repo.get(preview_result.day.template.id)
+            template = await uow.day_template_ro_repo.get(
+                preview_result.day.template.id
+            )
 
             # Create and schedule the day
             day = DayEntity.create_for_date(
@@ -85,4 +94,3 @@ class ScheduleDayHandler:
                 calendar_entries=preview_result.calendar_entries,
                 messages=preview_result.messages,
             )
-

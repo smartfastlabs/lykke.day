@@ -1,21 +1,15 @@
 """Command to unschedule a day, removing routine tasks."""
 
-import asyncio
 from datetime import date
-from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.commands.base import BaseCommandHandler
 from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity
 
 
-class UnscheduleDayHandler:
+class UnscheduleDayHandler(BaseCommandHandler):
     """Unschedules a day, removing routine tasks."""
-
-    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
-        self._uow_factory = uow_factory
-        self.user_id = user_id
 
     async def unschedule_day(self, date: date) -> DayEntity:
         """Unschedule a day, removing routine tasks and marking day as unscheduled.
@@ -26,7 +20,7 @@ class UnscheduleDayHandler:
         Returns:
             The updated Day entity
         """
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self.new_uow() as uow:
             # Get all tasks for the date, filter for routine tasks, then delete them
             tasks = await uow.task_ro_repo.search_query(value_objects.DateQuery(date=date))
             routine_tasks = [t for t in tasks if t.routine_id is not None]

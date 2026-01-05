@@ -2,17 +2,13 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import UnitOfWorkFactory
+from planned.application.commands.base import BaseCommandHandler
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import ActionEntity, DayEntity, TaskEntity
 
 
-class RecordTaskActionHandler:
+class RecordTaskActionHandler(BaseCommandHandler):
     """Records an action on a task."""
-
-    def __init__(self, uow_factory: UnitOfWorkFactory, user_id: UUID) -> None:
-        self._uow_factory = uow_factory
-        self.user_id = user_id
 
     async def record_task_action(
         self, task_id: UUID, action: ActionEntity
@@ -29,7 +25,7 @@ class RecordTaskActionHandler:
         Raises:
             NotFoundError: If the task or day is not found
         """
-        async with self._uow_factory.create(self.user_id) as uow:
+        async with self.new_uow() as uow:
             # Get the task to find its scheduled_date
             task = await uow.task_ro_repo.get(task_id)
 
