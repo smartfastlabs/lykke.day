@@ -23,7 +23,6 @@ class SaveDayHandler:
             The saved Day entity
         """
         async with self._uow_factory.create(self.user_id) as uow:
-            await uow.day_rw_repo.put(day)
-            await uow.commit()
+            uow.add(day)
             return day
 

@@ -1,11 +1,10 @@
 """Command to update an existing day template."""
 
-from dataclasses import asdict
-from typing import Any
 from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain.entities import DayTemplateEntity
+from planned.domain.events.day_template_events import DayTemplateUpdatedEvent
 from planned.domain.value_objects import DayTemplateUpdateObject
 
 
@@ -34,14 +33,14 @@ class UpdateDayTemplateHandler:
             NotFoundError: If day template not found
         """
         async with self._uow_factory.create(self.user_id) as uow:
-            # Convert update_data to dict and filter out None values
-            update_data_dict: dict[str, Any] = asdict(update_data)
-            update_dict = {k: v for k, v in update_data_dict.items() if v is not None}
+            # Get the existing day template
+            day_template = await uow.day_template_ro_repo.get(day_template_id)
 
-            # Apply updates directly to the database
-            day_template = await uow.day_template_rw_repo.apply_updates(
-                day_template_id, **update_dict
+            # Apply updates using domain method (adds EntityUpdatedEvent)
+            day_template = day_template.apply_update(
+                update_data, DayTemplateUpdatedEvent
             )
-            await uow.commit()
-            return day_template
 
+            # Add entity to UoW for saving
+            uow.add(day_template)
+            return day_template

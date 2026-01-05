@@ -22,7 +22,7 @@ class DeleteDayTemplateHandler:
             NotFoundError: If day template not found
         """
         async with self._uow_factory.create(self.user_id) as uow:
-            day_template = await uow.day_template_rw_repo.get(day_template_id)
-            await uow.day_template_rw_repo.delete(day_template)
-            await uow.commit()
+            day_template = await uow.day_template_ro_repo.get(day_template_id)
+            day_template.delete()  # Mark for deletion
+            uow.add(day_template)
 

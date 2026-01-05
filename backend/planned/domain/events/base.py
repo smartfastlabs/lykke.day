@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 if TYPE_CHECKING:
     from planned.domain.value_objects.update import BaseUpdateObject
+
     _BaseUpdateObject = BaseUpdateObject
 else:
     # At runtime, we don't need the actual types for TypeVar bounds
@@ -27,6 +28,22 @@ class DomainEvent:
     """
 
     occurred_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+
+@dataclass(frozen=True, kw_only=True)
+class EntityCreatedEvent(DomainEvent):
+    """Base class for entity creation events.
+
+    This event is raised when a new entity is created via create().
+    """
+
+
+@dataclass(frozen=True, kw_only=True)
+class EntityDeletedEvent(DomainEvent):
+    """Base class for entity deletion events.
+
+    This event is raised when an entity is deleted via delete().
+    """
 
 
 @dataclass(frozen=True, kw_only=True)

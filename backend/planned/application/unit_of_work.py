@@ -5,46 +5,49 @@ The Unit of Work pattern provides a way to:
 2. Ensure all repositories share the same database connection
 3. Handle domain event dispatching after commit
 4. Provide a clean abstraction for testing
+5. Track entities that need to be saved (via add() method)
 """
 
 from typing import Protocol, Self
 from uuid import UUID
 
+from planned.domain.entities.base import BaseEntityObject
+
 from planned.application.repositories import (
     AuthTokenRepositoryReadOnlyProtocol,
-    AuthTokenRepositoryReadWriteProtocol,
     CalendarEntryRepositoryReadOnlyProtocol,
-    CalendarEntryRepositoryReadWriteProtocol,
     CalendarRepositoryReadOnlyProtocol,
-    CalendarRepositoryReadWriteProtocol,
     DayRepositoryReadOnlyProtocol,
-    DayRepositoryReadWriteProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
-    DayTemplateRepositoryReadWriteProtocol,
     MessageRepositoryReadOnlyProtocol,
-    MessageRepositoryReadWriteProtocol,
     PushSubscriptionRepositoryReadOnlyProtocol,
-    PushSubscriptionRepositoryReadWriteProtocol,
     RoutineRepositoryReadOnlyProtocol,
-    RoutineRepositoryReadWriteProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
-    TaskDefinitionRepositoryReadWriteProtocol,
     TaskRepositoryReadOnlyProtocol,
-    TaskRepositoryReadWriteProtocol,
     UserRepositoryReadOnlyProtocol,
-    UserRepositoryReadWriteProtocol,
 )
 
 
 class UnitOfWorkProtocol(Protocol):
     """Protocol for Unit of Work pattern.
 
-    Provides access to all repositories scoped to a single transaction.
-    All repositories share the same database connection and transaction context.
-    Provides both read-only and read-write repositories with explicit naming.
+    Provides access to read-only repositories for querying and an add() method
+    for tracking entities that need to be saved. All repositories share the same
+    database connection and transaction context.
+
+    Commands should use:
+    - ro_repo properties for reading entities
+    - add() method for tracking entities to save
+    - commit() to persist changes
+
+    The commit() method will:
+    1. Process all added entities (create, update, delete based on domain events)
+    2. Collect domain events from all aggregates
+    3. Commit the database transaction
+    4. Dispatch domain events
     """
 
-    # Read-only repository properties (for query handlers)
+    # Read-only repository properties (for reading entities)
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
@@ -56,19 +59,6 @@ class UnitOfWorkProtocol(Protocol):
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
-
-    # Read-write repository properties (for command handlers)
-    auth_token_rw_repo: AuthTokenRepositoryReadWriteProtocol
-    calendar_entry_rw_repo: CalendarEntryRepositoryReadWriteProtocol
-    calendar_rw_repo: CalendarRepositoryReadWriteProtocol
-    day_rw_repo: DayRepositoryReadWriteProtocol
-    day_template_rw_repo: DayTemplateRepositoryReadWriteProtocol
-    message_rw_repo: MessageRepositoryReadWriteProtocol
-    push_subscription_rw_repo: PushSubscriptionRepositoryReadWriteProtocol
-    routine_rw_repo: RoutineRepositoryReadWriteProtocol
-    task_definition_rw_repo: TaskDefinitionRepositoryReadWriteProtocol
-    task_rw_repo: TaskRepositoryReadWriteProtocol
-    user_rw_repo: UserRepositoryReadWriteProtocol
 
     async def __aenter__(self) -> Self:
         """Enter the unit of work context.
@@ -90,13 +80,26 @@ class UnitOfWorkProtocol(Protocol):
         """
         ...
 
+    def add(self, entity: BaseEntityObject) -> None:
+        """Add an entity to be tracked for persistence.
+
+        Only entities added via this method will be saved when commit() is called.
+        The commit() method will inspect domain events on each added entity to
+        determine whether to create, update, or delete it.
+
+        Args:
+            entity: The entity to track for persistence.
+        """
+        ...
+
     async def commit(self) -> None:
         """Commit the current transaction.
 
-        This should:
-        1. Collect domain events from all aggregates
-        2. Dispatch domain events
+        This will:
+        1. Process all added entities (create, update, delete based on domain events)
+        2. Collect domain events from all aggregates
         3. Commit the database transaction
+        4. Dispatch domain events
         """
         ...
 

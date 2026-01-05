@@ -38,13 +38,16 @@ class UpdateDayHandler:
             # Get the existing day
             day_id = DayEntity.id_from_date_and_user(date, self.user_id)
             try:
-                day = await uow.day_rw_repo.get(day_id)
+                day = await uow.day_ro_repo.get(day_id)
             except NotFoundError:
                 # Create a new day if it doesn't exist
-                user = await uow.user_rw_repo.get(self.user_id)
+                user = await uow.user_ro_repo.get(self.user_id)
                 template_slug = user.settings.template_defaults[date.weekday()]
-                template = await uow.day_template_rw_repo.get_by_slug(template_slug)
-                day = DayEntity.create_for_date(date, user_id=self.user_id, template=template)
+                template = await uow.day_template_ro_repo.get_by_slug(template_slug)
+                day = DayEntity.create_for_date(
+                    date, user_id=self.user_id, template=template
+                )
+                day.create()  # Mark as newly created
 
             # Apply status transition if requested
             if update_data.status is not None:
@@ -52,7 +55,7 @@ class UpdateDayHandler:
 
             # Update template if requested
             if update_data.template_id is not None:
-                template = await uow.day_template_rw_repo.get(update_data.template_id)
+                template = await uow.day_template_ro_repo.get(update_data.template_id)
                 day.update_template(template)
 
             # Update other fields if provided
@@ -63,12 +66,13 @@ class UpdateDayHandler:
             if update_data.tags is not None:
                 day.tags = update_data.tags
 
-            # Save and commit
-            await uow.day_rw_repo.put(day)
-            await uow.commit()
+            # Add entity to UoW for saving
+            uow.add(day)
             return day
 
-    def _apply_status_transition(self, day: DayEntity, new_status: value_objects.DayStatus) -> None:
+    def _apply_status_transition(
+        self, day: DayEntity, new_status: value_objects.DayStatus
+    ) -> None:
         """Apply a status transition using domain methods.
 
         Args:
@@ -84,4 +88,3 @@ class UpdateDayHandler:
         else:
             # For other statuses, set directly (maintains compatibility)
             day.status = new_status
-

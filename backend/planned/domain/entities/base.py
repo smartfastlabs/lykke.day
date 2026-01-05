@@ -4,7 +4,11 @@ from dataclasses import asdict, dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 from uuid import UUID, uuid4
 
-from planned.domain.events.base import DomainEvent
+from planned.domain.events.base import (
+    DomainEvent,
+    EntityCreatedEvent,
+    EntityDeletedEvent,
+)
 
 if TYPE_CHECKING:
     from planned.domain.events.base import EntityUpdatedEvent
@@ -85,6 +89,29 @@ class BaseEntityObject(BaseObject, Generic[UpdateObjectType, UpdateEventType]):
         """
         return len(self._domain_events) > 0
 
+    def create(self) -> Self:
+        """Mark this entity as newly created by adding an EntityCreatedEvent.
+
+        Call this method after creating a new entity instance to indicate
+        it should be inserted into the database.
+
+        Returns:
+            Self for method chaining.
+        """
+        self._add_event(EntityCreatedEvent())
+        return self
+
+    def delete(self) -> Self:
+        """Mark this entity for deletion by adding an EntityDeletedEvent.
+
+        Call this method to indicate the entity should be deleted from the database.
+
+        Returns:
+            Self for method chaining.
+        """
+        self._add_event(EntityDeletedEvent())
+        return self
+
     def apply_update(
         self,
         update_object: UpdateObjectType,
@@ -115,8 +142,6 @@ class BaseEntityObject(BaseObject, Generic[UpdateObjectType, UpdateEventType]):
 
         # Record domain event with update object
         # The event class should accept update_object as a parameter
-        from planned.domain.events.base import EntityUpdatedEvent
-
         event = update_event_class(
             update_object=update_object,
         )

@@ -13,9 +13,7 @@ class CreateCalendarHandler:
         self._uow_factory = uow_factory
         self.user_id = user_id
 
-    async def run(
-        self, calendar: CalendarEntity
-    ) -> CalendarEntity:
+    async def run(self, calendar: CalendarEntity) -> CalendarEntity:
         """Create a new calendar.
 
         Args:
@@ -25,7 +23,6 @@ class CreateCalendarHandler:
             The created calendar entity
         """
         async with self._uow_factory.create(self.user_id) as uow:
-            created_calendar = await uow.calendar_rw_repo.put(calendar)
-            await uow.commit()
-            return created_calendar
-
+            calendar.create()  # Mark as newly created
+            uow.add(calendar)
+            return calendar

@@ -25,7 +25,7 @@ class CreateDayTemplateHandler:
             The created day template entity
         """
         async with self._uow_factory.create(self.user_id) as uow:
-            created_day_template = await uow.day_template_rw_repo.put(day_template)
-            await uow.commit()
-            return created_day_template
+            day_template.create()  # Mark as newly created
+            uow.add(day_template)
+            return day_template
 

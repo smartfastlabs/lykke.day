@@ -38,8 +38,8 @@ class SyncCalendarHandler:
         """
         uow = self._uow_factory.create(self.user_id)
         async with uow:
-            calendar = await uow.calendar_rw_repo.get(calendar_id)
-            token = await uow.auth_token_rw_repo.get(calendar.auth_token_id)
+            calendar = await uow.calendar_ro_repo.get(calendar_id)
+            token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
 
             # Calculate lookback time
             lookback: datetime = datetime.now(UTC) - CALENDAR_DEFAULT_LOOKBACK
@@ -125,14 +125,14 @@ class SyncAllCalendarsHandler:
         """Sync all calendars for the user."""
         uow = self._uow_factory.create(self.user_id)
         async with uow:
-            calendars = await uow.calendar_rw_repo.all()
+            calendars = await uow.calendar_ro_repo.all()
             sync_handler = SyncCalendarHandler(
                 self._uow_factory, self._google_gateway, self.user_id
             )
 
             for calendar in calendars:
                 try:
-                    token = await uow.auth_token_rw_repo.get(calendar.auth_token_id)
+                    token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
                     (
                         calendar_entries,
                         deleted_calendar_entries,
@@ -140,14 +140,15 @@ class SyncAllCalendarsHandler:
 
                     # Save calendar entries
                     for calendar_entry in calendar_entries:
-                        await uow.calendar_entry_rw_repo.put(calendar_entry)
+                        calendar_entry.create()  # Mark as newly created
+                        uow.add(calendar_entry)
                     for calendar_entry in deleted_calendar_entries:
                         logger.info(f"DELETING CALENDAR ENTRY: {calendar_entry.name}")
-                        await uow.calendar_entry_rw_repo.delete(calendar_entry)
+                        calendar_entry.delete()  # Mark for deletion
+                        uow.add(calendar_entry)
 
-                    # Update calendar last_sync_at
-                    await uow.calendar_rw_repo.put(calendar)
-                    await uow.commit()
+                    # Update calendar last_sync_at (just set attribute, no event needed)
+                    uow.add(calendar)
                 except TokenExpiredError:
                     logger.info(f"Token expired for calendar {calendar.name}")
                 except Exception as e:

@@ -24,7 +24,7 @@ class DeletePushSubscriptionHandler:
             NotFoundError: If push subscription not found
         """
         async with self._uow_factory.create(self.user_id) as uow:
-            subscription = await uow.push_subscription_rw_repo.get(subscription_id)
-            await uow.push_subscription_rw_repo.delete(subscription)
-            await uow.commit()
+            subscription = await uow.push_subscription_ro_repo.get(subscription_id)
+            subscription.delete()  # Mark for deletion
+            uow.add(subscription)
 

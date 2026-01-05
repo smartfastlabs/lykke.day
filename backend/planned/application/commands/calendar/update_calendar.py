@@ -1,11 +1,10 @@
 """Command to update an existing calendar."""
 
-from dataclasses import asdict
-from typing import Any
 from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
 from planned.domain.entities import CalendarEntity
+from planned.domain.events.calendar_events import CalendarUpdatedEvent
 from planned.domain.value_objects import CalendarUpdateObject
 
 
@@ -32,12 +31,13 @@ class UpdateCalendarHandler:
             NotFoundError: If calendar not found
         """
         async with self._uow_factory.create(self.user_id) as uow:
-            # Convert update_data to dict and filter out None values
-            update_data_dict: dict[str, Any] = asdict(update_data)
-            update_dict = {k: v for k, v in update_data_dict.items() if v is not None}
+            # Get the existing calendar
+            calendar = await uow.calendar_ro_repo.get(calendar_id)
 
-            # Apply updates directly to the database
-            calendar = await uow.calendar_rw_repo.apply_updates(calendar_id, **update_dict)
-            await uow.commit()
+            # Apply updates using domain method (adds EntityUpdatedEvent)
+            calendar = calendar.apply_update(update_data, CalendarUpdatedEvent)
+
+            # Add entity to UoW for saving
+            uow.add(calendar)
             return calendar
 

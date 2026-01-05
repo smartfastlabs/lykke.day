@@ -25,7 +25,7 @@ class CreatePushSubscriptionHandler:
             The created push subscription entity
         """
         async with self._uow_factory.create(self.user_id) as uow:
-            created_subscription = await uow.push_subscription_rw_repo.put(subscription)
-            await uow.commit()
-            return created_subscription
+            subscription.create()  # Mark as newly created
+            uow.add(subscription)
+            return subscription
 

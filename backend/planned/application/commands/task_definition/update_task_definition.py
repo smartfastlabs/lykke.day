@@ -1,7 +1,5 @@
 """Command to update an existing task definition."""
 
-from dataclasses import asdict
-from typing import Any
 from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
@@ -34,13 +32,16 @@ class UpdateTaskDefinitionHandler:
             NotFoundError: If task definition not found
         """
         async with self._uow_factory.create(self.user_id) as uow:
-            # Convert update_data to dict and filter out None values
-            update_data_dict: dict[str, Any] = asdict(update_data)
-            update_dict = {k: v for k, v in update_data_dict.items() if v is not None}
+            # Get the existing task definition
+            task_definition = await uow.task_definition_ro_repo.get(task_definition_id)
 
-            # Apply updates directly to the database
-            task_definition = await uow.task_definition_rw_repo.apply_updates(
-                task_definition_id, **update_dict
+            # Apply updates using domain method (adds EntityUpdatedEvent)
+            from planned.domain.events.task_events import TaskDefinitionUpdatedEvent
+
+            task_definition = task_definition.apply_update(
+                update_data, TaskDefinitionUpdatedEvent
             )
-            await uow.commit()
+
+            # Add entity to UoW for saving
+            uow.add(task_definition)
             return task_definition

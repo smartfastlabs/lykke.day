@@ -1,7 +1,5 @@
 """Command to update an existing user."""
 
-from dataclasses import asdict
-from typing import Any
 from uuid import UUID
 
 from planned.application.unit_of_work import UnitOfWorkFactory
@@ -31,12 +29,15 @@ class UpdateUserHandler:
             NotFoundError: If user not found
         """
         async with self._uow_factory.create(self.user_id) as uow:
-            # Convert update_data to dict and filter out None values
-            update_data_dict: dict[str, Any] = asdict(update_data)
-            update_dict = {k: v for k, v in update_data_dict.items() if v is not None}
+            # Get the existing user
+            user = await uow.user_ro_repo.get(self.user_id)
 
-            # Apply updates directly to the database
-            user = await uow.user_rw_repo.apply_updates(self.user_id, **update_dict)
-            await uow.commit()
+            # Apply updates using domain method (adds EntityUpdatedEvent)
+            from planned.domain.events.user_events import UserUpdatedEvent
+
+            user = user.apply_update(update_data, UserUpdatedEvent)
+
+            # Add entity to UoW for saving
+            uow.add(user)
             return user
 

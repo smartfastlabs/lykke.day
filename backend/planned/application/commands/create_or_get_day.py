@@ -27,18 +27,18 @@ class CreateOrGetDayHandler:
         async with self._uow_factory.create(self.user_id) as uow:
             day_id = DayEntity.id_from_date_and_user(date, self.user_id)
             try:
-                return await uow.day_rw_repo.get(day_id)
+                return await uow.day_ro_repo.get(day_id)
             except NotFoundError:
                 # Day doesn't exist, create it
-                user = await uow.user_rw_repo.get(self.user_id)
+                user = await uow.user_ro_repo.get(self.user_id)
                 template_slug = user.settings.template_defaults[date.weekday()]
-                template = await uow.day_template_rw_repo.get_by_slug(template_slug)
+                template = await uow.day_template_ro_repo.get_by_slug(template_slug)
                 day = DayEntity.create_for_date(
                     date,
                     user_id=self.user_id,
                     template=template,
                 )
-                result = await uow.day_rw_repo.put(day)
-                await uow.commit()
-                return result
+                day.create()  # Mark as newly created
+                uow.add(day)
+                return day
 
