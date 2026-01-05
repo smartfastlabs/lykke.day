@@ -2,16 +2,15 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import ReadOnlyRepositories
+from planned.application.queries.base import BaseQueryHandler
+from planned.application.repositories import CalendarRepositoryReadOnlyProtocol
 from planned.domain.entities import CalendarEntity
 
 
-class GetCalendarHandler:
+class GetCalendarHandler(BaseQueryHandler):
     """Retrieves a single calendar by ID."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        self._ro_repos = ro_repos
-        self.user_id = user_id
+    calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
 
     async def run(self, calendar_id: UUID) -> CalendarEntity:
         """Get a single calendar by ID.
@@ -25,5 +24,4 @@ class GetCalendarHandler:
         Raises:
             NotFoundError: If calendar not found
         """
-        return await self._ro_repos.calendar_ro_repo.get(calendar_id)
-
+        return await self.calendar_ro_repo.get(calendar_id)

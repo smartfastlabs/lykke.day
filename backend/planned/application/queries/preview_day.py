@@ -4,19 +4,32 @@ import asyncio
 from datetime import date
 from uuid import UUID
 
+from planned.application.queries.base import BaseQueryHandler
 from planned.application.queries.preview_tasks import PreviewTasksHandler
+from planned.application.repositories import (
+    CalendarEntryRepositoryReadOnlyProtocol,
+    DayRepositoryReadOnlyProtocol,
+    DayTemplateRepositoryReadOnlyProtocol,
+    MessageRepositoryReadOnlyProtocol,
+    UserRepositoryReadOnlyProtocol,
+)
 from planned.application.unit_of_work import ReadOnlyRepositories
 from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity, DayTemplateEntity
 
 
-class PreviewDayHandler:
+class PreviewDayHandler(BaseQueryHandler):
     """Previews what a day would look like if scheduled."""
 
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
+    user_ro_repo: UserRepositoryReadOnlyProtocol
+
     def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        self._ro_repos = ro_repos
-        self.user_id = user_id
+        super().__init__(ro_repos, user_id)
         self._preview_tasks_handler = PreviewTasksHandler(ro_repos, user_id)
 
     async def preview_day(
@@ -44,8 +57,8 @@ class PreviewDayHandler:
         # Load preview tasks and existing data in parallel
         tasks, calendar_entries, messages = await asyncio.gather(
             self._preview_tasks_handler.preview_tasks(date),
-            self._ro_repos.calendar_entry_ro_repo.search_query(value_objects.DateQuery(date=date)),
-            self._ro_repos.message_ro_repo.search_query(value_objects.DateQuery(date=date)),
+            self.calendar_entry_ro_repo.search_query(value_objects.DateQuery(date=date)),
+            self.message_ro_repo.search_query(value_objects.DateQuery(date=date)),
         )
 
         return value_objects.DayContext(
@@ -62,19 +75,19 @@ class PreviewDayHandler:
     ) -> DayTemplateEntity:
         """Get the template to use for the preview."""
         if template_id is not None:
-            return await self._ro_repos.day_template_ro_repo.get(template_id)
+            return await self.day_template_ro_repo.get(template_id)
 
         # Try to get from existing day
         try:
             day_id = DayEntity.id_from_date_and_user(date, self.user_id)
-            existing_day = await self._ro_repos.day_ro_repo.get(day_id)
+            existing_day = await self.day_ro_repo.get(day_id)
             if existing_day.template:
                 return existing_day.template
         except NotFoundError:
             pass
 
         # Fall back to user's default template
-        user = await self._ro_repos.user_ro_repo.get(self.user_id)
+        user = await self.user_ro_repo.get(self.user_id)
         template_slug = user.settings.template_defaults[date.weekday()]
-        return await self._ro_repos.day_template_ro_repo.get_by_slug(template_slug)
+        return await self.day_template_ro_repo.get_by_slug(template_slug)
 

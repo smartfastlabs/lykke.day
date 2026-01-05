@@ -2,16 +2,15 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import ReadOnlyRepositories
+from planned.application.queries.base import BaseQueryHandler
+from planned.application.repositories import TaskDefinitionRepositoryReadOnlyProtocol
 from planned.domain.entities import TaskDefinitionEntity
 
 
-class GetTaskDefinitionHandler:
+class GetTaskDefinitionHandler(BaseQueryHandler):
     """Retrieves a single task definition by ID."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        self._ro_repos = ro_repos
-        self.user_id = user_id
+    task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
 
     async def run(
         self, task_definition_id: UUID
@@ -27,5 +26,5 @@ class GetTaskDefinitionHandler:
         Raises:
             NotFoundError: If task definition not found
         """
-        return await self._ro_repos.task_definition_ro_repo.get(task_definition_id)
+        return await self.task_definition_ro_repo.get(task_definition_id)
 

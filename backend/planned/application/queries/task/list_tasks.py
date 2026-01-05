@@ -1,18 +1,15 @@
 """Query to search tasks with pagination."""
 
-from uuid import UUID
-
-from planned.application.unit_of_work import ReadOnlyRepositories
+from planned.application.queries.base import BaseQueryHandler
+from planned.application.repositories import TaskRepositoryReadOnlyProtocol
 from planned.domain import value_objects
 from planned.domain.entities import TaskEntity
 
 
-class SearchTasksHandler:
+class SearchTasksHandler(BaseQueryHandler):
     """Searches tasks with pagination."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        self._ro_repos = ro_repos
-        self.user_id = user_id
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
 
     async def run(
         self,
@@ -27,7 +24,7 @@ class SearchTasksHandler:
             PagedQueryResponse with tasks
         """
         if search_query is not None:
-            items = await self._ro_repos.task_ro_repo.search_query(search_query)
+            items = await self.task_ro_repo.search_query(search_query)
             limit = search_query.limit or 50
             offset = search_query.offset or 0
             total = len(items)
@@ -44,7 +41,7 @@ class SearchTasksHandler:
                 has_previous=start > 0,
             )
         else:
-            items = await self._ro_repos.task_ro_repo.all()
+            items = await self.task_ro_repo.all()
             total = len(items)
             limit = 50
             offset = 0

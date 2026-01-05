@@ -1,18 +1,15 @@
 """Query to search days with pagination."""
 
-from uuid import UUID
-
-from planned.application.unit_of_work import ReadOnlyRepositories
+from planned.application.queries.base import BaseQueryHandler
+from planned.application.repositories import DayRepositoryReadOnlyProtocol
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity
 
 
-class SearchDaysHandler:
+class SearchDaysHandler(BaseQueryHandler):
     """Searches days with pagination."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        self._ro_repos = ro_repos
-        self.user_id = user_id
+    day_ro_repo: DayRepositoryReadOnlyProtocol
 
     async def run(
         self,
@@ -27,7 +24,7 @@ class SearchDaysHandler:
             PagedQueryResponse with days
         """
         if search_query is not None:
-            items = await self._ro_repos.day_ro_repo.search_query(search_query)
+            items = await self.day_ro_repo.search_query(search_query)
             limit = search_query.limit or 50
             offset = search_query.offset or 0
             total = len(items)
@@ -44,7 +41,7 @@ class SearchDaysHandler:
                 has_previous=start > 0,
             )
         else:
-            items = await self._ro_repos.day_ro_repo.all()
+            items = await self.day_ro_repo.all()
             total = len(items)
             limit = 50
             offset = 0

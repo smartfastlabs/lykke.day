@@ -1,18 +1,15 @@
 """Query to search calendar entries with pagination."""
 
-from uuid import UUID
-
-from planned.application.unit_of_work import ReadOnlyRepositories
+from planned.application.queries.base import BaseQueryHandler
+from planned.application.repositories import CalendarEntryRepositoryReadOnlyProtocol
 from planned.domain import value_objects
 from planned.domain.entities import CalendarEntryEntity
 
 
-class SearchCalendarEntriesHandler:
+class SearchCalendarEntriesHandler(BaseQueryHandler):
     """Searches calendar entries with pagination."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        self._ro_repos = ro_repos
-        self.user_id = user_id
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
 
     async def run(
         self,
@@ -27,7 +24,7 @@ class SearchCalendarEntriesHandler:
             PagedQueryResponse with calendar entries
         """
         if search_query is not None:
-            items = await self._ro_repos.calendar_entry_ro_repo.search_query(
+            items = await self.calendar_entry_ro_repo.search_query(
                 search_query
             )
             limit = search_query.limit or 50
@@ -46,7 +43,7 @@ class SearchCalendarEntriesHandler:
                 has_previous=start > 0,
             )
         else:
-            items = await self._ro_repos.calendar_entry_ro_repo.all()
+            items = await self.calendar_entry_ro_repo.all()
             total = len(items)
             limit = 50
             offset = 0

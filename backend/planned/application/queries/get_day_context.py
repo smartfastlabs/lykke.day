@@ -4,19 +4,30 @@ import asyncio
 from datetime import date
 from uuid import UUID
 
-from planned.application.unit_of_work import ReadOnlyRepositories
+from planned.application.queries.base import BaseQueryHandler
+from planned.application.repositories import (
+    CalendarEntryRepositoryReadOnlyProtocol,
+    DayRepositoryReadOnlyProtocol,
+    DayTemplateRepositoryReadOnlyProtocol,
+    MessageRepositoryReadOnlyProtocol,
+    TaskRepositoryReadOnlyProtocol,
+    UserRepositoryReadOnlyProtocol,
+)
 from planned.core.constants import DEFAULT_END_OF_DAY_TIME
 from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
 from planned.domain.entities import CalendarEntryEntity, DayEntity, MessageEntity, TaskEntity, UserEntity
 
 
-class GetDayContextHandler:
+class GetDayContextHandler(BaseQueryHandler):
     """Gets the complete context for a day."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        self._ro_repos = ro_repos
-        self.user_id = user_id
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    day_ro_repo: DayRepositoryReadOnlyProtocol
+    day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+    user_ro_repo: UserRepositoryReadOnlyProtocol
 
     async def get_day_context(
         self, date: date
@@ -38,14 +49,14 @@ class GetDayContextHandler:
             # Try to load existing day and all related data
             day_id = DayEntity.id_from_date_and_user(date, self.user_id)
             tasks, calendar_entries, messages, day = await asyncio.gather(
-                self._ro_repos.task_ro_repo.search_query(value_objects.DateQuery(date=date)),
-                self._ro_repos.calendar_entry_ro_repo.search_query(value_objects.DateQuery(date=date)),
-                self._ro_repos.message_ro_repo.search_query(value_objects.DateQuery(date=date)),
-                self._ro_repos.day_ro_repo.get(day_id),
+                self.task_ro_repo.search_query(value_objects.DateQuery(date=date)),
+                self.calendar_entry_ro_repo.search_query(value_objects.DateQuery(date=date)),
+                self.message_ro_repo.search_query(value_objects.DateQuery(date=date)),
+                self.day_ro_repo.get(day_id),
             )
         except NotFoundError:
             # Day doesn't exist, create a preview day using default template
-            user = await self._ro_repos.user_ro_repo.get(self.user_id)
+            user = await self.user_ro_repo.get(self.user_id)
             day = await self._create_preview_day(date, user)
 
         return self._build_context(day, tasks, calendar_entries, messages)
@@ -65,7 +76,7 @@ class GetDayContextHandler:
             A Day entity (not saved to database)
         """
         template_slug = user.settings.template_defaults[date.weekday()]
-        template = await self._ro_repos.day_template_ro_repo.get_by_slug(template_slug)
+        template = await self.day_template_ro_repo.get_by_slug(template_slug)
         return DayEntity.create_for_date(
             date,
             user_id=self.user_id,

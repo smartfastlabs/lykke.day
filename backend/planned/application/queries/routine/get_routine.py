@@ -2,16 +2,15 @@
 
 from uuid import UUID
 
-from planned.application.unit_of_work import ReadOnlyRepositories
+from planned.application.queries.base import BaseQueryHandler
+from planned.application.repositories import RoutineRepositoryReadOnlyProtocol
 from planned.domain.entities import RoutineEntity
 
 
-class GetRoutineHandler:
+class GetRoutineHandler(BaseQueryHandler):
     """Retrieves a single routine by ID."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        self._ro_repos = ro_repos
-        self.user_id = user_id
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
 
     async def run(self, routine_id: UUID) -> RoutineEntity:
         """Get a single routine by ID.
@@ -25,5 +24,5 @@ class GetRoutineHandler:
         Raises:
             NotFoundError: If routine not found
         """
-        return await self._ro_repos.routine_ro_repo.get(routine_id)
+        return await self.routine_ro_repo.get(routine_id)
 

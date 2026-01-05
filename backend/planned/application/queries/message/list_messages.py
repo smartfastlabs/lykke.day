@@ -1,18 +1,15 @@
 """Query to search messages with pagination."""
 
-from uuid import UUID
-
-from planned.application.unit_of_work import ReadOnlyRepositories
+from planned.application.queries.base import BaseQueryHandler
+from planned.application.repositories import MessageRepositoryReadOnlyProtocol
 from planned.domain import value_objects
 from planned.domain.entities import MessageEntity
 
 
-class SearchMessagesHandler:
+class SearchMessagesHandler(BaseQueryHandler):
     """Searches messages with pagination."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        self._ro_repos = ro_repos
-        self.user_id = user_id
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
 
     async def run(
         self,
@@ -27,7 +24,7 @@ class SearchMessagesHandler:
             PagedQueryResponse with messages
         """
         if search_query is not None:
-            items = await self._ro_repos.message_ro_repo.search_query(search_query)
+            items = await self.message_ro_repo.search_query(search_query)
             limit = search_query.limit or 50
             offset = search_query.offset or 0
             total = len(items)
@@ -44,7 +41,7 @@ class SearchMessagesHandler:
                 has_previous=start > 0,
             )
         else:
-            items = await self._ro_repos.message_ro_repo.all()
+            items = await self.message_ro_repo.all()
             total = len(items)
             limit = 50
             offset = 0

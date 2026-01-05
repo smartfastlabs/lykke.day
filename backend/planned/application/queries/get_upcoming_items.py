@@ -1,7 +1,13 @@
 """Queries to get upcoming tasks and calendar entries."""
 
 from datetime import date, timedelta
+from uuid import UUID
 
+from planned.application.queries.base import BaseQueryHandler
+from planned.application.repositories import (
+    CalendarEntryRepositoryReadOnlyProtocol,
+    TaskRepositoryReadOnlyProtocol,
+)
 from planned.application.unit_of_work import ReadOnlyRepositories
 from planned.core.utils import filter_upcoming_calendar_entries, filter_upcoming_tasks
 from planned.core.constants import DEFAULT_LOOK_AHEAD
@@ -9,11 +15,13 @@ from planned.domain import value_objects
 from planned.domain.entities import CalendarEntryEntity, TaskEntity, UserEntity
 
 
-class GetUpcomingTasksHandler:
+class GetUpcomingTasksHandler(BaseQueryHandler):
     """Gets tasks that are upcoming within a look-ahead window."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
-        self._ro_repos = ro_repos
+    task_ro_repo: TaskRepositoryReadOnlyProtocol
+
+    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
+        super().__init__(ro_repos, user_id)
 
     async def get_upcoming_tasks(
         self, user: UserEntity, date: date, look_ahead: timedelta = DEFAULT_LOOK_AHEAD
@@ -28,15 +36,17 @@ class GetUpcomingTasksHandler:
         Returns:
             List of tasks that are upcoming within the look-ahead window
         """
-        tasks = await self._ro_repos.task_ro_repo.search_query(value_objects.DateQuery(date=date))
+        tasks = await self.task_ro_repo.search_query(value_objects.DateQuery(date=date))
         return filter_upcoming_tasks(tasks, look_ahead)
 
 
-class GetUpcomingCalendarEntriesHandler:
+class GetUpcomingCalendarEntriesHandler(BaseQueryHandler):
     """Gets calendar entries that are upcoming within a look-ahead window."""
 
-    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
-        self._ro_repos = ro_repos
+    calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+
+    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
+        super().__init__(ro_repos, user_id)
 
     async def get_upcoming_calendar_entries(
         self, user: UserEntity, date: date, look_ahead: timedelta = DEFAULT_LOOK_AHEAD
@@ -51,7 +61,7 @@ class GetUpcomingCalendarEntriesHandler:
         Returns:
             List of calendar entries that are upcoming within the look-ahead window
         """
-        calendar_entries = await self._ro_repos.calendar_entry_ro_repo.search_query(
+        calendar_entries = await self.calendar_entry_ro_repo.search_query(
             value_objects.DateQuery(date=date)
         )
         return filter_upcoming_calendar_entries(calendar_entries, look_ahead)
