@@ -1,13 +1,18 @@
 """Domain events related to Day aggregates."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import date as dt_date
+from typing import TYPE_CHECKING
 from uuid import UUID
 
-from planned.domain.entities.day import DayEntity
 from planned.domain.value_objects.update import DayUpdateObject
 
 from .base import DomainEvent, EntityUpdatedEvent
+
+if TYPE_CHECKING:
+    from planned.domain.entities.day import DayEntity
 
 __all__ = [
     "DayCompletedEvent",
@@ -43,5 +48,5 @@ class DayUnscheduledEvent(DomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class DayUpdatedEvent(EntityUpdatedEvent[DayUpdateObject, DayEntity]):
+class DayUpdatedEvent(EntityUpdatedEvent[DayUpdateObject, "DayEntity"]):
     """Event raised when a day is updated via apply_update()."""

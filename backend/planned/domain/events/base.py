@@ -1,14 +1,24 @@
 """Base classes for domain events."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
-from planned.domain.entities.base import BaseEntityObject
-from planned.domain.value_objects.update import BaseUpdateObject
+if TYPE_CHECKING:
+    from planned.domain.entities.base import BaseEntityObject
+    from planned.domain.value_objects.update import BaseUpdateObject
+    _BaseUpdateObject = BaseUpdateObject
+    _BaseEntityObject = BaseEntityObject
+else:
+    # At runtime, we don't need the actual types for TypeVar bounds
+    # The bounds are only used for type checking
+    _BaseUpdateObject = Any
+    _BaseEntityObject = Any
 
-UpdateObjectType = TypeVar("UpdateObjectType", bound=BaseUpdateObject)
-EntityType = TypeVar("EntityType", bound=BaseEntityObject)
+UpdateObjectType = TypeVar("UpdateObjectType", bound=_BaseUpdateObject)
+EntityType = TypeVar("EntityType", bound=_BaseEntityObject)
 
 
 @dataclass(frozen=True, kw_only=True)

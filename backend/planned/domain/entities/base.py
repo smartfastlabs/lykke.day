@@ -1,15 +1,25 @@
+from __future__ import annotations
+
 from dataclasses import asdict, dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 from uuid import UUID, uuid4
 
 from planned.domain.events.base import DomainEvent
-from planned.domain.value_objects.update import BaseUpdateObject
 
 if TYPE_CHECKING:
     from planned.domain.events.base import EntityUpdatedEvent
+    from planned.domain.value_objects.update import BaseUpdateObject
 
-UpdateObjectType = TypeVar("UpdateObjectType", bound=BaseUpdateObject)
-UpdateEventType = TypeVar("UpdateEventType", bound="EntityUpdatedEvent[Any, Any]")
+    _BaseUpdateObject = BaseUpdateObject
+    _EntityUpdatedEvent = EntityUpdatedEvent
+else:
+    # At runtime, we don't need the actual types for TypeVar bounds
+    # The bounds are only used for type checking
+    _BaseUpdateObject = Any
+    _EntityUpdatedEvent = Any
+
+UpdateObjectType = TypeVar("UpdateObjectType", bound=_BaseUpdateObject)
+UpdateEventType = TypeVar("UpdateEventType", bound=_EntityUpdatedEvent)
 
 
 @dataclass(kw_only=True)

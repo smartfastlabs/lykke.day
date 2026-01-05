@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC
 from datetime import date as dt_date
 from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from planned.core.exceptions import DomainError
@@ -12,7 +15,6 @@ from ..events.day_events import (
     DayCompletedEvent,
     DayScheduledEvent,
     DayUnscheduledEvent,
-    DayUpdatedEvent,
 )
 from ..value_objects.update import DayUpdateObject
 from ..events.task_events import (
@@ -25,9 +27,12 @@ from .base import BaseEntityObject
 from .day_template import DayTemplateEntity
 from .task import TaskEntity
 
+if TYPE_CHECKING:
+    from ..events.day_events import DayUpdatedEvent
+
 
 @dataclass(kw_only=True)
-class DayEntity(BaseEntityObject[DayUpdateObject, DayUpdatedEvent]):
+class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
     user_id: UUID
     date: dt_date
     alarm: value_objects.Alarm | None = None
