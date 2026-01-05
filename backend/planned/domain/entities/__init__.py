@@ -1,4 +1,3 @@
-from .action import ActionEntity
 from .base import BaseConfigObject, BaseEntityObject, BaseObject
 from .calendar import CalendarEntity
 from .calendar_entry import CalendarEntryEntity
@@ -8,7 +7,6 @@ from .task import TaskEntity
 from .user import UserEntity
 
 __all__ = [
-    "ActionEntity",
     "BaseConfigObject",
     "BaseEntityObject",
     "BaseObject",

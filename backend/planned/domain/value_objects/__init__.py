@@ -1,4 +1,4 @@
-from .action import ActionType
+from .action import Action, ActionType
 from .alarm import Alarm, AlarmType
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .day import DayContext, DayMode, DayStatus, DayTag
@@ -39,6 +39,7 @@ from .update import (
 from .user import UserSetting
 
 __all__ = [
+    "Action",
     "ActionType",
     "Alarm",
     "AlarmType",

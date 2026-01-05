@@ -5,11 +5,9 @@ from datetime import datetime
 from uuid import UUID
 
 from planned.core.exceptions import DomainError
-
+from planned.domain import value_objects
 from planned.infrastructure import data_objects
 
-from .. import value_objects
-from .action import ActionEntity
 from .base import BaseEntityObject
 
 
@@ -26,9 +24,9 @@ class TaskEntity(BaseEntityObject):
     schedule: value_objects.TaskSchedule | None = None
     routine_id: UUID | None = None
     tags: list[value_objects.TaskTag] = field(default_factory=list)
-    actions: list[ActionEntity] = field(default_factory=list)
+    actions: list[value_objects.Action] = field(default_factory=list)
 
-    def record_action(self, action: ActionEntity) -> value_objects.TaskStatus:
+    def record_action(self, action: value_objects.Action) -> value_objects.TaskStatus:
         """Record an action on this task.
 
         This method handles action recording and status transitions based on

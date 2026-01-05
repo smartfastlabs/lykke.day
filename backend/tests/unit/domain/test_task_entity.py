@@ -7,7 +7,8 @@ import pytest
 
 from planned.core.exceptions import DomainError
 from planned.domain import value_objects
-from planned.domain.entities import ActionEntity, TaskEntity
+from planned.domain import value_objects
+from planned.domain.entities import TaskEntity
 from planned.infrastructure import data_objects
 
 
@@ -75,7 +76,7 @@ def test_record_action_status_transitions(
 ) -> None:
     """Test record_action handles status transitions correctly."""
     test_task.status = initial_status
-    action = ActionEntity(type=action_type)
+    action = value_objects.Action(type=action_type)
 
     old_status = test_task.record_action(action)
 
@@ -92,7 +93,7 @@ def test_record_action_status_transitions(
 def test_record_action_complete_already_complete(test_task: TaskEntity) -> None:
     """Test record_action raises error when completing already complete task."""
     test_task.status = value_objects.TaskStatus.COMPLETE
-    action = ActionEntity(type=value_objects.ActionType.COMPLETE)
+    action = value_objects.Action(type=value_objects.ActionType.COMPLETE)
 
     with pytest.raises(DomainError, match="already complete"):
         test_task.record_action(action)
@@ -101,7 +102,7 @@ def test_record_action_complete_already_complete(test_task: TaskEntity) -> None:
 def test_record_action_punt_already_punted(test_task: TaskEntity) -> None:
     """Test record_action raises error when punting already punted task."""
     test_task.status = value_objects.TaskStatus.PUNT
-    action = ActionEntity(type=value_objects.ActionType.PUNT)
+    action = value_objects.Action(type=value_objects.ActionType.PUNT)
 
     with pytest.raises(DomainError, match="already punted"):
         test_task.record_action(action)

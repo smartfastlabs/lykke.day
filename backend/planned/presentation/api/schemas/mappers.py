@@ -4,7 +4,6 @@ from dataclasses import asdict
 
 from planned.domain import value_objects
 from planned.domain.entities import (
-    ActionEntity,
     CalendarEntity,
     CalendarEntryEntity,
     DayEntity,
@@ -28,7 +27,7 @@ from planned.presentation.api.schemas import (
 )
 
 
-def map_action_to_schema(action: ActionEntity) -> ActionSchema:
+def map_action_to_schema(action: value_objects.Action) -> ActionSchema:
     """Convert Action entity to Action schema."""
     return ActionSchema(**asdict(action))
 

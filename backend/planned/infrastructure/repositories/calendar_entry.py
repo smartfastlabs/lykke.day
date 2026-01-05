@@ -3,7 +3,8 @@ from uuid import UUID
 
 from sqlalchemy.sql import Select
 
-from planned.domain.entities import ActionEntity, CalendarEntryEntity
+from planned.domain import value_objects
+from planned.domain.entities import CalendarEntryEntity
 
 from .base import DateQuery, UserScopedBaseRepository
 from planned.infrastructure.database.tables import calendar_entries_tbl
@@ -77,11 +78,11 @@ class CalendarEntryRepository(UserScopedBaseRepository[CalendarEntryEntity, Date
         if "frequency" in data and isinstance(data["frequency"], str):
             data["frequency"] = value_objects.TaskFrequency(data["frequency"])
         
-        # Handle actions - they come as dicts from JSONB, need to convert to entities
+        # Handle actions - they come as dicts from JSONB, need to convert to value objects
         if "actions" in data and data["actions"]:
             from planned.infrastructure.repositories.base.utils import filter_init_false_fields
             data["actions"] = [
-                ActionEntity(**filter_init_false_fields(action, ActionEntity))
+                value_objects.Action(**filter_init_false_fields(action, value_objects.Action))
                 if isinstance(action, dict)
                 else action
                 for action in data["actions"]

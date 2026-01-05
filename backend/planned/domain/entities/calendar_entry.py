@@ -8,7 +8,6 @@ from zoneinfo import ZoneInfo
 from gcsa.event import Event as GoogleEvent
 
 from .. import value_objects
-from .action import ActionEntity
 from .base import BaseEntityObject
 
 
@@ -54,7 +53,7 @@ class CalendarEntryEntity(BaseEntityObject):
     ends_at: datetime | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    actions: list[ActionEntity] = field(default_factory=list)
+    actions: list[value_objects.Action] = field(default_factory=list)
     timezone: str | None = field(default=None, repr=False)
 
     @property

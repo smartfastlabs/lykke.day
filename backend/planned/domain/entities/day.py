@@ -24,7 +24,6 @@ from ..events.task_events import (
 )
 from planned.infrastructure import data_objects
 
-from .action import ActionEntity
 from .base import BaseEntityObject
 from .task import TaskEntity
 
@@ -175,7 +174,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
             self.alarm = template.alarm
 
     def record_task_action(
-        self, task: "TaskEntity", action: "ActionEntity"
+        self, task: "TaskEntity", action: "value_objects.Action"
     ) -> "TaskEntity":
         """Record an action on a task within this day aggregate.
 

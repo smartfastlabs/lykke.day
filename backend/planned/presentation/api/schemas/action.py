@@ -11,7 +11,7 @@ from .base import BaseEntitySchema
 
 
 class ActionSchema(BaseEntitySchema):
-    """API schema for Action entity."""
+    """API schema for Action value object."""
 
     type: ActionType
     data: dict[str, str] = Field(default_factory=dict)

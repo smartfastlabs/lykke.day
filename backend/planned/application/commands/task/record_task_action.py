@@ -4,14 +4,15 @@ from uuid import UUID
 
 from planned.application.commands.base import BaseCommandHandler
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import ActionEntity, DayEntity, TaskEntity
+from planned.domain import value_objects
+from planned.domain.entities import DayEntity, TaskEntity
 
 
 class RecordTaskActionHandler(BaseCommandHandler):
     """Records an action on a task."""
 
     async def record_task_action(
-        self, task_id: UUID, action: ActionEntity
+        self, task_id: UUID, action: value_objects.Action
     ) -> TaskEntity:
         """Record an action on a task through the Day aggregate root.
 

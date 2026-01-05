@@ -9,7 +9,7 @@ from planned.application.commands import RecordTaskActionHandler
 from planned.application.queries.task import SearchTasksHandler
 from planned.core.utils.dates import get_current_date
 from planned.domain import value_objects
-from planned.domain.entities import ActionEntity, TaskEntity
+from planned.domain.entities import TaskEntity
 from planned.presentation.api.schemas import TaskSchema
 from planned.presentation.api.schemas.mappers import map_task_to_schema
 
@@ -34,7 +34,7 @@ async def list_todays_tasks(
 async def add_task_action(
     date: dt.date,
     _id: uuid.UUID,
-    action: ActionEntity,
+    action: value_objects.Action,
     handler: Annotated[
         RecordTaskActionHandler, Depends(get_record_task_action_handler)
     ],

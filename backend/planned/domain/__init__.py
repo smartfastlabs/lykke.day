@@ -1,6 +1,5 @@
 # Re-export entities for easier imports
 from .entities import (
-    ActionEntity,
     CalendarEntity,
     CalendarEntryEntity,
     DayEntity,
@@ -17,7 +16,6 @@ _DayContext.model_rebuild()
 
 __all__ = [
     # Entities
-    "ActionEntity",
     "CalendarEntity",
     "CalendarEntryEntity",
     "DayEntity",
