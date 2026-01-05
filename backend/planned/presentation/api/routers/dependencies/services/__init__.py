@@ -82,7 +82,7 @@ def get_update_day_handler(
 ) -> UpdateDayHandler:
     """Get an UpdateDayHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return UpdateDayHandler(ro_repos, uow_factory, user.id)
+    return UpdateDayHandler(ro_repos, uow_factory, user.id, ro_repo_factory)
 
 
 def get_record_task_action_handler(
@@ -94,4 +94,4 @@ def get_record_task_action_handler(
 ) -> RecordTaskActionHandler:
     """Get a RecordTaskActionHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return RecordTaskActionHandler(ro_repos, uow_factory, user.id)
+    return RecordTaskActionHandler(ro_repos, uow_factory, user.id, ro_repo_factory)

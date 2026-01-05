@@ -5,11 +5,6 @@ from uuid import UUID
 
 from planned.application.commands.base import BaseCommandHandler
 from planned.application.queries.preview_day import PreviewDayHandler
-from planned.application.unit_of_work import (
-    ReadOnlyRepositories,
-    ReadOnlyRepositoryFactory,
-    UnitOfWorkFactory,
-)
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity
 
@@ -17,28 +12,7 @@ from planned.domain.entities import DayEntity
 class ScheduleDayHandler(BaseCommandHandler):
     """Schedules a day with tasks from routines."""
 
-    def __init__(
-        self,
-        ro_repos: ReadOnlyRepositories,
-        uow_factory: UnitOfWorkFactory,
-        user_id: UUID,
-        ro_repo_factory: ReadOnlyRepositoryFactory,
-    ) -> None:
-        """Initialize ScheduleDayHandler.
-
-        Args:
-            ro_repos: Read-only repositories (from BaseCommandHandler)
-            uow_factory: UnitOfWork factory (from BaseCommandHandler)
-            user_id: User ID (from BaseCommandHandler)
-            ro_repo_factory: Factory for creating read-only repositories for PreviewDayHandler
-        """
-        super().__init__(ro_repos, uow_factory, user_id)
-        self._ro_repo_factory = ro_repo_factory
-
-    def _get_preview_handler(self) -> PreviewDayHandler:
-        """Create a PreviewDayHandler with read-only repositories for the user."""
-        ro_repos = self._ro_repo_factory.create(self.user_id)
-        return PreviewDayHandler(ro_repos, self.user_id)
+    preview_day_handler: PreviewDayHandler
 
     async def schedule_day(
         self, date: date, template_id: UUID | None = None
@@ -62,8 +36,9 @@ class ScheduleDayHandler(BaseCommandHandler):
                 await uow.delete(task)
 
             # Get preview of what the day would look like
-            preview_handler = self._get_preview_handler()
-            preview_result = await preview_handler.preview_day(date, template_id)
+            preview_result = await self.preview_day_handler.preview_day(
+                date, template_id
+            )
 
             # Validate template exists
             if preview_result.day.template is None:
