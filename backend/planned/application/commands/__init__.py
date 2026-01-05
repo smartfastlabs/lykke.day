@@ -3,13 +3,15 @@
 Command handlers execute operations that change state, persist changes, and return results.
 """
 
-from .create_or_get_day import CreateOrGetDayHandler
-from .record_task_action import RecordTaskActionHandler
-from .save_day import SaveDayHandler
-from .schedule_day import ScheduleDayHandler
-from .sync_calendar import SyncAllCalendarsHandler, SyncCalendarHandler
-from .unschedule_day import UnscheduleDayHandler
-from .update_day import UpdateDayHandler
+from .calendar import SyncAllCalendarsHandler, SyncCalendarHandler
+from .day import (
+    CreateOrGetDayHandler,
+    SaveDayHandler,
+    ScheduleDayHandler,
+    UnscheduleDayHandler,
+    UpdateDayHandler,
+)
+from .task import RecordTaskActionHandler
 
 __all__ = [
     "CreateOrGetDayHandler",
