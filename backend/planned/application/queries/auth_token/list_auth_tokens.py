@@ -1,4 +1,4 @@
-"""Query to list auth tokens with optional pagination."""
+"""Query to search auth tokens with pagination."""
 
 from uuid import UUID
 
@@ -7,8 +7,8 @@ from planned.domain import value_objects
 from planned.infrastructure import data_objects
 
 
-class ListAuthTokensHandler:
-    """Lists auth tokens with optional pagination."""
+class SearchAuthTokensHandler:
+    """Searches auth tokens with pagination."""
 
     def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
         self._ro_repos = ro_repos
@@ -17,35 +17,44 @@ class ListAuthTokensHandler:
     async def run(
         self,
         search_query: value_objects.AuthTokenQuery | None = None,
-    ) -> list[data_objects.AuthToken] | value_objects.PagedQueryResponse[data_objects.AuthToken]:
-        """List auth tokens with optional pagination.
+    ) -> value_objects.PagedQueryResponse[data_objects.AuthToken]:
+        """Search auth tokens with pagination.
 
         Args:
             search_query: Optional search/filter query object with pagination info
 
         Returns:
-            List of auth tokens or PagedQueryResponse if pagination is requested
+            PagedQueryResponse with auth tokens
         """
         if search_query is not None:
             items = await self._ro_repos.auth_token_ro_repo.search_query(search_query)
-            # Check if pagination is requested
-            if search_query.limit is not None or search_query.offset is not None:
-                limit = search_query.limit or 50
-                offset = search_query.offset or 0
-                total = len(items)
-                start = offset
-                end = start + limit
-                paginated_items = items[start:end]
+            limit = search_query.limit or 50
+            offset = search_query.offset or 0
+            total = len(items)
+            start = offset
+            end = start + limit
+            paginated_items = items[start:end]
 
-                return value_objects.PagedQueryResponse(
-                    items=paginated_items,
-                    total=total,
-                    limit=limit,
-                    offset=offset,
-                    has_next=end < total,
-                    has_previous=start > 0,
-                )
-            return items
+            return value_objects.PagedQueryResponse(
+                items=paginated_items,
+                total=total,
+                limit=limit,
+                offset=offset,
+                has_next=end < total,
+                has_previous=start > 0,
+            )
         else:
-            return await self._ro_repos.auth_token_ro_repo.all()
+            items = await self._ro_repos.auth_token_ro_repo.all()
+            total = len(items)
+            limit = 50
+            offset = 0
+
+            return value_objects.PagedQueryResponse(
+                items=items,
+                total=total,
+                limit=limit,
+                offset=offset,
+                has_next=False,
+                has_previous=False,
+            )
 

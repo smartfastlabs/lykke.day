@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from planned.application.commands import ScheduleDayHandler, UpdateDayHandler
 from planned.application.queries import GetDayContextHandler, PreviewDayHandler
-from planned.application.queries.day_template import ListDayTemplatesHandler
+from planned.application.queries.day_template import SearchDayTemplatesHandler
 from planned.core.utils.dates import get_current_date, get_tomorrows_date
 from planned.domain.entities import UserEntity
 from planned.presentation.api.schemas import (
@@ -154,10 +154,9 @@ async def update_day(
 async def get_templates(
     user: Annotated[UserEntity, Depends(get_current_user)],
     list_day_templates_handler: Annotated[
-        ListDayTemplatesHandler, Depends(get_list_day_templates_handler)
+        SearchDayTemplatesHandler, Depends(get_list_day_templates_handler)
     ],
 ) -> list[DayTemplateSchema]:
     """Get all available day templates."""
     result = await list_day_templates_handler.run()
-    templates = result if isinstance(result, list) else result.items
-    return [map_day_template_to_schema(template) for template in templates]
+    return [map_day_template_to_schema(template) for template in result.items]

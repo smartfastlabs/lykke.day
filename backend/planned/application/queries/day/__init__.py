@@ -1,8 +1,8 @@
 """Day query handlers."""
 
-from .list_days import ListDaysHandler
+from .list_days import SearchDaysHandler
 
 __all__ = [
-    "ListDaysHandler",
+    "SearchDaysHandler",
 ]
 

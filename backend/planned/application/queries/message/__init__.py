@@ -1,8 +1,8 @@
 """Message query handlers."""
 
-from .list_messages import ListMessagesHandler
+from .list_messages import SearchMessagesHandler
 
 __all__ = [
-    "ListMessagesHandler",
+    "SearchMessagesHandler",
 ]
 

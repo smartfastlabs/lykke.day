@@ -1,10 +1,10 @@
 """Router for Routine CRUD operations."""
 
-from typing import Annotated, cast
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
-from planned.application.queries.routine import GetRoutineHandler, ListRoutinesHandler
+from planned.application.queries.routine import GetRoutineHandler, SearchRoutinesHandler
 from planned.domain import value_objects
 from planned.domain.entities import RoutineEntity, UserEntity
 from planned.presentation.api.schemas import RoutineSchema
@@ -34,7 +34,7 @@ async def get_routine(
 async def list_routines(
     user: Annotated[UserEntity, Depends(get_current_user)],
     list_routines_handler: Annotated[
-        ListRoutinesHandler, Depends(get_list_routines_handler)
+        SearchRoutinesHandler, Depends(get_list_routines_handler)
     ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
@@ -43,7 +43,7 @@ async def list_routines(
     result = await list_routines_handler.run(
         search_query=value_objects.RoutineQuery(limit=limit, offset=offset),
     )
-    paged_response = cast("value_objects.PagedQueryResponse[RoutineEntity]", result)
+    paged_response = result
     # Convert entities to schemas
     routine_schemas = [map_routine_to_schema(r) for r in paged_response.items]
     return value_objects.PagedQueryResponse(

@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import Depends
 from planned.application.queries.task_definition import (
     GetTaskDefinitionHandler,
-    ListTaskDefinitionsHandler,
+    SearchTaskDefinitionsHandler,
 )
 from planned.application.unit_of_work import ReadOnlyRepositoryFactory
 from planned.domain.entities import UserEntity
@@ -30,8 +30,8 @@ def get_list_task_definitions_handler(
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
-) -> ListTaskDefinitionsHandler:
-    """Get a ListTaskDefinitionsHandler instance."""
+) -> SearchTaskDefinitionsHandler:
+    """Get a SearchTaskDefinitionsHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ListTaskDefinitionsHandler(ro_repos, user.id)
+    return SearchTaskDefinitionsHandler(ro_repos, user.id)
 

@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from planned.application.queries.calendar_entry import ListCalendarEntriesHandler
+from planned.application.queries.calendar_entry import SearchCalendarEntriesHandler
 from planned.core.utils.dates import get_current_date
 from planned.domain import value_objects
 from planned.domain.entities import CalendarEntryEntity, UserEntity
@@ -18,11 +18,10 @@ router = APIRouter()
 async def today(
     user: Annotated[UserEntity, Depends(get_current_user)],
     list_calendar_entries_handler: Annotated[
-        ListCalendarEntriesHandler, Depends(get_list_calendar_entries_handler)
+        SearchCalendarEntriesHandler, Depends(get_list_calendar_entries_handler)
     ],
 ) -> list[CalendarEntrySchema]:
     result = await list_calendar_entries_handler.run(
         search_query=value_objects.CalendarEntryQuery(date=get_current_date()),
     )
-    entries = result if isinstance(result, list) else result.items
-    return [map_calendar_entry_to_schema(entry) for entry in entries]
+    return [map_calendar_entry_to_schema(entry) for entry in result.items]

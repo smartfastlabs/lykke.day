@@ -1,10 +1,10 @@
 """Routine query handlers."""
 
 from .get_routine import GetRoutineHandler
-from .list_routines import ListRoutinesHandler
+from .list_routines import SearchRoutinesHandler
 
 __all__ = [
     "GetRoutineHandler",
-    "ListRoutinesHandler",
+    "SearchRoutinesHandler",
 ]
 

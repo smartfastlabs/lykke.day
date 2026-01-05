@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from planned.application.queries.calendar_entry import ListCalendarEntriesHandler
+from planned.application.queries.calendar_entry import SearchCalendarEntriesHandler
 from planned.application.unit_of_work import ReadOnlyRepositoryFactory
 from planned.domain.entities import UserEntity
 
@@ -16,8 +16,8 @@ def get_list_calendar_entries_handler(
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
-) -> ListCalendarEntriesHandler:
-    """Get a ListCalendarEntriesHandler instance."""
+) -> SearchCalendarEntriesHandler:
+    """Get a SearchCalendarEntriesHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ListCalendarEntriesHandler(ro_repos, user.id)
+    return SearchCalendarEntriesHandler(ro_repos, user.id)
 

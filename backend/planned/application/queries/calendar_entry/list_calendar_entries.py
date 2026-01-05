@@ -1,4 +1,4 @@
-"""Query to list calendar entries with optional pagination."""
+"""Query to search calendar entries with pagination."""
 
 from uuid import UUID
 
@@ -7,8 +7,8 @@ from planned.domain import value_objects
 from planned.domain.entities import CalendarEntryEntity
 
 
-class ListCalendarEntriesHandler:
-    """Lists calendar entries with optional pagination."""
+class SearchCalendarEntriesHandler:
+    """Searches calendar entries with pagination."""
 
     def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
         self._ro_repos = ro_repos
@@ -17,35 +17,45 @@ class ListCalendarEntriesHandler:
     async def run(
         self,
         search_query: value_objects.CalendarEntryQuery | None = None,
-    ) -> list[CalendarEntryEntity] | value_objects.PagedQueryResponse[CalendarEntryEntity]:
-        """List calendar entries with optional pagination.
+    ) -> value_objects.PagedQueryResponse[CalendarEntryEntity]:
+        """Search calendar entries with pagination.
 
         Args:
             search_query: Optional search/filter query object with pagination info
 
         Returns:
-            List of calendar entries or PagedQueryResponse if pagination is requested
+            PagedQueryResponse with calendar entries
         """
         if search_query is not None:
-            items = await self._ro_repos.calendar_entry_ro_repo.search_query(search_query)
-            # Check if pagination is requested
-            if search_query.limit is not None or search_query.offset is not None:
-                limit = search_query.limit or 50
-                offset = search_query.offset or 0
-                total = len(items)
-                start = offset
-                end = start + limit
-                paginated_items = items[start:end]
+            items = await self._ro_repos.calendar_entry_ro_repo.search_query(
+                search_query
+            )
+            limit = search_query.limit or 50
+            offset = search_query.offset or 0
+            total = len(items)
+            start = offset
+            end = start + limit
+            paginated_items = items[start:end]
 
-                return value_objects.PagedQueryResponse(
-                    items=paginated_items,
-                    total=total,
-                    limit=limit,
-                    offset=offset,
-                    has_next=end < total,
-                    has_previous=start > 0,
-                )
-            return items
+            return value_objects.PagedQueryResponse(
+                items=paginated_items,
+                total=total,
+                limit=limit,
+                offset=offset,
+                has_next=end < total,
+                has_previous=start > 0,
+            )
         else:
-            return await self._ro_repos.calendar_entry_ro_repo.all()
+            items = await self._ro_repos.calendar_entry_ro_repo.all()
+            total = len(items)
+            limit = 50
+            offset = 0
 
+            return value_objects.PagedQueryResponse(
+                items=items,
+                total=total,
+                limit=limit,
+                offset=offset,
+                has_next=False,
+                has_previous=False,
+            )

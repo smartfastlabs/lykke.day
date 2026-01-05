@@ -12,7 +12,7 @@ from planned.application.commands.task_definition import (
 )
 from planned.application.queries.task_definition import (
     GetTaskDefinitionHandler,
-    ListTaskDefinitionsHandler,
+    SearchTaskDefinitionsHandler,
 )
 from planned.domain import value_objects
 from planned.domain.entities import TaskDefinitionEntity, UserEntity
@@ -67,7 +67,7 @@ async def get_task_definition(
 async def list_task_definitions(
     user: Annotated[UserEntity, Depends(get_current_user)],
     list_task_definitions_handler: Annotated[
-        ListTaskDefinitionsHandler, Depends(get_list_task_definitions_handler)
+        SearchTaskDefinitionsHandler, Depends(get_list_task_definitions_handler)
     ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
@@ -76,10 +76,7 @@ async def list_task_definitions(
     result = await list_task_definitions_handler.run(
         search_query=value_objects.TaskDefinitionQuery(limit=limit, offset=offset),
     )
-    task_definitions: list[TaskDefinitionEntity] = (
-        result if isinstance(result, list) else result.items
-    )
-    return [map_task_definition_to_schema(td) for td in task_definitions]
+    return [map_task_definition_to_schema(td) for td in result.items]
 
 
 @router.post("/", response_model=TaskDefinitionSchema)

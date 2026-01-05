@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import Depends
 from planned.application.queries.routine import (
     GetRoutineHandler,
-    ListRoutinesHandler,
+    SearchRoutinesHandler,
 )
 from planned.application.unit_of_work import ReadOnlyRepositoryFactory
 from planned.domain.entities import UserEntity
@@ -30,8 +30,8 @@ def get_list_routines_handler(
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
-) -> ListRoutinesHandler:
-    """Get a ListRoutinesHandler instance."""
+) -> SearchRoutinesHandler:
+    """Get a SearchRoutinesHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ListRoutinesHandler(ro_repos, user.id)
+    return SearchRoutinesHandler(ro_repos, user.id)
 

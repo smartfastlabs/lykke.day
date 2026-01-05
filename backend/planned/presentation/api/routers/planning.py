@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from planned.application.commands import ScheduleDayHandler
 from planned.application.queries import PreviewDayHandler
-from planned.application.queries.routine import ListRoutinesHandler
+from planned.application.queries.routine import SearchRoutinesHandler
 from planned.core.utils.dates import get_current_date, get_tomorrows_date
 from planned.domain import value_objects
 from planned.domain.entities import RoutineEntity, UserEntity
@@ -27,13 +27,12 @@ router = APIRouter()
 async def list_routines(
     user: Annotated[UserEntity, Depends(get_current_user)],
     list_routines_handler: Annotated[
-        ListRoutinesHandler, Depends(get_list_routines_handler)
+        SearchRoutinesHandler, Depends(get_list_routines_handler)
     ],
 ) -> list[RoutineSchema]:
     """Get all routines for the current user."""
     result = await list_routines_handler.run()
-    routines = result if isinstance(result, list) else result.items
-    return [map_routine_to_schema(routine) for routine in routines]
+    return [map_routine_to_schema(routine) for routine in result.items]
 
 
 # ============================================================================

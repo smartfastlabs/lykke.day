@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import Depends
 from planned.application.queries.day_template import (
     GetDayTemplateHandler,
-    ListDayTemplatesHandler,
+    SearchDayTemplatesHandler,
 )
 from planned.application.unit_of_work import ReadOnlyRepositoryFactory
 from planned.domain.entities import UserEntity
@@ -30,8 +30,8 @@ def get_list_day_templates_handler(
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
-) -> ListDayTemplatesHandler:
-    """Get a ListDayTemplatesHandler instance."""
+) -> SearchDayTemplatesHandler:
+    """Get a SearchDayTemplatesHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ListDayTemplatesHandler(ro_repos, user.id)
+    return SearchDayTemplatesHandler(ro_repos, user.id)
 

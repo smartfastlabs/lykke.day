@@ -6,7 +6,7 @@ from planned.application.commands.push_subscription import (
     CreatePushSubscriptionHandler,
     DeletePushSubscriptionHandler,
 )
-from planned.application.queries.push_subscription import ListPushSubscriptionsHandler
+from planned.application.queries.push_subscription import SearchPushSubscriptionsHandler
 from planned.domain import value_objects
 from planned.domain.entities import UserEntity
 from planned.infrastructure import data_objects
@@ -39,12 +39,11 @@ class SubscriptionRequest(value_objects.BaseRequestObject):
 async def list_subscriptions(
     user: Annotated[UserEntity, Depends(get_current_user)],
     list_push_subscriptions_handler: Annotated[
-        ListPushSubscriptionsHandler, Depends(get_list_push_subscriptions_handler)
+        SearchPushSubscriptionsHandler, Depends(get_list_push_subscriptions_handler)
     ],
 ) -> list[PushSubscriptionSchema]:
     result = await list_push_subscriptions_handler.run()
-    subscriptions = result if isinstance(result, list) else result.items
-    return [map_push_subscription_to_schema(sub) for sub in subscriptions]
+    return [map_push_subscription_to_schema(sub) for sub in result.items]
 
 
 @router.delete("/subscriptions/{subscription_id}")

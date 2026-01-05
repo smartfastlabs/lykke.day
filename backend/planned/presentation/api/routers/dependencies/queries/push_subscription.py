@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from planned.application.queries.push_subscription import ListPushSubscriptionsHandler
+from planned.application.queries.push_subscription import SearchPushSubscriptionsHandler
 from planned.application.unit_of_work import ReadOnlyRepositoryFactory
 from planned.domain.entities import UserEntity
 
@@ -16,8 +16,8 @@ def get_list_push_subscriptions_handler(
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
-) -> ListPushSubscriptionsHandler:
-    """Get a ListPushSubscriptionsHandler instance."""
+) -> SearchPushSubscriptionsHandler:
+    """Get a SearchPushSubscriptionsHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ListPushSubscriptionsHandler(ro_repos, user.id)
+    return SearchPushSubscriptionsHandler(ro_repos, user.id)
 

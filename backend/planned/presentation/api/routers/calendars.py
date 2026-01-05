@@ -1,6 +1,6 @@
 """Router for Calendar CRUD operations."""
 
-from typing import Annotated, cast
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -11,7 +11,7 @@ from planned.application.commands.calendar import (
 )
 from planned.application.queries.calendar import (
     GetCalendarHandler,
-    ListCalendarsHandler,
+    SearchCalendarsHandler,
 )
 from planned.domain import value_objects
 from planned.domain.entities import CalendarEntity, UserEntity
@@ -49,7 +49,7 @@ async def get_calendar(
 async def list_calendars(
     user: Annotated[UserEntity, Depends(get_current_user)],
     list_calendars_handler: Annotated[
-        ListCalendarsHandler, Depends(get_list_calendars_handler)
+        SearchCalendarsHandler, Depends(get_list_calendars_handler)
     ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
@@ -58,7 +58,7 @@ async def list_calendars(
     result = await list_calendars_handler.run(
         search_query=value_objects.CalendarQuery(limit=limit, offset=offset),
     )
-    paged_response = cast("value_objects.PagedQueryResponse[CalendarEntity]", result)
+    paged_response = result
     # Convert entities to schemas
     calendar_schemas = [map_calendar_to_schema(c) for c in paged_response.items]
     return value_objects.PagedQueryResponse(

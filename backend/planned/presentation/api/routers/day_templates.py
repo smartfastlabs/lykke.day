@@ -1,6 +1,6 @@
 """Router for DayTemplate CRUD operations."""
 
-from typing import Annotated, cast
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -11,7 +11,7 @@ from planned.application.commands.day_template import (
 )
 from planned.application.queries.day_template import (
     GetDayTemplateHandler,
-    ListDayTemplatesHandler,
+    SearchDayTemplatesHandler,
 )
 from planned.domain import value_objects
 from planned.domain.entities import DayTemplateEntity, UserEntity
@@ -49,7 +49,7 @@ async def get_day_template(
 async def list_day_templates(
     user: Annotated[UserEntity, Depends(get_current_user)],
     list_day_templates_handler: Annotated[
-        ListDayTemplatesHandler, Depends(get_list_day_templates_handler)
+        SearchDayTemplatesHandler, Depends(get_list_day_templates_handler)
     ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
@@ -58,7 +58,7 @@ async def list_day_templates(
     result = await list_day_templates_handler.run(
         search_query=value_objects.DayTemplateQuery(limit=limit, offset=offset),
     )
-    paged_response = cast("value_objects.PagedQueryResponse[DayTemplateEntity]", result)
+    paged_response = result
     # Convert entities to schemas
     template_schemas = [map_day_template_to_schema(dt) for dt in paged_response.items]
     return value_objects.PagedQueryResponse(
