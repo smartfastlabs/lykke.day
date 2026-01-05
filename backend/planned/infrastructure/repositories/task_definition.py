@@ -7,7 +7,9 @@ from planned.infrastructure.database.tables import task_definitions_tbl
 from .base import BaseQuery, UserScopedBaseRepository
 
 
-class TaskDefinitionRepository(UserScopedBaseRepository[TaskDefinitionEntity, BaseQuery]):
+class TaskDefinitionRepository(
+    UserScopedBaseRepository[TaskDefinitionEntity, BaseQuery]
+):
     Object = TaskDefinitionEntity
     table = task_definitions_tbl
     QueryClass = BaseQuery
@@ -24,7 +26,7 @@ class TaskDefinitionRepository(UserScopedBaseRepository[TaskDefinitionEntity, Ba
             "user_id": task_definition.user_id,
             "name": task_definition.name,
             "description": task_definition.description,
-            "type": task_definition.type.value,
+            "type": task_definition.type,
         }
 
         return row

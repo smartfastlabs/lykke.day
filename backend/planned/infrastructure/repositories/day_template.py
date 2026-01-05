@@ -1,16 +1,23 @@
+from datetime import time as dt_time
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy.sql import Select
-
+from planned.core.utils.serialization import dataclass_to_json_dict
 from planned.domain import value_objects
 from planned.domain.entities import DayTemplateEntity
 from planned.infrastructure.database.tables import day_templates_tbl
+from planned.infrastructure.repositories.base.utils import (
+    filter_init_false_fields,
+    normalize_list_fields,
+)
+from sqlalchemy.sql import Select
 
 from .base import DayTemplateQuery, UserScopedBaseRepository
 
 
-class DayTemplateRepository(UserScopedBaseRepository[DayTemplateEntity, DayTemplateQuery]):
+class DayTemplateRepository(
+    UserScopedBaseRepository[DayTemplateEntity, DayTemplateQuery]
+):
     Object = DayTemplateEntity
     table = day_templates_tbl
     QueryClass = DayTemplateQuery
@@ -39,14 +46,14 @@ class DayTemplateRepository(UserScopedBaseRepository[DayTemplateEntity, DayTempl
         }
 
         # Handle JSONB fields
-        from planned.core.utils.serialization import dataclass_to_json_dict
-
         if template.alarm:
             row["alarm"] = dataclass_to_json_dict(template.alarm)
-        
+
         # Handle list fields - convert UUIDs to strings for JSON serialization
         if template.routine_ids:
-            row["routine_ids"] = [str(routine_id) for routine_id in template.routine_ids]
+            row["routine_ids"] = [
+                str(routine_id) for routine_id in template.routine_ids
+            ]
         else:
             row["routine_ids"] = []
 
@@ -58,36 +65,37 @@ class DayTemplateRepository(UserScopedBaseRepository[DayTemplateEntity, DayTempl
 
         Overrides base to handle UUID conversion for routine_ids stored as JSON strings.
         """
-        from planned.infrastructure.repositories.base.utils import normalize_list_fields
-
         data = normalize_list_fields(dict(row), DayTemplateEntity)
-        
+
         # Filter out fields with init=False (e.g., _domain_events)
-        from planned.infrastructure.repositories.base.utils import filter_init_false_fields
         data = filter_init_false_fields(data, DayTemplateEntity)
 
         # Convert string UUIDs back to UUID objects for routine_ids
-        if "routine_ids" in data and data["routine_ids"]:
+        if data.get("routine_ids"):
             data["routine_ids"] = [
                 UUID(routine_id) if isinstance(routine_id, str) else routine_id
                 for routine_id in data["routine_ids"]
             ]
-        
+
         # Handle alarm - it comes as a dict from JSONB, need to convert to value object
-        if "alarm" in data and data["alarm"]:
+        if data.get("alarm"):
             if isinstance(data["alarm"], dict):
                 alarm_data = dict(data["alarm"])
                 # Convert time string back to time object if needed
                 if "time" in alarm_data and isinstance(alarm_data["time"], str):
-                    from datetime import time as dt_time
                     alarm_data["time"] = dt_time.fromisoformat(alarm_data["time"])
                 # Convert type string to enum if needed
                 if "type" in alarm_data and isinstance(alarm_data["type"], str):
                     alarm_data["type"] = value_objects.AlarmType(alarm_data["type"])
                 # Convert triggered_at string to time object if needed
-                if "triggered_at" in alarm_data and alarm_data["triggered_at"] and isinstance(alarm_data["triggered_at"], str):
-                    from datetime import time as dt_time
-                    alarm_data["triggered_at"] = dt_time.fromisoformat(alarm_data["triggered_at"])
+                if (
+                    "triggered_at" in alarm_data
+                    and alarm_data["triggered_at"]
+                    and isinstance(alarm_data["triggered_at"], str)
+                ):
+                    alarm_data["triggered_at"] = dt_time.fromisoformat(
+                        alarm_data["triggered_at"]
+                    )
                 data["alarm"] = value_objects.Alarm(**alarm_data)
 
         return DayTemplateEntity(**data)
