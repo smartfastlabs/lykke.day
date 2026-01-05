@@ -6,10 +6,11 @@ from uuid import UUID
 
 from planned.core.exceptions import DomainError
 
+from planned.infrastructure import data_objects
+
 from .. import value_objects
 from .action import ActionEntity
 from .base import BaseEntityObject
-from .task_definition import TaskDefinitionEntity
 
 
 @dataclass(kw_only=True)
@@ -18,7 +19,7 @@ class TaskEntity(BaseEntityObject):
     scheduled_date: dt_date
     name: str
     status: value_objects.TaskStatus
-    task_definition: TaskDefinitionEntity
+    task_definition: data_objects.TaskDefinition
     category: value_objects.TaskCategory
     frequency: value_objects.TaskFrequency
     completed_at: datetime | None = None

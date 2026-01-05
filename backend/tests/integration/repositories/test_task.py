@@ -6,7 +6,8 @@ from uuid import uuid4, uuid5
 import pytest
 
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import TaskEntity, TaskDefinitionEntity
+from planned.domain.entities import TaskEntity
+from planned.infrastructure import data_objects
 from planned.domain.value_objects.query import DateQuery
 from planned.domain.value_objects.task import (
     TaskCategory,
@@ -26,7 +27,7 @@ def _create_task_definition(user_id, task_id=None):
     else:
         task_id = uuid5(user_id, task_id)
 
-    return TaskDefinitionEntity(
+    return data_objects.TaskDefinition(
         user_id=user_id,
         id=task_id,
         name="Test Task",

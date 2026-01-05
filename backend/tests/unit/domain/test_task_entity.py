@@ -7,13 +7,14 @@ import pytest
 
 from planned.core.exceptions import DomainError
 from planned.domain import value_objects
-from planned.domain.entities import ActionEntity, TaskDefinitionEntity, TaskEntity
+from planned.domain.entities import ActionEntity, TaskEntity
+from planned.infrastructure import data_objects
 
 
 @pytest.fixture
 def test_task(test_user_id: str) -> TaskEntity:
     """Create a test task."""
-    task_def = TaskDefinitionEntity(
+    task_def = data_objects.TaskDefinition(
         user_id=test_user_id,
         name="Test Task Definition",
         description="Test description",

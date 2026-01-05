@@ -4,7 +4,7 @@ from uuid import UUID
 
 from planned.application.queries.base import BaseQueryHandler
 from planned.application.repositories import TaskDefinitionRepositoryReadOnlyProtocol
-from planned.domain.entities import TaskDefinitionEntity
+from planned.infrastructure import data_objects
 
 
 class GetTaskDefinitionHandler(BaseQueryHandler):
@@ -14,14 +14,14 @@ class GetTaskDefinitionHandler(BaseQueryHandler):
 
     async def run(
         self, task_definition_id: UUID
-    ) -> TaskDefinitionEntity:
+    ) -> data_objects.TaskDefinition:
         """Get a single task definition by ID.
 
         Args:
             task_definition_id: The ID of the task definition to retrieve
 
         Returns:
-            The task definition entity
+            The task definition data object
 
         Raises:
             NotFoundError: If task definition not found

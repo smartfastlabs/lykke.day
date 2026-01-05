@@ -3,7 +3,7 @@
 from planned.application.queries.base import BaseQueryHandler
 from planned.application.repositories import TaskDefinitionRepositoryReadOnlyProtocol
 from planned.domain import value_objects
-from planned.domain.entities import TaskDefinitionEntity
+from planned.infrastructure import data_objects
 
 
 class SearchTaskDefinitionsHandler(BaseQueryHandler):
@@ -14,7 +14,7 @@ class SearchTaskDefinitionsHandler(BaseQueryHandler):
     async def run(
         self,
         search_query: value_objects.TaskDefinitionQuery | None = None,
-    ) -> value_objects.PagedQueryResponse[TaskDefinitionEntity]:
+    ) -> value_objects.PagedQueryResponse[data_objects.TaskDefinition]:
         """Search task definitions with pagination.
 
         Args:

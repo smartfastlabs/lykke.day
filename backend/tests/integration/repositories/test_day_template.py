@@ -5,8 +5,8 @@ from datetime import time
 import pytest
 
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import DayTemplateEntity
 from planned.domain.value_objects.alarm import Alarm, AlarmType
+from planned.infrastructure import data_objects
 from planned.infrastructure.repositories import DayTemplateRepository
 
 
@@ -30,7 +30,7 @@ async def test_get_by_slug_not_found(day_template_repo):
 @pytest.mark.asyncio
 async def test_put(day_template_repo, test_user):
     """Test creating a new day template."""
-    template = DayTemplateEntity(
+    template = data_objects.DayTemplate(
         user_id=test_user.id,
         slug="custom",
         alarm=Alarm(

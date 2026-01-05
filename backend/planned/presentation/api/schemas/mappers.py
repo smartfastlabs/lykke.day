@@ -8,9 +8,7 @@ from planned.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
     DayEntity,
-    DayTemplateEntity,
     RoutineEntity,
-    TaskDefinitionEntity,
     TaskEntity,
 )
 from planned.infrastructure import data_objects
@@ -41,9 +39,9 @@ def map_alarm_to_schema(alarm: value_objects.Alarm) -> AlarmSchema:
 
 
 def map_task_definition_to_schema(
-    task_definition: TaskDefinitionEntity,
+    task_definition: data_objects.TaskDefinition,
 ) -> TaskDefinitionSchema:
-    """Convert TaskDefinition entity to TaskDefinition schema."""
+    """Convert TaskDefinition data object to TaskDefinition schema."""
     return TaskDefinitionSchema(**asdict(task_definition))
 
 
@@ -82,9 +80,9 @@ def map_task_to_schema(task: TaskEntity) -> TaskSchema:
 
 
 def map_day_template_to_schema(
-    template: DayTemplateEntity,
+    template: data_objects.DayTemplate,
 ) -> DayTemplateSchema:
-    """Convert DayTemplate entity to DayTemplate schema."""
+    """Convert DayTemplate data object to DayTemplate schema."""
     alarm_schema = map_alarm_to_schema(template.alarm) if template.alarm else None
 
     return DayTemplateSchema(

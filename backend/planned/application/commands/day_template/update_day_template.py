@@ -1,11 +1,11 @@
 """Command to update an existing day template."""
 
+from dataclasses import asdict
 from uuid import UUID
 
 from planned.application.commands.base import BaseCommandHandler
-from planned.domain.entities import DayTemplateEntity
-from planned.domain.events.day_template_events import DayTemplateUpdatedEvent
 from planned.domain.value_objects import DayTemplateUpdateObject
+from planned.infrastructure import data_objects
 
 
 class UpdateDayTemplateHandler(BaseCommandHandler):
@@ -15,7 +15,7 @@ class UpdateDayTemplateHandler(BaseCommandHandler):
         self,
         day_template_id: UUID,
         update_data: DayTemplateUpdateObject,
-    ) -> DayTemplateEntity:
+    ) -> data_objects.DayTemplate:
         """Update an existing day template.
 
         Args:
@@ -23,7 +23,7 @@ class UpdateDayTemplateHandler(BaseCommandHandler):
             update_data: The update data containing optional fields to update
 
         Returns:
-            The updated day template entity
+            The updated day template data object
 
         Raises:
             NotFoundError: If day template not found
@@ -32,11 +32,13 @@ class UpdateDayTemplateHandler(BaseCommandHandler):
             # Get the existing day template
             day_template = await uow.day_template_ro_repo.get(day_template_id)
 
-            # Apply updates using domain method (adds EntityUpdatedEvent)
-            day_template = day_template.apply_update(
-                update_data, DayTemplateUpdatedEvent
-            )
+            # Convert update object to dict and filter out None values
+            update_dict = asdict(update_data)
+            update_dict = {k: v for k, v in update_dict.items() if v is not None}
 
-            # Add entity to UoW for saving
-            uow.add(day_template)
-            return day_template
+            # Apply updates using clone
+            updated_day_template = day_template.clone(**update_dict)
+
+            # Add to UoW for saving
+            uow.add(updated_day_template)
+            return updated_day_template

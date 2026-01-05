@@ -70,7 +70,7 @@ class QueryHandler(ABC, Generic[QueryT, ResultT]):
             def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
                 self._ro_repos = ro_repos
 
-            async def run(self, user_id: UUID, template_id: UUID) -> DayTemplateEntity:
+            async def run(self, user_id: UUID, template_id: UUID) -> "data_objects.DayTemplate":
                 return await self._ro_repos.day_template_ro_repo.get(template_id)
     """
 

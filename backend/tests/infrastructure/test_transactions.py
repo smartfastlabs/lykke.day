@@ -5,7 +5,8 @@ from uuid import uuid4
 import pytest
 from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
-from planned.domain.entities import DayEntity, TaskDefinitionEntity, TaskEntity
+from planned.domain.entities import DayEntity, TaskEntity
+from planned.infrastructure import data_objects
 from planned.infrastructure.database.transaction import (
     TransactionManager,
     get_transaction_connection,
@@ -121,7 +122,7 @@ async def test_multiple_operations_in_single_transaction(
         category=value_objects.TaskCategory.HOUSE,
         frequency=value_objects.TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=TaskDefinitionEntity(
+        task_definition=data_objects.TaskDefinition(
             user_id=test_user.id,
             name="Test Task",
             description="Test",

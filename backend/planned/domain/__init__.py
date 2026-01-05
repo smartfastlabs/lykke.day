@@ -4,10 +4,8 @@ from .entities import (
     CalendarEntity,
     CalendarEntryEntity,
     DayEntity,
-    DayTemplateEntity,
     RoutineEntity,
     TaskEntity,
-    TaskDefinitionEntity,
     UserEntity,
 )
 from .value_objects import BaseRequestObject, BaseResponseObject, BaseValueObject, UserSetting
@@ -23,10 +21,8 @@ __all__ = [
     "CalendarEntity",
     "CalendarEntryEntity",
     "DayEntity",
-    "DayTemplateEntity",
     "RoutineEntity",
     "TaskEntity",
-    "TaskDefinitionEntity",
     "UserEntity",
     "UserSetting",
     # Value Objects

@@ -1,22 +1,22 @@
 """Command to bulk create task definitions."""
 
 from planned.application.commands.base import BaseCommandHandler
-from planned.domain.entities import TaskDefinitionEntity
+from planned.infrastructure import data_objects
 
 
 class BulkCreateTaskDefinitionsHandler(BaseCommandHandler):
     """Creates multiple task definitions."""
 
     async def run(
-        self, task_definitions: tuple[TaskDefinitionEntity, ...]
-    ) -> list[TaskDefinitionEntity]:
+        self, task_definitions: tuple[data_objects.TaskDefinition, ...]
+    ) -> list[data_objects.TaskDefinition]:
         """Create multiple task definitions.
 
         Args:
-            task_definitions: Tuple of task definition entities to create
+            task_definitions: Tuple of task definition data objects to create
 
         Returns:
-            List of created task definition entities
+            List of created task definition data objects
         """
         if not task_definitions:
             return []

@@ -15,7 +15,8 @@ from planned.application.repositories import (
 from planned.application.unit_of_work import ReadOnlyRepositories
 from planned.core.exceptions import NotFoundError
 from planned.domain import value_objects
-from planned.domain.entities import DayEntity, DayTemplateEntity
+from planned.domain.entities import DayEntity
+from planned.infrastructure import data_objects
 
 
 class PreviewDayHandler(BaseQueryHandler):
@@ -68,7 +69,7 @@ class PreviewDayHandler(BaseQueryHandler):
         self,
         date: date,
         template_id: UUID | None,
-    ) -> DayTemplateEntity:
+    ) -> data_objects.DayTemplate:
         """Get the template to use for the preview."""
         if template_id is not None:
             return await self.day_template_ro_repo.get(template_id)

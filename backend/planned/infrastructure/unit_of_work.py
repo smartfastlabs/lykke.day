@@ -39,9 +39,7 @@ from planned.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
     DayEntity,
-    DayTemplateEntity,
     RoutineEntity,
-    TaskDefinitionEntity,
     TaskEntity,
     UserEntity,
 )
@@ -380,7 +378,7 @@ class SqlAlchemyUnitOfWork:
         # Map entity types to their repositories
         if entity_type == DayEntity:
             return self._day_rw_repo
-        elif entity_type == DayTemplateEntity:
+        elif entity_type == data_objects.DayTemplate:
             return self._day_template_rw_repo
         elif entity_type == CalendarEntryEntity:
             return self._calendar_entry_rw_repo
@@ -390,7 +388,7 @@ class SqlAlchemyUnitOfWork:
             return self._task_rw_repo
         elif entity_type == RoutineEntity:
             return self._routine_rw_repo
-        elif entity_type == TaskDefinitionEntity:
+        elif entity_type == data_objects.TaskDefinition:
             return self._task_definition_rw_repo
         elif entity_type == UserEntity:
             return self._user_rw_repo
@@ -418,7 +416,7 @@ class SqlAlchemyUnitOfWork:
         # Map entity types to their read-only repositories
         if entity_type == DayEntity:
             return self.day_ro_repo
-        elif entity_type == DayTemplateEntity:
+        elif entity_type == data_objects.DayTemplate:
             return self.day_template_ro_repo
         elif entity_type == CalendarEntryEntity:
             return self.calendar_entry_ro_repo
@@ -428,7 +426,7 @@ class SqlAlchemyUnitOfWork:
             return self.task_ro_repo
         elif entity_type == RoutineEntity:
             return self.routine_ro_repo
-        elif entity_type == TaskDefinitionEntity:
+        elif entity_type == data_objects.TaskDefinition:
             return self.task_definition_ro_repo
         elif entity_type == UserEntity:
             return self.user_ro_repo

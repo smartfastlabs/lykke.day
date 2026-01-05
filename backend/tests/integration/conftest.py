@@ -6,7 +6,8 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from planned.domain.entities import DayTemplateEntity, UserEntity
+from planned.domain.entities import UserEntity
+from planned.infrastructure import data_objects
 from planned.domain.value_objects.alarm import Alarm, AlarmType
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.repositories import (
@@ -67,7 +68,7 @@ async def _setup_day_templates_for_user(user: UserEntity) -> None:
     repo = DayTemplateRepository(user_id=user.id)
 
     # Create default template (UUID will be auto-generated from slug + user_id)
-    default_template = DayTemplateEntity(
+    default_template = data_objects.DayTemplate(
         user_id=user.id,
         slug="default",
         alarm=Alarm(
@@ -79,7 +80,7 @@ async def _setup_day_templates_for_user(user: UserEntity) -> None:
     await repo.put(default_template)
 
     # Create weekend template (UUID will be auto-generated from slug + user_id)
-    weekend_template = DayTemplateEntity(
+    weekend_template = data_objects.DayTemplate(
         user_id=user.id,
         slug="weekend",
         alarm=Alarm(

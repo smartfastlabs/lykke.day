@@ -7,14 +7,15 @@ from uuid import uuid4
 import pytest
 
 from planned.domain import value_objects
-from planned.domain.entities import CalendarEntity, CalendarEntryEntity, TaskDefinitionEntity, TaskEntity
+from planned.domain.entities import CalendarEntity, CalendarEntryEntity, TaskEntity
+from planned.infrastructure import data_objects
 from planned.domain.services.notification import NotificationPayloadBuilder
 
 
 @pytest.fixture
 def test_task(test_user_id: str) -> TaskEntity:
     """Create a test task."""
-    task_def = TaskDefinitionEntity(
+    task_def = data_objects.TaskDefinition(
         user_id=test_user_id,
         name="Test Task Definition",
         description="Test description",
@@ -49,7 +50,7 @@ def test_build_for_tasks_single_task(test_task: TaskEntity) -> None:
 
 def test_build_for_tasks_multiple_tasks(test_user_id: str) -> None:
     """Test building notification payload for multiple tasks."""
-    task_def = TaskDefinitionEntity(
+    task_def = data_objects.TaskDefinition(
         user_id=test_user_id,
         name="Task Definition",
         description="Test description",

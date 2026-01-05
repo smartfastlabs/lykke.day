@@ -4,7 +4,7 @@ from uuid import UUID
 
 from planned.core.utils.serialization import dataclass_to_json_dict
 from planned.domain import value_objects
-from planned.domain.entities import DayTemplateEntity
+from planned.infrastructure import data_objects
 from planned.infrastructure.database.tables import day_templates_tbl
 from planned.infrastructure.repositories.base.utils import (
     filter_init_false_fields,
@@ -16,9 +16,9 @@ from .base import DayTemplateQuery, UserScopedBaseRepository
 
 
 class DayTemplateRepository(
-    UserScopedBaseRepository[DayTemplateEntity, DayTemplateQuery]
+    UserScopedBaseRepository[data_objects.DayTemplate, DayTemplateQuery]
 ):
-    Object = DayTemplateEntity
+    Object = data_objects.DayTemplate
     table = day_templates_tbl
     QueryClass = DayTemplateQuery
 
@@ -36,7 +36,7 @@ class DayTemplateRepository(
         return stmt
 
     @staticmethod
-    def entity_to_row(template: DayTemplateEntity) -> dict[str, Any]:
+    def entity_to_row(template: data_objects.DayTemplate) -> dict[str, Any]:
         """Convert a DayTemplate entity to a database row dict."""
         row: dict[str, Any] = {
             "id": template.id,
@@ -60,15 +60,15 @@ class DayTemplateRepository(
         return row
 
     @classmethod
-    def row_to_entity(cls, row: dict[str, Any]) -> DayTemplateEntity:
-        """Convert a database row dict to a DayTemplate entity.
+    def row_to_entity(cls, row: dict[str, Any]) -> data_objects.DayTemplate:
+        """Convert a database row dict to a DayTemplate data object.
 
         Overrides base to handle UUID conversion for routine_ids stored as JSON strings.
         """
-        data = normalize_list_fields(dict(row), DayTemplateEntity)
+        data = normalize_list_fields(dict(row), data_objects.DayTemplate)
 
         # Filter out fields with init=False (e.g., _domain_events)
-        data = filter_init_false_fields(data, DayTemplateEntity)
+        data = filter_init_false_fields(data, data_objects.DayTemplate)
 
         # Convert string UUIDs back to UUID objects for routine_ids
         if data.get("routine_ids"):
@@ -98,8 +98,8 @@ class DayTemplateRepository(
                     )
                 data["alarm"] = value_objects.Alarm(**alarm_data)
 
-        return DayTemplateEntity(**data)
+        return data_objects.DayTemplate(**data)
 
-    async def get_by_slug(self, slug: str) -> DayTemplateEntity:
+    async def get_by_slug(self, slug: str) -> data_objects.DayTemplate:
         """Get a DayTemplate by slug (must be scoped to a user)."""
         return await self.get_one(DayTemplateQuery(slug=slug))

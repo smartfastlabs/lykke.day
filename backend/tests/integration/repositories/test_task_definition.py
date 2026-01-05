@@ -5,15 +5,15 @@ from uuid import uuid4
 import pytest
 
 from planned.core.exceptions import NotFoundError
-from planned.domain.entities import TaskDefinitionEntity
 from planned.domain.value_objects.task import TaskType
+from planned.infrastructure import data_objects
 from planned.infrastructure.repositories import TaskDefinitionRepository
 
 
 @pytest.mark.asyncio
 async def test_get(task_definition_repo, test_user):
     """Test getting a task definition by ID."""
-    task_def = TaskDefinitionEntity(
+    task_def = data_objects.TaskDefinition(
         user_id=test_user.id,
         name="Test Task",
         description="Test description",
@@ -37,7 +37,7 @@ async def test_get_not_found(task_definition_repo):
 @pytest.mark.asyncio
 async def test_put(task_definition_repo, test_user):
     """Test creating a new task definition."""
-    task_def = TaskDefinitionEntity(
+    task_def = data_objects.TaskDefinition(
         user_id=test_user.id,
         name="New Task",
         description="New description",
@@ -53,13 +53,13 @@ async def test_put(task_definition_repo, test_user):
 @pytest.mark.asyncio
 async def test_all(task_definition_repo, test_user):
     """Test getting all task definitions."""
-    task_def1 = TaskDefinitionEntity(
+    task_def1 = data_objects.TaskDefinition(
         user_id=test_user.id,
         name="Task 1",
         description="Description 1",
         type=TaskType.ACTIVITY,
     )
-    task_def2 = TaskDefinitionEntity(
+    task_def2 = data_objects.TaskDefinition(
         user_id=test_user.id,
         name="Task 2",
         description="Description 2",
@@ -78,7 +78,7 @@ async def test_all(task_definition_repo, test_user):
 @pytest.mark.asyncio
 async def test_user_isolation(task_definition_repo, test_user, create_test_user):
     """Test that different users' task definitions are properly isolated."""
-    task_def = TaskDefinitionEntity(
+    task_def = data_objects.TaskDefinition(
         user_id=test_user.id,
         name="User1 Task",
         description="Description",

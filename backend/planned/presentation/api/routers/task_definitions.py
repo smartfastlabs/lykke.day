@@ -15,7 +15,8 @@ from planned.application.queries.task_definition import (
     SearchTaskDefinitionsHandler,
 )
 from planned.domain import value_objects
-from planned.domain.entities import TaskDefinitionEntity, UserEntity
+from planned.domain.entities import UserEntity
+from planned.infrastructure import data_objects
 from planned.infrastructure.data.default_task_definitions import (
     DEFAULT_TASK_DEFINITIONS,
 )
@@ -86,8 +87,8 @@ async def create_task_definition(
     ],
 ) -> TaskDefinitionSchema:
     """Create a new task definition."""
-    # Convert schema to entity
-    task_definition = TaskDefinitionEntity(
+    # Convert schema to data object
+    task_definition = data_objects.TaskDefinition(
         user_id=user.id,
         name=task_definition_data.name,
         description=task_definition_data.description,
@@ -107,12 +108,12 @@ async def bulk_create_task_definitions(
     ],
 ) -> list[TaskDefinitionSchema]:
     """Bulk create task definitions."""
-    # Convert dictionaries to entities
+    # Convert dictionaries to data objects
     task_definitions = []
     for data in task_definitions_data:
         if "user_id" not in data:
             data["user_id"] = user.id
-        task_definition = TaskDefinitionEntity(**data)
+        task_definition = data_objects.TaskDefinition(**data)
         task_definitions.append(task_definition)
 
     created = await bulk_create_task_definitions_handler.run(

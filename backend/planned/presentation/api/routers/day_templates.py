@@ -14,7 +14,8 @@ from planned.application.queries.day_template import (
     SearchDayTemplatesHandler,
 )
 from planned.domain import value_objects
-from planned.domain.entities import DayTemplateEntity, UserEntity
+from planned.domain.entities import UserEntity
+from planned.infrastructure import data_objects
 from planned.presentation.api.schemas import DayTemplateSchema, DayTemplateUpdateSchema
 from planned.presentation.api.schemas.mappers import map_day_template_to_schema
 
@@ -91,7 +92,7 @@ async def create_day_template(
             triggered_at=day_template_data.alarm.triggered_at,
         )
 
-    day_template = DayTemplateEntity(
+    day_template = data_objects.DayTemplate(
         id=day_template_data.id if day_template_data.id else None,  # type: ignore[arg-type]
         user_id=user.id,
         slug=day_template_data.slug,
