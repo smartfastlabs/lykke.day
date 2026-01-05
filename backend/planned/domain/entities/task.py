@@ -5,8 +5,7 @@ from datetime import datetime
 from uuid import UUID
 
 from planned.core.exceptions import DomainError
-from planned.domain import value_objects
-from planned.infrastructure import data_objects
+from planned.domain import data_objects, value_objects
 
 from .base import BaseEntityObject
 

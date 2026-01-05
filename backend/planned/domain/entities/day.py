@@ -22,7 +22,7 @@ from ..events.task_events import (
     TaskCompletedEvent,
     TaskStatusChangedEvent,
 )
-from planned.infrastructure import data_objects
+from planned.domain import data_objects
 
 from .base import BaseEntityObject
 from .task import TaskEntity

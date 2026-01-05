@@ -1,7 +1,7 @@
 """Command to create a new day template."""
 
 from planned.application.commands.base import BaseCommandHandler
-from planned.infrastructure import data_objects
+from planned.domain import data_objects
 
 
 class CreateDayTemplateHandler(BaseCommandHandler):

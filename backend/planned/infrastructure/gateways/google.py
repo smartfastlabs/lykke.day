@@ -13,9 +13,8 @@ from loguru import logger
 from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from planned.core.config import settings
 from planned.core.exceptions import TokenExpiredError
-from planned.domain import value_objects
+from planned.domain import data_objects, value_objects
 from planned.domain.entities import CalendarEntity, CalendarEntryEntity
-from planned.infrastructure import data_objects
 
 if TYPE_CHECKING:
     pass

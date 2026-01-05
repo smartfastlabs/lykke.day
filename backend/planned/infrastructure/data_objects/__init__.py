@@ -1,7 +1,14 @@
-from .auth_token import AuthToken
-from .day_template import DayTemplate
-from .push_subscription import PushSubscription
-from .task_definition import TaskDefinition
+"""Backwards-compatible re-export of domain data objects.
+
+Data objects now live in `planned.domain.data_objects`.
+"""
+
+from planned.domain.data_objects import (  # noqa: F401
+    AuthToken,
+    DayTemplate,
+    PushSubscription,
+    TaskDefinition,
+)
 
 __all__ = [
     "AuthToken",

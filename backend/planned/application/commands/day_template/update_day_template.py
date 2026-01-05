@@ -4,8 +4,8 @@ from dataclasses import asdict
 from uuid import UUID
 
 from planned.application.commands.base import BaseCommandHandler
+from planned.domain import data_objects
 from planned.domain.value_objects import DayTemplateUpdateObject
-from planned.infrastructure import data_objects
 
 
 class UpdateDayTemplateHandler(BaseCommandHandler):

@@ -3,7 +3,7 @@ from uuid import UUID
 
 from sqlalchemy.sql import Select
 
-from planned.domain import value_objects
+from planned.domain import data_objects, value_objects
 from planned.domain.entities import TaskEntity
 
 from .base import DateQuery, UserScopedBaseRepository
@@ -86,12 +86,13 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, DateQuery]):
             data["frequency"] = value_objects.TaskFrequency(data["frequency"])
         
         # Handle JSONB fields - task_definition, schedule, tags, actions
-        from planned.infrastructure import data_objects
         from planned.infrastructure.repositories.base.utils import filter_init_false_fields
         
         if "task_definition" in data and isinstance(data["task_definition"], dict):
             # TaskDefinition is a dataclass
-            task_def_dict = filter_init_false_fields(data["task_definition"], data_objects.TaskDefinition)
+            task_def_dict = filter_init_false_fields(
+                data["task_definition"], data_objects.TaskDefinition
+            )
             # Convert enum strings back to enums
             if "type" in task_def_dict and isinstance(task_def_dict["type"], str):
                 task_def_dict["type"] = value_objects.TaskType(task_def_dict["type"])

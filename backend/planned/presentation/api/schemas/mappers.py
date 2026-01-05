@@ -10,7 +10,7 @@ from planned.domain.entities import (
     RoutineEntity,
     TaskEntity,
 )
-from planned.infrastructure import data_objects
+from planned.domain import data_objects
 from planned.presentation.api.schemas import (
     ActionSchema,
     AlarmSchema,

@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
-
-from google.oauth2.credentials import Credentials
 
 from planned.domain.entities.base import BaseEntityObject
 
@@ -16,14 +15,13 @@ class AuthToken(BaseEntityObject):
     token_uri: str | None = None
     client_id: str | None = None
     client_secret: str | None = None
-    scopes: list | None = None
+    scopes: list[Any] | None = None
     expires_at: datetime | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
-    def google_credentials(self) -> Credentials:
-        """
-        Returns the credentials for Google API.
-        """
+    def google_credentials(self) -> Any:
+        """Build Google credentials from token fields."""
+        from google.oauth2.credentials import Credentials
 
         return Credentials(
             token=self.token,

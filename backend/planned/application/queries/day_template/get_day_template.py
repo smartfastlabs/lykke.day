@@ -4,7 +4,7 @@ from uuid import UUID
 
 from planned.application.queries.base import BaseQueryHandler
 from planned.application.repositories import DayTemplateRepositoryReadOnlyProtocol
-from planned.infrastructure import data_objects
+from planned.domain import data_objects
 
 
 class GetDayTemplateHandler(BaseQueryHandler):

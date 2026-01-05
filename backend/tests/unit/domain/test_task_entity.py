@@ -9,7 +9,7 @@ from planned.core.exceptions import DomainError
 from planned.domain import value_objects
 from planned.domain import value_objects
 from planned.domain.entities import TaskEntity
-from planned.infrastructure import data_objects
+from planned.domain import data_objects
 
 
 @pytest.fixture
