@@ -4,9 +4,12 @@ from typing import Annotated
 
 from fastapi import Depends
 from planned.application.commands.routine import (
+    AddRoutineTaskHandler,
     CreateRoutineHandler,
     DeleteRoutineHandler,
+    RemoveRoutineTaskHandler,
     UpdateRoutineHandler,
+    UpdateRoutineTaskHandler,
 )
 from planned.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from planned.domain.entities import UserEntity
@@ -49,5 +52,41 @@ def get_delete_routine_handler(
     """Get a DeleteRoutineHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return DeleteRoutineHandler(ro_repos, uow_factory, user.id)
+
+
+def get_add_routine_task_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> AddRoutineTaskHandler:
+    """Get an AddRoutineTaskHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return AddRoutineTaskHandler(ro_repos, uow_factory, user.id)
+
+
+def get_update_routine_task_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> UpdateRoutineTaskHandler:
+    """Get an UpdateRoutineTaskHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return UpdateRoutineTaskHandler(ro_repos, uow_factory, user.id)
+
+
+def get_remove_routine_task_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> RemoveRoutineTaskHandler:
+    """Get a RemoveRoutineTaskHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return RemoveRoutineTaskHandler(ro_repos, uow_factory, user.id)
 
 

@@ -2,9 +2,9 @@
 
 from uuid import UUID
 
-from planned.domain.value_objects.routine import RoutineSchedule, RoutineTask
-from planned.domain.value_objects.task import TaskCategory
 from pydantic import Field
+from planned.domain.value_objects.routine import RoutineSchedule, RoutineTask
+from planned.domain.value_objects.task import TaskCategory, TaskSchedule
 
 from .base import BaseEntitySchema, BaseSchema
 
@@ -38,3 +38,18 @@ class RoutineUpdateSchema(BaseSchema):
     routine_schedule: RoutineSchedule | None = None
     description: str | None = None
     tasks: list[RoutineTask] | None = None
+
+
+class RoutineTaskCreateSchema(BaseSchema):
+    """API schema for attaching a RoutineTask."""
+
+    task_definition_id: UUID
+    name: str | None = None
+    schedule: TaskSchedule | None = None
+
+
+class RoutineTaskUpdateSchema(BaseSchema):
+    """API schema for updating an attached RoutineTask."""
+
+    name: str | None = None
+    schedule: TaskSchedule | None = None

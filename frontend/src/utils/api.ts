@@ -8,6 +8,7 @@ import {
   TaskDefinition,
   Routine,
   PushSubscription,
+  TaskSchedule,
 } from "@/types/api";
 import type {
   ApiResponse,
@@ -277,4 +278,29 @@ export const taskDefinitionAPI = {
 
 export const routineAPI = {
   ...createCrudMethods<Routine>("routines"),
+  addTask: (
+    routineId: string,
+    payload: {
+      task_definition_id: string;
+      name?: string | null;
+      schedule?: TaskSchedule | null;
+    }
+  ): Promise<Routine> =>
+    fetchData<Routine>(`/api/routines/${routineId}/tasks`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateTask: (
+    routineId: string,
+    taskDefinitionId: string,
+    payload: { name?: string | null; schedule?: TaskSchedule | null }
+  ): Promise<Routine> =>
+    fetchData<Routine>(`/api/routines/${routineId}/tasks/${taskDefinitionId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  removeTask: (routineId: string, taskDefinitionId: string): Promise<Routine> =>
+    fetchData<Routine>(`/api/routines/${routineId}/tasks/${taskDefinitionId}`, {
+      method: "DELETE",
+    }),
 };

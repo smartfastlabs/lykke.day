@@ -5,25 +5,34 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
 from planned.application.commands.routine import (
+    AddRoutineTaskHandler,
     CreateRoutineHandler,
     DeleteRoutineHandler,
+    RemoveRoutineTaskHandler,
     UpdateRoutineHandler,
+    UpdateRoutineTaskHandler,
 )
 from planned.application.queries.routine import GetRoutineHandler, SearchRoutinesHandler
 from planned.domain import value_objects
 from planned.domain.entities import RoutineEntity, UserEntity
 from planned.domain.value_objects import RoutineUpdateObject
+from planned.domain.value_objects.routine import RoutineTask
 from planned.presentation.api.schemas import (
     RoutineCreateSchema,
     RoutineSchema,
+    RoutineTaskCreateSchema,
+    RoutineTaskUpdateSchema,
     RoutineUpdateSchema,
 )
 from planned.presentation.api.schemas.mappers import map_routine_to_schema
 
 from .dependencies.commands.routine import (
+    get_add_routine_task_handler,
     get_create_routine_handler,
     get_delete_routine_handler,
+    get_remove_routine_task_handler,
     get_update_routine_handler,
+    get_update_routine_task_handler,
 )
 from .dependencies.queries.routine import (
     get_get_routine_handler,
@@ -126,3 +135,65 @@ async def delete_routine(
 ) -> None:
     """Delete a routine."""
     await delete_routine_handler.run(routine_id=uuid)
+
+
+@router.post(
+    "/{uuid}/tasks",
+    response_model=RoutineSchema,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_routine_task(
+    uuid: UUID,
+    routine_task: RoutineTaskCreateSchema,
+    add_routine_task_handler: Annotated[
+        AddRoutineTaskHandler, Depends(get_add_routine_task_handler)
+    ],
+) -> RoutineSchema:
+    """Attach a task definition to a routine."""
+    updated = await add_routine_task_handler.run(
+        routine_id=uuid,
+        task=RoutineTask(**routine_task.model_dump()),
+    )
+    return map_routine_to_schema(updated)
+
+
+@router.put(
+    "/{uuid}/tasks/{task_definition_id}",
+    response_model=RoutineSchema,
+)
+async def update_routine_task(
+    uuid: UUID,
+    task_definition_id: UUID,
+    routine_task_update: RoutineTaskUpdateSchema,
+    update_routine_task_handler: Annotated[
+        UpdateRoutineTaskHandler, Depends(get_update_routine_task_handler)
+    ],
+) -> RoutineSchema:
+    """Update an attached routine task (name/schedule)."""
+    updated = await update_routine_task_handler.run(
+        routine_id=uuid,
+        task_update=RoutineTask(
+            task_definition_id=task_definition_id,
+            name=routine_task_update.name,
+            schedule=routine_task_update.schedule,
+        ),
+    )
+    return map_routine_to_schema(updated)
+
+
+@router.delete(
+    "/{uuid}/tasks/{task_definition_id}",
+    response_model=RoutineSchema,
+)
+async def remove_routine_task(
+    uuid: UUID,
+    task_definition_id: UUID,
+    remove_routine_task_handler: Annotated[
+        RemoveRoutineTaskHandler, Depends(get_remove_routine_task_handler)
+    ],
+) -> RoutineSchema:
+    """Detach a task definition from a routine."""
+    updated = await remove_routine_task_handler.run(
+        routine_id=uuid, task_definition_id=task_definition_id
+    )
+    return map_routine_to_schema(updated)
