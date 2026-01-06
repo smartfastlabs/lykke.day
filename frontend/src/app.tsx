@@ -10,6 +10,7 @@ import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import Welcome from "@/pages/welcome";
+import Landing from "@/pages/landing";
 import DayView from "@/pages/day/preview";
 import NavPage from "@/pages/navigation/links";
 import CalendarPage from "@/pages/navigation/calendar";
@@ -78,6 +79,7 @@ export default function App() {
         )}
       >
         <Route path="/" component={Home} />
+        <Route path="/landing" component={Landing} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
         <Route path="/welcome" component={Welcome} />
