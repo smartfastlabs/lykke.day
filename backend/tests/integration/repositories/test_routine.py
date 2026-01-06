@@ -7,8 +7,15 @@ import pytest
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import RoutineEntity
 from planned.infrastructure.repositories import RoutineRepository
-from planned.domain.value_objects.routine import RoutineSchedule
-from planned.domain.value_objects.task import TaskCategory, TaskFrequency
+from datetime import time
+
+from planned.domain.value_objects.routine import RoutineSchedule, RoutineTask
+from planned.domain.value_objects.task import (
+    TaskCategory,
+    TaskFrequency,
+    TaskSchedule,
+    TimingType,
+)
 
 
 @pytest.mark.asyncio
@@ -109,4 +116,70 @@ async def test_user_isolation(routine_repo, test_user, create_test_user):
     # User2 should not see user1's routine
     with pytest.raises(NotFoundError):
         await routine_repo2.get(routine.id)
+
+
+@pytest.mark.asyncio
+async def test_put_with_task_schedule(routine_repo, test_user):
+    """Ensure tasks with schedules are serialized/deserialized."""
+    routine = RoutineEntity(
+        id=uuid4(),
+        user_id=test_user.id,
+        name="With Task Schedule",
+        category=TaskCategory.HOUSE,
+        description="Has scheduled task",
+        routine_schedule=RoutineSchedule(frequency=TaskFrequency.DAILY),
+        tasks=[
+            RoutineTask(
+                task_definition_id=uuid4(),
+                name="Test Task",
+                schedule=TaskSchedule(
+                    timing_type=TimingType.FIXED_TIME,
+                    start_time=time(hour=9, minute=0),
+                    end_time=time(hour=10, minute=0),
+                ),
+            )
+        ],
+    )
+
+    await routine_repo.put(routine)
+    result = await routine_repo.get(routine.id)
+
+    assert result.tasks
+    first = result.tasks[0]
+    assert first.schedule is not None
+    assert first.schedule.start_time == time(hour=9, minute=0)
+    assert first.schedule.end_time == time(hour=10, minute=0)
+
+
+@pytest.mark.asyncio
+async def test_put_with_task_schedule_dict(routine_repo, test_user):
+    """Ensure repository handles dict-based schedule input."""
+    routine = RoutineEntity(
+        id=uuid4(),
+        user_id=test_user.id,
+        name="With Task Schedule Dict",
+        category=TaskCategory.HOUSE,
+        description="Has scheduled task from dict",
+        routine_schedule={"frequency": TaskFrequency.DAILY.value},  # type: ignore[arg-type]
+        tasks=[
+            {
+                "task_definition_id": uuid4(),
+                "name": "Dict Task",
+                "schedule": {
+                    "timing_type": TimingType.FIXED_TIME,
+                    "start_time": "09:00:00",
+                    "end_time": "10:00:00",
+                },
+            }
+        ],  # type: ignore[arg-type]
+    )
+
+    await routine_repo.put(routine)
+    result = await routine_repo.get(routine.id)
+
+    assert result.tasks
+    first = result.tasks[0]
+    assert first.schedule is not None
+    assert first.schedule.start_time == time(hour=9)
+    assert first.schedule.end_time == time(hour=10)
 
