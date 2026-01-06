@@ -1,14 +1,6 @@
 import { Component, createSignal } from "solid-js";
-import {
-  Routine,
-  RoutineSchedule,
-  TaskCategory,
-  TaskFrequency,
-} from "@/types/api";
-import {
-  ALL_TASK_CATEGORIES,
-  ALL_TASK_FREQUENCIES,
-} from "@/types/api/constants";
+import { Routine, RoutineSchedule, TaskCategory } from "@/types/api";
+import { ALL_TASK_CATEGORIES } from "@/types/api/constants";
 import {
   FormError,
   Input,
@@ -16,6 +8,7 @@ import {
   SubmitButton,
   TextArea,
 } from "@/components/forms";
+import RoutineScheduleForm from "./RoutineScheduleForm";
 
 interface FormProps {
   onSubmit: (routine: Partial<Routine>) => Promise<void>;
@@ -32,23 +25,22 @@ const RoutineForm: Component<FormProps> = (props) => {
   const [category, setCategory] = createSignal<TaskCategory>(
     props.initialData?.category ?? "HYGIENE"
   );
-  const [frequency, setFrequency] = createSignal<TaskFrequency>(
-    props.initialData?.routine_schedule.frequency ?? "DAILY"
+  const [routineSchedule, setRoutineSchedule] = createSignal<RoutineSchedule>(
+    props.initialData?.routine_schedule ?? {
+      frequency: "DAILY",
+      weekdays: null,
+      day_number: null,
+    }
   );
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
 
-    const routine_schedule: RoutineSchedule = {
-      frequency: frequency(),
-      weekdays: props.initialData?.routine_schedule.weekdays ?? null,
-    };
-
     const routine: Partial<Routine> = {
       name: name().trim(),
       description: description().trim() || "",
       category: category(),
-      routine_schedule,
+      routine_schedule: routineSchedule(),
       tasks: props.initialData?.tasks ?? [],
     };
 
@@ -84,13 +76,9 @@ const RoutineForm: Component<FormProps> = (props) => {
         required
       />
 
-      <Select
-        id="frequency"
-        placeholder="Frequency"
-        value={frequency}
-        onChange={setFrequency}
-        options={ALL_TASK_FREQUENCIES}
-        required
+      <RoutineScheduleForm
+        schedule={routineSchedule()}
+        onScheduleChange={setRoutineSchedule}
       />
 
       <FormError error={props.error} />

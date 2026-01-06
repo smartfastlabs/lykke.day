@@ -1382,6 +1382,8 @@ export interface components {
             frequency: components["schemas"]["TaskFrequency"];
             /** Weekdays */
             weekdays?: components["schemas"]["DayOfWeek"][] | null;
+            /** Day Number */
+            day_number?: number | null;
         };
         /**
          * RoutineSchema

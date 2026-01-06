@@ -19,6 +19,9 @@ class DayOfWeek(int, Enum):
 class RoutineSchedule(BaseModel):
     frequency: TaskFrequency
     weekdays: list[DayOfWeek] | None = None
+    day_number: int | None = (
+        None  # Day of month (1-31) for MONTHLY, day of year (1-365) for YEARLY
+    )
 
 
 class RoutineTask(BaseModel):

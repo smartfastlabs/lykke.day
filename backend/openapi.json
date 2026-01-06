@@ -3819,6 +3819,17 @@
               }
             ],
             "title": "Weekdays"
+          },
+          "day_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Number"
           }
         },
         "type": "object",

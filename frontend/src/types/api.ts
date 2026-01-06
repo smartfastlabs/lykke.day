@@ -235,6 +235,7 @@ export interface Routine {
 export interface RoutineSchedule {
   frequency: TaskFrequency;
   weekdays?: DayOfWeek[] | null;
+  day_number?: number | null; // Day of month (1-31) for MONTHLY, day of year (1-365) for YEARLY
 }
 export interface RoutineTask {
   task_definition_id: string;
