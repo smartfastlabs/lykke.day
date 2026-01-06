@@ -2,9 +2,9 @@ from typing import Any
 from uuid import UUID
 
 from planned.domain.entities import RoutineEntity
+from planned.infrastructure.database.tables import routines_tbl
 
 from .base import BaseQuery, UserScopedBaseRepository
-from planned.infrastructure.database.tables import routines_tbl
 
 
 class RoutineRepository(UserScopedBaseRepository[RoutineEntity, BaseQuery]):
@@ -23,7 +23,7 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, BaseQuery]):
             "id": routine.id,
             "user_id": routine.user_id,
             "name": routine.name,
-            "category": routine.category.value,
+            "category": routine.category,
             "description": routine.description,
         }
 

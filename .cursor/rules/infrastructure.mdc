@@ -42,6 +42,7 @@ infrastructure/
 ## Import Rules
 
 **Allowed Imports:**
+
 - Standard library
 - Third-party libraries (SQLAlchemy, Google APIs, etc.)
 - `planned.application.*` - Application layer protocols
@@ -50,6 +51,7 @@ infrastructure/
 - Other infrastructure layer modules
 
 **Forbidden Imports:**
+
 - `planned.presentation.*` - Presentation layer
 
 ---
@@ -78,7 +80,7 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, DateQuery]):
     table = tasks_tbl  # SQLAlchemy table
     QueryClass = DateQuery  # Query object type
     excluded_row_fields = {"date"}  # DB-only fields to exclude
-    
+
     def __init__(self, user_id: UUID) -> None:
         super().__init__(user_id=user_id)
 ```
@@ -103,31 +105,31 @@ Repositories must implement `entity_to_row()` to convert entities to database ro
 def entity_to_row(task: TaskEntity) -> dict[str, Any]:
     """Convert a Task entity to a database row dict."""
     from planned.core.utils.serialization import dataclass_to_json_dict
-    
+
     row: dict[str, Any] = {
         "id": task.id,
         "user_id": task.user_id,
         "scheduled_date": task.scheduled_date,
         "name": task.name,
-        "status": task.status.value,  # Convert enum to string
-        "category": task.category.value,
-        "frequency": task.frequency.value,
+        "status": task.status,  # Convert enum to string
+        "category": task.category,
+        "frequency": task.frequency,
         "completed_at": task.completed_at,
         "routine_id": task.routine_id,
     }
-    
+
     # Handle JSONB fields - serialize nested objects
     row["task_definition"] = dataclass_to_json_dict(task.task_definition)
-    
+
     if task.schedule:
         row["schedule"] = dataclass_to_json_dict(task.schedule)
-    
+
     if task.tags:
         row["tags"] = [tag.value for tag in task.tags]
-    
+
     if task.actions:
         row["actions"] = [dataclass_to_json_dict(action) for action in task.actions]
-    
+
     return row
 ```
 
@@ -143,28 +145,28 @@ def row_to_entity(cls, row: dict[str, Any]) -> TaskEntity:
         filter_init_false_fields,
         normalize_list_fields,
     )
-    
+
     # Filter out init=False fields (like _domain_events)
     data = filter_init_false_fields(dict(row), TaskEntity)
-    
+
     # Normalize None to [] for list fields
     data = normalize_list_fields(data, TaskEntity)
-    
+
     # Convert enum strings to enums
     if "status" in data and isinstance(data["status"], str):
         data["status"] = TaskStatus(data["status"])
-    
+
     # Convert JSONB fields - deserialize nested objects
     if data.get("task_definition"):
         data["task_definition"] = TaskDefinitionEntity(**data["task_definition"])
-    
+
     if data.get("schedule"):
         data["schedule"] = TaskSchedule(**data["schedule"])
-    
+
     # Convert tag strings to enum values
     if data.get("tags"):
         data["tags"] = [TaskTag(tag) if isinstance(tag, str) else tag for tag in data["tags"]]
-    
+
     return TaskEntity(**data)
 ```
 
@@ -176,17 +178,17 @@ Repositories can override `build_query()` to add custom query logic:
 def build_query(self, query: DateQuery) -> Select[tuple]:
     """Build a SQLAlchemy Core select statement from a query object."""
     stmt = super().build_query(query)  # Base query with user scoping
-    
+
     # Add date filtering
     if query.date is not None:
         stmt = stmt.where(self.table.c.date == query.date)
-    
+
     # Add pagination
     if query.limit is not None:
         stmt = stmt.limit(query.limit)
     if query.offset is not None:
         stmt = stmt.offset(query.offset)
-    
+
     return stmt
 ```
 
@@ -217,7 +219,7 @@ from planned.infrastructure import data_objects
 
 class GoogleCalendarGateway:
     """Implementation of GoogleCalendarGatewayProtocol."""
-    
+
     async def load_calendar_events(
         self,
         calendar: CalendarEntity,
@@ -227,18 +229,18 @@ class GoogleCalendarGateway:
         """Load calendar entries from Google Calendar."""
         google_cal = get_google_calendar(calendar, token)
         events = google_cal.get_events(time_min=lookback)
-        
+
         # Convert Google events to domain entities
         calendar_entries = [
             self._google_event_to_entity(event, calendar) for event in events
         ]
-        
+
         return calendar_entries
-    
+
     def get_flow(self, flow_name: str) -> Flow:
         """Get OAuth flow for Google authentication."""
         return get_flow(flow_name)
-    
+
     def _google_event_to_entity(
         self, event: GoogleEvent, calendar: CalendarEntity
     ) -> CalendarEntryEntity:
@@ -272,33 +274,33 @@ from planned.infrastructure.repositories import TaskRepository, DayRepository, .
 
 class SqlAlchemyUnitOfWork:
     """SQLAlchemy implementation of UnitOfWorkProtocol."""
-    
+
     # Read-only repository properties (public API)
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     # ... other repos
-    
+
     def __init__(self, user_id: UUID) -> None:
         self.user_id = user_id
         self._connection: AsyncConnection | None = None
         self._added_entities: list[BaseEntityObject] = []
         # Internal read-write repositories
-    
+
     async def __aenter__(self) -> Self:
         """Enter transaction context."""
         # Create connection and transaction
         # Initialize repositories with connection
         return self
-    
+
     async def __aexit__(self, ...) -> None:
         """Exit transaction context."""
         # Commit or rollback transaction
         # Close connection
-    
+
     def add(self, entity: BaseEntityObject) -> None:
         """Track entity for persistence."""
         self._added_entities.append(entity)
-    
+
     async def commit(self) -> None:
         """Commit transaction and dispatch events."""
         # Process added entities (create/update/delete based on events)
@@ -375,13 +377,13 @@ from google.oauth2.credentials import Credentials
 @dataclass
 class AuthToken:
     """Data object for authentication tokens."""
-    
+
     user_id: UUID
     provider: str
     access_token: str
     refresh_token: str | None
     expires_at: datetime | None
-    
+
     def google_credentials(self) -> Credentials:
         """Convert to Google Credentials object."""
         return Credentials(
@@ -512,9 +514,9 @@ async def test_task_repository_get(task_repo, test_user, test_date):
         task_definition=create_task_definition(test_user.id),
     )
     await task_repo.put(task)
-    
+
     result = await task_repo.get(task.id)
-    
+
     assert result.id == task.id
     assert result.name == "Test Task"
     assert result.user_id == test_user.id
@@ -534,7 +536,7 @@ async def test_google_calendar_gateway(google_gateway, calendar, token):
         lookback=datetime.now(UTC),
         token=token,
     )
-    
+
     assert len(events) > 0
     assert all(isinstance(e, CalendarEntryEntity) for e in events)
 ```
@@ -552,7 +554,7 @@ async def test_unit_of_work_commit(uow_factory, test_user_id):
         task.create()
         uow.add(task)
         # commit() is called automatically on exit
-    
+
     # Verify task was saved
     async with uow_factory.create(test_user_id) as uow:
         saved_task = await uow.task_ro_repo.get(task.id)
@@ -562,6 +564,7 @@ async def test_unit_of_work_commit(uow_factory, test_user_id):
 ### Test Location
 
 Infrastructure layer tests go in:
+
 - `tests/integration/repositories/` - Repository integration tests
 - `tests/integration/services/` - Service integration tests
 - `tests/unit/gateways/` - Gateway unit tests (with mocks/VCR)
@@ -586,10 +589,10 @@ class SimpleRepository(UserScopedBaseRepository[Entity, BaseQuery]):
     Object = Entity
     table = entity_tbl
     QueryClass = BaseQuery
-    
+
     def __init__(self, user_id: UUID) -> None:
         super().__init__(user_id=user_id)
-    
+
     @staticmethod
     def entity_to_row(entity: Entity) -> dict[str, Any]:
         return {
@@ -606,18 +609,18 @@ class SimpleRepository(UserScopedBaseRepository[Entity, BaseQuery]):
 @staticmethod
 def entity_to_row(entity: Entity) -> dict[str, Any]:
     from planned.core.utils.serialization import dataclass_to_json_dict
-    
+
     row = {
         "id": entity.id,
         "user_id": entity.user_id,
         # ... simple fields
     }
-    
+
     # JSONB fields
     row["nested_object"] = dataclass_to_json_dict(entity.nested_object)
     if entity.optional_list:
         row["optional_list"] = [item.value for item in entity.optional_list]
-    
+
     return row
 
 @classmethod
@@ -626,14 +629,14 @@ def row_to_entity(cls, row: dict[str, Any]) -> Entity:
         filter_init_false_fields,
         normalize_list_fields,
     )
-    
+
     data = filter_init_false_fields(dict(row), Entity)
     data = normalize_list_fields(data, Entity)
-    
+
     # Deserialize JSONB fields
     if data.get("nested_object"):
         data["nested_object"] = NestedObject(**data["nested_object"])
-    
+
     return Entity(**data)
 ```
 
@@ -642,12 +645,12 @@ def row_to_entity(cls, row: dict[str, Any]) -> Entity:
 ```python
 def build_query(self, query: DateQuery) -> Select[tuple]:
     stmt = super().build_query(query)
-    
+
     if query.date is not None:
         stmt = stmt.where(self.table.c.date == query.date)
-    
+
     if query.status is not None:
         stmt = stmt.where(self.table.c.status == query.status.value)
-    
+
     return stmt.order_by(self.table.c.created_at.desc())
 ```

@@ -34,8 +34,8 @@ class NotificationPayloadBuilder:
             {
                 "id": str(task.id),
                 "name": task.name,
-                "status": task.status.value,
-                "category": task.category.value,
+                "status": task.status,
+                "category": task.category,
             }
             for task in tasks
         ]
@@ -111,4 +111,3 @@ class NotificationPayloadBuilder:
                 "calendar_entries": calendar_entry_data,
             },
         )
-
