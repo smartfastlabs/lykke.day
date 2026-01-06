@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { Component, For, Show, createMemo, createResource, createSignal } from "solid-js";
-import Page from "@/components/shared/layout/page";
+import SettingsPage, { ActionButton } from "@/components/shared/settingsPage";
 import RoutineForm from "@/components/routines/form";
 import TaskScheduleForm from "@/components/tasks/scheduleForm";
 import { Icon } from "@/components/shared/icon";
@@ -161,35 +161,32 @@ const RoutineDetailPage: Component = () => {
   const getTaskDefinitionName = (taskDefinitionId: string) =>
     taskDefinitions()?.find((def) => def.id === taskDefinitionId)?.name ?? taskDefinitionId;
 
+  const actionButtons = createMemo((): ActionButton[] => {
+    return [
+      {
+        label: isEditMode() ? "Exit Edit Mode" : "Edit Mode",
+        onClick: () => setIsEditMode((prev) => !prev),
+      },
+      {
+        label: "Delete",
+        onClick: handleDelete,
+      },
+    ];
+  });
+
   return (
-    <Page>
+    <SettingsPage
+      heading="Edit Routine"
+      actionButtons={actionButtons()}
+      bottomLink={{ label: "Back to Routines", url: "/settings/routines" }}
+    >
       <Show
         when={routine()}
         fallback={<div class="text-center text-gray-500 py-8">Loading...</div>}
       >
         {(current) => (
-          <div class="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-6 py-8">
+          <div class="flex flex-col items-center justify-center px-6 py-8">
             <div class="w-full max-w-3xl space-y-8">
-              <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-medium text-neutral-900">Edit Routine</h1>
-                <div class="flex items-center gap-3">
-                  <button
-                    type="button"
-                    class="text-sm text-blue-600 hover:text-blue-700"
-                    onClick={() => setIsEditMode((prev) => !prev)}
-                  >
-                    {isEditMode() ? "Exit Edit Mode" : "Edit Mode"}
-                  </button>
-                  <button
-                    type="button"
-                    class="text-sm text-red-600 hover:text-red-700"
-                    onClick={handleDelete}
-                    disabled={isLoading()}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
 
               <RoutineForm
                 initialData={current()}
@@ -332,7 +329,7 @@ const RoutineDetailPage: Component = () => {
           </div>
         )}
       </Show>
-    </Page>
+    </SettingsPage>
   );
 };
 

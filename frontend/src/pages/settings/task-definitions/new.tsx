@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
-import Page from "@/components/shared/layout/page";
+import SettingsPage from "@/components/shared/settingsPage";
 import { taskDefinitionAPI } from "@/utils/api";
 import { TaskDefinition } from "@/types/api";
 import TaskDefinitionForm from "@/components/taskDefinitions/form";
@@ -29,13 +29,12 @@ export default function NewTaskDefinition() {
   };
 
   return (
-    <Page>
-      <div class="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-6">
+    <SettingsPage
+      heading="Create Task Definition"
+      bottomLink={{ label: "Back to Task Definitions", url: "/settings/task-definitions" }}
+    >
+      <div class="flex flex-col items-center justify-center px-6">
         <div class="w-full max-w-sm">
-          <h1 class="text-2xl font-medium text-neutral-900 text-center mb-8">
-            Create Task Definition
-          </h1>
-
           <TaskDefinitionForm
             onSubmit={handleSubmit}
             isLoading={isLoading()}
@@ -43,7 +42,7 @@ export default function NewTaskDefinition() {
           />
         </div>
       </div>
-    </Page>
+    </SettingsPage>
   );
 }
 

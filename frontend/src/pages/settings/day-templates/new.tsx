@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
-import Page from "@/components/shared/layout/page";
+import SettingsPage from "@/components/shared/settingsPage";
 import { dayTemplateAPI } from "@/utils/api";
 import { DayTemplate } from "@/types/api";
 import DayTemplateForm from "@/components/dayTemplates/form";
@@ -27,13 +27,12 @@ export default function NewDayTemplate() {
   };
 
   return (
-    <Page>
-      <div class="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-6">
+    <SettingsPage
+      heading="Create Day Template"
+      bottomLink={{ label: "Back to Day Templates", url: "/settings/day-templates" }}
+    >
+      <div class="flex flex-col items-center justify-center px-6">
         <div class="w-full max-w-sm">
-          <h1 class="text-2xl font-medium text-neutral-900 text-center mb-8">
-            Create Day Template
-          </h1>
-
           <DayTemplateForm
             onSubmit={handleSubmit}
             isLoading={isLoading()}
@@ -41,7 +40,7 @@ export default function NewDayTemplate() {
           />
         </div>
       </div>
-    </Page>
+    </SettingsPage>
   );
 }
 

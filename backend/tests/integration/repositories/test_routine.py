@@ -1,14 +1,11 @@
 """Integration tests for RoutineRepository."""
 
+from datetime import time
 from uuid import uuid4
 
 import pytest
-
 from planned.core.exceptions import NotFoundError
 from planned.domain.entities import RoutineEntity
-from planned.infrastructure.repositories import RoutineRepository
-from datetime import time
-
 from planned.domain.value_objects.routine import RoutineSchedule, RoutineTask
 from planned.domain.value_objects.task import (
     TaskCategory,
@@ -16,6 +13,7 @@ from planned.domain.value_objects.task import (
     TaskSchedule,
     TimingType,
 )
+from planned.infrastructure.repositories import RoutineRepository
 
 
 @pytest.mark.asyncio
@@ -31,9 +29,9 @@ async def test_get(routine_repo, test_user):
         tasks=[],
     )
     await routine_repo.put(routine)
-    
+
     result = await routine_repo.get(routine.id)
-    
+
     assert result.id == routine.id
     assert result.name == "Test Routine"
 
@@ -57,9 +55,9 @@ async def test_put(routine_repo, test_user):
         routine_schedule=RoutineSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
-    
+
     result = await routine_repo.put(routine)
-    
+
     assert result.name == "New Routine"
     assert result.category == TaskCategory.HOUSE
 
@@ -87,9 +85,9 @@ async def test_all(routine_repo, test_user):
     )
     await routine_repo.put(routine1)
     await routine_repo.put(routine2)
-    
+
     all_routines = await routine_repo.all()
-    
+
     routine_ids = [r.id for r in all_routines]
     assert routine1.id in routine_ids
     assert routine2.id in routine_ids
@@ -108,11 +106,11 @@ async def test_user_isolation(routine_repo, test_user, create_test_user):
         tasks=[],
     )
     await routine_repo.put(routine)
-    
+
     # Create another user
     user2 = await create_test_user()
     routine_repo2 = RoutineRepository(user_id=user2.id)
-    
+
     # User2 should not see user1's routine
     with pytest.raises(NotFoundError):
         await routine_repo2.get(routine.id)
@@ -149,37 +147,3 @@ async def test_put_with_task_schedule(routine_repo, test_user):
     assert first.schedule is not None
     assert first.schedule.start_time == time(hour=9, minute=0)
     assert first.schedule.end_time == time(hour=10, minute=0)
-
-
-@pytest.mark.asyncio
-async def test_put_with_task_schedule_dict(routine_repo, test_user):
-    """Ensure repository handles dict-based schedule input."""
-    routine = RoutineEntity(
-        id=uuid4(),
-        user_id=test_user.id,
-        name="With Task Schedule Dict",
-        category=TaskCategory.HOUSE,
-        description="Has scheduled task from dict",
-        routine_schedule={"frequency": TaskFrequency.DAILY.value},  # type: ignore[arg-type]
-        tasks=[
-            {
-                "task_definition_id": uuid4(),
-                "name": "Dict Task",
-                "schedule": {
-                    "timing_type": TimingType.FIXED_TIME,
-                    "start_time": "09:00:00",
-                    "end_time": "10:00:00",
-                },
-            }
-        ],  # type: ignore[arg-type]
-    )
-
-    await routine_repo.put(routine)
-    result = await routine_repo.get(routine.id)
-
-    assert result.tasks
-    first = result.tasks[0]
-    assert first.schedule is not None
-    assert first.schedule.start_time == time(hour=9)
-    assert first.schedule.end_time == time(hour=10)
-

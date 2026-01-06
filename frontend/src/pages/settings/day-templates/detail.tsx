@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { Component, Show, createResource, createSignal } from "solid-js";
-import Page from "@/components/shared/layout/page";
+import SettingsPage, { ActionButton } from "@/components/shared/settingsPage";
 import DayTemplateForm from "@/components/dayTemplates/form";
 import { dayTemplateAPI } from "@/utils/api";
 import { DayTemplate } from "@/types/api";
@@ -56,29 +56,26 @@ const DayTemplateDetailPage: Component = () => {
     }
   };
 
+  const actionButtons: ActionButton[] = [
+    {
+      label: "Delete",
+      onClick: handleDelete,
+    },
+  ];
+
   return (
-    <Page>
+    <SettingsPage
+      heading="Edit Day Template"
+      actionButtons={actionButtons}
+      bottomLink={{ label: "Back to Day Templates", url: "/settings/day-templates" }}
+    >
       <Show
         when={dayTemplate()}
         fallback={<div class="text-center text-gray-500 py-8">Loading...</div>}
       >
         {(current) => (
-          <div class="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-6">
+          <div class="flex flex-col items-center justify-center px-6">
             <div class="w-full max-w-sm space-y-6">
-              <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-medium text-neutral-900">
-                  Edit Day Template
-                </h1>
-                <button
-                  type="button"
-                  class="text-sm text-red-600 hover:text-red-700"
-                  onClick={handleDelete}
-                  disabled={isLoading()}
-                >
-                  Delete
-                </button>
-              </div>
-
               <DayTemplateForm
                 initialData={current()}
                 onSubmit={handleUpdate}
@@ -89,7 +86,7 @@ const DayTemplateDetailPage: Component = () => {
           </div>
         )}
       </Show>
-    </Page>
+    </SettingsPage>
   );
 };
 

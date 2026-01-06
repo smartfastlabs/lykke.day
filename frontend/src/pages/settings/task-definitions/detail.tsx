@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { Component, Show, createResource, createSignal } from "solid-js";
-import Page from "@/components/shared/layout/page";
+import SettingsPage, { ActionButton } from "@/components/shared/settingsPage";
 import TaskDefinitionForm from "@/components/taskDefinitions/form";
 import { taskDefinitionAPI } from "@/utils/api";
 import { TaskDefinition } from "@/types/api";
@@ -58,29 +58,26 @@ const TaskDefinitionDetailPage: Component = () => {
     }
   };
 
+  const actionButtons: ActionButton[] = [
+    {
+      label: "Delete",
+      onClick: handleDelete,
+    },
+  ];
+
   return (
-    <Page>
+    <SettingsPage
+      heading="Edit Task Definition"
+      actionButtons={actionButtons}
+      bottomLink={{ label: "Back to Task Definitions", url: "/settings/task-definitions" }}
+    >
       <Show
         when={taskDefinition()}
         fallback={<div class="text-center text-gray-500 py-8">Loading...</div>}
       >
         {(current) => (
-          <div class="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-6">
+          <div class="flex flex-col items-center justify-center px-6">
             <div class="w-full max-w-sm space-y-6">
-              <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-medium text-neutral-900">
-                  Edit Task Definition
-                </h1>
-                <button
-                  type="button"
-                  class="text-sm text-red-600 hover:text-red-700"
-                  onClick={handleDelete}
-                  disabled={isLoading()}
-                >
-                  Delete
-                </button>
-              </div>
-
               <TaskDefinitionForm
                 initialData={current()}
                 onSubmit={handleUpdate}
@@ -91,7 +88,7 @@ const TaskDefinitionDetailPage: Component = () => {
           </div>
         )}
       </Show>
-    </Page>
+    </SettingsPage>
   );
 };
 

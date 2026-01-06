@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
-import Page from "@/components/shared/layout/page";
+import SettingsPage from "@/components/shared/settingsPage";
 import { routineAPI } from "@/utils/api";
 import { Routine } from "@/types/api";
 import RoutineForm from "@/components/routines/form";
@@ -27,17 +27,16 @@ export default function NewRoutine() {
   };
 
   return (
-    <Page>
-      <div class="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-6">
+    <SettingsPage
+      heading="Create Routine"
+      bottomLink={{ label: "Back to Routines", url: "/settings/routines" }}
+    >
+      <div class="flex flex-col items-center justify-center px-6">
         <div class="w-full max-w-sm">
-          <h1 class="text-2xl font-medium text-neutral-900 text-center mb-8">
-            Create Routine
-          </h1>
-
           <RoutineForm onSubmit={handleSubmit} isLoading={isLoading()} error={error()} />
         </div>
       </div>
-    </Page>
+    </SettingsPage>
   );
 }
 
