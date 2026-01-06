@@ -35,3 +35,9 @@ class DayTemplateUpdateSchema(BaseSchema):
     icon: str | None = None
     routine_ids: list[UUID] | None = None
 
+
+class DayTemplateRoutineCreateSchema(BaseSchema):
+    """API schema for attaching a routine to a day template."""
+
+    routine_id: UUID
+

@@ -4,8 +4,10 @@ from typing import Annotated
 
 from fastapi import Depends
 from planned.application.commands.day_template import (
+    AddDayTemplateRoutineHandler,
     CreateDayTemplateHandler,
     DeleteDayTemplateHandler,
+    RemoveDayTemplateRoutineHandler,
     UpdateDayTemplateHandler,
 )
 from planned.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
@@ -49,4 +51,28 @@ def get_delete_day_template_handler(
     """Get a DeleteDayTemplateHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return DeleteDayTemplateHandler(ro_repos, uow_factory, user.id)
+
+
+def get_add_day_template_routine_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> AddDayTemplateRoutineHandler:
+    """Get an AddDayTemplateRoutineHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return AddDayTemplateRoutineHandler(ro_repos, uow_factory, user.id)
+
+
+def get_remove_day_template_routine_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> RemoveDayTemplateRoutineHandler:
+    """Get a RemoveDayTemplateRoutineHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return RemoveDayTemplateRoutineHandler(ro_repos, uow_factory, user.id)
 

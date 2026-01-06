@@ -12,6 +12,7 @@ from .day import DaySchema, DayUpdateSchema
 from .day_context import DayContextSchema
 from .day_template import (
     DayTemplateCreateSchema,
+    DayTemplateRoutineCreateSchema,
     DayTemplateSchema,
     DayTemplateUpdateSchema,
 )
@@ -37,6 +38,7 @@ CalendarEntrySchema.model_rebuild()
 CalendarUpdateSchema.model_rebuild()
 DaySchema.model_rebuild()
 DayTemplateCreateSchema.model_rebuild()
+DayTemplateRoutineCreateSchema.model_rebuild()
 DayTemplateSchema.model_rebuild()
 DayTemplateUpdateSchema.model_rebuild()
 DayUpdateSchema.model_rebuild()
@@ -58,6 +60,7 @@ __all__ = [
     "DayContextSchema",
     "DaySchema",
     "DayTemplateCreateSchema",
+    "DayTemplateRoutineCreateSchema",
     "DayTemplateSchema",
     "DayTemplateUpdateSchema",
     "DayUpdateSchema",

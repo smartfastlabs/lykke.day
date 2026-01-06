@@ -261,6 +261,15 @@ export const pushAPI = {
 
 export const dayTemplateAPI = {
   ...createCrudMethods<DayTemplate>("day-templates"),
+  addRoutine: (dayTemplateId: string, routineId: string): Promise<DayTemplate> =>
+    fetchData<DayTemplate>(`/api/day-templates/${dayTemplateId}/routines`, {
+      method: "POST",
+      body: JSON.stringify({ routine_id: routineId }),
+    }),
+  removeRoutine: (dayTemplateId: string, routineId: string): Promise<DayTemplate> =>
+    fetchData<DayTemplate>(`/api/day-templates/${dayTemplateId}/routines/${routineId}`, {
+      method: "DELETE",
+    }),
 };
 
 export const taskDefinitionAPI = {

@@ -192,7 +192,7 @@ export interface DayTemplate {
   id?: string;
   user_id: string;
   slug: string;
-  tasks?: string[];
+  routine_ids?: string[];
   alarm?: Alarm | null;
   icon?: string | null;
 }

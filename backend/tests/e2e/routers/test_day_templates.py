@@ -182,3 +182,160 @@ async def test_list_day_templates_pagination(authenticated_client):
     assert "has_next" in data
     assert "has_previous" in data
 
+
+@pytest.mark.asyncio
+async def test_add_routine_to_day_template(authenticated_client):
+    """Test adding a routine to a day template."""
+    client, user = await authenticated_client()
+
+    # Create a day template
+    from planned.domain.entities import DayTemplateEntity
+    from planned.infrastructure.repositories import DayTemplateRepository
+
+    day_template_repo = DayTemplateRepository(user_id=user.id)
+    day_template = DayTemplateEntity(
+        user_id=user.id,
+        slug="routine-test",
+        routine_ids=[],
+    )
+    day_template = await day_template_repo.put(day_template)
+
+    # Create a routine
+    from planned.domain.entities import RoutineEntity
+    from planned.domain.value_objects.routine import RoutineSchedule
+    from planned.domain.value_objects.task import TaskCategory, TaskFrequency
+    from planned.infrastructure.repositories import RoutineRepository
+
+    routine_repo = RoutineRepository(user_id=user.id)
+    routine = RoutineEntity(
+        id=uuid4(),
+        user_id=user.id,
+        name="Test Routine",
+        category=TaskCategory.HOUSE,
+        description="Test description",
+        routine_schedule=RoutineSchedule(frequency=TaskFrequency.DAILY),
+        tasks=[],
+    )
+    routine = await routine_repo.put(routine)
+
+    # Add routine to day template
+    response = client.post(
+        f"/day-templates/{day_template.id}/routines",
+        json={"routine_id": str(routine.id)},
+    )
+
+    assert response.status_code == 201
+    data = response.json()
+    assert str(routine.id) in data["routine_ids"]
+
+
+@pytest.mark.asyncio
+async def test_add_duplicate_routine_to_day_template(authenticated_client):
+    """Test adding a duplicate routine to a day template returns error."""
+    client, user = await authenticated_client()
+
+    # Create a day template with a routine already attached
+    from planned.domain.entities import DayTemplateEntity, RoutineEntity
+    from planned.domain.value_objects.routine import RoutineSchedule
+    from planned.domain.value_objects.task import TaskCategory, TaskFrequency
+    from planned.infrastructure.repositories import DayTemplateRepository, RoutineRepository
+
+    routine_repo = RoutineRepository(user_id=user.id)
+    routine = RoutineEntity(
+        id=uuid4(),
+        user_id=user.id,
+        name="Test Routine",
+        category=TaskCategory.HOUSE,
+        description="Test description",
+        routine_schedule=RoutineSchedule(frequency=TaskFrequency.DAILY),
+        tasks=[],
+    )
+    routine = await routine_repo.put(routine)
+
+    day_template_repo = DayTemplateRepository(user_id=user.id)
+    day_template = DayTemplateEntity(
+        user_id=user.id,
+        slug="duplicate-test",
+        routine_ids=[routine.id],
+    )
+    day_template = await day_template_repo.put(day_template)
+
+    # Try to add the same routine again
+    response = client.post(
+        f"/day-templates/{day_template.id}/routines",
+        json={"routine_id": str(routine.id)},
+    )
+
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_remove_routine_from_day_template(authenticated_client):
+    """Test removing a routine from a day template."""
+    client, user = await authenticated_client()
+
+    # Create a routine
+    from planned.domain.entities import RoutineEntity
+    from planned.domain.value_objects.routine import RoutineSchedule
+    from planned.domain.value_objects.task import TaskCategory, TaskFrequency
+    from planned.infrastructure.repositories import RoutineRepository
+
+    routine_repo = RoutineRepository(user_id=user.id)
+    routine = RoutineEntity(
+        id=uuid4(),
+        user_id=user.id,
+        name="Test Routine",
+        category=TaskCategory.HOUSE,
+        description="Test description",
+        routine_schedule=RoutineSchedule(frequency=TaskFrequency.DAILY),
+        tasks=[],
+    )
+    routine = await routine_repo.put(routine)
+
+    # Create a day template with the routine attached
+    from planned.domain.entities import DayTemplateEntity
+    from planned.infrastructure.repositories import DayTemplateRepository
+
+    day_template_repo = DayTemplateRepository(user_id=user.id)
+    day_template = DayTemplateEntity(
+        user_id=user.id,
+        slug="remove-test",
+        routine_ids=[routine.id],
+    )
+    day_template = await day_template_repo.put(day_template)
+
+    # Remove routine from day template
+    response = client.delete(
+        f"/day-templates/{day_template.id}/routines/{routine.id}",
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert str(routine.id) not in data["routine_ids"]
+
+
+@pytest.mark.asyncio
+async def test_remove_nonexistent_routine_from_day_template(authenticated_client):
+    """Test removing a routine that doesn't exist from a day template returns error."""
+    client, user = await authenticated_client()
+
+    # Create a day template without any routines
+    from planned.domain.entities import DayTemplateEntity
+    from planned.infrastructure.repositories import DayTemplateRepository
+
+    day_template_repo = DayTemplateRepository(user_id=user.id)
+    day_template = DayTemplateEntity(
+        user_id=user.id,
+        slug="remove-nonexistent-test",
+        routine_ids=[],
+    )
+    day_template = await day_template_repo.put(day_template)
+
+    # Try to remove a routine that doesn't exist
+    fake_routine_id = uuid4()
+    response = client.delete(
+        f"/day-templates/{day_template.id}/routines/{fake_routine_id}",
+    )
+
+    assert response.status_code == 404
+

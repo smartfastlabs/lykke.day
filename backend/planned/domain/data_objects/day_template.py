@@ -4,6 +4,7 @@ import uuid
 from dataclasses import dataclass, field
 from uuid import UUID
 
+from planned.core.exceptions import DomainError, NotFoundError
 from planned.domain import value_objects
 from planned.domain.entities.base import BaseEntityObject
 
@@ -31,3 +32,49 @@ class DayTemplate(BaseEntityObject):
         name = f"{user_id}:{slug}"
         return uuid.uuid5(namespace, name)
 
+    def _copy_with_routine_ids(self, routine_ids: list[UUID]) -> DayTemplate:
+        """Return a copy of this day template with updated routine_ids."""
+        return DayTemplate(
+            id=self.id,
+            user_id=self.user_id,
+            slug=self.slug,
+            alarm=self.alarm,
+            icon=self.icon,
+            routine_ids=routine_ids,
+        )
+
+    def add_routine(self, routine_id: UUID) -> DayTemplate:
+        """Attach a routine to the day template, enforcing uniqueness."""
+        if routine_id in self.routine_ids:
+            raise DomainError("Routine already attached to day template")
+
+        updated = self._copy_with_routine_ids([*self.routine_ids, routine_id])
+        from planned.domain.events.day_template_events import (
+            DayTemplateRoutineAddedEvent,
+        )
+
+        updated._add_event(
+            DayTemplateRoutineAddedEvent(
+                day_template_id=updated.id, routine_id=routine_id
+            )
+        )
+        return updated
+
+    def remove_routine(self, routine_id: UUID) -> DayTemplate:
+        """Detach a routine from the day template."""
+        if routine_id not in self.routine_ids:
+            raise NotFoundError("Routine not found in day template")
+
+        updated = self._copy_with_routine_ids(
+            [rid for rid in self.routine_ids if rid != routine_id]
+        )
+        from planned.domain.events.day_template_events import (
+            DayTemplateRoutineRemovedEvent,
+        )
+
+        updated._add_event(
+            DayTemplateRoutineRemovedEvent(
+                day_template_id=updated.id, routine_id=routine_id
+            )
+        )
+        return updated

@@ -3,10 +3,12 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from planned.application.commands.day_template import (
+    AddDayTemplateRoutineHandler,
     CreateDayTemplateHandler,
     DeleteDayTemplateHandler,
+    RemoveDayTemplateRoutineHandler,
     UpdateDayTemplateHandler,
 )
 from planned.application.queries.day_template import (
@@ -18,14 +20,17 @@ from planned.domain.entities import UserEntity
 from planned.infrastructure import data_objects
 from planned.presentation.api.schemas import (
     DayTemplateCreateSchema,
+    DayTemplateRoutineCreateSchema,
     DayTemplateSchema,
     DayTemplateUpdateSchema,
 )
 from planned.presentation.api.schemas.mappers import map_day_template_to_schema
 
 from .dependencies.commands.day_template import (
+    get_add_day_template_routine_handler,
     get_create_day_template_handler,
     get_delete_day_template_handler,
+    get_remove_day_template_routine_handler,
     get_update_day_template_handler,
 )
 from .dependencies.queries.day_template import (
@@ -151,3 +156,42 @@ async def delete_day_template(
 ) -> None:
     """Delete a day template."""
     await delete_day_template_handler.run(day_template_id=uuid)
+
+
+@router.post(
+    "/{uuid}/routines",
+    response_model=DayTemplateSchema,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_day_template_routine(
+    uuid: UUID,
+    routine_data: DayTemplateRoutineCreateSchema,
+    add_day_template_routine_handler: Annotated[
+        AddDayTemplateRoutineHandler,
+        Depends(get_add_day_template_routine_handler),
+    ],
+) -> DayTemplateSchema:
+    """Attach a routine to a day template."""
+    updated = await add_day_template_routine_handler.run(
+        day_template_id=uuid, routine_id=routine_data.routine_id
+    )
+    return map_day_template_to_schema(updated)
+
+
+@router.delete(
+    "/{uuid}/routines/{routine_id}",
+    response_model=DayTemplateSchema,
+)
+async def remove_day_template_routine(
+    uuid: UUID,
+    routine_id: UUID,
+    remove_day_template_routine_handler: Annotated[
+        RemoveDayTemplateRoutineHandler,
+        Depends(get_remove_day_template_routine_handler),
+    ],
+) -> DayTemplateSchema:
+    """Detach a routine from a day template."""
+    updated = await remove_day_template_routine_handler.run(
+        day_template_id=uuid, routine_id=routine_id
+    )
+    return map_day_template_to_schema(updated)
