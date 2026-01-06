@@ -189,11 +189,11 @@ async def test_add_routine_to_day_template(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a day template
-    from planned.domain.data_objects import DayTemplate
+    from planned.domain.entities.day_template import DayTemplateEntity
     from planned.infrastructure.repositories import DayTemplateRepository
 
     day_template_repo = DayTemplateRepository(user_id=user.id)
-    day_template = DayTemplate(
+    day_template = DayTemplateEntity(
         user_id=user.id,
         slug="routine-test",
         routine_ids=[],
@@ -235,8 +235,8 @@ async def test_add_duplicate_routine_to_day_template(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a day template with a routine already attached
-    from planned.domain.data_objects import DayTemplate
     from planned.domain.entities import RoutineEntity
+    from planned.domain.entities.day_template import DayTemplateEntity
     from planned.domain.value_objects.routine import RoutineSchedule
     from planned.domain.value_objects.task import TaskCategory, TaskFrequency
     from planned.infrastructure.repositories import (
@@ -257,7 +257,7 @@ async def test_add_duplicate_routine_to_day_template(authenticated_client):
     routine = await routine_repo.put(routine)
 
     day_template_repo = DayTemplateRepository(user_id=user.id)
-    day_template = DayTemplate(
+    day_template = DayTemplateEntity(
         user_id=user.id,
         slug="duplicate-test",
         routine_ids=[routine.id],
@@ -297,11 +297,11 @@ async def test_remove_routine_from_day_template(authenticated_client):
     routine = await routine_repo.put(routine)
 
     # Create a day template with the routine attached
-    from planned.domain.data_objects import DayTemplate
+    from planned.domain.entities.day_template import DayTemplateEntity
     from planned.infrastructure.repositories import DayTemplateRepository
 
     day_template_repo = DayTemplateRepository(user_id=user.id)
-    day_template = DayTemplate(
+    day_template = DayTemplateEntity(
         user_id=user.id,
         slug="remove-test",
         routine_ids=[routine.id],
@@ -324,11 +324,11 @@ async def test_remove_nonexistent_routine_from_day_template(authenticated_client
     client, user = await authenticated_client()
 
     # Create a day template without any routines
-    from planned.domain.data_objects import DayTemplate
+    from planned.domain.entities.day_template import DayTemplateEntity
     from planned.infrastructure.repositories import DayTemplateRepository
 
     day_template_repo = DayTemplateRepository(user_id=user.id)
-    day_template = DayTemplate(
+    day_template = DayTemplateEntity(
         user_id=user.id,
         slug="remove-nonexistent-test",
         routine_ids=[],

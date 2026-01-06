@@ -17,7 +17,7 @@ from planned.application.queries.day_template import (
 )
 from planned.domain import value_objects
 from planned.domain.entities import UserEntity
-from planned.infrastructure import data_objects
+from planned.domain.entities.day_template import DayTemplateEntity
 from planned.presentation.api.schemas import (
     DayTemplateCreateSchema,
     DayTemplateRoutineCreateSchema,
@@ -101,7 +101,7 @@ async def create_day_template(
             triggered_at=day_template_data.alarm.triggered_at,
         )
 
-    day_template = data_objects.DayTemplate(
+    day_template = DayTemplateEntity(
         user_id=user.id,
         slug=day_template_data.slug,
         alarm=alarm,

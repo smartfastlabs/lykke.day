@@ -3,7 +3,7 @@
 from planned.application.queries.base import BaseQueryHandler
 from planned.application.repositories import DayTemplateRepositoryReadOnlyProtocol
 from planned.domain import value_objects
-from planned.infrastructure import data_objects
+from planned.domain.entities.day_template import DayTemplateEntity
 
 
 class SearchDayTemplatesHandler(BaseQueryHandler):
@@ -14,7 +14,7 @@ class SearchDayTemplatesHandler(BaseQueryHandler):
     async def run(
         self,
         search_query: value_objects.DayTemplateQuery | None = None,
-    ) -> value_objects.PagedQueryResponse[data_objects.DayTemplate]:
+    ) -> value_objects.PagedQueryResponse[DayTemplateEntity]:
         """Search day templates with pagination.
 
         Args:

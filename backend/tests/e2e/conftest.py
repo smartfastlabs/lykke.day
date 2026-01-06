@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 from planned.app import app
 from planned.domain.entities import UserEntity
-from planned.infrastructure import data_objects
+from planned.domain.entities.day_template import DayTemplateEntity
 from planned.domain.value_objects.alarm import Alarm, AlarmType
 from planned.domain.value_objects.user import UserSetting
 from planned.infrastructure.database.tables import User as UserDB
@@ -38,7 +38,7 @@ def setup_test_user_day_template():
         day_template_repo = DayTemplateRepository(user_id=test_user_id)
 
         # Create default template (UUID will be auto-generated)
-        default_template = data_objects.DayTemplate(
+        default_template = DayTemplateEntity(
             user_id=test_user_id,
             slug="default",
             alarm=Alarm(

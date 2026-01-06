@@ -12,7 +12,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from planned.infrastructure import data_objects
+from planned.domain.entities.day_template import DayTemplateEntity
 from planned.domain.value_objects.alarm import Alarm, AlarmType
 from planned.domain.value_objects.day import DayStatus
 from planned.infrastructure.database.utils import reset_engine
@@ -74,7 +74,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     # we create it directly since there's no API endpoint for template creation
     user_id = UUID(user_id_str)
     day_template_repo = DayTemplateRepository(user_id=user_id)
-    default_template = data_objects.DayTemplate(
+    default_template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
         alarm=Alarm(

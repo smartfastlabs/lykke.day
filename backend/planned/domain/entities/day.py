@@ -22,7 +22,7 @@ from ..events.task_events import (
     TaskCompletedEvent,
     TaskStatusChangedEvent,
 )
-from planned.domain import data_objects
+from planned.domain.entities.day_template import DayTemplateEntity
 
 from .base import BaseEntityObject
 from .task import TaskEntity
@@ -39,7 +39,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
     status: value_objects.DayStatus = value_objects.DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
     tags: list[value_objects.DayTag] = field(default_factory=list)
-    template: data_objects.DayTemplate | None = None
+    template: DayTemplateEntity | None = None
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
@@ -72,7 +72,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
         cls,
         date: dt_date,
         user_id: UUID,
-        template: "data_objects.DayTemplate",
+        template: "DayTemplateEntity",
     ) -> "DayEntity":
         """Create a new day for the given date and user.
 
@@ -95,7 +95,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
             alarm=template.alarm,
         )
 
-    def schedule(self, template: "data_objects.DayTemplate") -> None:
+    def schedule(self, template: "DayTemplateEntity") -> None:
         """Schedule the day with the given template.
 
         This method enforces the business rule that only unscheduled days
@@ -162,7 +162,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
         self.status = value_objects.DayStatus.COMPLETE
         self._add_event(DayCompletedEvent(day_id=self.id, date=self.date))
 
-    def update_template(self, template: "data_objects.DayTemplate") -> None:
+    def update_template(self, template: "DayTemplateEntity") -> None:
         """Update the day's template.
 
         Args:

@@ -4,7 +4,7 @@ from uuid import UUID
 
 from planned.application.queries.base import BaseQueryHandler
 from planned.application.repositories import DayTemplateRepositoryReadOnlyProtocol
-from planned.domain import data_objects
+from planned.domain.entities.day_template import DayTemplateEntity
 
 
 class GetDayTemplateHandler(BaseQueryHandler):
@@ -12,7 +12,7 @@ class GetDayTemplateHandler(BaseQueryHandler):
 
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
 
-    async def run(self, day_template_id: UUID) -> data_objects.DayTemplate:
+    async def run(self, day_template_id: UUID) -> DayTemplateEntity:
         """Get a single day template by ID.
 
         Args:

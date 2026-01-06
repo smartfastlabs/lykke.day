@@ -3,7 +3,7 @@
 from uuid import UUID
 
 from planned.application.commands.base import BaseCommandHandler
-from planned.domain import data_objects
+from planned.domain.entities.day_template import DayTemplateEntity
 from planned.domain.events.day_template_events import DayTemplateUpdatedEvent
 from planned.domain.value_objects import DayTemplateUpdateObject
 
@@ -15,7 +15,7 @@ class UpdateDayTemplateHandler(BaseCommandHandler):
         self,
         day_template_id: UUID,
         update_data: DayTemplateUpdateObject,
-    ) -> data_objects.DayTemplate:
+    ) -> DayTemplateEntity:
         """Update an existing day template.
 
         Args:

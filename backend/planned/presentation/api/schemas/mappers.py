@@ -7,6 +7,7 @@ from planned.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
     DayEntity,
+    DayTemplateEntity,
     RoutineEntity,
     TaskEntity,
 )
@@ -79,7 +80,7 @@ def map_task_to_schema(task: TaskEntity) -> TaskSchema:
 
 
 def map_day_template_to_schema(
-    template: data_objects.DayTemplate,
+    template: DayTemplateEntity,
 ) -> DayTemplateSchema:
     """Convert DayTemplate data object to DayTemplate schema."""
     alarm_schema = map_alarm_to_schema(template.alarm) if template.alarm else None

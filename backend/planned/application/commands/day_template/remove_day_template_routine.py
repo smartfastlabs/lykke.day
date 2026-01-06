@@ -3,7 +3,7 @@
 from uuid import UUID
 
 from planned.application.commands.base import BaseCommandHandler
-from planned.domain import data_objects
+from planned.domain.entities.day_template import DayTemplateEntity
 
 
 class RemoveDayTemplateRoutineHandler(BaseCommandHandler):
@@ -11,7 +11,7 @@ class RemoveDayTemplateRoutineHandler(BaseCommandHandler):
 
     async def run(
         self, day_template_id: UUID, routine_id: UUID
-    ) -> data_objects.DayTemplate:
+    ) -> DayTemplateEntity:
         """Remove an attached routine from the day template.
 
         Args:

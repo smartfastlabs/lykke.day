@@ -8,18 +8,17 @@ from uuid import UUID
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin
 from fastapi_users.authentication import AuthenticationBackend, CookieTransport
-from fastapi_users.exceptions import UserAlreadyExists
 from fastapi_users.authentication.strategy import JWTStrategy
+from fastapi_users.exceptions import UserAlreadyExists
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
 from planned.core.config import settings
 from planned.domain import value_objects
-from planned.infrastructure import data_objects
+from planned.domain.entities.day_template import DayTemplateEntity
 from planned.infrastructure.auth.schemas import UserCreate
 from planned.infrastructure.database.tables import User
 from planned.infrastructure.database.utils import get_engine
 from planned.infrastructure.repositories import DayTemplateRepository
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 # JWT secret - using the same secret as session was using
 SECRET = settings.SESSION_SECRET
@@ -68,7 +67,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
 
-    async def create(
+    async def create(  # type: ignore[override]
         self,
         user_create: UserCreate,
         safe: bool = False,
@@ -79,25 +78,29 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         existing_user = await self.user_db.get_by_email(user_create.email)
         if existing_user is not None:
             raise UserAlreadyExists()
-        
+
         # Set custom fields before creation
-        user_dict = user_create.create_update_dict() if safe else user_create.create_update_dict_superuser()
-        
+        user_dict = (
+            user_create.create_update_dict()
+            if safe
+            else user_create.create_update_dict_superuser()
+        )
+
         # Hash password
         password = user_dict.pop("password")
         user_dict["hashed_password"] = self.password_helper.hash(password)
-        
+
         # Set custom fields
         user_dict["created_at"] = datetime.now(UTC)
         from planned.core.utils.serialization import dataclass_to_json_dict
 
         user_dict["settings"] = dataclass_to_json_dict(value_objects.UserSetting())
-        
+
         # Create user
         user = await self.user_db.create(user_dict)
-        
+
         await self.on_after_register(user, request)
-        
+
         return user
 
     async def on_after_register(
@@ -108,14 +111,14 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         """Called after a user registers."""
         # Create default day templates for new user
         day_template_repo = DayTemplateRepository(user_id=user.id)
-        
+
         default_templates = [
-            data_objects.DayTemplate(user_id=user.id, slug="default", alarm=None, icon=None),
-            data_objects.DayTemplate(user_id=user.id, slug="workday", alarm=None, icon=None),
-            data_objects.DayTemplate(user_id=user.id, slug="weekday", alarm=None, icon=None),
-            data_objects.DayTemplate(user_id=user.id, slug="weekend", alarm=None, icon=None),
+            DayTemplateEntity(user_id=user.id, slug="default", alarm=None, icon=None),
+            DayTemplateEntity(user_id=user.id, slug="workday", alarm=None, icon=None),
+            DayTemplateEntity(user_id=user.id, slug="weekday", alarm=None, icon=None),
+            DayTemplateEntity(user_id=user.id, slug="weekend", alarm=None, icon=None),
         ]
-        
+
         # Insert all templates using insert_many for efficiency
         await day_template_repo.insert_many(*default_templates)
 
@@ -135,4 +138,3 @@ fastapi_users = FastAPIUsers[User, UUID](
 
 # Current user dependencies
 current_active_user = fastapi_users.current_user(active=True)
-

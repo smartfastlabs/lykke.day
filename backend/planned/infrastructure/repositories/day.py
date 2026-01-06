@@ -3,7 +3,7 @@ from uuid import UUID
 
 from planned.domain import value_objects
 from planned.domain.entities import DayEntity
-from planned.infrastructure import data_objects
+from planned.domain.entities.day_template import DayTemplateEntity
 from planned.infrastructure.database.tables import days_tbl
 
 from .base import BaseQuery, UserScopedBaseRepository
@@ -108,9 +108,9 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                 )
 
                 template_data = filter_init_false_fields(
-                    template_data, data_objects.DayTemplate
+                    template_data, DayTemplateEntity
                 )
-                data["template"] = data_objects.DayTemplate(**template_data)
+                data["template"] = DayTemplateEntity(**template_data)
 
         # Handle alarm - it comes as a dict from JSONB, need to convert to value object
         if data.get("alarm"):

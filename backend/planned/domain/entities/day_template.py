@@ -2,15 +2,21 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from planned.core.exceptions import DomainError, NotFoundError
 from planned.domain import value_objects
-from planned.domain.entities.base import BaseEntityObject
+from planned.domain.value_objects.update import DayTemplateUpdateObject
+
+from .base import BaseEntityObject
+
+if TYPE_CHECKING:
+    from planned.domain.events.day_template_events import DayTemplateUpdatedEvent
 
 
 @dataclass(kw_only=True)
-class DayTemplate(BaseEntityObject):
+class DayTemplateEntity(BaseEntityObject[DayTemplateUpdateObject, "DayTemplateUpdatedEvent"]):
     user_id: UUID
     slug: str
     alarm: value_objects.Alarm | None = None
@@ -32,9 +38,9 @@ class DayTemplate(BaseEntityObject):
         name = f"{user_id}:{slug}"
         return uuid.uuid5(namespace, name)
 
-    def _copy_with_routine_ids(self, routine_ids: list[UUID]) -> DayTemplate:
+    def _copy_with_routine_ids(self, routine_ids: list[UUID]) -> DayTemplateEntity:
         """Return a copy of this day template with updated routine_ids."""
-        return DayTemplate(
+        return DayTemplateEntity(
             id=self.id,
             user_id=self.user_id,
             slug=self.slug,
@@ -43,7 +49,7 @@ class DayTemplate(BaseEntityObject):
             routine_ids=routine_ids,
         )
 
-    def add_routine(self, routine_id: UUID) -> DayTemplate:
+    def add_routine(self, routine_id: UUID) -> DayTemplateEntity:
         """Attach a routine to the day template, enforcing uniqueness."""
         if routine_id in self.routine_ids:
             raise DomainError("Routine already attached to day template")
@@ -60,7 +66,7 @@ class DayTemplate(BaseEntityObject):
         )
         return updated
 
-    def remove_routine(self, routine_id: UUID) -> DayTemplate:
+    def remove_routine(self, routine_id: UUID) -> DayTemplateEntity:
         """Detach a routine from the day template."""
         if routine_id not in self.routine_ids:
             raise NotFoundError("Routine not found in day template")
@@ -78,3 +84,4 @@ class DayTemplate(BaseEntityObject):
             )
         )
         return updated
+

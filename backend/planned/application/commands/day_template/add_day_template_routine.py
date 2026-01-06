@@ -3,13 +3,13 @@
 from uuid import UUID
 
 from planned.application.commands.base import BaseCommandHandler
-from planned.domain import data_objects
+from planned.domain.entities.day_template import DayTemplateEntity
 
 
 class AddDayTemplateRoutineHandler(BaseCommandHandler):
     """Attach a routine to a day template."""
 
-    async def run(self, day_template_id: UUID, routine_id: UUID) -> data_objects.DayTemplate:
+    async def run(self, day_template_id: UUID, routine_id: UUID) -> DayTemplateEntity:
         """Attach a routine to the day template.
 
         Args:

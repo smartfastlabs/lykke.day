@@ -1,11 +1,16 @@
 """Base classes for CQRS queries."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 from uuid import UUID
 
 from planned.application.unit_of_work import ReadOnlyRepositories
+
+if TYPE_CHECKING:
+    from planned.domain.entities.day_template import DayTemplateEntity
 
 # Query type and result type
 QueryT = TypeVar("QueryT", bound="Query")
@@ -54,7 +59,7 @@ class QueryHandler(ABC, Generic[QueryT, ResultT]):
             def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
                 self._ro_repos = ro_repos
 
-            async def run(self, user_id: UUID, template_id: UUID) -> "data_objects.DayTemplate":
+            async def run(self, user_id: UUID, template_id: UUID) -> "DayTemplateEntity":
                 return await self._ro_repos.day_template_ro_repo.get(template_id)
     """
 
