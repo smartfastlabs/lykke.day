@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from planned.presentation.workers.client import enqueue_example_task
+from planned.presentation.workers.tasks import example_triggered_task
 
 router = APIRouter()
 
@@ -20,6 +20,6 @@ async def trigger_example_task(message: str = "Hello from API") -> dict[str, str
     Returns:
         A confirmation that the task was enqueued.
     """
-    await enqueue_example_task(message=message)
+    await example_triggered_task.kiq(message=message)  # type: ignore[call-overload]
     return {"status": "enqueued", "message": message}
 
