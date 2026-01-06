@@ -1,7 +1,8 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { Component, Show, createResource, createSignal } from "solid-js";
-import SettingsPage, { ActionButton } from "@/components/shared/settingsPage";
+import DetailPage from "@/components/shared/detailPage";
 import TaskDefinitionForm from "@/components/taskDefinitions/form";
+import TaskDefinitionPreview from "@/components/taskDefinitions/preview";
 import { taskDefinitionAPI } from "@/utils/api";
 import { TaskDefinition } from "@/types/api";
 
@@ -58,37 +59,32 @@ const TaskDefinitionDetailPage: Component = () => {
     }
   };
 
-  const actionButtons: ActionButton[] = [
-    {
-      label: "Delete",
-      onClick: handleDelete,
-    },
-  ];
-
   return (
-    <SettingsPage
-      heading="Edit Task Definition"
-      actionButtons={actionButtons}
-      bottomLink={{ label: "Back to Task Definitions", url: "/settings/task-definitions" }}
+    <Show
+      when={taskDefinition()}
+      fallback={<div class="text-center text-gray-500 py-8">Loading...</div>}
     >
-      <Show
-        when={taskDefinition()}
-        fallback={<div class="text-center text-gray-500 py-8">Loading...</div>}
-      >
-        {(current) => (
-          <div class="flex flex-col items-center justify-center px-6">
-            <div class="w-full max-w-sm space-y-6">
-              <TaskDefinitionForm
-                initialData={current()}
-                onSubmit={handleUpdate}
-                isLoading={isLoading()}
-                error={error()}
-              />
+      {(current) => (
+        <DetailPage
+          heading="Task Definition"
+          bottomLink={{ label: "Back to Task Definitions", url: "/settings/task-definitions" }}
+          preview={<TaskDefinitionPreview taskDefinition={current()} />}
+          edit={
+            <div class="flex flex-col items-center justify-center px-6 py-8">
+              <div class="w-full max-w-sm space-y-6">
+                <TaskDefinitionForm
+                  initialData={current()}
+                  onSubmit={handleUpdate}
+                  isLoading={isLoading()}
+                  error={error()}
+                />
+              </div>
             </div>
-          </div>
-        )}
-      </Show>
-    </SettingsPage>
+          }
+          onDelete={handleDelete}
+        />
+      )}
+    </Show>
   );
 };
 

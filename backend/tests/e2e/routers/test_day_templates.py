@@ -239,7 +239,10 @@ async def test_add_duplicate_routine_to_day_template(authenticated_client):
     from planned.domain.entities import RoutineEntity
     from planned.domain.value_objects.routine import RoutineSchedule
     from planned.domain.value_objects.task import TaskCategory, TaskFrequency
-    from planned.infrastructure.repositories import DayTemplateRepository, RoutineRepository
+    from planned.infrastructure.repositories import (
+        DayTemplateRepository,
+        RoutineRepository,
+    )
 
     routine_repo = RoutineRepository(user_id=user.id)
     routine = RoutineEntity(
@@ -339,4 +342,3 @@ async def test_remove_nonexistent_routine_from_day_template(authenticated_client
     )
 
     assert response.status_code == 404
-
