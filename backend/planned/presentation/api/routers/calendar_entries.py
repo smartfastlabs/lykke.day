@@ -14,6 +14,7 @@ router = APIRouter()
 
 
 @router.get("/today/", response_model=list[CalendarEntrySchema])
+@router.get("/today", response_model=list[CalendarEntrySchema])
 async def today(
     list_calendar_entries_handler: Annotated[
         SearchCalendarEntriesHandler, Depends(get_list_calendar_entries_handler)

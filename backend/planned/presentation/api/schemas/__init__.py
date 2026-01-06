@@ -8,7 +8,13 @@ from .day import DaySchema, DayUpdateSchema
 from .day_context import DayContextSchema
 from .day_template import DayTemplateSchema, DayTemplateUpdateSchema
 from .push_subscription import PushSubscriptionSchema
-from .routine import RoutineCreateSchema, RoutineSchema, RoutineUpdateSchema
+from .routine import (
+    RoutineCreateSchema,
+    RoutineSchema,
+    RoutineTaskCreateSchema,
+    RoutineTaskUpdateSchema,
+    RoutineUpdateSchema,
+)
 from .task import TaskScheduleSchema, TaskSchema
 from .task_definition import TaskDefinitionSchema, TaskDefinitionUpdateSchema
 
@@ -24,6 +30,8 @@ TaskSchema.model_rebuild()
 TaskDefinitionUpdateSchema.model_rebuild()
 DayContextSchema.model_rebuild()
 RoutineSchema.model_rebuild()
+RoutineTaskCreateSchema.model_rebuild()
+RoutineTaskUpdateSchema.model_rebuild()
 RoutineUpdateSchema.model_rebuild()
 
 __all__ = [
@@ -40,6 +48,8 @@ __all__ = [
     "PushSubscriptionSchema",
     "RoutineCreateSchema",
     "RoutineSchema",
+    "RoutineTaskCreateSchema",
+    "RoutineTaskUpdateSchema",
     "RoutineUpdateSchema",
     "TaskDefinitionSchema",
     "TaskDefinitionUpdateSchema",

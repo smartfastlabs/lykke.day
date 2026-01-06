@@ -81,8 +81,8 @@ async def test_get_routine_not_found(authenticated_client):
 
 
 @pytest.mark.asyncio
-async def test_create_routine_not_allowed(authenticated_client):
-    """Test that creating a routine is not allowed (read-only router)."""
+async def test_create_routine(authenticated_client):
+    """Test creating a routine via router."""
     client, user = await authenticated_client()
 
     routine_data = {
@@ -96,13 +96,12 @@ async def test_create_routine_not_allowed(authenticated_client):
 
     response = client.post("/routines/", json=routine_data)
 
-    # Should return 405 Method Not Allowed or 404
-    assert response.status_code in [404, 405]
+    assert response.status_code == 201
 
 
 @pytest.mark.asyncio
-async def test_update_routine_not_allowed(authenticated_client):
-    """Test that updating a routine is not allowed (read-only router)."""
+async def test_update_routine(authenticated_client):
+    """Test updating a routine via router."""
     client, user = await authenticated_client()
 
     # Create a routine via repository
@@ -129,13 +128,12 @@ async def test_update_routine_not_allowed(authenticated_client):
 
     response = client.put(f"/routines/{routine.id}", json=update_data)
 
-    # Should return 405 Method Not Allowed or 404
-    assert response.status_code in [404, 405]
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
-async def test_delete_routine_not_allowed(authenticated_client):
-    """Test that deleting a routine is not allowed (read-only router)."""
+async def test_delete_routine(authenticated_client):
+    """Test deleting a routine via router."""
     client, user = await authenticated_client()
 
     # Create a routine via repository
@@ -153,8 +151,7 @@ async def test_delete_routine_not_allowed(authenticated_client):
 
     response = client.delete(f"/routines/{routine.id}")
 
-    # Should return 405 Method Not Allowed or 404
-    assert response.status_code in [404, 405]
+    assert response.status_code in [204, 200]
 
 
 @pytest.mark.asyncio

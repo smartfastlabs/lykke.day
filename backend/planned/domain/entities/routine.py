@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+from uuid import UUID  # noqa: TC003
 
 from planned.core.exceptions import DomainError, NotFoundError
 from planned.domain import value_objects
@@ -13,8 +14,6 @@ from planned.domain.events.routine import (
 )
 
 if TYPE_CHECKING:
-    from uuid import UUID
-
     from planned.domain.events.base import DomainEvent
 
 
