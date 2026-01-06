@@ -1,31 +1,33 @@
 import { Router, useNavigate, Route } from "@solidjs/router";
 import { Title, MetaProvider } from "@solidjs/meta";
 import { Suspense, onMount, onCleanup } from "solid-js";
-import "./index.css";
+import "@/index.css";
 
-import { NotificationProvider } from "./providers/notifications";
-import { SheppardProvider } from "./providers/sheppard";
+import { NotificationProvider } from "@/providers/notifications";
+import { SheppardProvider } from "@/providers/sheppard";
 
-import Home from "./pages/home";
-import Login from "./pages/login";
-import Register from "./pages/register";
-import Welcome from "./pages/welcome";
-import DayView from "./pages/day/preview";
-import NavPage from "./pages/navigation/links";
-import CalendarPage from "./pages/navigation/calendar";
-import NotificationsPage from "./pages/notifications/index";
-import NotificationsSubscribePage from "./pages/notifications/subscribe";
-import SettingsPage from "./pages/settings/index";
-import DayTemplatesPage from "./pages/settings/day-templates/index";
-import NewDayTemplatePage from "./pages/settings/day-templates/new";
-import TaskDefinitionsPage from "./pages/settings/task-definitions/index";
-import NewTaskDefinitionPage from "./pages/settings/task-definitions/new";
-import RoutinesPage from "./pages/settings/routines/index";
-import NewRoutinePage from "./pages/settings/routines/new";
-import RoutineDetailPage from "./pages/settings/routines/detail";
-import NotFound from "./pages/not-found";
+import Home from "@/pages/home";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
+import Welcome from "@/pages/welcome";
+import DayView from "@/pages/day/preview";
+import NavPage from "@/pages/navigation/links";
+import CalendarPage from "@/pages/navigation/calendar";
+import NotificationsPage from "@/pages/notifications/index";
+import NotificationsSubscribePage from "@/pages/notifications/subscribe";
+import SettingsPage from "@/pages/settings/index";
+import DayTemplatesPage from "@/pages/settings/day-templates/index";
+import NewDayTemplatePage from "@/pages/settings/day-templates/new";
+import DayTemplateDetailPage from "@/pages/settings/day-templates/detail";
+import TaskDefinitionsPage from "@/pages/settings/task-definitions/index";
+import NewTaskDefinitionPage from "@/pages/settings/task-definitions/new";
+import TaskDefinitionDetailPage from "@/pages/settings/task-definitions/detail";
+import RoutinesPage from "@/pages/settings/routines/index";
+import NewRoutinePage from "@/pages/settings/routines/new";
+import RoutineDetailPage from "@/pages/settings/routines/detail";
+import NotFound from "@/pages/not-found";
 
-import "./utils/icons";
+import "@/utils/icons";
 
 function NavigationHandler() {
   const navigate = useNavigate();
@@ -94,12 +96,20 @@ export default function App() {
           component={NewDayTemplatePage}
         />
         <Route
+          path="/settings/day-templates/:id"
+          component={DayTemplateDetailPage}
+        />
+        <Route
           path="/settings/task-definitions"
           component={TaskDefinitionsPage}
         />
         <Route
           path="/settings/task-definitions/new"
           component={NewTaskDefinitionPage}
+        />
+        <Route
+          path="/settings/task-definitions/:id"
+          component={TaskDefinitionDetailPage}
         />
         <Route path="/settings/routines" component={RoutinesPage} />
         <Route path="/settings/routines/new" component={NewRoutinePage} />

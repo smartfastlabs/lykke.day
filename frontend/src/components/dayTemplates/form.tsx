@@ -6,11 +6,12 @@ interface FormProps {
   onSubmit: (template: Partial<DayTemplate>) => Promise<void>;
   isLoading?: boolean;
   error?: string;
+  initialData?: DayTemplate;
 }
 
 const DayTemplateForm: Component<FormProps> = (props) => {
-  const [slug, setSlug] = createSignal("");
-  const [icon, setIcon] = createSignal("");
+  const [slug, setSlug] = createSignal(props.initialData?.slug ?? "");
+  const [icon, setIcon] = createSignal(props.initialData?.icon ?? "");
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
@@ -22,6 +23,8 @@ const DayTemplateForm: Component<FormProps> = (props) => {
 
     await props.onSubmit(template);
   };
+
+  const isUpdate = !!props.initialData;
 
   return (
     <form onSubmit={handleSubmit} class="space-y-6">
@@ -44,8 +47,8 @@ const DayTemplateForm: Component<FormProps> = (props) => {
 
       <SubmitButton
         isLoading={props.isLoading}
-        loadingText="Creating..."
-        text="Create Day Template"
+        loadingText={isUpdate ? "Updating..." : "Creating..."}
+        text={isUpdate ? "Update Day Template" : "Create Day Template"}
       />
     </form>
   );

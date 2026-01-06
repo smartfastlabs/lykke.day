@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"]
+    },
     // General
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
