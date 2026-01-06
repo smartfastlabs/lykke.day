@@ -16,7 +16,11 @@ from planned.application.queries.day_template import (
 from planned.domain import value_objects
 from planned.domain.entities import UserEntity
 from planned.infrastructure import data_objects
-from planned.presentation.api.schemas import DayTemplateSchema, DayTemplateUpdateSchema
+from planned.presentation.api.schemas import (
+    DayTemplateCreateSchema,
+    DayTemplateSchema,
+    DayTemplateUpdateSchema,
+)
 from planned.presentation.api.schemas.mappers import map_day_template_to_schema
 
 from .dependencies.commands.day_template import (
@@ -72,7 +76,7 @@ async def list_day_templates(
 
 @router.post("/", response_model=DayTemplateSchema)
 async def create_day_template(
-    day_template_data: DayTemplateSchema,
+    day_template_data: DayTemplateCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
     create_day_template_handler: Annotated[
         CreateDayTemplateHandler, Depends(get_create_day_template_handler)
@@ -93,7 +97,6 @@ async def create_day_template(
         )
 
     day_template = data_objects.DayTemplate(
-        id=day_template_data.id if day_template_data.id else None,  # type: ignore[arg-type]
         user_id=user.id,
         slug=day_template_data.slug,
         alarm=alarm,

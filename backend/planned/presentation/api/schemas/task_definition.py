@@ -7,13 +7,18 @@ from planned.domain.value_objects.task import TaskType
 from .base import BaseEntitySchema, BaseSchema
 
 
-class TaskDefinitionSchema(BaseEntitySchema):
-    """API schema for TaskDefinition entity."""
+class TaskDefinitionCreateSchema(BaseSchema):
+    """API schema for creating a TaskDefinition entity."""
 
-    user_id: UUID
     name: str
     description: str
     type: TaskType
+
+
+class TaskDefinitionSchema(TaskDefinitionCreateSchema, BaseEntitySchema):
+    """API schema for TaskDefinition entity."""
+
+    user_id: UUID
 
 
 class TaskDefinitionUpdateSchema(BaseSchema):
@@ -22,4 +27,3 @@ class TaskDefinitionUpdateSchema(BaseSchema):
     name: str | None = None
     description: str | None = None
     type: TaskType | None = None
-

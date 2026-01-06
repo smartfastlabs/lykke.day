@@ -1,11 +1,11 @@
 """Command to update an existing task definition."""
 
-from dataclasses import asdict
 from uuid import UUID
 
 from planned.application.commands.base import BaseCommandHandler
-from planned.infrastructure import data_objects
+from planned.domain.events.task_events import TaskDefinitionUpdatedEvent
 from planned.domain.value_objects import TaskDefinitionUpdateObject
+from planned.infrastructure import data_objects
 
 
 class UpdateTaskDefinitionHandler(BaseCommandHandler):
@@ -32,13 +32,11 @@ class UpdateTaskDefinitionHandler(BaseCommandHandler):
             # Get the existing task definition
             task_definition = await uow.task_definition_ro_repo.get(task_definition_id)
 
-            # Convert update object to dict and filter out None values
-            update_dict = asdict(update_data)
-            update_dict = {k: v for k, v in update_dict.items() if v is not None}
+            # Apply updates using domain method (adds EntityUpdatedEvent)
+            task_definition = task_definition.apply_update(
+                update_data, TaskDefinitionUpdatedEvent
+            )
 
-            # Apply updates using clone
-            updated_task_definition = task_definition.clone(**update_dict)
-
-            # Add to UoW for saving
-            uow.add(updated_task_definition)
-            return updated_task_definition
+            # Add entity to UoW for saving
+            uow.add(task_definition)
+            return task_definition

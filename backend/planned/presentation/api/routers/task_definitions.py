@@ -21,6 +21,7 @@ from planned.infrastructure.data.default_task_definitions import (
     DEFAULT_TASK_DEFINITIONS,
 )
 from planned.presentation.api.schemas import (
+    TaskDefinitionCreateSchema,
     TaskDefinitionSchema,
     TaskDefinitionUpdateSchema,
 )
@@ -80,7 +81,7 @@ async def list_task_definitions(
 
 @router.post("/", response_model=TaskDefinitionSchema)
 async def create_task_definition(
-    task_definition_data: TaskDefinitionSchema,
+    task_definition_data: TaskDefinitionCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
     create_task_definition_handler: Annotated[
         CreateTaskDefinitionHandler, Depends(get_create_task_definition_handler)

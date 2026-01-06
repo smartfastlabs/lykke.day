@@ -1,10 +1,10 @@
 """Command to update an existing day template."""
 
-from dataclasses import asdict
 from uuid import UUID
 
 from planned.application.commands.base import BaseCommandHandler
 from planned.domain import data_objects
+from planned.domain.events.day_template_events import DayTemplateUpdatedEvent
 from planned.domain.value_objects import DayTemplateUpdateObject
 
 
@@ -32,13 +32,11 @@ class UpdateDayTemplateHandler(BaseCommandHandler):
             # Get the existing day template
             day_template = await uow.day_template_ro_repo.get(day_template_id)
 
-            # Convert update object to dict and filter out None values
-            update_dict = asdict(update_data)
-            update_dict = {k: v for k, v in update_dict.items() if v is not None}
+            # Apply updates using domain method (adds EntityUpdatedEvent)
+            day_template = day_template.apply_update(
+                update_data, DayTemplateUpdatedEvent
+            )
 
-            # Apply updates using clone
-            updated_day_template = day_template.clone(**update_dict)
-
-            # Add to UoW for saving
-            uow.add(updated_day_template)
-            return updated_day_template
+            # Add entity to UoW for saving
+            uow.add(day_template)
+            return day_template

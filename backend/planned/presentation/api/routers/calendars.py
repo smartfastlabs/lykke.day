@@ -15,7 +15,11 @@ from planned.application.queries.calendar import (
 )
 from planned.domain import value_objects
 from planned.domain.entities import CalendarEntity, UserEntity
-from planned.presentation.api.schemas import CalendarSchema, CalendarUpdateSchema
+from planned.presentation.api.schemas import (
+    CalendarCreateSchema,
+    CalendarSchema,
+    CalendarUpdateSchema,
+)
 from planned.presentation.api.schemas.mappers import map_calendar_to_schema
 
 from .dependencies.commands.calendar import (
@@ -71,7 +75,7 @@ async def list_calendars(
 
 @router.post("/", response_model=CalendarSchema)
 async def create_calendar(
-    calendar_data: CalendarSchema,
+    calendar_data: CalendarCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
     create_calendar_handler: Annotated[
         CreateCalendarHandler, Depends(get_create_calendar_handler)
@@ -80,7 +84,6 @@ async def create_calendar(
     """Create a new calendar."""
     # Convert schema to entity (id is optional for create, entity will generate it if None)
     calendar = CalendarEntity(
-        id=calendar_data.id if calendar_data.id else None,  # type: ignore[arg-type]
         user_id=user.id,
         name=calendar_data.name,
         auth_token_id=calendar_data.auth_token_id,
