@@ -31,10 +31,10 @@ class RoutineTaskRemovedEvent(DomainEvent):
     """Raised when a task is detached from a routine."""
 
     routine_id: UUID
-    task_definition_id: UUID
+    routine_task_id: UUID  # RoutineTask.id
+    task_definition_id: UUID | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
 class RoutineUpdatedEvent(EntityUpdatedEvent[RoutineUpdateObject]):
     """Event raised when a routine is updated via apply_update()."""
-

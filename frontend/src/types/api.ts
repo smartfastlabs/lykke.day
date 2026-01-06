@@ -238,6 +238,7 @@ export interface RoutineSchedule {
   day_number?: number | null; // Day of month (1-31) for MONTHLY, day of year (1-365) for YEARLY
 }
 export interface RoutineTask {
+  id?: string;
   task_definition_id: string;
   name?: string | null;
   schedule?: TaskSchedule | null;

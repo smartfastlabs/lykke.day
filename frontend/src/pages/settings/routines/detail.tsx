@@ -26,6 +26,7 @@ const RoutineDetailPage: Component = () => {
   const [selectedTaskDefinitionId, setSelectedTaskDefinitionId] = createSignal<string | null>(
     null
   );
+  const [selectedRoutineTaskId, setSelectedRoutineTaskId] = createSignal<string | null>(null);
   const [selectedAction, setSelectedAction] = createSignal<"add" | "edit" | null>(null);
   const [taskName, setTaskName] = createSignal("");
   const [scheduleInitial, setScheduleInitial] = createSignal<TaskSchedule | null>(null);
@@ -70,6 +71,7 @@ const RoutineDetailPage: Component = () => {
 
   const resetTaskForm = () => {
     setSelectedTaskDefinitionId(null);
+    setSelectedRoutineTaskId(null);
     setSelectedAction(null);
     setScheduleInitial(null);
     setTaskName("");
@@ -86,6 +88,7 @@ const RoutineDetailPage: Component = () => {
 
   const openEditTask = (task: RoutineTask) => {
     setSelectedTaskDefinitionId(task.task_definition_id);
+    setSelectedRoutineTaskId(task.id!);
     setSelectedAction("edit");
     setTaskName(task.name ?? "");
     setScheduleInitial(task.schedule ?? null);
@@ -96,6 +99,7 @@ const RoutineDetailPage: Component = () => {
     const current = routine();
     const action = selectedAction();
     const taskDefinitionId = selectedTaskDefinitionId();
+    const routineTaskId = selectedRoutineTaskId();
     if (!current || !current.id || !action || !taskDefinitionId) return;
 
     setIsTaskLoading(true);
@@ -111,7 +115,11 @@ const RoutineDetailPage: Component = () => {
           schedule,
         });
       } else {
-        updated = await routineAPI.updateTask(current.id, taskDefinitionId, {
+        if (!routineTaskId) {
+          setActionError("Routine task ID is required for update");
+          return;
+        }
+        updated = await routineAPI.updateTask(current.id, routineTaskId, {
           name: nameValue ?? undefined,
           schedule,
         });
@@ -127,14 +135,14 @@ const RoutineDetailPage: Component = () => {
     }
   };
 
-  const handleRemoveTask = async (taskDefinitionId: string) => {
+  const handleRemoveTask = async (routineTaskId: string) => {
     const current = routine();
     if (!current?.id) return;
 
     setIsTaskLoading(true);
     setActionError("");
     try {
-      const updated = await routineAPI.removeTask(current.id, taskDefinitionId);
+      const updated = await routineAPI.removeTask(current.id, routineTaskId);
       mutateRoutine(updated);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to remove task";

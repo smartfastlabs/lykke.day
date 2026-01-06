@@ -301,15 +301,15 @@ export const routineAPI = {
     }),
   updateTask: (
     routineId: string,
-    taskDefinitionId: string,
+    routineTaskId: string,
     payload: { name?: string | null; schedule?: TaskSchedule | null }
   ): Promise<Routine> =>
-    fetchData<Routine>(`/api/routines/${routineId}/tasks/${taskDefinitionId}`, {
+    fetchData<Routine>(`/api/routines/${routineId}/tasks/${routineTaskId}`, {
       method: "PUT",
       body: JSON.stringify(payload),
     }),
-  removeTask: (routineId: string, taskDefinitionId: string): Promise<Routine> =>
-    fetchData<Routine>(`/api/routines/${routineId}/tasks/${taskDefinitionId}`, {
+  removeTask: (routineId: string, routineTaskId: string): Promise<Routine> =>
+    fetchData<Routine>(`/api/routines/${routineId}/tasks/${routineTaskId}`, {
       method: "DELETE",
     }),
 };

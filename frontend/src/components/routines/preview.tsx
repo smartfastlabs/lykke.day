@@ -25,13 +25,7 @@ interface RoutinePreviewProps {
 const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
   const attachedTasks = createMemo(() => props.routine.tasks ?? []);
 
-  const attachedTaskIds = createMemo(
-    () => new Set(attachedTasks().map((task) => task.task_definition_id))
-  );
-
-  const availableDefinitions = createMemo(() =>
-    (props.taskDefinitions ?? []).filter((def) => !attachedTaskIds().has(def.id!))
-  );
+  const availableDefinitions = createMemo(() => props.taskDefinitions ?? []);
 
   const getTaskDefinitionName = (taskDefinitionId: string) =>
     props.taskDefinitions?.find((def) => def.id === taskDefinitionId)?.name ?? taskDefinitionId;
@@ -117,7 +111,7 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                         <Show when={props.onRemoveTask}>
                           <button
                             class="text-sm text-red-600 hover:text-red-700"
-                            onClick={() => props.onRemoveTask?.(task.task_definition_id)}
+                            onClick={() => props.onRemoveTask?.(task.id!)}
                             disabled={props.isLoading}
                           >
                             Remove
@@ -136,7 +130,7 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
               <div class="text-sm font-medium text-neutral-900">Add task</div>
               <Show
                 when={availableDefinitions().length > 0}
-                fallback={<div class="text-sm text-neutral-500">All tasks attached.</div>}
+                fallback={<div class="text-sm text-neutral-500">No task definitions available.</div>}
               >
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <For each={availableDefinitions()}>

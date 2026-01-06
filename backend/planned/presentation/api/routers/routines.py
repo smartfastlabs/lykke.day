@@ -158,12 +158,12 @@ async def add_routine_task(
 
 
 @router.put(
-    "/{uuid}/tasks/{task_definition_id}",
+    "/{uuid}/tasks/{routine_task_id}",
     response_model=RoutineSchema,
 )
 async def update_routine_task(
     uuid: UUID,
-    task_definition_id: UUID,
+    routine_task_id: UUID,
     routine_task_update: RoutineTaskUpdateSchema,
     update_routine_task_handler: Annotated[
         UpdateRoutineTaskHandler, Depends(get_update_routine_task_handler)
@@ -173,7 +173,10 @@ async def update_routine_task(
     updated = await update_routine_task_handler.run(
         routine_id=uuid,
         task_update=RoutineTask(
-            task_definition_id=task_definition_id,
+            id=routine_task_id,
+            task_definition_id=UUID(
+                "00000000-0000-0000-0000-000000000000"
+            ),  # Will be preserved from existing task
             name=routine_task_update.name,
             schedule=routine_task_update.schedule,
         ),
@@ -182,18 +185,18 @@ async def update_routine_task(
 
 
 @router.delete(
-    "/{uuid}/tasks/{task_definition_id}",
+    "/{uuid}/tasks/{routine_task_id}",
     response_model=RoutineSchema,
 )
 async def remove_routine_task(
     uuid: UUID,
-    task_definition_id: UUID,
+    routine_task_id: UUID,
     remove_routine_task_handler: Annotated[
         RemoveRoutineTaskHandler, Depends(get_remove_routine_task_handler)
     ],
 ) -> RoutineSchema:
-    """Detach a task definition from a routine."""
+    """Detach a routine task from a routine by RoutineTask.id."""
     updated = await remove_routine_task_handler.run(
-        routine_id=uuid, task_definition_id=task_definition_id
+        routine_id=uuid, routine_task_id=routine_task_id
     )
     return map_routine_to_schema(updated)

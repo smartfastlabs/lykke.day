@@ -19,7 +19,7 @@ class UpdateRoutineTaskHandler(BaseCommandHandler):
 
         Args:
             routine_id: ID of the routine to update.
-            task_update: RoutineTask containing updates (matched by task_definition_id).
+            task_update: RoutineTask containing updates (matched by RoutineTask.id).
 
         Returns:
             The updated routine entity.
@@ -29,4 +29,3 @@ class UpdateRoutineTaskHandler(BaseCommandHandler):
             updated_routine = routine.update_task(task_update)
             uow.add(updated_routine)
             return updated_routine
-

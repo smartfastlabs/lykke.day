@@ -1,7 +1,7 @@
 from enum import Enum
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .task import TaskFrequency, TaskSchedule
 
@@ -25,6 +25,7 @@ class RoutineSchedule(BaseModel):
 
 
 class RoutineTask(BaseModel):
+    id: UUID = Field(default_factory=uuid4)
     task_definition_id: UUID
     name: str | None = None
     schedule: TaskSchedule | None = None
