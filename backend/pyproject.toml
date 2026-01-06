@@ -36,6 +36,8 @@ passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 bcrypt = "4.3.0" # 5.0 has a bug that doesn't work with pathlib
 jinja2 = "^3.1.6"
 blinker = "^1.9.0"
+taskiq = "^0.12.0"
+taskiq-redis = "^0.2.0"
 yt-dlp = "^2025.11.12"
 pvporcupine = "^3.0.0"
 pvcheetah = "^2.3.0"
@@ -137,6 +139,10 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "planned.sidecars.*"
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "taskiq_redis.*"
+ignore_missing_imports = true
 
 
 

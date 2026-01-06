@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DATA_PATH: str = "../data"
     DATABASE_URL: str = "postgresql+psycopg://localhost/planned"
+    REDIS_URL: str = "redis://localhost:6379"
     SESSION_SECRET: str = ""
     ANTHROPIC_API_KEY: str = ""
     PRINTER_NAME: str = "HP_OfficeJet_Pro_9010_series"

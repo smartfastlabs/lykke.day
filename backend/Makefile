@@ -41,6 +41,9 @@ migrate-create:
 serve: docker-up
 	DATABASE_URL=postgresql+psycopg://planned:password@localhost:5432/planned_dev poetry run uvicorn planned.app:app --host 0.0.0.0 --port 8080 --reload
 
+worker: docker-up
+	REDIS_URL=redis://localhost:6379 DATABASE_URL=postgresql+psycopg://planned:password@localhost:5432/planned_dev poetry run taskiq worker planned.infrastructure.workers.config.broker
+
 test: docker-up
 	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test ENV_FILE=.env.test poetry run pytest tests --vcr-record=once
 

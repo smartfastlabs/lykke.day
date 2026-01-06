@@ -22,6 +22,12 @@ services:
       -c shared_buffers=256MB
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: planned_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
 volumes:
   postgres_data:
-
