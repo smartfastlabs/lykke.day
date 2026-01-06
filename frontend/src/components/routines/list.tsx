@@ -19,5 +19,3 @@ const RoutineList: Component<ListProps> = (props) => {
 };
 
 export default RoutineList;
-
-

@@ -2,7 +2,6 @@ import { useNavigate } from "@solidjs/router";
 import { Component, Show, createResource } from "solid-js";
 import Page from "../../../components/shared/layout/page";
 import { routineAPI } from "../../../utils/api";
-import { Routine } from "../../../types/api";
 import RoutineList from "../../../components/routines/list";
 import { Icon } from "../../../components/shared/icon";
 
@@ -10,10 +9,9 @@ const RoutinesPage: Component = () => {
   const navigate = useNavigate();
   const [routines] = createResource(routineAPI.getAll);
 
-  const onClick = (routine: Routine) => {
-    if (routine.id) {
-      navigate(`/settings/routines/${routine.id}`);
-    }
+  const handleNavigate = (id?: string) => {
+    if (!id) return;
+    navigate(`/settings/routines/${id}`);
   };
 
   return (
@@ -33,7 +31,10 @@ const RoutinesPage: Component = () => {
               <Icon key="plus" class="w-5 h-5" />
             </button>
           </div>
-          <RoutineList routines={routines()!} onItemClick={onClick} />
+          <RoutineList
+            routines={routines()!}
+            onItemClick={(routine) => handleNavigate(routine.id)}
+          />
         </div>
       </Show>
     </Page>
@@ -41,5 +42,3 @@ const RoutinesPage: Component = () => {
 };
 
 export default RoutinesPage;
-
-

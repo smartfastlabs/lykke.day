@@ -11,13 +11,13 @@ from loguru import logger
 from planned.application.events import register_all_handlers
 from planned.core.config import settings
 from planned.core.exceptions import BaseError
+from planned.core.utils import youtube
 from planned.infrastructure.auth import (
     UserCreate,
     UserRead,
     auth_backend,
     fastapi_users,
 )
-from planned.core.utils import youtube
 from planned.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
@@ -51,7 +51,10 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
         uow_factory=uow_factory,
     )
     from planned.application.events.handlers.base import DomainEventHandler
-    logger.info(f"Registered {len(DomainEventHandler._handler_classes)} domain event handler class(es)")
+
+    logger.info(
+        f"Registered {len(DomainEventHandler._handler_classes)} domain event handler class(es)"
+    )
 
     yield  # type: ignore
 
@@ -64,6 +67,7 @@ app = FastAPI(
     description="API for managing calendar events",
     debug=settings.DEBUG,
     lifespan=init_lifespan,
+    redirect_slashes=False,
 )
 
 

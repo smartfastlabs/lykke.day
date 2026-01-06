@@ -9,7 +9,11 @@ import {
   Routine,
   PushSubscription,
 } from "../types/api";
-import type { ApiResponse, ApiError, PaginatedResponse } from "../types/api/utils";
+import type {
+  ApiResponse,
+  ApiError,
+  PaginatedResponse,
+} from "../types/api/utils";
 
 // Custom error class for API errors
 export class ApiRequestError extends Error {
@@ -37,12 +41,17 @@ async function fetchJSON<T>(
   url: string,
   options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
-  const { suppressError = false, suppressAuthRedirect = false, headers = {}, ...fetchOptions } = options;
-  
+  const {
+    suppressError = false,
+    suppressAuthRedirect = false,
+    headers = {},
+    ...fetchOptions
+  } = options;
+
   const mergedHeaders = { ...DEFAULT_HEADERS, ...headers };
 
-  const response = await fetch(url, { 
-    ...fetchOptions, 
+  const response = await fetch(url, {
+    ...fetchOptions,
     headers: mergedHeaders,
     credentials: "include",
   });
@@ -52,7 +61,10 @@ async function fetchJSON<T>(
     if (!suppressError) {
       globalNotifications.addError("Not logged in");
     }
-    if (!suppressAuthRedirect && !["/login", "/register"].includes(window.location.pathname)) {
+    if (
+      !suppressAuthRedirect &&
+      !["/login", "/register"].includes(window.location.pathname)
+    ) {
       window.location.href = "/login";
     }
     throw new ApiRequestError("Unauthorized", 401);
@@ -72,11 +84,11 @@ async function fetchJSON<T>(
   if (!response.ok) {
     const errorBody = body as ApiError;
     const errorMessage = errorBody.detail || "Unknown error";
-    
+
     if (!suppressError) {
       globalNotifications.addError(`Error: ${errorMessage}`);
     }
-    
+
     throw new ApiRequestError(errorMessage, response.status, errorBody.detail);
   }
 
@@ -88,7 +100,10 @@ async function fetchJSON<T>(
 }
 
 // Helper to extract data from response (throws on error)
-async function fetchData<T>(url: string, options: FetchOptions = {}): Promise<T> {
+async function fetchData<T>(
+  url: string,
+  options: FetchOptions = {}
+): Promise<T> {
   const response = await fetchJSON<T>(url, options);
   return response.data;
 }
@@ -109,8 +124,7 @@ interface EntityWithId {
 
 function createCrudMethods<T extends EntityWithId>(type: string) {
   return {
-    get: (id: string): Promise<T> => 
-      fetchData<T>(`/api/${type}/${id}`),
+    get: (id: string): Promise<T> => fetchData<T>(`/api/${type}/${id}/`),
 
     getAll: async (): Promise<T[]> => {
       const data = await fetchData<T[] | PaginatedResponse<T>>(`/api/${type}/`);
@@ -145,15 +159,13 @@ function createCrudMethods<T extends EntityWithId>(type: string) {
 export const eventAPI = {
   ...createCrudMethods<Event>("events"),
 
-  getTodays: (): Promise<Event[]> => 
-    fetchData<Event[]>("/api/events/today"),
+  getTodays: (): Promise<Event[]> => fetchData<Event[]>("/api/events/today"),
 };
 
 export const taskAPI = {
   ...createCrudMethods<Task>("tasks"),
 
-  getTodays: (): Promise<Task[]> => 
-    fetchData<Task[]>("/api/tasks/today"),
+  getTodays: (): Promise<Task[]> => fetchData<Task[]>("/api/tasks/today"),
 
   setTaskStatus: (task: Task, status: string): Promise<Task> =>
     fetchData<Task>(`/api/tasks/${task.date}/${task.id}/actions`, {
@@ -206,43 +218,43 @@ export const authAPI = {
 };
 
 export const alarmAPI = {
-  stopAll: (): Promise<void> => 
+  stopAll: (): Promise<void> =>
     fetchData<void>("/api/sheppard/stop-alarm", { method: "PUT" }),
 };
 
 export const dayAPI = {
-  getToday: (): Promise<DayContext> => 
+  getToday: (): Promise<DayContext> =>
     fetchData<DayContext>("/api/days/today/context"),
 
-  getTomorrow: (): Promise<DayContext> => 
+  getTomorrow: (): Promise<DayContext> =>
     fetchData<DayContext>("/api/days/tomorrow/context"),
 
-  getContext: (date: string): Promise<DayContext> => 
+  getContext: (date: string): Promise<DayContext> =>
     fetchData<DayContext>(`/api/days/${date}/context`),
 
-  scheduleToday: (): Promise<Day> => 
+  scheduleToday: (): Promise<Day> =>
     fetchData<Day>("/api/days/today/schedule", { method: "PUT" }),
 
-  getTemplates: (): Promise<DayTemplate[]> => 
+  getTemplates: (): Promise<DayTemplate[]> =>
     fetchData<DayTemplate[]>("/api/days/templates"),
 };
 
 export const planningAPI = {
-  scheduleToday: (): Promise<DayContext> => 
+  scheduleToday: (): Promise<DayContext> =>
     fetchData<DayContext>("/api/planning/schedule/today", { method: "PUT" }),
 
-  previewToday: (): Promise<DayContext> => 
+  previewToday: (): Promise<DayContext> =>
     fetchData<DayContext>("/api/planning/preview/today"),
 
-  previewTomorrow: (): Promise<DayContext> => 
+  previewTomorrow: (): Promise<DayContext> =>
     fetchData<DayContext>("/api/planning/preview/tomorrow"),
 };
 
 export const pushAPI = {
-  getSubscriptions: (): Promise<PushSubscription[]> => 
+  getSubscriptions: (): Promise<PushSubscription[]> =>
     fetchData<PushSubscription[]>("/api/push/subscriptions"),
 
-  deleteSubscription: (id: string): Promise<void> => 
+  deleteSubscription: (id: string): Promise<void> =>
     fetchData<void>(`/api/push/subscriptions/${id}`, { method: "DELETE" }),
 };
 
@@ -253,7 +265,7 @@ export const dayTemplateAPI = {
 export const taskDefinitionAPI = {
   ...createCrudMethods<TaskDefinition>("task-definitions"),
 
-  getAvailable: (): Promise<TaskDefinition[]> => 
+  getAvailable: (): Promise<TaskDefinition[]> =>
     fetchData<TaskDefinition[]>("/api/task-definitions/available"),
 
   bulkCreate: (taskDefinitions: TaskDefinition[]): Promise<TaskDefinition[]> =>

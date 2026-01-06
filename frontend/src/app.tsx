@@ -22,6 +22,7 @@ import TaskDefinitionsPage from "./pages/settings/task-definitions/index";
 import NewTaskDefinitionPage from "./pages/settings/task-definitions/new";
 import RoutinesPage from "./pages/settings/routines/index";
 import NewRoutinePage from "./pages/settings/routines/new";
+import RoutineDetailPage from "./pages/settings/routines/detail";
 import NotFound from "./pages/not-found";
 
 import "./utils/icons";
@@ -102,6 +103,7 @@ export default function App() {
         />
         <Route path="/settings/routines" component={RoutinesPage} />
         <Route path="/settings/routines/new" component={NewRoutinePage} />
+        <Route path="/settings/routines/:id" component={RoutineDetailPage} />
         <Route path="*" component={NotFound} />
       </Router>
     </SheppardProvider>
