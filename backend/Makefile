@@ -1,4 +1,4 @@
-.PHONY: serve test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db
+.PHONY: serve test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db migrate-data-to-prod
 
 # Docker management
 docker-up:
@@ -77,3 +77,17 @@ export-openapi:
 
 generate-types: export-openapi
 	poetry run python scripts/generate_ts_types.py
+
+# Data migration
+migrate-data-to-prod:
+	@if [ -z "$$DEST_DATABASE_URL" ]; then \
+		if [ -f .env.prod ] && grep -q '^PRODUCTION_MIGRATION_DB_URL=' .env.prod; then \
+			DEST_DATABASE_URL=$$(grep '^PRODUCTION_MIGRATION_DB_URL=' .env.prod | cut -d'=' -f2-) \
+			poetry run python scripts/migrate_data_to_production.py $(ARGS); \
+		else \
+			echo "Error: DEST_DATABASE_URL not set and PRODUCTION_MIGRATION_DB_URL not found in .env.prod"; \
+			exit 1; \
+		fi \
+	else \
+		poetry run python scripts/migrate_data_to_production.py $(ARGS); \
+	fi
