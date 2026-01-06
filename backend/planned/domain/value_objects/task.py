@@ -25,19 +25,78 @@ class TaskFrequency(str, Enum):
 
 
 class TaskCategory(str, Enum):
+    # Personal Care
     HYGIENE = "HYGIENE"
-    NUTRITION = "NUTRITION"
+    GROOMING = "GROOMING"
+    SLEEP = "SLEEP"
+    # Health & Fitness
     HEALTH = "HEALTH"
-    PET = "PET"
+    FITNESS = "FITNESS"
+    MEDICAL = "MEDICAL"
+    # Nutrition
+    NUTRITION = "NUTRITION"
+    COOKING = "COOKING"
+    # Home & Household
     HOUSE = "HOUSE"
+    CLEANING = "CLEANING"
+    MAINTENANCE = "MAINTENANCE"
+    ORGANIZATION = "ORGANIZATION"
+    # Work & Professional
+    WORK = "WORK"
+    MEETING = "MEETING"
+    PROFESSIONAL = "PROFESSIONAL"
+    # Social & Family
+    FAMILY = "FAMILY"
+    SOCIAL = "SOCIAL"
+    RELATIONSHIP = "RELATIONSHIP"
+    # Shopping & Errands
+    SHOPPING = "SHOPPING"
+    ERRAND = "ERRAND"
+    # Transportation
+    COMMUTE = "COMMUTE"
+    TRAVEL = "TRAVEL"
+    # Entertainment & Leisure
+    ENTERTAINMENT = "ENTERTAINMENT"
+    HOBBY = "HOBBY"
+    RECREATION = "RECREATION"
+    # Education & Learning
+    EDUCATION = "EDUCATION"
+    LEARNING = "LEARNING"
+    # Finance & Bills
+    FINANCE = "FINANCE"
+    BILLS = "BILLS"
+    # Technology & Digital
+    TECHNOLOGY = "TECHNOLOGY"
+    DIGITAL = "DIGITAL"
+    # Pet Care
+    PET = "PET"
+    # Other
+    PLANNING = "PLANNING"
+    ADMIN = "ADMIN"
 
 
 class TaskType(str, Enum):
     MEAL = "MEAL"
+    WORK = "WORK"
+    MEETING = "MEETING"
+    EXERCISE = "EXERCISE"
     EVENT = "EVENT"
+    SOCIAL = "SOCIAL"
     CHORE = "CHORE"
     ERRAND = "ERRAND"
+    SHOPPING = "SHOPPING"
+    PERSONAL_CARE = "PERSONAL_CARE"
     ACTIVITY = "ACTIVITY"
+    ENTERTAINMENT = "ENTERTAINMENT"
+    LEARNING = "LEARNING"
+    COMMUTE = "COMMUTE"
+    TRAVEL = "TRAVEL"
+    APPOINTMENT = "APPOINTMENT"
+    COMMUNICATION = "COMMUNICATION"
+    FINANCIAL = "FINANCIAL"
+    MAINTENANCE = "MAINTENANCE"
+    PLANNING = "PLANNING"
+    TECHNOLOGY = "TECHNOLOGY"
 
 
 class TaskStatus(str, Enum):
