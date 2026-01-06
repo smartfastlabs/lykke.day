@@ -106,33 +106,19 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/planning/routines": {
+    "/planning/routines/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Routines */
-        get: operations["list_routines_planning_routines_get"];
+        /**
+         * List Routines
+         * @description Get all routines for the current user.
+         */
+        get: operations["list_routines_planning_routines__get"];
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/planning/schedule/today": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Schedule Today */
-        put: operations["schedule_today_planning_schedule_today_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -147,7 +133,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Preview Today */
+        /**
+         * Preview Today
+         * @description Preview what today would look like if scheduled.
+         */
         get: operations["preview_today_planning_preview_today_get"];
         put?: never;
         post?: never;
@@ -164,9 +153,52 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Preview Tomorrow */
+        /**
+         * Preview Tomorrow
+         * @description Preview what tomorrow would look like if scheduled.
+         */
         get: operations["preview_tomorrow_planning_tomorrow_preview_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/planning/date/{date}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview Date
+         * @description Preview what a specific date would look like if scheduled.
+         */
+        get: operations["preview_date_planning_date__date__preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/planning/schedule/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Schedule Today
+         * @description Schedule today with tasks from routines.
+         */
+        put: operations["schedule_today_planning_schedule_today_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -182,25 +214,11 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Schedule Tomorrow */
+        /**
+         * Schedule Tomorrow
+         * @description Schedule tomorrow with tasks from routines.
+         */
         put: operations["schedule_tomorrow_planning_tomorrow_schedule_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/planning/date/{date}/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Preview Date */
-        get: operations["preview_date_planning_date__date__preview_get"];
-        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -216,7 +234,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Schedule Date */
+        /**
+         * Schedule Date
+         * @description Schedule a specific date with tasks from routines.
+         */
         put: operations["schedule_date_planning_date__date__schedule_put"];
         post?: never;
         delete?: never;
@@ -279,7 +300,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/events/today": {
+    "/calendar-entries/today": {
         parameters: {
             query?: never;
             header?: never;
@@ -287,7 +308,7 @@ export interface paths {
             cookie?: never;
         };
         /** Today */
-        get: operations["today_events_today_get"];
+        get: operations["today_calendar_entries_today_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -296,7 +317,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/push/subscriptions": {
+    "/calendar-entries/today/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today */
+        get: operations["today_calendar_entries_today__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/subscriptions/": {
         parameters: {
             query?: never;
             header?: never;
@@ -304,7 +342,7 @@ export interface paths {
             cookie?: never;
         };
         /** List Subscriptions */
-        get: operations["list_subscriptions_push_subscriptions_get"];
+        get: operations["list_subscriptions_push_subscriptions__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -330,7 +368,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/push/subscribe": {
+    "/push/subscribe/": {
         parameters: {
             query?: never;
             header?: never;
@@ -340,22 +378,25 @@ export interface paths {
         get?: never;
         put?: never;
         /** Subscribe */
-        post: operations["subscribe_push_subscribe_post"];
+        post: operations["subscribe_push_subscribe__post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/tasks/today": {
+    "/tasks/today/": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Todays Tasks */
-        get: operations["list_todays_tasks_tasks_today_get"];
+        /**
+         * List Todays Tasks
+         * @description Get all tasks for today.
+         */
+        get: operations["list_todays_tasks_tasks_today__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -373,25 +414,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Add Task Action */
+        /**
+         * Add Task Action
+         * @description Record an action on a task.
+         */
         post: operations["add_task_action_tasks__date____id__actions_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/days/today/schedule": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Schedule Today */
-        put: operations["schedule_today_days_today_schedule_put"];
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -405,7 +432,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Context Today */
+        /**
+         * Get Context Today
+         * @description Get the complete context for today.
+         */
         get: operations["get_context_today_days_today_context_get"];
         put?: never;
         post?: never;
@@ -422,7 +452,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Context Tomorrow */
+        /**
+         * Get Context Tomorrow
+         * @description Get the complete context for tomorrow.
+         */
         get: operations["get_context_tomorrow_days_tomorrow_context_get"];
         put?: never;
         post?: never;
@@ -439,9 +472,72 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Context */
+        /**
+         * Get Context
+         * @description Get the complete context for a specific date.
+         */
         get: operations["get_context_days__date__context_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/days/{date}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview Day
+         * @description Preview what a day would look like if scheduled.
+         */
+        get: operations["preview_day_days__date__preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/days/today/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Schedule Today
+         * @description Schedule today with tasks from routines.
+         */
+        put: operations["schedule_today_days_today_schedule_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/days/{date}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Schedule Day
+         * @description Schedule a specific day with tasks from routines.
+         */
+        put: operations["schedule_day_days__date__schedule_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -462,7 +558,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update Day */
+        /**
+         * Update Day
+         * @description Update a day's status or template.
+         */
         patch: operations["update_day_days__date__patch"];
         trace?: never;
     };
@@ -473,8 +572,31 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Templates */
+        /**
+         * Get Templates
+         * @description Get all available day templates.
+         */
         get: operations["get_templates_days_templates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/days/templates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Templates
+         * @description Get all available day templates.
+         */
+        get: operations["get_templates_days_templates__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -490,13 +612,22 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Entity */
-        get: operations["get_entity_day_templates__uuid__get"];
-        /** Update Entity */
-        put: operations["update_entity_day_templates__uuid__put"];
+        /**
+         * Get Day Template
+         * @description Get a single day template by ID.
+         */
+        get: operations["get_day_template_day_templates__uuid__get"];
+        /**
+         * Update Day Template
+         * @description Update a day template.
+         */
+        put: operations["update_day_template_day_templates__uuid__put"];
         post?: never;
-        /** Delete Entity */
-        delete: operations["delete_entity_day_templates__uuid__delete"];
+        /**
+         * Delete Day Template
+         * @description Delete a day template.
+         */
+        delete: operations["delete_day_template_day_templates__uuid__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -509,18 +640,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Entities With Query Paged */
-        get: operations["list_entities_with_query_paged_day_templates__get"];
+        /**
+         * List Day Templates
+         * @description List day templates with pagination.
+         */
+        get: operations["list_day_templates_day_templates__get"];
         put?: never;
-        /** Create Entity */
-        post: operations["create_entity_day_templates__post"];
+        /**
+         * Create Day Template
+         * @description Create a new day template.
+         */
+        post: operations["create_day_template_day_templates__post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/task-definitions/available": {
+    "/task-definitions/available/": {
         parameters: {
             query?: never;
             header?: never;
@@ -534,7 +671,7 @@ export interface paths {
          *     Returns:
          *         List of task definition dictionaries (without user_id)
          */
-        get: operations["get_available_task_definitions_task_definitions_available_get"];
+        get: operations["get_available_task_definitions_task_definitions_available__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -550,13 +687,22 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Entity */
-        get: operations["get_entity_task_definitions__uuid__get"];
-        /** Update Entity */
-        put: operations["update_entity_task_definitions__uuid__put"];
+        /**
+         * Get Task Definition
+         * @description Get a single task definition by ID.
+         */
+        get: operations["get_task_definition_task_definitions__uuid__get"];
+        /**
+         * Update Task Definition
+         * @description Update a task definition.
+         */
+        put: operations["update_task_definition_task_definitions__uuid__put"];
         post?: never;
-        /** Delete Entity */
-        delete: operations["delete_entity_task_definitions__uuid__delete"];
+        /**
+         * Delete Task Definition
+         * @description Delete a task definition.
+         */
+        delete: operations["delete_task_definition_task_definitions__uuid__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -569,18 +715,24 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Entities With Query Paged */
-        get: operations["list_entities_with_query_paged_task_definitions__get"];
+        /**
+         * List Task Definitions
+         * @description List task definitions with pagination.
+         */
+        get: operations["list_task_definitions_task_definitions__get"];
         put?: never;
-        /** Create Entity */
-        post: operations["create_entity_task_definitions__post"];
+        /**
+         * Create Task Definition
+         * @description Create a new task definition.
+         */
+        post: operations["create_task_definition_task_definitions__post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/task-definitions/bulk": {
+    "/task-definitions/bulk/": {
         parameters: {
             query?: never;
             header?: never;
@@ -589,8 +741,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Bulk Create Entities */
-        post: operations["bulk_create_entities_task_definitions_bulk_post"];
+        /**
+         * Bulk Create Task Definitions
+         * @description Bulk create task definitions.
+         */
+        post: operations["bulk_create_task_definitions_task_definitions_bulk__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -604,11 +759,22 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Entity */
-        get: operations["get_entity_routines__uuid__get"];
-        put?: never;
+        /**
+         * Get Routine
+         * @description Get a single routine by ID.
+         */
+        get: operations["get_routine_routines__uuid__get"];
+        /**
+         * Update Routine
+         * @description Update an existing routine.
+         */
+        put: operations["update_routine_routines__uuid__put"];
         post?: never;
-        delete?: never;
+        /**
+         * Delete Routine
+         * @description Delete a routine.
+         */
+        delete: operations["delete_routine_routines__uuid__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -621,11 +787,62 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Entities With Query Paged */
-        get: operations["list_entities_with_query_paged_routines__get"];
+        /**
+         * List Routines
+         * @description List routines with pagination.
+         */
+        get: operations["list_routines_routines__get"];
         put?: never;
-        post?: never;
+        /**
+         * Create Routine
+         * @description Create a new routine.
+         */
+        post: operations["create_routine_routines__post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routines/{uuid}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Routine Task
+         * @description Attach a task definition to a routine.
+         */
+        post: operations["add_routine_task_routines__uuid__tasks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routines/{uuid}/tasks/{task_definition_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Routine Task
+         * @description Update an attached routine task (name/schedule).
+         */
+        put: operations["update_routine_task_routines__uuid__tasks__task_definition_id__put"];
+        post?: never;
+        /**
+         * Remove Routine Task
+         * @description Detach a task definition from a routine.
+         */
+        delete: operations["remove_routine_task_routines__uuid__tasks__task_definition_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -638,13 +855,22 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Entity */
-        get: operations["get_entity_calendars__uuid__get"];
-        /** Update Entity */
-        put: operations["update_entity_calendars__uuid__put"];
+        /**
+         * Get Calendar
+         * @description Get a single calendar by ID.
+         */
+        get: operations["get_calendar_calendars__uuid__get"];
+        /**
+         * Update Calendar
+         * @description Update a calendar.
+         */
+        put: operations["update_calendar_calendars__uuid__put"];
         post?: never;
-        /** Delete Entity */
-        delete: operations["delete_entity_calendars__uuid__delete"];
+        /**
+         * Delete Calendar
+         * @description Delete a calendar.
+         */
+        delete: operations["delete_calendar_calendars__uuid__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -657,11 +883,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Entities With Query Paged */
-        get: operations["list_entities_with_query_paged_calendars__get"];
+        /**
+         * List Calendars
+         * @description List calendars with pagination.
+         */
+        get: operations["list_calendars_calendars__get"];
         put?: never;
-        /** Create Entity */
-        post: operations["create_entity_calendars__post"];
+        /**
+         * Create Calendar
+         * @description Create a new calendar.
+         */
+        post: operations["create_calendar_calendars__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -694,11 +926,6 @@ export interface components {
     schemas: {
         /** Action */
         Action: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id?: string;
             type: components["schemas"]["ActionType"];
             /** Data */
             data?: {
@@ -711,17 +938,33 @@ export interface components {
             created_at?: string;
         };
         /**
+         * ActionSchema
+         * @description API schema for Action value object.
+         */
+        ActionSchema: {
+            /** Id */
+            id?: string | null;
+            type: components["schemas"]["ActionType"];
+            /** Data */
+            data?: {
+                [key: string]: string;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
          * ActionType
          * @enum {string}
          */
         ActionType: "COMPLETE" | "DELETE" | "EDIT" | "NOTIFY" | "PAUSE" | "PUNT" | "RESUME" | "START" | "VIEW";
-        /** Alarm */
-        Alarm: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id?: string;
+        /**
+         * AlarmSchema
+         * @description API schema for Alarm value object.
+         */
+        AlarmSchema: {
             /** Name */
             name: string;
             /**
@@ -764,18 +1007,11 @@ export interface components {
              */
             client_secret?: string | null;
         };
-        /** Calendar */
-        Calendar: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id?: string;
-            /**
-             * User Id
-             * Format: uuid
-             */
-            user_id: string;
+        /**
+         * CalendarCreateSchema
+         * @description API schema for creating a Calendar entity.
+         */
+        CalendarCreateSchema: {
             /** Name */
             name: string;
             /**
@@ -790,115 +1026,13 @@ export interface components {
             /** Last Sync At */
             last_sync_at?: string | null;
         };
-        /** Day */
-        Day: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id?: string;
-            /**
-             * User Id
-             * Format: uuid
-             */
-            user_id: string;
-            /**
-             * Date
-             * Format: date
-             */
-            date: string;
-            /**
-             * Template Id
-             * Format: uuid
-             */
-            template_id: string;
-            /** Tags */
-            tags?: components["schemas"]["DayTag"][];
-            alarm?: components["schemas"]["Alarm"] | null;
-            /** @default UNSCHEDULED */
-            status: components["schemas"]["DayStatus"];
-            /** Scheduled At */
-            scheduled_at?: string | null;
-        };
-        /** DayContext */
-        DayContext: {
-            day: components["schemas"]["Day"];
-            /** Events */
-            events?: components["schemas"]["Event"][];
-            /** Tasks */
-            tasks?: components["schemas"]["Task"][];
-            /** Messages */
-            messages?: components["schemas"]["Message"][];
-        };
         /**
-         * DayOfWeek
-         * @enum {integer}
+         * CalendarEntrySchema
+         * @description API schema for CalendarEntry entity.
          */
-        DayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6;
-        /**
-         * DayStatus
-         * @enum {string}
-         */
-        DayStatus: "UNSCHEDULED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETE";
-        /**
-         * DayTag
-         * @enum {string}
-         */
-        DayTag: "WEEKEND" | "VACATION" | "WORKDAY";
-        /** DayTemplate */
-        "DayTemplate-Input": {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id?: string;
-            /**
-             * User Id
-             * Format: uuid
-             */
-            user_id: string;
-            /** Slug */
-            slug: string;
-            /** Tasks */
-            tasks?: string[];
-            alarm?: components["schemas"]["Alarm"] | null;
-            /** Icon */
-            icon?: string | null;
-        };
-        /** DayTemplate */
-        "DayTemplate-Output": {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id?: string;
-            /**
-             * User Id
-             * Format: uuid
-             */
-            user_id: string;
-            /** Slug */
-            slug: string;
-            /** Tasks */
-            tasks?: string[];
-            alarm?: components["schemas"]["Alarm"] | null;
-            /** Icon */
-            icon?: string | null;
-        };
-        /** ErrorModel */
-        ErrorModel: {
-            /** Detail */
-            detail: string | {
-                [key: string]: string;
-            };
-        };
-        /** Event */
-        Event: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id?: string;
+        CalendarEntrySchema: {
+            /** Id */
+            id?: string | null;
             /**
              * User Id
              * Format: uuid
@@ -929,94 +1063,233 @@ export interface components {
              * Created At
              * Format: date-time
              */
-            created_at?: string;
+            created_at: string;
             /**
              * Updated At
              * Format: date-time
              */
-            updated_at?: string;
-            /** People */
-            people?: components["schemas"]["Person"][];
+            updated_at: string;
             /** Actions */
-            actions?: components["schemas"]["Action"][];
+            actions?: components["schemas"]["ActionSchema"][];
             /**
              * Date
              * Format: date
-             * @description Get the date for this event.
              */
-            readonly date: string;
+            date: string;
         };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /** Keys */
-        Keys: {
-            /** P256Dh */
-            p256dh: string;
-            /** Auth */
-            auth: string;
-        };
-        /** Message */
-        Message: {
+        /**
+         * CalendarSchema
+         * @description API schema for Calendar entity.
+         */
+        CalendarSchema: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
             /**
-             * Id
+             * Auth Token Id
              * Format: uuid
              */
-            id?: string;
+            auth_token_id: string;
+            /** Platform Id */
+            platform_id: string;
+            /** Platform */
+            platform: string;
+            /** Last Sync At */
+            last_sync_at?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
+         * CalendarUpdateSchema
+         * @description API schema for Calendar update requests.
+         */
+        CalendarUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            /** Auth Token Id */
+            auth_token_id?: string | null;
+            /** Last Sync At */
+            last_sync_at?: string | null;
+        };
+        /**
+         * DayContextSchema
+         * @description API schema for DayContext value object.
+         */
+        DayContextSchema: {
+            day: components["schemas"]["DaySchema"];
+            /** Calendar Entries */
+            calendar_entries?: components["schemas"]["CalendarEntrySchema"][];
+            /** Tasks */
+            tasks?: components["schemas"]["TaskSchema"][];
+        };
+        /**
+         * DayOfWeek
+         * @enum {integer}
+         */
+        DayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+        /**
+         * DaySchema
+         * @description API schema for Day entity.
+         */
+        DaySchema: {
+            /** Id */
+            id?: string | null;
             /**
              * User Id
              * Format: uuid
              */
             user_id: string;
             /**
-             * Author
-             * @enum {string}
-             */
-            author: "system" | "agent" | "user";
-            /**
-             * Sent At
-             * Format: date-time
-             */
-            sent_at: string;
-            /** Content */
-            content: string;
-            /** Read At */
-            read_at?: string | null;
-            /**
              * Date
              * Format: date
-             * @description Get the date for this entity.
-             *
-             *     If _get_date() is implemented, it takes precedence.
-             *     Otherwise, uses _get_datetime() with the configured timezone.
              */
-            readonly date: string;
+            date: string;
+            alarm?: components["schemas"]["AlarmSchema"] | null;
+            status: components["schemas"]["DayStatus"];
+            /** Scheduled At */
+            scheduled_at?: string | null;
+            /** Tags */
+            tags?: components["schemas"]["DayTag"][];
+            template?: components["schemas"]["DayTemplateSchema"] | null;
         };
-        /** Person */
-        Person: {
+        /**
+         * DayStatus
+         * @enum {string}
+         */
+        DayStatus: "UNSCHEDULED" | "SCHEDULED" | "IN_PROGRESS" | "COMPLETE";
+        /**
+         * DayTag
+         * @enum {string}
+         */
+        DayTag: "WEEKEND" | "VACATION" | "WORKDAY";
+        /**
+         * DayTemplateCreateSchema
+         * @description API schema for creating a DayTemplate entity.
+         */
+        DayTemplateCreateSchema: {
+            /** Slug */
+            slug: string;
+            alarm?: components["schemas"]["AlarmSchema"] | null;
+            /** Icon */
+            icon?: string | null;
+            /** Routine Ids */
+            routine_ids?: string[];
+        };
+        /**
+         * DayTemplateSchema
+         * @description API schema for DayTemplate entity.
+         */
+        DayTemplateSchema: {
+            /** Id */
+            id?: string | null;
+            /** Slug */
+            slug: string;
+            alarm?: components["schemas"]["AlarmSchema"] | null;
+            /** Icon */
+            icon?: string | null;
+            /** Routine Ids */
+            routine_ids?: string[];
             /**
-             * Id
+             * User Id
              * Format: uuid
              */
-            id?: string;
-            /** Name */
-            name?: string | null;
-            /** Email */
-            email?: string | null;
-            /** Phone Number */
-            phone_number?: string | null;
-            /** Relationship */
-            relationship?: string | null;
+            user_id: string;
         };
-        /** PushSubscription */
-        PushSubscription: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id?: string;
+        /**
+         * DayTemplateUpdateSchema
+         * @description API schema for DayTemplate update requests.
+         */
+        DayTemplateUpdateSchema: {
+            /** Slug */
+            slug?: string | null;
+            alarm?: components["schemas"]["AlarmSchema"] | null;
+            /** Icon */
+            icon?: string | null;
+            /** Routine Ids */
+            routine_ids?: string[] | null;
+        };
+        /**
+         * DayUpdateSchema
+         * @description API schema for Day update requests.
+         */
+        DayUpdateSchema: {
+            alarm?: components["schemas"]["AlarmSchema"] | null;
+            status?: components["schemas"]["DayStatus"] | null;
+            /** Scheduled At */
+            scheduled_at?: string | null;
+            /** Tags */
+            tags?: components["schemas"]["DayTag"][] | null;
+            /** Template Id */
+            template_id?: string | null;
+        };
+        /** ErrorModel */
+        ErrorModel: {
+            /** Detail */
+            detail: string | {
+                [key: string]: string;
+            };
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /** PagedQueryResponse */
+        PagedQueryResponse_CalendarSchema_: {
+            /** Items */
+            items: components["schemas"]["CalendarSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedQueryResponse */
+        PagedQueryResponse_DayTemplateSchema_: {
+            /** Items */
+            items: components["schemas"]["DayTemplateSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedQueryResponse */
+        PagedQueryResponse_RoutineSchema_: {
+            /** Items */
+            items: components["schemas"]["RoutineSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /**
+         * PushSubscriptionSchema
+         * @description API schema for PushSubscription entity.
+         */
+        PushSubscriptionSchema: {
+            /** Id */
+            id?: string | null;
             /**
              * User Id
              * Format: uuid
@@ -1031,18 +1304,41 @@ export interface components {
             /** Auth */
             auth: string;
             /**
-             * Createdat
+             * Created At
              * Format: date-time
              */
-            createdAt?: string;
+            created_at: string;
         };
-        /** Routine */
-        Routine: {
+        /**
+         * RoutineCreateSchema
+         * @description API schema for creating a Routine entity.
+         */
+        RoutineCreateSchema: {
+            /** Name */
+            name: string;
+            category: components["schemas"]["TaskCategory"];
+            routine_schedule: components["schemas"]["RoutineSchedule"];
             /**
-             * Id
-             * Format: uuid
+             * Description
+             * @default
              */
-            id?: string;
+            description: string;
+            /** Tasks */
+            tasks?: components["schemas"]["RoutineTask-Input"][];
+        };
+        /** RoutineSchedule */
+        RoutineSchedule: {
+            frequency: components["schemas"]["TaskFrequency"];
+            /** Weekdays */
+            weekdays?: components["schemas"]["DayOfWeek"][] | null;
+        };
+        /**
+         * RoutineSchema
+         * @description API schema for Routine entity.
+         */
+        RoutineSchema: {
+            /** Id */
+            id?: string | null;
             /**
              * User Id
              * Format: uuid
@@ -1058,16 +1354,10 @@ export interface components {
              */
             description: string;
             /** Tasks */
-            tasks?: components["schemas"]["RoutineTask"][];
-        };
-        /** RoutineSchedule */
-        RoutineSchedule: {
-            frequency: components["schemas"]["TaskFrequency"];
-            /** Weekdays */
-            weekdays?: components["schemas"]["DayOfWeek"][] | null;
+            tasks?: components["schemas"]["RoutineTask-Output"][];
         };
         /** RoutineTask */
-        RoutineTask: {
+        "RoutineTask-Input": {
             /**
              * Task Definition Id
              * Format: uuid
@@ -1077,86 +1367,102 @@ export interface components {
             name?: string | null;
             schedule?: components["schemas"]["TaskSchedule"] | null;
         };
-        /** StatusResponse */
-        StatusResponse: {
+        /** RoutineTask */
+        "RoutineTask-Output": {
             /**
-             * Ok
-             * @default true
-             */
-            ok: boolean;
-        };
-        /** SubscriptionRequest */
-        SubscriptionRequest: {
-            /** Device Name */
-            device_name: string;
-            /** Endpoint */
-            endpoint: string;
-            keys: components["schemas"]["Keys"];
-        };
-        /** Task */
-        Task: {
-            /**
-             * Id
+             * Task Definition Id
              * Format: uuid
              */
-            id?: string;
-            /**
-             * User Id
-             * Format: uuid
-             */
-            user_id: string;
-            /**
-             * Scheduled Date
-             * Format: date
-             */
-            scheduled_date: string;
+            task_definition_id: string;
             /** Name */
-            name: string;
-            status: components["schemas"]["TaskStatus"];
-            task_definition: components["schemas"]["TaskDefinition"];
-            category: components["schemas"]["TaskCategory"];
-            frequency: components["schemas"]["TaskFrequency"];
-            /** Completed At */
-            completed_at?: string | null;
+            name?: string | null;
             schedule?: components["schemas"]["TaskSchedule"] | null;
-            /** Routine Id */
-            routine_id?: string | null;
-            /** Tags */
-            tags?: components["schemas"]["TaskTag"][];
-            /** Actions */
-            actions?: components["schemas"]["Action"][];
-            /**
-             * Date
-             * Format: date
-             * @description Get the date for this entity.
-             *
-             *     If _get_date() is implemented, it takes precedence.
-             *     Otherwise, uses _get_datetime() with the configured timezone.
-             */
-            readonly date: string;
         };
+        /**
+         * RoutineTaskCreateSchema
+         * @description API schema for attaching a RoutineTask.
+         */
+        RoutineTaskCreateSchema: {
+            /**
+             * Task Definition Id
+             * Format: uuid
+             */
+            task_definition_id: string;
+            /** Name */
+            name?: string | null;
+            schedule?: components["schemas"]["TaskSchedule"] | null;
+        };
+        /**
+         * RoutineTaskUpdateSchema
+         * @description API schema for updating an attached RoutineTask.
+         */
+        RoutineTaskUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            schedule?: components["schemas"]["TaskSchedule"] | null;
+        };
+        /**
+         * RoutineUpdateSchema
+         * @description API schema for Routine update requests.
+         */
+        RoutineUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            category?: components["schemas"]["TaskCategory"] | null;
+            routine_schedule?: components["schemas"]["RoutineSchedule"] | null;
+            /** Description */
+            description?: string | null;
+            /** Tasks */
+            tasks?: components["schemas"]["RoutineTask-Input"][] | null;
+        };
+        /** StatusResponse */
+        StatusResponse: Record<string, never>;
+        /** SubscriptionRequest */
+        SubscriptionRequest: Record<string, never>;
         /**
          * TaskCategory
          * @enum {string}
          */
-        TaskCategory: "HYGIENE" | "NUTRITION" | "HEALTH" | "PET" | "HOUSE";
-        /** TaskDefinition */
-        TaskDefinition: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id?: string;
-            /**
-             * User Id
-             * Format: uuid
-             */
-            user_id: string;
+        TaskCategory: "HYGIENE" | "GROOMING" | "SLEEP" | "HEALTH" | "FITNESS" | "MEDICAL" | "NUTRITION" | "COOKING" | "HOUSE" | "CLEANING" | "MAINTENANCE" | "ORGANIZATION" | "WORK" | "MEETING" | "PROFESSIONAL" | "FAMILY" | "SOCIAL" | "RELATIONSHIP" | "SHOPPING" | "ERRAND" | "COMMUTE" | "TRAVEL" | "ENTERTAINMENT" | "HOBBY" | "RECREATION" | "EDUCATION" | "LEARNING" | "FINANCE" | "BILLS" | "TECHNOLOGY" | "DIGITAL" | "PET" | "PLANNING" | "ADMIN";
+        /**
+         * TaskDefinitionCreateSchema
+         * @description API schema for creating a TaskDefinition entity.
+         */
+        TaskDefinitionCreateSchema: {
             /** Name */
             name: string;
             /** Description */
             description: string;
             type: components["schemas"]["TaskType"];
+        };
+        /**
+         * TaskDefinitionSchema
+         * @description API schema for TaskDefinition entity.
+         */
+        TaskDefinitionSchema: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            type: components["schemas"]["TaskType"];
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
+         * TaskDefinitionUpdateSchema
+         * @description API schema for TaskDefinition update requests.
+         */
+        TaskDefinitionUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+            type?: components["schemas"]["TaskType"] | null;
         };
         /**
          * TaskFrequency
@@ -1174,6 +1480,52 @@ export interface components {
             timing_type: components["schemas"]["TimingType"];
         };
         /**
+         * TaskScheduleSchema
+         * @description API schema for TaskSchedule value object.
+         */
+        TaskScheduleSchema: {
+            /** Available Time */
+            available_time?: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            /** End Time */
+            end_time?: string | null;
+            timing_type: components["schemas"]["TimingType"];
+        };
+        /**
+         * TaskSchema
+         * @description API schema for Task entity.
+         */
+        TaskSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Scheduled Date
+             * Format: date
+             */
+            scheduled_date: string;
+            /** Name */
+            name: string;
+            status: components["schemas"]["TaskStatus"];
+            task_definition: components["schemas"]["TaskDefinitionSchema"];
+            category: components["schemas"]["TaskCategory"];
+            frequency: components["schemas"]["TaskFrequency"];
+            /** Completed At */
+            completed_at?: string | null;
+            schedule?: components["schemas"]["TaskScheduleSchema"] | null;
+            /** Routine Id */
+            routine_id?: string | null;
+            /** Tags */
+            tags?: components["schemas"]["TaskTag"][];
+            /** Actions */
+            actions?: components["schemas"]["ActionSchema"][];
+        };
+        /**
          * TaskStatus
          * @enum {string}
          */
@@ -1187,27 +1539,14 @@ export interface components {
          * TaskType
          * @enum {string}
          */
-        TaskType: "MEAL" | "EVENT" | "CHORE" | "ERRAND" | "ACTIVITY";
+        TaskType: "MEAL" | "WORK" | "MEETING" | "EXERCISE" | "EVENT" | "SOCIAL" | "CHORE" | "ERRAND" | "SHOPPING" | "PERSONAL_CARE" | "ACTIVITY" | "ENTERTAINMENT" | "LEARNING" | "COMMUTE" | "TRAVEL" | "APPOINTMENT" | "COMMUNICATION" | "FINANCIAL" | "MAINTENANCE" | "PLANNING" | "TECHNOLOGY";
         /**
          * TimingType
          * @enum {string}
          */
         TimingType: "DEADLINE" | "FIXED_TIME" | "TIME_WINDOW" | "FLEXIBLE";
-        /** UpdateDayRequest */
-        UpdateDayRequest: {
-            status?: components["schemas"]["DayStatus"] | null;
-            /** Template Id */
-            template_id?: string | null;
-        };
         /** UpdatePasswordRequest */
-        UpdatePasswordRequest: {
-            /** New Password */
-            new_password: string;
-            /** Confirm New Password */
-            confirm_new_password: string;
-            /** Old Password */
-            old_password?: string | null;
-        };
+        UpdatePasswordRequest: Record<string, never>;
         /**
          * UserCreate
          * @description Schema for creating a new user.
@@ -1483,7 +1822,7 @@ export interface operations {
             };
         };
     };
-    list_routines_planning_routines_get: {
+    list_routines_planning_routines__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1498,27 +1837,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Routine"][];
-                };
-            };
-        };
-    };
-    schedule_today_planning_schedule_today_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContext"];
+                    "application/json": components["schemas"]["RoutineSchema"][];
                 };
             };
         };
@@ -1538,7 +1857,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContext"];
+                    "application/json": components["schemas"]["DayContextSchema"];
                 };
             };
         };
@@ -1558,27 +1877,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContext"];
-                };
-            };
-        };
-    };
-    schedule_tomorrow_planning_tomorrow_schedule_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContext"];
+                    "application/json": components["schemas"]["DayContextSchema"];
                 };
             };
         };
@@ -1600,7 +1899,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContext"];
+                    "application/json": components["schemas"]["DayContextSchema"];
                 };
             };
             /** @description Validation Error */
@@ -1610,6 +1909,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    schedule_today_planning_schedule_today_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayContextSchema"];
+                };
+            };
+        };
+    };
+    schedule_tomorrow_planning_tomorrow_schedule_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayContextSchema"];
                 };
             };
         };
@@ -1631,7 +1970,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContext"];
+                    "application/json": components["schemas"]["DayContextSchema"];
                 };
             };
             /** @description Validation Error */
@@ -1730,7 +2069,7 @@ export interface operations {
             };
         };
     };
-    today_events_today_get: {
+    today_calendar_entries_today_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1745,12 +2084,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Event"][];
+                    "application/json": components["schemas"]["CalendarEntrySchema"][];
                 };
             };
         };
     };
-    list_subscriptions_push_subscriptions_get: {
+    today_calendar_entries_today__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1765,7 +2104,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PushSubscription"][];
+                    "application/json": components["schemas"]["CalendarEntrySchema"][];
+                };
+            };
+        };
+    };
+    list_subscriptions_push_subscriptions__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscriptionSchema"][];
                 };
             };
         };
@@ -1801,7 +2160,7 @@ export interface operations {
             };
         };
     };
-    subscribe_push_subscribe_post: {
+    subscribe_push_subscribe__post: {
         parameters: {
             query?: never;
             header?: never;
@@ -1820,7 +2179,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PushSubscription"];
+                    "application/json": components["schemas"]["PushSubscriptionSchema"];
                 };
             };
             /** @description Validation Error */
@@ -1834,7 +2193,7 @@ export interface operations {
             };
         };
     };
-    list_todays_tasks_tasks_today_get: {
+    list_todays_tasks_tasks_today__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1849,7 +2208,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Task"][];
+                    "application/json": components["schemas"]["TaskSchema"][];
                 };
             };
         };
@@ -1876,7 +2235,111 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Task"];
+                    "application/json": components["schemas"]["TaskSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_context_today_days_today_context_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayContextSchema"];
+                };
+            };
+        };
+    };
+    get_context_tomorrow_days_tomorrow_context_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayContextSchema"];
+                };
+            };
+        };
+    };
+    get_context_days__date__context_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayContextSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_day_days__date__preview_get: {
+        parameters: {
+            query?: {
+                template_id?: string | null;
+            };
+            header?: never;
+            path: {
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayContextSchema"];
                 };
             };
             /** @description Validation Error */
@@ -1905,54 +2368,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContext"];
+                    "application/json": components["schemas"]["DayContextSchema"];
                 };
             };
         };
     };
-    get_context_today_days_today_context_get: {
+    schedule_day_days__date__schedule_put: {
         parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContext"];
-                };
+            query?: {
+                template_id?: string | null;
             };
-        };
-    };
-    get_context_tomorrow_days_tomorrow_context_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContext"];
-                };
-            };
-        };
-    };
-    get_context_days__date__context_get: {
-        parameters: {
-            query?: never;
             header?: never;
             path: {
                 date: string;
@@ -1967,7 +2392,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContext"];
+                    "application/json": components["schemas"]["DayContextSchema"];
                 };
             };
             /** @description Validation Error */
@@ -1992,7 +2417,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateDayRequest"];
+                "application/json": components["schemas"]["DayUpdateSchema"];
             };
         };
         responses: {
@@ -2002,7 +2427,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Day"];
+                    "application/json": components["schemas"]["DaySchema"];
                 };
             };
             /** @description Validation Error */
@@ -2031,12 +2456,32 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayTemplate-Output"][];
+                    "application/json": components["schemas"]["DayTemplateSchema"][];
                 };
             };
         };
     };
-    get_entity_day_templates__uuid__get: {
+    get_templates_days_templates__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayTemplateSchema"][];
+                };
+            };
+        };
+    };
+    get_day_template_day_templates__uuid__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -2053,7 +2498,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayTemplate-Output"];
+                    "application/json": components["schemas"]["DayTemplateSchema"];
                 };
             };
             /** @description Validation Error */
@@ -2067,7 +2512,7 @@ export interface operations {
             };
         };
     };
-    update_entity_day_templates__uuid__put: {
+    update_day_template_day_templates__uuid__put: {
         parameters: {
             query?: never;
             header?: never;
@@ -2078,7 +2523,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["DayTemplate-Input"];
+                "application/json": components["schemas"]["DayTemplateUpdateSchema"];
             };
         };
         responses: {
@@ -2088,7 +2533,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayTemplate-Output"];
+                    "application/json": components["schemas"]["DayTemplateSchema"];
                 };
             };
             /** @description Validation Error */
@@ -2102,7 +2547,7 @@ export interface operations {
             };
         };
     };
-    delete_entity_day_templates__uuid__delete: {
+    delete_day_template_day_templates__uuid__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -2133,16 +2578,11 @@ export interface operations {
             };
         };
     };
-    list_entities_with_query_paged_day_templates__get: {
+    list_day_templates_day_templates__get: {
         parameters: {
             query?: {
-                limit?: number | null;
-                offset?: number | null;
-                order_by?: string | null;
-                order_by_desc?: boolean | null;
-                created_before?: string | null;
-                created_after?: string | null;
-                slug?: string | null;
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -2156,7 +2596,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PagedQueryResponse_DayTemplateSchema_"];
                 };
             };
             /** @description Validation Error */
@@ -2170,7 +2610,7 @@ export interface operations {
             };
         };
     };
-    create_entity_day_templates__post: {
+    create_day_template_day_templates__post: {
         parameters: {
             query?: never;
             header?: never;
@@ -2179,7 +2619,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["DayTemplate-Input"];
+                "application/json": components["schemas"]["DayTemplateCreateSchema"];
             };
         };
         responses: {
@@ -2189,7 +2629,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayTemplate-Output"];
+                    "application/json": components["schemas"]["DayTemplateSchema"];
                 };
             };
             /** @description Validation Error */
@@ -2203,7 +2643,7 @@ export interface operations {
             };
         };
     };
-    get_available_task_definitions_task_definitions_available_get: {
+    get_available_task_definitions_task_definitions_available__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -2225,7 +2665,7 @@ export interface operations {
             };
         };
     };
-    get_entity_task_definitions__uuid__get: {
+    get_task_definition_task_definitions__uuid__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -2242,7 +2682,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TaskDefinition"];
+                    "application/json": components["schemas"]["TaskDefinitionSchema"];
                 };
             };
             /** @description Validation Error */
@@ -2256,7 +2696,7 @@ export interface operations {
             };
         };
     };
-    update_entity_task_definitions__uuid__put: {
+    update_task_definition_task_definitions__uuid__put: {
         parameters: {
             query?: never;
             header?: never;
@@ -2267,7 +2707,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TaskDefinition"];
+                "application/json": components["schemas"]["TaskDefinitionUpdateSchema"];
             };
         };
         responses: {
@@ -2277,7 +2717,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TaskDefinition"];
+                    "application/json": components["schemas"]["TaskDefinitionSchema"];
                 };
             };
             /** @description Validation Error */
@@ -2291,7 +2731,7 @@ export interface operations {
             };
         };
     };
-    delete_entity_task_definitions__uuid__delete: {
+    delete_task_definition_task_definitions__uuid__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -2303,13 +2743,11 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            200: {
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": unknown;
-                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -2322,15 +2760,11 @@ export interface operations {
             };
         };
     };
-    list_entities_with_query_paged_task_definitions__get: {
+    list_task_definitions_task_definitions__get: {
         parameters: {
             query?: {
-                limit?: number | null;
-                offset?: number | null;
-                order_by?: string | null;
-                order_by_desc?: boolean | null;
-                created_before?: string | null;
-                created_after?: string | null;
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -2344,7 +2778,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TaskDefinitionSchema"][];
                 };
             };
             /** @description Validation Error */
@@ -2358,7 +2792,7 @@ export interface operations {
             };
         };
     };
-    create_entity_task_definitions__post: {
+    create_task_definition_task_definitions__post: {
         parameters: {
             query?: never;
             header?: never;
@@ -2367,7 +2801,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TaskDefinition"];
+                "application/json": components["schemas"]["TaskDefinitionCreateSchema"];
             };
         };
         responses: {
@@ -2377,7 +2811,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TaskDefinition"];
+                    "application/json": components["schemas"]["TaskDefinitionSchema"];
                 };
             };
             /** @description Validation Error */
@@ -2391,7 +2825,7 @@ export interface operations {
             };
         };
     };
-    bulk_create_entities_task_definitions_bulk_post: {
+    bulk_create_task_definitions_task_definitions_bulk__post: {
         parameters: {
             query?: never;
             header?: never;
@@ -2412,7 +2846,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TaskDefinition"][];
+                    "application/json": components["schemas"]["TaskDefinitionSchema"][];
                 };
             };
             /** @description Validation Error */
@@ -2426,7 +2860,7 @@ export interface operations {
             };
         };
     };
-    get_entity_routines__uuid__get: {
+    get_routine_routines__uuid__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -2443,7 +2877,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Routine"];
+                    "application/json": components["schemas"]["RoutineSchema"];
                 };
             };
             /** @description Validation Error */
@@ -2457,74 +2891,7 @@ export interface operations {
             };
         };
     };
-    list_entities_with_query_paged_routines__get: {
-        parameters: {
-            query?: {
-                limit?: number | null;
-                offset?: number | null;
-                order_by?: string | null;
-                order_by_desc?: boolean | null;
-                created_before?: string | null;
-                created_after?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_entity_calendars__uuid__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                uuid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Calendar"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_entity_calendars__uuid__put: {
+    update_routine_routines__uuid__put: {
         parameters: {
             query?: never;
             header?: never;
@@ -2535,7 +2902,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Calendar"];
+                "application/json": components["schemas"]["RoutineUpdateSchema"];
             };
         };
         responses: {
@@ -2545,7 +2912,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Calendar"];
+                    "application/json": components["schemas"]["RoutineSchema"];
                 };
             };
             /** @description Validation Error */
@@ -2559,7 +2926,270 @@ export interface operations {
             };
         };
     };
-    delete_entity_calendars__uuid__delete: {
+    delete_routine_routines__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_routines_routines__get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedQueryResponse_RoutineSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_routine_routines__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_routine_task_routines__uuid__tasks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineTaskCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_routine_task_routines__uuid__tasks__task_definition_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+                task_definition_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineTaskUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_routine_task_routines__uuid__tasks__task_definition_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+                task_definition_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_calendar_calendars__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_calendar_calendars__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_calendar_calendars__uuid__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -2590,15 +3220,11 @@ export interface operations {
             };
         };
     };
-    list_entities_with_query_paged_calendars__get: {
+    list_calendars_calendars__get: {
         parameters: {
             query?: {
-                limit?: number | null;
-                offset?: number | null;
-                order_by?: string | null;
-                order_by_desc?: boolean | null;
-                created_before?: string | null;
-                created_after?: string | null;
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -2612,7 +3238,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PagedQueryResponse_CalendarSchema_"];
                 };
             };
             /** @description Validation Error */
@@ -2626,7 +3252,7 @@ export interface operations {
             };
         };
     };
-    create_entity_calendars__post: {
+    create_calendar_calendars__post: {
         parameters: {
             query?: never;
             header?: never;
@@ -2635,7 +3261,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Calendar"];
+                "application/json": components["schemas"]["CalendarCreateSchema"];
             };
         };
         responses: {
@@ -2645,7 +3271,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Calendar"];
+                    "application/json": components["schemas"]["CalendarSchema"];
                 };
             };
             /** @description Validation Error */

@@ -55,29 +55,12 @@ import {
   faFileInvoice,
   // Task type icons
   faBowlFood,
-  faCookie,
-  faPhone,
-  faDumbbell as faExercise,
-  faUsers as faSocial,
-  faPeopleGroup,
-  faSoap,
-  faShirt,
+  faHandshake,
   faFilm,
-  faGamepad as faHobby,
-  faGraduationCap as faLearning,
-  faBook as faStudy,
-  faBookOpen as faReading,
-  faCar as faCommute,
-  faPlane as faTravel,
   faCalendarCheck,
-  faToolbox,
   faEnvelope,
   faMoneyBill,
-  faCreditCard as faPayment,
-  faScrewdriverWrench,
   faClipboard,
-  faLaptop as faTechnology,
-  faMobileScreen,
   faBasketShopping,
   faPersonWalking,
 } from "@fortawesome/free-solid-svg-icons";
@@ -176,59 +159,27 @@ export function getCategoryIcon(category?: TaskCategory): IconDefinition | null 
 
 // Task Type icons
 const typeIcons: Record<TaskType, IconDefinition> = {
-  // Eating & Meals
   MEAL: faBowlFood,
-  SNACK: faCookie,
-  // Work & Professional
   WORK: faBriefcase,
   MEETING: faHandshake,
-  CALL: faPhone,
-  // Exercise & Fitness
-  EXERCISE: faExercise,
-  WORKOUT: faDumbbell,
-  // Social & Events
+  EXERCISE: faDumbbell,
   EVENT: faCalendar,
-  SOCIAL: faSocial,
-  GATHERING: faPeopleGroup,
-  // Household Tasks
+  SOCIAL: faUsers,
   CHORE: faBroom,
-  CLEANING: faBroom,
-  LAUNDRY: faShirt,
-  // Errands & Shopping
   ERRAND: faBasketShopping,
   SHOPPING: faShoppingCart,
-  // Personal Care
   PERSONAL_CARE: faDroplet,
-  GROOMING: faScissors,
-  // Entertainment & Leisure
   ACTIVITY: faPersonWalking,
   ENTERTAINMENT: faFilm,
-  HOBBY: faHobby,
-  // Learning & Education
-  LEARNING: faLearning,
-  STUDY: faStudy,
-  READING: faReading,
-  // Transportation
-  COMMUTE: faCommute,
-  TRAVEL: faTravel,
-  // Appointments & Services
+  LEARNING: faGraduationCap,
+  COMMUTE: faCar,
+  TRAVEL: faPlane,
   APPOINTMENT: faCalendarCheck,
-  SERVICE: faToolbox,
-  // Communication
   COMMUNICATION: faEnvelope,
-  EMAIL: faEnvelope,
-  // Financial
   FINANCIAL: faMoneyBill,
-  PAYMENT: faPayment,
-  // Maintenance & Repairs
-  MAINTENANCE: faScrewdriverWrench,
-  REPAIR: faWrench,
-  // Planning & Organization
+  MAINTENANCE: faWrench,
   PLANNING: faClipboard,
-  ORGANIZATION: faFolderOpen,
-  // Technology
-  TECHNOLOGY: faTechnology,
-  DIGITAL: faMobileScreen,
+  TECHNOLOGY: faLaptop,
 };
 
 export function getTypeIcon(type?: TaskType): IconDefinition | null {
