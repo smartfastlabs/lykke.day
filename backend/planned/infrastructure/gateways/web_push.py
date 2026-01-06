@@ -1,13 +1,19 @@
 import json
 
 import aiohttp
-from webpush import WebPush, WebPushMessage, WebPushSubscription  # type: ignore
-
+from loguru import logger
 from planned.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from planned.core.config import settings
 from planned.core.exceptions import PushNotificationError
 from planned.domain import value_objects
 from planned.infrastructure import data_objects
+from webpush import WebPush, WebPushMessage, WebPushSubscription  # type: ignore
+
+logger.info(f"VAPID_PUBLIC_KEY: {settings.VAPID_PUBLIC_KEY}")
+logger.info(f"VAPID_SECRET_KEY: {settings.VAPID_SECRET_KEY}")
+
+logger.info(f"VAPID_PUBLIC_KEY: {settings.VAPID_PUBLIC_KEY.encode('utf-8')}")
+logger.info(f"VAPID_SECRET_KEY: {settings.VAPID_SECRET_KEY.encode('utf-8')}")
 
 wp = WebPush(
     public_key=settings.VAPID_PUBLIC_KEY.encode("utf-8"),
@@ -25,9 +31,7 @@ async def send_notification(
     if isinstance(content, value_objects.NotificationPayload):
         content_dict = dataclass_to_json_dict(content)
         # Filter out None values for JSON
-        filtered_content = {
-            k: v for k, v in content_dict.items() if v is not None
-        }
+        filtered_content = {k: v for k, v in content_dict.items() if v is not None}
         content = json.dumps(filtered_content)
     elif isinstance(content, dict):
         content = json.dumps(content)
