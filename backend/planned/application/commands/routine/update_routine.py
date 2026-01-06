@@ -1,11 +1,11 @@
 """Command to update an existing routine."""
 
-from dataclasses import asdict
 from uuid import UUID
 
 from planned.application.commands.base import BaseCommandHandler
-from planned.domain.value_objects import RoutineUpdateObject
 from planned.domain.entities import RoutineEntity
+from planned.domain.events.routine import RoutineUpdatedEvent
+from planned.domain.value_objects import RoutineUpdateObject
 
 
 class UpdateRoutineHandler(BaseCommandHandler):
@@ -26,12 +26,12 @@ class UpdateRoutineHandler(BaseCommandHandler):
             The updated routine entity.
         """
         async with self.new_uow() as uow:
+            # Get the existing routine
             routine = await uow.routine_ro_repo.get(routine_id)
 
-            update_dict = {k: v for k, v in asdict(update_data).items() if v is not None}
-            updated_routine = routine.clone(**update_dict)
+            # Apply updates using domain method (adds RoutineUpdatedEvent)
+            routine = routine.apply_update(update_data, RoutineUpdatedEvent)
 
-            uow.add(updated_routine)
-            return updated_routine
-
-
+            # Add entity to UoW for saving
+            uow.add(routine)
+            return routine

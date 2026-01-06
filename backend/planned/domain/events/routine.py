@@ -5,8 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import UUID
 
-from planned.domain.events.base import DomainEvent
+from planned.domain.events.base import DomainEvent, EntityUpdatedEvent
 from planned.domain.value_objects.routine import RoutineTask
+from planned.domain.value_objects.update import RoutineUpdateObject
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -31,4 +32,9 @@ class RoutineTaskRemovedEvent(DomainEvent):
 
     routine_id: UUID
     task_definition_id: UUID
+
+
+@dataclass(frozen=True, kw_only=True)
+class RoutineUpdatedEvent(EntityUpdatedEvent[RoutineUpdateObject]):
+    """Event raised when a routine is updated via apply_update()."""
 
