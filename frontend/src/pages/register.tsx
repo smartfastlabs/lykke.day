@@ -34,7 +34,7 @@ export default function Register() {
     try {
       await authAPI.register(email().trim(), password());
       await authAPI.login(email().trim(), password());
-      window.location.href = "/welcome";
+      window.location.href = "/me/welcome";
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Registration failed";

@@ -16,7 +16,7 @@ export default function NewTaskDefinition() {
 
     try {
       await taskDefinitionAPI.create(taskDefinition as TaskDefinition);
-      navigate("/settings/task-definitions");
+      navigate("/me/settings/task-definitions");
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error
@@ -31,7 +31,10 @@ export default function NewTaskDefinition() {
   return (
     <SettingsPage
       heading="Create Task Definition"
-      bottomLink={{ label: "Back to Task Definitions", url: "/settings/task-definitions" }}
+      bottomLink={{
+        label: "Back to Task Definitions",
+        url: "/me/settings/task-definitions",
+      }}
     >
       <div class="flex flex-col items-center justify-center px-6">
         <div class="w-full max-w-sm">

@@ -24,7 +24,7 @@ export default function PushNotifications() {
         registration.showNotification("asdOops!", {
           body: "You're already subscribed to push notifications.",
           icon: "/icons/192.png",
-          data: { url: "/tomorrow" },
+          data: { url: "/me/day/tomorrow" },
         });
       });
     } else if ("serviceWorker" in navigator) {

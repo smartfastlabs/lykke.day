@@ -1,33 +1,33 @@
-import { Router, useNavigate, Route } from "@solidjs/router";
+import { Navigate, Route, Router, useNavigate } from "@solidjs/router";
 import { Title, MetaProvider } from "@solidjs/meta";
 import { Suspense, onMount, onCleanup } from "solid-js";
 import "@/index.css";
 
 import { NotificationProvider } from "@/providers/notifications";
-import { SheppardProvider } from "@/providers/sheppard";
+import { AuthGuard } from "@/providers/authGuard";
 
-import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
-import Welcome from "@/pages/welcome";
 import Landing from "@/pages/landing";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
-import DayView from "@/pages/day/preview";
-import NavPage from "@/pages/navigation/links";
-import CalendarPage from "@/pages/navigation/calendar";
-import NotificationsPage from "@/pages/notifications/index";
-import NotificationsSubscribePage from "@/pages/notifications/subscribe";
-import SettingsPage from "@/pages/settings/index";
-import DayTemplatesPage from "@/pages/settings/day-templates/index";
-import NewDayTemplatePage from "@/pages/settings/day-templates/new";
-import DayTemplateDetailPage from "@/pages/settings/day-templates/detail";
-import TaskDefinitionsPage from "@/pages/settings/task-definitions/index";
-import NewTaskDefinitionPage from "@/pages/settings/task-definitions/new";
-import TaskDefinitionDetailPage from "@/pages/settings/task-definitions/detail";
-import RoutinesPage from "@/pages/settings/routines/index";
-import NewRoutinePage from "@/pages/settings/routines/new";
-import RoutineDetailPage from "@/pages/settings/routines/detail";
+import Home from "@/pages/me";
+import DayView from "@/pages/me/day/preview";
+import NavPage from "@/pages/me/navigation/links";
+import CalendarPage from "@/pages/me/navigation/calendar";
+import NotificationsPage from "@/pages/me/notifications/index";
+import NotificationsSubscribePage from "@/pages/me/notifications/subscribe";
+import SettingsPage from "@/pages/me/settings/index";
+import DayTemplatesPage from "@/pages/me/settings/day-templates/index";
+import NewDayTemplatePage from "@/pages/me/settings/day-templates/new";
+import DayTemplateDetailPage from "@/pages/me/settings/day-templates/detail";
+import TaskDefinitionsPage from "@/pages/me/settings/task-definitions/index";
+import NewTaskDefinitionPage from "@/pages/me/settings/task-definitions/new";
+import TaskDefinitionDetailPage from "@/pages/me/settings/task-definitions/detail";
+import RoutinesPage from "@/pages/me/settings/routines/index";
+import NewRoutinePage from "@/pages/me/settings/routines/new";
+import RoutineDetailPage from "@/pages/me/settings/routines/detail";
+import Welcome from "@/pages/me/welcome";
 import NotFound from "@/pages/not-found";
 
 import "@/utils/icons";
@@ -68,28 +68,34 @@ export default function App() {
   });
 
   return (
-    <SheppardProvider>
-      <Router
-        root={(props) => (
-          <NotificationProvider>
-            <NavigationHandler />
-            <MetaProvider>
-              <Title>Todd's Daily Planer</Title>
-              <Suspense>{props.children}</Suspense>
-            </MetaProvider>
-          </NotificationProvider>
-        )}
-      >
-        <Route path="/" component={Landing} />
-        <Route path="/home" component={Home} />
-        <Route path="/privacy" component={Privacy} />
-        <Route path="/terms" component={Terms} />
-        <Route path="/login" component={Login} />
-        <Route path="/register" component={Register} />
+    <Router
+      root={(props) => (
+        <NotificationProvider>
+          <NavigationHandler />
+          <MetaProvider>
+            <Title>Todd's Daily Planer</Title>
+            <Suspense>{props.children}</Suspense>
+          </MetaProvider>
+        </NotificationProvider>
+      )}
+    >
+      <Route path="/" component={Landing} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route
+        path="/welcome"
+        component={() => <Navigate href="/me/welcome" />}
+      />
+      <Route path="/home" component={() => <Navigate href="/me" />} />
+
+      <Route path="/me" component={AuthGuard}>
+        <Route path="/" component={Home} />
         <Route path="/welcome" component={Welcome} />
+        <Route path="/day/:date" component={DayView} />
         <Route path="/nav/calendar" component={CalendarPage} />
         <Route path="/nav" component={NavPage} />
-        <Route path="/day/:date" component={DayView} />
         <Route path="/notifications" component={NotificationsPage} />
         <Route
           path="/notifications/subscribe"
@@ -120,8 +126,9 @@ export default function App() {
         <Route path="/settings/routines" component={RoutinesPage} />
         <Route path="/settings/routines/new" component={NewRoutinePage} />
         <Route path="/settings/routines/:id" component={RoutineDetailPage} />
-        <Route path="*" component={NotFound} />
-      </Router>
-    </SheppardProvider>
+      </Route>
+
+      <Route path="*" component={NotFound} />
+    </Router>
   );
 }

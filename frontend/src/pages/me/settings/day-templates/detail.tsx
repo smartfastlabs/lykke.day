@@ -36,7 +36,7 @@ const DayTemplateDetailPage: Component = () => {
         ...partialTemplate,
         id: current.id,
       });
-      navigate("/settings/day-templates");
+      navigate("/me/settings/day-templates");
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to update day template";
@@ -54,7 +54,7 @@ const DayTemplateDetailPage: Component = () => {
     setIsLoading(true);
     try {
       await dayTemplateAPI.delete(current.id);
-      navigate("/settings/day-templates");
+      navigate("/me/settings/day-templates");
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to delete day template";
@@ -110,7 +110,7 @@ const DayTemplateDetailPage: Component = () => {
           heading="Day Template"
           bottomLink={{
             label: "Back to Day Templates",
-            url: "/settings/day-templates",
+            url: "/me/settings/day-templates",
           }}
           preview={
             <DayTemplatePreview

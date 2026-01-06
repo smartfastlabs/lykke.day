@@ -11,15 +11,15 @@ import Page from "@/components/shared/layout/page";
 import LinkGrid, { LinkItem } from "@/components/shared/linkGrid";
 
 const settingsItems: LinkItem[] = [
-  { label: "Day Templates", icon: faFileLines, url: "/settings/day-templates" },
+  { label: "Day Templates", icon: faFileLines, url: "/me/settings/day-templates" },
   {
     label: "Task Definitions",
     icon: faListCheck,
-    url: "/settings/task-definitions",
+    url: "/me/settings/task-definitions",
   },
-  { label: "Routines", icon: faRepeat, url: "/settings/routines" },
-  { label: "Profile", icon: faUser, url: "/settings/profile" },
-  { label: "Calendar", icon: faCalendar, url: "/settings/calendar" },
+  { label: "Routines", icon: faRepeat, url: "/me/settings/routines" },
+  { label: "Profile", icon: faUser, url: "/me/settings/profile" },
+  { label: "Calendar", icon: faCalendar, url: "/me/settings/calendar" },
 ];
 
 const SettingsPage: Component = () => {

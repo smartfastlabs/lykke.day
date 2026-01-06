@@ -34,7 +34,7 @@ const CalendarPage: Component = () => {
 
   function onClick(item: DayItem) {
     const dateStr = item.date.toISOString().split("T")[0];
-    navigate(`/day/${dateStr}`);
+    navigate(`/me/day/${dateStr}`);
   }
 
   return (

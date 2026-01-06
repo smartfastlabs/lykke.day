@@ -11,14 +11,14 @@ const RoutinesPage: Component = () => {
 
   const handleNavigate = (id?: string) => {
     if (!id) return;
-    navigate(`/settings/routines/${id}`);
+    navigate(`/me/settings/routines/${id}`);
   };
 
   const actionButtons: ActionButton[] = [
     {
       label: "New Routine",
       icon: faPlus,
-      onClick: () => navigate("/settings/routines/new"),
+      onClick: () => navigate("/me/settings/routines/new"),
     },
   ];
 

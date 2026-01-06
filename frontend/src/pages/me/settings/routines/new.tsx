@@ -16,7 +16,7 @@ export default function NewRoutine() {
 
     try {
       await routineAPI.create(routine as Routine);
-      navigate("/settings/routines");
+      navigate("/me/settings/routines");
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to create routine";
@@ -29,7 +29,7 @@ export default function NewRoutine() {
   return (
     <SettingsPage
       heading="Create Routine"
-      bottomLink={{ label: "Back to Routines", url: "/settings/routines" }}
+      bottomLink={{ label: "Back to Routines", url: "/me/settings/routines" }}
     >
       <div class="flex flex-col items-center justify-center px-6">
         <div class="w-full max-w-sm">

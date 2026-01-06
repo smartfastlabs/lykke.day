@@ -31,7 +31,7 @@ const TaskDefinitionDetailPage: Component = () => {
         ...partialTaskDefinition,
         id: current.id,
       });
-      navigate("/settings/task-definitions");
+      navigate("/me/settings/task-definitions");
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to update task definition";
@@ -49,7 +49,7 @@ const TaskDefinitionDetailPage: Component = () => {
     setIsLoading(true);
     try {
       await taskDefinitionAPI.delete(current.id);
-      navigate("/settings/task-definitions");
+      navigate("/me/settings/task-definitions");
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to delete task definition";
@@ -67,7 +67,10 @@ const TaskDefinitionDetailPage: Component = () => {
       {(current) => (
         <DetailPage
           heading="Task Definition"
-          bottomLink={{ label: "Back to Task Definitions", url: "/settings/task-definitions" }}
+          bottomLink={{
+            label: "Back to Task Definitions",
+            url: "/me/settings/task-definitions",
+          }}
           preview={<TaskDefinitionPreview taskDefinition={current()} />}
           edit={
             <div class="flex flex-col items-center justify-center px-6 py-8">

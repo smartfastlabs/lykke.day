@@ -12,7 +12,7 @@ const TaskDefinitionsPage: Component = () => {
 
   const onClick = (taskDefinition: TaskDefinition) => {
     if (taskDefinition.id) {
-      navigate(`/settings/task-definitions/${taskDefinition.id}`);
+      navigate(`/me/settings/task-definitions/${taskDefinition.id}`);
     }
   };
 
@@ -20,7 +20,7 @@ const TaskDefinitionsPage: Component = () => {
     {
       label: "New Task Definition",
       icon: faPlus,
-      onClick: () => navigate("/settings/task-definitions/new"),
+      onClick: () => navigate("/me/settings/task-definitions/new"),
     },
   ];
 

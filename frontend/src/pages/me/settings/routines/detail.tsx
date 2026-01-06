@@ -44,7 +44,7 @@ const RoutineDetailPage: Component = () => {
         ...partialRoutine,
         id: current.id,
       });
-      navigate("/settings/routines");
+      navigate("/me/settings/routines");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to update routine";
       setError(message);
@@ -60,7 +60,7 @@ const RoutineDetailPage: Component = () => {
     setIsLoading(true);
     try {
       await routineAPI.delete(current.id);
-      navigate("/settings/routines");
+      navigate("/me/settings/routines");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to delete routine";
       setError(message);
@@ -160,7 +160,7 @@ const RoutineDetailPage: Component = () => {
       {(current) => (
         <DetailPage
           heading="Routine"
-          bottomLink={{ label: "Back to Routines", url: "/settings/routines" }}
+          bottomLink={{ label: "Back to Routines", url: "/me/settings/routines" }}
           preview={
             <RoutinePreview
               routine={current()}

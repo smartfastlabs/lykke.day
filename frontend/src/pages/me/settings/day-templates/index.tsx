@@ -12,7 +12,7 @@ const DayTemplatesPage: Component = () => {
 
   const onClick = (template: DayTemplate) => {
     if (template.id) {
-      navigate(`/settings/day-templates/${template.id}`);
+      navigate(`/me/settings/day-templates/${template.id}`);
     }
   };
 
@@ -20,7 +20,7 @@ const DayTemplatesPage: Component = () => {
     {
       label: "New Template",
       icon: faPlus,
-      onClick: () => navigate("/settings/day-templates/new"),
+      onClick: () => navigate("/me/settings/day-templates/new"),
     },
   ];
 

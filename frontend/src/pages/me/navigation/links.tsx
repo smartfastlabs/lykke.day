@@ -14,11 +14,11 @@ import LinkGrid, { LinkItem } from "@/components/shared/linkGrid";
 import { alarmAPI } from "@/utils/api";
 
 const navItems: LinkItem[] = [
-  { label: "Home", icon: faHouse, url: "/" },
-  { label: "Tomorrow", icon: faCalendarPlus, url: "/day/tomorrow" },
-  { label: "Notifications", icon: faBell, url: "/notifications" },
-  { label: "Calendar", icon: faCalendar, url: "/nav/calendar" },
-  { label: "Settings", icon: faGear, url: "/settings" },
+  { label: "Home", icon: faHouse, url: "/me" },
+  { label: "Tomorrow", icon: faCalendarPlus, url: "/me/day/tomorrow" },
+  { label: "Notifications", icon: faBell, url: "/me/notifications" },
+  { label: "Calendar", icon: faCalendar, url: "/me/nav/calendar" },
+  { label: "Settings", icon: faGear, url: "/me/settings" },
   { label: "Login", icon: faRightToBracket, url: "/login" },
   { label: "Alarm", icon: faMugHot, method: alarmAPI.stopAll },
 ];

@@ -27,7 +27,7 @@ export default function Login() {
 
     try {
       await authAPI.login(email(), password());
-      window.location.href = "/";
+      window.location.href = "/me";
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Authentication failed";

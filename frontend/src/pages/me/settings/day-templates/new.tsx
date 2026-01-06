@@ -16,7 +16,7 @@ export default function NewDayTemplate() {
 
     try {
       await dayTemplateAPI.create(template as DayTemplate);
-      navigate("/settings/day-templates");
+      navigate("/me/settings/day-templates");
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to create day template";
@@ -29,7 +29,10 @@ export default function NewDayTemplate() {
   return (
     <SettingsPage
       heading="Create Day Template"
-      bottomLink={{ label: "Back to Day Templates", url: "/settings/day-templates" }}
+      bottomLink={{
+        label: "Back to Day Templates",
+        url: "/me/settings/day-templates",
+      }}
     >
       <div class="flex flex-col items-center justify-center px-6">
         <div class="w-full max-w-sm">

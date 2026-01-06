@@ -56,7 +56,7 @@ export default function NotificationsIndex() {
             Push Subscriptions
           </h1>
           <button
-            onClick={() => navigate("/notifications/subscribe")}
+            onClick={() => navigate("/me/notifications/subscribe")}
             class="px-4 py-2 bg-neutral-900 text-white font-medium rounded-lg hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 transition-colors"
           >
             Subscribe

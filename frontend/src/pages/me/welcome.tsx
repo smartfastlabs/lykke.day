@@ -56,7 +56,7 @@ const Welcome: Component = () => {
       globalNotifications.addSuccess(
         `Successfully imported ${selected.length} task definition${selected.length > 1 ? "s" : ""}!`
       );
-      navigate("/");
+      navigate("/me");
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error
@@ -173,7 +173,7 @@ const Welcome: Component = () => {
                 : `Import ${selectedIds().size} Task Definition${selectedIds().size !== 1 ? "s" : ""}`}
             </button>
             <button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/me")}
               class="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
             >
               Skip for Now
