@@ -1070,18 +1070,18 @@ sqlalchemy = ["fastapi-users-db-sqlalchemy (>=7.0.0)"]
 
 [[package]]
 name = "fastapi-users-db-sqlalchemy"
-version = "3.0.1"
-description = "FastAPI Users database adapter for SQLAlchemy."
+version = "7.0.0"
+description = "FastAPI Users database adapter for SQLAlchemy"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 files = [
-    {file = "fastapi-users-db-sqlalchemy-3.0.1.tar.gz", hash = "sha256:c7b20a14f3c2eb7d51654e1f2b9461f92ec808abaa50fc8438ec18427d66be66"},
-    {file = "fastapi_users_db_sqlalchemy-3.0.1-py3-none-any.whl", hash = "sha256:d053d78c92d5a12d54176a6fd695a1bcec63ecb9c973075680923e56812e509f"},
+    {file = "fastapi_users_db_sqlalchemy-7.0.0-py3-none-any.whl", hash = "sha256:5fceac018e7cfa69efc70834dd3035b3de7988eb4274154a0dbe8b14f5aa001e"},
+    {file = "fastapi_users_db_sqlalchemy-7.0.0.tar.gz", hash = "sha256:6823eeedf8a92f819276a2b2210ef1dcfd71fe8b6e37f7b4da8d1c60e3dfd595"},
 ]
 
 [package.dependencies]
-fastapi-users = ">=9.1.0"
-sqlalchemy = {version = ">=1.4", extras = ["asyncio"]}
+fastapi-users = ">=10.0.0"
+sqlalchemy = {version = ">=2.0.0,<2.1.0", extras = ["asyncio"]}
 
 [[package]]
 name = "filelock"
@@ -4530,4 +4530,4 @@ cffi = ["cffi (>=1.17,<2.0)", "cffi (>=2.0.0b)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.13"
-content-hash = "277c1a681b1464ad21187e4b099afd985b155e396d3cfce07cdb3052a2cb63eb"
+content-hash = "9a4799a20f9be73261f7555858768f1702ddece8f004becc95e50c2df82f3bb4"

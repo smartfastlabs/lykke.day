@@ -6,7 +6,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, Request
-from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin, schemas
+from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin
 from fastapi_users.authentication import AuthenticationBackend, CookieTransport
 from fastapi_users.exceptions import UserAlreadyExists
 from fastapi_users.authentication.strategy import JWTStrategy
@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from planned.core.config import settings
 from planned.domain import value_objects
 from planned.infrastructure import data_objects
+from planned.infrastructure.auth.schemas import UserCreate
 from planned.infrastructure.database.tables import User
 from planned.infrastructure.database.utils import get_engine
 from planned.infrastructure.repositories import DayTemplateRepository
@@ -69,7 +70,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
 
     async def create(
         self,
-        user_create: schemas.UC,
+        user_create: UserCreate,
         safe: bool = False,
         request: Request | None = None,
     ) -> User:
