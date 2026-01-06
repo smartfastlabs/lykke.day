@@ -43,7 +43,7 @@ const Landing: Component = () => {
       icon: calendar,
       title: "Calendar Aware",
       description:
-        "We sync with your calendar so wellness fits into your real life — not around it.",
+        "We watch your calendar so wellness fits into your real life — not around it.",
     },
     {
       icon: bellAlert,
@@ -84,7 +84,6 @@ const Landing: Component = () => {
                   <span class="text-amber-500">.</span>
                   day
                 </h1>
-                <div class="w-16 h-px bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto" />
               </div>
 
               {/* Definition card */}
