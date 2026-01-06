@@ -20,6 +20,8 @@ import DayTemplatesPage from "./pages/settings/day-templates/index";
 import NewDayTemplatePage from "./pages/settings/day-templates/new";
 import TaskDefinitionsPage from "./pages/settings/task-definitions/index";
 import NewTaskDefinitionPage from "./pages/settings/task-definitions/new";
+import RoutinesPage from "./pages/settings/routines/index";
+import NewRoutinePage from "./pages/settings/routines/new";
 import NotFound from "./pages/not-found";
 
 import "./utils/icons";
@@ -98,6 +100,8 @@ export default function App() {
           path="/settings/task-definitions/new"
           component={NewTaskDefinitionPage}
         />
+        <Route path="/settings/routines" component={RoutinesPage} />
+        <Route path="/settings/routines/new" component={NewRoutinePage} />
         <Route path="*" component={NotFound} />
       </Router>
     </SheppardProvider>

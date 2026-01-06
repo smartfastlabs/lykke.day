@@ -33,6 +33,7 @@ from .update import (
     CalendarUpdateObject,
     DayTemplateUpdateObject,
     DayUpdateObject,
+    RoutineUpdateObject,
     TaskDefinitionUpdateObject,
     UserUpdateObject,
 )
@@ -66,6 +67,7 @@ __all__ = [
     "PagedQueryResponse",
     "PushSubscriptionQuery",
     "RoutineQuery",
+    "RoutineUpdateObject",
     "TaskDefinitionQuery",
     "TaskDefinitionUpdateObject",
     "TaskQuery",

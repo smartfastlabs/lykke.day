@@ -14,6 +14,11 @@ from .push_subscription import (
     get_create_push_subscription_handler,
     get_delete_push_subscription_handler,
 )
+from .routine import (
+    get_create_routine_handler,
+    get_delete_routine_handler,
+    get_update_routine_handler,
+)
 from .task_definition import (
     get_bulk_create_task_definitions_handler,
     get_create_task_definition_handler,
@@ -39,6 +44,10 @@ __all__ = [
     # PushSubscription
     "get_create_push_subscription_handler",
     "get_delete_push_subscription_handler",
+    # Routine
+    "get_create_routine_handler",
+    "get_update_routine_handler",
+    "get_delete_routine_handler",
     # User
     "get_update_user_handler",
 ]

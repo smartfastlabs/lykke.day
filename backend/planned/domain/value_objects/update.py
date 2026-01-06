@@ -7,7 +7,8 @@ from uuid import UUID
 from .alarm import Alarm
 from .base import BaseRequestObject
 from .day import DayStatus, DayTag
-from .task import TaskType
+from .routine import RoutineSchedule, RoutineTask
+from .task import TaskCategory, TaskType
 from .user import UserSetting
 
 
@@ -28,6 +29,17 @@ class TaskDefinitionUpdateObject(BaseUpdateObject):
     name: str | None = None
     description: str | None = None
     type: TaskType | None = None
+
+
+@dataclass(kw_only=True)
+class RoutineUpdateObject(BaseUpdateObject):
+    """Update object for Routine entity."""
+
+    name: str | None = None
+    category: TaskCategory | None = None
+    routine_schedule: RoutineSchedule | None = None
+    description: str | None = None
+    tasks: list[RoutineTask] | None = None
 
 
 @dataclass(kw_only=True)

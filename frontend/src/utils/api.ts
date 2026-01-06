@@ -6,6 +6,7 @@ import {
   DayContext,
   DayTemplate,
   TaskDefinition,
+  Routine,
   PushSubscription,
 } from "../types/api";
 import type { ApiResponse, ApiError, PaginatedResponse } from "../types/api/utils";
@@ -260,4 +261,8 @@ export const taskDefinitionAPI = {
       method: "POST",
       body: JSON.stringify(taskDefinitions),
     }),
+};
+
+export const routineAPI = {
+  ...createCrudMethods<Routine>("routines"),
 };
