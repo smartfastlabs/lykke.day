@@ -1,4 +1,4 @@
-import { DayOfWeek } from "../types/api";
+import { DayOfWeek } from "@/types/api";
 
 export function getDateString(date: Date = new Date()): string {
   const year = date.getFullYear();

@@ -1,10 +1,10 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, Show, createResource } from "solid-js";
-import Page from "../../../components/shared/layout/page";
-import { taskDefinitionAPI } from "../../../utils/api";
-import { TaskDefinition } from "../../../types/api";
-import TaskDefinitionList from "../../../components/taskDefinitions/list";
-import { Icon } from "../../../components/shared/icon";
+import Page from "@/components/shared/layout/page";
+import { taskDefinitionAPI } from "@/utils/api";
+import { TaskDefinition } from "@/types/api";
+import TaskDefinitionList from "@/components/taskDefinitions/list";
+import { Icon } from "@/components/shared/icon";
 
 const TaskDefinitionsPage: Component = () => {
   const navigate = useNavigate();

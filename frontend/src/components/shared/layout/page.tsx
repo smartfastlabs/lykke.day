@@ -1,6 +1,6 @@
 import { useNavigate } from "@solidjs/router";
-import { NotificationContainer } from "../../../providers/notifications";
-import NavButton from "../navButton";
+import { NotificationContainer } from "@/providers/notifications";
+import NavButton from "@/components/shared/navButton";
 import { Component, JSX } from "solid-js";
 
 interface PageProps {

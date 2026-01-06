@@ -1,6 +1,6 @@
 import type { JSX } from "solid-js";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { getIcon } from "../../utils/icons";
+import { getIcon } from "@/utils/icons";
 
 interface IconProps {
   /** Direct icon definition - takes precedence over key */

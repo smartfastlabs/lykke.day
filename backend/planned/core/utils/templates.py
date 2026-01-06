@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any
 
 from jinja2 import ChoiceLoader, Environment, FileSystemLoader
-
 from planned.core.config import settings
 
 USER_TEMPLATE_PATH: Path = (Path(settings.DATA_PATH) / "config" / "prompts").resolve()
@@ -22,4 +21,3 @@ env = Environment(
 def render(template_name: str, /, **kwargs: Any) -> str:
     template = env.get_template(template_name)
     return textwrap.dedent(template.render(**kwargs)).strip()
-

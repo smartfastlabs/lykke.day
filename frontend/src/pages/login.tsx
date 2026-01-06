@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js";
-import Page from "../components/shared/layout/page";
-import { authAPI } from "../utils/api";
-import { Input, SubmitButton, FormError } from "../components/forms";
+import Page from "@/components/shared/layout/page";
+import { authAPI } from "@/utils/api";
+import { Input, SubmitButton, FormError } from "@/components/forms";
 
 export default function Login() {
   const [email, setEmail] = createSignal("");

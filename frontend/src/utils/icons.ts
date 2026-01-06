@@ -38,7 +38,7 @@ import {
   faPersonWalking,
 } from "@fortawesome/free-solid-svg-icons";
 
-import type { TaskCategory, TaskType } from "../types/api";
+import type { TaskCategory, TaskType } from "@/types/api";
 
 // General purpose icons by key name
 export const icons: Record<string, IconDefinition> = {

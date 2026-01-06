@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
-import { TaskDefinition } from "../../types/api";
-import { GenericList } from "../shared/genericList";
+import { TaskDefinition } from "@/types/api";
+import { GenericList } from "@/components/shared/genericList";
 import TaskDefinitionListItem from "./listItem";
 
 interface ListProps {

@@ -1,9 +1,9 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, For, Show, createResource, createSignal } from "solid-js";
-import Page from "../components/shared/layout/page";
-import { taskDefinitionAPI } from "../utils/api";
-import { TaskDefinition } from "../types/api";
-import { globalNotifications } from "../providers/notifications";
+import Page from "@/components/shared/layout/page";
+import { taskDefinitionAPI } from "@/utils/api";
+import { TaskDefinition } from "@/types/api";
+import { globalNotifications } from "@/providers/notifications";
 
 const Welcome: Component = () => {
   const navigate = useNavigate();

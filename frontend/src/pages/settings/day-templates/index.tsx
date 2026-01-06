@@ -1,10 +1,10 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, Show, createResource } from "solid-js";
-import Page from "../../../components/shared/layout/page";
-import { dayTemplateAPI } from "../../../utils/api";
-import { DayTemplate } from "../../../types/api";
-import DayTemplateList from "../../../components/dayTemplates/list";
-import { Icon } from "../../../components/shared/icon";
+import Page from "@/components/shared/layout/page";
+import { dayTemplateAPI } from "@/utils/api";
+import { DayTemplate } from "@/types/api";
+import DayTemplateList from "@/components/dayTemplates/list";
+import { Icon } from "@/components/shared/icon";
 
 const DayTemplatesPage: Component = () => {
   const navigate = useNavigate();

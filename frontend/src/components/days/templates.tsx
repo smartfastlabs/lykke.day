@@ -2,9 +2,9 @@ import { useNavigate } from "@solidjs/router";
 import { Component, For, createResource } from "solid-js";
 import { template } from "solid-js/web";
 
-import { dayAPI } from "../../utils/api";
-import { getIcon } from "../../utils/icons";
-import { DayTemplate } from "../../types/api";
+import { dayAPI } from "@/utils/api";
+import { getIcon } from "@/utils/icons";
+import { DayTemplate } from "@/types/api";
 
 const DayTemplatePage: Component = () => {
   const [templates] = createResource(dayAPI.getTemplates);

@@ -1,8 +1,8 @@
-import Page from "../shared/layout/page";
+import Page from "@/components/shared/layout/page";
 import { createMemo, For, Component, createResource, Show } from "solid-js";
-import { dayAPI } from "../../utils/api";
-import { Day, Task, Event, Alarm } from "../../types/api";
-import type { DayContext, TaskFrequency } from "../../types/api";
+import { dayAPI } from "@/utils/api";
+import { Day, Task, Event, Alarm } from "@/types/api";
+import type { DayContext, TaskFrequency } from "@/types/api";
 
 const formatTime = (timeStr: string): string => {
   const date = new Date(timeStr);

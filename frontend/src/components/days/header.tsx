@@ -7,9 +7,9 @@ import {
   Accessor,
 } from "solid-js";
 
-import { Icon } from "../shared/icon";
-import { formatTimeString } from "../tasks/list";
-import { Day } from "../../types/api";
+import { Icon } from "@/components/shared/icon";
+import { formatTimeString } from "@/components/tasks/list";
+import { Day } from "@/types/api";
 
 const DayHeader: Component<{ day: Day }> = (props) => {
   const date = () => new Date(props.day.date + "T12:00:00");

@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
-import { Routine } from "../../types/api";
-import { GenericList } from "../shared/genericList";
+import { Routine } from "@/types/api";
+import { GenericList } from "@/components/shared/genericList";
 import RoutineListItem from "./listItem";
 
 interface ListProps {

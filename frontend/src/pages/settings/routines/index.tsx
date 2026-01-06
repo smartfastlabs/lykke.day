@@ -1,9 +1,9 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, Show, createResource } from "solid-js";
-import Page from "../../../components/shared/layout/page";
-import { routineAPI } from "../../../utils/api";
-import RoutineList from "../../../components/routines/list";
-import { Icon } from "../../../components/shared/icon";
+import Page from "@/components/shared/layout/page";
+import { routineAPI } from "@/utils/api";
+import RoutineList from "@/components/routines/list";
+import { Icon } from "@/components/shared/icon";
 
 const RoutinesPage: Component = () => {
   const navigate = useNavigate();

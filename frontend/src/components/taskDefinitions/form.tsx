@@ -1,6 +1,6 @@
 import { Component, createSignal } from "solid-js";
-import { TaskDefinition, TaskType } from "../../types/api";
-import { Input, TextArea, Select, SubmitButton, FormError } from "../forms";
+import { TaskDefinition, TaskType } from "@/types/api";
+import { Input, TextArea, Select, SubmitButton, FormError } from "@/components/forms";
 
 interface FormProps {
   onSubmit: (taskDefinition: Partial<TaskDefinition>) => Promise<void>;

@@ -1,9 +1,9 @@
 import { createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
-import Page from "../../../components/shared/layout/page";
-import { dayTemplateAPI } from "../../../utils/api";
-import { DayTemplate } from "../../../types/api";
-import DayTemplateForm from "../../../components/dayTemplates/form";
+import Page from "@/components/shared/layout/page";
+import { dayTemplateAPI } from "@/utils/api";
+import { DayTemplate } from "@/types/api";
+import DayTemplateForm from "@/components/dayTemplates/form";
 
 export default function NewDayTemplate() {
   const navigate = useNavigate();

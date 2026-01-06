@@ -1,6 +1,6 @@
 import { useNavigate } from "@solidjs/router";
 import { Component } from "solid-js";
-import Page from "../components/shared/layout/page";
+import Page from "@/components/shared/layout/page";
 
 const NotFound: Component = () => {
   const navigate = useNavigate();

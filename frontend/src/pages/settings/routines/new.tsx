@@ -1,9 +1,9 @@
 import { createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
-import Page from "../../../components/shared/layout/page";
-import { routineAPI } from "../../../utils/api";
-import { Routine } from "../../../types/api";
-import RoutineForm from "../../../components/routines/form";
+import Page from "@/components/shared/layout/page";
+import { routineAPI } from "@/utils/api";
+import { Routine } from "@/types/api";
+import RoutineForm from "@/components/routines/form";
 
 export default function NewRoutine() {
   const navigate = useNavigate();

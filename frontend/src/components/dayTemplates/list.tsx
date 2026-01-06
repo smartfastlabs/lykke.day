@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
-import { DayTemplate } from "../../types/api";
-import { GenericList } from "../shared/genericList";
+import { DayTemplate } from "@/types/api";
+import { GenericList } from "@/components/shared/genericList";
 import DayTemplateListItem from "./listItem";
 
 interface ListProps {

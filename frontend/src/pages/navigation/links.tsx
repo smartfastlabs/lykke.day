@@ -9,9 +9,9 @@ import {
   faMugHot,
 } from "@fortawesome/free-solid-svg-icons";
 
-import Page from "../../components/shared/layout/page";
-import LinkGrid, { LinkItem } from "../../components/shared/linkGrid";
-import { alarmAPI } from "../../utils/api";
+import Page from "@/components/shared/layout/page";
+import LinkGrid, { LinkItem } from "@/components/shared/linkGrid";
+import { alarmAPI } from "@/utils/api";
 
 const navItems: LinkItem[] = [
   { label: "Home", icon: faHouse, url: "/" },

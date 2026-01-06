@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { Routine } from "../../types/api";
+import { Routine } from "@/types/api";
 
 interface ListItemProps {
   routine: Routine;

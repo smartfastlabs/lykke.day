@@ -1,5 +1,5 @@
 import { Component, createSignal, For, Show } from "solid-js";
-import { TaskStatus, TaskType } from "../../../types/api";
+import { TaskStatus, TaskType } from "@/types/api";
 import { FilterChip } from "./FilterChip";
 import { FilterGroup } from "./FilterGroup";
 import {

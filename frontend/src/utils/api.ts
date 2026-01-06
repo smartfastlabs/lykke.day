@@ -1,4 +1,4 @@
-import { globalNotifications } from "../providers/notifications";
+import { globalNotifications } from "@/providers/notifications";
 import {
   Event,
   Task,
@@ -8,12 +8,12 @@ import {
   TaskDefinition,
   Routine,
   PushSubscription,
-} from "../types/api";
+} from "@/types/api";
 import type {
   ApiResponse,
   ApiError,
   PaginatedResponse,
-} from "../types/api/utils";
+} from "@/types/api/utils";
 
 // Custom error class for API errors
 export class ApiRequestError extends Error {

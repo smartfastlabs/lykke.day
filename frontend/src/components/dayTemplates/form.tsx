@@ -1,6 +1,6 @@
 import { Component, createSignal } from "solid-js";
-import { DayTemplate } from "../../types/api";
-import { Input, SubmitButton, FormError } from "../forms";
+import { DayTemplate } from "@/types/api";
+import { Input, SubmitButton, FormError } from "@/components/forms";
 
 interface FormProps {
   onSubmit: (template: Partial<DayTemplate>) => Promise<void>;

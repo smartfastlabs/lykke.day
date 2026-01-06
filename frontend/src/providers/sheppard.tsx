@@ -7,8 +7,8 @@ import {
   type ParentProps,
   type ResourceReturn,
 } from "solid-js";
-import { DayContext, Task, Event, Day, TaskStatus } from "../types/api";
-import { dayAPI, taskAPI } from "../utils/api";
+import { DayContext, Task, Event, Day, TaskStatus } from "@/types/api";
+import { dayAPI, taskAPI } from "@/utils/api";
 
 interface SheppardContextValue {
   // The main resource - provides loading/error states

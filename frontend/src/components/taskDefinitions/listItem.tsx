@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { TaskDefinition } from "../../types/api";
+import { TaskDefinition } from "@/types/api";
 
 interface ListItemProps {
   taskDefinition: TaskDefinition;

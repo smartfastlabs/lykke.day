@@ -1,9 +1,9 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { Component, Show, createResource, createSignal } from "solid-js";
-import Page from "../../../components/shared/layout/page";
-import DayTemplateForm from "../../../components/dayTemplates/form";
-import { dayTemplateAPI } from "../../../utils/api";
-import { DayTemplate } from "../../../types/api";
+import Page from "@/components/shared/layout/page";
+import DayTemplateForm from "@/components/dayTemplates/form";
+import { dayTemplateAPI } from "@/utils/api";
+import { DayTemplate } from "@/types/api";
 
 const DayTemplateDetailPage: Component = () => {
   const params = useParams();

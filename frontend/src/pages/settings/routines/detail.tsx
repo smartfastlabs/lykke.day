@@ -1,9 +1,9 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { Component, Show, createResource, createSignal } from "solid-js";
-import Page from "../../../components/shared/layout/page";
-import RoutineForm from "../../../components/routines/form";
-import { routineAPI } from "../../../utils/api";
-import { Routine } from "../../../types/api";
+import Page from "@/components/shared/layout/page";
+import RoutineForm from "@/components/routines/form";
+import { routineAPI } from "@/utils/api";
+import { Routine } from "@/types/api";
 
 const RoutineDetailPage: Component = () => {
   const params = useParams();

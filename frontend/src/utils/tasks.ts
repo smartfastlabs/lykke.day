@@ -1,5 +1,5 @@
 import { getTime } from "./dates";
-import type { Task } from "../types/api";
+import type { Task } from "@/types/api";
 
 interface GroupedTasks {
   punted: Task[];

@@ -4,9 +4,9 @@ import datetime
 from zoneinfo import ZoneInfo
 
 from planned.core.config import settings
+from planned.core.utils.dates import get_current_datetime, get_current_time
 from planned.domain import value_objects
 from planned.domain.entities import TaskEntity
-from planned.core.utils.dates import get_current_datetime, get_current_time
 
 
 def is_task_eligible_for_upcoming(
@@ -67,9 +67,7 @@ def calculate_cutoff_time(look_ahead: datetime.timedelta) -> datetime.time:
         The cutoff time in the configured timezone
     """
     cutoff_datetime_utc = get_current_datetime() + look_ahead
-    cutoff_datetime_local = cutoff_datetime_utc.astimezone(
-        ZoneInfo(settings.TIMEZONE)
-    )
+    cutoff_datetime_local = cutoff_datetime_utc.astimezone(ZoneInfo(settings.TIMEZONE))
     return cutoff_datetime_local.time()
 
 
@@ -99,4 +97,3 @@ def filter_upcoming_tasks(
             result.append(task)
 
     return result
-

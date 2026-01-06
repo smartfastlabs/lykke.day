@@ -1,10 +1,10 @@
 import { Component, createMemo, Show, type Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import TaskList from "../tasks/list";
-import EventList from "../events/list";
-import { EmptyState } from "../shared/EmptyState";
-import { SectionHeader } from "../shared/SectionHeader";
+import TaskList from "@/components/tasks/list";
+import EventList from "@/components/events/list";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { SectionHeader } from "@/components/shared/SectionHeader";
 import {
   TaskFilters,
   ALL_STATUSES,
@@ -14,7 +14,7 @@ import {
   type FrequencyGroup,
   type TaskFiltersState,
 } from "./filters";
-import { TaskStatus, TaskType, TaskFrequency, Task, Event } from "../../types/api";
+import { TaskStatus, TaskType, TaskFrequency, Task, Event } from "@/types/api";
 
 interface DayViewProps {
   events: Accessor<Event[]>;

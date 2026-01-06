@@ -1,4 +1,4 @@
-import { TaskStatus, TaskType, TaskFrequency } from "../../../types/api";
+import { TaskStatus, TaskType, TaskFrequency } from "@/types/api";
 
 // Filter constants
 export const ALL_STATUSES: TaskStatus[] = [

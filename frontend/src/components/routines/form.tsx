@@ -1,6 +1,6 @@
 import { Component, createSignal } from "solid-js";
-import { Routine, RoutineSchedule, TaskCategory, TaskFrequency } from "../../types/api";
-import { FormError, Input, Select, SubmitButton, TextArea } from "../forms";
+import { Routine, RoutineSchedule, TaskCategory, TaskFrequency } from "@/types/api";
+import { FormError, Input, Select, SubmitButton, TextArea } from "@/components/forms";
 
 interface FormProps {
   onSubmit: (routine: Partial<Routine>) => Promise<void>;
