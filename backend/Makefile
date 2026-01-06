@@ -1,4 +1,4 @@
-.PHONY: serve test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-create init-db
+.PHONY: serve test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db
 
 # Docker management
 docker-up:
@@ -29,6 +29,18 @@ migrate-dev:
 
 migrate-test:
 	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test poetry run alembic upgrade head
+
+migrate-prod:
+	@if [ -z "$$PRODUCTION_MIGRATION_DB_URL" ]; then \
+		if [ -f .env.prod ] && grep -q '^PRODUCTION_MIGRATION_DB_URL=' .env.prod; then \
+			DATABASE_URL=$$(grep '^PRODUCTION_MIGRATION_DB_URL=' .env.prod | cut -d'=' -f2-) poetry run alembic upgrade head; \
+		else \
+			echo "Error: PRODUCTION_MIGRATION_DB_URL not set and not found in .env.prod"; \
+			exit 1; \
+		fi \
+	else \
+		DATABASE_URL=$$PRODUCTION_MIGRATION_DB_URL poetry run alembic upgrade head; \
+	fi
 
 migrate-create:
 	@if [ -z "$(MSG)" ]; then \

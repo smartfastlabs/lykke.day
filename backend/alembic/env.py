@@ -1,13 +1,11 @@
 import asyncio
 from logging.config import fileConfig
 
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy import pool
-
 from alembic import context
-
 from planned.core.config import settings
 from planned.infrastructure.database.tables import metadata
+from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import create_async_engine
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -24,6 +22,7 @@ target_metadata = metadata
 
 def get_url() -> str:
     """Get database URL from settings."""
+    print(settings.DATABASE_URL)
     return settings.DATABASE_URL
 
 
