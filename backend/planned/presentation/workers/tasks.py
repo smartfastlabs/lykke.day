@@ -1,16 +1,21 @@
 """Background task definitions using Taskiq."""
 
-from typing import Annotated
+from datetime import UTC, datetime, timedelta
+from typing import Annotated, cast
 from uuid import UUID
 
 from loguru import logger
+from planned.application.commands import ScheduleDayHandler
 from planned.application.commands.calendar import SyncAllCalendarsHandler
 from planned.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+from planned.application.queries import PreviewDayHandler
+from planned.application.repositories import UserRepositoryReadOnlyProtocol
 from planned.application.unit_of_work import (
     ReadOnlyRepositoryFactory,
     UnitOfWorkFactory,
 )
 from planned.infrastructure.gateways import GoogleCalendarGateway
+from planned.infrastructure.repositories import UserRepository
 from planned.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
@@ -34,6 +39,11 @@ def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
     return SqlAlchemyReadOnlyRepositoryFactory()
 
 
+def get_user_repository() -> UserRepositoryReadOnlyProtocol:
+    """Get a UserRepository instance (not user-scoped)."""
+    return cast("UserRepositoryReadOnlyProtocol", UserRepository())
+
+
 def get_sync_all_calendars_handler(
     user_id: UUID,
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
@@ -47,6 +57,19 @@ def get_sync_all_calendars_handler(
     """Get a SyncAllCalendarsHandler instance for a user."""
     ro_repos = ro_repo_factory.create(user_id)
     return SyncAllCalendarsHandler(ro_repos, uow_factory, user_id, google_gateway)
+
+
+def get_schedule_day_handler(
+    user_id: UUID,
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> ScheduleDayHandler:
+    """Get a ScheduleDayHandler instance for a user."""
+    ro_repos = ro_repo_factory.create(user_id)
+    preview_day_handler = PreviewDayHandler(ro_repos, user_id)
+    return ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_day_handler)
 
 
 @broker.task
@@ -69,3 +92,58 @@ async def sync_calendar_task(
     await sync_handler.sync_all_calendars()
 
     logger.info(f"Calendar sync completed for user {user_id}")
+
+
+@broker.task
+async def schedule_all_users_week_task(
+    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+) -> None:
+    """Load all users and enqueue scheduling tasks for each user.
+
+    This is the parent task that fans out to per-user scheduling tasks.
+    It is one of the few tasks that is NOT scoped to a specific user.
+    """
+    logger.info("Starting scheduled week task for all users")
+
+    users = await user_repo.all()
+    logger.info(f"Found {len(users)} users to schedule")
+
+    for user in users:
+        # Enqueue a sub-task for each user
+        await schedule_user_week_task.kiq(user_id=user.id)  # type: ignore[call-overload]
+
+    logger.info(f"Enqueued scheduling tasks for {len(users)} users")
+
+
+@broker.task
+async def schedule_user_week_task(
+    user_id: UUID,
+    schedule_handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
+) -> None:
+    """Schedule all days for the next week for a specific user.
+
+    Args:
+        user_id: The user ID to schedule days for.
+        schedule_handler: Injected ScheduleDayHandler.
+    """
+    logger.info(f"Starting week scheduling for user {user_id}")
+
+    today = datetime.now(UTC).date()
+    days_scheduled = 0
+
+    for day_offset in range(7):
+        target_date = today + timedelta(days=day_offset)
+        try:
+            await schedule_handler.schedule_day(date=target_date)
+            days_scheduled += 1
+            logger.debug(f"Scheduled {target_date} for user {user_id}")
+        except ValueError as e:
+            # Day template might be missing for some days - log and continue
+            logger.warning(f"Could not schedule {target_date} for user {user_id}: {e}")
+        except Exception:
+            # Catch-all for resilient background job - continue with other days
+            logger.exception(f"Error scheduling {target_date} for user {user_id}")
+
+    logger.info(
+        f"Week scheduling completed for user {user_id}: {days_scheduled}/7 days scheduled"
+    )

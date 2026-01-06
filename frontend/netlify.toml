@@ -1,0 +1,17 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA routing - redirect all paths to index.html for client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Proxy API requests to your backend (update the URL when you deploy your backend)
+[[redirects]]
+  from = "/api/*"
+  to = "https://your-backend-url.com/:splat"
+  status = 200
+  force = true
+
