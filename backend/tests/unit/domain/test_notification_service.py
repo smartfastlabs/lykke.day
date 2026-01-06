@@ -6,10 +6,13 @@ from uuid import uuid4
 
 import pytest
 
+from planned.core.utils import (
+    build_notification_payload_for_calendar_entries,
+    build_notification_payload_for_tasks,
+)
 from planned.domain import value_objects
 from planned.domain.entities import CalendarEntity, CalendarEntryEntity, TaskEntity
 from planned.infrastructure import data_objects
-from planned.domain.services.notification import NotificationPayloadBuilder
 
 
 @pytest.fixture
@@ -34,7 +37,7 @@ def test_task(test_user_id: str) -> TaskEntity:
 
 def test_build_for_tasks_single_task(test_task: TaskEntity) -> None:
     """Test building notification payload for a single task."""
-    payload = NotificationPayloadBuilder.build_for_tasks([test_task])
+    payload = build_notification_payload_for_tasks([test_task])
 
     assert payload.title == "Test Task"
     assert payload.body == "Task ready: Test Task"
@@ -75,7 +78,7 @@ def test_build_for_tasks_multiple_tasks(test_user_id: str) -> None:
         frequency=value_objects.TaskFrequency.DAILY,
     )
 
-    payload = NotificationPayloadBuilder.build_for_tasks([task1, task2])
+    payload = build_notification_payload_for_tasks([task1, task2])
 
     assert payload.title == "2 tasks ready"
     assert payload.body == "You have 2 tasks ready"
@@ -106,7 +109,7 @@ def test_build_for_calendar_entries_single(test_user_id: str) -> None:
         frequency=value_objects.TaskFrequency.ONCE,
     )
 
-    payload = NotificationPayloadBuilder.build_for_calendar_entries([entry])
+    payload = build_notification_payload_for_calendar_entries([entry])
 
     assert payload.title == "Test Event"
     assert payload.body == "Event starting soon: Test Event"
@@ -152,7 +155,7 @@ def test_build_for_calendar_entries_multiple(test_user_id: str) -> None:
         frequency=value_objects.TaskFrequency.ONCE,
     )
 
-    payload = NotificationPayloadBuilder.build_for_calendar_entries(
+    payload = build_notification_payload_for_calendar_entries(
         [entry1, entry2]
     )
 
@@ -185,7 +188,7 @@ def test_build_for_calendar_entries_no_ends_at(test_user_id: str) -> None:
         frequency=value_objects.TaskFrequency.ONCE,
     )
 
-    payload = NotificationPayloadBuilder.build_for_calendar_entries([entry])
+    payload = build_notification_payload_for_calendar_entries([entry])
 
     assert payload.data["calendar_entries"][0]["ends_at"] is None
 

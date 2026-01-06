@@ -9,9 +9,9 @@ from planned.application.repositories import (
     RoutineRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
 )
+from planned.core.utils import is_routine_active
 from planned.domain import value_objects
 from planned.domain.entities import TaskEntity
-from planned.domain.services.routine import RoutineService
 
 
 class PreviewTasksHandler(BaseQueryHandler):
@@ -33,7 +33,7 @@ class PreviewTasksHandler(BaseQueryHandler):
 
         for routine in await self.routine_ro_repo.all():
             logger.debug(f"Checking routine: {routine.name}")
-            if RoutineService.is_routine_active(routine.routine_schedule, date):
+            if is_routine_active(routine.routine_schedule, date):
                 for routine_task in routine.tasks:
                     task_def = await self.task_definition_ro_repo.get(
                         routine_task.task_definition_id,

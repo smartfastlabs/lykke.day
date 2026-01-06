@@ -4,7 +4,7 @@ import datetime
 
 import pytest
 
-from planned.domain.services.routine import RoutineService
+from planned.core.utils import is_routine_active
 from planned.domain.value_objects.routine import RoutineSchedule
 from planned.domain.value_objects.task import TaskFrequency
 
@@ -33,14 +33,14 @@ def test_is_routine_active_with_weekdays(
         frequency=TaskFrequency.WEEKLY,
         weekdays=[DayOfWeek(d) for d in weekdays],
     )
-    result = RoutineService.is_routine_active(schedule, date)
+    result = is_routine_active(schedule, date)
     assert result == expected
 
 
 def test_is_routine_active_no_weekdays() -> None:
     """Test is_routine_active returns True when no weekdays specified."""
     schedule = RoutineSchedule(frequency=TaskFrequency.DAILY, weekdays=None)
-    result = RoutineService.is_routine_active(
+    result = is_routine_active(
         schedule, datetime.date(2025, 11, 27)
     )
     assert result is True
@@ -60,7 +60,7 @@ def test_is_routine_active_all_frequencies_no_weekdays(
 ) -> None:
     """Test is_routine_active with all frequencies when no weekdays."""
     schedule = RoutineSchedule(frequency=frequency, weekdays=None)
-    result = RoutineService.is_routine_active(
+    result = is_routine_active(
         schedule, datetime.date(2025, 11, 27)
     )
     assert result is True
