@@ -1,6 +1,7 @@
 import { Component, Show, For, createSignal, onMount } from "solid-js";
 import { Icon } from "solid-heroicons";
 import { sun, arrowPath, calendar, bellAlert } from "solid-heroicons/outline";
+import Footer from "@/components/shared/layout/footer";
 
 interface Feature {
   icon: typeof sun;
@@ -204,27 +205,9 @@ const Landing: Component = () => {
           </div>
 
           {/* Footer */}
-          <footer class="relative z-10 py-8 px-6">
-            <div class="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p class="text-stone-400 text-sm">
-                © {new Date().getFullYear()} lykke.day — All rights reserved.
-              </p>
-              <div class="flex items-center gap-6">
-                <a
-                  href="/privacy"
-                  class="text-stone-400 text-sm hover:text-stone-600 transition-colors"
-                >
-                  Privacy
-                </a>
-                <a
-                  href="/terms"
-                  class="text-stone-400 text-sm hover:text-stone-600 transition-colors"
-                >
-                  Terms
-                </a>
-              </div>
-            </div>
-          </footer>
+          <div class="relative z-10">
+            <Footer />
+          </div>
 
           {/* Modal */}
           <Show when={showModal()}>

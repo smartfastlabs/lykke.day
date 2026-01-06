@@ -1,6 +1,6 @@
-import { useNavigate } from "@solidjs/router";
 import { NotificationContainer } from "@/providers/notifications";
 import NavButton from "@/components/shared/navButton";
+import Footer from "@/components/shared/layout/footer";
 import { Component, JSX } from "solid-js";
 
 interface PageProps {
@@ -16,6 +16,7 @@ const Page: Component<PageProps> = (props) => {
           {props.children}
         </div>
       </div>
+      <Footer />
       <NavButton />
     </div>
   );

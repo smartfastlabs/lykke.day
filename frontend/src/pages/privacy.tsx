@@ -1,9 +1,10 @@
 import { Component } from "solid-js";
+import Footer from "@/components/shared/layout/footer";
 
 const Privacy: Component = () => {
   return (
-    <div class="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
-      <div class="max-w-2xl mx-auto px-6 py-16">
+    <div class="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex flex-col">
+      <div class="max-w-2xl mx-auto px-6 py-16 flex-1">
         <a
           href="/landing"
           class="inline-block mb-8 text-stone-500 hover:text-stone-700 transition-colors text-sm"
@@ -96,6 +97,7 @@ const Privacy: Component = () => {
           </section>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

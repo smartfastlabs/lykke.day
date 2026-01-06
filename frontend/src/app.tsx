@@ -80,8 +80,8 @@ export default function App() {
           </NotificationProvider>
         )}
       >
-        <Route path="/" component={Home} />
-        <Route path="/landing" component={Landing} />
+        <Route path="/" component={Landing} />
+        <Route path="/home" component={Home} />
         <Route path="/privacy" component={Privacy} />
         <Route path="/terms" component={Terms} />
         <Route path="/login" component={Login} />
