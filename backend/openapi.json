@@ -1561,6 +1561,124 @@
         }
       }
     },
+    "/day-templates/{uuid}/routines": {
+      "post": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Add Day Template Routine",
+        "description": "Attach a routine to a day template.",
+        "operationId": "add_day_template_routine_day_templates__uuid__routines_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayTemplateRoutineCreateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayTemplateSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/day-templates/{uuid}/routines/{routine_id}": {
+      "delete": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Remove Day Template Routine",
+        "description": "Detach a routine from a day template.",
+        "operationId": "remove_day_template_routine_day_templates__uuid__routines__routine_id__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          },
+          {
+            "name": "routine_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Routine Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayTemplateSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/task-definitions/available/": {
       "get": {
         "tags": [
@@ -3235,6 +3353,21 @@
         ],
         "title": "DayTemplateCreateSchema",
         "description": "API schema for creating a DayTemplate entity."
+      },
+      "DayTemplateRoutineCreateSchema": {
+        "properties": {
+          "routine_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Routine Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "routine_id"
+        ],
+        "title": "DayTemplateRoutineCreateSchema",
+        "description": "API schema for attaching a routine to a day template."
       },
       "DayTemplateSchema": {
         "properties": {

@@ -657,6 +657,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/day-templates/{uuid}/routines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Day Template Routine
+         * @description Attach a routine to a day template.
+         */
+        post: operations["add_day_template_routine_day_templates__uuid__routines_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/day-templates/{uuid}/routines/{routine_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Day Template Routine
+         * @description Detach a routine from a day template.
+         */
+        delete: operations["remove_day_template_routine_day_templates__uuid__routines__routine_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/task-definitions/available/": {
         parameters: {
             query?: never;
@@ -1178,6 +1218,17 @@ export interface components {
             icon?: string | null;
             /** Routine Ids */
             routine_ids?: string[];
+        };
+        /**
+         * DayTemplateRoutineCreateSchema
+         * @description API schema for attaching a routine to a day template.
+         */
+        DayTemplateRoutineCreateSchema: {
+            /**
+             * Routine Id
+             * Format: uuid
+             */
+            routine_id: string;
         };
         /**
          * DayTemplateSchema
@@ -2622,6 +2673,73 @@ export interface operations {
                 "application/json": components["schemas"]["DayTemplateCreateSchema"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayTemplateSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_day_template_routine_day_templates__uuid__routines_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DayTemplateRoutineCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayTemplateSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_day_template_routine_day_templates__uuid__routines__routine_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+                routine_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

@@ -1,4 +1,5 @@
 import { TaskStatus, TaskType, TaskFrequency } from "@/types/api";
+import { ALL_TASK_TYPES, ALL_TASK_FREQUENCIES } from "@/types/api/constants";
 
 // Filter constants
 export const ALL_STATUSES: TaskStatus[] = [
@@ -10,19 +11,9 @@ export const ALL_STATUSES: TaskStatus[] = [
   "PENDING",
 ];
 
-export const ALL_TYPES: TaskType[] = ["MEAL", "EVENT", "CHORE", "ERRAND", "ACTIVITY"];
-
-export const ALL_FREQUENCIES: TaskFrequency[] = [
-  "DAILY",
-  "WEEKLY",
-  "BI_WEEKLY",
-  "MONTHLY",
-  "YEARLY",
-  "ONCE",
-  "WORK_DAYS",
-  "WEEKENDS",
-  "CUSTOM_WEEKLY",
-];
+// Re-export with shorter names for backward compatibility
+export const ALL_TYPES: TaskType[] = ALL_TASK_TYPES;
+export const ALL_FREQUENCIES: TaskFrequency[] = ALL_TASK_FREQUENCIES;
 
 // Frequency display groups for the simplified filter
 export type FrequencyGroup = "ONCE" | "DAILY" | "WEEKLY" | "MONTHLY+";

@@ -1,6 +1,21 @@
 import { Component, createSignal } from "solid-js";
-import { Routine, RoutineSchedule, TaskCategory, TaskFrequency } from "@/types/api";
-import { FormError, Input, Select, SubmitButton, TextArea } from "@/components/forms";
+import {
+  Routine,
+  RoutineSchedule,
+  TaskCategory,
+  TaskFrequency,
+} from "@/types/api";
+import {
+  ALL_TASK_CATEGORIES,
+  ALL_TASK_FREQUENCIES,
+} from "@/types/api/constants";
+import {
+  FormError,
+  Input,
+  Select,
+  SubmitButton,
+  TextArea,
+} from "@/components/forms";
 
 interface FormProps {
   onSubmit: (routine: Partial<Routine>) => Promise<void>;
@@ -9,23 +24,14 @@ interface FormProps {
   initialData?: Routine;
 }
 
-const CATEGORIES: TaskCategory[] = ["HYGIENE", "NUTRITION", "HEALTH", "PET", "HOUSE"];
-const FREQUENCIES: TaskFrequency[] = [
-  "DAILY",
-  "CUSTOM_WEEKLY",
-  "WEEKLY",
-  "ONCE",
-  "YEARLY",
-  "MONTHLY",
-  "BI_WEEKLY",
-  "WORK_DAYS",
-  "WEEKENDS",
-];
-
 const RoutineForm: Component<FormProps> = (props) => {
   const [name, setName] = createSignal(props.initialData?.name ?? "");
-  const [description, setDescription] = createSignal(props.initialData?.description ?? "");
-  const [category, setCategory] = createSignal<TaskCategory>(props.initialData?.category ?? "HYGIENE");
+  const [description, setDescription] = createSignal(
+    props.initialData?.description ?? ""
+  );
+  const [category, setCategory] = createSignal<TaskCategory>(
+    props.initialData?.category ?? "HYGIENE"
+  );
   const [frequency, setFrequency] = createSignal<TaskFrequency>(
     props.initialData?.routine_schedule.frequency ?? "DAILY"
   );
@@ -53,7 +59,13 @@ const RoutineForm: Component<FormProps> = (props) => {
 
   return (
     <form onSubmit={handleSubmit} class="space-y-6">
-      <Input id="name" placeholder="Name" value={name} onChange={setName} required />
+      <Input
+        id="name"
+        placeholder="Name"
+        value={name}
+        onChange={setName}
+        required
+      />
 
       <TextArea
         id="description"
@@ -68,7 +80,7 @@ const RoutineForm: Component<FormProps> = (props) => {
         placeholder="Category"
         value={category}
         onChange={setCategory}
-        options={CATEGORIES}
+        options={ALL_TASK_CATEGORIES}
         required
       />
 
@@ -77,7 +89,7 @@ const RoutineForm: Component<FormProps> = (props) => {
         placeholder="Frequency"
         value={frequency}
         onChange={setFrequency}
-        options={FREQUENCIES}
+        options={ALL_TASK_FREQUENCIES}
         required
       />
 
@@ -93,5 +105,3 @@ const RoutineForm: Component<FormProps> = (props) => {
 };
 
 export default RoutineForm;
-
-

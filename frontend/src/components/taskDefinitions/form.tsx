@@ -1,5 +1,6 @@
 import { Component, createSignal } from "solid-js";
 import { TaskDefinition, TaskType } from "@/types/api";
+import { ALL_TASK_TYPES } from "@/types/api/constants";
 import { Input, TextArea, Select, SubmitButton, FormError } from "@/components/forms";
 
 interface FormProps {
@@ -8,8 +9,6 @@ interface FormProps {
   error?: string;
   initialData?: TaskDefinition;
 }
-
-const TASK_TYPES: TaskType[] = ["MEAL", "EVENT", "CHORE", "ERRAND", "ACTIVITY"];
 
 const TaskDefinitionForm: Component<FormProps> = (props) => {
   const [name, setName] = createSignal(props.initialData?.name ?? "");
@@ -53,7 +52,7 @@ const TaskDefinitionForm: Component<FormProps> = (props) => {
         placeholder="Type"
         value={type}
         onChange={setType}
-        options={TASK_TYPES}
+        options={ALL_TASK_TYPES}
         required
       />
 
