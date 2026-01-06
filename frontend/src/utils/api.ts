@@ -124,7 +124,7 @@ interface EntityWithId {
 
 function createCrudMethods<T extends EntityWithId>(type: string) {
   return {
-    get: (id: string): Promise<T> => fetchData<T>(`/api/${type}/${id}/`),
+    get: (id: string): Promise<T> => fetchData<T>(`/api/${type}/${id}`),
 
     getAll: async (): Promise<T[]> => {
       const data = await fetchData<T[] | PaginatedResponse<T>>(`/api/${type}/`);
@@ -132,7 +132,7 @@ function createCrudMethods<T extends EntityWithId>(type: string) {
     },
 
     create: (item: Omit<T, "id">): Promise<T> =>
-      fetchData<T>(`/api/${type}`, {
+      fetchData<T>(`/api/${type}/`, {
         method: "POST",
         body: JSON.stringify(item),
       }),
@@ -165,7 +165,7 @@ export const eventAPI = {
 export const taskAPI = {
   ...createCrudMethods<Task>("tasks"),
 
-  getTodays: (): Promise<Task[]> => fetchData<Task[]>("/api/tasks/today"),
+  getTodays: (): Promise<Task[]> => fetchData<Task[]>("/api/tasks/today/"),
 
   setTaskStatus: (task: Task, status: string): Promise<Task> =>
     fetchData<Task>(`/api/tasks/${task.date}/${task.id}/actions`, {
@@ -236,7 +236,7 @@ export const dayAPI = {
     fetchData<Day>("/api/days/today/schedule", { method: "PUT" }),
 
   getTemplates: (): Promise<DayTemplate[]> =>
-    fetchData<DayTemplate[]>("/api/days/templates"),
+    fetchData<DayTemplate[]>("/api/days/templates/"),
 };
 
 export const planningAPI = {
@@ -252,7 +252,7 @@ export const planningAPI = {
 
 export const pushAPI = {
   getSubscriptions: (): Promise<PushSubscription[]> =>
-    fetchData<PushSubscription[]>("/api/push/subscriptions"),
+    fetchData<PushSubscription[]>("/api/push/subscriptions/"),
 
   deleteSubscription: (id: string): Promise<void> =>
     fetchData<void>(`/api/push/subscriptions/${id}`, { method: "DELETE" }),
@@ -266,10 +266,10 @@ export const taskDefinitionAPI = {
   ...createCrudMethods<TaskDefinition>("task-definitions"),
 
   getAvailable: (): Promise<TaskDefinition[]> =>
-    fetchData<TaskDefinition[]>("/api/task-definitions/available"),
+    fetchData<TaskDefinition[]>("/api/task-definitions/available/"),
 
   bulkCreate: (taskDefinitions: TaskDefinition[]): Promise<TaskDefinition[]> =>
-    fetchData<TaskDefinition[]>("/api/task-definitions/bulk", {
+    fetchData<TaskDefinition[]>("/api/task-definitions/bulk/", {
       method: "POST",
       body: JSON.stringify(taskDefinitions),
     }),

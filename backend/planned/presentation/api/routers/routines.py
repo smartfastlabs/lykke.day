@@ -34,7 +34,7 @@ from .dependencies.user import get_current_user
 router = APIRouter()
 
 
-@router.get("/{uuid}/", response_model=RoutineSchema)
+@router.get("/{uuid}", response_model=RoutineSchema)
 async def get_routine(
     uuid: UUID,
     get_routine_handler: Annotated[GetRoutineHandler, Depends(get_get_routine_handler)],

@@ -35,7 +35,7 @@ class SubscriptionRequest(value_objects.BaseRequestObject):
     keys: Keys
 
 
-@router.get("/subscriptions", response_model=list[PushSubscriptionSchema])
+@router.get("/subscriptions/", response_model=list[PushSubscriptionSchema])
 async def list_subscriptions(
     list_push_subscriptions_handler: Annotated[
         SearchPushSubscriptionsHandler, Depends(get_list_push_subscriptions_handler)
@@ -55,7 +55,7 @@ async def delete_subscription(
     await delete_push_subscription_handler.run(subscription_id=UUID(subscription_id))
 
 
-@router.post("/subscribe", response_model=PushSubscriptionSchema)
+@router.post("/subscribe/", response_model=PushSubscriptionSchema)
 async def subscribe(
     background_tasks: BackgroundTasks,
     request: SubscriptionRequest,

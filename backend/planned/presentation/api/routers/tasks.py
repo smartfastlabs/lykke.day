@@ -19,7 +19,7 @@ from .dependencies.services import get_record_task_action_handler
 router = APIRouter()
 
 
-@router.get("/today", response_model=list[TaskSchema])
+@router.get("/today/", response_model=list[TaskSchema])
 async def list_todays_tasks(
     list_tasks_handler: Annotated[SearchTasksHandler, Depends(get_list_tasks_handler)],
 ) -> list[TaskSchema]:

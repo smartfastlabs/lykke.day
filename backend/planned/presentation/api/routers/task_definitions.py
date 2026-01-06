@@ -41,7 +41,7 @@ from .dependencies.user import get_current_user
 router = APIRouter()
 
 
-@router.get("/available")
+@router.get("/available/")
 async def get_available_task_definitions() -> list[dict]:
     """Get the curated list of available task definitions that users can import.
 
@@ -98,7 +98,7 @@ async def create_task_definition(
     return map_task_definition_to_schema(created)
 
 
-@router.post("/bulk", response_model=list[TaskDefinitionSchema])
+@router.post("/bulk/", response_model=list[TaskDefinitionSchema])
 async def bulk_create_task_definitions(
     task_definitions_data: list[dict],
     user: Annotated[UserEntity, Depends(get_current_user)],

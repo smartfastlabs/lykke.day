@@ -141,7 +141,7 @@ async def update_day(
 # ============================================================================
 
 
-@router.get("/templates", response_model=list[DayTemplateSchema])
+@router.get("/templates/", response_model=list[DayTemplateSchema])
 async def get_templates(
     list_day_templates_handler: Annotated[
         SearchDayTemplatesHandler, Depends(get_list_day_templates_handler)

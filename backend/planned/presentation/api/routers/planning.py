@@ -21,7 +21,7 @@ from .dependencies.services import get_preview_day_handler, get_schedule_day_han
 router = APIRouter()
 
 
-@router.get("/routines", response_model=list[RoutineSchema])
+@router.get("/routines/", response_model=list[RoutineSchema])
 async def list_routines(
     list_routines_handler: Annotated[
         SearchRoutinesHandler, Depends(get_list_routines_handler)
