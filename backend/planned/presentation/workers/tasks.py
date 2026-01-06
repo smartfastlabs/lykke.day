@@ -21,7 +21,12 @@ from planned.infrastructure.unit_of_work import (
     SqlAlchemyUnitOfWorkFactory,
 )
 from planned.infrastructure.workers.config import broker
+from taskiq import TaskiqScheduler
+from taskiq.schedule_sources import LabelScheduleSource
 from taskiq_dependencies import Depends
+
+# Create a scheduler for periodic tasks
+scheduler = TaskiqScheduler(broker=broker, sources=[LabelScheduleSource(broker)])
 
 
 def get_google_gateway() -> GoogleCalendarGatewayProtocol:
@@ -147,3 +152,34 @@ async def schedule_user_week_task(
     logger.info(
         f"Week scheduling completed for user {user_id}: {days_scheduled}/7 days scheduled"
     )
+
+
+# =============================================================================
+# Example Tasks
+# =============================================================================
+
+
+@broker.task(schedule=[{"cron": "* * * * *"}])
+async def heartbeat_task() -> None:
+    """Heartbeat task that runs every minute.
+
+    This is a simple example of a scheduled task that logs a message.
+    Useful for verifying that the worker is running and processing tasks.
+    """
+    logger.info("💓 Heartbeat: Worker is alive and processing tasks")
+
+
+@broker.task
+async def example_triggered_task(message: str) -> dict[str, str]:
+    """Example task that can be triggered via API.
+
+    This demonstrates a task that can be enqueued on-demand from an API endpoint.
+
+    Args:
+        message: A message to include in the task output.
+
+    Returns:
+        A dictionary with the task result.
+    """
+    logger.info(f"Example triggered task received message: {message}")
+    return {"status": "completed", "message": message}

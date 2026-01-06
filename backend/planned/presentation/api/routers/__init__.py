@@ -13,6 +13,7 @@ from . import (
     sheppard,
     task_definitions,
     tasks,
+    utils,
 )
 
 router = APIRouter()
@@ -90,4 +91,9 @@ router.include_router(
     calendars.router,
     prefix="/calendars",
     tags=["calendars"],
+)
+router.include_router(
+    utils.router,
+    prefix="/utils",
+    tags=["utils"],
 )

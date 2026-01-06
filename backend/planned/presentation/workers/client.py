@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from planned.presentation.workers.tasks import (
+    example_triggered_task,
     schedule_all_users_week_task,
     schedule_user_week_task,
     sync_calendar_task,
@@ -35,3 +36,12 @@ async def enqueue_schedule_user_week(user_id: UUID) -> None:
         user_id: The user ID to schedule the week for.
     """
     await schedule_user_week_task.kiq(user_id=user_id)  # type: ignore[call-overload]
+
+
+async def enqueue_example_task(message: str) -> None:
+    """Enqueue an example task that can be triggered via API.
+
+    Args:
+        message: A message to include in the task.
+    """
+    await example_triggered_task.kiq(message=message)
