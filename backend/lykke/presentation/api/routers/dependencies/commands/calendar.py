@@ -7,6 +7,7 @@ from fastapi import Depends, Path
 from lykke.application.commands.calendar import (
     CreateCalendarHandler,
     DeleteCalendarHandler,
+    RecordWebhookNotificationHandler,
     SyncCalendarChangesHandler,
     UpdateCalendarHandler,
 )
@@ -69,3 +70,19 @@ def get_delete_calendar_handler(
     """Get a DeleteCalendarHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return DeleteCalendarHandler(ro_repos, uow_factory, user.id)
+
+
+def get_record_webhook_notification_handler(
+    user_id: Annotated[UUID, Path()],
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> RecordWebhookNotificationHandler:
+    """Get a RecordWebhookNotificationHandler instance for webhook use (user_id from path)."""
+    ro_repos = ro_repo_factory.create(user_id)
+    return RecordWebhookNotificationHandler(
+        ro_repos=ro_repos,
+        uow_factory=uow_factory,
+        user_id=user_id,
+    )

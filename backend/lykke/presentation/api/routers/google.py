@@ -7,8 +7,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Response
 from fastapi.responses import RedirectResponse
 from googleapiclient.discovery import build
 from loguru import logger
-from lykke.application.commands.calendar import SyncCalendarChangesHandler
-from lykke.application.queries.calendar import GetCalendarBySubscriptionHandler
+from lykke.application.commands.calendar import RecordWebhookNotificationHandler
 
 # TODO: Refactor OAuth flow to use commands/queries instead of direct repository access
 # This is a complex OAuth callback flow that creates multiple entities in a single transaction.
@@ -21,9 +20,9 @@ from lykke.core.constants import OAUTH_STATE_EXPIRY
 from lykke.domain import data_objects
 from lykke.domain.entities import CalendarEntity, UserEntity
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
+from lykke.presentation.workers.tasks import sync_single_calendar_task
 
-from .dependencies.commands.calendar import get_sync_calendar_changes_handler
-from .dependencies.queries.calendar import get_calendar_by_subscription_handler
+from .dependencies.commands.calendar import get_record_webhook_notification_handler
 from .dependencies.repositories import get_auth_token_repo, get_calendar_repo
 from .dependencies.user import get_current_user
 
@@ -144,11 +143,9 @@ async def google_login_callback(
 @router.post("/webhook/{user_id}")
 async def google_webhook(
     user_id: UUID,
-    query_handler: Annotated[
-        GetCalendarBySubscriptionHandler, Depends(get_calendar_by_subscription_handler)
-    ],
-    sync_handler: Annotated[
-        SyncCalendarChangesHandler, Depends(get_sync_calendar_changes_handler)
+    record_handler: Annotated[
+        RecordWebhookNotificationHandler,
+        Depends(get_record_webhook_notification_handler),
     ],
     x_goog_channel_id: Annotated[str | None, Header()] = None,
     x_goog_resource_id: Annotated[str | None, Header()] = None,
@@ -159,6 +156,7 @@ async def google_webhook(
 
     Google sends notifications to this endpoint when calendar events change.
     The notification includes headers with channel and resource information.
+    The actual sync is performed asynchronously via a background task.
 
     Args:
         user_id: The user ID extracted from the webhook URL.
@@ -186,8 +184,8 @@ async def google_webhook(
         logger.info("Received sync verification from Google")
         return Response(status_code=200)
 
-    # Look up calendar by subscription (user-scoped)
-    calendar = await query_handler.run(
+    # Look up calendar by subscription info
+    calendar = await record_handler.run(
         subscription_id=x_goog_channel_id,
         resource_id=x_goog_resource_id,
     )
@@ -198,10 +196,8 @@ async def google_webhook(
         )
         return Response(status_code=200)
 
-    # Sync the calendar
-    try:
-        await sync_handler.sync(calendar)
-    except Exception as e:
-        logger.exception(f"Error syncing calendar from webhook: {e}")
+    # Schedule background task to sync the calendar
+    await sync_single_calendar_task.kiq(user_id=user_id, calendar_id=calendar.id)
+    logger.info(f"Scheduled sync task for calendar {calendar.id}")
 
     return Response(status_code=200)

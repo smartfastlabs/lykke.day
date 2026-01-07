@@ -6,14 +6,14 @@ from uuid import UUID
 
 from loguru import logger
 from lykke.application.commands import ScheduleDayHandler
-from lykke.application.commands.calendar import SyncAllCalendarsHandler
+from lykke.application.commands.calendar import (
+    SyncAllCalendarsHandler,
+    SyncCalendarChangesHandler,
+)
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.queries import PreviewDayHandler
 from lykke.application.repositories import UserRepositoryReadOnlyProtocol
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositoryFactory,
-    UnitOfWorkFactory,
-)
+from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.infrastructure.gateways import GoogleCalendarGateway
 from lykke.infrastructure.repositories import UserRepository
 from lykke.infrastructure.unit_of_work import (
@@ -64,6 +64,21 @@ def get_sync_all_calendars_handler(
     return SyncAllCalendarsHandler(ro_repos, uow_factory, user_id, google_gateway)
 
 
+def get_sync_calendar_changes_handler(
+    user_id: UUID,
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    google_gateway: Annotated[
+        GoogleCalendarGatewayProtocol, Depends(get_google_gateway)
+    ],
+) -> SyncCalendarChangesHandler:
+    """Get a SyncCalendarChangesHandler instance for a user."""
+    ro_repos = ro_repo_factory.create(user_id)
+    return SyncCalendarChangesHandler(ro_repos, uow_factory, user_id, google_gateway)
+
+
 def get_schedule_day_handler(
     user_id: UUID,
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
@@ -97,6 +112,37 @@ async def sync_calendar_task(
     await sync_handler.sync_all_calendars()
 
     logger.info(f"Calendar sync completed for user {user_id}")
+
+
+@broker.task  # type: ignore[untyped-decorator]
+async def sync_single_calendar_task(
+    user_id: UUID,
+    calendar_id: UUID,
+    sync_handler: Annotated[
+        SyncCalendarChangesHandler, Depends(get_sync_calendar_changes_handler)
+    ],
+) -> None:
+    """Sync a single calendar for a user (triggered by webhook).
+
+    This task is enqueued when a Google Calendar webhook notification is received.
+
+    Args:
+        user_id: The user ID that owns the calendar.
+        calendar_id: The calendar ID to sync.
+        sync_handler: Injected SyncCalendarChangesHandler.
+    """
+    logger.info(
+        f"Starting single calendar sync for user {user_id}, calendar {calendar_id}"
+    )
+
+    # Look up the calendar
+    calendar = await sync_handler.calendar_ro_repo.get(calendar_id)
+
+    await sync_handler.sync(calendar)
+
+    logger.info(
+        f"Single calendar sync completed for user {user_id}, calendar {calendar_id}"
+    )
 
 
 @broker.task  # type: ignore[untyped-decorator]
