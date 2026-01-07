@@ -5,9 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
-from lykke.application.commands.calendar.sync_calendar_changes import (
-    SyncCalendarChangesHandler,
-)
+from lykke.application.commands.calendar.sync_calendar import SyncCalendarHandler
 from lykke.domain import data_objects
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 from lykke.domain.value_objects import TaskFrequency
@@ -205,7 +203,7 @@ def test_sync_calendar_changes_with_new_events(
     mock_calendar_entry_repo.get_by_platform_id.return_value = None
 
     # Create handler and sync
-    SyncCalendarChangesHandler(
+    SyncCalendarHandler(
         ro_repos=mock_ro_repos,
         uow_factory=mock_uow_factory,
         user_id=test_user_id,

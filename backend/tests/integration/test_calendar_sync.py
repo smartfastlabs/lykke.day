@@ -4,9 +4,6 @@ from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
-from lykke.application.commands.calendar.sync_calendar_changes import (
-    SyncCalendarChangesHandler,
-)
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 from lykke.domain.value_objects import TaskFrequency
 from lykke.domain.value_objects.sync import SyncSubscription
