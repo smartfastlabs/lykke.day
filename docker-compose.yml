@@ -27,7 +27,41 @@ services:
     container_name: planned_redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
+
+  # Uncomment to test Docker builds locally
+  # api:
+  #   build:
+  #     context: ./backend
+  #     target: api
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     DATABASE_URL: postgresql+psycopg://planned:password@postgres:5432/planned_dev
+  #     REDIS_URL: redis://redis:6379
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+
+  # worker:
+  #   build:
+  #     context: ./backend
+  #     target: worker
+  #   environment:
+  #     DATABASE_URL: postgresql+psycopg://planned:password@postgres:5432/planned_dev
+  #     REDIS_URL: redis://redis:6379
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
 
 volumes:
   postgres_data:

@@ -1,4 +1,4 @@
-.PHONY: serve test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db migrate-data-to-prod
+.PHONY: serve test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db migrate-data-to-prod docker-build-api docker-build-worker docker-build-all docker-build-cli export-openapi generate-types migrate-data-to-prod
 
 # Docker management
 docker-up:
@@ -23,31 +23,72 @@ docker-down:
 
 docker-restart: docker-down docker-up
 
+# Test Docker builds locally (mimics Railway)
+docker-build-api:
+	docker build -t planned-api --target api .
+
+docker-build-worker:
+	docker build -t planned-worker --target worker .
+
+docker-build-cli:
+	docker build -t planned-cli --target cli .
+
+docker-build-all: docker-build-api docker-build-worker docker-build-cli
+
 # Database migrations
-migrate-dev:
-	DATABASE_URL=postgresql+psycopg://planned:password@localhost:5432/planned_dev poetry run alembic upgrade head
+migrate-dev: docker-up docker-build-cli
+	docker run --rm -it \
+		--network plannedday_default \
+		-v $(CURDIR):/app \
+		-w /app \
+		-e DATABASE_URL=postgresql+psycopg://planned:password@postgres:5432/planned_dev \
+		planned-cli \
+		poetry run alembic upgrade head
 
-migrate-test:
-	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test poetry run alembic upgrade head
+migrate-test: docker-up docker-build-cli
+	docker run --rm -it \
+		--network plannedday_default \
+		-v $(CURDIR):/app \
+		-w /app \
+		-e DATABASE_URL=postgresql+psycopg://planned_test:password@postgres:5432/planned_test \
+		planned-cli \
+		poetry run alembic upgrade head
 
-migrate-prod:
+migrate-prod: docker-build-cli
 	@if [ -z "$$PRODUCTION_MIGRATION_DB_URL" ]; then \
 		if [ -f .env.prod ] && grep -q '^PRODUCTION_MIGRATION_DB_URL=' .env.prod; then \
-			DATABASE_URL=$$(grep '^PRODUCTION_MIGRATION_DB_URL=' .env.prod | cut -d'=' -f2-) poetry run alembic upgrade head; \
+			DB_URL=$$(grep '^PRODUCTION_MIGRATION_DB_URL=' .env.prod | cut -d'=' -f2-); \
+			docker run --rm -it \
+				-v $(CURDIR):/app \
+				-w /app \
+				-e DATABASE_URL=$$DB_URL \
+				planned-cli \
+				poetry run alembic upgrade head; \
 		else \
 			echo "Error: PRODUCTION_MIGRATION_DB_URL not set and not found in .env.prod"; \
 			exit 1; \
 		fi \
 	else \
-		DATABASE_URL=$$PRODUCTION_MIGRATION_DB_URL poetry run alembic upgrade head; \
+		docker run --rm -it \
+			-v $(CURDIR):/app \
+			-w /app \
+			-e DATABASE_URL=$$PRODUCTION_MIGRATION_DB_URL \
+			planned-cli \
+			poetry run alembic upgrade head; \
 	fi
 
-migrate-create:
+migrate-create: docker-up docker-build-cli
 	@if [ -z "$(MSG)" ]; then \
 		echo "Usage: make migrate-create MSG='your migration message'"; \
 		exit 1; \
 	fi
-	DATABASE_URL=postgresql+psycopg://planned:password@localhost:5432/planned_dev poetry run alembic revision --autogenerate -m "$(MSG)"
+	docker run --rm -it \
+		--network plannedday_default \
+		-v $(CURDIR):/app \
+		-w /app \
+		-e DATABASE_URL=postgresql+psycopg://planned:password@postgres:5432/planned_dev \
+		planned-cli \
+		poetry run alembic revision --autogenerate -m "$(MSG)"
 
 # Application targets
 serve: docker-up
@@ -56,38 +97,72 @@ serve: docker-up
 worker: docker-up
 	REDIS_URL=redis://localhost:6379 DATABASE_URL=postgresql+psycopg://planned:password@localhost:5432/planned_dev poetry run taskiq worker planned.infrastructure.workers.config.broker
 
-test: docker-up
-	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test ENV_FILE=.env.test poetry run pytest tests --vcr-record=once
+test: docker-up docker-build-cli
+	docker run --rm -it \
+		--network plannedday_default \
+		-v $(CURDIR):/app \
+		-w /app \
+		-e DATABASE_URL=postgresql+psycopg://planned_test:password@postgres:5432/planned_test \
+		-e ENV_FILE=.env.test \
+		planned-cli \
+		poetry run pytest tests --vcr-record=once
 
-typecheck:
-	poetry run mypy planned
+typecheck: docker-build-cli
+	docker run --rm -it \
+		-v $(CURDIR):/app \
+		-w /app \
+		planned-cli \
+		poetry run mypy planned
 
 check:
 	make typecheck
 	make test
 
-test-target:
-	DATABASE_URL=postgresql+psycopg://planned_test:password@localhost:5432/planned_test \
-	ENV_FILE=.env.test \
-	poetry run pytest $(if $(findstring /,$(TARGET)),$(TARGET),tests -k '$(TARGET)') --vcr-record=once -vv -s
+test-target: docker-up docker-build-cli
+	docker run --rm -it \
+		--network plannedday_default \
+		-v $(CURDIR):/app \
+		-w /app \
+		-e DATABASE_URL=postgresql+psycopg://planned_test:password@postgres:5432/planned_test \
+		-e ENV_FILE=.env.test \
+		planned-cli \
+		poetry run pytest $(if $(findstring /,$(TARGET)),$(TARGET),tests -k '$(TARGET)') --vcr-record=once -vv -s
 
 # Type generation
-export-openapi:
-	poetry run python scripts/export_openapi_schema.py
+export-openapi: docker-build-cli
+	docker run --rm -it \
+		-v $(CURDIR):/app \
+		-w /app \
+		planned-cli \
+		poetry run python scripts/export_openapi_schema.py
 
-generate-types: export-openapi
-	poetry run python scripts/generate_ts_types.py
+generate-types: export-openapi docker-build-cli
+	docker run --rm -it \
+		-v $(CURDIR):/app \
+		-w /app \
+		planned-cli \
+		poetry run python scripts/generate_ts_types.py
 
 # Data migration
-migrate-data-to-prod:
+migrate-data-to-prod: docker-build-cli
 	@if [ -z "$$DEST_DATABASE_URL" ]; then \
 		if [ -f .env.prod ] && grep -q '^PRODUCTION_MIGRATION_DB_URL=' .env.prod; then \
-			DEST_DATABASE_URL=$$(grep '^PRODUCTION_MIGRATION_DB_URL=' .env.prod | cut -d'=' -f2-) \
-			poetry run python scripts/migrate_data_to_production.py $(ARGS); \
+			DEST_DATABASE_URL=$$(grep '^PRODUCTION_MIGRATION_DB_URL=' .env.prod | cut -d'=' -f2-); \
+			docker run --rm -it \
+				-v $(CURDIR):/app \
+				-w /app \
+				-e DEST_DATABASE_URL=$$DEST_DATABASE_URL \
+				planned-cli \
+				poetry run python scripts/migrate_data_to_production.py $(ARGS); \
 		else \
 			echo "Error: DEST_DATABASE_URL not set and PRODUCTION_MIGRATION_DB_URL not found in .env.prod"; \
 			exit 1; \
 		fi \
 	else \
-		poetry run python scripts/migrate_data_to_production.py $(ARGS); \
+		docker run --rm -it \
+			-v $(CURDIR):/app \
+			-w /app \
+			-e DEST_DATABASE_URL=$$DEST_DATABASE_URL \
+			planned-cli \
+			poetry run python scripts/migrate_data_to_production.py $(ARGS); \
 	fi
