@@ -14,9 +14,9 @@ from lykke.application.repositories import (
     CalendarRepositoryReadWriteProtocol,
 )
 from lykke.core.constants import OAUTH_STATE_EXPIRY
-from lykke.domain.entities import CalendarEntity, UserEntity
 from lykke.domain import data_objects
-from lykke.infrastructure.gateways.google import get_flow
+from lykke.domain.entities import CalendarEntity, UserEntity
+from lykke.infrastructure.gateways.google import GoogleCalendarGateway
 
 from .dependencies.repositories import get_auth_token_repo, get_calendar_repo
 from .dependencies.user import get_current_user
@@ -30,7 +30,9 @@ router = APIRouter()
 @router.get("/login")
 async def google_login() -> RedirectResponse:
     state = secrets.token_urlsafe(16)
-    authorization_url, state = get_flow("login").authorization_url(
+    authorization_url, state = GoogleCalendarGateway.get_flow(
+        "login"
+    ).authorization_url(
         access_type="offline",
         include_granted_scopes="true",
         state=state,
@@ -95,7 +97,7 @@ async def google_login_callback(
             detail="Missing required parameters",
         )
 
-    flow = get_flow("login")
+    flow = GoogleCalendarGateway.get_flow("login")
     flow.fetch_token(code=code)
 
     auth_token: data_objects.AuthToken = await auth_token_repo.put(

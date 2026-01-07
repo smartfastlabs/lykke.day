@@ -302,7 +302,8 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             channel_id,
         )
 
-    def get_flow(self, flow_name: str) -> Flow:
+    @staticmethod
+    def get_flow(flow_name: str) -> Flow:
         """Get OAuth flow for Google authentication.
 
         Args:
