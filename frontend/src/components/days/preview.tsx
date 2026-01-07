@@ -91,7 +91,12 @@ interface PreviewProps {
 export const DayPreview: Component<PreviewProps> = (props) => {
   // All items
   const tasks = createMemo(() => props.dayContext?.tasks || []);
-  const events = createMemo(() => props.dayContext?.events || []);
+  const events = createMemo(
+    () =>
+      props.dayContext?.calendar_entries ??
+      props.dayContext?.events ??
+      []
+  );
   const alarm = createMemo(() => props.dayContext?.day.alarm);
 
   function filterTasks(categories: string | string[]): Task[] {

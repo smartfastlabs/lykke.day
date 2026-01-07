@@ -34,7 +34,9 @@ export function SheppardProvider(props: ParentProps) {
 
   // Derived values from the resource
   const tasks = createMemo(() => dayContext()?.tasks ?? []);
-  const events = createMemo(() => dayContext()?.events ?? []);
+  const events = createMemo(
+    () => dayContext()?.calendar_entries ?? dayContext()?.events ?? []
+  );
   const day = createMemo(() => dayContext()?.day);
   const isLoading = createMemo(() => dayContext.loading);
   const error = createMemo(() => dayContext.error);

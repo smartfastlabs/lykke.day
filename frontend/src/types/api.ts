@@ -134,6 +134,7 @@ export interface Day {
 }
 export interface DayContext {
   day: Day;
+  calendar_entries?: Event[];
   events?: Event[];
   tasks?: Task[];
 }
