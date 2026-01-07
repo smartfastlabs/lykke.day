@@ -1,8 +1,8 @@
 """Query to get the complete context for a day."""
 
 import asyncio
-from datetime import date
-from uuid import UUID
+from datetime import date as datetime_date
+from typing import cast
 
 from lykke.application.queries.base import BaseQueryHandler
 from lykke.application.repositories import (
@@ -27,9 +27,7 @@ class GetDayContextHandler(BaseQueryHandler):
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
-    async def get_day_context(
-        self, date: date
-    ) -> value_objects.DayContext:
+    async def get_day_context(self, date: datetime_date) -> value_objects.DayContext:
         """Load complete day context for the given date.
 
         Args:
@@ -38,28 +36,50 @@ class GetDayContextHandler(BaseQueryHandler):
         Returns:
             A DayContext with all related data
         """
-        tasks: list[TaskEntity] = []
-        calendar_entries: list[CalendarEntryEntity] = []
-        day: DayEntity
+        day_id = DayEntity.id_from_date_and_user(date, self.user_id)
 
-        try:
-            # Try to load existing day and all related data
-            day_id = DayEntity.id_from_date_and_user(date, self.user_id)
-            tasks, calendar_entries, day = await asyncio.gather(
-                self.task_ro_repo.search_query(value_objects.DateQuery(date=date)),
-                self.calendar_entry_ro_repo.search_query(value_objects.DateQuery(date=date)),
-                self.day_ro_repo.get(day_id),
-            )
-        except NotFoundError:
-            # Day doesn't exist, create a preview day using default template
+        tasks_result, calendar_entries_result, day_result = await asyncio.gather(
+            self.task_ro_repo.search_query(value_objects.DateQuery(date=date)),
+            self.calendar_entry_ro_repo.search_query(
+                value_objects.DateQuery(date=date)
+            ),
+            self.day_ro_repo.get(day_id),
+            return_exceptions=True,
+        )
+
+        tasks = cast(
+            "list[TaskEntity]", self._unwrap_result(tasks_result, "tasks result")
+        )
+        calendar_entries = cast(
+            "list[CalendarEntryEntity]",
+            self._unwrap_result(calendar_entries_result, "calendar entries result"),
+        )
+
+        if isinstance(day_result, NotFoundError):
             user = await self.user_ro_repo.get(self.user_id)
             day = await self._create_preview_day(date, user)
+        elif isinstance(day_result, Exception):
+            # Propagate other errors to maintain existing error handling behaviour
+            raise day_result
+        else:
+            if not isinstance(day_result, DayEntity):
+                raise TypeError(
+                    f"Unexpected day result type: {type(day_result).__name__}"
+                )
+            day = day_result
 
         return self._build_context(day, tasks, calendar_entries)
 
+    @staticmethod
+    def _unwrap_result(result: object, name: str) -> object:
+        """Raise any exception returned by asyncio.gather."""
+        if isinstance(result, Exception):
+            raise type(result)(f"{name}: {result}") from result
+        return result
+
     async def _create_preview_day(
         self,
-        date: date,
+        date: datetime_date,
         user: UserEntity,
     ) -> DayEntity:
         """Create a preview day when no existing day is found.
@@ -105,4 +125,3 @@ class GetDayContextHandler(BaseQueryHandler):
             ),
             calendar_entries=sorted(calendar_entries, key=lambda e: e.starts_at),
         )
-

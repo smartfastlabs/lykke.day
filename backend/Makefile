@@ -1,4 +1,4 @@
-.PHONY: serve serve-http test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db migrate-data-to-prod docker-build export-openapi generate-types migrate-data-to-prod worker scheduler
+.PHONY: serve serve-prod serve-http test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db migrate-data-to-prod docker-build export-openapi generate-types migrate-data-to-prod worker scheduler
 
 # Docker management
 docker-up:
@@ -71,6 +71,29 @@ serve: docker-up
 	@bash -c ' \
 		export REDIS_URL=redis://localhost:6379; \
 		export DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev; \
+		poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler & \
+		SCHEDULER_PID=$$!; \
+		poetry run taskiq worker lykke.infrastructure.workers.config:broker & \
+		WORKER_PID=$$!; \
+		trap "kill $$SCHEDULER_PID $$WORKER_PID 2>/dev/null; exit" EXIT INT TERM; \
+		poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload; \
+		kill $$SCHEDULER_PID $$WORKER_PID 2>/dev/null || true'
+
+serve-prod: docker-up
+	@echo "Starting FastAPI server, scheduler, and worker against production DB..."
+	@bash -c ' \
+		if [ -z "$$PRODUCTION_MIGRATION_DB_URL" ]; then \
+			if [ -f .env.prod ] && grep -q "^PRODUCTION_MIGRATION_DB_URL=" .env.prod; then \
+				DATABASE_URL=$$(grep "^PRODUCTION_MIGRATION_DB_URL=" .env.prod | cut -d"=" -f2-); \
+			else \
+				echo "Error: PRODUCTION_MIGRATION_DB_URL not set and .env.prod missing"; \
+				exit 1; \
+			fi; \
+		else \
+			DATABASE_URL=$$PRODUCTION_MIGRATION_DB_URL; \
+		fi; \
+		export REDIS_URL=redis://localhost:6379; \
+		export DATABASE_URL=$$DATABASE_URL; \
 		poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler & \
 		SCHEDULER_PID=$$!; \
 		poetry run taskiq worker lykke.infrastructure.workers.config:broker & \

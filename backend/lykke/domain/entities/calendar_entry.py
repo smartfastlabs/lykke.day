@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import dataclass, field
 from datetime import UTC
 from datetime import date as dt_date
@@ -6,9 +7,8 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from gcsa.event import Event as GoogleEvent
-
-from .. import value_objects
-from .base import BaseEntityObject
+from lykke.domain import value_objects
+from lykke.domain.entities.base import BaseEntityObject
 
 
 def get_datetime(
@@ -55,6 +55,21 @@ class CalendarEntryEntity(BaseEntityObject):
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     actions: list[value_objects.Action] = field(default_factory=list)
     timezone: str | None = field(default=None, repr=False)
+    id: UUID = field(default=None, init=True)  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Ensure deterministic ID based on platform source."""
+        current_id = object.__getattribute__(self, "id")
+        if current_id is None:
+            generated_id = self.id_from_platform(self.platform, self.platform_id)
+            object.__setattr__(self, "id", generated_id)
+
+    @classmethod
+    def id_from_platform(cls, platform: str, platform_id: str) -> UUID:
+        """Generate stable UUID5 using platform and platform-specific ID."""
+        namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "lykke.calendar_entry")
+        name = f"{platform}:{platform_id}"
+        return uuid.uuid5(namespace, name)
 
     @property
     def date(self) -> dt_date:
@@ -118,4 +133,3 @@ class CalendarEntryEntity(BaseEntityObject):
             timezone=target_timezone,
         )
         return calendar_entry
-
