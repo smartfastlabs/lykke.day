@@ -126,28 +126,14 @@ class DomainEventHandler(ABC):
             )
             return
 
-        logger.debug(
-            "Received domain event {} (sender={}); registered handler classes={}",
-            event_obj.__class__.__name__,
-            getattr(sender, "__name__", sender),
-            [h.__name__ for h in cls._handler_classes],
-        )
-
         # Extract user_id from event
         user_id = cls._extract_user_id(event_obj)
         if user_id is None:
-            logger.debug(f"Skipping event {event_obj.__class__.__name__} - no user_id")
             # Skip events without user_id
             return
 
         # Create handler instances for all handlers that handle this event type
         for handler_class in cls._handler_classes:
-            logger.debug(
-                "Evaluating handler {} for event {}; handles={}",
-                handler_class.__name__,
-                getattr(sender, "__name__", sender),
-                [h.__name__ for h in handler_class.handles],
-            )
             if event_obj.__class__ in handler_class.handles:
                 # Create a user-scoped instance of this handler
                 if cls._class_ro_repo_factory is None:
@@ -162,12 +148,6 @@ class DomainEventHandler(ABC):
                     ro_repos=ro_repos,
                     user_id=user_id,
                     uow_factory=cls._class_uow_factory,
-                )
-                logger.debug(
-                    "Dispatching {} to handler {} for user_id={}",
-                    event_obj.__class__.__name__,
-                    handler_class.__name__,
-                    user_id,
                 )
                 await handler_instance.handle(event_obj)
 
@@ -197,19 +177,6 @@ class DomainEventHandler(ABC):
         event_types: set[type[DomainEvent]] = set()
         for handler_class in cls._handler_classes:
             event_types.update(handler_class.handles)
-
-        logger.debug(
-            "Registering domain event handlers: {}; signal id={}; current receivers={}",
-            [
-                {
-                    "handler": handler_class.__name__,
-                    "events": [et.__name__ for et in handler_class.handles],
-                }
-                for handler_class in cls._handler_classes
-            ],
-            id(domain_event_signal),
-            list(domain_event_signal.receivers),
-        )
 
         # To avoid sender mismatches (and duplicate connections on reload),
         # connect the dispatcher once without a sender filter and handle
