@@ -46,9 +46,7 @@ async def get_context_today(
     """Get the complete context for today."""
     date = get_current_date()
     try:
-        context = await handler.get_day_context(
-            date=date, allow_preview_if_missing=False
-        )
+        context = await handler.get_day_context(date=date)
     except NotFoundError:
         # If the day does not exist yet, schedule it and return the persisted context
         context = await schedule_handler.schedule_day(date=date)
@@ -58,9 +56,14 @@ async def get_context_today(
 @router.get("/tomorrow/context", response_model=DayContextSchema)
 async def get_context_tomorrow(
     handler: Annotated[GetDayContextHandler, Depends(get_get_day_context_handler)],
+    schedule_handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
 ) -> DayContextSchema:
     """Get the complete context for tomorrow."""
-    context = await handler.get_day_context(date=get_tomorrows_date())
+    date = get_tomorrows_date()
+    try:
+        context = await handler.get_day_context(date=date)
+    except NotFoundError:
+        context = await schedule_handler.schedule_day(date=date)
     return map_day_context_to_schema(context)
 
 
@@ -68,9 +71,13 @@ async def get_context_tomorrow(
 async def get_context(
     date: datetime.date,
     handler: Annotated[GetDayContextHandler, Depends(get_get_day_context_handler)],
+    schedule_handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
 ) -> DayContextSchema:
     """Get the complete context for a specific date."""
-    context = await handler.get_day_context(date=date)
+    try:
+        context = await handler.get_day_context(date=date)
+    except NotFoundError:
+        context = await schedule_handler.schedule_day(date=date)
     return map_day_context_to_schema(context)
 
 

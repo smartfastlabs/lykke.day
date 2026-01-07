@@ -15,7 +15,7 @@ from lykke.application.repositories import (
 from lykke.core.constants import DEFAULT_END_OF_DAY_TIME
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.entities import CalendarEntryEntity, DayEntity, TaskEntity, UserEntity
+from lykke.domain.entities import CalendarEntryEntity, DayEntity, TaskEntity
 
 
 class GetDayContextHandler(BaseQueryHandler):
@@ -27,17 +27,11 @@ class GetDayContextHandler(BaseQueryHandler):
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
-    async def get_day_context(
-        self,
-        date: datetime_date,
-        allow_preview_if_missing: bool = True,
-    ) -> value_objects.DayContext:
+    async def get_day_context(self, date: datetime_date) -> value_objects.DayContext:
         """Load complete day context for the given date.
 
         Args:
             date: The date to get context for
-            allow_preview_if_missing: Whether to return a preview when the day
-                does not yet exist. If False, a NotFoundError is raised instead.
 
         Returns:
             A DayContext with all related data
@@ -62,10 +56,7 @@ class GetDayContextHandler(BaseQueryHandler):
         )
 
         if isinstance(day_result, NotFoundError):
-            if not allow_preview_if_missing:
-                raise day_result
-            user = await self.user_ro_repo.get(self.user_id)
-            day = await self._create_preview_day(date, user)
+            raise day_result
         elif isinstance(day_result, Exception):
             # Propagate other errors to maintain existing error handling behaviour
             raise day_result
@@ -84,30 +75,6 @@ class GetDayContextHandler(BaseQueryHandler):
         if isinstance(result, Exception):
             raise type(result)(f"{name}: {result}") from result
         return result
-
-    async def _create_preview_day(
-        self,
-        date: datetime_date,
-        user: UserEntity,
-    ) -> DayEntity:
-        """Create a preview day when no existing day is found.
-
-        Args:
-            date: The date for the preview day
-            user: The user entity
-
-        Returns:
-            A Day entity (not saved to database)
-        """
-        template_slug = user.settings.template_defaults[date.weekday()]
-        template = await self.day_template_ro_repo.search_one(
-            value_objects.DayTemplateQuery(slug=template_slug)
-        )
-        return DayEntity.create_for_date(
-            date,
-            user_id=self.user_id,
-            template=template,
-        )
 
     def _build_context(
         self,
