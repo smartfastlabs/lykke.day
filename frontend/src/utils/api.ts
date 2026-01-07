@@ -9,6 +9,7 @@ import {
   Routine,
   PushSubscription,
   TaskSchedule,
+  CurrentUser,
 } from "@/types/api";
 import type {
   ApiResponse,
@@ -176,6 +177,20 @@ export const taskAPI = {
 };
 
 export const authAPI = {
+  me: async (): Promise<CurrentUser | null> => {
+    try {
+      return await fetchData<CurrentUser>("/api/me", {
+        suppressAuthRedirect: true,
+        suppressError: true,
+      });
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 401) {
+        return null;
+      }
+      throw error;
+    }
+  },
+
   login: async (email: string, password: string): Promise<void> => {
     const formData = new URLSearchParams();
     formData.append("username", email);

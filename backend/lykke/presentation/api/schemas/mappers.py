@@ -12,6 +12,7 @@ from lykke.domain.entities import (
     TaskEntity,
 )
 from lykke.domain import data_objects
+from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import (
     ActionSchema,
     AlarmSchema,
@@ -25,6 +26,8 @@ from lykke.presentation.api.schemas import (
     TaskDefinitionSchema,
     TaskScheduleSchema,
     TaskSchema,
+    UserSchema,
+    UserSettingsSchema,
 )
 
 
@@ -168,3 +171,20 @@ def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
 def map_calendar_to_schema(calendar: CalendarEntity) -> CalendarSchema:
     """Convert Calendar entity to Calendar schema."""
     return CalendarSchema(**asdict(calendar))
+
+
+def map_user_to_schema(user: UserEntity) -> UserSchema:
+    """Convert User entity to User schema."""
+    settings_schema = UserSettingsSchema(**asdict(user.settings))
+
+    return UserSchema(
+        id=user.id,
+        email=user.email,
+        phone_number=user.phone_number,
+        is_active=user.is_active,
+        is_superuser=user.is_superuser,
+        is_verified=user.is_verified,
+        settings=settings_schema,
+        created_at=user.created_at,
+        updated_at=user.updated_at,
+    )

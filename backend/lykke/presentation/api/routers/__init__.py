@@ -7,6 +7,7 @@ from . import (
     day_templates,
     days,
     google,
+    me,
     planning,
     push_subscriptions,
     routines,
@@ -46,6 +47,14 @@ router.include_router(
     tags=[
         "google",
         "auth",
+    ],
+)
+router.include_router(
+    me.router,
+    prefix="/me",
+    tags=[
+        "auth",
+        "user",
     ],
 )
 router.include_router(

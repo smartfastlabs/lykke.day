@@ -73,7 +73,7 @@ serve: docker-up
 		export DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev; \
 		poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler & \
 		SCHEDULER_PID=$$!; \
-		poetry run taskiq worker lykke.infrastructure.workers.config.broker & \
+		poetry run taskiq worker lykke.infrastructure.workers.config:broker & \
 		WORKER_PID=$$!; \
 		trap "kill $$SCHEDULER_PID $$WORKER_PID 2>/dev/null; exit" EXIT INT TERM; \
 		poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload; \
@@ -83,7 +83,7 @@ serve-http: docker-up
 	DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run uvicorn lykke.app:app --host 0.0.0.0 --port 8080 --reload
 
 worker: docker-up
-	REDIS_URL=redis://localhost:6379 DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run taskiq worker lykke.infrastructure.workers.config.broker
+	REDIS_URL=redis://localhost:6379 DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run taskiq worker lykke.infrastructure.workers.config:broker
 
 scheduler: docker-up
 	REDIS_URL=redis://localhost:6379 DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler

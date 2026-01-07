@@ -1,24 +1,22 @@
 import { useNavigate } from "@solidjs/router";
-import { Show, createEffect, type ParentProps } from "solid-js";
+import { Show, createEffect, createMemo, type ParentProps } from "solid-js";
 
-import { SheppardProvider, useSheppard } from "@/providers/sheppard";
-import { ApiRequestError } from "@/utils/api";
+import { useAuth } from "@/providers/auth";
+import { SheppardProvider } from "@/providers/sheppard";
 
 function AuthenticatedBoundary(props: ParentProps) {
   const navigate = useNavigate();
-  const { isLoading, error } = useSheppard();
+  const { user, isLoading, error } = useAuth();
+
+  const isUnauthenticated = createMemo(() => !isLoading() && user() === null);
 
   createEffect(() => {
-    const currentError = error();
-    if (
-      currentError instanceof ApiRequestError &&
-      currentError.status === 401
-    ) {
+    if (isUnauthenticated()) {
       navigate("/login", { replace: true });
     }
   });
 
-  if (error() && !(error() instanceof ApiRequestError)) {
+  if (error()) {
     return (
       <div class="p-8 text-center text-red-500">
         Unable to load your account right now. Please try again.
@@ -28,18 +26,18 @@ function AuthenticatedBoundary(props: ParentProps) {
 
   return (
     <Show
-      when={!isLoading()}
-      fallback={<div class="p-8 text-center text-gray-400">Loading...</div>}
+      when={!isLoading() && Boolean(user())}
+      fallback={
+        <div class="p-8 text-center text-gray-400">
+          {isUnauthenticated() ? "Redirecting..." : "Loading..."}
+        </div>
+      }
     >
-      {props.children}
+      <SheppardProvider>{props.children}</SheppardProvider>
     </Show>
   );
 }
 
 export function AuthGuard(props: ParentProps) {
-  return (
-    <SheppardProvider>
-      <AuthenticatedBoundary>{props.children}</AuthenticatedBoundary>
-    </SheppardProvider>
-  );
+  return <AuthenticatedBoundary>{props.children}</AuthenticatedBoundary>;
 }

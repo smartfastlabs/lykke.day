@@ -4,6 +4,7 @@ import { Suspense, onMount, onCleanup } from "solid-js";
 import "@/index.css";
 
 import { NotificationProvider } from "@/providers/notifications";
+import { AuthProvider } from "@/providers/auth";
 import { AuthGuard } from "@/providers/authGuard";
 
 import Login from "@/pages/login";
@@ -68,67 +69,69 @@ export default function App() {
   });
 
   return (
-    <Router
-      root={(props) => (
-        <NotificationProvider>
-          <NavigationHandler />
-          <MetaProvider>
-            <Title>Todd's Daily Planer</Title>
-            <Suspense>{props.children}</Suspense>
-          </MetaProvider>
-        </NotificationProvider>
-      )}
-    >
-      <Route path="/" component={Landing} />
-      <Route path="/privacy" component={Privacy} />
-      <Route path="/terms" component={Terms} />
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
-      <Route
-        path="/welcome"
-        component={() => <Navigate href="/me/welcome" />}
-      />
-      <Route path="/home" component={() => <Navigate href="/me" />} />
+    <NotificationProvider>
+      <Router
+        root={(props) => (
+          <AuthProvider>
+            <NavigationHandler />
+            <MetaProvider>
+              <Title>Todd's Daily Planer</Title>
+              <Suspense>{props.children}</Suspense>
+            </MetaProvider>
+          </AuthProvider>
+        )}
+      >
+        <Route path="/" component={Landing} />
+        <Route path="/privacy" component={Privacy} />
+        <Route path="/terms" component={Terms} />
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+        <Route
+          path="/welcome"
+          component={() => <Navigate href="/me/welcome" />}
+        />
+        <Route path="/home" component={() => <Navigate href="/me" />} />
 
-      <Route path="/me" component={AuthGuard}>
-        <Route path="/" component={Home} />
-        <Route path="/welcome" component={Welcome} />
-        <Route path="/day/:date" component={DayView} />
-        <Route path="/nav/calendar" component={CalendarPage} />
-        <Route path="/nav" component={NavPage} />
-        <Route path="/notifications" component={NotificationsPage} />
-        <Route
-          path="/notifications/subscribe"
-          component={NotificationsSubscribePage}
-        />
-        <Route path="/settings" component={SettingsPage} />
-        <Route path="/settings/day-templates" component={DayTemplatesPage} />
-        <Route
-          path="/settings/day-templates/new"
-          component={NewDayTemplatePage}
-        />
-        <Route
-          path="/settings/day-templates/:id"
-          component={DayTemplateDetailPage}
-        />
-        <Route
-          path="/settings/task-definitions"
-          component={TaskDefinitionsPage}
-        />
-        <Route
-          path="/settings/task-definitions/new"
-          component={NewTaskDefinitionPage}
-        />
-        <Route
-          path="/settings/task-definitions/:id"
-          component={TaskDefinitionDetailPage}
-        />
-        <Route path="/settings/routines" component={RoutinesPage} />
-        <Route path="/settings/routines/new" component={NewRoutinePage} />
-        <Route path="/settings/routines/:id" component={RoutineDetailPage} />
-      </Route>
+        <Route path="/me" component={AuthGuard}>
+          <Route path="/" component={Home} />
+          <Route path="/welcome" component={Welcome} />
+          <Route path="/day/:date" component={DayView} />
+          <Route path="/nav/calendar" component={CalendarPage} />
+          <Route path="/nav" component={NavPage} />
+          <Route path="/notifications" component={NotificationsPage} />
+          <Route
+            path="/notifications/subscribe"
+            component={NotificationsSubscribePage}
+          />
+          <Route path="/settings" component={SettingsPage} />
+          <Route path="/settings/day-templates" component={DayTemplatesPage} />
+          <Route
+            path="/settings/day-templates/new"
+            component={NewDayTemplatePage}
+          />
+          <Route
+            path="/settings/day-templates/:id"
+            component={DayTemplateDetailPage}
+          />
+          <Route
+            path="/settings/task-definitions"
+            component={TaskDefinitionsPage}
+          />
+          <Route
+            path="/settings/task-definitions/new"
+            component={NewTaskDefinitionPage}
+          />
+          <Route
+            path="/settings/task-definitions/:id"
+            component={TaskDefinitionDetailPage}
+          />
+          <Route path="/settings/routines" component={RoutinesPage} />
+          <Route path="/settings/routines/new" component={NewRoutinePage} />
+          <Route path="/settings/routines/:id" component={RoutineDetailPage} />
+        </Route>
 
-      <Route path="*" component={NotFound} />
-    </Router>
+        <Route path="*" component={NotFound} />
+      </Router>
+    </NotificationProvider>
   );
 }
