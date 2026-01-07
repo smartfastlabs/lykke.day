@@ -6,12 +6,12 @@ from datetime import UTC, timedelta
 import pytest
 from freezegun import freeze_time
 
-from planned.core.utils.event_filters import (
+from lykke.core.utils.event_filters import (
     filter_upcoming_calendar_entries,
     is_calendar_entry_eligible_for_upcoming,
 )
-from planned.domain import value_objects
-from planned.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.domain import value_objects
+from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 
 
 @pytest.fixture

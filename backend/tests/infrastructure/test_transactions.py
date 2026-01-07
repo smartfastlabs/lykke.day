@@ -3,15 +3,15 @@
 from uuid import uuid4
 
 import pytest
-from planned.core.exceptions import NotFoundError
-from planned.domain import value_objects
-from planned.domain.entities import DayEntity, TaskEntity
-from planned.infrastructure import data_objects
-from planned.infrastructure.database.transaction import (
+from lykke.core.exceptions import NotFoundError
+from lykke.domain import value_objects
+from lykke.domain.entities import DayEntity, TaskEntity
+from lykke.infrastructure import data_objects
+from lykke.infrastructure.database.transaction import (
     TransactionManager,
     get_transaction_connection,
 )
-from planned.core.utils.dates import get_current_datetime
+from lykke.core.utils.dates import get_current_datetime
 
 
 @pytest.mark.asyncio

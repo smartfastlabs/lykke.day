@@ -7,10 +7,10 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from planned.core.config import settings
-from planned.domain.entities import CalendarEntryEntity
-from planned.domain.value_objects.task import TaskFrequency
-from planned.infrastructure.repositories import CalendarEntryRepository
+from lykke.core.config import settings
+from lykke.domain.entities import CalendarEntryEntity
+from lykke.domain.value_objects.task import TaskFrequency
+from lykke.infrastructure.repositories import CalendarEntryRepository
 
 
 @pytest.mark.asyncio

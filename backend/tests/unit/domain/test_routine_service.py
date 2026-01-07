@@ -4,9 +4,9 @@ import datetime
 
 import pytest
 
-from planned.core.utils import is_routine_active
-from planned.domain.value_objects.routine import RoutineSchedule
-from planned.domain.value_objects.task import TaskFrequency
+from lykke.core.utils import is_routine_active
+from lykke.domain.value_objects.routine import RoutineSchedule
+from lykke.domain.value_objects.task import TaskFrequency
 
 
 @pytest.mark.parametrize(
@@ -27,7 +27,7 @@ def test_is_routine_active_with_weekdays(
     date: datetime.date, weekdays: list[int], expected: bool
 ) -> None:
     """Test is_routine_active with specific weekdays."""
-    from planned.domain.value_objects.routine import DayOfWeek
+    from lykke.domain.value_objects.routine import DayOfWeek
 
     schedule = RoutineSchedule(
         frequency=TaskFrequency.WEEKLY,

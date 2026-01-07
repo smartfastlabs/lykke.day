@@ -1,6 +1,6 @@
 """Unit tests for strings utility functions."""
 
-from planned.core.utils.strings import slugify
+from lykke.core.utils.strings import slugify
 
 
 def test_slugify_basic():

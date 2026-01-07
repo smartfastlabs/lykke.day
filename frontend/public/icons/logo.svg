@@ -17,7 +17,7 @@
     stroke-width="2"
   />
 
-  <!-- "PLANNED" -->
+  <!-- "LYKKE" -->
   <text
     x="64"
     y="44"
@@ -29,7 +29,7 @@
     lengthAdjust="spacingAndGlyphs"
     textLength="100"
   >
-    PLANNED
+    LYKKE
   </text>
 
   <!-- Divider -->

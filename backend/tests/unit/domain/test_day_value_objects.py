@@ -5,7 +5,7 @@ from datetime import UTC
 
 import pytest
 
-from planned.domain.value_objects.day import (
+from lykke.domain.value_objects.day import (
     DayContext,
     DayMode,
     DayStatus,
@@ -56,7 +56,7 @@ def test_day_mode_values(mode: DayMode, expected_value: str) -> None:
 
 def test_day_context_creation(test_user_id: str) -> None:
     """Test DayContext can be created with a day."""
-    from planned.domain.entities import DayEntity
+    from lykke.domain.entities import DayEntity
 
     day = DayEntity(
         user_id=test_user_id,
@@ -71,7 +71,7 @@ def test_day_context_creation(test_user_id: str) -> None:
 
 def test_day_context_defaults() -> None:
     """Test DayContext has default empty lists."""
-    from planned.domain.entities import DayEntity
+    from lykke.domain.entities import DayEntity
     from uuid import uuid4
 
     test_user_id = uuid4()

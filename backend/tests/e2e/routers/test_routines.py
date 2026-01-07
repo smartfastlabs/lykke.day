@@ -4,10 +4,10 @@ from uuid import uuid4
 
 import pytest
 
-from planned.domain.entities import RoutineEntity
-from planned.domain.value_objects.routine import RoutineSchedule
-from planned.domain.value_objects.task import TaskCategory, TaskFrequency
-from planned.infrastructure.repositories import RoutineRepository
+from lykke.domain.entities import RoutineEntity
+from lykke.domain.value_objects.routine import RoutineSchedule
+from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
+from lykke.infrastructure.repositories import RoutineRepository
 
 
 @pytest.mark.asyncio

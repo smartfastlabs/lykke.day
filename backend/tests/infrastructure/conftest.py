@@ -4,9 +4,9 @@ import pytest_asyncio
 
 from uuid import uuid4
 
-from planned.domain.entities import UserEntity
-from planned.domain.value_objects.user import UserSetting
-from planned.infrastructure.repositories import DayRepository, TaskRepository, UserRepository
+from lykke.domain.entities import UserEntity
+from lykke.domain.value_objects.user import UserSetting
+from lykke.infrastructure.repositories import DayRepository, TaskRepository, UserRepository
 
 
 @pytest_asyncio.fixture

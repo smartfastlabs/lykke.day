@@ -12,11 +12,11 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from planned.domain.entities.day_template import DayTemplateEntity
-from planned.domain.value_objects.alarm import Alarm, AlarmType
-from planned.domain.value_objects.day import DayStatus
-from planned.infrastructure.database.utils import reset_engine
-from planned.infrastructure.repositories import (
+from lykke.domain.entities.day_template import DayTemplateEntity
+from lykke.domain.value_objects.alarm import Alarm, AlarmType
+from lykke.domain.value_objects.day import DayStatus
+from lykke.infrastructure.database.utils import reset_engine
+from lykke.infrastructure.repositories import (
     DayRepository,
     DayTemplateRepository,
     UserRepository,
@@ -67,7 +67,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
 
     assert login_response.status_code == 204, f"Login failed: {login_response.text}"
     # Check that auth cookie is set
-    assert "planned_auth" in test_client.cookies
+    assert "lykke_auth" in test_client.cookies
 
     # Create default DayTemplate (required for scheduling)
     # Note: In production, this would be created by SheppardManager, but for e2e test

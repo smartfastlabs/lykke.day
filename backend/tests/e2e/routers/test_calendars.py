@@ -3,9 +3,9 @@
 from uuid import uuid4
 
 import pytest
-from planned.domain.entities import CalendarEntity
-from planned.infrastructure import data_objects
-from planned.infrastructure.repositories import AuthTokenRepository, CalendarRepository
+from lykke.domain.entities import CalendarEntity
+from lykke.infrastructure import data_objects
+from lykke.infrastructure.repositories import AuthTokenRepository, CalendarRepository
 
 
 @pytest.mark.asyncio

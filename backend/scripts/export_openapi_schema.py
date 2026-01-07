@@ -4,11 +4,11 @@ import json
 import sys
 from pathlib import Path
 
-# Add parent directory to path so we can import planned
+# Add parent directory to path so we can import lykke
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import FastAPI app
-from planned.app import app
+from lykke.app import app
 
 
 def main():

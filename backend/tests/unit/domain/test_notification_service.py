@@ -6,13 +6,13 @@ from uuid import uuid4
 
 import pytest
 
-from planned.core.utils import (
+from lykke.core.utils import (
     build_notification_payload_for_calendar_entries,
     build_notification_payload_for_tasks,
 )
-from planned.domain import value_objects
-from planned.domain.entities import CalendarEntity, CalendarEntryEntity, TaskEntity
-from planned.infrastructure import data_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import CalendarEntity, CalendarEntryEntity, TaskEntity
+from lykke.infrastructure import data_objects
 
 
 @pytest.fixture

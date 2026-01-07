@@ -4,10 +4,10 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from planned.core.exceptions import NotFoundError
-from planned.domain import value_objects
-from planned.domain.entities import DayEntity
-from planned.core.utils.dates import get_current_datetime
+from lykke.core.exceptions import NotFoundError
+from lykke.domain import value_objects
+from lykke.domain.entities import DayEntity
+from lykke.core.utils.dates import get_current_datetime
 
 
 @pytest.mark.asyncio

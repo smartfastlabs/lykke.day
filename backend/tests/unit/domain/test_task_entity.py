@@ -5,11 +5,11 @@ from datetime import UTC
 
 import pytest
 
-from planned.core.exceptions import DomainError
-from planned.domain import value_objects
-from planned.domain import value_objects
-from planned.domain.entities import TaskEntity
-from planned.domain import data_objects
+from lykke.core.exceptions import DomainError
+from lykke.domain import value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import TaskEntity
+from lykke.domain import data_objects
 
 
 @pytest.fixture

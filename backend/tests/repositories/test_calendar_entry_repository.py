@@ -5,11 +5,11 @@ from zoneinfo import ZoneInfo
 
 import pytest
 import pytest_asyncio
-from planned import settings
-from planned.domain.entities import CalendarEntity, CalendarEntryEntity
-from planned.domain.value_objects.task import TaskFrequency
-from planned.domain.value_objects.query import DateQuery
-from planned.infrastructure.repositories import CalendarEntryRepository, UserRepository
+from lykke.core.config import settings
+from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.domain.value_objects.task import TaskFrequency
+from lykke.domain.value_objects.query import DateQuery
+from lykke.infrastructure.repositories import CalendarEntryRepository, UserRepository
 
 
 @pytest_asyncio.fixture

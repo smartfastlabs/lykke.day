@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "planned"
+name = "lykke"
 package-mode = false
 version = "0.1.0"
 description = ""
 authors = ["Todd Sifleet <todd.sifleet@gmail.com>"]
 readme = "README.md"
-packages = [{include = "planned"}]
+packages = [{include = "lykke"}]
 
 [tool.poetry.dependencies]
 python = "^3.13"
@@ -52,6 +52,7 @@ pytest-vcr = "^1.0.2"
 pytest-asyncio = "^1.0.0"
 equals = "^3.1.2"
 types-passlib = "^1.7.7.20250602"
+pillow = "^12.1.0"
 
 
 [build-system]
@@ -59,7 +60,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 # Environment configurations
-[tool.planned.env]
+[tool.lykke.env]
 pythonpath = "."
 
 [tool.black]
@@ -91,11 +92,11 @@ ignore = [
 ]
 
 [tool.ruff.isort]
-known-first-party = ["planned"]
+known-first-party = ["lykke"]
 combine-as-imports = true
 
 [tool.ruff.per-file-ignores]
-"planned/scripts/**" = ["ALL"]
+"lykke/scripts/**" = ["ALL"]
 
 [tool.mypy]
 exclude="scripts.*"
@@ -131,7 +132,7 @@ module = "aiofiles.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = "planned.sidecars.*"
+module = "lykke.sidecars.*"
 ignore_errors = true
 
 [[tool.mypy.overrides]]
@@ -141,15 +142,15 @@ ignore_missing_imports = true
 
 
 [tool.pytest.ini_options]
-addopts = "--cov=planned --cov-report=term-missing --cov-report=xml"
+addopts = "--cov=lykke --cov-report=term-missing --cov-report=xml"
 testpaths = ["tests"]
 
 [tool.coverage.run]
 branch = true
-source = ["planned"]
+source = ["lykke"]
 omit = [
-    "planned/scripts/*",
-    "planned/app.py",
+    "lykke/scripts/*",
+    "lykke/app.py",
 ]
 
 [tool.coverage.report]

@@ -5,11 +5,11 @@ from uuid import uuid4, uuid5
 
 import pytest
 
-from planned.core.exceptions import NotFoundError
-from planned.domain.entities import TaskEntity
-from planned.infrastructure import data_objects
-from planned.domain.value_objects.query import DateQuery
-from planned.domain.value_objects.task import (
+from lykke.core.exceptions import NotFoundError
+from lykke.domain.entities import TaskEntity
+from lykke.infrastructure import data_objects
+from lykke.domain.value_objects.query import DateQuery
+from lykke.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
     TaskSchedule,
@@ -17,7 +17,7 @@ from planned.domain.value_objects.task import (
     TaskType,
     TimingType,
 )
-from planned.infrastructure.repositories import TaskRepository
+from lykke.infrastructure.repositories import TaskRepository
 
 
 def _create_task_definition(user_id, task_id=None):

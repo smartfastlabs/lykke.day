@@ -6,14 +6,14 @@ from datetime import UTC, timedelta
 import pytest
 from freezegun import freeze_time
 
-from planned.core.utils.task_filters import (
+from lykke.core.utils.task_filters import (
     calculate_cutoff_time,
     filter_upcoming_tasks,
     is_task_eligible_for_upcoming,
 )
-from planned.domain import value_objects
-from planned.domain.entities import TaskEntity
-from planned.infrastructure import data_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import TaskEntity
+from lykke.infrastructure import data_objects
 
 
 @pytest.fixture

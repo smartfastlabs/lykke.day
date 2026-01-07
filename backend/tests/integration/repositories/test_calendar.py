@@ -4,10 +4,10 @@ from uuid import uuid4
 
 import pytest
 
-from planned.core.exceptions import NotFoundError
-from planned.domain.entities import CalendarEntity
-from planned.infrastructure import data_objects
-from planned.infrastructure.repositories import CalendarRepository
+from lykke.core.exceptions import NotFoundError
+from lykke.domain.entities import CalendarEntity
+from lykke.infrastructure import data_objects
+from lykke.infrastructure.repositories import CalendarRepository
 
 
 @pytest.mark.asyncio

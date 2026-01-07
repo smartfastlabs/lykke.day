@@ -4,10 +4,10 @@ from datetime import time
 
 import pytest
 
-from planned.core.exceptions import NotFoundError
-from planned.domain.entities.day_template import DayTemplateEntity
-from planned.domain.value_objects.alarm import Alarm, AlarmType
-from planned.infrastructure.repositories import DayTemplateRepository
+from lykke.core.exceptions import NotFoundError
+from lykke.domain.entities.day_template import DayTemplateEntity
+from lykke.domain.value_objects.alarm import Alarm, AlarmType
+from lykke.infrastructure.repositories import DayTemplateRepository
 
 
 @pytest.mark.asyncio

@@ -2,8 +2,8 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from planned.core.config import settings
-from planned.infrastructure.database.tables import metadata
+from lykke.core.config import settings
+from lykke.infrastructure.database.tables import metadata
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import create_async_engine
 

@@ -4,7 +4,7 @@ import datetime
 from datetime import time
 
 import pytest
-from planned.domain.value_objects.task import TaskSchedule, TimingType
+from lykke.domain.value_objects.task import TaskSchedule, TimingType
 
 
 def test_task_schedule_with_all_times() -> None:

@@ -4,9 +4,9 @@ from uuid import uuid4
 
 import pytest
 
-from planned.core.exceptions import NotFoundError
-from planned.domain.entities import UserEntity
-from planned.domain.value_objects.user import UserSetting
+from lykke.core.exceptions import NotFoundError
+from lykke.domain.entities import UserEntity
+from lykke.domain.value_objects.user import UserSetting
 
 
 @pytest.mark.asyncio

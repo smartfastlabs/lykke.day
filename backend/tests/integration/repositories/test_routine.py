@@ -4,16 +4,16 @@ from datetime import time
 from uuid import uuid4
 
 import pytest
-from planned.core.exceptions import NotFoundError
-from planned.domain.entities import RoutineEntity
-from planned.domain.value_objects.routine import RoutineSchedule, RoutineTask
-from planned.domain.value_objects.task import (
+from lykke.core.exceptions import NotFoundError
+from lykke.domain.entities import RoutineEntity
+from lykke.domain.value_objects.routine import RoutineSchedule, RoutineTask
+from lykke.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
     TaskSchedule,
     TimingType,
 )
-from planned.infrastructure.repositories import RoutineRepository
+from lykke.infrastructure.repositories import RoutineRepository
 
 
 @pytest.mark.asyncio

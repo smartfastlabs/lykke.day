@@ -10,46 +10,46 @@ from dobles import InstanceDouble
 @pytest.fixture
 def mock_user_repo():
     """Mocked UserRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.UserRepositoryProtocol")
+    return InstanceDouble("lykke.application.repositories.UserRepositoryProtocol")
 
 
 @pytest.fixture
 def mock_day_repo():
     """Mocked DayRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.DayRepositoryProtocol")
+    return InstanceDouble("lykke.application.repositories.DayRepositoryProtocol")
 
 
 @pytest.fixture
 def mock_day_template_repo():
     """Mocked DayTemplateRepositoryProtocol for unit tests."""
     return InstanceDouble(
-        "planned.application.repositories.DayTemplateRepositoryProtocol"
+        "lykke.application.repositories.DayTemplateRepositoryProtocol"
     )
 
 
 @pytest.fixture
 def mock_calendar_entry_repo():
     """Mocked CalendarEntryRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.CalendarEntryRepositoryProtocol")
+    return InstanceDouble("lykke.application.repositories.CalendarEntryRepositoryProtocol")
 
 
 @pytest.fixture
 def mock_task_repo():
     """Mocked TaskRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.TaskRepositoryProtocol")
+    return InstanceDouble("lykke.application.repositories.TaskRepositoryProtocol")
 
 
 @pytest.fixture
 def mock_calendar_repo():
     """Mocked CalendarRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.CalendarRepositoryProtocol")
+    return InstanceDouble("lykke.application.repositories.CalendarRepositoryProtocol")
 
 
 @pytest.fixture
 def mock_auth_token_repo():
     """Mocked AuthTokenRepositoryProtocol for unit tests."""
     return InstanceDouble(
-        "planned.application.repositories.AuthTokenRepositoryProtocol"
+        "lykke.application.repositories.AuthTokenRepositoryProtocol"
     )
 
 
@@ -57,21 +57,21 @@ def mock_auth_token_repo():
 def mock_push_subscription_repo():
     """Mocked PushSubscriptionRepositoryProtocol for unit tests."""
     return InstanceDouble(
-        "planned.application.repositories.PushSubscriptionRepositoryProtocol"
+        "lykke.application.repositories.PushSubscriptionRepositoryProtocol"
     )
 
 
 @pytest.fixture
 def mock_routine_repo():
     """Mocked RoutineRepositoryProtocol for unit tests."""
-    return InstanceDouble("planned.application.repositories.RoutineRepositoryProtocol")
+    return InstanceDouble("lykke.application.repositories.RoutineRepositoryProtocol")
 
 
 @pytest.fixture
 def mock_task_definition_repo():
     """Mocked TaskDefinitionRepositoryProtocol for unit tests."""
     return InstanceDouble(
-        "planned.application.repositories.TaskDefinitionRepositoryProtocol"
+        "lykke.application.repositories.TaskDefinitionRepositoryProtocol"
     )
 
 
@@ -80,7 +80,7 @@ def mock_task_definition_repo():
 def mock_google_gateway():
     """Mocked GoogleCalendarGatewayProtocol for unit tests."""
     return InstanceDouble(
-        "planned.application.gateways.google_protocol.GoogleCalendarGatewayProtocol"
+        "lykke.application.gateways.google_protocol.GoogleCalendarGatewayProtocol"
     )
 
 
@@ -88,7 +88,7 @@ def mock_google_gateway():
 def mock_web_push_gateway():
     """Mocked WebPushGatewayProtocol for unit tests."""
     return InstanceDouble(
-        "planned.application.gateways.web_push_protocol.WebPushGatewayProtocol"
+        "lykke.application.gateways.web_push_protocol.WebPushGatewayProtocol"
     )
 
 
@@ -103,8 +103,8 @@ def test_user_id():
 @pytest.fixture
 def test_user(test_user_id):
     """Test user entity for unit tests."""
-    from planned.domain.entities import UserEntity
-    from planned.domain.value_objects.user import UserSetting
+    from lykke.domain.entities import UserEntity
+    from lykke.domain.value_objects.user import UserSetting
 
     return UserEntity(
         id=test_user_id,

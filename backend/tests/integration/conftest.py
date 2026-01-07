@@ -6,11 +6,11 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from planned.domain.entities import UserEntity
-from planned.domain.entities.day_template import DayTemplateEntity
-from planned.domain.value_objects.alarm import Alarm, AlarmType
-from planned.domain.value_objects.user import UserSetting
-from planned.infrastructure.repositories import (
+from lykke.domain.entities import UserEntity
+from lykke.domain.entities.day_template import DayTemplateEntity
+from lykke.domain.value_objects.alarm import Alarm, AlarmType
+from lykke.domain.value_objects.user import UserSetting
+from lykke.infrastructure.repositories import (
     AuthTokenRepository,
     CalendarEntryRepository,
     CalendarRepository,

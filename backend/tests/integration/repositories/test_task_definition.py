@@ -4,10 +4,10 @@ from uuid import uuid4
 
 import pytest
 
-from planned.core.exceptions import NotFoundError
-from planned.domain.value_objects.task import TaskType
-from planned.infrastructure import data_objects
-from planned.infrastructure.repositories import TaskDefinitionRepository
+from lykke.core.exceptions import NotFoundError
+from lykke.domain.value_objects.task import TaskType
+from lykke.infrastructure import data_objects
+from lykke.infrastructure.repositories import TaskDefinitionRepository
 
 
 @pytest.mark.asyncio

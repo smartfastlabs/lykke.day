@@ -73,7 +73,7 @@ async def test_login(test_client):
 
     assert response.status_code == 204
     # Check that auth cookie is set
-    assert "planned_auth" in response.cookies
+    assert "lykke_auth" in response.cookies
 
 
 @pytest.mark.asyncio

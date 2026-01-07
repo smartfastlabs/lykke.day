@@ -85,7 +85,7 @@ const Welcome: Component = () => {
     <Page>
       <div class="w-full px-5 py-4 max-w-2xl mx-auto">
         <div class="mb-8">
-          <h1 class="text-3xl font-bold mb-2">Welcome to Planned.day!</h1>
+          <h1 class="text-3xl font-bold mb-2">Welcome to Lykke.day!</h1>
           <p class="text-gray-600">
             Get started by importing some task definitions. You can always add
             more later.

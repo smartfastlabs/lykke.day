@@ -5,15 +5,15 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from planned.app import app
-from planned.domain.entities import UserEntity
-from planned.domain.entities.day_template import DayTemplateEntity
-from planned.domain.value_objects.alarm import Alarm, AlarmType
-from planned.domain.value_objects.user import UserSetting
-from planned.infrastructure.database.tables import User as UserDB
-from planned.infrastructure.database.utils import reset_engine
-from planned.infrastructure.repositories import DayTemplateRepository, UserRepository
-from planned.presentation.api.routers.dependencies.user import get_current_user
+from lykke.app import app
+from lykke.domain.entities import UserEntity
+from lykke.domain.entities.day_template import DayTemplateEntity
+from lykke.domain.value_objects.alarm import Alarm, AlarmType
+from lykke.domain.value_objects.user import UserSetting
+from lykke.infrastructure.database.tables import User as UserDB
+from lykke.infrastructure.database.utils import reset_engine
+from lykke.infrastructure.repositories import DayTemplateRepository, UserRepository
+from lykke.presentation.api.routers.dependencies.user import get_current_user
 
 
 @pytest.fixture
@@ -26,7 +26,7 @@ def setup_test_user_day_template():
 
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         user_repo = UserRepository()
-        test_user_email = f"test_{uuid4()}@planned.day"
+        test_user_email = f"test_{uuid4()}@lykke.day"
         test_user = UserEntity(
             email=test_user_email,
             hashed_password=pwd_context.hash("test_password"),

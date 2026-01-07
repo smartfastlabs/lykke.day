@@ -64,7 +64,7 @@ def get_source_url() -> str:
     """Get source database URL (local dev by default)."""
     url = os.environ.get(
         "SOURCE_DATABASE_URL",
-        "postgresql+psycopg://planned:password@localhost:5432/planned_dev",
+        "postgresql+psycopg://lykke:password@localhost:5432/lykke_dev",
     )
     return normalize_postgres_url(url)
 

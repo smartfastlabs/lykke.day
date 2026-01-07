@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 from dateutil.tz import tzoffset
 
-from planned.domain.entities.calendar_entry import get_datetime
+from lykke.domain.entities.calendar_entry import get_datetime
 
 TARGET_TIMEZONE = "America/Chicago"
 

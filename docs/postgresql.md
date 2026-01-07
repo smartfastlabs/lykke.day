@@ -1,6 +1,6 @@
 # PostgreSQL Setup
 
-Local PostgreSQL database setup for the Planned application running on Raspberry Pi.
+Local PostgreSQL database setup for the Lykke application running on Raspberry Pi.
 
 ## Installation
 
@@ -16,13 +16,13 @@ sudo systemctl start postgresql
 Create the user and database:
 
 ```bash
-sudo -u postgres psql -c "CREATE USER planned WITH PASSWORD 'password';"
-sudo -u postgres psql -c "CREATE DATABASE planned OWNER planned;"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE planned TO planned;"
+sudo -u postgres psql -c "CREATE USER lykke WITH PASSWORD 'password';"
+sudo -u postgres psql -c "CREATE DATABASE lykke OWNER lykke;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE lykke TO lykke;"
 ```
 
 ## Verify Connection
 
 ```bash
-psql -h localhost -U planned -d planned
+psql -h localhost -U lykke -d lykke
 ```

@@ -15,7 +15,7 @@ const NotFound: Component = () => {
         </div>
 
         <h1 class="text-2xl font-bold text-neutral-900 mb-2 text-center">
-          This day wasn't planned
+          This day wasn't planned for
         </h1>
         <p class="text-neutral-500 mb-8 text-center max-w-md">
           The page you're looking for doesn't exist or has been moved to a

@@ -3,7 +3,7 @@
 
 import pytest
 
-from planned.infrastructure import data_objects
+from lykke.infrastructure import data_objects
 
 
 @pytest.mark.asyncio

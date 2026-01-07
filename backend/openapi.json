@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Planned.day",
+    "title": "Lykke.day",
     "description": "API for managing calendar events",
     "version": "0.1.0"
   },
@@ -4660,7 +4660,7 @@
       "APIKeyCookie": {
         "type": "apiKey",
         "in": "cookie",
-        "name": "planned_auth"
+        "name": "lykke_auth"
       }
     }
   }

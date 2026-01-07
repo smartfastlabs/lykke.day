@@ -189,8 +189,8 @@ async def test_add_routine_to_day_template(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a day template
-    from planned.domain.entities.day_template import DayTemplateEntity
-    from planned.infrastructure.repositories import DayTemplateRepository
+    from lykke.domain.entities.day_template import DayTemplateEntity
+    from lykke.infrastructure.repositories import DayTemplateRepository
 
     day_template_repo = DayTemplateRepository(user_id=user.id)
     day_template = DayTemplateEntity(
@@ -201,10 +201,10 @@ async def test_add_routine_to_day_template(authenticated_client):
     day_template = await day_template_repo.put(day_template)
 
     # Create a routine
-    from planned.domain.entities import RoutineEntity
-    from planned.domain.value_objects.routine import RoutineSchedule
-    from planned.domain.value_objects.task import TaskCategory, TaskFrequency
-    from planned.infrastructure.repositories import RoutineRepository
+    from lykke.domain.entities import RoutineEntity
+    from lykke.domain.value_objects.routine import RoutineSchedule
+    from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
+    from lykke.infrastructure.repositories import RoutineRepository
 
     routine_repo = RoutineRepository(user_id=user.id)
     routine = RoutineEntity(
@@ -235,11 +235,11 @@ async def test_add_duplicate_routine_to_day_template(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a day template with a routine already attached
-    from planned.domain.entities import RoutineEntity
-    from planned.domain.entities.day_template import DayTemplateEntity
-    from planned.domain.value_objects.routine import RoutineSchedule
-    from planned.domain.value_objects.task import TaskCategory, TaskFrequency
-    from planned.infrastructure.repositories import (
+    from lykke.domain.entities import RoutineEntity
+    from lykke.domain.entities.day_template import DayTemplateEntity
+    from lykke.domain.value_objects.routine import RoutineSchedule
+    from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
+    from lykke.infrastructure.repositories import (
         DayTemplateRepository,
         RoutineRepository,
     )
@@ -279,10 +279,10 @@ async def test_remove_routine_from_day_template(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a routine
-    from planned.domain.entities import RoutineEntity
-    from planned.domain.value_objects.routine import RoutineSchedule
-    from planned.domain.value_objects.task import TaskCategory, TaskFrequency
-    from planned.infrastructure.repositories import RoutineRepository
+    from lykke.domain.entities import RoutineEntity
+    from lykke.domain.value_objects.routine import RoutineSchedule
+    from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
+    from lykke.infrastructure.repositories import RoutineRepository
 
     routine_repo = RoutineRepository(user_id=user.id)
     routine = RoutineEntity(
@@ -297,8 +297,8 @@ async def test_remove_routine_from_day_template(authenticated_client):
     routine = await routine_repo.put(routine)
 
     # Create a day template with the routine attached
-    from planned.domain.entities.day_template import DayTemplateEntity
-    from planned.infrastructure.repositories import DayTemplateRepository
+    from lykke.domain.entities.day_template import DayTemplateEntity
+    from lykke.infrastructure.repositories import DayTemplateRepository
 
     day_template_repo = DayTemplateRepository(user_id=user.id)
     day_template = DayTemplateEntity(
@@ -324,8 +324,8 @@ async def test_remove_nonexistent_routine_from_day_template(authenticated_client
     client, user = await authenticated_client()
 
     # Create a day template without any routines
-    from planned.domain.entities.day_template import DayTemplateEntity
-    from planned.infrastructure.repositories import DayTemplateRepository
+    from lykke.domain.entities.day_template import DayTemplateEntity
+    from lykke.infrastructure.repositories import DayTemplateRepository
 
     day_template_repo = DayTemplateRepository(user_id=user.id)
     day_template = DayTemplateEntity(
