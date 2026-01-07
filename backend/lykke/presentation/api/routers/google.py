@@ -1,3 +1,4 @@
+import hmac
 import secrets
 from datetime import UTC, datetime
 from typing import Annotated, cast
@@ -7,13 +8,13 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Response
 from fastapi.responses import RedirectResponse
 from googleapiclient.discovery import build
 from loguru import logger
-from lykke.application.commands.calendar import RecordWebhookNotificationHandler
 
 # TODO: Refactor OAuth flow to use commands/queries instead of direct repository access
 # This is a complex OAuth callback flow that creates multiple entities in a single transaction.
 # Consider creating a dedicated OAuthCallbackCommand to handle this flow properly.
 from lykke.application.repositories import (
     AuthTokenRepositoryReadWriteProtocol,
+    CalendarRepositoryReadOnlyProtocol,
     CalendarRepositoryReadWriteProtocol,
 )
 from lykke.core.constants import OAUTH_STATE_EXPIRY
@@ -22,8 +23,11 @@ from lykke.domain.entities import CalendarEntity, UserEntity
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
 from lykke.presentation.workers.tasks import sync_single_calendar_task
 
-from .dependencies.commands.calendar import get_record_webhook_notification_handler
-from .dependencies.repositories import get_auth_token_repo, get_calendar_repo
+from .dependencies.repositories import (
+    get_auth_token_repo,
+    get_calendar_repo,
+    get_calendar_repo_by_user_id,
+)
 from .dependencies.user import get_current_user
 
 # Auth state storage (in memory for simplicity, use a database in production)
@@ -140,43 +144,55 @@ async def google_login_callback(
     return RedirectResponse(url="/app")
 
 
-@router.post("/webhook/{user_id}")
+@router.post("/webhook/{user_id}/{calendar_id}")
 async def google_webhook(
     user_id: UUID,
-    record_handler: Annotated[
-        RecordWebhookNotificationHandler,
-        Depends(get_record_webhook_notification_handler),
+    calendar_id: UUID,
+    calendar_repo: Annotated[
+        CalendarRepositoryReadOnlyProtocol, Depends(get_calendar_repo_by_user_id)
     ],
-    x_goog_channel_id: Annotated[str | None, Header()] = None,
-    x_goog_resource_id: Annotated[str | None, Header()] = None,
+    x_goog_channel_token: Annotated[str | None, Header()] = None,
     x_goog_resource_state: Annotated[str | None, Header()] = None,
-    x_goog_message_number: Annotated[str | None, Header()] = None,
 ) -> Response:
     """Webhook endpoint for Google Calendar push notifications.
 
     Google sends notifications to this endpoint when calendar events change.
-    The notification includes headers with channel and resource information.
     The actual sync is performed asynchronously via a background task.
 
     Args:
         user_id: The user ID extracted from the webhook URL.
+        calendar_id: The calendar ID extracted from the webhook URL.
 
     Headers:
-        X-Goog-Channel-ID: The channel ID from the watch request.
-        X-Goog-Resource-ID: An opaque ID identifying the watched resource.
+        X-Goog-Channel-Token: Secret token for webhook verification.
         X-Goog-Resource-State: The type of change (sync, exists, not_exists).
-        X-Goog-Message-Number: Incrementing message number.
 
     Returns:
         Empty 200 response to acknowledge receipt.
     """
     logger.info(
-        f"Received Google webhook for user {user_id}: channel_id={x_goog_channel_id}, "
-        f"resource_id={x_goog_resource_id}, state={x_goog_resource_state}, "
-        f"message_number={x_goog_message_number}"
+        f"Received Google webhook for user {user_id}, calendar {calendar_id}, "
+        f"state={x_goog_resource_state}"
     )
 
-    if not x_goog_channel_id:
+    # Look up the calendar to get the expected token
+    try:
+        calendar = await calendar_repo.get(calendar_id)
+    except Exception:
+        logger.warning(f"Calendar {calendar_id} not found for user {user_id}")
+        return Response(status_code=200)
+
+    # Verify the token from Google matches our stored client_state
+    expected_token = (
+        calendar.sync_subscription.client_state if calendar.sync_subscription else None
+    )
+
+    if not expected_token or not x_goog_channel_token:
+        logger.warning(f"Missing token for calendar {calendar_id}")
+        return Response(status_code=200)
+
+    if not hmac.compare_digest(expected_token, x_goog_channel_token):
+        logger.warning(f"Invalid token for calendar {calendar_id}")
         return Response(status_code=200)
 
     # Handle sync state (initial verification from Google)
@@ -184,20 +200,8 @@ async def google_webhook(
         logger.info("Received sync verification from Google")
         return Response(status_code=200)
 
-    # Look up calendar by subscription info
-    calendar = await record_handler.run(
-        subscription_id=x_goog_channel_id,
-        resource_id=x_goog_resource_id,
-    )
-
-    if not calendar:
-        logger.warning(
-            f"No calendar found for user={user_id}, channel_id={x_goog_channel_id}"
-        )
-        return Response(status_code=200)
-
     # Schedule background task to sync the calendar
-    await sync_single_calendar_task.kiq(user_id=user_id, calendar_id=calendar.id)
-    logger.info(f"Scheduled sync task for calendar {calendar.id}")
+    await sync_single_calendar_task.kiq(user_id=user_id, calendar_id=calendar_id)
+    logger.info(f"Scheduled sync task for calendar {calendar_id}")
 
     return Response(status_code=200)

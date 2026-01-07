@@ -37,6 +37,7 @@ class GoogleCalendarGatewayProtocol(Protocol):
         token: data_objects.AuthToken,
         webhook_url: str,
         channel_id: str,
+        client_state: str,
     ) -> value_objects.CalendarSubscription:
         """Subscribe to push notifications for calendar updates.
 
@@ -48,6 +49,7 @@ class GoogleCalendarGatewayProtocol(Protocol):
             token: The authentication token.
             webhook_url: The HTTPS URL to receive push notifications.
             channel_id: Unique identifier for the notification channel.
+            client_state: Secret token for webhook verification.
 
         Returns:
             CalendarSubscription with channel details and expiration.

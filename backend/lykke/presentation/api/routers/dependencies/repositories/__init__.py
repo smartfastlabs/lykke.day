@@ -6,12 +6,14 @@ with FastAPI's Depends() in route handlers.
 """
 
 from typing import Annotated, cast
+from uuid import UUID
 
-from fastapi import Depends
+from fastapi import Depends, Path
 
 from lykke.application.repositories import (
     AuthTokenRepositoryReadWriteProtocol,
     CalendarEntryRepositoryReadWriteProtocol,
+    CalendarRepositoryReadOnlyProtocol,
     CalendarRepositoryReadWriteProtocol,
     DayRepositoryReadWriteProtocol,
     DayTemplateRepositoryReadWriteProtocol,
@@ -116,3 +118,12 @@ def get_task_definition_repo(
 def get_user_repo() -> UserRepositoryReadWriteProtocol:
     """Get an instance of UserRepository (not user-scoped)."""
     return cast("UserRepositoryReadWriteProtocol", UserRepository())
+
+
+def get_calendar_repo_by_user_id(
+    user_id: Annotated[UUID, Path()],
+) -> CalendarRepositoryReadOnlyProtocol:
+    """Get a user-scoped CalendarRepository using user_id from path (for webhooks)."""
+    return cast(
+        "CalendarRepositoryReadOnlyProtocol", CalendarRepository(user_id=user_id)
+    )

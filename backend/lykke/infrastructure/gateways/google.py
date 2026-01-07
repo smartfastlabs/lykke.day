@@ -234,6 +234,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         token: data_objects.AuthToken,
         webhook_url: str,
         channel_id: str,
+        client_state: str,
     ) -> value_objects.CalendarSubscription:
         """Synchronous implementation of calendar subscription."""
         try:
@@ -244,10 +245,12 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             service = build("calendar", "v3", credentials=credentials)
 
             # Create the watch request body
+            # The 'token' field is returned as X-Goog-Channel-Token in notifications
             watch_body = {
                 "id": channel_id,
                 "type": "web_hook",
                 "address": webhook_url,
+                "token": client_state,
             }
 
             # Execute the watch request
@@ -279,6 +282,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         token: data_objects.AuthToken,
         webhook_url: str,
         channel_id: str,
+        client_state: str,
     ) -> value_objects.CalendarSubscription:
         """Subscribe to push notifications for calendar updates.
 
@@ -290,6 +294,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             token: The authentication token.
             webhook_url: The HTTPS URL to receive push notifications.
             channel_id: Unique identifier for the notification channel.
+            client_state: Secret token for webhook verification.
 
         Returns:
             CalendarSubscription with channel details and expiration.
@@ -300,6 +305,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             token,
             webhook_url,
             channel_id,
+            client_state,
         )
 
     @staticmethod

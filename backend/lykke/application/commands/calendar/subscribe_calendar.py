@@ -1,5 +1,6 @@
 """Command to subscribe a calendar to push notifications for changes."""
 
+import secrets
 import uuid
 from uuid import UUID
 
@@ -56,8 +57,13 @@ class SubscribeCalendarHandler(BaseCommandHandler):
                 # Generate unique channel ID for this subscription
                 channel_id = str(uuid.uuid4())
 
-                # Build webhook URL with user_id - Google will call this when events change
-                webhook_url = f"{settings.API_PREFIX}/google/webhook/{self.user_id}"
+                # Generate secret token for webhook verification
+                client_state = secrets.token_urlsafe(32)
+
+                # Build webhook URL with user_id and calendar_id
+                webhook_url = (
+                    f"{settings.API_PREFIX}/google/webhook/{self.user_id}/{calendar.id}"
+                )
 
                 # Subscribe to calendar changes via Google API
                 subscription = await self._google_gateway.subscribe_to_calendar(
@@ -65,6 +71,7 @@ class SubscribeCalendarHandler(BaseCommandHandler):
                     token=token,
                     webhook_url=webhook_url,
                     channel_id=channel_id,
+                    client_state=client_state,
                 )
 
                 # Store subscription info on the calendar entity
@@ -73,6 +80,7 @@ class SubscribeCalendarHandler(BaseCommandHandler):
                     resource_id=subscription.resource_id,
                     expiration=subscription.expiration,
                     provider="google",
+                    client_state=client_state,
                 )
 
                 # Persist the updated calendar
