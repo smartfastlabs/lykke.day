@@ -1,18 +1,38 @@
 """Calendar command handler dependency injection functions."""
 
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import Depends
+from fastapi import Depends, Path
 from lykke.application.commands.calendar import (
     CreateCalendarHandler,
     DeleteCalendarHandler,
+    SyncCalendarChangesHandler,
     UpdateCalendarHandler,
 )
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
+from lykke.infrastructure.gateways.google import GoogleCalendarGateway
 
 from ..services import get_read_only_repository_factory, get_unit_of_work_factory
 from ..user import get_current_user
+
+
+def get_sync_calendar_changes_handler(
+    user_id: Annotated[UUID, Path()],
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> SyncCalendarChangesHandler:
+    """Get a SyncCalendarChangesHandler instance for webhook use (user_id from path)."""
+    ro_repos = ro_repo_factory.create(user_id)
+    return SyncCalendarChangesHandler(
+        ro_repos=ro_repos,
+        uow_factory=uow_factory,
+        user_id=user_id,
+        google_gateway=GoogleCalendarGateway(),
+    )
 
 
 def get_create_calendar_handler(
@@ -49,4 +69,3 @@ def get_delete_calendar_handler(
     """Get a DeleteCalendarHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return DeleteCalendarHandler(ro_repos, uow_factory, user.id)
-

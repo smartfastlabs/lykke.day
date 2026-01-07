@@ -13,9 +13,20 @@ class CalendarRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[CalendarEnti
 
     Query = value_objects.CalendarQuery
 
+    async def get_one_or_none(
+        self, query: value_objects.CalendarQuery
+    ) -> CalendarEntity | None:
+        """Get a single calendar matching the query, or None if not found."""
+        ...
+
 
 class CalendarRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[CalendarEntity]):
     """Read-write protocol defining the interface for calendar repositories."""
 
     Query = value_objects.CalendarQuery
 
+    async def get_one_or_none(
+        self, query: value_objects.CalendarQuery
+    ) -> CalendarEntity | None:
+        """Get a single calendar matching the query, or None if not found."""
+        ...

@@ -5,18 +5,41 @@ from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntity
 from lykke.infrastructure.database.tables import calendars_tbl
 from lykke.infrastructure.repositories.base.utils import filter_init_false_fields
+from sqlalchemy.sql import Select
 
-from .base import BaseQuery, UserScopedBaseRepository
+from .base import UserScopedBaseRepository
+
+CalendarQuery = value_objects.CalendarQuery
 
 
-class CalendarRepository(UserScopedBaseRepository[CalendarEntity, BaseQuery]):
+class CalendarRepository(UserScopedBaseRepository[CalendarEntity, CalendarQuery]):
+    """User-scoped calendar repository."""
+
     Object = CalendarEntity
     table = calendars_tbl
-    QueryClass = BaseQuery
+    QueryClass = CalendarQuery
 
     def __init__(self, user_id: UUID) -> None:
         """Initialize CalendarRepository with user scoping."""
         super().__init__(user_id=user_id)
+
+    def build_query(self, query: CalendarQuery) -> Select[tuple]:
+        """Build a SQLAlchemy Core select statement from a query object."""
+        stmt = super().build_query(query)
+
+        if query.subscription_id is not None:
+            stmt = stmt.where(
+                self.table.c.sync_subscription["subscription_id"].astext
+                == query.subscription_id
+            )
+
+        if query.resource_id is not None:
+            stmt = stmt.where(
+                self.table.c.sync_subscription["resource_id"].astext
+                == query.resource_id
+            )
+
+        return stmt
 
     @staticmethod
     def entity_to_row(calendar: CalendarEntity) -> dict[str, Any]:
@@ -33,7 +56,9 @@ class CalendarRepository(UserScopedBaseRepository[CalendarEntity, BaseQuery]):
         }
 
         if calendar.sync_subscription:
-            row["sync_subscription"] = calendar.sync_subscription.model_dump(mode="json")
+            row["sync_subscription"] = calendar.sync_subscription.model_dump(
+                mode="json"
+            )
 
         return row
 
@@ -44,6 +69,8 @@ class CalendarRepository(UserScopedBaseRepository[CalendarEntity, BaseQuery]):
 
         sync_subscription = data.get("sync_subscription")
         if sync_subscription:
-            data["sync_subscription"] = value_objects.SyncSubscription(**sync_subscription)
+            data["sync_subscription"] = value_objects.SyncSubscription(
+                **sync_subscription
+            )
 
         return CalendarEntity(**data)

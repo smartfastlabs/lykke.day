@@ -58,6 +58,9 @@ class AuthTokenQuery(BaseQuery):
 class CalendarQuery(BaseQuery):
     """Query class for Calendar entities."""
 
+    subscription_id: str | None = None
+    resource_id: str | None = None
+
 
 class CalendarEntryQuery(DateQuery):
     """Query class for CalendarEntry entities."""

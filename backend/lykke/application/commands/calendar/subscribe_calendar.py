@@ -5,10 +5,7 @@ from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositories,
-    UnitOfWorkFactory,
-)
+from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.config import settings
 from lykke.domain.entities import CalendarEntity
 from lykke.domain.value_objects.sync import SyncSubscription
@@ -59,8 +56,8 @@ class SubscribeCalendarHandler(BaseCommandHandler):
                 # Generate unique channel ID for this subscription
                 channel_id = str(uuid.uuid4())
 
-                # Build webhook URL - Google will call this when events change
-                webhook_url = f"{settings.API_PREFIX}/google/webhook"
+                # Build webhook URL with user_id - Google will call this when events change
+                webhook_url = f"{settings.API_PREFIX}/google/webhook/{self.user_id}"
 
                 # Subscribe to calendar changes via Google API
                 subscription = await self._google_gateway.subscribe_to_calendar(
@@ -86,4 +83,3 @@ class SubscribeCalendarHandler(BaseCommandHandler):
                 )
 
         return calendar
-

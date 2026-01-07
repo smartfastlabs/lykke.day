@@ -15,6 +15,8 @@ class ReadOnlyRepositoryProtocol(Protocol[T]):
     - search_query: Search objects based on a query object (for date-scoped queries)
     """
 
+    # todo: add get_one and get_one_none methods
+
     async def get(self, key: UUID) -> T:
         """Get an object by key."""
         ...

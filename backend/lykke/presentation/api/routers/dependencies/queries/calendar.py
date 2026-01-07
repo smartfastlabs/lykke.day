@@ -1,9 +1,11 @@
 """Calendar query handler dependency injection functions."""
 
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import Depends
+from fastapi import Depends, Path
 from lykke.application.queries.calendar import (
+    GetCalendarBySubscriptionHandler,
     GetCalendarHandler,
     SearchCalendarsHandler,
 )
@@ -12,6 +14,17 @@ from lykke.domain.entities import UserEntity
 
 from ..services import get_read_only_repository_factory
 from ..user import get_current_user
+
+
+def get_calendar_by_subscription_handler(
+    user_id: Annotated[UUID, Path()],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> GetCalendarBySubscriptionHandler:
+    """Get a GetCalendarBySubscriptionHandler instance (user_id from path)."""
+    ro_repos = ro_repo_factory.create(user_id)
+    return GetCalendarBySubscriptionHandler(ro_repos, user_id)
 
 
 def get_get_calendar_handler(
