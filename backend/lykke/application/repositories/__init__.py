@@ -45,49 +45,26 @@ from .user_repository import (
     UserRepositoryReadWriteProtocol,
 )
 
+# Exported repository protocols (sorted alphabetically)
 __all__ = [
-    # Read-only protocols
     "AuthTokenRepositoryReadOnlyProtocol",
-    "AuthTokenRepositoryProtocol",
-    "CalendarEntryRepositoryReadOnlyProtocol",
-    "CalendarEntryRepositoryProtocol",
-    "CalendarRepositoryReadOnlyProtocol",
-    "CalendarRepositoryProtocol",
-    "DayRepositoryReadOnlyProtocol",
-    "DayRepositoryProtocol",
-    "DayTemplateRepositoryReadOnlyProtocol",
-    "DayTemplateRepositoryProtocol",
-    "PushSubscriptionRepositoryReadOnlyProtocol",
-    "PushSubscriptionRepositoryProtocol",
-    "RoutineRepositoryReadOnlyProtocol",
-    "RoutineRepositoryProtocol",
-    "TaskDefinitionRepositoryReadOnlyProtocol",
-    "TaskDefinitionRepositoryProtocol",
-    "TaskRepositoryReadOnlyProtocol",
-    "TaskRepositoryProtocol",
-    "UserRepositoryReadOnlyProtocol",
-    "UserRepositoryProtocol",
-    # Read-write protocols
     "AuthTokenRepositoryReadWriteProtocol",
+    "CalendarEntryRepositoryReadOnlyProtocol",
     "CalendarEntryRepositoryReadWriteProtocol",
+    "CalendarRepositoryReadOnlyProtocol",
     "CalendarRepositoryReadWriteProtocol",
+    "DayRepositoryReadOnlyProtocol",
     "DayRepositoryReadWriteProtocol",
+    "DayTemplateRepositoryReadOnlyProtocol",
     "DayTemplateRepositoryReadWriteProtocol",
+    "PushSubscriptionRepositoryReadOnlyProtocol",
     "PushSubscriptionRepositoryReadWriteProtocol",
+    "RoutineRepositoryReadOnlyProtocol",
     "RoutineRepositoryReadWriteProtocol",
+    "TaskDefinitionRepositoryReadOnlyProtocol",
     "TaskDefinitionRepositoryReadWriteProtocol",
+    "TaskRepositoryReadOnlyProtocol",
     "TaskRepositoryReadWriteProtocol",
+    "UserRepositoryReadOnlyProtocol",
     "UserRepositoryReadWriteProtocol",
 ]
-
-# Backward-compatibility aliases (old protocol names)
-AuthTokenRepositoryProtocol = AuthTokenRepositoryReadOnlyProtocol
-CalendarEntryRepositoryProtocol = CalendarEntryRepositoryReadOnlyProtocol
-CalendarRepositoryProtocol = CalendarRepositoryReadOnlyProtocol
-DayRepositoryProtocol = DayRepositoryReadOnlyProtocol
-DayTemplateRepositoryProtocol = DayTemplateRepositoryReadOnlyProtocol
-PushSubscriptionRepositoryProtocol = PushSubscriptionRepositoryReadOnlyProtocol
-RoutineRepositoryProtocol = RoutineRepositoryReadOnlyProtocol
-TaskDefinitionRepositoryProtocol = TaskDefinitionRepositoryReadOnlyProtocol
-TaskRepositoryProtocol = TaskRepositoryReadOnlyProtocol
-UserRepositoryProtocol = UserRepositoryReadOnlyProtocol

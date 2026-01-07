@@ -9,69 +9,75 @@ from dobles import InstanceDouble
 # Mocked repository fixtures
 @pytest.fixture
 def mock_user_repo():
-    """Mocked UserRepositoryProtocol for unit tests."""
-    return InstanceDouble("lykke.application.repositories.UserRepositoryProtocol")
+    """Mocked UserRepositoryReadOnlyProtocol for unit tests."""
+    return InstanceDouble(
+        "lykke.application.repositories.UserRepositoryReadOnlyProtocol"
+    )
 
 
 @pytest.fixture
 def mock_day_repo():
-    """Mocked DayRepositoryProtocol for unit tests."""
-    return InstanceDouble("lykke.application.repositories.DayRepositoryProtocol")
+    """Mocked DayRepositoryReadOnlyProtocol for unit tests."""
+    return InstanceDouble("lykke.application.repositories.DayRepositoryReadOnlyProtocol")
 
 
 @pytest.fixture
 def mock_day_template_repo():
-    """Mocked DayTemplateRepositoryProtocol for unit tests."""
+    """Mocked DayTemplateRepositoryReadOnlyProtocol for unit tests."""
     return InstanceDouble(
-        "lykke.application.repositories.DayTemplateRepositoryProtocol"
+        "lykke.application.repositories.DayTemplateRepositoryReadOnlyProtocol"
     )
 
 
 @pytest.fixture
 def mock_calendar_entry_repo():
-    """Mocked CalendarEntryRepositoryProtocol for unit tests."""
-    return InstanceDouble("lykke.application.repositories.CalendarEntryRepositoryProtocol")
+    """Mocked CalendarEntryRepositoryReadOnlyProtocol for unit tests."""
+    return InstanceDouble(
+        "lykke.application.repositories.CalendarEntryRepositoryReadOnlyProtocol"
+    )
 
 
 @pytest.fixture
 def mock_task_repo():
-    """Mocked TaskRepositoryProtocol for unit tests."""
-    return InstanceDouble("lykke.application.repositories.TaskRepositoryProtocol")
+    """Mocked TaskRepositoryReadOnlyProtocol for unit tests."""
+    return InstanceDouble("lykke.application.repositories.TaskRepositoryReadOnlyProtocol")
 
 
 @pytest.fixture
 def mock_calendar_repo():
-    """Mocked CalendarRepositoryProtocol for unit tests."""
-    return InstanceDouble("lykke.application.repositories.CalendarRepositoryProtocol")
+    """Mocked CalendarRepositoryReadOnlyProtocol for unit tests."""
+    return InstanceDouble(
+        "lykke.application.repositories.CalendarRepositoryReadOnlyProtocol"
+    )
 
 
 @pytest.fixture
 def mock_auth_token_repo():
-    """Mocked AuthTokenRepositoryProtocol for unit tests."""
+    """Mocked AuthTokenRepositoryReadOnlyProtocol for unit tests."""
     return InstanceDouble(
-        "lykke.application.repositories.AuthTokenRepositoryProtocol"
+        "lykke.application.repositories.AuthTokenRepositoryReadOnlyProtocol"
     )
 
 
 @pytest.fixture
 def mock_push_subscription_repo():
-    """Mocked PushSubscriptionRepositoryProtocol for unit tests."""
+    """Mocked PushSubscriptionRepositoryReadOnlyProtocol for unit tests."""
     return InstanceDouble(
-        "lykke.application.repositories.PushSubscriptionRepositoryProtocol"
+        "lykke.application.repositories.PushSubscriptionRepositoryReadOnlyProtocol"
     )
 
 
 @pytest.fixture
 def mock_routine_repo():
-    """Mocked RoutineRepositoryProtocol for unit tests."""
-    return InstanceDouble("lykke.application.repositories.RoutineRepositoryProtocol")
+    """Mocked RoutineRepositoryReadOnlyProtocol for unit tests."""
+    return InstanceDouble("lykke.application.repositories.RoutineRepositoryReadOnlyProtocol")
 
 
 @pytest.fixture
 def mock_task_definition_repo():
-    """Mocked TaskDefinitionRepositoryProtocol for unit tests."""
+    """Mocked TaskDefinitionRepositoryReadOnlyProtocol for unit tests."""
     return InstanceDouble(
-        "lykke.application.repositories.TaskDefinitionRepositoryProtocol"
+        "lykke.application.repositories.TaskDefinitionRepositoryReadOnlyProtocol"
     )
 
 
