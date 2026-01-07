@@ -10,6 +10,8 @@ from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProt
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.exceptions import TokenExpiredError
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.domain.events.calendar_events import CalendarUpdatedEvent
+from lykke.domain.value_objects import CalendarUpdateObject
 
 # Max lookahead for calendar events (1 year)
 MAX_EVENT_LOOKAHEAD = timedelta(days=365)
@@ -52,7 +54,9 @@ class SyncCalendarChangesHandler(BaseCommandHandler):
                 )
 
             try:
-                lookback = calendar.last_sync_at or (datetime.now(UTC) - timedelta(days=7))
+                lookback = calendar.last_sync_at or (
+                    datetime.now(UTC) - timedelta(days=7)
+                )
                 sync_token = (
                     calendar.sync_subscription.sync_token
                     if calendar.sync_subscription
@@ -125,10 +129,20 @@ class SyncCalendarChangesHandler(BaseCommandHandler):
                             event_id=entry.platform_id,
                         )
 
-                # Update calendar's last_sync_at
-                calendar.last_sync_at = datetime.now(UTC)
-                if calendar.sync_subscription:
-                    calendar.sync_subscription.sync_token = next_sync_token
+                # Update calendar metadata using apply_update to raise events
+                updated_subscription = (
+                    calendar.sync_subscription.model_copy(
+                        update={"sync_token": next_sync_token}
+                    )
+                    if calendar.sync_subscription
+                    else None
+                )
+                update_data = CalendarUpdateObject(
+                    last_sync_at=datetime.now(UTC),
+                    sync_subscription=updated_subscription,
+                    sync_subscription_id=calendar.sync_subscription_id,
+                )
+                calendar = calendar.apply_update(update_data, CalendarUpdatedEvent)
                 uow.add(calendar)
 
                 logger.info(

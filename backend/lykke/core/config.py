@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     TWILIO_MESSAGING_SERVICE_SID: str = ""
     SENDGRID_API_KEY: str = ""
     SENDGRID_FROM_EMAIL: str = ""
+    GOOGLE_CREDENTIALS_JSON: str = ""
     ENVIRONMENT: str = "development"
     DATA_PATH: str = "../data"
     DATABASE_URL: str = "postgresql+psycopg://localhost/lykke"

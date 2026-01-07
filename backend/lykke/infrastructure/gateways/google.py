@@ -1,4 +1,5 @@
 import asyncio
+import json
 import re
 from datetime import UTC, datetime
 from typing import Any
@@ -84,6 +85,19 @@ def _parse_recurrence_frequency(
 
 class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
     """Gateway for interacting with Google Calendar API."""
+
+    @staticmethod
+    def _client_config_from_env() -> dict[str, Any] | None:
+        """Return OAuth client config from env if provided."""
+        credentials_json = settings.GOOGLE_CREDENTIALS_JSON.strip()
+        if not credentials_json:
+            return None
+
+        try:
+            return json.loads(credentials_json)
+        except json.JSONDecodeError as exc:
+            logger.error("GOOGLE_CREDENTIALS_JSON is not valid JSON")
+            raise ValueError("Invalid GOOGLE_CREDENTIALS_JSON") from exc
 
     @staticmethod
     def _parse_datetime(
@@ -426,6 +440,13 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         Returns:
             The OAuth flow object.
         """
+        if client_config := GoogleCalendarGateway._client_config_from_env():
+            return Flow.from_client_config(
+                client_config,
+                scopes=SCOPES,
+                redirect_uri=REDIRECT_URIS[flow_name],
+            )
+
         return Flow.from_client_secrets_file(
             CLIENT_SECRET_FILE,
             scopes=SCOPES,
