@@ -2,9 +2,10 @@ import secrets
 from datetime import UTC, datetime
 from typing import Annotated, cast
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Response
 from fastapi.responses import RedirectResponse
 from googleapiclient.discovery import build
+from loguru import logger
 
 # TODO: Refactor OAuth flow to use commands/queries instead of direct repository access
 # This is a complex OAuth callback flow that creates multiple entities in a single transaction.
@@ -133,3 +134,38 @@ async def google_login_callback(
         )
 
     return RedirectResponse(url="/app")
+
+
+@router.post("/webhook")
+async def google_webhook(
+    x_goog_channel_id: Annotated[str | None, Header()] = None,
+    x_goog_resource_id: Annotated[str | None, Header()] = None,
+    x_goog_resource_state: Annotated[str | None, Header()] = None,
+    x_goog_message_number: Annotated[str | None, Header()] = None,
+) -> Response:
+    """Webhook endpoint for Google Calendar push notifications.
+
+    Google sends notifications to this endpoint when calendar events change.
+    The notification includes headers with channel and resource information.
+
+    Headers:
+        X-Goog-Channel-ID: The channel ID from the watch request.
+        X-Goog-Resource-ID: An opaque ID identifying the watched resource.
+        X-Goog-Resource-State: The type of change (sync, exists, not_exists).
+        X-Goog-Message-Number: Incrementing message number.
+
+    Returns:
+        Empty 200 response to acknowledge receipt.
+    """
+    logger.info(
+        f"Received Google webhook: channel_id={x_goog_channel_id}, "
+        f"resource_id={x_goog_resource_id}, state={x_goog_resource_state}, "
+        f"message_number={x_goog_message_number}"
+    )
+
+    # TODO: Implement webhook handling logic
+    # 1. Look up calendar by channel_id/resource_id
+    # 2. Trigger calendar sync for that calendar
+    # 3. Handle 'sync' state (initial verification)
+
+    return Response(status_code=200)
