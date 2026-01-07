@@ -1,11 +1,13 @@
-"""Data object for Google Calendar push notification subscription."""
+"""Value object for Google Calendar push notification subscription."""
 
 from dataclasses import dataclass
 from datetime import datetime
 
+from .base import BaseValueObject
+
 
 @dataclass(kw_only=True)
-class CalendarSubscription:
+class CalendarSubscription(BaseValueObject):
     """Represents a Google Calendar watch channel subscription.
 
     Attributes:

@@ -234,7 +234,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         token: data_objects.AuthToken,
         webhook_url: str,
         channel_id: str,
-    ) -> data_objects.CalendarSubscription:
+    ) -> value_objects.CalendarSubscription:
         """Synchronous implementation of calendar subscription."""
         try:
             credentials = token.google_credentials()
@@ -265,7 +265,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             expiration_ms = int(response["expiration"])
             expiration = datetime.fromtimestamp(expiration_ms / 1000, tz=UTC)
 
-            return data_objects.CalendarSubscription(
+            return value_objects.CalendarSubscription(
                 channel_id=response["id"],
                 resource_id=response["resourceId"],
                 expiration=expiration,
@@ -279,7 +279,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         token: data_objects.AuthToken,
         webhook_url: str,
         channel_id: str,
-    ) -> data_objects.CalendarSubscription:
+    ) -> value_objects.CalendarSubscription:
         """Subscribe to push notifications for calendar updates.
 
         Creates a watch channel on the specified calendar that will send

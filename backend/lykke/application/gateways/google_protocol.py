@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
 
-from lykke.domain import data_objects
+from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 
 if TYPE_CHECKING:
@@ -37,7 +37,7 @@ class GoogleCalendarGatewayProtocol(Protocol):
         token: data_objects.AuthToken,
         webhook_url: str,
         channel_id: str,
-    ) -> data_objects.CalendarSubscription:
+    ) -> value_objects.CalendarSubscription:
         """Subscribe to push notifications for calendar updates.
 
         Creates a watch channel on the specified calendar that will send

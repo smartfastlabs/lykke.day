@@ -1,6 +1,7 @@
 from .action import Action, ActionType
 from .alarm import Alarm, AlarmType
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
+from .calendar_subscription import CalendarSubscription
 from .day import DayContext, DayMode, DayStatus, DayTag
 from .push import NotificationAction, NotificationPayload
 from .query import (
@@ -49,6 +50,7 @@ __all__ = [
     "BaseResponseObject",
     "BaseUpdateObject",
     "BaseValueObject",
+    "CalendarSubscription",
     "CalendarUpdateObject",
     "DayContext",
     "DayMode",
