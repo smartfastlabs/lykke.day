@@ -26,5 +26,5 @@ COPY . .
 RUN poetry install --no-interaction
 
 # TaskIQ worker entrypoint
-CMD ["poetry", "run", "taskiq", "worker", "planned.infrastructure.workers.config.broker"]
+CMD ["poetry", "run", "taskiq", "worker", "planned.infrastructure.workers.config:broker"]
 
