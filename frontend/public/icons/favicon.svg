@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#FEF7ED"/>
+  <text x="16" y="13" font-family="system-ui, -apple-system, BlinkMacSystemFont, sans-serif" font-size="8" font-weight="700" fill="#57534e" text-anchor="middle" letter-spacing="-0.3">lykke</text>
+  <circle cx="8" cy="23" r="2" fill="#F59E0B"/>
+  <text x="19" y="26" font-family="system-ui, -apple-system, BlinkMacSystemFont, sans-serif" font-size="8" font-weight="700" fill="#57534e" text-anchor="middle" letter-spacing="-0.3">day</text>
+</svg>
