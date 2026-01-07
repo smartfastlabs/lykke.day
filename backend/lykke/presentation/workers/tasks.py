@@ -8,7 +8,7 @@ from loguru import logger
 from lykke.application.commands import ScheduleDayHandler
 from lykke.application.commands.calendar import (
     SyncAllCalendarsHandler,
-    SyncCalendarChangesHandler,
+    SyncCalendarHandler,
 )
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.queries import PreviewDayHandler
@@ -60,15 +60,15 @@ def get_sync_all_calendars_handler(
     return SyncAllCalendarsHandler(ro_repos, uow_factory, user_id, google_gateway)
 
 
-def get_sync_calendar_changes_handler(
+def get_sync_calendar_handler(
     user_id: UUID,
     uow_factory: UnitOfWorkFactory,
     ro_repo_factory: ReadOnlyRepositoryFactory,
     google_gateway: GoogleCalendarGatewayProtocol,
-) -> SyncCalendarChangesHandler:
-    """Get a SyncCalendarChangesHandler instance for a user."""
+) -> SyncCalendarHandler:
+    """Get a SyncCalendarHandler instance for a user."""
     ro_repos = ro_repo_factory.create(user_id)
-    return SyncCalendarChangesHandler(ro_repos, uow_factory, user_id, google_gateway)
+    return SyncCalendarHandler(ro_repos, uow_factory, user_id, google_gateway)
 
 
 def get_schedule_day_handler(
@@ -124,17 +124,14 @@ async def sync_single_calendar_task(
         f"Starting single calendar sync for user {user_id}, calendar {calendar_id}"
     )
 
-    sync_handler = get_sync_calendar_changes_handler(
+    sync_handler = get_sync_calendar_handler(
         user_id=user_id,
         uow_factory=get_unit_of_work_factory(),
         ro_repo_factory=get_read_only_repository_factory(),
         google_gateway=get_google_gateway(),
     )
 
-    # Look up the calendar
-    calendar = await sync_handler.calendar_ro_repo.get(calendar_id)
-
-    await sync_handler.sync(calendar)
+    await sync_handler.sync_calendar(calendar_id)
 
     logger.info(
         f"Single calendar sync completed for user {user_id}, calendar {calendar_id}"
@@ -191,7 +188,7 @@ async def schedule_user_week_task(
         except ValueError as e:
             # Day template might be missing for some days - log and continue
             logger.warning(f"Could not schedule {target_date} for user {user_id}: {e}")
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             # Catch-all for resilient background job - continue with other days
             logger.exception(f"Error scheduling {target_date} for user {user_id}")
 

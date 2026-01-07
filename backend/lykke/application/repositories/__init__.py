@@ -48,15 +48,25 @@ from .user_repository import (
 __all__ = [
     # Read-only protocols
     "AuthTokenRepositoryReadOnlyProtocol",
+    "AuthTokenRepositoryProtocol",
     "CalendarEntryRepositoryReadOnlyProtocol",
+    "CalendarEntryRepositoryProtocol",
     "CalendarRepositoryReadOnlyProtocol",
+    "CalendarRepositoryProtocol",
     "DayRepositoryReadOnlyProtocol",
+    "DayRepositoryProtocol",
     "DayTemplateRepositoryReadOnlyProtocol",
+    "DayTemplateRepositoryProtocol",
     "PushSubscriptionRepositoryReadOnlyProtocol",
+    "PushSubscriptionRepositoryProtocol",
     "RoutineRepositoryReadOnlyProtocol",
+    "RoutineRepositoryProtocol",
     "TaskDefinitionRepositoryReadOnlyProtocol",
+    "TaskDefinitionRepositoryProtocol",
     "TaskRepositoryReadOnlyProtocol",
+    "TaskRepositoryProtocol",
     "UserRepositoryReadOnlyProtocol",
+    "UserRepositoryProtocol",
     # Read-write protocols
     "AuthTokenRepositoryReadWriteProtocol",
     "CalendarEntryRepositoryReadWriteProtocol",
@@ -69,3 +79,15 @@ __all__ = [
     "TaskRepositoryReadWriteProtocol",
     "UserRepositoryReadWriteProtocol",
 ]
+
+# Backward-compatibility aliases (old protocol names)
+AuthTokenRepositoryProtocol = AuthTokenRepositoryReadOnlyProtocol
+CalendarEntryRepositoryProtocol = CalendarEntryRepositoryReadOnlyProtocol
+CalendarRepositoryProtocol = CalendarRepositoryReadOnlyProtocol
+DayRepositoryProtocol = DayRepositoryReadOnlyProtocol
+DayTemplateRepositoryProtocol = DayTemplateRepositoryReadOnlyProtocol
+PushSubscriptionRepositoryProtocol = PushSubscriptionRepositoryReadOnlyProtocol
+RoutineRepositoryProtocol = RoutineRepositoryReadOnlyProtocol
+TaskDefinitionRepositoryProtocol = TaskDefinitionRepositoryReadOnlyProtocol
+TaskRepositoryProtocol = TaskRepositoryReadOnlyProtocol
+UserRepositoryProtocol = UserRepositoryReadOnlyProtocol

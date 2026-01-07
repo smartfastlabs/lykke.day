@@ -111,7 +111,7 @@ worker: docker-up
 scheduler: docker-up
 	REDIS_URL=redis://localhost:6379 DATABASE_URL=postgresql+psycopg://lykke:password@localhost:5432/lykke_dev poetry run taskiq scheduler lykke.presentation.workers.tasks:scheduler
 
-test: docker-up
+test: 
 	DATABASE_URL=postgresql+psycopg://lykke_test:password@localhost:5432/lykke_test ENV_FILE=.env.test poetry run pytest tests --vcr-record=once
 
 typecheck:

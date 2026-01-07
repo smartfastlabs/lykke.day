@@ -1,6 +1,6 @@
 """Command to sync calendar entries from external calendar providers."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from googleapiclient.errors import HttpError
@@ -14,8 +14,13 @@ from lykke.application.unit_of_work import (
 )
 from lykke.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from lykke.core.exceptions import TokenExpiredError
-from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 from lykke.domain import data_objects
+from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.domain.events.calendar_events import CalendarUpdatedEvent
+from lykke.domain.value_objects import CalendarUpdateObject
+
+# Max lookahead for calendar events (1 year)
+MAX_EVENT_LOOKAHEAD = timedelta(days=365)
 
 
 class SyncCalendarHandler(BaseCommandHandler):
@@ -39,165 +44,125 @@ class SyncCalendarHandler(BaseCommandHandler):
         super().__init__(ro_repos, uow_factory, user_id)
         self._google_gateway = google_gateway
 
-    async def sync_calendar(
-        self, calendar_id: UUID
-    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity]]:
-        """Sync calendar entries from external provider.
-
-        Args:
-            calendar_id: The calendar ID to sync
-
-        Returns:
-            Tuple of (calendar_entries, deleted_calendar_entries)
-        """
+    async def sync_calendar(self, calendar_id: UUID) -> CalendarEntity:
+        """Sync a calendar by ID using a fresh unit of work."""
         uow = self.new_uow()
         async with uow:
             calendar = await uow.calendar_ro_repo.get(calendar_id)
             token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
+            return await self.sync_calendar_with_uow(calendar, token, uow)
 
-            # Calculate lookback time
-            lookback: datetime = datetime.now(UTC) - CALENDAR_DEFAULT_LOOKBACK
-            if calendar.last_sync_at:
-                lookback = calendar.last_sync_at - CALENDAR_SYNC_LOOKBACK
+    async def sync_calendar_entity(self, calendar: CalendarEntity) -> CalendarEntity:
+        """Sync a provided calendar entity using a fresh unit of work."""
+        uow = self.new_uow()
+        async with uow:
+            token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
+            return await self.sync_calendar_with_uow(calendar, token, uow)
 
-            calendar_entries, deleted_calendar_entries = [], []
-            sync_token = (
-                calendar.sync_subscription.sync_token
-                if calendar.sync_subscription
-                else None
-            )
-
-            if calendar.platform == "google":
-                calendar.last_sync_at = datetime.now(UTC)
-                try:
-                    (
-                        fetched_entries,
-                        fetched_deleted_entries,
-                        next_sync_token,
-                    ) = await self._google_gateway.load_calendar_events(
-                        calendar,
-                        lookback=lookback,
-                        token=token,
-                        sync_token=sync_token,
-                    )
-                except HttpError as exc:
-                    if exc.resp.status == 410:
-                        logger.info("Sync token expired, performing full sync")
-                        (
-                            fetched_entries,
-                            fetched_deleted_entries,
-                            next_sync_token,
-                        ) = await self._google_gateway.load_calendar_events(
-                            calendar,
-                            lookback=lookback,
-                            token=token,
-                            sync_token=None,
-                        )
-                    else:
-                        raise
-
-                for calendar_entry in fetched_entries:
-                    if calendar_entry.status == "cancelled":
-                        deleted_calendar_entries.append(calendar_entry)
-                    else:
-                        calendar_entries.append(calendar_entry)
-
-                deleted_calendar_entries.extend(fetched_deleted_entries)
-                if calendar.sync_subscription:
-                    calendar.sync_subscription.sync_token = next_sync_token
-            else:
-                raise NotImplementedError(
-                    f"Sync not implemented for platform {calendar.platform}"
-                )
-
-        return calendar_entries, deleted_calendar_entries
-
-    async def _sync_calendar_internal(
+    async def sync_calendar_with_uow(
         self,
         calendar: CalendarEntity,
         token: data_objects.AuthToken,
         uow: UnitOfWorkProtocol,
-    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity]]:
-        """Internal method to sync a calendar (used by SyncAllCalendarsHandler).
-
-        Args:
-            calendar: The calendar to sync
-            token: The auth token for the calendar
-            uow: The unit of work to use
-
-        Returns:
-            Tuple of (calendar_entries, deleted_calendar_entries)
-        """
-        # Calculate lookback time
+    ) -> CalendarEntity:
+        """Perform the sync using an existing unit of work."""
         lookback: datetime = datetime.now(UTC) - CALENDAR_DEFAULT_LOOKBACK
         if calendar.last_sync_at:
             lookback = calendar.last_sync_at - CALENDAR_SYNC_LOOKBACK
 
-        calendar_entries, deleted_calendar_entries = [], []
         sync_token = (
             calendar.sync_subscription.sync_token
             if calendar.sync_subscription
             else None
         )
+        (
+            fetched_entries,
+            fetched_deleted_entries,
+            next_sync_token,
+        ) = await self._load_calendar_events(calendar, lookback, sync_token, token)
 
-        if calendar.platform == "google":
-            calendar.last_sync_at = datetime.now(UTC)
-            try:
-                (
-                    fetched_entries,
-                    fetched_deleted_entries,
-                    next_sync_token,
-                ) = await self._google_gateway.load_calendar_events(
-                    calendar,
-                    lookback=lookback,
-                    token=token,
-                    sync_token=sync_token,
-                )
-            except HttpError as exc:
-                if exc.resp.status == 410:
-                    logger.info("Sync token expired, performing full sync")
-                    (
-                        fetched_entries,
-                        fetched_deleted_entries,
-                        next_sync_token,
-                    ) = await self._google_gateway.load_calendar_events(
-                        calendar,
-                        lookback=lookback,
-                        token=token,
-                        sync_token=None,
-                    )
-                else:
-                    raise
+        max_date = datetime.now(UTC) + MAX_EVENT_LOOKAHEAD
+        filtered_entries = [
+            entry for entry in fetched_entries if entry.starts_at <= max_date
+        ]
 
-            for calendar_entry in fetched_entries:
-                if calendar_entry.status == "cancelled":
-                    deleted_calendar_entries.append(calendar_entry)
-                else:
-                    calendar_entries.append(calendar_entry)
+        for entry in filtered_entries:
+            if entry.status == "cancelled":
+                await self._delete_if_exists(entry, uow)
+            else:
+                entry.create()
+                uow.add(entry)
 
-            deleted_calendar_entries.extend(fetched_deleted_entries)
-            if calendar.sync_subscription:
-                calendar.sync_subscription.sync_token = next_sync_token
+        for entry in fetched_deleted_entries:
+            await self._delete_if_exists(entry, uow)
+
+        updated_calendar = self._apply_calendar_update(calendar, next_sync_token)
+        uow.add(updated_calendar)
+        return updated_calendar
+
+    async def _delete_if_exists(
+        self, entry: CalendarEntryEntity, uow: UnitOfWorkProtocol
+    ) -> None:
+        """Delete the entry if present, otherwise log and skip."""
+        existing = await uow.calendar_entry_ro_repo.get_by_platform_id(  # type: ignore[attr-defined]
+            entry.platform_id
+        )
+        if existing:
+            await uow.delete(existing)
         else:
+            logger.info(
+                "Skip delete for event without match",
+                event_id=entry.platform_id,
+            )
+
+    async def _load_calendar_events(
+        self,
+        calendar: CalendarEntity,
+        lookback: datetime,
+        sync_token: str | None,
+        token: data_objects.AuthToken,
+    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity], str | None]:
+        """Load events from the provider, handling sync token expiration."""
+        if calendar.platform != "google":
             raise NotImplementedError(
                 f"Sync not implemented for platform {calendar.platform}"
             )
 
-        # Resolve deletions by looking up existing entities efficiently
-        resolved_deleted: list[CalendarEntryEntity] = []
-        for calendar_entry in deleted_calendar_entries:
-            existing = await uow.calendar_entry_ro_repo.get_by_platform_id(  # type: ignore[attr-defined]
-                calendar_entry.platform_id
+        try:
+            return await self._google_gateway.load_calendar_events(
+                calendar=calendar,
+                lookback=lookback,
+                token=token,
+                sync_token=sync_token,
             )
-            if existing:
-                resolved_deleted.append(existing)
-            else:
-                logger.info(
-                    "Skip delete for event without match",
-                    event_id=calendar_entry.platform_id,
+        except HttpError as exc:
+            if exc.resp.status == 410:
+                logger.info("Sync token expired, performing full sync")
+                return await self._google_gateway.load_calendar_events(
+                    calendar=calendar,
+                    lookback=lookback,
+                    token=token,
+                    sync_token=None,
                 )
+            raise
 
-        return calendar_entries, resolved_deleted
+    def _apply_calendar_update(
+        self, calendar: CalendarEntity, next_sync_token: str | None
+    ) -> CalendarEntity:
+        """Apply sync metadata updates and emit domain events."""
+        updated_subscription = (
+            calendar.sync_subscription.model_copy(
+                update={"sync_token": next_sync_token}
+            )
+            if calendar.sync_subscription
+            else None
+        )
+        update_data = CalendarUpdateObject(
+            last_sync_at=datetime.now(UTC),
+            sync_subscription=updated_subscription,
+            sync_subscription_id=calendar.sync_subscription_id,
+        )
+        return calendar.apply_update(update_data, CalendarUpdatedEvent)
 
 
 class SyncAllCalendarsHandler(BaseCommandHandler):
@@ -236,24 +201,9 @@ class SyncAllCalendarsHandler(BaseCommandHandler):
             for calendar in calendars:
                 try:
                     token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
-                    (
-                        calendar_entries,
-                        deleted_calendar_entries,
-                    ) = await sync_handler._sync_calendar_internal(calendar, token, uow)
-
-                    # Save calendar entries - upsert all (repo handles insert/update)
-                    for calendar_entry in calendar_entries:
-                        calendar_entry.create()  # Mark with EntityCreatedEvent
-                        uow.add(calendar_entry)  # UoW will call repo.put() which does upsert
-                    
-                    for calendar_entry in deleted_calendar_entries:
-                        logger.info(f"DELETING CALENDAR ENTRY: {calendar_entry.name}")
-                        await uow.delete(calendar_entry)
-
-                    # Update calendar last_sync_at (just set attribute, no event needed)
-                    uow.add(calendar)
+                    await sync_handler.sync_calendar_with_uow(calendar, token, uow)
                 except TokenExpiredError:
                     logger.info(f"Token expired for calendar {calendar.name}")
-                except Exception as e:
+                except Exception as e:  # pylint: disable=broad-except
                     logger.exception(f"Error syncing calendar {calendar.name}: {e}")
                     await uow.rollback()
