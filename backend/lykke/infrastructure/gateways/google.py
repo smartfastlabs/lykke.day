@@ -2,7 +2,7 @@ import asyncio
 import json
 import re
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 from zoneinfo import ZoneInfo
 
 from google.auth.exceptions import RefreshError
@@ -102,7 +102,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             return None
 
         try:
-            return json.loads(credentials_json)
+            return cast("dict[str, Any]", json.loads(credentials_json))
         except json.JSONDecodeError as exc:
             logger.error("GOOGLE_CREDENTIALS_JSON is not valid JSON")
             raise ValueError("Invalid GOOGLE_CREDENTIALS_JSON") from exc

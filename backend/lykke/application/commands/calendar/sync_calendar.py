@@ -128,11 +128,6 @@ class SyncCalendarHandler(BaseCommandHandler):
         Returns:
             Tuple of (calendar_entries, deleted_calendar_entries)
         """
-        existing_entries = await uow.calendar_entry_ro_repo.all()
-        existing_by_platform_id = {
-            entry.platform_id: entry for entry in existing_entries
-        }
-
         # Calculate lookback time
         lookback: datetime = datetime.now(UTC) - CALENDAR_DEFAULT_LOOKBACK
         if calendar.last_sync_at:
@@ -188,14 +183,19 @@ class SyncCalendarHandler(BaseCommandHandler):
                 f"Sync not implemented for platform {calendar.platform}"
             )
 
-        # Map deletions to existing entities so delete operations succeed
+        # Resolve deletions by looking up existing entities efficiently
         resolved_deleted: list[CalendarEntryEntity] = []
         for calendar_entry in deleted_calendar_entries:
-            existing = existing_by_platform_id.get(calendar_entry.platform_id)
+            existing = await uow.calendar_entry_ro_repo.get_by_platform_id(  # type: ignore[attr-defined]
+                calendar_entry.platform_id
+            )
             if existing:
                 resolved_deleted.append(existing)
             else:
-                resolved_deleted.append(calendar_entry)
+                logger.info(
+                    "Skip delete for event without match",
+                    event_id=calendar_entry.platform_id,
+                )
 
         return calendar_entries, resolved_deleted
 
@@ -241,9 +241,11 @@ class SyncAllCalendarsHandler(BaseCommandHandler):
                         deleted_calendar_entries,
                     ) = await sync_handler._sync_calendar_internal(calendar, token, uow)
 
-                    # Save calendar entries
+                    # Save calendar entries - upsert all (repo handles insert/update)
                     for calendar_entry in calendar_entries:
-                        await uow.create(calendar_entry)
+                        calendar_entry.create()  # Mark with EntityCreatedEvent
+                        uow.add(calendar_entry)  # UoW will call repo.put() which does upsert
+                    
                     for calendar_entry in deleted_calendar_entries:
                         logger.info(f"DELETING CALENDAR ENTRY: {calendar_entry.name}")
                         await uow.delete(calendar_entry)

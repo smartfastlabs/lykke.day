@@ -43,10 +43,6 @@ class SyncCalendarChangesHandler(BaseCommandHandler):
         uow = self.new_uow()
         async with uow:
             token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
-            existing_entries = await uow.calendar_entry_ro_repo.all()
-            existing_by_platform_id = {
-                entry.platform_id: entry for entry in existing_entries
-            }
 
             if calendar.platform != "google":
                 raise NotImplementedError(
@@ -103,11 +99,14 @@ class SyncCalendarChangesHandler(BaseCommandHandler):
                             f"which is more than a year out"
                         )
 
-                # Process entries - create or update
+                # Process entries - upsert or delete
                 for entry in filtered_entries:
                     if entry.status == "cancelled":
                         logger.info(f"Deleting cancelled event: {entry.name}")
-                        existing = existing_by_platform_id.get(entry.platform_id)
+                        # Look up by platform_id efficiently (single DB query per entry)
+                        existing = await uow.calendar_entry_ro_repo.get_by_platform_id(  # type: ignore[attr-defined]
+                            entry.platform_id
+                        )
                         if existing:
                             await uow.delete(existing)
                         else:
@@ -116,11 +115,15 @@ class SyncCalendarChangesHandler(BaseCommandHandler):
                                 event_id=entry.platform_id,
                             )
                     else:
-                        await uow.create(entry)
+                        # Upsert: mark for create/update and let repository handle it
+                        entry.create()  # Mark with EntityCreatedEvent
+                        uow.add(entry)  # UoW will call repo.put() which does upsert
 
                 # Apply deletions returned separately (already have status set)
                 for entry in deleted_entries:
-                    existing = existing_by_platform_id.get(entry.platform_id)
+                    existing = await uow.calendar_entry_ro_repo.get_by_platform_id(  # type: ignore[attr-defined]
+                        entry.platform_id
+                    )
                     if existing:
                         await uow.delete(existing)
                     else:

@@ -30,6 +30,29 @@ class CalendarEntryRepository(UserScopedBaseRepository[CalendarEntryEntity, Date
 
         return stmt
 
+    async def get_by_platform_id(self, platform_id: str) -> CalendarEntryEntity | None:
+        """Get a calendar entry by its platform_id.
+
+        Args:
+            platform_id: The platform-specific ID (e.g., Google Calendar event ID)
+
+        Returns:
+            The calendar entry if found, None otherwise
+        """
+        from sqlalchemy import select
+
+        async with self._get_connection(for_write=False) as conn:
+            stmt = select(self.table).where(self.table.c.platform_id == platform_id)
+            stmt = self._apply_user_scope(stmt)
+
+            result = await conn.execute(stmt)
+            row = result.mappings().first()
+
+            if row is None:
+                return None
+
+            return type(self).row_to_entity(dict(row))
+
     @staticmethod
     def entity_to_row(calendar_entry: CalendarEntryEntity) -> dict[str, Any]:
         """Convert a CalendarEntry entity to a database row dict."""
