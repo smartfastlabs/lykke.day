@@ -1,6 +1,4 @@
 from typing import Any
-from uuid import UUID
-
 from sqlalchemy.sql import Select
 
 from lykke.domain import data_objects
@@ -31,10 +29,6 @@ class AuthTokenRepository(BaseRepository[data_objects.AuthToken, AuthTokenQuery]
             stmt = stmt.where(self.table.c.platform == query.platform)
 
         return stmt
-
-    async def get_by_user(self, user_id: UUID) -> list[data_objects.AuthToken]:
-        """Get all auth tokens for a user."""
-        return await self.search_query(AuthTokenQuery(user_id=user_id))
 
     @staticmethod
     def entity_to_row(auth_token: data_objects.AuthToken) -> dict[str, Any]:

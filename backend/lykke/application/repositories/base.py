@@ -15,8 +15,6 @@ class ReadOnlyRepositoryProtocol(Protocol[T]):
     - search_query: Search objects based on a query object (for date-scoped queries)
     """
 
-    # todo: add get_one and get_one_none methods
-
     async def get(self, key: UUID) -> T:
         """Get an object by key."""
         ...
@@ -30,6 +28,14 @@ class ReadOnlyRepositoryProtocol(Protocol[T]):
 
         Note: Date filtering should be done using query objects with date fields.
         """
+        ...
+
+    async def search_one(self, query: object) -> T:
+        """Get a single object matching the query or raise if none found."""
+        ...
+
+    async def search_one_or_none(self, query: object) -> T | None:
+        """Get a single object matching the query, or None if not found."""
         ...
 
 
@@ -72,6 +78,14 @@ class ReadWriteRepositoryProtocol(Protocol[T]):
 
         Note: Date filtering should be done using query objects with date fields.
         """
+        ...
+
+    async def search_one(self, query: object) -> T:
+        """Get a single object matching the query or raise if none found."""
+        ...
+
+    async def search_one_or_none(self, query: object) -> T | None:
+        """Get a single object matching the query, or None if not found."""
         ...
 
     async def delete_many(self, query: object) -> None:

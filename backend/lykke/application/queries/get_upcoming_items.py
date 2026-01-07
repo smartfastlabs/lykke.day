@@ -62,7 +62,7 @@ class GetUpcomingCalendarEntriesHandler(BaseQueryHandler):
             List of calendar entries that are upcoming within the look-ahead window
         """
         calendar_entries = await self.calendar_entry_ro_repo.search_query(
-            value_objects.DateQuery(date=date)
+            value_objects.CalendarEntryQuery(date=date)
         )
         return filter_upcoming_calendar_entries(calendar_entries, look_ahead)
 

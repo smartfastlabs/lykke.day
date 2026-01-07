@@ -7,7 +7,7 @@ import pytest
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 from lykke.domain.value_objects import TaskFrequency
 from lykke.domain.value_objects.sync import SyncSubscription
-from lykke.domain import data_objects
+from lykke.domain import value_objects
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
 from lykke.infrastructure.repositories import CalendarEntryRepository
 from lykke.infrastructure.unit_of_work import (
@@ -88,8 +88,9 @@ async def test_sync_creates_new_events(test_user_id, test_calendar, calendar_ent
         uow.add(event)
     
     # Verify event was created
-    retrieved = await calendar_entry_repo.get_by_platform_id("test-event-1")
-    assert retrieved is not None
+    retrieved = await calendar_entry_repo.search_one(
+        value_objects.CalendarEntryQuery(platform_id="test-event-1")
+    )
     assert retrieved.name == "Test Meeting"
     assert retrieved.platform_id == "test-event-1"
     
@@ -143,8 +144,9 @@ async def test_sync_updates_existing_events(
         uow.add(updated_event)
     
     # Verify event was updated
-    retrieved = await calendar_entry_repo.get_by_platform_id("test-event-2")
-    assert retrieved is not None
+    retrieved = await calendar_entry_repo.search_one(
+        value_objects.CalendarEntryQuery(platform_id="test-event-2")
+    )
     assert retrieved.name == "Updated Name"
     assert retrieved.platform_id == "test-event-2"
     
@@ -180,24 +182,29 @@ async def test_sync_deletes_cancelled_events(
         uow.add(event)
     
     # Verify event exists
-    retrieved = await calendar_entry_repo.get_by_platform_id("test-event-3")
-    assert retrieved is not None
+    retrieved = await calendar_entry_repo.search_one(
+        value_objects.CalendarEntryQuery(platform_id="test-event-3")
+    )
     
     # Delete the event
     async with uow:
         await uow.delete(event)
     
     # Verify event was deleted
-    deleted = await calendar_entry_repo.get_by_platform_id("test-event-3")
+    deleted = await calendar_entry_repo.search_one_or_none(
+        value_objects.CalendarEntryQuery(platform_id="test-event-3")
+    )
     assert deleted is None
 
 
 @pytest.mark.asyncio
-async def test_get_by_platform_id_returns_none_for_nonexistent(
+async def test_search_one_or_none_returns_none_for_nonexistent(
     test_user_id, calendar_entry_repo
 ):
-    """Test that get_by_platform_id returns None for nonexistent events."""
-    result = await calendar_entry_repo.get_by_platform_id("nonexistent-event")
+    """Test that search_one_or_none returns None for nonexistent events."""
+    result = await calendar_entry_repo.search_one_or_none(
+        value_objects.CalendarEntryQuery(platform_id="nonexistent-event")
+    )
     assert result is None
 
 
@@ -226,8 +233,9 @@ async def test_upsert_with_same_platform_id(test_user_id, test_calendar, calenda
         uow.add(event1)
     
     # Get the ID that was generated
-    retrieved1 = await calendar_entry_repo.get_by_platform_id("test-event-upsert")
-    assert retrieved1 is not None
+    retrieved1 = await calendar_entry_repo.search_one(
+        value_objects.CalendarEntryQuery(platform_id="test-event-upsert")
+    )
     assert retrieved1.name == "Version 1"
     original_id = retrieved1.id
     
@@ -250,8 +258,9 @@ async def test_upsert_with_same_platform_id(test_user_id, test_calendar, calenda
         uow.add(event2)
     
     # Verify it was updated, not duplicated
-    retrieved2 = await calendar_entry_repo.get_by_platform_id("test-event-upsert")
-    assert retrieved2 is not None
+    retrieved2 = await calendar_entry_repo.search_one(
+        value_objects.CalendarEntryQuery(platform_id="test-event-upsert")
+    )
     assert retrieved2.name == "Version 2"
     assert retrieved2.id == original_id  # Same ID
     

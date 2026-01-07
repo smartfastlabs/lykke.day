@@ -6,13 +6,15 @@ from lykke.domain.entities import CalendarEntryEntity
 from lykke.infrastructure.database.tables import calendar_entries_tbl
 from sqlalchemy.sql import Select
 
-from .base import DateQuery, UserScopedBaseRepository
+from .base import CalendarEntryQuery, UserScopedBaseRepository
 
 
-class CalendarEntryRepository(UserScopedBaseRepository[CalendarEntryEntity, DateQuery]):
+class CalendarEntryRepository(
+    UserScopedBaseRepository[CalendarEntryEntity, CalendarEntryQuery]
+):
     Object = CalendarEntryEntity
     table = calendar_entries_tbl
-    QueryClass = DateQuery
+    QueryClass = CalendarEntryQuery
     # Exclude 'date' - it's a database-only field for querying (computed from starts_at)
     excluded_row_fields = {"date"}
 
@@ -20,38 +22,17 @@ class CalendarEntryRepository(UserScopedBaseRepository[CalendarEntryEntity, Date
         """Initialize CalendarEntryRepository with user scoping."""
         super().__init__(user_id=user_id)
 
-    def build_query(self, query: DateQuery) -> Select[tuple]:
+    def build_query(self, query: CalendarEntryQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
         stmt = super().build_query(query)
 
-        # Add date filtering if specified
         if query.date is not None:
             stmt = stmt.where(self.table.c.date == query.date)
 
+        if query.platform_id is not None:
+            stmt = stmt.where(self.table.c.platform_id == query.platform_id)
+
         return stmt
-
-    async def get_by_platform_id(self, platform_id: str) -> CalendarEntryEntity | None:
-        """Get a calendar entry by its platform_id.
-
-        Args:
-            platform_id: The platform-specific ID (e.g., Google Calendar event ID)
-
-        Returns:
-            The calendar entry if found, None otherwise
-        """
-        from sqlalchemy import select
-
-        async with self._get_connection(for_write=False) as conn:
-            stmt = select(self.table).where(self.table.c.platform_id == platform_id)
-            stmt = self._apply_user_scope(stmt)
-
-            result = await conn.execute(stmt)
-            row = result.mappings().first()
-
-            if row is None:
-                return None
-
-            return type(self).row_to_entity(dict(row))
 
     @staticmethod
     def entity_to_row(calendar_entry: CalendarEntryEntity) -> dict[str, Any]:

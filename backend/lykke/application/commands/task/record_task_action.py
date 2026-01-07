@@ -42,7 +42,9 @@ class RecordTaskActionHandler(BaseCommandHandler):
                 template_slug = user.settings.template_defaults[
                     task.scheduled_date.weekday()
                 ]
-                template = await uow.day_template_ro_repo.get_by_slug(template_slug)
+                template = await uow.day_template_ro_repo.search_one(
+                    value_objects.DayTemplateQuery(slug=template_slug)
+                )
                 day = DayEntity.create_for_date(
                     task.scheduled_date,
                     user_id=self.user_id,

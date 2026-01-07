@@ -14,7 +14,7 @@ from lykke.application.unit_of_work import (
 )
 from lykke.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from lykke.core.exceptions import TokenExpiredError
-from lykke.domain import data_objects
+from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
@@ -104,8 +104,8 @@ class SyncCalendarHandler(BaseCommandHandler):
         self, entry: CalendarEntryEntity, uow: UnitOfWorkProtocol
     ) -> None:
         """Delete the entry if present, otherwise log and skip."""
-        existing = await uow.calendar_entry_ro_repo.get_by_platform_id(
-            entry.platform_id
+        existing = await uow.calendar_entry_ro_repo.search_one_or_none(
+            value_objects.CalendarEntryQuery(platform_id=entry.platform_id)
         )
         if existing:
             await uow.delete(existing)

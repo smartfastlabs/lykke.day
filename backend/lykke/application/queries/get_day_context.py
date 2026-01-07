@@ -41,7 +41,7 @@ class GetDayContextHandler(BaseQueryHandler):
         tasks_result, calendar_entries_result, day_result = await asyncio.gather(
             self.task_ro_repo.search_query(value_objects.DateQuery(date=date)),
             self.calendar_entry_ro_repo.search_query(
-                value_objects.DateQuery(date=date)
+                value_objects.CalendarEntryQuery(date=date)
             ),
             self.day_ro_repo.get(day_id),
             return_exceptions=True,
@@ -92,7 +92,9 @@ class GetDayContextHandler(BaseQueryHandler):
             A Day entity (not saved to database)
         """
         template_slug = user.settings.template_defaults[date.weekday()]
-        template = await self.day_template_ro_repo.get_by_slug(template_slug)
+        template = await self.day_template_ro_repo.search_one(
+            value_objects.DayTemplateQuery(slug=template_slug)
+        )
         return DayEntity.create_for_date(
             date,
             user_id=self.user_id,

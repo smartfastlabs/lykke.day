@@ -38,7 +38,9 @@ class UpdateDayHandler(BaseCommandHandler):
                 # Create a new day if it doesn't exist
                 user = await uow.user_ro_repo.get(self.user_id)
                 template_slug = user.settings.template_defaults[date.weekday()]
-                template = await uow.day_template_ro_repo.get_by_slug(template_slug)
+                template = await uow.day_template_ro_repo.search_one(
+                    value_objects.DayTemplateQuery(slug=template_slug)
+                )
                 day = DayEntity.create_for_date(
                     date, user_id=self.user_id, template=template
                 )

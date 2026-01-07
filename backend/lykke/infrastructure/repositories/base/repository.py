@@ -248,7 +248,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
         return stmt
 
-    async def get_one(self, query: QueryType) -> ObjectType:
+    async def search_one(self, query: QueryType) -> ObjectType:
         """Get a single object matching the query. Raises NotFoundError if none found."""
         query.limit = None  # Ensure we get all results, then take first
 
@@ -264,7 +264,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
             return type(self).row_to_entity(dict(row))
 
-    async def get_one_or_none(self, query: QueryType) -> ObjectType | None:
+    async def search_one_or_none(self, query: QueryType) -> ObjectType | None:
         """Get a single object matching the query, or None if not found."""
         query.limit = None  # Ensure we get all results, then take first
 
@@ -277,6 +277,14 @@ class BaseRepository(Generic[ObjectType, QueryType]):
                 return None
 
             return type(self).row_to_entity(dict(row))
+
+    async def get_one(self, query: QueryType) -> ObjectType:
+        """Backward-compatible alias for search_one."""
+        return await self.search_one(query)
+
+    async def get_one_or_none(self, query: QueryType) -> ObjectType | None:
+        """Backward-compatible alias for search_one_or_none."""
+        return await self.search_one_or_none(query)
 
     async def search_query(self, query: QueryType) -> list[ObjectType]:
         """Search for objects based on the provided query object."""
@@ -400,7 +408,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
     async def delete_one(self, query: QueryType) -> None:
         """Delete a single object matching the query. Raises Exception if multiple match."""
         # First, get the object to ensure exactly one matches
-        obj = await self.get_one(query)
+        obj = await self.search_one(query)
 
         # Then delete it by key
         await self.delete(obj)

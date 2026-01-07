@@ -14,26 +14,10 @@ class UserRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[UserEntity], Pro
     """Read-only protocol defining the interface for user repositories."""
     
     Query: type[value_objects.UserQuery] = value_objects.UserQuery
-    
-    async def get_by_email(self, email: str) -> UserEntity | None:
-        """Get a user by email address."""
-        ...
-
-    async def get_by_phone(self, phone_number: str) -> UserEntity | None:
-        """Get a user by phone number."""
-        ...
 
 
 class UserRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[UserEntity], Protocol):
     """Read-write protocol defining the interface for user repositories."""
     
     Query: type[value_objects.UserQuery] = value_objects.UserQuery
-    
-    async def get_by_email(self, email: str) -> UserEntity | None:
-        """Get a user by email address."""
-        ...
-
-    async def get_by_phone(self, phone_number: str) -> UserEntity | None:
-        """Get a user by phone number."""
-        ...
 

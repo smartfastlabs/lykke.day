@@ -66,7 +66,7 @@ def test_auth_token(test_user_id):
 def mock_calendar_entry_repo():
     """Mock calendar entry repository."""
     repo = MagicMock()
-    repo.get_by_platform_id = AsyncMock()
+    repo.search_one_or_none = AsyncMock()
     return repo
 
 
@@ -105,7 +105,7 @@ def mock_uow(
     """Mock UnitOfWork for sync tests."""
     mock_calendar_repo.get = AsyncMock(return_value=test_calendar)
     mock_auth_token_repo.get = AsyncMock(return_value=test_auth_token)
-    mock_calendar_entry_repo.get_by_platform_id = AsyncMock(return_value=None)
+    mock_calendar_entry_repo.search_one_or_none = AsyncMock(return_value=None)
 
     class DummyUOW:
         calendar_ro_repo = mock_calendar_repo
@@ -200,7 +200,7 @@ def test_sync_calendar_changes_with_new_events(
         [],
         "new-sync-token",
     )
-    mock_calendar_entry_repo.get_by_platform_id.return_value = None
+    mock_calendar_entry_repo.search_one_or_none.return_value = None
 
     # Create handler and sync
     SyncCalendarHandler(
@@ -257,7 +257,7 @@ def test_sync_calendar_changes_with_updated_events(
         [],
         "new-sync-token",
     )
-    mock_calendar_entry_repo.get_by_platform_id.return_value = existing_event
+    mock_calendar_entry_repo.search_one_or_none.return_value = existing_event
 
 
 def test_sync_calendar_changes_with_deleted_events(
@@ -303,7 +303,7 @@ def test_sync_calendar_changes_with_deleted_events(
         [],
         "new-sync-token",
     )
-    mock_calendar_entry_repo.get_by_platform_id.return_value = existing_event
+    mock_calendar_entry_repo.search_one_or_none.return_value = existing_event
 
 
 def test_sync_calendar_changes_filters_far_future_events(
@@ -366,7 +366,7 @@ def test_sync_calendar_changes_handles_missing_deleted_events(
         [],
         "new-sync-token",
     )
-    mock_calendar_entry_repo.get_by_platform_id.return_value = None
+    mock_calendar_entry_repo.search_one_or_none.return_value = None
 
 
 def test_sync_calendar_changes_updates_sync_token(

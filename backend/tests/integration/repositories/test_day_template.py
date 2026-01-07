@@ -5,26 +5,31 @@ from datetime import time
 import pytest
 
 from lykke.core.exceptions import NotFoundError
+from lykke.domain import value_objects
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.value_objects.alarm import Alarm, AlarmType
 from lykke.infrastructure.repositories import DayTemplateRepository
 
 
 @pytest.mark.asyncio
-async def test_get_by_slug(day_template_repo, test_user, setup_day_templates):
+async def test_search_one_by_slug(day_template_repo, test_user, setup_day_templates):
     await setup_day_templates
     """Test getting a day template by slug."""
-    result = await day_template_repo.get_by_slug("default")
+    result = await day_template_repo.search_one(
+        value_objects.DayTemplateQuery(slug="default")
+    )
 
     assert result.slug == "default"
     assert result.user_id == test_user.id
 
 
 @pytest.mark.asyncio
-async def test_get_by_slug_not_found(day_template_repo):
+async def test_search_one_by_slug_not_found(day_template_repo):
     """Test getting a non-existent day template raises NotFoundError."""
     with pytest.raises(NotFoundError):
-        await day_template_repo.get_by_slug("nonexistent")
+        await day_template_repo.search_one(
+            value_objects.DayTemplateQuery(slug="nonexistent")
+        )
 
 
 @pytest.mark.asyncio
@@ -69,8 +74,12 @@ async def test_user_isolation(
 
     # User2 should not see user1's templates
     with pytest.raises(NotFoundError):
-        await day_template_repo2.get_by_slug("default")
+        await day_template_repo2.search_one(
+            value_objects.DayTemplateQuery(slug="default")
+        )
 
     # User1 should still see their templates
-    result = await day_template_repo.get_by_slug("default")
+    result = await day_template_repo.search_one(
+        value_objects.DayTemplateQuery(slug="default")
+    )
     assert result.user_id == test_user.id

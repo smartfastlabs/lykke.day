@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from lykke.domain import value_objects
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.value_objects.alarm import Alarm, AlarmType
 from lykke.domain.value_objects.day import DayStatus
@@ -51,8 +52,10 @@ async def test_full_user_flow_e2e(test_client: TestClient):
 
     # Verify user exists in database after registration
     user_repo = UserRepository()
-    user_from_db = await user_repo.get_by_email(email)
-    assert user_from_db is not None, "User should exist in database after registration"
+    user_from_db = await user_repo.search_one(
+        value_objects.UserQuery(email=email)
+    )
+    assert user_from_db is not None, "User should exist in database after registration"  # noqa: S101
     assert user_from_db.email == email
     assert user_from_db.hashed_password is not None, "Password hash should be set"
     assert str(user_from_db.id) == user_id_str
@@ -118,7 +121,9 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     # Step 4: Verify database state directly
 
     # Verify user in database
-    user_from_db_after = await user_repo.get_by_email(email)
+    user_from_db_after = await user_repo.search_one(
+        value_objects.UserQuery(email=email)
+    )
     assert user_from_db_after is not None
     assert user_from_db_after.id == user_id
 

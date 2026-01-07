@@ -7,8 +7,8 @@ import pytest
 import pytest_asyncio
 from lykke.core.config import settings
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.domain.value_objects.query import CalendarEntryQuery
 from lykke.domain.value_objects.task import TaskFrequency
-from lykke.domain.value_objects.query import DateQuery
 from lykke.infrastructure.repositories import CalendarEntryRepository, UserRepository
 
 
@@ -58,44 +58,58 @@ async def calendar_entry_repo(test_date, test_user):
 
 @pytest.mark.asyncio
 async def test_search(test_date, calendar_entry_repo):
-    results = await calendar_entry_repo.search_query(DateQuery(date=test_date))
+    results = await calendar_entry_repo.search_query(
+        CalendarEntryQuery(date=test_date)
+    )
 
     assert len(results) == 1
 
 
 @pytest.mark.asyncio
 async def test_delete(test_date, calendar_entry_repo):
-    results = await calendar_entry_repo.search_query(DateQuery(date=test_date))
+    results = await calendar_entry_repo.search_query(
+        CalendarEntryQuery(date=test_date)
+    )
     await calendar_entry_repo.delete(results[0])
 
-    results = await calendar_entry_repo.search_query(DateQuery(date=test_date))
+    results = await calendar_entry_repo.search_query(
+        CalendarEntryQuery(date=test_date)
+    )
 
     assert len(results) == 0
 
 
 @pytest.mark.asyncio
 async def test_delete_missing_date(test_date, calendar_entry_repo):
-    await calendar_entry_repo.delete_many(DateQuery(date=test_date + timedelta(days=3)))
+    await calendar_entry_repo.delete_many(
+        CalendarEntryQuery(date=test_date + timedelta(days=3))
+    )
 
-    results = await calendar_entry_repo.search_query(DateQuery(date=test_date))
+    results = await calendar_entry_repo.search_query(
+        CalendarEntryQuery(date=test_date)
+    )
 
     assert len(results) == 1
 
 
 @pytest.mark.asyncio
 async def test_delete_date(test_date, calendar_entry_repo):
-    await calendar_entry_repo.delete_many(DateQuery(date=test_date))
+    await calendar_entry_repo.delete_many(CalendarEntryQuery(date=test_date))
 
-    results = await calendar_entry_repo.search_query(DateQuery(date=test_date))
+    results = await calendar_entry_repo.search_query(
+        CalendarEntryQuery(date=test_date)
+    )
 
     assert len(results) == 0
 
 
 @pytest.mark.asyncio
 async def test_delete_by_date(test_date, calendar_entry_repo):
-    await calendar_entry_repo.delete_many(DateQuery(date=test_date))
+    await calendar_entry_repo.delete_many(CalendarEntryQuery(date=test_date))
 
-    results = await calendar_entry_repo.search_query(DateQuery(date=test_date))
+    results = await calendar_entry_repo.search_query(
+        CalendarEntryQuery(date=test_date)
+    )
 
     assert len(results) == 0
 
@@ -113,7 +127,9 @@ async def test_put(test_calendar_entry, test_user, clear_repos):
     # Create calendar_entry_repo after user is recreated
     calendar_entry_repo = CalendarEntryRepository(user_id=recreated_user.id)
 
-    results = await calendar_entry_repo.search_query(DateQuery(date=test_calendar_entry.date))
+    results = await calendar_entry_repo.search_query(
+        CalendarEntryQuery(date=test_calendar_entry.date)
+    )
 
     assert len(results) == 0  # clear_repos cleared everything
 
@@ -121,7 +137,9 @@ async def test_put(test_calendar_entry, test_user, clear_repos):
         test_calendar_entry,
     )
 
-    results = await calendar_entry_repo.search_query(DateQuery(date=test_calendar_entry.date))
+    results = await calendar_entry_repo.search_query(
+        CalendarEntryQuery(date=test_calendar_entry.date)
+    )
 
     assert len(results) == 1  # Now we have 1 calendar entry
 

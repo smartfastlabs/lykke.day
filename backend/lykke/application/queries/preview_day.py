@@ -56,7 +56,9 @@ class PreviewDayHandler(BaseQueryHandler):
         # Load preview tasks and existing data in parallel
         tasks, calendar_entries = await asyncio.gather(
             self._preview_tasks_handler.preview_tasks(date),
-            self.calendar_entry_ro_repo.search_query(value_objects.DateQuery(date=date)),
+            self.calendar_entry_ro_repo.search_query(
+                value_objects.CalendarEntryQuery(date=date)
+            ),
         )
 
         return value_objects.DayContext(
@@ -86,5 +88,7 @@ class PreviewDayHandler(BaseQueryHandler):
         # Fall back to user's default template
         user = await self.user_ro_repo.get(self.user_id)
         template_slug = user.settings.template_defaults[date.weekday()]
-        return await self.day_template_ro_repo.get_by_slug(template_slug)
+        return await self.day_template_ro_repo.search_one(
+            value_objects.DayTemplateQuery(slug=template_slug)
+        )
 

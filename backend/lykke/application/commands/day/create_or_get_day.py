@@ -4,6 +4,7 @@ from datetime import date
 
 from lykke.application.commands.base import BaseCommandHandler
 from lykke.core.exceptions import NotFoundError
+from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 
 
@@ -27,7 +28,9 @@ class CreateOrGetDayHandler(BaseCommandHandler):
                 # Day doesn't exist, create it
                 user = await uow.user_ro_repo.get(self.user_id)
                 template_slug = user.settings.template_defaults[date.weekday()]
-                template = await uow.day_template_ro_repo.get_by_slug(template_slug)
+                template = await uow.day_template_ro_repo.search_one(
+                    value_objects.DayTemplateQuery(slug=template_slug)
+                )
                 day = DayEntity.create_for_date(
                     date,
                     user_id=self.user_id,

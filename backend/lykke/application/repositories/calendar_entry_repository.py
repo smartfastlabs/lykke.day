@@ -15,10 +15,6 @@ class CalendarEntryRepositoryReadOnlyProtocol(
 
     Query = value_objects.CalendarEntryQuery
 
-    async def get_by_platform_id(self, platform_id: str) -> CalendarEntryEntity | None:
-        """Fetch a calendar entry by external platform ID if it exists."""
-        ...
-
 
 class CalendarEntryRepositoryReadWriteProtocol(
     ReadWriteRepositoryProtocol[CalendarEntryEntity]

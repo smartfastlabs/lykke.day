@@ -20,7 +20,9 @@ class CreateLeadUserHandler(BaseCommandHandler):
     async def run(self, data: CreateLeadUserData) -> None:
         """Create a lead if unique by email."""
         async with self.new_uow() as uow:
-            existing = await uow.user_ro_repo.get_by_email(data.email)
+            existing = await uow.user_ro_repo.search_one_or_none(
+                value_objects.UserQuery(email=data.email)
+            )
             if existing:
                 return
 

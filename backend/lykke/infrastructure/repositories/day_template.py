@@ -100,6 +100,3 @@ class DayTemplateRepository(
 
         return DayTemplateEntity(**data)
 
-    async def get_by_slug(self, slug: str) -> DayTemplateEntity:
-        """Get a DayTemplate by slug (must be scoped to a user)."""
-        return await self.get_one(DayTemplateQuery(slug=slug))

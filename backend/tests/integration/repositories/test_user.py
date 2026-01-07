@@ -5,6 +5,7 @@ from uuid import uuid4
 import pytest
 
 from lykke.core.exceptions import NotFoundError
+from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.value_objects.user import UserSetting
 
@@ -64,12 +65,14 @@ async def test_put_update(user_repo, create_test_user):
 
 
 @pytest.mark.asyncio
-async def test_get_by_email(user_repo, create_test_user):
+async def test_search_one_or_none_by_email(user_repo, create_test_user):
     """Test getting a user by email."""
     email = f"specific-{uuid4()}@example.com"
     user = await create_test_user(email=email)
 
-    result = await user_repo.get_by_email(email)
+    result = await user_repo.search_one_or_none(
+        value_objects.UserQuery(email=email)
+    )
 
     assert result is not None
     assert result.id == user.id
@@ -77,9 +80,11 @@ async def test_get_by_email(user_repo, create_test_user):
 
 
 @pytest.mark.asyncio
-async def test_get_by_email_not_found(user_repo):
+async def test_search_one_or_none_by_email_not_found(user_repo):
     """Test getting a user by non-existent email returns None."""
-    result = await user_repo.get_by_email("nonexistent@example.com")
+    result = await user_repo.search_one_or_none(
+        value_objects.UserQuery(email="nonexistent@example.com")
+    )
     assert result is None
 
 

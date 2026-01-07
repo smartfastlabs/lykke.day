@@ -65,6 +65,7 @@ class CalendarQuery(BaseQuery):
 class CalendarEntryQuery(DateQuery):
     """Query class for CalendarEntry entities."""
 
+    platform_id: str | None = None
 
 class DayQuery(DateQuery):
     """Query class for Day entities."""

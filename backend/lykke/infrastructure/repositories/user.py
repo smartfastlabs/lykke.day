@@ -5,12 +5,12 @@ from typing import Any
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.database.tables import users_tbl
-from sqlalchemy import select
+from sqlalchemy.sql import Select
 
-from .base import BaseQuery, BaseRepository
+from .base import BaseRepository
 
 
-class UserRepository(BaseRepository[UserEntity, BaseQuery]):
+class UserRepository(BaseRepository[UserEntity, value_objects.UserQuery]):
     """UserRepository is NOT user-scoped - it's used for user management."""
 
     Object = UserEntity
@@ -21,29 +21,17 @@ class UserRepository(BaseRepository[UserEntity, BaseQuery]):
         """Initialize UserRepository without user scoping."""
         super().__init__()
 
-    async def get_by_email(self, email: str) -> UserEntity | None:
-        """Get a user by email address."""
-        async with self._get_connection(for_write=False) as conn:
-            stmt = select(self.table).where(self.table.c.email == email)
-            result = await conn.execute(stmt)
-            row = result.mappings().first()
+    def build_query(self, query: value_objects.UserQuery) -> Select[tuple]:
+        """Build a SQLAlchemy Core select statement from a query object."""
+        stmt = super().build_query(query)
 
-            if row is None:
-                return None
+        if query.email is not None:
+            stmt = stmt.where(self.table.c.email == query.email)
 
-            return self.row_to_entity(dict(row))
+        if query.phone_number is not None:
+            stmt = stmt.where(self.table.c.phone_number == query.phone_number)
 
-    async def get_by_phone(self, phone_number: str) -> UserEntity | None:
-        """Get a user by phone number."""
-        async with self._get_connection(for_write=False) as conn:
-            stmt = select(self.table).where(self.table.c.phone_number == phone_number)
-            result = await conn.execute(stmt)
-            row = result.mappings().first()
-
-            if row is None:
-                return None
-
-            return self.row_to_entity(dict(row))
+        return stmt
 
     @staticmethod
     def entity_to_row(user: UserEntity) -> dict[str, Any]:
