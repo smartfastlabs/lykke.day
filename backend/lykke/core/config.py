@@ -28,6 +28,7 @@ def normalize_postgres_url(url: str) -> str:
 class Settings(BaseSettings):
     API_PREFIX: str = ""
     API_BASE_URL: str = "https://e8dbd9e76199.ngrok-free.app"
+    WEB_DOMAIN: str = "http://localhost:8888"
     TIMEZONE: str = "America/Chicago"
     DEBUG: bool = False
     VAPID_SECRET_KEY: str = ""

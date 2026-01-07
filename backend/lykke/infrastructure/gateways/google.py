@@ -25,9 +25,17 @@ SCOPES = [
     "https://www.googleapis.com/auth/userinfo.email",
     "openid",
 ]
+
+
+def _build_redirect_uri(path: str) -> str:
+    """Build redirect URI using configured web domain."""
+    base_domain = settings.WEB_DOMAIN.rstrip("/")
+    return f"{base_domain}{path}"
+
+
 REDIRECT_URIS: dict[str, str] = {
-    "login": "http://localhost:8888/api/google/callback/login",
-    "calendar": "http://localhost:8888/api/google/callback/calendar",
+    "login": _build_redirect_uri("/api/google/callback/login"),
+    "calendar": _build_redirect_uri("/api/google/callback/calendar"),
 }
 
 
@@ -217,10 +225,8 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             )
             parent_recurrence = parent_event.get("recurrence")
             frequency = _parse_recurrence_frequency(parent_recurrence)
-        except Exception as exc:  # noqa: BLE001
-            logger.warning(
-                f"Failed to fetch parent event {recurring_event_id}: {exc}"
-            )
+        except Exception as exc:
+            logger.warning(f"Failed to fetch parent event {recurring_event_id}: {exc}")
             frequency = value_objects.TaskFrequency.ONCE
 
         frequency_cache[recurring_event_id] = frequency
