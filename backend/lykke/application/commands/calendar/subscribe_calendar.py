@@ -9,6 +9,8 @@ from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProt
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.config import settings
 from lykke.domain.entities import CalendarEntity
+from lykke.domain.events.calendar_events import CalendarUpdatedEvent
+from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.domain.value_objects.sync import SyncSubscription
 
 
@@ -61,9 +63,8 @@ class SubscribeCalendarHandler(BaseCommandHandler):
                 client_state = secrets.token_urlsafe(32)
 
                 # Build webhook URL with user_id and calendar_id
-                webhook_url = (
-                    f"{settings.API_PREFIX}/google/webhook/{self.user_id}/{calendar.id}"
-                )
+                base_url = settings.API_BASE_URL.rstrip("/")
+                webhook_url = f"{base_url}/google/webhook/{self.user_id}/{calendar.id}"
 
                 # Subscribe to calendar changes via Google API
                 subscription = await self._google_gateway.subscribe_to_calendar(
@@ -74,17 +75,18 @@ class SubscribeCalendarHandler(BaseCommandHandler):
                     client_state=client_state,
                 )
 
-                # Store subscription info on the calendar entity
-                calendar.sync_subscription = SyncSubscription(
-                    subscription_id=subscription.channel_id,
-                    resource_id=subscription.resource_id,
-                    expiration=subscription.expiration,
-                    provider="google",
-                    client_state=client_state,
+                update_data = CalendarUpdateObject(
+                    sync_subscription=SyncSubscription(
+                        subscription_id=subscription.channel_id,
+                        resource_id=subscription.resource_id,
+                        expiration=subscription.expiration,
+                        provider="google",
+                        client_state=client_state,
+                    ),
+                    sync_subscription_id=subscription.channel_id,
                 )
-                calendar.sync_subscription_id = subscription.channel_id
 
-                # Persist the updated calendar
+                calendar = calendar.apply_update(update_data, CalendarUpdatedEvent)
                 uow.add(calendar)
             else:
                 raise NotImplementedError(

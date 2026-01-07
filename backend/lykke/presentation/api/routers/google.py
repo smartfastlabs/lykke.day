@@ -182,16 +182,17 @@ async def google_webhook(
         logger.warning(f"Calendar {calendar_id} not found for user {user_id}")
         return Response(status_code=200)
 
-    # Verify the token from Google matches our stored client_state
-    expected_token = (
-        calendar.sync_subscription.client_state if calendar.sync_subscription else None
-    )
+    if not calendar.sync_subscription:
+        logger.warning(f"Calendar {calendar_id} has no sync subscription")
+        return Response(status_code=200)
 
-    if not expected_token or not x_goog_channel_token:
+    if not x_goog_channel_token:
         logger.warning(f"Missing token for calendar {calendar_id}")
         return Response(status_code=200)
 
-    if not hmac.compare_digest(expected_token, x_goog_channel_token):
+    if not hmac.compare_digest(
+        calendar.sync_subscription.client_state, x_goog_channel_token
+    ):
         logger.warning(f"Invalid token for calendar {calendar_id}")
         return Response(status_code=200)
 
