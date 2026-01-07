@@ -3,6 +3,8 @@
 from datetime import datetime
 from uuid import UUID
 
+from lykke.domain.value_objects import UserStatus
+
 from .base import BaseSchema
 
 
@@ -16,8 +18,9 @@ class UserSchema(BaseSchema):
     """Schema for the current authenticated user."""
 
     id: UUID
-    email: str
+    email: str | None = None
     phone_number: str | None = None
+    status: UserStatus
     is_active: bool
     is_superuser: bool
     is_verified: bool

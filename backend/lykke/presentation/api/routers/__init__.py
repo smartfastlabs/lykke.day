@@ -6,6 +6,7 @@ from . import (
     calendars,
     day_templates,
     days,
+    early_access,
     google,
     me,
     planning,
@@ -18,6 +19,10 @@ from . import (
 )
 
 router = APIRouter()
+router.include_router(
+    early_access.router,
+    tags=["public"],
+)
 router.include_router(
     sheppard.router,
     prefix="/sheppard",

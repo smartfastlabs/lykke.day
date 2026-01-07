@@ -181,6 +181,7 @@ def map_user_to_schema(user: UserEntity) -> UserSchema:
         id=user.id,
         email=user.email,
         phone_number=user.phone_number,
+        status=user.status,
         is_active=user.is_active,
         is_superuser=user.is_superuser,
         is_verified=user.is_verified,

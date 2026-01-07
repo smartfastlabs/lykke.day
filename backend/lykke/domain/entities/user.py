@@ -17,12 +17,15 @@ if TYPE_CHECKING:
 class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
     """User entity compatible with fastapi-users."""
 
-    email: str
+    email: str | None = None
     phone_number: str | None = None
     hashed_password: str
+    status: value_objects.UserStatus = value_objects.UserStatus.ACTIVE
     is_active: bool = True
     is_superuser: bool = False
     is_verified: bool = False
-    settings: value_objects.UserSetting = field(default_factory=value_objects.UserSetting)
+    settings: value_objects.UserSetting = field(
+        default_factory=value_objects.UserSetting
+    )
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime | None = None

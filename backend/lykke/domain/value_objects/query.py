@@ -39,6 +39,7 @@ class UserQuery(BaseQuery):
     """Query class for User entities."""
 
     email: str | None = None
+    phone_number: str | None = None
 
 
 class DayTemplateQuery(BaseQuery):

@@ -2,6 +2,7 @@ import { Component, Show, For, createSignal, onMount } from "solid-js";
 import { Icon } from "solid-heroicons";
 import { sun, arrowPath, calendar, bellAlert } from "solid-heroicons/outline";
 import Footer from "@/components/shared/layout/footer";
+import { marketingAPI } from "@/utils/api";
 
 interface Feature {
   icon: typeof sun;
@@ -13,16 +14,33 @@ const Landing: Component = () => {
   const [contact, setContact] = createSignal("");
   const [showModal, setShowModal] = createSignal(false);
   const [submitted, setSubmitted] = createSignal(false);
+  const [submitting, setSubmitting] = createSignal(false);
+  const [error, setError] = createSignal<string | null>(null);
   const [mounted, setMounted] = createSignal(false);
 
   onMount(() => {
     setTimeout(() => setMounted(true), 50);
   });
 
-  const handleOptIn = () => {
-    if (contact().trim()) {
+  const handleOptIn = async () => {
+    const value = contact().trim();
+    if (!value) {
+      setError("Please enter an email or phone number.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      await marketingAPI.requestEarlyAccess(value);
       setShowModal(false);
       setSubmitted(true);
+    } catch (err) {
+      setError("Please enter a valid email or phone number.");
+      console.error("Early access submission failed", err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -238,10 +256,16 @@ const Landing: Component = () => {
                 <input
                   type="text"
                   value={contact()}
-                  onInput={(e) => setContact(e.currentTarget.value)}
+                  onInput={(e) => {
+                    setContact(e.currentTarget.value);
+                    setError(null);
+                  }}
                   placeholder="Email or phone"
                   class="w-full px-5 py-3.5 mb-4 bg-stone-50/80 border border-stone-200 rounded-xl text-stone-700 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all duration-200"
                 />
+                <Show when={error()}>
+                  <p class="text-rose-500 text-xs mb-3">{error()}</p>
+                </Show>
                 <p class="text-stone-400 text-xs mb-6">
                   We'll only reach out about lykke.day. Unsubscribe anytime.
                 </p>
@@ -254,9 +278,10 @@ const Landing: Component = () => {
                   </button>
                   <button
                     onClick={handleOptIn}
-                    class="flex-1 py-3 bg-gradient-to-r from-stone-800 to-stone-700 text-white rounded-xl hover:from-stone-700 hover:to-stone-600 transition-all duration-200 shadow-md shadow-stone-900/20"
+                    disabled={submitting()}
+                    class="flex-1 py-3 bg-gradient-to-r from-stone-800 to-stone-700 text-white rounded-xl hover:from-stone-700 hover:to-stone-600 transition-all duration-200 shadow-md shadow-stone-900/20 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    I'm in
+                    {submitting() ? "Sending..." : "I'm in"}
                   </button>
                 </div>
               </div>

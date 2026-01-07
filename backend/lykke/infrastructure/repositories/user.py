@@ -15,7 +15,7 @@ class UserRepository(BaseRepository[UserEntity, BaseQuery]):
 
     Object = UserEntity
     table = users_tbl
-    QueryClass = BaseQuery
+    QueryClass = value_objects.UserQuery
 
     def __init__(self) -> None:
         """Initialize UserRepository without user scoping."""
@@ -33,6 +33,18 @@ class UserRepository(BaseRepository[UserEntity, BaseQuery]):
 
             return self.row_to_entity(dict(row))
 
+    async def get_by_phone(self, phone_number: str) -> UserEntity | None:
+        """Get a user by phone number."""
+        async with self._get_connection(for_write=False) as conn:
+            stmt = select(self.table).where(self.table.c.phone_number == phone_number)
+            result = await conn.execute(stmt)
+            row = result.mappings().first()
+
+            if row is None:
+                return None
+
+            return self.row_to_entity(dict(row))
+
     @staticmethod
     def entity_to_row(user: UserEntity) -> dict[str, Any]:
         """Convert a User entity to a database row dict."""
@@ -41,6 +53,7 @@ class UserRepository(BaseRepository[UserEntity, BaseQuery]):
             "email": user.email,
             "phone_number": user.phone_number,
             "hashed_password": user.hashed_password,
+            "status": user.status,
         }
 
         # Handle settings JSONB field
@@ -80,6 +93,12 @@ class UserRepository(BaseRepository[UserEntity, BaseQuery]):
                 )
         else:
             data["settings"] = value_objects.UserSetting()
+
+        if "status" not in data or data["status"] is None:
+            data["status"] = value_objects.UserStatus.ACTIVE
+        else:
+            # Coerce raw values into enum
+            data["status"] = value_objects.UserStatus(data["status"])
 
         from lykke.infrastructure.repositories.base.utils import (
             filter_init_false_fields,

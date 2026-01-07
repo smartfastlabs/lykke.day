@@ -9,7 +9,7 @@ from .base import BaseRequestObject
 from .day import DayStatus, DayTag
 from .routine import RoutineSchedule, RoutineTask
 from .task import TaskCategory, TaskType
-from .user import UserSetting
+from .user import UserSetting, UserStatus
 
 
 @dataclass(kw_only=True)
@@ -53,6 +53,7 @@ class UserUpdateObject(BaseUpdateObject):
     is_superuser: bool | None = None
     is_verified: bool | None = None
     settings: UserSetting | None = None
+    status: "UserStatus" | None = None
 
 
 @dataclass(kw_only=True)

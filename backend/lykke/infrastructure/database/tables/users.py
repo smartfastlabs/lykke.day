@@ -25,7 +25,11 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     __tablename__ = "users"
 
     # Custom fields
-    phone_number = Column(String, nullable=True)
+    email: Mapped[str | None] = mapped_column(
+        String(length=320), unique=True, index=True, nullable=True
+    )
+    phone_number = Column(String, nullable=True, unique=True)
     settings = Column(JSONB)  # UserSetting as JSONB
+    status: Mapped[str] = mapped_column(String, nullable=False, server_default="active")
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=True)

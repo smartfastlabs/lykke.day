@@ -328,3 +328,13 @@ export const routineAPI = {
       method: "DELETE",
     }),
 };
+
+export const marketingAPI = {
+  requestEarlyAccess: (contact: string): Promise<void> =>
+    fetchData<void>("/api/early-access", {
+      method: "POST",
+      body: JSON.stringify({ contact }),
+      suppressAuthRedirect: true,
+      suppressError: true,
+    }),
+};

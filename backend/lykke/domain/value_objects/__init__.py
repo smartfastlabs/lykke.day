@@ -37,7 +37,7 @@ from .update import (
     TaskDefinitionUpdateObject,
     UserUpdateObject,
 )
-from .user import UserSetting
+from .user import UserSetting, UserStatus
 
 __all__ = [
     "Action",
@@ -83,5 +83,6 @@ __all__ = [
     "TaskTag",
     "TaskType",
     "TimingType",
+    "UserStatus",
     "UserSetting",
 ]
