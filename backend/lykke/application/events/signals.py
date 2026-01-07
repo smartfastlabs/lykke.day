@@ -22,7 +22,12 @@ async def send_domain_events(events: list[DomainEvent]) -> None:
     if not events:
         return
 
-    logger.debug(f"Dispatching {len(events)} domain event(s)")
+    logger.debug(
+        "Dispatching {} domain event(s); signal id={}; receivers={}",
+        len(events),
+        id(domain_event_signal),
+        list(domain_event_signal.receivers),
+    )
 
     for event in events:
         event_name = event.__class__.__name__
@@ -41,4 +46,9 @@ async def send_domain_events(events: list[DomainEvent]) -> None:
                 logger.exception(
                     f"Error in event handler {receiver} for {event_name}: {result}"
                 )
+        logger.debug(
+            "Finished dispatch for {}; receiver results count={}",
+            event_name,
+            len(results),
+        )
 

@@ -107,30 +107,48 @@ class DomainEventHandler(ABC):
         return None
 
     @classmethod
-    async def _dispatch_event(
-        cls,
-        _sender: type[DomainEvent],
-        event: DomainEvent,
-    ) -> None:
+    async def _dispatch_event(cls, *args: object, **kwargs: object) -> None:
         """Class-level dispatcher that creates user-scoped handler instances for events.
 
         This method is connected to the blinker signal and creates handler instances
         per user when events are dispatched.
 
         Args:
-            _sender: The event class type
-            event: The domain event instance
+            args/kwargs: Arguments from the signal (expects `sender` and `event`)
         """
+        sender = kwargs.pop("sender", args[0] if args else None)
+        event_obj = kwargs.get("event")
+        if not isinstance(event_obj, DomainEvent):
+            logger.warning(
+                "Received signal without DomainEvent payload; sender=%s kwargs=%s",
+                getattr(sender, "__name__", sender),
+                kwargs,
+            )
+            return
+
+        logger.debug(
+            "Received domain event {} (sender={}); registered handler classes={}",
+            event_obj.__class__.__name__,
+            getattr(sender, "__name__", sender),
+            [h.__name__ for h in cls._handler_classes],
+        )
+
         # Extract user_id from event
-        user_id = cls._extract_user_id(event)
+        user_id = cls._extract_user_id(event_obj)
         if user_id is None:
-            logger.debug(f"Skipping event {event.__class__.__name__} - no user_id")
+            logger.debug(f"Skipping event {event_obj.__class__.__name__} - no user_id")
             # Skip events without user_id
             return
 
         # Create handler instances for all handlers that handle this event type
         for handler_class in cls._handler_classes:
-            if _sender in handler_class.handles:
+            logger.debug(
+                "Evaluating handler {} for event {}; handles={}",
+                handler_class.__name__,
+                getattr(sender, "__name__", sender),
+                [h.__name__ for h in handler_class.handles],
+            )
+            if event_obj.__class__ in handler_class.handles:
                 # Create a user-scoped instance of this handler
                 if cls._class_ro_repo_factory is None:
                     logger.warning(
@@ -146,12 +164,12 @@ class DomainEventHandler(ABC):
                     uow_factory=cls._class_uow_factory,
                 )
                 logger.debug(
-                    "Dispatching %s to handler %s for user_id=%s",
-                    event.__class__.__name__,
+                    "Dispatching {} to handler {} for user_id={}",
+                    event_obj.__class__.__name__,
                     handler_class.__name__,
                     user_id,
                 )
-                await handler_instance.handle(event)
+                await handler_instance.handle(event_obj)
 
     @classmethod
     def register_all_handlers(
@@ -180,9 +198,25 @@ class DomainEventHandler(ABC):
         for handler_class in cls._handler_classes:
             event_types.update(handler_class.handles)
 
-        # Connect dispatcher to all relevant event types
-        for event_type in event_types:
-            domain_event_signal.connect(cls._dispatch_event, sender=event_type)
+        logger.debug(
+            "Registering domain event handlers: {}; signal id={}; current receivers={}",
+            [
+                {
+                    "handler": handler_class.__name__,
+                    "events": [et.__name__ for et in handler_class.handles],
+                }
+                for handler_class in cls._handler_classes
+            ],
+            id(domain_event_signal),
+            list(domain_event_signal.receivers),
+        )
+
+        # To avoid sender mismatches (and duplicate connections on reload),
+        # connect the dispatcher once without a sender filter and handle
+        # filtering inside _dispatch_event.
+        domain_event_signal.disconnect(cls._dispatch_event)
+        domain_event_signal.disconnect(cls._dispatch_event, sender=None)
+        domain_event_signal.connect(cls._dispatch_event, weak=False)
 
     @classmethod
     def clear_registry(cls) -> None:

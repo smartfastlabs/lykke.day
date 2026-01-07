@@ -1,7 +1,6 @@
 """Event handler that logs forgot password requests."""
 
 from loguru import logger
-
 from lykke.domain.events.base import DomainEvent
 from lykke.domain.events.user_events import UserForgotPasswordEvent
 
@@ -28,4 +27,3 @@ class UserForgotPasswordLoggerHandler(DomainEventHandler):
             origin=event.request_origin,
             user_agent=event.user_agent,
         )
-
