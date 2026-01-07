@@ -73,6 +73,16 @@ export default function Login() {
         />
 
         <p class="text-sm text-center text-stone-600">
+          Forgot your password?{" "}
+          <a
+            href="/forgot-password"
+            class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
+          >
+            Reset it
+          </a>
+        </p>
+
+        <p class="text-sm text-center text-stone-600">
           Don't have an account?{" "}
           <a
             href="/early-access"

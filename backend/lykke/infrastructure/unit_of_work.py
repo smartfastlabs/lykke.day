@@ -51,7 +51,7 @@ from lykke.domain.events.base import (
     EntityDeletedEvent,
     EntityUpdatedEvent,
 )
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 from lykke.infrastructure.database import get_engine
 from lykke.infrastructure.database.transaction import (
     get_transaction_connection,

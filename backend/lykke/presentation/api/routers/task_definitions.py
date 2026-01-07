@@ -16,7 +16,7 @@ from lykke.application.queries.task_definition import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 from lykke.infrastructure.data.default_task_definitions import (
     DEFAULT_TASK_DEFINITIONS,
 )

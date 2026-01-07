@@ -122,6 +122,32 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         # Insert all templates using insert_many for efficiency
         await day_template_repo.insert_many(*default_templates)
 
+    async def on_after_forgot_password(
+        self,
+        user: User,
+        token: str,
+        request: Request | None = None,
+    ) -> None:
+        """Emit a domain event when a password reset is requested."""
+        # Local import to avoid circular dependencies at import time
+        from lykke.application.events import send_domain_events
+        from lykke.domain.events.user_events import UserForgotPasswordEvent
+
+        request_origin = request.headers.get("origin") if request else None
+        user_agent = request.headers.get("user-agent") if request else None
+
+        await send_domain_events(
+            [
+                UserForgotPasswordEvent(
+                    user_id=user.id,
+                    email=user.email,
+                    reset_token=token,
+                    request_origin=request_origin,
+                    user_agent=user_agent,
+                )
+            ]
+        )
+
 
 async def get_user_manager(
     user_db: Annotated[SQLAlchemyUserDatabase[User, UUID], Depends(get_user_db)],

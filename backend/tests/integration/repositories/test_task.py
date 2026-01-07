@@ -7,7 +7,7 @@ import pytest
 
 from lykke.core.exceptions import NotFoundError
 from lykke.domain.entities import TaskEntity
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 from lykke.domain.value_objects.query import DateQuery
 from lykke.domain.value_objects.task import (
     TaskCategory,

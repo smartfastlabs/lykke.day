@@ -14,7 +14,7 @@ from lykke.application.unit_of_work import (
 from lykke.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from lykke.core.exceptions import TokenExpiredError
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 
 
 class SyncCalendarHandler(BaseCommandHandler):

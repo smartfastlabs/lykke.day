@@ -3,7 +3,7 @@
 from lykke.application.queries.base import BaseQueryHandler
 from lykke.application.repositories import AuthTokenRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 
 
 class SearchAuthTokensHandler(BaseQueryHandler):

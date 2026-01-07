@@ -5,7 +5,7 @@ from uuid import UUID
 from lykke.application.commands.base import BaseCommandHandler
 from lykke.domain.events.task_events import TaskDefinitionUpdatedEvent
 from lykke.domain.value_objects import TaskDefinitionUpdateObject
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 
 
 class UpdateTaskDefinitionHandler(BaseCommandHandler):

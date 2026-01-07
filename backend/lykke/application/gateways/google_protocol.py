@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
 
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 
 if TYPE_CHECKING:
     from google_auth_oauthlib.flow import Flow

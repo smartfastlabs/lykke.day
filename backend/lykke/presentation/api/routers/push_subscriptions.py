@@ -9,7 +9,7 @@ from lykke.application.commands.push_subscription import (
 from lykke.application.queries.push_subscription import SearchPushSubscriptionsHandler
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 from lykke.infrastructure.gateways import web_push
 from lykke.presentation.api.schemas import PushSubscriptionSchema
 from lykke.presentation.api.schemas.mappers import map_push_subscription_to_schema

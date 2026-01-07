@@ -1,7 +1,7 @@
 """Command to create a new push subscription."""
 
 from lykke.application.commands.base import BaseCommandHandler
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 
 
 class CreatePushSubscriptionHandler(BaseCommandHandler):

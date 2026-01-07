@@ -231,6 +231,42 @@ export const authAPI = {
       throw new ApiRequestError("Logout failed", response.status);
     }
   },
+
+  forgotPassword: async (email: string): Promise<void> => {
+    const response = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+      headers: DEFAULT_HEADERS,
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiRequestError(
+        (errorData as ApiError).detail || "Unable to request password reset",
+        response.status,
+        (errorData as ApiError).detail
+      );
+    }
+  },
+
+  resetPassword: async (token: string, password: string): Promise<void> => {
+    const response = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
+      headers: DEFAULT_HEADERS,
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiRequestError(
+        (errorData as ApiError).detail || "Unable to reset password",
+        response.status,
+        (errorData as ApiError).detail
+      );
+    }
+  },
 };
 
 export const alarmAPI = {

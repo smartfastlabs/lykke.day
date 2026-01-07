@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from typing import ClassVar
 from uuid import UUID
 
+from loguru import logger
+
 # Import signal here to avoid circular imports
 from lykke.application.events.signals import domain_event_signal
 from lykke.application.unit_of_work import (
@@ -122,6 +124,7 @@ class DomainEventHandler(ABC):
         # Extract user_id from event
         user_id = cls._extract_user_id(event)
         if user_id is None:
+            logger.debug(f"Skipping event {event.__class__.__name__} - no user_id")
             # Skip events without user_id
             return
 
@@ -130,6 +133,10 @@ class DomainEventHandler(ABC):
             if _sender in handler_class.handles:
                 # Create a user-scoped instance of this handler
                 if cls._class_ro_repo_factory is None:
+                    logger.warning(
+                        "No ReadOnlyRepositoryFactory set; "
+                        f"cannot instantiate handler {handler_class.__name__}"
+                    )
                     continue  # Skip if factories not set up
 
                 ro_repos = cls._class_ro_repo_factory.create(user_id)
@@ -137,6 +144,12 @@ class DomainEventHandler(ABC):
                     ro_repos=ro_repos,
                     user_id=user_id,
                     uow_factory=cls._class_uow_factory,
+                )
+                logger.debug(
+                    "Dispatching %s to handler %s for user_id=%s",
+                    event.__class__.__name__,
+                    handler_class.__name__,
+                    user_id,
                 )
                 await handler_instance.handle(event)
 

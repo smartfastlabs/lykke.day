@@ -13,7 +13,7 @@ from lykke.core.utils.task_filters import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import TaskEntity
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 
 
 @pytest.fixture

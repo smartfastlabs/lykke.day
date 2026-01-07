@@ -6,7 +6,7 @@ import pytest
 
 from lykke.core.exceptions import NotFoundError
 from lykke.domain.value_objects.task import TaskType
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 from lykke.infrastructure.repositories import TaskDefinitionRepository
 
 

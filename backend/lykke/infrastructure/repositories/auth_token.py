@@ -3,7 +3,7 @@ from uuid import UUID
 
 from sqlalchemy.sql import Select
 
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 from lykke.infrastructure.database.tables import auth_tokens_tbl
 
 from .base import AuthTokenQuery, BaseRepository

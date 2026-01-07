@@ -9,6 +9,8 @@ import { AuthGuard } from "@/providers/authGuard";
 
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import EarlyAccess from "@/pages/early-access";
 import Landing from "@/pages/landing";
 import Privacy from "@/pages/privacy";
@@ -87,6 +89,8 @@ export default function App() {
         <Route path="/terms" component={Terms} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
+        <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/reset-password" component={ResetPassword} />
         <Route path="/early-access" component={EarlyAccess} />
         <Route
           path="/welcome"

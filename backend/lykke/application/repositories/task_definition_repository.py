@@ -5,7 +5,7 @@ from lykke.application.repositories.base import (
     ReadWriteRepositoryProtocol,
 )
 from lykke.domain import value_objects
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 
 
 class TaskDefinitionRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[data_objects.TaskDefinition]):

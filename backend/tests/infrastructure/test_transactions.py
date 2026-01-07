@@ -6,7 +6,7 @@ import pytest
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, TaskEntity
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 from lykke.infrastructure.database.transaction import (
     TransactionManager,
     get_transaction_connection,

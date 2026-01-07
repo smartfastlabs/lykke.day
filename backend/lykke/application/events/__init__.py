@@ -6,7 +6,11 @@ This module provides:
 - Auto-registration of all event handlers
 """
 
-from .handlers import DomainEventHandler, TaskStatusLoggerHandler
+from .handlers import (
+    DomainEventHandler,
+    TaskStatusLoggerHandler,
+    UserForgotPasswordLoggerHandler,
+)
 from .signals import domain_event_signal, send_domain_events
 from lykke.application.unit_of_work import (
     ReadOnlyRepositoryFactory,
@@ -39,6 +43,7 @@ def register_all_handlers(
 __all__ = [
     "DomainEventHandler",
     "TaskStatusLoggerHandler",
+    "UserForgotPasswordLoggerHandler",
     "domain_event_signal",
     "register_all_handlers",
     "send_domain_events",

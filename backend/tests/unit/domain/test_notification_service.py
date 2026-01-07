@@ -12,7 +12,7 @@ from lykke.core.utils import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity, TaskEntity
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 
 
 @pytest.fixture

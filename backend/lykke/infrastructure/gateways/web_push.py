@@ -5,15 +5,8 @@ from loguru import logger
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.core.config import settings
 from lykke.core.exceptions import PushNotificationError
-from lykke.domain import value_objects
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects, value_objects
 from webpush import WebPush, WebPushMessage, WebPushSubscription  # type: ignore
-
-logger.info(f"VAPID_PUBLIC_KEY: {settings.VAPID_PUBLIC_KEY}")
-logger.info(f"VAPID_SECRET_KEY: {settings.VAPID_SECRET_KEY}")
-
-logger.info(f"VAPID_PUBLIC_KEY (bytes): {settings.VAPID_PUBLIC_KEY.encode('utf-8')!r}")
-logger.info(f"VAPID_SECRET_KEY (bytes): {settings.VAPID_SECRET_KEY.encode('utf-8')!r}")
 
 wp = WebPush(
     public_key=settings.VAPID_PUBLIC_KEY.encode("utf-8"),

@@ -1,7 +1,7 @@
 from typing import Any
 from uuid import UUID
 
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 from lykke.infrastructure.database.tables import task_definitions_tbl
 
 from .base import BaseQuery, UserScopedBaseRepository

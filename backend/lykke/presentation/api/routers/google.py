@@ -15,7 +15,7 @@ from lykke.application.repositories import (
 )
 from lykke.core.constants import OAUTH_STATE_EXPIRY
 from lykke.domain.entities import CalendarEntity, UserEntity
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 from lykke.infrastructure.gateways.google import get_flow
 
 from .dependencies.repositories import get_auth_token_repo, get_calendar_repo

@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 
 from lykke.core.exceptions import NotFoundError
-from lykke.infrastructure import data_objects
+from lykke.domain import data_objects
 from lykke.infrastructure.repositories import PushSubscriptionRepository
 
 
