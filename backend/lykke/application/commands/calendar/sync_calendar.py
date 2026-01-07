@@ -104,7 +104,7 @@ class SyncCalendarHandler(BaseCommandHandler):
         self, entry: CalendarEntryEntity, uow: UnitOfWorkProtocol
     ) -> None:
         """Delete the entry if present, otherwise log and skip."""
-        existing = await uow.calendar_entry_ro_repo.get_by_platform_id(  # type: ignore[attr-defined]
+        existing = await uow.calendar_entry_ro_repo.get_by_platform_id(
             entry.platform_id
         )
         if existing:

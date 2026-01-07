@@ -18,6 +18,7 @@ from lykke.infrastructure.unit_of_work import (
     SqlAlchemyUnitOfWorkFactory,
 )
 from lykke.presentation.api.routers import router
+from lykke.core.observability import init_sentry_fastapi
 
 
 def is_testing() -> bool:
@@ -64,6 +65,8 @@ app = FastAPI(
     lifespan=init_lifespan,
     redirect_slashes=False,
 )
+
+init_sentry_fastapi(app)
 
 
 # Set all CORS enabled origins

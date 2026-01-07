@@ -30,6 +30,7 @@ aiohttp = "^3.13.2"
 webpush = "^1.0.6"
 playwright = "^1.56.0"
 loguru = "^0.7.3"
+sentry-sdk = {extras = ["fastapi"], version = "^2.19.0"}
 langchain = "^1.1.0"
 langchain-anthropic = "^1.2.0"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
@@ -137,6 +138,18 @@ ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = "taskiq_redis.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "sentry_sdk.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "sentry_sdk"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "sentry_sdk.integrations.*"
 ignore_missing_imports = true
 
 

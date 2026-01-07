@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     PRINTER_NAME: str = "HP_OfficeJet_Pro_9010_series"
     PVPORCUPINE_ACCESS_KEY: str = ""
+    SENTRY_DSN: str = "https://74a825a2f692f88bc80c503b172e888a@o4506864112238592.ingest.us.sentry.io/4506864114270208"
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
