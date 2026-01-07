@@ -8,6 +8,10 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, field_validator
 from lykke.application.commands.user import CreateLeadUserData, CreateLeadUserHandler
+from lykke.application.unit_of_work import (
+    ReadOnlyRepositoryFactory,
+    UnitOfWorkFactory,
+)
 from lykke.core.exceptions import BadRequestError
 
 from .dependencies.services import (
@@ -62,8 +66,8 @@ def _normalize_phone(contact: str) -> str | None:
 @router.post("/early-access", response_model=StatusResponse, status_code=200)
 async def request_early_access(
     data: EarlyAccessRequest,
-    uow_factory=Depends(get_unit_of_work_factory),
-    ro_repo_factory=Depends(get_read_only_repository_factory),
+    uow_factory: UnitOfWorkFactory = Depends(get_unit_of_work_factory),
+    ro_repo_factory: ReadOnlyRepositoryFactory = Depends(get_read_only_repository_factory),
 ) -> StatusResponse:
     """Capture lead contact as a user with status NEW_LEAD."""
     contact = data.contact.strip()

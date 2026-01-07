@@ -25,7 +25,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     __tablename__ = "users"
 
     # Custom fields
-    email: Mapped[str | None] = mapped_column(
+    email: Mapped[str] = mapped_column(
         String(length=320), unique=True, index=True, nullable=True
     )
     phone_number = Column(String, nullable=True, unique=True)

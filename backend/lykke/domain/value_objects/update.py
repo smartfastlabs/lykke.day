@@ -1,4 +1,5 @@
 """Update objects for entity updates."""
+from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -53,7 +54,7 @@ class UserUpdateObject(BaseUpdateObject):
     is_superuser: bool | None = None
     is_verified: bool | None = None
     settings: UserSetting | None = None
-    status: "UserStatus" | None = None
+    status: UserStatus | None = None
 
 
 @dataclass(kw_only=True)
