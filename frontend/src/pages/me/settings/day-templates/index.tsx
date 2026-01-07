@@ -1,10 +1,10 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, Show, createResource } from "solid-js";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import SettingsPage, { ActionButton } from "@/components/shared/settingsPage";
+import SettingsPage, { ActionButton } from "@/components/shared/SettingsPage";
 import { dayTemplateAPI } from "@/utils/api";
 import { DayTemplate } from "@/types/api";
-import DayTemplateList from "@/components/dayTemplates/list";
+import DayTemplateList from "@/components/dayTemplates/List";
 
 const DayTemplatesPage: Component = () => {
   const navigate = useNavigate();

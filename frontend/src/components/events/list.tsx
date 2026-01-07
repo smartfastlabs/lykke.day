@@ -1,5 +1,5 @@
 import { Component, For, Show } from "solid-js";
-import { Icon } from "@/components/shared/icon";
+import { Icon } from "@/components/shared/Icon";
 import type { Accessor } from "solid-js";
 import { getTypeIcon } from "@/utils/icons";
 import { Event } from "@/types/api";

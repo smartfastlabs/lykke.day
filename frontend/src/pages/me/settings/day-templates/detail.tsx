@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { Component, Show, createResource, createSignal } from "solid-js";
-import DetailPage from "@/components/shared/detailPage";
-import DayTemplateForm from "@/components/dayTemplates/form";
-import DayTemplatePreview from "@/components/dayTemplates/preview";
+import DetailPage from "@/components/shared/DetailPage";
+import DayTemplateForm from "@/components/dayTemplates/Form";
+import DayTemplatePreview from "@/components/dayTemplates/Preview";
 import { dayTemplateAPI, routineAPI } from "@/utils/api";
 import { DayTemplate, Routine } from "@/types/api";
 

@@ -1,10 +1,10 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, Show, createResource } from "solid-js";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import SettingsPage, { ActionButton } from "@/components/shared/settingsPage";
+import SettingsPage, { ActionButton } from "@/components/shared/SettingsPage";
 import { taskDefinitionAPI } from "@/utils/api";
 import { TaskDefinition } from "@/types/api";
-import TaskDefinitionList from "@/components/taskDefinitions/list";
+import TaskDefinitionList from "@/components/taskDefinitions/List";
 
 const TaskDefinitionsPage: Component = () => {
   const navigate = useNavigate();

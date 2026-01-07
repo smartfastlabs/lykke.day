@@ -1,7 +1,7 @@
 import { Component, Show, For, createMemo } from "solid-js";
 import { Routine, RoutineTask, TaskDefinition, TaskSchedule } from "@/types/api";
-import { Icon } from "@/components/shared/icon";
-import TaskScheduleForm from "@/components/tasks/scheduleForm";
+import { Icon } from "@/components/shared/Icon";
+import TaskScheduleForm from "@/components/tasks/ScheduleForm";
 import { Input } from "@/components/forms";
 
 interface RoutinePreviewProps {

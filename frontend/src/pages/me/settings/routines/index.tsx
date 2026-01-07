@@ -1,9 +1,9 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, Show, createResource } from "solid-js";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import SettingsPage, { ActionButton } from "@/components/shared/settingsPage";
+import SettingsPage, { ActionButton } from "@/components/shared/SettingsPage";
 import { routineAPI } from "@/utils/api";
-import RoutineList from "@/components/routines/list";
+import RoutineList from "@/components/routines/List";
 
 const RoutinesPage: Component = () => {
   const navigate = useNavigate();

@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { Component, Show, createResource, createSignal } from "solid-js";
-import DetailPage from "@/components/shared/detailPage";
-import CalendarForm from "@/components/calendars/form";
-import CalendarPreview from "@/components/calendars/preview";
+import DetailPage from "@/components/shared/DetailPage";
+import CalendarForm from "@/components/calendars/Form";
+import CalendarPreview from "@/components/calendars/Preview";
 import { calendarAPI } from "@/utils/api";
 import { Calendar } from "@/types/api";
 

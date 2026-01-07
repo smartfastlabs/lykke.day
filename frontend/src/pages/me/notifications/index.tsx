@@ -2,7 +2,7 @@ import { createSignal, onMount, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { pushAPI } from "@/utils/api";
 import { PushSubscription } from "@/types/api";
-import Page from "@/components/shared/layout/page";
+import Page from "@/components/shared/layout/Page";
 
 export default function NotificationsIndex() {
   const navigate = useNavigate();

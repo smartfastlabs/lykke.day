@@ -1,7 +1,7 @@
 import { Component, Show } from "solid-js";
 import { DayTemplate } from "@/types/api";
 import { getIcon } from "@/utils/icons";
-import { Icon } from "@/components/shared/icon";
+import { Icon } from "@/components/shared/Icon";
 
 interface ListItemProps {
   template: DayTemplate;

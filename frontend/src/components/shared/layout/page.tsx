@@ -1,6 +1,6 @@
 import { NotificationContainer } from "@/providers/notifications";
-import NavButton from "@/components/shared/navButton";
-import Footer from "@/components/shared/layout/footer";
+import NavButton from "@/components/shared/NavButton";
+import Footer from "@/components/shared/layout/Footer";
 import { Component, JSX } from "solid-js";
 
 interface PageProps {

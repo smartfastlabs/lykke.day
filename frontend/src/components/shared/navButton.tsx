@@ -1,6 +1,6 @@
 import { useNavigate } from "@solidjs/router";
 import { Component } from "solid-js";
-import { Icon } from "./icon";
+import { Icon } from "./Icon";
 
 const NavButton: Component = () => {
   const navigate = useNavigate();

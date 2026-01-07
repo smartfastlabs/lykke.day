@@ -1,6 +1,6 @@
 import { Component, Show, For, createMemo } from "solid-js";
 import { DayTemplate, Routine } from "@/types/api";
-import { Icon } from "@/components/shared/icon";
+import { Icon } from "@/components/shared/Icon";
 
 interface DayTemplatePreviewProps {
   dayTemplate: DayTemplate;

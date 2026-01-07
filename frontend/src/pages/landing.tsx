@@ -1,7 +1,7 @@
 import { Component, For, createSignal, onMount } from "solid-js";
 import { Icon } from "solid-heroicons";
 import { sun, arrowPath, calendar, bellAlert } from "solid-heroicons/outline";
-import Footer from "@/components/shared/layout/footer";
+import Footer from "@/components/shared/layout/Footer";
 import { useAuth } from "@/providers/auth";
 
 interface Feature {

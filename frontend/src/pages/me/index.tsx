@@ -1,10 +1,10 @@
-import Page from "@/components/shared/layout/page";
+import Page from "@/components/shared/layout/Page";
 import { Switch, Match, Show, Component, createSignal } from "solid-js";
 import { useSheppard } from "@/providers/sheppard";
-import DayView from "@/components/days/view";
-import DayHeader from "@/components/days/header";
-import DayPreview from "@/components/days/preview";
-import DayTabs from "@/components/days/tabs";
+import DayView from "@/components/days/View";
+import DayHeader from "@/components/days/Header";
+import DayPreview from "@/components/days/Preview";
+import DayTabs from "@/components/days/Tabs";
 
 export const Home: Component = () => {
   const { dayContext, events, tasks, day, isLoading } = useSheppard();

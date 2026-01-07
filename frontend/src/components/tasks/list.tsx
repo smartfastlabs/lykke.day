@@ -2,7 +2,7 @@ import { createSignal, Component, For, Show } from "solid-js";
 import type { Accessor } from "solid-js";
 import { getCategoryIcon, getTypeIcon } from "@/utils/icons";
 import { TaskStatus, Task, TaskSchedule } from "@/types/api";
-import { Icon } from "@/components/shared/icon";
+import { Icon } from "@/components/shared/Icon";
 import { useSheppard } from "@/providers/sheppard";
 
 export const formatTimeString = (timeStr: string): string => {

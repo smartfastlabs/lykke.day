@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { Component, Show, createResource, createSignal } from "solid-js";
-import DetailPage from "@/components/shared/detailPage";
-import RoutineForm from "@/components/routines/form";
-import RoutinePreview from "@/components/routines/preview";
+import DetailPage from "@/components/shared/DetailPage";
+import RoutineForm from "@/components/routines/Form";
+import RoutinePreview from "@/components/routines/Preview";
 import { routineAPI, taskDefinitionAPI } from "@/utils/api";
 import { Routine, RoutineTask, TaskDefinition, TaskSchedule } from "@/types/api";
 

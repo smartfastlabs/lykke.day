@@ -7,8 +7,8 @@ import {
   faListCheck,
 } from "@fortawesome/free-solid-svg-icons";
 
-import Page from "@/components/shared/layout/page";
-import LinkGrid, { LinkItem } from "@/components/shared/linkGrid";
+import Page from "@/components/shared/layout/Page";
+import LinkGrid, { LinkItem } from "@/components/shared/LinkGrid";
 
 const settingsItems: LinkItem[] = [
   { label: "Day Templates", icon: faFileLines, url: "/me/settings/day-templates" },

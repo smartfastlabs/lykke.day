@@ -1,4 +1,4 @@
-import Page from "@/components/shared/layout/page";
+import Page from "@/components/shared/layout/Page";
 import { createMemo, For, Component, createResource, Show } from "solid-js";
 import { dayAPI } from "@/utils/api";
 import { Day, Task, Event, Alarm } from "@/types/api";

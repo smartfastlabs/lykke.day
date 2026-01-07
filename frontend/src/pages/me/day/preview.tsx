@@ -1,9 +1,9 @@
-import Page from "@/components/shared/layout/page";
+import Page from "@/components/shared/layout/Page";
 import { Component, Show, createResource } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { dayAPI } from "@/utils/api";
 
-import DayPreview from "@/components/days/preview";
+import DayPreview from "@/components/days/Preview";
 
 export const DayPreviewPage: Component = () => {
   const params = useParams();

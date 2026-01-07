@@ -1,5 +1,5 @@
 import { Component, Show, JSX, createSignal } from "solid-js";
-import SettingsPage, { ActionButton } from "@/components/shared/settingsPage";
+import SettingsPage, { ActionButton } from "@/components/shared/SettingsPage";
 
 interface DetailPageProps {
   heading: string;

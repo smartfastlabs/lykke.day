@@ -1,8 +1,8 @@
 import { Component, createMemo, Show, type Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import TaskList from "@/components/tasks/list";
-import EventList from "@/components/events/list";
+import TaskList from "@/components/tasks/List";
+import EventList from "@/components/events/List";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import {

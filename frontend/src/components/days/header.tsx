@@ -7,8 +7,8 @@ import {
   Accessor,
 } from "solid-js";
 
-import { Icon } from "@/components/shared/icon";
-import { formatTimeString } from "@/components/tasks/list";
+import { Icon } from "@/components/shared/Icon";
+import { formatTimeString } from "@/components/tasks/List";
 import { Day } from "@/types/api";
 
 const DayHeader: Component<{ day: Day }> = (props) => {

@@ -1,7 +1,7 @@
 import { Component } from "solid-js";
 import { Calendar } from "@/types/api";
-import { GenericList } from "@/components/shared/genericList";
-import CalendarListItem from "./listItem";
+import { GenericList } from "@/components/shared/GenericList";
+import CalendarListItem from "./ListItem";
 
 interface CalendarListProps {
   calendars: Calendar[];

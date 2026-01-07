@@ -27,11 +27,17 @@ class GetDayContextHandler(BaseQueryHandler):
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
-    async def get_day_context(self, date: datetime_date) -> value_objects.DayContext:
+    async def get_day_context(
+        self,
+        date: datetime_date,
+        allow_preview_if_missing: bool = True,
+    ) -> value_objects.DayContext:
         """Load complete day context for the given date.
 
         Args:
             date: The date to get context for
+            allow_preview_if_missing: Whether to return a preview when the day
+                does not yet exist. If False, a NotFoundError is raised instead.
 
         Returns:
             A DayContext with all related data
@@ -56,6 +62,8 @@ class GetDayContextHandler(BaseQueryHandler):
         )
 
         if isinstance(day_result, NotFoundError):
+            if not allow_preview_if_missing:
+                raise day_result
             user = await self.user_ro_repo.get(self.user_id)
             day = await self._create_preview_day(date, user)
         elif isinstance(day_result, Exception):

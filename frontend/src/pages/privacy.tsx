@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import Footer from "@/components/shared/layout/footer";
+import Footer from "@/components/shared/layout/Footer";
 
 const Privacy: Component = () => {
   return (

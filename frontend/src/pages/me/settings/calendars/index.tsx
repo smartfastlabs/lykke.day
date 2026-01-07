@@ -1,8 +1,8 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, Show, createResource } from "solid-js";
 import { faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons";
-import SettingsPage, { ActionButton } from "@/components/shared/settingsPage";
-import CalendarList from "@/components/calendars/list";
+import SettingsPage, { ActionButton } from "@/components/shared/SettingsPage";
+import CalendarList from "@/components/calendars/List";
 import { calendarAPI } from "@/utils/api";
 
 const CalendarsPage: Component = () => {

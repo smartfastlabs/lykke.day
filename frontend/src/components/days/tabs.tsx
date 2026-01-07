@@ -9,7 +9,7 @@ import {
   faHandsWash,
   faMessage,
 } from "@fortawesome/free-solid-svg-icons";
-import { Icon } from "@/components/shared/icon";
+import { Icon } from "@/components/shared/Icon";
 
 interface TabIndicatorProps {
   activeTab: () => string;

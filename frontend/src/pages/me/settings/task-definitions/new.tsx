@@ -1,9 +1,9 @@
 import { createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
-import SettingsPage from "@/components/shared/settingsPage";
+import SettingsPage from "@/components/shared/SettingsPage";
 import { taskDefinitionAPI } from "@/utils/api";
 import { TaskDefinition } from "@/types/api";
-import TaskDefinitionForm from "@/components/taskDefinitions/form";
+import TaskDefinitionForm from "@/components/taskDefinitions/Form";
 
 export default function NewTaskDefinition() {
   const navigate = useNavigate();

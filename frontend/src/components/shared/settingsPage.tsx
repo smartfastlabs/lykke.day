@@ -1,7 +1,7 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, For, Show, JSX } from "solid-js";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import Page from "@/components/shared/layout/page";
+import Page from "@/components/shared/layout/Page";
 
 export interface ActionButton {
   label: string;

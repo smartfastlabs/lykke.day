@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends
 from lykke.application.commands import ScheduleDayHandler, UpdateDayHandler
 from lykke.application.queries import GetDayContextHandler, PreviewDayHandler
 from lykke.application.queries.day_template import SearchDayTemplatesHandler
+from lykke.core.exceptions import NotFoundError
 from lykke.core.utils.dates import get_current_date, get_tomorrows_date
 from lykke.presentation.api.schemas import (
     DayContextSchema,
@@ -40,9 +41,17 @@ router = APIRouter()
 @router.get("/today/context", response_model=DayContextSchema)
 async def get_context_today(
     handler: Annotated[GetDayContextHandler, Depends(get_get_day_context_handler)],
+    schedule_handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
 ) -> DayContextSchema:
     """Get the complete context for today."""
-    context = await handler.get_day_context(date=get_current_date())
+    date = get_current_date()
+    try:
+        context = await handler.get_day_context(
+            date=date, allow_preview_if_missing=False
+        )
+    except NotFoundError:
+        # If the day does not exist yet, schedule it and return the persisted context
+        context = await schedule_handler.schedule_day(date=date)
     return map_day_context_to_schema(context)
 
 
