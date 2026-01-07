@@ -6,6 +6,7 @@ from uuid import uuid4, uuid5
 import pytest
 
 from lykke.core.exceptions import NotFoundError
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain.entities import TaskEntity
 from lykke.domain import data_objects
 from lykke.domain.value_objects.query import DateQuery
@@ -260,3 +261,36 @@ async def test_task_with_schedule(task_repo, test_user, test_date):
     assert result.schedule is not None
     assert result.schedule.start_time == datetime.time(10, 0)
     assert result.schedule.end_time == datetime.time(12, 0)
+
+
+def test_row_to_entity_parses_time_strings(test_user, test_date):
+    """Ensure time-only strings in schedule JSON deserialize without ValueError."""
+    schedule_dict = {
+        "timing_type": TimingType.DEADLINE.value,
+        "start_time": "20:00:00",
+        "end_time": None,
+        "available_time": None,
+    }
+    row = {
+        "id": uuid4(),
+        "user_id": test_user.id,
+        "date": test_date,
+        "scheduled_date": test_date,
+        "name": "String schedule task",
+        "status": TaskStatus.READY.value,
+        "task_definition": dataclass_to_json_dict(
+            _create_task_definition(test_user.id)
+        ),
+        "category": TaskCategory.HOUSE.value,
+        "frequency": TaskFrequency.DAILY.value,
+        "completed_at": None,
+        "schedule": schedule_dict,
+        "routine_id": None,
+        "tags": [],
+        "actions": [],
+    }
+
+    entity = TaskRepository.row_to_entity(row)
+
+    assert entity.schedule is not None
+    assert entity.schedule.start_time == datetime.time(20, 0)
