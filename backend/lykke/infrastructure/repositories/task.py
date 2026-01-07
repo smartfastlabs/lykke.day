@@ -114,11 +114,11 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, DateQuery]):
                     if time_field in schedule_dict and isinstance(
                         schedule_dict[time_field], str
                     ):
-                        from datetime import datetime as dt
+                        from datetime import time as dt_time
 
-                        schedule_dict[time_field] = dt.fromisoformat(
+                        schedule_dict[time_field] = dt_time.fromisoformat(
                             schedule_dict[time_field]
-                        ).time()
+                        )
                 data["schedule"] = value_objects.TaskSchedule.model_validate(
                     schedule_dict
                 )
