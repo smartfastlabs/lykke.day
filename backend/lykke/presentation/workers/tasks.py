@@ -51,13 +51,9 @@ def get_user_repository() -> UserRepositoryReadOnlyProtocol:
 
 def get_sync_all_calendars_handler(
     user_id: UUID,
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    google_gateway: Annotated[
-        GoogleCalendarGatewayProtocol, Depends(get_google_gateway)
-    ],
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
+    google_gateway: GoogleCalendarGatewayProtocol,
 ) -> SyncAllCalendarsHandler:
     """Get a SyncAllCalendarsHandler instance for a user."""
     ro_repos = ro_repo_factory.create(user_id)
@@ -66,13 +62,9 @@ def get_sync_all_calendars_handler(
 
 def get_sync_calendar_changes_handler(
     user_id: UUID,
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    google_gateway: Annotated[
-        GoogleCalendarGatewayProtocol, Depends(get_google_gateway)
-    ],
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
+    google_gateway: GoogleCalendarGatewayProtocol,
 ) -> SyncCalendarChangesHandler:
     """Get a SyncCalendarChangesHandler instance for a user."""
     ro_repos = ro_repo_factory.create(user_id)
@@ -81,10 +73,8 @@ def get_sync_calendar_changes_handler(
 
 def get_schedule_day_handler(
     user_id: UUID,
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> ScheduleDayHandler:
     """Get a ScheduleDayHandler instance for a user."""
     ro_repos = ro_repo_factory.create(user_id)
@@ -95,9 +85,6 @@ def get_schedule_day_handler(
 @broker.task  # type: ignore[untyped-decorator]
 async def sync_calendar_task(
     user_id: UUID,
-    sync_handler: Annotated[
-        SyncAllCalendarsHandler, Depends(get_sync_all_calendars_handler)
-    ],
 ) -> None:
     """Sync all calendar entries for a specific user.
 
@@ -105,9 +92,15 @@ async def sync_calendar_task(
 
     Args:
         user_id: The user ID to sync calendars for.
-        sync_handler: Injected SyncAllCalendarsHandler.
     """
     logger.info(f"Starting calendar sync for user {user_id}")
+
+    sync_handler = get_sync_all_calendars_handler(
+        user_id=user_id,
+        uow_factory=get_unit_of_work_factory(),
+        ro_repo_factory=get_read_only_repository_factory(),
+        google_gateway=get_google_gateway(),
+    )
 
     await sync_handler.sync_all_calendars()
 
@@ -118,9 +111,6 @@ async def sync_calendar_task(
 async def sync_single_calendar_task(
     user_id: UUID,
     calendar_id: UUID,
-    sync_handler: Annotated[
-        SyncCalendarChangesHandler, Depends(get_sync_calendar_changes_handler)
-    ],
 ) -> None:
     """Sync a single calendar for a user (triggered by webhook).
 
@@ -129,10 +119,16 @@ async def sync_single_calendar_task(
     Args:
         user_id: The user ID that owns the calendar.
         calendar_id: The calendar ID to sync.
-        sync_handler: Injected SyncCalendarChangesHandler.
     """
     logger.info(
         f"Starting single calendar sync for user {user_id}, calendar {calendar_id}"
+    )
+
+    sync_handler = get_sync_calendar_changes_handler(
+        user_id=user_id,
+        uow_factory=get_unit_of_work_factory(),
+        ro_repo_factory=get_read_only_repository_factory(),
+        google_gateway=get_google_gateway(),
     )
 
     # Look up the calendar
@@ -169,15 +165,19 @@ async def schedule_all_users_week_task(
 @broker.task  # type: ignore[untyped-decorator]
 async def schedule_user_week_task(
     user_id: UUID,
-    schedule_handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
 ) -> None:
     """Schedule all days for the next week for a specific user.
 
     Args:
         user_id: The user ID to schedule days for.
-        schedule_handler: Injected ScheduleDayHandler.
     """
     logger.info(f"Starting week scheduling for user {user_id}")
+
+    schedule_handler = get_schedule_day_handler(
+        user_id=user_id,
+        uow_factory=get_unit_of_work_factory(),
+        ro_repo_factory=get_read_only_repository_factory(),
+    )
 
     today = datetime.now(UTC).date()
     days_scheduled = 0

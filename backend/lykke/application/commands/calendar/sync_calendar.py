@@ -3,6 +3,7 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
+from googleapiclient.errors import HttpError
 from loguru import logger
 from lykke.application.commands.base import BaseCommandHandler
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
@@ -60,18 +61,50 @@ class SyncCalendarHandler(BaseCommandHandler):
                 lookback = calendar.last_sync_at - CALENDAR_SYNC_LOOKBACK
 
             calendar_entries, deleted_calendar_entries = [], []
+            sync_token = (
+                calendar.sync_subscription.sync_token
+                if calendar.sync_subscription
+                else None
+            )
 
             if calendar.platform == "google":
                 calendar.last_sync_at = datetime.now(UTC)
-                for calendar_entry in await self._google_gateway.load_calendar_events(
-                    calendar,
-                    lookback=lookback,
-                    token=token,
-                ):
+                try:
+                    (
+                        fetched_entries,
+                        fetched_deleted_entries,
+                        next_sync_token,
+                    ) = await self._google_gateway.load_calendar_events(
+                        calendar,
+                        lookback=lookback,
+                        token=token,
+                        sync_token=sync_token,
+                    )
+                except HttpError as exc:
+                    if exc.resp.status == 410:
+                        logger.info("Sync token expired, performing full sync")
+                        (
+                            fetched_entries,
+                            fetched_deleted_entries,
+                            next_sync_token,
+                        ) = await self._google_gateway.load_calendar_events(
+                            calendar,
+                            lookback=lookback,
+                            token=token,
+                            sync_token=None,
+                        )
+                    else:
+                        raise
+
+                for calendar_entry in fetched_entries:
                     if calendar_entry.status == "cancelled":
                         deleted_calendar_entries.append(calendar_entry)
                     else:
                         calendar_entries.append(calendar_entry)
+
+                deleted_calendar_entries.extend(fetched_deleted_entries)
+                if calendar.sync_subscription:
+                    calendar.sync_subscription.sync_token = next_sync_token
             else:
                 raise NotImplementedError(
                     f"Sync not implemented for platform {calendar.platform}"
@@ -95,30 +128,76 @@ class SyncCalendarHandler(BaseCommandHandler):
         Returns:
             Tuple of (calendar_entries, deleted_calendar_entries)
         """
+        existing_entries = await uow.calendar_entry_ro_repo.all()
+        existing_by_platform_id = {
+            entry.platform_id: entry for entry in existing_entries
+        }
+
         # Calculate lookback time
         lookback: datetime = datetime.now(UTC) - CALENDAR_DEFAULT_LOOKBACK
         if calendar.last_sync_at:
             lookback = calendar.last_sync_at - CALENDAR_SYNC_LOOKBACK
 
         calendar_entries, deleted_calendar_entries = [], []
+        sync_token = (
+            calendar.sync_subscription.sync_token
+            if calendar.sync_subscription
+            else None
+        )
 
         if calendar.platform == "google":
             calendar.last_sync_at = datetime.now(UTC)
-            for calendar_entry in await self._google_gateway.load_calendar_events(
-                calendar,
-                lookback=lookback,
-                token=token,
-            ):
+            try:
+                (
+                    fetched_entries,
+                    fetched_deleted_entries,
+                    next_sync_token,
+                ) = await self._google_gateway.load_calendar_events(
+                    calendar,
+                    lookback=lookback,
+                    token=token,
+                    sync_token=sync_token,
+                )
+            except HttpError as exc:
+                if exc.resp.status == 410:
+                    logger.info("Sync token expired, performing full sync")
+                    (
+                        fetched_entries,
+                        fetched_deleted_entries,
+                        next_sync_token,
+                    ) = await self._google_gateway.load_calendar_events(
+                        calendar,
+                        lookback=lookback,
+                        token=token,
+                        sync_token=None,
+                    )
+                else:
+                    raise
+
+            for calendar_entry in fetched_entries:
                 if calendar_entry.status == "cancelled":
                     deleted_calendar_entries.append(calendar_entry)
                 else:
                     calendar_entries.append(calendar_entry)
+
+            deleted_calendar_entries.extend(fetched_deleted_entries)
+            if calendar.sync_subscription:
+                calendar.sync_subscription.sync_token = next_sync_token
         else:
             raise NotImplementedError(
                 f"Sync not implemented for platform {calendar.platform}"
             )
 
-        return calendar_entries, deleted_calendar_entries
+        # Map deletions to existing entities so delete operations succeed
+        resolved_deleted: list[CalendarEntryEntity] = []
+        for calendar_entry in deleted_calendar_entries:
+            existing = existing_by_platform_id.get(calendar_entry.platform_id)
+            if existing:
+                resolved_deleted.append(existing)
+            else:
+                resolved_deleted.append(calendar_entry)
+
+        return calendar_entries, resolved_deleted
 
 
 class SyncAllCalendarsHandler(BaseCommandHandler):

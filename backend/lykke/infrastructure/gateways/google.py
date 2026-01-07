@@ -1,9 +1,9 @@
 import asyncio
 import re
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime
+from typing import Any
+from zoneinfo import ZoneInfo
 
-from gcsa.event import Event as GoogleEvent
-from gcsa.google_calendar import GoogleCalendar
 from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import Flow
@@ -82,134 +82,144 @@ def _parse_recurrence_frequency(
     return value_objects.TaskFrequency.ONCE
 
 
-def _get_event_frequency(
-    event: GoogleEvent,
-    gc: GoogleCalendar,
-    frequency_cache: dict[str, value_objects.TaskFrequency],
-) -> value_objects.TaskFrequency:
-    """Determine the frequency of an event, fetching parent event if necessary.
-
-    Args:
-        event: The Google Calendar event (may be an instance of a recurring event).
-        gc: The GoogleCalendar client for fetching parent events.
-        frequency_cache: Cache of recurring_event_id -> TaskFrequency to avoid repeat lookups.
-
-    Returns:
-        The appropriate TaskFrequency enum value.
-    """
-    # Check if this event is an instance of a recurring event
-
-    if not event.recurring_event_id:
-        # Not a recurring event instance, check if it has its own recurrence
-        recurrence = getattr(event, "recurrence", None)
-        return _parse_recurrence_frequency(recurrence)
-
-    # Check cache first
-    if event.recurring_event_id in frequency_cache:
-        return frequency_cache[event.recurring_event_id]
-
-    # Fetch the parent event to get recurrence rules
-    try:
-        parent_event = gc.get_event(event.recurring_event_id)
-        recurrence = getattr(parent_event, "recurrence", None)
-        frequency = _parse_recurrence_frequency(recurrence)
-    except Exception as e:
-        logger.warning(
-            f"Failed to fetch parent event {event.recurring_event_id} for event {event.id}: {e}"
-        )
-        frequency = value_objects.TaskFrequency.ONCE
-
-    # Cache the result
-    frequency_cache[event.recurring_event_id] = frequency
-    return frequency
-
-
-def _is_after(
-    d1: datetime | date,
-    d2: datetime | date,
-) -> bool:
-    if type(d1) is type(d2):
-        return d2 > d1
-    if isinstance(d1, datetime):
-        d1 = d1.date()
-    elif isinstance(d2, datetime):
-        d2 = d2.date()
-    return d2 > d1
-
-
 class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
     """Gateway for interacting with Google Calendar API."""
 
-    def _get_google_calendar(
-        self, calendar: CalendarEntity, token: data_objects.AuthToken
-    ) -> GoogleCalendar:
-        """Create a GoogleCalendar client with the given credentials."""
-        try:
-            credentials = token.google_credentials()
-            # Force a refresh check
-            if credentials.expired and credentials.refresh_token:
-                credentials.refresh(Request())
+    @staticmethod
+    def _parse_datetime(
+        value: dict[str, Any] | None,
+        fallback_timezone: str,
+        use_start_of_day: bool,
+    ) -> datetime:
+        """Parse Google Calendar date/datetime dicts into aware datetimes."""
+        if not value:
+            # Fallback to now to satisfy required fields; caller should override if needed
+            return datetime.now(UTC)
 
-            return GoogleCalendar(
-                calendar.platform_id,
-                credentials=credentials,
-                token_path=".token.pickle",
-                credentials_path=CLIENT_SECRET_FILE,
-                read_only=True,
-            )
-        except RefreshError as exc:
-            raise TokenExpiredError("User needs to re-authenticate") from exc
+        if date_time := value.get("dateTime"):
+            # dateTime already includes timezone info
+            # Replace trailing Z for fromisoformat compatibility
+            normalized = date_time.replace("Z", "+00:00")
+            try:
+                dt = datetime.fromisoformat(normalized)
+            except ValueError:
+                dt = datetime.now(UTC)
+            return dt.astimezone(UTC)
 
-    def _load_calendar_events_sync(
+        if date_only := value.get("date"):
+            try:
+                parsed_date = datetime.fromisoformat(date_only).date()
+            except ValueError:
+                parsed_date = datetime.now(UTC).date()
+            return datetime.combine(
+                parsed_date,
+                datetime.min.time() if use_start_of_day else datetime.max.time(),
+                tzinfo=ZoneInfo(fallback_timezone),
+            ).astimezone(UTC)
+
+        return datetime.now(UTC)
+
+    def _google_event_to_entity(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
-    ) -> list[CalendarEntryEntity]:
-        """Synchronous implementation of calendar entry loading."""
-        calendar_entries: list[CalendarEntryEntity] = []
-        frequency_cache: dict[str, value_objects.TaskFrequency] = {}
+        event: dict[str, Any],
+        frequency_cache: dict[str, value_objects.TaskFrequency],
+        recurrence_lookup: Any,
+    ) -> CalendarEntryEntity:
+        """Convert a Google API event dict to CalendarEntryEntity."""
+        status = event.get("status", "confirmed")
+        recurrence = event.get("recurrence")
+        recurring_event_id = event.get("recurringEventId")
+        frequency = self._determine_frequency(
+            calendar_id=calendar.platform_id,
+            recurrence=recurrence,
+            recurring_event_id=recurring_event_id,
+            recurrence_lookup=recurrence_lookup,
+            frequency_cache=frequency_cache,
+        )
 
-        logger.info(f"Loading calendar entries for calendar {calendar.name}...")
-        gc = self._get_google_calendar(calendar, token)
+        start_dt = self._parse_datetime(
+            event.get("start"),
+            fallback_timezone=event.get("timeZone", settings.TIMEZONE),
+            use_start_of_day=True,
+        )
+        end_dt = self._parse_datetime(
+            event.get("end"),
+            fallback_timezone=event.get("timeZone", settings.TIMEZONE),
+            use_start_of_day=False,
+        )
 
-        for event in gc.get_events(
-            single_events=True,
-            showDeleted=False,
-            time_max=datetime.now(UTC) + timedelta(days=30),
-        ):
-            if _is_after(event.end, event.updated):
-                logger.info(
-                    f"It looks like the event `{event.summary}` has already happened"
-                )
-                continue
-            if event.other.get("status") == "cancelled":
-                logger.info(
-                    f"It looks like the event `{event.summary}` has been cancelled"
-                )
-            try:
-                # Get frequency, fetching parent event if this is a recurring instance
-                frequency = _get_event_frequency(event, gc, frequency_cache)
-                calendar_entries.append(
-                    CalendarEntryEntity.from_google(
-                        calendar.user_id,
-                        calendar.id,
-                        event,
-                        frequency,
-                        settings.TIMEZONE,
-                    )
-                )
-            except Exception as e:
-                logger.info(f"Error converting event {event.id}: {e}")
-                continue
-        return calendar_entries
+        created = event.get("created")
+        updated = event.get("updated")
+        created_dt = (
+            datetime.fromisoformat(created.replace("Z", "+00:00")).astimezone(UTC)
+            if isinstance(created, str)
+            else datetime.now(UTC)
+        )
+        updated_dt = (
+            datetime.fromisoformat(updated.replace("Z", "+00:00")).astimezone(UTC)
+            if isinstance(updated, str)
+            else datetime.now(UTC)
+        )
+
+        return CalendarEntryEntity(
+            user_id=calendar.user_id,
+            calendar_id=calendar.id,
+            platform_id=event.get("id", "NA"),
+            platform="google",
+            status=status,
+            name=event.get("summary", "(no title)"),
+            starts_at=start_dt,
+            ends_at=end_dt,
+            frequency=frequency,
+            created_at=created_dt,
+            updated_at=updated_dt,
+            timezone=event.get("start", {}).get("timeZone", settings.TIMEZONE),
+        )
+
+    def _determine_frequency(
+        self,
+        calendar_id: str,
+        recurrence: list[str] | None,
+        recurring_event_id: str | None,
+        recurrence_lookup: Any,
+        frequency_cache: dict[str, value_objects.TaskFrequency],
+    ) -> value_objects.TaskFrequency:
+        """Determine recurrence frequency using cache and parent lookups."""
+        if recurrence:
+            return _parse_recurrence_frequency(recurrence)
+
+        if not recurring_event_id:
+            return value_objects.TaskFrequency.ONCE
+
+        if recurring_event_id in frequency_cache:
+            return frequency_cache[recurring_event_id]
+
+        try:
+            parent_event = (
+                recurrence_lookup.events()
+                .get(calendarId=calendar_id, eventId=recurring_event_id)
+                .execute()
+            )
+            parent_recurrence = parent_event.get("recurrence")
+            frequency = _parse_recurrence_frequency(parent_recurrence)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                f"Failed to fetch parent event {recurring_event_id}: {exc}"
+            )
+            frequency = value_objects.TaskFrequency.ONCE
+
+        frequency_cache[recurring_event_id] = frequency
+        return frequency
 
     async def load_calendar_events(
         self,
         calendar: CalendarEntity,
         lookback: datetime,
         token: data_objects.AuthToken,
-    ) -> list[CalendarEntryEntity]:
-        """Load calendar entries from Google Calendar.
+        sync_token: str | None = None,
+    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity], str | None]:
+        """Load calendar entries from Google Calendar (full or incremental).
 
         Args:
             calendar: The calendar to load entries from.
@@ -217,16 +227,74 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             token: The authentication token.
 
         Returns:
-            List of calendar entries from the calendar.
+            Tuple of (new/updated entries, deleted entries, next sync token).
         """
         try:
             return await asyncio.to_thread(
                 self._load_calendar_events_sync,
                 calendar,
+                lookback,
                 token,
+                sync_token,
             )
         except RefreshError as exc:
             raise TokenExpiredError("User needs to re-authenticate") from exc
+
+    def _load_calendar_events_sync(
+        self,
+        calendar: CalendarEntity,
+        lookback: datetime,
+        token: data_objects.AuthToken,
+        sync_token: str | None,
+    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity], str | None]:
+        """Fetch events using Google API with support for sync tokens."""
+        credentials = token.google_credentials()
+        if credentials.expired and credentials.refresh_token:
+            credentials.refresh(Request())
+
+        service = build("calendar", "v3", credentials=credentials)
+        events: list[CalendarEntryEntity] = []
+        deleted: list[CalendarEntryEntity] = []
+        frequency_cache: dict[str, value_objects.TaskFrequency] = {}
+        next_sync_token: str | None = None
+        page_token: str | None = None
+
+        while True:
+            params: dict[str, Any] = {
+                "calendarId": calendar.platform_id,
+                "showDeleted": True,
+                "singleEvents": True,
+                "maxResults": 2500,
+            }
+            if sync_token:
+                params["syncToken"] = sync_token
+            else:
+                params["timeMin"] = lookback.astimezone(UTC).isoformat()
+
+            if page_token:
+                params["pageToken"] = page_token
+
+            response = service.events().list(**params).execute()
+            recurrence_lookup = service
+
+            for event in response.get("items", []):
+                entry = self._google_event_to_entity(
+                    calendar=calendar,
+                    event=event,
+                    frequency_cache=frequency_cache,
+                    recurrence_lookup=recurrence_lookup,
+                )
+                if entry.status == "cancelled":
+                    deleted.append(entry)
+                else:
+                    events.append(entry)
+
+            next_sync_token = response.get("nextSyncToken", next_sync_token)
+            page_token = response.get("nextPageToken")
+            if not page_token:
+                break
+
+        return events, deleted, next_sync_token
 
     def _subscribe_to_calendar_sync(
         self,

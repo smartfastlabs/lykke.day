@@ -199,12 +199,10 @@ async def google_webhook(
         logger.warning(f"Invalid token for calendar {calendar_id}")
         return Response(status_code=200)
 
-    # Handle sync state (initial verification from Google)
     if x_goog_resource_state == "sync":
-        logger.info("Received sync verification from Google")
-        return Response(status_code=200)
+        logger.info("Received sync verification from Google, triggering initial sync")
 
-    # Schedule background task to sync the calendar
+    # Schedule background task to sync the calendar (initial + incremental)
     await sync_single_calendar_task.kiq(user_id=user_id, calendar_id=calendar_id)
     logger.info(f"Scheduled sync task for calendar {calendar_id}")
 

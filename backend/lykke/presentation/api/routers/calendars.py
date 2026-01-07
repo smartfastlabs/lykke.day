@@ -23,6 +23,7 @@ from lykke.presentation.api.schemas import (
     CalendarUpdateSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_calendar_to_schema
+from lykke.presentation.workers.tasks import sync_single_calendar_task
 
 from .dependencies.commands.calendar import (
     get_create_calendar_handler,
@@ -65,6 +66,11 @@ async def subscribe_calendar(
     """Enable push notifications for a calendar."""
     calendar = await get_calendar_handler.run(calendar_id=uuid)
     updated = await subscribe_calendar_handler.subscribe(calendar=calendar)
+    # Trigger initial sync via background task
+    await sync_single_calendar_task.kiq(
+        user_id=updated.user_id,
+        calendar_id=updated.id,
+    )
     return map_calendar_to_schema(updated)
 
 

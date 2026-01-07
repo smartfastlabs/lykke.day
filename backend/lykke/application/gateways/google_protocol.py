@@ -18,16 +18,19 @@ class GoogleCalendarGatewayProtocol(Protocol):
         calendar: CalendarEntity,
         lookback: datetime,
         token: data_objects.AuthToken,
-    ) -> list[CalendarEntryEntity]:
-        """Load calendar entries from Google Calendar.
+        sync_token: str | None = None,
+    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity], str | None]:
+        """Load calendar entries from Google Calendar (full or incremental).
 
         Args:
             calendar: The calendar to load entries from.
             lookback: The datetime to look back from.
             token: The authentication token.
+            sync_token: Optional sync token for incremental syncs. If provided,
+                only changes since the token will be returned.
 
         Returns:
-            List of calendar entries from the calendar.
+            Tuple of (new/updated entries, deleted entries, next sync token).
         """
         ...
 
