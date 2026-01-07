@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     VAPID_SECRET_KEY: str = ""
     VAPID_PUBLIC_KEY: str = ""
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_FROM_NUMBER: str = ""
+    TWILIO_MESSAGING_SERVICE_SID: str = ""
     ENVIRONMENT: str = "development"
     DATA_PATH: str = "../data"
     DATABASE_URL: str = "postgresql+psycopg://localhost/lykke"

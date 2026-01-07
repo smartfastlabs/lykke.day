@@ -19,7 +19,7 @@ const settingsItems: LinkItem[] = [
   },
   { label: "Routines", icon: faRepeat, url: "/me/settings/routines" },
   { label: "Profile", icon: faUser, url: "/me/settings/profile" },
-  { label: "Calendar", icon: faCalendar, url: "/me/settings/calendar" },
+  { label: "Calendars", icon: faCalendar, url: "/me/settings/calendars" },
 ];
 
 const SettingsPage: Component = () => {

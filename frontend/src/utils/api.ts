@@ -5,6 +5,7 @@ import {
   Day,
   DayContext,
   DayTemplate,
+  Calendar,
   TaskDefinition,
   Routine,
   PushSubscription,
@@ -363,6 +364,10 @@ export const routineAPI = {
     fetchData<Routine>(`/api/routines/${routineId}/tasks/${routineTaskId}`, {
       method: "DELETE",
     }),
+};
+
+export const calendarAPI = {
+  ...createCrudMethods<Calendar>("calendars"),
 };
 
 export const marketingAPI = {

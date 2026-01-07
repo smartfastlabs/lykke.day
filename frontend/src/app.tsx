@@ -31,6 +31,8 @@ import TaskDefinitionDetailPage from "@/pages/me/settings/task-definitions/detai
 import RoutinesPage from "@/pages/me/settings/routines/index";
 import NewRoutinePage from "@/pages/me/settings/routines/new";
 import RoutineDetailPage from "@/pages/me/settings/routines/detail";
+import CalendarsPage from "@/pages/me/settings/calendars/index";
+import CalendarDetailPage from "@/pages/me/settings/calendars/detail";
 import Welcome from "@/pages/me/welcome";
 import NotFound from "@/pages/not-found";
 
@@ -134,6 +136,11 @@ export default function App() {
           <Route path="/settings/routines" component={RoutinesPage} />
           <Route path="/settings/routines/new" component={NewRoutinePage} />
           <Route path="/settings/routines/:id" component={RoutineDetailPage} />
+          <Route path="/settings/calendars" component={CalendarsPage} />
+          <Route
+            path="/settings/calendars/:id"
+            component={CalendarDetailPage}
+          />
         </Route>
 
         <Route path="*" component={NotFound} />
