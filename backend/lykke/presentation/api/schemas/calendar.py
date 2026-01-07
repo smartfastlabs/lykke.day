@@ -6,6 +6,17 @@ from uuid import UUID
 from .base import BaseEntitySchema, BaseSchema
 
 
+class SyncSubscriptionSchema(BaseSchema):
+    """Schema describing a calendar sync subscription."""
+
+    subscription_id: str
+    resource_id: str | None = None
+    expiration: datetime
+    provider: str
+    client_state: str | None = None
+    sync_token: str | None = None
+
+
 class CalendarCreateSchema(BaseSchema):
     """API schema for creating a Calendar entity."""
 
@@ -20,6 +31,9 @@ class CalendarSchema(CalendarCreateSchema, BaseEntitySchema):
     """API schema for Calendar entity."""
 
     user_id: UUID
+    sync_subscription: SyncSubscriptionSchema | None = None
+    sync_subscription_id: str | None = None
+    sync_enabled: bool = False
 
 
 class CalendarUpdateSchema(BaseSchema):

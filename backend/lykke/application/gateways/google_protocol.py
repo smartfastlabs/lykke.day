@@ -56,6 +56,23 @@ class GoogleCalendarGatewayProtocol(Protocol):
         """
         ...
 
+    async def unsubscribe_from_calendar(
+        self,
+        calendar: CalendarEntity,
+        token: data_objects.AuthToken,
+        channel_id: str,
+        resource_id: str | None,
+    ) -> None:
+        """Unsubscribe from push notifications for calendar updates.
+
+        Args:
+            calendar: The calendar to unsubscribe from.
+            token: The authentication token.
+            channel_id: The channel identifier previously returned by subscribe.
+            resource_id: The resource identifier returned by subscribe (if provided).
+        """
+        ...
+
     def get_flow(self, flow_name: str) -> "Flow":
         """Get OAuth flow for Google authentication.
 

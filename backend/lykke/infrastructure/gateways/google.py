@@ -25,8 +25,8 @@ SCOPES = [
     "openid",
 ]
 REDIRECT_URIS: dict[str, str] = {
-    "login": "http://localhost:8080/google/callback/login",
-    "calendar": "http://localhost:8080/google/callback/calendar",
+    "login": "http://localhost:8888/api/google/callback/login",
+    "calendar": "http://localhost:8888/api/google/callback/calendar",
 }
 
 
@@ -306,6 +306,46 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             webhook_url,
             channel_id,
             client_state,
+        )
+
+    def _unsubscribe_from_calendar_sync(
+        self,
+        calendar: CalendarEntity,
+        token: data_objects.AuthToken,
+        channel_id: str,
+        resource_id: str | None,
+    ) -> None:
+        """Synchronous implementation to stop a calendar watch channel."""
+        try:
+            credentials = token.google_credentials()
+            if credentials.expired and credentials.refresh_token:
+                credentials.refresh(Request())
+
+            service = build("calendar", "v3", credentials=credentials)
+
+            stop_body = {"id": channel_id}
+            if resource_id:
+                stop_body["resourceId"] = resource_id
+
+            # pylint: disable=no-member  # Dynamic API client
+            service.channels().stop(body=stop_body).execute()
+        except RefreshError as exc:
+            raise TokenExpiredError("User needs to re-authenticate") from exc
+
+    async def unsubscribe_from_calendar(
+        self,
+        calendar: CalendarEntity,
+        token: data_objects.AuthToken,
+        channel_id: str,
+        resource_id: str | None,
+    ) -> None:
+        """Unsubscribe from push notifications for calendar updates."""
+        await asyncio.to_thread(
+            self._unsubscribe_from_calendar_sync,
+            calendar,
+            token,
+            channel_id,
+            resource_id,
         )
 
     @staticmethod

@@ -368,6 +368,10 @@ export const routineAPI = {
 
 export const calendarAPI = {
   ...createCrudMethods<Calendar>("calendars"),
+  subscribe: (id: string): Promise<Calendar> =>
+    fetchData<Calendar>(`/api/calendars/${id}/subscribe`, { method: "POST" }),
+  unsubscribe: (id: string): Promise<Calendar> =>
+    fetchData<Calendar>(`/api/calendars/${id}/subscribe`, { method: "DELETE" }),
 };
 
 export const marketingAPI = {

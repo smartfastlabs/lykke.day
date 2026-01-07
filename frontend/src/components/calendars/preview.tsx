@@ -3,6 +3,8 @@ import { Calendar } from "@/types/api";
 
 interface CalendarPreviewProps {
   calendar: Calendar;
+  onToggleSync?: () => Promise<void> | void;
+  isToggling?: boolean;
 }
 
 const formatDateTime = (value?: string | null): string => {
@@ -12,6 +14,14 @@ const formatDateTime = (value?: string | null): string => {
 };
 
 const CalendarPreview: Component<CalendarPreviewProps> = (props) => {
+  const isSynced = () =>
+    props.calendar.sync_enabled ?? Boolean(props.calendar.sync_subscription);
+
+  const syncExpiration = () => {
+    const expiration = props.calendar.sync_subscription?.expiration;
+    return expiration ? formatDateTime(expiration) : "No active subscription";
+  };
+
   return (
     <div class="flex flex-col items-center justify-center px-6 py-8">
       <div class="w-full max-w-md space-y-6">
@@ -40,6 +50,43 @@ const CalendarPreview: Component<CalendarPreviewProps> = (props) => {
               <div class="mt-1 text-base text-neutral-900">
                 {formatDateTime(props.calendar.last_sync_at)}
               </div>
+            </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-sm font-medium text-neutral-500">Sync Status</label>
+                <div class="mt-1 text-base text-neutral-900 flex items-center gap-2">
+                  <span
+                    class={`text-xs px-2 py-1 rounded-full ${
+                      isSynced()
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {isSynced() ? "Enabled" : "Disabled"}
+                  </span>
+                  <span class="text-xs text-neutral-500">
+                    {isSynced() ? `Expires ${syncExpiration()}` : "Not receiving updates"}
+                  </span>
+                </div>
+              </div>
+              {props.onToggleSync && (
+                <button
+                  type="button"
+                  class={`rounded-md px-3 py-2 text-sm font-medium ${
+                    isSynced()
+                      ? "border border-red-200 text-red-700 hover:bg-red-50"
+                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                  } ${props.isToggling ? "opacity-70 cursor-not-allowed" : ""}`}
+                  onClick={() => props.onToggleSync?.()}
+                  disabled={props.isToggling}
+                >
+                  {props.isToggling
+                    ? "Working..."
+                    : isSynced()
+                      ? "Disable Sync"
+                      : "Enable Sync"}
+                </button>
+              )}
             </div>
           </div>
         </div>

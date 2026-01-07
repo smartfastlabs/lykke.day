@@ -11,8 +11,9 @@ const CalendarDetailPage: Component = () => {
   const navigate = useNavigate();
   const [error, setError] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
+  const [isToggling, setIsToggling] = createSignal(false);
 
-  const [calendar] = createResource<Calendar | undefined, string>(
+  const [calendar, { mutate }] = createResource<Calendar | undefined, string>(
     () => params.id,
     async (id) => calendarAPI.get(id)
   );
@@ -55,6 +56,27 @@ const CalendarDetailPage: Component = () => {
     }
   };
 
+  const handleToggleSubscription = async () => {
+    const current = calendar();
+    if (!current?.id) return;
+
+    setError("");
+    setIsToggling(true);
+    try {
+      const hasSubscription =
+        current.sync_enabled ?? Boolean(current.sync_subscription);
+      const updated = hasSubscription
+        ? await calendarAPI.unsubscribe(current.id)
+        : await calendarAPI.subscribe(current.id);
+      mutate(updated);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to toggle sync";
+      setError(message);
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
   return (
     <Show
       when={calendar()}
@@ -64,7 +86,13 @@ const CalendarDetailPage: Component = () => {
         <DetailPage
           heading="Calendar"
           bottomLink={{ label: "Back to Calendars", url: "/me/settings/calendars" }}
-          preview={<CalendarPreview calendar={current()} />}
+          preview={
+            <CalendarPreview
+              calendar={current()}
+              onToggleSync={handleToggleSubscription}
+              isToggling={isToggling()}
+            />
+          }
           edit={
             <div class="flex flex-col items-center justify-center px-6 py-8">
               <div class="w-full max-w-sm space-y-6">

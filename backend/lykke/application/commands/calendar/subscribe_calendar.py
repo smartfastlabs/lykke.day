@@ -82,6 +82,7 @@ class SubscribeCalendarHandler(BaseCommandHandler):
                     provider="google",
                     client_state=client_state,
                 )
+                calendar.sync_subscription_id = subscription.channel_id
 
                 # Persist the updated calendar
                 uow.add(calendar)

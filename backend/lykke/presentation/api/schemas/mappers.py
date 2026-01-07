@@ -18,6 +18,7 @@ from lykke.presentation.api.schemas import (
     AlarmSchema,
     CalendarEntrySchema,
     CalendarSchema,
+    SyncSubscriptionSchema,
     DayContextSchema,
     DaySchema,
     DayTemplateSchema,
@@ -170,7 +171,23 @@ def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
 
 def map_calendar_to_schema(calendar: CalendarEntity) -> CalendarSchema:
     """Convert Calendar entity to Calendar schema."""
-    return CalendarSchema(**asdict(calendar))
+    sync_subscription = (
+        SyncSubscriptionSchema(**calendar.sync_subscription.model_dump())
+        if calendar.sync_subscription
+        else None
+    )
+    return CalendarSchema(
+        id=calendar.id,
+        user_id=calendar.user_id,
+        name=calendar.name,
+        auth_token_id=calendar.auth_token_id,
+        platform_id=calendar.platform_id,
+        platform=calendar.platform,
+        last_sync_at=calendar.last_sync_at,
+        sync_subscription=sync_subscription,
+        sync_subscription_id=calendar.sync_subscription_id,
+        sync_enabled=calendar.sync_subscription is not None,
+    )
 
 
 def map_user_to_schema(user: UserEntity) -> UserSchema:

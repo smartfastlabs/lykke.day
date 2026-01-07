@@ -102,6 +102,14 @@ export interface BaseEntityObject {
   id?: string;
 }
 export interface BaseObject {}
+export interface CalendarSyncSubscription {
+  subscription_id: string;
+  resource_id?: string | null;
+  expiration: string;
+  provider: string;
+  client_state?: string | null;
+  sync_token?: string | null;
+}
 export interface Calendar {
   id?: string;
   user_id: string;
@@ -110,6 +118,9 @@ export interface Calendar {
   platform_id: string;
   platform: string;
   last_sync_at?: string | null;
+  sync_subscription?: CalendarSyncSubscription | null;
+  sync_subscription_id?: string | null;
+  sync_enabled?: boolean;
 }
 export interface Day {
   id?: string;

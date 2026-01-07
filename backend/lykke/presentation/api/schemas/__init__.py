@@ -5,6 +5,7 @@ from .alarm import AlarmSchema
 from .calendar import (
     CalendarCreateSchema,
     CalendarSchema,
+    SyncSubscriptionSchema,
     CalendarUpdateSchema,
 )
 from .calendar_entry import CalendarEntrySchema
@@ -35,6 +36,7 @@ from .task_definition import (
 # Rebuild models with forward references after all classes are defined
 CalendarCreateSchema.model_rebuild()
 CalendarSchema.model_rebuild()
+SyncSubscriptionSchema.model_rebuild()
 CalendarEntrySchema.model_rebuild()
 CalendarUpdateSchema.model_rebuild()
 DaySchema.model_rebuild()
@@ -59,6 +61,7 @@ __all__ = [
     "CalendarEntrySchema",
     "CalendarCreateSchema",
     "CalendarSchema",
+    "SyncSubscriptionSchema",
     "CalendarUpdateSchema",
     "DayContextSchema",
     "DaySchema",

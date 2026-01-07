@@ -7,6 +7,8 @@ from fastapi import APIRouter, Depends, Query
 from lykke.application.commands.calendar import (
     CreateCalendarHandler,
     DeleteCalendarHandler,
+    SubscribeCalendarHandler,
+    UnsubscribeCalendarHandler,
     UpdateCalendarHandler,
 )
 from lykke.application.queries.calendar import (
@@ -25,6 +27,8 @@ from lykke.presentation.api.schemas.mappers import map_calendar_to_schema
 from .dependencies.commands.calendar import (
     get_create_calendar_handler,
     get_delete_calendar_handler,
+    get_subscribe_calendar_handler,
+    get_unsubscribe_calendar_handler,
     get_update_calendar_handler,
 )
 from .dependencies.queries.calendar import (
@@ -46,6 +50,38 @@ async def get_calendar(
     """Get a single calendar by ID."""
     calendar = await get_calendar_handler.run(calendar_id=uuid)
     return map_calendar_to_schema(calendar)
+
+
+@router.post("/{uuid}/subscribe", response_model=CalendarSchema)
+async def subscribe_calendar(
+    uuid: UUID,
+    get_calendar_handler: Annotated[
+        GetCalendarHandler, Depends(get_get_calendar_handler)
+    ],
+    subscribe_calendar_handler: Annotated[
+        SubscribeCalendarHandler, Depends(get_subscribe_calendar_handler)
+    ],
+) -> CalendarSchema:
+    """Enable push notifications for a calendar."""
+    calendar = await get_calendar_handler.run(calendar_id=uuid)
+    updated = await subscribe_calendar_handler.subscribe(calendar=calendar)
+    return map_calendar_to_schema(updated)
+
+
+@router.delete("/{uuid}/subscribe", response_model=CalendarSchema)
+async def unsubscribe_calendar(
+    uuid: UUID,
+    get_calendar_handler: Annotated[
+        GetCalendarHandler, Depends(get_get_calendar_handler)
+    ],
+    unsubscribe_calendar_handler: Annotated[
+        UnsubscribeCalendarHandler, Depends(get_unsubscribe_calendar_handler)
+    ],
+) -> CalendarSchema:
+    """Disable push notifications for a calendar."""
+    calendar = await get_calendar_handler.run(calendar_id=uuid)
+    updated = await unsubscribe_calendar_handler.unsubscribe(calendar=calendar)
+    return map_calendar_to_schema(updated)
 
 
 @router.get("/", response_model=value_objects.PagedQueryResponse[CalendarSchema])

@@ -6,6 +6,9 @@ interface CalendarListItemProps {
 }
 
 const CalendarListItem: Component<CalendarListItemProps> = (props) => {
+  const isSynced = () =>
+    props.calendar.sync_enabled ?? Boolean(props.calendar.sync_subscription);
+
   return (
     <div class="flex items-center gap-4">
       <div class="flex-1 min-w-0">
@@ -15,6 +18,15 @@ const CalendarListItem: Component<CalendarListItemProps> = (props) => {
           {props.calendar.platform_id ? ` • ${props.calendar.platform_id}` : ""}
         </span>
       </div>
+      <span
+        class={`text-[11px] px-2 py-1 rounded-full ${
+          isSynced()
+            ? "bg-emerald-100 text-emerald-700"
+            : "bg-gray-100 text-gray-500"
+        }`}
+      >
+        {isSynced() ? "Sync On" : "Sync Off"}
+      </span>
       <Show when={props.calendar.last_sync_at}>
         {(lastSync) => (
           <span class="text-[11px] text-gray-400 whitespace-nowrap">
