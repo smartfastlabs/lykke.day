@@ -330,10 +330,10 @@ export const routineAPI = {
 };
 
 export const marketingAPI = {
-  requestEarlyAccess: (contact: string): Promise<void> =>
+  requestEarlyAccess: (email: string): Promise<void> =>
     fetchData<void>("/api/early-access", {
       method: "POST",
-      body: JSON.stringify({ contact }),
+      body: JSON.stringify({ email }),
       suppressAuthRedirect: true,
       suppressError: true,
     }),

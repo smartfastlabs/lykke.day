@@ -9,6 +9,7 @@ import { AuthGuard } from "@/providers/authGuard";
 
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import EarlyAccess from "@/pages/early-access";
 import Landing from "@/pages/landing";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
@@ -86,6 +87,7 @@ export default function App() {
         <Route path="/terms" component={Terms} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
+        <Route path="/early-access" component={EarlyAccess} />
         <Route
           path="/welcome"
           component={() => <Navigate href="/me/welcome" />}

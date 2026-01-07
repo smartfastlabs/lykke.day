@@ -9,31 +9,23 @@ from lykke.domain.entities import UserEntity
 
 @dataclass(kw_only=True)
 class CreateLeadUserData(value_objects.BaseRequestObject):
-    """Normalized contact data for lead capture."""
+    """Normalized email for lead capture."""
 
-    email: str | None = None
-    phone_number: str | None = None
+    email: str
 
 
 class CreateLeadUserHandler(BaseCommandHandler):
     """Create a lead user with status NEW_LEAD."""
 
     async def run(self, data: CreateLeadUserData) -> None:
-        """Create a lead if unique by email/phone."""
+        """Create a lead if unique by email."""
         async with self.new_uow() as uow:
-            if data.email:
-                existing = await uow.user_ro_repo.get_by_email(data.email)
-                if existing:
-                    return
-
-            if data.phone_number:
-                existing = await uow.user_ro_repo.get_by_phone(data.phone_number)
-                if existing:
-                    return
+            existing = await uow.user_ro_repo.get_by_email(data.email)
+            if existing:
+                return
 
             lead = UserEntity(
                 email=data.email,
-                phone_number=data.phone_number,
                 hashed_password="!",
                 is_active=False,
                 is_superuser=False,

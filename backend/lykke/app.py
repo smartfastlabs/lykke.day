@@ -12,12 +12,7 @@ from lykke.application.events import register_all_handlers
 from lykke.core.config import settings
 from lykke.core.exceptions import BaseError
 from lykke.core.utils import youtube
-from lykke.infrastructure.auth import (
-    UserCreate,
-    UserRead,
-    auth_backend,
-    fastapi_users,
-)
+from lykke.infrastructure.auth import UserCreate, UserRead, auth_backend, fastapi_users
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
@@ -100,6 +95,12 @@ app.include_router(
 )
 app.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix=f"{settings.API_PREFIX}/auth",
+    tags=["auth"],
+)
+
+app.include_router(
+    fastapi_users.get_reset_password_router(),
     prefix=f"{settings.API_PREFIX}/auth",
     tags=["auth"],
 )

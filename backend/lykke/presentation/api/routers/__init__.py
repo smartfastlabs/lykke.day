@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
 from . import (
-    auth,
     calendar_entries,
     calendars,
     day_templates,
@@ -37,15 +36,7 @@ router.include_router(
     prefix="/planning",
     tags=["routine"],
 )
-router.include_router(
-    auth.router,
-    prefix="/auth",
-    tags=[
-        "auth",
-        "login",
-        "password",
-    ],
-)
+
 router.include_router(
     google.router,
     prefix="/google",

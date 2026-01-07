@@ -18,7 +18,7 @@ class UserSchema(BaseSchema):
     """Schema for the current authenticated user."""
 
     id: UUID
-    email: str | None = None
+    email: str
     phone_number: str | None = None
     status: UserStatus
     is_active: bool

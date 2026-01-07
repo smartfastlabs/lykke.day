@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
     """User entity compatible with fastapi-users."""
 
-    email: str | None = None
+    email: str
     phone_number: str | None = None
     hashed_password: str
     status: value_objects.UserStatus = value_objects.UserStatus.ACTIVE
