@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from ..value_objects.sync import SyncSubscription
 from ..value_objects.update import CalendarUpdateObject
 from .base import BaseEntityObject
 
@@ -21,6 +22,8 @@ class CalendarEntity(BaseEntityObject[CalendarUpdateObject, "CalendarUpdatedEven
     platform_id: str
     platform: str
     last_sync_at: datetime | None = None
+    sync_subscription: SyncSubscription | None = None
+    sync_subscription_id: str | None = None
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:

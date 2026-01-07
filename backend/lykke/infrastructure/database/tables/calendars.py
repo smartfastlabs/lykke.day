@@ -1,7 +1,7 @@
 """Calendars table definition."""
 
 from sqlalchemy import Column, DateTime, Index, String
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
 
@@ -18,6 +18,11 @@ class Calendar(Base):
     platform_id = Column(String, nullable=False)
     platform = Column(String, nullable=False)
     last_sync_at = Column(DateTime)
+    sync_subscription = Column(JSONB, nullable=True)  # SyncSubscription
+    sync_subscription_id = Column(String, nullable=True)  # Denormalized for webhook lookups
 
-    __table_args__ = (Index("idx_calendars_user_id", "user_id"),)
+    __table_args__ = (
+        Index("idx_calendars_user_id", "user_id"),
+        Index("idx_calendars_sync_subscription_id", "sync_subscription_id"),
+    )
 

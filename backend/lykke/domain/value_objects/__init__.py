@@ -37,6 +37,7 @@ from .update import (
     TaskDefinitionUpdateObject,
     UserUpdateObject,
 )
+from .sync import SyncSubscription
 from .user import UserSetting, UserStatus
 
 __all__ = [
@@ -85,4 +86,5 @@ __all__ = [
     "TimingType",
     "UserStatus",
     "UserSetting",
+    "SyncSubscription",
 ]

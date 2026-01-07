@@ -9,6 +9,7 @@ from .alarm import Alarm
 from .base import BaseRequestObject
 from .day import DayStatus, DayTag
 from .routine import RoutineSchedule, RoutineTask
+from .sync import SyncSubscription
 from .task import TaskCategory, TaskType
 from .user import UserSetting, UserStatus
 
@@ -74,6 +75,8 @@ class CalendarUpdateObject(BaseUpdateObject):
     name: str | None = None
     auth_token_id: UUID | None = None
     last_sync_at: datetime | None = None
+    sync_subscription: SyncSubscription | None = None
+    sync_subscription_id: str | None = None
 
 
 @dataclass(kw_only=True)
