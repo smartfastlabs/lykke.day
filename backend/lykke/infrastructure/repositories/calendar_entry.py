@@ -32,6 +32,9 @@ class CalendarEntryRepository(
         """Build a SQLAlchemy Core select statement from a query object."""
         stmt = super().build_query(query)
 
+        if query.calendar_id is not None:
+            stmt = stmt.where(self.table.c.calendar_id == query.calendar_id)
+
         if query.date is not None:
             stmt = stmt.where(self.table.c.date == query.date)
 

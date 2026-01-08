@@ -12,6 +12,7 @@ const CalendarDetailPage: Component = () => {
   const [error, setError] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
   const [isToggling, setIsToggling] = createSignal(false);
+  const [isResyncing, setIsResyncing] = createSignal(false);
 
   const [calendar, { mutate }] = createResource<Calendar | undefined, string>(
     () => params.id,
@@ -77,6 +78,23 @@ const CalendarDetailPage: Component = () => {
     }
   };
 
+  const handleResync = async () => {
+    const current = calendar();
+    if (!current?.id) return;
+
+    setError("");
+    setIsResyncing(true);
+    try {
+      const updated = await calendarAPI.resync(current.id);
+      mutate(updated);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to resync calendar";
+      setError(message);
+    } finally {
+      setIsResyncing(false);
+    }
+  };
+
   return (
     <Show
       when={calendar()}
@@ -91,6 +109,8 @@ const CalendarDetailPage: Component = () => {
               calendar={current()}
               onToggleSync={handleToggleSubscription}
               isToggling={isToggling()}
+              onResync={handleResync}
+              isResyncing={isResyncing()}
             />
           }
           edit={

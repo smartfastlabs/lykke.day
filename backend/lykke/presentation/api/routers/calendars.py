@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Query
 from lykke.application.commands.calendar import (
     CreateCalendarHandler,
     DeleteCalendarHandler,
+    ResyncCalendarHandler,
     SubscribeCalendarHandler,
     UnsubscribeCalendarHandler,
     UpdateCalendarHandler,
@@ -28,6 +29,7 @@ from lykke.presentation.workers.tasks import sync_single_calendar_task
 from .dependencies.commands.calendar import (
     get_create_calendar_handler,
     get_delete_calendar_handler,
+    get_resync_calendar_handler,
     get_subscribe_calendar_handler,
     get_unsubscribe_calendar_handler,
     get_update_calendar_handler,
@@ -87,6 +89,22 @@ async def unsubscribe_calendar(
     """Disable push notifications for a calendar."""
     calendar = await get_calendar_handler.run(calendar_id=uuid)
     updated = await unsubscribe_calendar_handler.unsubscribe(calendar=calendar)
+    return map_calendar_to_schema(updated)
+
+
+@router.post("/{uuid}/resync", response_model=CalendarSchema)
+async def resync_calendar(
+    uuid: UUID,
+    get_calendar_handler: Annotated[
+        GetCalendarHandler, Depends(get_get_calendar_handler)
+    ],
+    resync_calendar_handler: Annotated[
+        ResyncCalendarHandler, Depends(get_resync_calendar_handler)
+    ],
+) -> CalendarSchema:
+    """Resubscribe and fully resync a calendar."""
+    calendar = await get_calendar_handler.run(calendar_id=uuid)
+    updated = await resync_calendar_handler.resync(calendar=calendar)
     return map_calendar_to_schema(updated)
 
 
