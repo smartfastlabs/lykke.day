@@ -45,6 +45,7 @@ class CalendarEntryEntity(BaseEntityObject):
     user_id: UUID
     name: str
     calendar_id: UUID
+    calendar_entry_series_id: UUID | None = None
     platform_id: str
     platform: str
     status: str

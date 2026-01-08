@@ -16,6 +16,7 @@ class CalendarEntry(Base):
     date = Column(Date, nullable=False)  # extracted from starts_at for querying
     name = Column(String, nullable=False)
     calendar_id = Column(PGUUID, nullable=False)
+    calendar_entry_series_id = Column(PGUUID)
     platform_id = Column(String, nullable=False)
     platform = Column(String, nullable=False)
     status = Column(String, nullable=False)
@@ -31,4 +32,5 @@ class CalendarEntry(Base):
         Index("idx_calendar_entries_date", "date"),
         Index("idx_calendar_entries_calendar_id", "calendar_id"),
         Index("idx_calendar_entries_user_id", "user_id"),
+        Index("idx_calendar_entries_series_id", "calendar_entry_series_id"),
     )
