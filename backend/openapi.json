@@ -827,6 +827,52 @@
             "APIKeyCookie": []
           }
         ]
+      },
+      "put": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Update Current User Profile",
+        "description": "Update the current authenticated user.",
+        "operationId": "update_current_user_profile_me_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
       }
     },
     "/calendar-entries/today": {
@@ -3388,6 +3434,16 @@
               }
             ],
             "title": "Last Sync At"
+          },
+          "default_event_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -3447,6 +3503,16 @@
           },
           "frequency": {
             "$ref": "#/components/schemas/TaskFrequency"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "ends_at": {
             "anyOf": [
@@ -3543,6 +3609,16 @@
             ],
             "title": "Last Sync At"
           },
+          "default_event_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "user_id": {
             "type": "string",
             "format": "uuid",
@@ -3610,6 +3686,16 @@
               }
             ],
             "title": "Auth Token Id"
+          },
+          "default_event_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "last_sync_at": {
             "anyOf": [
@@ -4038,6 +4124,17 @@
           "detail"
         ],
         "title": "ErrorModel"
+      },
+      "EventCategory": {
+        "type": "string",
+        "enum": [
+          "WORK",
+          "PERSONAL",
+          "FAMILY",
+          "SOCIAL",
+          "OTHER"
+        ],
+        "title": "EventCategory"
       },
       "HTTPValidationError": {
         "properties": {
@@ -5248,6 +5345,29 @@
         "title": "UserSettingsSchema",
         "description": "Schema for user settings."
       },
+      "UserSettingsUpdateSchema": {
+        "properties": {
+          "template_defaults": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "maxItems": 7,
+                "minItems": 7
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Defaults"
+          }
+        },
+        "type": "object",
+        "title": "UserSettingsUpdateSchema",
+        "description": "Schema for updating user settings."
+      },
       "UserStatus": {
         "type": "string",
         "enum": [
@@ -5256,6 +5376,77 @@
         ],
         "title": "UserStatus",
         "description": "Lifecycle status for a user/account record."
+      },
+      "UserUpdateSchema": {
+        "properties": {
+          "phone_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "is_superuser": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Superuser"
+          },
+          "is_verified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Verified"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserSettingsUpdateSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "UserUpdateSchema",
+        "description": "Schema for updating a user profile."
       },
       "ValidationError": {
         "properties": {

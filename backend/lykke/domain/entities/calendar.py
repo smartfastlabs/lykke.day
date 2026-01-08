@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ..value_objects.sync import SyncSubscription
+from ..value_objects.task import EventCategory
 from ..value_objects.update import CalendarUpdateObject
 from .base import BaseEntityObject
 
@@ -21,6 +22,7 @@ class CalendarEntity(BaseEntityObject[CalendarUpdateObject, "CalendarUpdatedEven
     auth_token_id: UUID
     platform_id: str
     platform: str
+    default_event_category: EventCategory | None = None
     last_sync_at: datetime | None = None
     sync_subscription: SyncSubscription | None = None
     sync_subscription_id: str | None = None

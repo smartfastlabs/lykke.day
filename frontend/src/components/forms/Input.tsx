@@ -79,6 +79,9 @@ export function Select<T extends string>(props: SelectProps<T>) {
         class={inputClass}
         required={props.required}
       >
+        {props.placeholder && (
+          <option value="">{props.placeholder}</option>
+        )}
         {props.options.map((option) => (
           <option value={option}>{option}</option>
         ))}

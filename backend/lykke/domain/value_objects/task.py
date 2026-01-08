@@ -75,6 +75,14 @@ class TaskCategory(str, Enum):
     ADMIN = "ADMIN"
 
 
+class EventCategory(str, Enum):
+    WORK = "WORK"
+    PERSONAL = "PERSONAL"
+    FAMILY = "FAMILY"
+    SOCIAL = "SOCIAL"
+    OTHER = "OTHER"
+
+
 class TaskType(str, Enum):
     MEAL = "MEAL"
     WORK = "WORK"

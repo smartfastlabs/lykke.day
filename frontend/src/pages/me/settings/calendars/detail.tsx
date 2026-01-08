@@ -1,10 +1,9 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { Component, Show, createResource, createSignal } from "solid-js";
 import DetailPage from "@/components/shared/DetailPage";
-import CalendarForm from "@/components/calendars/Form";
+import CalendarForm, { CalendarWithCategory } from "@/components/calendars/Form";
 import CalendarPreview from "@/components/calendars/Preview";
 import { calendarAPI } from "@/utils/api";
-import { Calendar } from "@/types/api";
 
 const CalendarDetailPage: Component = () => {
   const params = useParams();
@@ -14,12 +13,15 @@ const CalendarDetailPage: Component = () => {
   const [isToggling, setIsToggling] = createSignal(false);
   const [isResyncing, setIsResyncing] = createSignal(false);
 
-  const [calendar, { mutate }] = createResource<Calendar | undefined, string>(
+  const [calendar, { mutate }] = createResource<
+    CalendarWithCategory | undefined,
+    string
+  >(
     () => params.id,
-    async (id) => calendarAPI.get(id)
+    async (id) => calendarAPI.get(id) as Promise<CalendarWithCategory>
   );
 
-  const handleUpdate = async (partialCalendar: Partial<Calendar>) => {
+  const handleUpdate = async (partialCalendar: Partial<CalendarWithCategory>) => {
     const current = calendar();
     if (!current?.id) return;
 

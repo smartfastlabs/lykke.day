@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import Field
 
-from lykke.domain.value_objects.task import TaskFrequency
+from lykke.domain.value_objects.task import EventCategory, TaskFrequency
 
 from .base import BaseEntitySchema
 
@@ -26,6 +26,7 @@ class CalendarEntrySchema(BaseEntitySchema):
     status: str
     starts_at: datetime
     frequency: TaskFrequency
+    category: EventCategory | None = None
     ends_at: datetime | None = None
     created_at: datetime
     updated_at: datetime

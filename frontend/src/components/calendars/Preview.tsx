@@ -1,8 +1,8 @@
 import { Component } from "solid-js";
-import { Calendar } from "@/types/api";
+import type { CalendarWithCategory } from "./Form";
 
 interface CalendarPreviewProps {
-  calendar: Calendar;
+  calendar: CalendarWithCategory;
   onToggleSync?: () => Promise<void> | void;
   isToggling?: boolean;
   onResync?: () => Promise<void> | void;
@@ -53,6 +53,14 @@ const CalendarPreview: Component<CalendarPreviewProps> = (props) => {
               </label>
               <div class="mt-1 text-xs text-neutral-900 break-all">
                 {props.calendar.auth_token_id}
+              </div>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-neutral-500">
+                Default Event Category
+              </label>
+              <div class="mt-1 text-base text-neutral-900">
+                {props.calendar.default_event_category ?? "Not set"}
               </div>
             </div>
             <div>

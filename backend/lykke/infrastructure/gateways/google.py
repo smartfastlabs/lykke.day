@@ -197,6 +197,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             created_at=created_dt,
             updated_at=updated_dt,
             timezone=event.get("start", {}).get("timeZone", settings.TIMEZONE),
+            category=calendar.default_event_category,
         )
 
     def _determine_frequency(

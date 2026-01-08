@@ -150,6 +150,7 @@ async def create_calendar(
         platform_id=calendar_data.platform_id,
         platform=calendar_data.platform,
         last_sync_at=calendar_data.last_sync_at,
+        default_event_category=calendar_data.default_event_category,
     )
     created = await create_calendar_handler.run(calendar=calendar)
     return map_calendar_to_schema(created)
@@ -170,6 +171,7 @@ async def update_calendar(
     update_object = CalendarUpdateObject(
         name=update_data.name,
         auth_token_id=update_data.auth_token_id,
+        default_event_category=update_data.default_event_category,
         last_sync_at=update_data.last_sync_at,
     )
     updated = await update_calendar_handler.run(

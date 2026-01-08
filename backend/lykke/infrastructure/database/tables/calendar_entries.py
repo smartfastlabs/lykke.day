@@ -21,6 +21,7 @@ class CalendarEntry(Base):
     status = Column(String, nullable=False)
     starts_at = Column(DateTime, nullable=False)
     frequency = Column(String, nullable=False)  # TaskFrequency enum as string
+    category = Column(String)  # TaskCategory enum as string
     ends_at = Column(DateTime)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=False)
@@ -31,4 +32,3 @@ class CalendarEntry(Base):
         Index("idx_calendar_entries_calendar_id", "calendar_id"),
         Index("idx_calendar_entries_user_id", "user_id"),
     )
-

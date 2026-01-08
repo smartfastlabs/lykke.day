@@ -1,15 +1,17 @@
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy.sql import Select
+
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntity
+from lykke.domain.value_objects.task import EventCategory
 from lykke.infrastructure.database.tables import calendars_tbl
 from lykke.infrastructure.repositories.base.utils import (
-    ensure_datetimes_utc,
     ensure_datetime_utc,
+    ensure_datetimes_utc,
     filter_init_false_fields,
 )
-from sqlalchemy.sql import Select
 
 from .base import UserScopedBaseRepository
 
@@ -55,6 +57,11 @@ class CalendarRepository(UserScopedBaseRepository[CalendarEntity, CalendarQuery]
             "auth_token_id": calendar.auth_token_id,
             "platform_id": calendar.platform_id,
             "platform": calendar.platform,
+            "default_event_category": (
+                calendar.default_event_category.value
+                if calendar.default_event_category
+                else None
+            ),
             "last_sync_at": calendar.last_sync_at,
             "sync_subscription_id": calendar.sync_subscription_id,
         }
@@ -79,6 +86,10 @@ class CalendarRepository(UserScopedBaseRepository[CalendarEntity, CalendarQuery]
             data["sync_subscription"] = value_objects.SyncSubscription(
                 **sync_subscription
             )
+
+        default_category = data.get("default_event_category")
+        if isinstance(default_category, str):
+            data["default_event_category"] = EventCategory(default_category)
 
         data = ensure_datetimes_utc(data, keys=("last_sync_at",))
         return CalendarEntity(**data)

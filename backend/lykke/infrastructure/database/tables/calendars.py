@@ -17,12 +17,14 @@ class Calendar(Base):
     auth_token_id = Column(PGUUID, nullable=False)
     platform_id = Column(String, nullable=False)
     platform = Column(String, nullable=False)
+    default_event_category = Column(String)
     last_sync_at = Column(DateTime)
     sync_subscription = Column(JSONB, nullable=True)  # SyncSubscription
-    sync_subscription_id = Column(String, nullable=True)  # Denormalized for webhook lookups
+    sync_subscription_id = Column(
+        String, nullable=True
+    )  # Denormalized for webhook lookups
 
     __table_args__ = (
         Index("idx_calendars_user_id", "user_id"),
         Index("idx_calendars_sync_subscription_id", "sync_subscription_id"),
     )
-

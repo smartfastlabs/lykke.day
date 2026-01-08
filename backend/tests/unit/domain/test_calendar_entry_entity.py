@@ -5,7 +5,7 @@ from uuid import uuid4
 from dateutil.tz import tzoffset
 
 from lykke.domain.entities.calendar_entry import CalendarEntryEntity, get_datetime
-from lykke.domain.value_objects import TaskFrequency
+from lykke.domain.value_objects import EventCategory, TaskFrequency
 
 TARGET_TIMEZONE = "America/Chicago"
 
@@ -138,4 +138,28 @@ def test_from_google_falls_back_to_target_timezone_when_missing() -> None:
     assert entry.starts_at == datetime(2025, 1, 1, 15, 0, tzinfo=UTC)
     assert entry.ends_at == datetime(2025, 1, 1, 16, 0, tzinfo=UTC)
     assert entry.timezone == target_timezone
+
+
+def test_from_google_sets_category_when_provided() -> None:
+    """Provided category should be applied to the entry."""
+    user_id = uuid4()
+    calendar_id = uuid4()
+    google_event = _DummyGoogleEvent(
+        start=datetime(2025, 1, 1, 9, 0, tzinfo=ZoneInfo("UTC")),
+        end=datetime(2025, 1, 1, 10, 0, tzinfo=ZoneInfo("UTC")),
+        timezone="UTC",
+        summary="Categorized event",
+        event_id="evt-3",
+    )
+
+    entry = CalendarEntryEntity.from_google(
+        user_id=user_id,
+        calendar_id=calendar_id,
+        google_event=google_event,
+        frequency=TaskFrequency.ONCE,
+        target_timezone="UTC",
+        category=EventCategory.WORK,
+    )
+
+    assert entry.category == EventCategory.WORK
 

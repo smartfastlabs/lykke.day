@@ -1,13 +1,12 @@
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC
-from datetime import date as dt_date
-from datetime import datetime, time
+from datetime import UTC, date as dt_date, datetime, time
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from lykke.core.config import settings
 from gcsa.event import Event as GoogleEvent
+
+from lykke.core.config import settings
 from lykke.domain import value_objects
 from lykke.domain.entities.base import BaseEntityObject
 
@@ -51,6 +50,7 @@ class CalendarEntryEntity(BaseEntityObject):
     status: str
     starts_at: datetime
     frequency: value_objects.TaskFrequency
+    category: value_objects.EventCategory | None = None
     ends_at: datetime | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
@@ -87,6 +87,7 @@ class CalendarEntryEntity(BaseEntityObject):
         google_event: GoogleEvent,
         frequency: value_objects.TaskFrequency,
         target_timezone: str,
+        category: value_objects.EventCategory | None = None,
     ) -> "CalendarEntryEntity":
         """Create a CalendarEntry from a Google Calendar event.
 
@@ -128,5 +129,6 @@ class CalendarEntryEntity(BaseEntityObject):
             created_at=google_event.created.astimezone(UTC),
             updated_at=google_event.updated.astimezone(UTC),
             timezone=event_timezone,
+            category=category,
         )
         return calendar_entry

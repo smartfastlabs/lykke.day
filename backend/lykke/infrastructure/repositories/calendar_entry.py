@@ -78,6 +78,8 @@ class CalendarEntryRepository(
             row["actions"] = [
                 dataclass_to_json_dict(action) for action in calendar_entry.actions
             ]
+        if calendar_entry.category is not None:
+            row["category"] = calendar_entry.category.value
 
         return row
 
@@ -96,6 +98,8 @@ class CalendarEntryRepository(
         # Convert frequency string back to enum if needed
         if "frequency" in data and isinstance(data["frequency"], str):
             data["frequency"] = value_objects.TaskFrequency(data["frequency"])
+        if "category" in data and isinstance(data["category"], str):
+            data["category"] = value_objects.EventCategory(data["category"])
 
         # Handle actions - they come as dicts from JSONB, need to convert to value objects
         if data.get("actions"):

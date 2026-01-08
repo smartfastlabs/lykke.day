@@ -21,6 +21,7 @@ from .query import (
 )
 from .routine import DayOfWeek, RoutineSchedule, RoutineTask
 from .task import (
+    EventCategory,
     TaskCategory,
     TaskFrequency,
     TaskSchedule,
@@ -86,6 +87,7 @@ __all__ = [
     "TaskTag",
     "TaskType",
     "TimingType",
+    "EventCategory",
     "UserStatus",
     "UserSetting",
     "SyncSubscription",

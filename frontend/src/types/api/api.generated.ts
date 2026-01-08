@@ -380,7 +380,11 @@ export interface paths {
          * @description Return the currently authenticated user.
          */
         get: operations["get_current_user_profile_me_get"];
-        put?: never;
+        /**
+         * Update Current User Profile
+         * @description Update the current authenticated user.
+         */
+        put: operations["update_current_user_profile_me_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1241,6 +1245,7 @@ export interface components {
             platform: string;
             /** Last Sync At */
             last_sync_at?: string | null;
+            default_event_category?: components["schemas"]["EventCategory"] | null;
         };
         /**
          * CalendarEntrySchema
@@ -1273,6 +1278,7 @@ export interface components {
              */
             starts_at: string;
             frequency: components["schemas"]["TaskFrequency"];
+            category?: components["schemas"]["EventCategory"] | null;
             /** Ends At */
             ends_at?: string | null;
             /**
@@ -1313,6 +1319,7 @@ export interface components {
             platform: string;
             /** Last Sync At */
             last_sync_at?: string | null;
+            default_event_category?: components["schemas"]["EventCategory"] | null;
             /**
              * User Id
              * Format: uuid
@@ -1336,6 +1343,7 @@ export interface components {
             name?: string | null;
             /** Auth Token Id */
             auth_token_id?: string | null;
+            default_event_category?: components["schemas"]["EventCategory"] | null;
             /** Last Sync At */
             last_sync_at?: string | null;
         };
@@ -1479,6 +1487,11 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /**
+         * EventCategory
+         * @enum {string}
+         */
+        EventCategory: "WORK" | "PERSONAL" | "FAMILY" | "SOCIAL" | "OTHER";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1933,11 +1946,35 @@ export interface components {
             template_defaults: string[];
         };
         /**
+         * UserSettingsUpdateSchema
+         * @description Schema for updating user settings.
+         */
+        UserSettingsUpdateSchema: {
+            /** Template Defaults */
+            template_defaults?: string[] | null;
+        };
+        /**
          * UserStatus
          * @description Lifecycle status for a user/account record.
          * @enum {string}
          */
         UserStatus: "active" | "new-lead";
+        /**
+         * UserUpdateSchema
+         * @description Schema for updating a user profile.
+         */
+        UserUpdateSchema: {
+            /** Phone Number */
+            phone_number?: string | null;
+            status?: components["schemas"]["UserStatus"] | null;
+            /** Is Active */
+            is_active?: boolean | null;
+            /** Is Superuser */
+            is_superuser?: boolean | null;
+            /** Is Verified */
+            is_verified?: boolean | null;
+            settings?: components["schemas"]["UserSettingsUpdateSchema"] | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -2525,6 +2562,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserSchema"];
+                };
+            };
+        };
+    };
+    update_current_user_profile_me_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
