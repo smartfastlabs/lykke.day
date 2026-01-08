@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from dataclasses import asdict, is_dataclass
-from typing import Any
+from typing import Any, cast
 
 from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import (
@@ -195,9 +195,10 @@ def map_user_to_schema(user: UserEntity) -> UserSchema:
     """Convert User entity to User schema."""
     settings_obj: Any = user.settings
     if is_dataclass(settings_obj):
-        settings_dict = asdict(settings_obj)
+        # mypy: ensure we only pass dataclass instances to asdict
+        settings_dict = asdict(cast("value_objects.UserSetting", settings_obj))
     elif hasattr(settings_obj, "model_dump"):
-        settings_dict = settings_obj.model_dump()  # type: ignore[call-arg]
+        settings_dict = cast("Any", settings_obj).model_dump()
     elif isinstance(settings_obj, Mapping):
         settings_dict = dict(settings_obj)
     else:
