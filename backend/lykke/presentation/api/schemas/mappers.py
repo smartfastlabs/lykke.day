@@ -1,8 +1,6 @@
 """Mapper functions to convert domain entities to API schemas."""
 
-from collections.abc import Mapping
-from dataclasses import asdict, is_dataclass
-from typing import Any, cast
+from dataclasses import asdict
 
 from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import (
@@ -193,16 +191,11 @@ def map_calendar_to_schema(calendar: CalendarEntity) -> CalendarSchema:
 
 def map_user_to_schema(user: UserEntity) -> UserSchema:
     """Convert User entity to User schema."""
-    settings_obj: Any = user.settings
-    if is_dataclass(settings_obj):
-        # mypy: ensure we only pass dataclass instances to asdict
-        settings_dict = asdict(cast("value_objects.UserSetting", settings_obj))
-    elif hasattr(settings_obj, "model_dump"):
-        settings_dict = cast("Any", settings_obj).model_dump()
-    elif isinstance(settings_obj, Mapping):
-        settings_dict = dict(settings_obj)
-    else:
-        settings_dict = {}
+    if not isinstance(user.settings, value_objects.UserSetting):
+        msg = "user.settings must be a UserSetting"
+        raise TypeError(msg)
+
+    settings_dict = asdict(user.settings)
 
     settings_schema = UserSettingsSchema(**settings_dict)
 

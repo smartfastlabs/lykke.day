@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
-from uuid import UUID
+from typing import TYPE_CHECKING, Any, cast
 
 from .. import value_objects
 from ..value_objects.update import UserUpdateObject
@@ -29,3 +28,28 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
     )
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime | None = None
+
+    def apply_update(
+        self,
+        update_object: UserUpdateObject,
+        update_event_class: type[UserUpdatedEvent],
+    ) -> UserEntity:
+        """Apply updates ensuring settings remain a UserSetting dataclass."""
+        update_dict: dict[str, Any] = asdict(update_object)
+        update_dict = {k: v for k, v in update_dict.items() if v is not None}
+
+        if "settings" in update_dict:
+            settings_val = update_dict["settings"]
+            if isinstance(settings_val, dict):
+                settings_val = value_objects.UserSetting(**settings_val)
+            if not isinstance(settings_val, value_objects.UserSetting):
+                msg = "settings must be a UserSetting"
+                raise TypeError(msg)
+            update_dict["settings"] = settings_val
+
+        updated_entity: UserEntity = self.clone(**update_dict)  # type: ignore[assignment]
+        updated_entity = updated_entity.clone(updated_at=datetime.now(UTC))  # type: ignore[assignment]
+
+        event = update_event_class(update_object=update_object)
+        updated_entity._domain_events.append(event)  # type: ignore[attr-defined]
+        return updated_entity

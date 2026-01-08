@@ -68,6 +68,14 @@ class BaseEntityObject(BaseObject, Generic[UpdateObjectType, UpdateEventType]):
         """
         self._domain_events.append(event)
 
+    def add_event(self, event: DomainEvent) -> None:
+        """Public helper to add a domain event."""
+        self._add_event(event)
+
+    # Fallback for static typing on subclasses that call add_event
+    def _add_event(self, event: DomainEvent) -> None:  # type: ignore[empty-body]
+        ...
+
     def collect_events(self) -> list[DomainEvent]:
         """Collect and clear all domain events from this aggregate.
 
