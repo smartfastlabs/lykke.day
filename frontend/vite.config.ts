@@ -24,7 +24,7 @@ export default defineConfig({
         name: "Lykke.Day",
         short_name: "lykke.day",
         description: "Intentional daily living",
-        start_url: "/",
+        start_url: "/me",
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#000000",

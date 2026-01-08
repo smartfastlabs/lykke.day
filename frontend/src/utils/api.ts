@@ -10,8 +10,8 @@ import {
   Routine,
   PushSubscription,
   TaskSchedule,
-  CurrentUser,
 } from "@/types/api";
+import type { CurrentUser } from "@/types/api/user";
 import type {
   ApiResponse,
   ApiError,
@@ -171,7 +171,7 @@ export const taskAPI = {
   getTodays: (): Promise<Task[]> => fetchData<Task[]>("/api/tasks/today/"),
 
   setTaskStatus: (task: Task, status: string): Promise<Task> =>
-    fetchData<Task>(`/api/tasks/${task.date}/${task.id}/actions`, {
+    fetchData<Task>(`/api/tasks/${task.id}/actions`, {
       method: "POST",
       body: JSON.stringify({ type: status }),
     }),
@@ -313,15 +313,24 @@ export const pushAPI = {
 
 export const dayTemplateAPI = {
   ...createCrudMethods<DayTemplate>("day-templates"),
-  addRoutine: (dayTemplateId: string, routineId: string): Promise<DayTemplate> =>
+  addRoutine: (
+    dayTemplateId: string,
+    routineId: string
+  ): Promise<DayTemplate> =>
     fetchData<DayTemplate>(`/api/day-templates/${dayTemplateId}/routines`, {
       method: "POST",
       body: JSON.stringify({ routine_id: routineId }),
     }),
-  removeRoutine: (dayTemplateId: string, routineId: string): Promise<DayTemplate> =>
-    fetchData<DayTemplate>(`/api/day-templates/${dayTemplateId}/routines/${routineId}`, {
-      method: "DELETE",
-    }),
+  removeRoutine: (
+    dayTemplateId: string,
+    routineId: string
+  ): Promise<DayTemplate> =>
+    fetchData<DayTemplate>(
+      `/api/day-templates/${dayTemplateId}/routines/${routineId}`,
+      {
+        method: "DELETE",
+      }
+    ),
 };
 
 export const taskDefinitionAPI = {

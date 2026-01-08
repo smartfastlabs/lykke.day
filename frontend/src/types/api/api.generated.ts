@@ -55,6 +55,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset:Forgot Password */
+        post: operations["reset_forgot_password_auth_forgot_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset:Reset Password */
+        post: operations["reset_reset_password_auth_reset_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/early-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Early Access
+         * @description Capture lead contact as a user with status NEW_LEAD.
+         */
+        post: operations["request_early_access_early_access_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sheppard/prompts/{prompt_name}": {
         parameters: {
             query?: never;
@@ -246,26 +300,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/set-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Set Password
-         * @description Update password for the current user.
-         */
-        post: operations["set_password_auth_set_password_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/google/login": {
         parameters: {
             query?: never;
@@ -292,6 +326,60 @@ export interface paths {
         };
         /** Google Login Callback */
         get: operations["google_login_callback_google_callback_login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/google/webhook/{user_id}/{calendar_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Google Webhook
+         * @description Webhook endpoint for Google Calendar push notifications.
+         *
+         *     Google sends notifications to this endpoint when calendar events change.
+         *     The actual sync is performed asynchronously via a background task.
+         *
+         *     Args:
+         *         user_id: The user ID extracted from the webhook URL.
+         *         calendar_id: The calendar ID extracted from the webhook URL.
+         *
+         *     Headers:
+         *         X-Goog-Channel-Token: Secret token for webhook verification.
+         *         X-Goog-Resource-State: The type of change (sync, exists, not_exists).
+         *
+         *     Returns:
+         *         Empty 200 response to acknowledge receipt.
+         */
+        post: operations["google_webhook_google_webhook__user_id___calendar_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Current User Profile
+         * @description Return the currently authenticated user.
+         */
+        get: operations["get_current_user_profile_me_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -405,7 +493,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/tasks/{date}/{_id}/actions": {
+    "/tasks/{_id}/actions": {
         parameters: {
             query?: never;
             header?: never;
@@ -418,7 +506,7 @@ export interface paths {
          * Add Task Action
          * @description Record an action on a task.
          */
-        post: operations["add_task_action_tasks__date____id__actions_post"];
+        post: operations["add_task_action_tasks___id__actions_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -864,7 +952,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/routines/{uuid}/tasks/{task_definition_id}": {
+    "/routines/{uuid}/tasks/{routine_task_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -876,13 +964,13 @@ export interface paths {
          * Update Routine Task
          * @description Update an attached routine task (name/schedule).
          */
-        put: operations["update_routine_task_routines__uuid__tasks__task_definition_id__put"];
+        put: operations["update_routine_task_routines__uuid__tasks__routine_task_id__put"];
         post?: never;
         /**
          * Remove Routine Task
-         * @description Detach a task definition from a routine.
+         * @description Detach a routine task from a routine by RoutineTask.id.
          */
-        delete: operations["remove_routine_task_routines__uuid__tasks__task_definition_id__delete"];
+        delete: operations["remove_routine_task_routines__uuid__tasks__routine_task_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -916,6 +1004,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/calendars/{uuid}/subscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Subscribe Calendar
+         * @description Enable push notifications for a calendar.
+         */
+        post: operations["subscribe_calendar_calendars__uuid__subscribe_post"];
+        /**
+         * Unsubscribe Calendar
+         * @description Disable push notifications for a calendar.
+         */
+        delete: operations["unsubscribe_calendar_calendars__uuid__subscribe_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendars/{uuid}/resync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resync Calendar
+         * @description Resubscribe and fully resync a calendar.
+         */
+        post: operations["resync_calendar_calendars__uuid__resync_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/calendars/": {
         parameters: {
             query?: never;
@@ -934,6 +1066,35 @@ export interface paths {
          * @description Create a new calendar.
          */
         post: operations["create_calendar_calendars__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/utils/trigger-example-task": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trigger Example Task
+         * @description Trigger an example background task.
+         *
+         *     This endpoint enqueues an example task to demonstrate triggering
+         *     TaskIQ jobs from API endpoints.
+         *
+         *     Args:
+         *         message: Optional message to include in the task (query param).
+         *
+         *     Returns:
+         *         A confirmation that the task was enqueued.
+         */
+        get: operations["trigger_example_task_utils_trigger_example_task_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1047,6 +1208,21 @@ export interface components {
              */
             client_secret?: string | null;
         };
+        /** Body_reset_forgot_password_auth_forgot_password_post */
+        Body_reset_forgot_password_auth_forgot_password_post: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+        };
+        /** Body_reset_reset_password_auth_reset_password_post */
+        Body_reset_reset_password_auth_reset_password_post: {
+            /** Token */
+            token: string;
+            /** Password */
+            password: string;
+        };
         /**
          * CalendarCreateSchema
          * @description API schema for creating a Calendar entity.
@@ -1142,6 +1318,14 @@ export interface components {
              * Format: uuid
              */
             user_id: string;
+            sync_subscription?: components["schemas"]["SyncSubscriptionSchema"] | null;
+            /** Sync Subscription Id */
+            sync_subscription_id?: string | null;
+            /**
+             * Sync Enabled
+             * @default false
+             */
+            sync_enabled: boolean;
         };
         /**
          * CalendarUpdateSchema
@@ -1276,6 +1460,17 @@ export interface components {
             tags?: components["schemas"]["DayTag"][] | null;
             /** Template Id */
             template_id?: string | null;
+        };
+        /**
+         * EarlyAccessRequest
+         * @description Request body for early access opt-in.
+         */
+        EarlyAccessRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
         };
         /** ErrorModel */
         ErrorModel: {
@@ -1412,6 +1607,11 @@ export interface components {
         /** RoutineTask */
         "RoutineTask-Input": {
             /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
+            /**
              * Task Definition Id
              * Format: uuid
              */
@@ -1422,6 +1622,11 @@ export interface components {
         };
         /** RoutineTask */
         "RoutineTask-Output": {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id?: string;
             /**
              * Task Definition Id
              * Format: uuid
@@ -1468,10 +1673,40 @@ export interface components {
             /** Tasks */
             tasks?: components["schemas"]["RoutineTask-Input"][] | null;
         };
-        /** StatusResponse */
-        StatusResponse: Record<string, never>;
+        /**
+         * StatusResponse
+         * @description Simple OK response.
+         */
+        StatusResponse: {
+            /**
+             * Ok
+             * @default true
+             */
+            ok: boolean;
+        };
         /** SubscriptionRequest */
         SubscriptionRequest: Record<string, never>;
+        /**
+         * SyncSubscriptionSchema
+         * @description Schema describing a calendar sync subscription.
+         */
+        SyncSubscriptionSchema: {
+            /** Subscription Id */
+            subscription_id: string;
+            /** Resource Id */
+            resource_id?: string | null;
+            /**
+             * Expiration
+             * Format: date-time
+             */
+            expiration: string;
+            /** Provider */
+            provider: string;
+            /** Client State */
+            client_state?: string | null;
+            /** Sync Token */
+            sync_token?: string | null;
+        };
         /**
          * TaskCategory
          * @enum {string}
@@ -1598,8 +1833,6 @@ export interface components {
          * @enum {string}
          */
         TimingType: "DEADLINE" | "FIXED_TIME" | "TIME_WINDOW" | "FLEXIBLE";
-        /** UpdatePasswordRequest */
-        UpdatePasswordRequest: Record<string, never>;
         /**
          * UserCreate
          * @description Schema for creating a new user.
@@ -1661,6 +1894,50 @@ export interface components {
             /** Phone Number */
             phone_number?: string | null;
         };
+        /**
+         * UserSchema
+         * @description Schema for the current authenticated user.
+         */
+        UserSchema: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Email */
+            email: string;
+            /** Phone Number */
+            phone_number?: string | null;
+            status: components["schemas"]["UserStatus"];
+            /** Is Active */
+            is_active: boolean;
+            /** Is Superuser */
+            is_superuser: boolean;
+            /** Is Verified */
+            is_verified: boolean;
+            settings: components["schemas"]["UserSettingsSchema"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Updated At */
+            updated_at?: string | null;
+        };
+        /**
+         * UserSettingsSchema
+         * @description Schema for user settings.
+         */
+        UserSettingsSchema: {
+            /** Template Defaults */
+            template_defaults: string[];
+        };
+        /**
+         * UserStatus
+         * @description Lifecycle status for a user/account record.
+         * @enum {string}
+         */
+        UserStatus: "active" | "new-lead";
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1791,6 +2068,114 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_forgot_password_auth_forgot_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Body_reset_forgot_password_auth_forgot_password_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_reset_password_auth_reset_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Body_reset_reset_password_auth_reset_password_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_early_access_early_access_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EarlyAccessRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatusResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2037,39 +2422,6 @@ export interface operations {
             };
         };
     };
-    set_password_auth_set_password_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePasswordRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StatusResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     google_login_google_login_get: {
         parameters: {
             query?: never;
@@ -2118,6 +2470,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    google_webhook_google_webhook__user_id___calendar_id__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-goog-channel-token"?: string | null;
+                "x-goog-resource-state"?: string | null;
+            };
+            path: {
+                user_id: string;
+                calendar_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_current_user_profile_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserSchema"];
                 };
             };
         };
@@ -2266,12 +2673,11 @@ export interface operations {
             };
         };
     };
-    add_task_action_tasks__date____id__actions_post: {
+    add_task_action_tasks___id__actions_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                date: string;
                 _id: string;
             };
             cookie?: never;
@@ -3175,13 +3581,13 @@ export interface operations {
             };
         };
     };
-    update_routine_task_routines__uuid__tasks__task_definition_id__put: {
+    update_routine_task_routines__uuid__tasks__routine_task_id__put: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 uuid: string;
-                task_definition_id: string;
+                routine_task_id: string;
             };
             cookie?: never;
         };
@@ -3211,13 +3617,13 @@ export interface operations {
             };
         };
     };
-    remove_routine_task_routines__uuid__tasks__task_definition_id__delete: {
+    remove_routine_task_routines__uuid__tasks__routine_task_id__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 uuid: string;
-                task_definition_id: string;
+                routine_task_id: string;
             };
             cookie?: never;
         };
@@ -3340,6 +3746,99 @@ export interface operations {
             };
         };
     };
+    subscribe_calendar_calendars__uuid__subscribe_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unsubscribe_calendar_calendars__uuid__subscribe_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resync_calendar_calendars__uuid__resync_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_calendars_calendars__get: {
         parameters: {
             query?: {
@@ -3392,6 +3891,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CalendarSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trigger_example_task_utils_trigger_example_task_get: {
+        parameters: {
+            query?: {
+                message?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
                 };
             };
             /** @description Validation Error */

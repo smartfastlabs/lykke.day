@@ -1,6 +1,5 @@
 """Routes for task operations."""
 
-import datetime as dt
 import uuid
 from typing import Annotated
 
@@ -9,7 +8,6 @@ from lykke.application.commands import RecordTaskActionHandler
 from lykke.application.queries.task import SearchTasksHandler
 from lykke.core.utils.dates import get_current_date
 from lykke.domain import value_objects
-from lykke.domain.entities import TaskEntity
 from lykke.presentation.api.schemas import TaskSchema
 from lykke.presentation.api.schemas.mappers import map_task_to_schema
 
@@ -30,9 +28,8 @@ async def list_todays_tasks(
     return [map_task_to_schema(task) for task in result.items]
 
 
-@router.post("/{date}/{_id}/actions", response_model=TaskSchema)
+@router.post("/{_id}/actions", response_model=TaskSchema)
 async def add_task_action(
-    date: dt.date,
     _id: uuid.UUID,
     action: value_objects.Action,
     handler: Annotated[
@@ -40,7 +37,6 @@ async def add_task_action(
     ],
 ) -> TaskSchema:
     """Record an action on a task."""
-    _ = date  # Path parameter kept for API compatibility
     task = await handler.record_task_action(
         task_id=_id,
         action=action,

@@ -18,6 +18,13 @@ export function groupTasks(tasks: Task[]): GroupedTasks {
   };
 
   for (const task of tasks) {
+    const taskDate = task.scheduled_date ?? task.date;
+    if (!taskDate) {
+      // If no date is available, treat as pending and skip time-based logic
+      result.pending.push(task);
+      continue;
+    }
+
     const schedule = task.schedule;
     if (!schedule) {
       result.pending.push(task);
@@ -25,15 +32,15 @@ export function groupTasks(tasks: Task[]): GroupedTasks {
     }
 
     const startTime: Date | null = schedule.start_time
-      ? getTime(task.date, schedule.start_time)
+      ? getTime(taskDate, schedule.start_time)
       : null;
 
     const endTime: Date | null = schedule.end_time
-      ? getTime(task.date, schedule.end_time)
+      ? getTime(taskDate, schedule.end_time)
       : null;
 
     const availableTime: Date | null = schedule.available_time
-      ? getTime(task.date, schedule.available_time)
+      ? getTime(taskDate, schedule.available_time)
       : null;
 
     const taskStatus = task.status;

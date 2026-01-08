@@ -21,6 +21,14 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 The page will reload if you make edits.<br>
 
+### `npm run dev:local`
+
+Runs the app with Netlify Dev, connecting to the local backend API at `http://localhost:8080`.<br>
+Use this when you want to test against your local backend server.
+
+**Note:** The default `netlify dev` command connects to the production API at `https://api.lykke.day`. Use `npm run dev:local` to connect to your local server instead. The script temporarily swaps the config file and restores it when you exit, so your `netlify.toml` remains unchanged.
+
+
 ### `npm run build`
 
 Builds the app for production to the `dist` folder.<br>

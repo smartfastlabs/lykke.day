@@ -25,7 +25,12 @@ export const TaskStorage = {
   },
 
   saveTask(task: Task) {
-    const currentInstances = getTasksFromStorage(TASK_KEY(task.date)) || [];
+    const taskDate = task.scheduled_date ?? task.date;
+    if (!taskDate) {
+      throw new Error("Task is missing a scheduled date");
+    }
+
+    const currentInstances = getTasksFromStorage(TASK_KEY(taskDate)) || [];
 
     const index = currentInstances.findIndex(
       (item) => item.id === task.id
@@ -36,6 +41,6 @@ export const TaskStorage = {
       currentInstances.push(task);
     }
 
-    saveToStorage(TASK_KEY(task.date), currentInstances);
+    saveToStorage(TASK_KEY(taskDate), currentInstances);
   },
 };
