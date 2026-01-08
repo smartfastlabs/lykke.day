@@ -7,7 +7,7 @@ import {
   type ParentProps,
 } from "solid-js";
 
-import type { CurrentUser } from "@/types/api";
+import type { CurrentUser } from "@/types/api/user";
 import { authAPI } from "@/utils/api";
 
 interface AuthContextValue {

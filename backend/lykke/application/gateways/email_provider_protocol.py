@@ -1,10 +1,10 @@
-"""Protocol for SendGrid email gateway."""
+"""Protocol for generic email provider gateway."""
 
 from typing import Protocol
 
 
-class SendGridGatewayProtocol(Protocol):
-    """Protocol defining the interface for SendGrid email gateways."""
+class EmailProviderGatewayProtocol(Protocol):
+    """Protocol defining the interface for email provider gateways."""
 
     async def send_message(self, email_address: str, subject: str, body: str) -> None:
         """Send a plain text email message.

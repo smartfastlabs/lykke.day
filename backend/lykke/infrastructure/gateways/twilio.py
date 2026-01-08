@@ -1,11 +1,11 @@
 import aiohttp
 from loguru import logger
-from lykke.application.gateways.twilio_protocol import TwilioGatewayProtocol
+from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
 from lykke.core.config import settings
 from lykke.core.exceptions import AuthenticationError, ServerError
 
 
-class TwilioGateway(TwilioGatewayProtocol):
+class TwilioGateway(SMSProviderProtocol):
     """Gateway implementing Twilio SMS messaging."""
 
     _BASE_URL = "https://api.twilio.com/2010-04-01/Accounts"

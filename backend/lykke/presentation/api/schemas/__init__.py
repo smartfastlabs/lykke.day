@@ -17,7 +17,12 @@ from .day_template import (
     DayTemplateSchema,
     DayTemplateUpdateSchema,
 )
-from .user import UserSchema, UserSettingsSchema
+from .user import (
+    UserSchema,
+    UserSettingsSchema,
+    UserSettingsUpdateSchema,
+    UserUpdateSchema,
+)
 from .push_subscription import PushSubscriptionSchema
 from .routine import (
     RoutineCreateSchema,
@@ -54,6 +59,8 @@ RoutineTaskUpdateSchema.model_rebuild()
 RoutineUpdateSchema.model_rebuild()
 UserSchema.model_rebuild()
 UserSettingsSchema.model_rebuild()
+UserSettingsUpdateSchema.model_rebuild()
+UserUpdateSchema.model_rebuild()
 
 __all__ = [
     "ActionSchema",
@@ -83,4 +90,6 @@ __all__ = [
     "TaskSchema",
     "UserSchema",
     "UserSettingsSchema",
+    "UserSettingsUpdateSchema",
+    "UserUpdateSchema",
 ]

@@ -11,7 +11,7 @@ import {
   PushSubscription,
   TaskSchedule,
 } from "@/types/api";
-import type { CurrentUser } from "@/types/api/user";
+import type { CurrentUser, UserProfileUpdate } from "@/types/api/user";
 import type {
   ApiResponse,
   ApiError,
@@ -267,6 +267,13 @@ export const authAPI = {
         (errorData as ApiError).detail
       );
     }
+  },
+
+  updateProfile: async (payload: UserProfileUpdate): Promise<CurrentUser> => {
+    return fetchData<CurrentUser>("/api/me", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
   },
 };
 

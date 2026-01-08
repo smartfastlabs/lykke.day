@@ -22,6 +22,7 @@ import CalendarPage from "@/pages/me/navigation/calendar";
 import NotificationsPage from "@/pages/me/notifications/index";
 import NotificationsSubscribePage from "@/pages/me/notifications/subscribe";
 import SettingsPage from "@/pages/me/settings/index";
+import ProfileSettingsPage from "@/pages/me/settings/profile";
 import DayTemplatesPage from "@/pages/me/settings/day-templates/index";
 import NewDayTemplatePage from "@/pages/me/settings/day-templates/new";
 import DayTemplateDetailPage from "@/pages/me/settings/day-templates/detail";
@@ -112,6 +113,7 @@ export default function App() {
             component={NotificationsSubscribePage}
           />
           <Route path="/settings" component={SettingsPage} />
+          <Route path="/settings/profile" component={ProfileSettingsPage} />
           <Route path="/settings/day-templates" component={DayTemplatesPage} />
           <Route
             path="/settings/day-templates/new"
