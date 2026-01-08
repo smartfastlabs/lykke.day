@@ -14,13 +14,13 @@ function loadTsConfig() {
   const configFile = ts.readConfigFile(TS_CONFIG_PATH, ts.sys.readFile);
   if (configFile.error) {
     throw new Error(
-      `Failed to read tsconfig.json: ${configFile.error.messageText}`,
+      `Failed to read tsconfig.json: ${configFile.error.messageText}`
     );
   }
   const parsed = ts.parseJsonConfigFileContent(
     configFile.config,
     ts.sys,
-    FRONTEND_ROOT,
+    FRONTEND_ROOT
   );
   return parsed.options;
 }
@@ -50,7 +50,7 @@ async function resolveRealPathCase(targetPath) {
   for (const part of parts) {
     const entries = await fs.readdir(current, { withFileTypes: true });
     const match = entries.find(
-      (entry) => entry.name.toLowerCase() === part.toLowerCase(),
+      (entry) => entry.name.toLowerCase() === part.toLowerCase()
     );
     if (!match) {
       return null;
@@ -83,7 +83,7 @@ async function checkFile(filePath) {
     content,
     ts.ScriptTarget.Latest,
     true,
-    getScriptKind(filePath),
+    getScriptKind(filePath)
   );
 
   const issues = [];
@@ -118,7 +118,7 @@ async function checkFile(filePath) {
       moduleSpecifier,
       filePath,
       compilerOptions,
-      ts.sys,
+      ts.sys
     );
     const resolvedFileName = resolution.resolvedModule?.resolvedFileName;
     if (!resolvedFileName) {
@@ -135,7 +135,7 @@ async function checkFile(filePath) {
     const realPath = await resolveRealPathCase(resolvedFileName);
     if (realPath && realPath !== resolvedFileName) {
       const { line, character } = sourceFile.getLineAndCharacterOfPosition(
-        node.getStart(),
+        node.getStart()
       );
       results.push({
         file: filePath,
@@ -160,8 +160,8 @@ async function main() {
       console.log(
         `${relativeFile}:${issue.line}:${issue.column} - import "${issue.importPath}" casing differs from disk path ${path.relative(
           FRONTEND_ROOT,
-          issue.diskPath,
-        )}`,
+          issue.diskPath
+        )}`
       );
     }
   }
@@ -178,4 +178,3 @@ main().catch((error) => {
   console.error(error);
   process.exit(1);
 });
-
