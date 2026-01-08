@@ -10,7 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import Page from "@/components/shared/layout/Page";
-import LinkGrid, { LinkItem } from "@/components/shared/linkGrid";
+import LinkGrid, { LinkItem } from "@/components/shared/LinkGrid";
 import { alarmAPI } from "@/utils/api";
 
 const navItems: LinkItem[] = [
