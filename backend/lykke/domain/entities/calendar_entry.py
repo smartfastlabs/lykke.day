@@ -95,18 +95,20 @@ class CalendarEntryEntity(BaseEntityObject):
             calendar_id: ID of the calendar
             google_event: Google Calendar event object
             frequency: Task frequency for the calendar entry
-            target_timezone: Target timezone for display purposes (datetimes stored in UTC)
+            target_timezone: Preferred display timezone (used as fallback when event lacks tz)
         """
+        event_timezone = google_event.timezone or target_timezone
+
         # Convert datetimes to UTC for storage
         starts_at_utc = get_datetime(
             google_event.start,
-            google_event.timezone,
+            event_timezone,
             "UTC",
         )
         ends_at_utc = (
             get_datetime(
                 google_event.end,
-                google_event.timezone,
+                event_timezone,
                 "UTC",
             )
             if google_event.end
@@ -125,6 +127,6 @@ class CalendarEntryEntity(BaseEntityObject):
             platform="google",
             created_at=google_event.created.astimezone(UTC),
             updated_at=google_event.updated.astimezone(UTC),
-            timezone=target_timezone,
+            timezone=event_timezone,
         )
         return calendar_entry
