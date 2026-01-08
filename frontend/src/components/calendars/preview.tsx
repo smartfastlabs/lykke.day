@@ -5,6 +5,8 @@ interface CalendarPreviewProps {
   calendar: Calendar;
   onToggleSync?: () => Promise<void> | void;
   isToggling?: boolean;
+  onResync?: () => Promise<void> | void;
+  isResyncing?: boolean;
 }
 
 const formatDateTime = (value?: string | null): string => {
@@ -30,30 +32,42 @@ const CalendarPreview: Component<CalendarPreviewProps> = (props) => {
           <div class="space-y-3">
             <div>
               <label class="text-sm font-medium text-neutral-500">Name</label>
-              <div class="mt-1 text-base text-neutral-900">{props.calendar.name}</div>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-neutral-500">Platform</label>
               <div class="mt-1 text-base text-neutral-900">
-                {props.calendar.platform}
-                {props.calendar.platform_id ? ` • ${props.calendar.platform_id}` : ""}
+                {props.calendar.name}
               </div>
             </div>
             <div>
-              <label class="text-sm font-medium text-neutral-500">Auth Token ID</label>
+              <label class="text-sm font-medium text-neutral-500">
+                Platform
+              </label>
+              <div class="mt-1 text-base text-neutral-900">
+                {props.calendar.platform}
+                {props.calendar.platform_id
+                  ? ` • ${props.calendar.platform_id}`
+                  : ""}
+              </div>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-neutral-500">
+                Auth Token ID
+              </label>
               <div class="mt-1 text-xs text-neutral-900 break-all">
                 {props.calendar.auth_token_id}
               </div>
             </div>
             <div>
-              <label class="text-sm font-medium text-neutral-500">Last Sync</label>
+              <label class="text-sm font-medium text-neutral-500">
+                Last Sync
+              </label>
               <div class="mt-1 text-base text-neutral-900">
                 {formatDateTime(props.calendar.last_sync_at)}
               </div>
             </div>
             <div class="flex items-center justify-between">
               <div>
-                <label class="text-sm font-medium text-neutral-500">Sync Status</label>
+                <label class="text-sm font-medium text-neutral-500">
+                  Sync Status
+                </label>
                 <div class="mt-1 text-base text-neutral-900 flex items-center gap-2">
                   <span
                     class={`text-xs px-2 py-1 rounded-full ${
@@ -65,28 +79,48 @@ const CalendarPreview: Component<CalendarPreviewProps> = (props) => {
                     {isSynced() ? "Enabled" : "Disabled"}
                   </span>
                   <span class="text-xs text-neutral-500">
-                    {isSynced() ? `Expires ${syncExpiration()}` : "Not receiving updates"}
+                    {isSynced()
+                      ? `Expires ${syncExpiration()}`
+                      : "Not receiving updates"}
                   </span>
                 </div>
               </div>
-              {props.onToggleSync && (
-                <button
-                  type="button"
-                  class={`rounded-md px-3 py-2 text-sm font-medium ${
-                    isSynced()
-                      ? "border border-red-200 text-red-700 hover:bg-red-50"
-                      : "bg-emerald-600 text-white hover:bg-emerald-700"
-                  } ${props.isToggling ? "opacity-70 cursor-not-allowed" : ""}`}
-                  onClick={() => props.onToggleSync?.()}
-                  disabled={props.isToggling}
-                >
-                  {props.isToggling
-                    ? "Working..."
-                    : isSynced()
-                      ? "Disable Sync"
-                      : "Enable Sync"}
-                </button>
-              )}
+              <div class="flex items-center gap-2">
+                {props.onResync && (
+                  <button
+                    type="button"
+                    class={`rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 ${
+                      props.isResyncing ? "opacity-70 cursor-not-allowed" : ""
+                    }`}
+                    onClick={() => props.onResync?.()}
+                    disabled={props.isResyncing || props.isToggling}
+                  >
+                    {props.isResyncing ? "Resyncing..." : "Resync"}
+                  </button>
+                )}
+                {props.onToggleSync && (
+                  <button
+                    type="button"
+                    class={`rounded-md px-3 py-2 text-sm font-medium ${
+                      isSynced()
+                        ? "border border-red-200 text-red-700 hover:bg-red-50"
+                        : "bg-emerald-600 text-white hover:bg-emerald-700"
+                    } ${
+                      props.isToggling || props.isResyncing
+                        ? "opacity-70 cursor-not-allowed"
+                        : ""
+                    }`}
+                    onClick={() => props.onToggleSync?.()}
+                    disabled={props.isToggling || props.isResyncing}
+                  >
+                    {props.isToggling
+                      ? "Working..."
+                      : isSynced()
+                        ? "Disable Sync"
+                        : "Enable Sync"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -96,4 +130,3 @@ const CalendarPreview: Component<CalendarPreviewProps> = (props) => {
 };
 
 export default CalendarPreview;
-

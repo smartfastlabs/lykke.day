@@ -1,5 +1,6 @@
-import { Navigate, Route, Router, useNavigate } from "@solidjs/router";
 import { Title, MetaProvider } from "@solidjs/meta";
+import { Navigate, Route, Router, useNavigate } from "@solidjs/router";
+import { registerSW } from "virtual:pwa-register/solid";
 import { Suspense, onMount, onCleanup } from "solid-js";
 import "@/index.css";
 
@@ -61,16 +62,15 @@ function NavigationHandler() {
 
 export default function App() {
   onMount(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((registration: ServiceWorkerRegistration) => {
-          console.log("SW registered: ", registration);
-        })
-        .catch((registrationError: unknown) => {
-          console.log("SW registration failed: ", registrationError);
-        });
-    }
+    registerSW({
+      immediate: true,
+      onRegistered(registration) {
+        console.log("PWA service worker registered:", registration);
+      },
+      onRegisterError(error) {
+        console.error("PWA service worker registration failed:", error);
+      },
+    });
   });
 
   return (
