@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     TWILIO_FROM_NUMBER: str = ""
     TWILIO_MESSAGING_SERVICE_SID: str = ""
     MAILGUN_API_KEY: str = ""
-    MAILGUN_DOMAIN: str = ""
+    MAILGUN_DOMAIN: str = "https://api.mailgun.net"
     MAILGUN_FROM_EMAIL: str = ""
     GOOGLE_CREDENTIALS_JSON: str = ""
     ENVIRONMENT: str = "development"

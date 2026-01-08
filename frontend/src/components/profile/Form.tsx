@@ -1,6 +1,18 @@
-import { Component, For, createSignal } from "solid-js";
+import {
+  Component,
+  For,
+  createMemo,
+  createResource,
+  createSignal,
+} from "solid-js";
 import { FormError, Input, Select, SubmitButton } from "@/components/forms";
-import type { CurrentUser, UserProfileUpdate, UserStatus } from "@/types/api/user";
+import { dayTemplateAPI } from "@/utils/api";
+import type { DayTemplate } from "@/types/api";
+import type {
+  CurrentUser,
+  UserProfileUpdate,
+  UserStatus,
+} from "@/types/api/user";
 
 const WEEKDAY_LABELS = [
   "Monday",
@@ -20,14 +32,29 @@ interface ProfileFormProps {
 }
 
 const ProfileForm: Component<ProfileFormProps> = (props) => {
+  const [dayTemplates] = createResource<DayTemplate[]>(dayTemplateAPI.getAll);
   const [phoneNumber, setPhoneNumber] = createSignal(props.initialData.phone_number ?? "");
   const [status, setStatus] = createSignal<UserStatus>(props.initialData.status);
   const [isActive, setIsActive] = createSignal(props.initialData.is_active);
   const [isSuperuser, setIsSuperuser] = createSignal(props.initialData.is_superuser);
   const [isVerified, setIsVerified] = createSignal(props.initialData.is_verified);
   const [templateDefaults, setTemplateDefaults] = createSignal<string[]>(
-    Array.from({ length: 7 }, (_, idx) => props.initialData.settings.template_defaults[idx] ?? "")
+    Array.from(
+      { length: 7 },
+      (_, idx) => props.initialData.settings.template_defaults[idx] ?? "default"
+    )
   );
+
+  const templateOptions = createMemo<string[]>(() => {
+    const baseOptions = ["default"];
+    const templateSlugs =
+      dayTemplates()
+        ?.map((template) => template.slug)
+        .filter(Boolean) ?? [];
+    const existingValues = templateDefaults().filter(Boolean);
+
+    return Array.from(new Set([...baseOptions, ...templateSlugs, ...existingValues]));
+  });
 
   const updateTemplateDefault = (index: number, value: string) => {
     setTemplateDefaults((prev) => {
@@ -130,7 +157,7 @@ const ProfileForm: Component<ProfileFormProps> = (props) => {
           <div>
             <h2 class="text-lg font-medium text-neutral-900">Template defaults</h2>
             <p class="text-sm text-neutral-500">
-              Set the default template slug for each day of the week.
+              Pick which day template to apply by default for each weekday.
             </p>
           </div>
         </div>
@@ -140,11 +167,12 @@ const ProfileForm: Component<ProfileFormProps> = (props) => {
             {(label, index) => (
               <div>
                 <label class="text-sm font-medium text-neutral-500">{label}</label>
-                <Input
+                <Select<string>
                   id={`template-default-${index()}`}
-                  placeholder={`${label} template slug`}
-                  value={() => templateDefaults()[index()]}
+                  placeholder={`${label} template`}
+                  value={() => templateDefaults()[index()] || "default"}
                   onChange={(value) => updateTemplateDefault(index(), value)}
+                  options={templateOptions()}
                 />
               </div>
             )}

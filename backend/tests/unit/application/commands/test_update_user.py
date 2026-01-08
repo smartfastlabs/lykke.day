@@ -1,0 +1,107 @@
+"""Unit tests for UpdateUserHandler."""
+
+import pytest
+
+from lykke.application.commands.user import UpdateUserHandler
+from lykke.domain.entities import UserEntity
+from lykke.domain.value_objects import UserSetting, UserUpdateObject, UserStatus
+
+
+class _FakeUserReadOnlyRepo:
+    def __init__(self, user: UserEntity) -> None:
+        self._user = user
+
+    async def get(self, user_id):
+        return self._user
+
+
+class _FakeReadOnlyRepos:
+    """Lightweight container matching ReadOnlyRepositories protocol."""
+
+    def __init__(self, user: UserEntity) -> None:
+        fake = object()
+        self.auth_token_ro_repo = fake
+        self.calendar_entry_ro_repo = fake
+        self.calendar_ro_repo = fake
+        self.day_ro_repo = fake
+        self.day_template_ro_repo = fake
+        self.push_subscription_ro_repo = fake
+        self.routine_ro_repo = fake
+        self.task_definition_ro_repo = fake
+        self.task_ro_repo = fake
+        self.user_ro_repo = _FakeUserReadOnlyRepo(user)
+
+
+class _FakeUoW:
+    """Minimal UnitOfWork that just collects added entities."""
+
+    def __init__(self) -> None:
+        self.added = []
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return None
+
+    def add(self, entity):
+        self.added.append(entity)
+
+
+class _FakeUoWFactory:
+    def __init__(self) -> None:
+        self.uow = _FakeUoW()
+
+    def create(self, user_id):
+        return self.uow
+
+
+@pytest.mark.asyncio
+async def test_update_user_updates_fields_and_settings():
+    user = UserEntity(
+        email="test@example.com",
+        hashed_password="hash",
+        settings=UserSetting(template_defaults=["default"] * 7),
+    )
+    ro_repos = _FakeReadOnlyRepos(user)
+    uow_factory = _FakeUoWFactory()
+    handler = UpdateUserHandler(ro_repos, uow_factory, user.id)
+
+    update_data = UserUpdateObject(
+        phone_number="123",
+        status=UserStatus.NEW_LEAD,
+        settings=UserSetting(template_defaults=["a", "b", "c", "d", "e", "f", "g"]),
+    )
+
+    updated = await handler.run(update_data)
+
+    assert updated.phone_number == "123"
+    assert updated.status == UserStatus.NEW_LEAD
+    assert updated.settings.template_defaults == ["a", "b", "c", "d", "e", "f", "g"]
+    assert uow_factory.uow.added == [updated]
+
+
+@pytest.mark.asyncio
+async def test_update_user_skips_none_fields():
+    user = UserEntity(
+        email="test@example.com",
+        hashed_password="hash",
+        settings=UserSetting(template_defaults=["default"] * 7),
+    )
+    ro_repos = _FakeReadOnlyRepos(user)
+    uow_factory = _FakeUoWFactory()
+    handler = UpdateUserHandler(ro_repos, uow_factory, user.id)
+
+    update_data = UserUpdateObject(
+        phone_number=None,
+        status=None,
+        settings=None,
+    )
+
+    updated = await handler.run(update_data)
+
+    assert updated.phone_number == user.phone_number
+    assert updated.status == user.status
+    assert updated.settings.template_defaults == user.settings.template_defaults
+    assert uow_factory.uow.added == [updated]
+

@@ -1,8 +1,10 @@
 """Mapper functions to convert domain entities to API schemas."""
 
-from dataclasses import asdict
+from collections.abc import Mapping
+from dataclasses import asdict, is_dataclass
+from typing import Any
 
-from lykke.domain import value_objects
+from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
@@ -10,20 +12,19 @@ from lykke.domain.entities import (
     DayTemplateEntity,
     RoutineEntity,
     TaskEntity,
+    UserEntity,
 )
-from lykke.domain import data_objects
-from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import (
     ActionSchema,
     AlarmSchema,
     CalendarEntrySchema,
     CalendarSchema,
-    SyncSubscriptionSchema,
     DayContextSchema,
     DaySchema,
     DayTemplateSchema,
     PushSubscriptionSchema,
     RoutineSchema,
+    SyncSubscriptionSchema,
     TaskDefinitionSchema,
     TaskScheduleSchema,
     TaskSchema,
@@ -192,7 +193,17 @@ def map_calendar_to_schema(calendar: CalendarEntity) -> CalendarSchema:
 
 def map_user_to_schema(user: UserEntity) -> UserSchema:
     """Convert User entity to User schema."""
-    settings_schema = UserSettingsSchema(**asdict(user.settings))
+    settings_obj: Any = user.settings
+    if is_dataclass(settings_obj):
+        settings_dict = asdict(settings_obj)
+    elif hasattr(settings_obj, "model_dump"):
+        settings_dict = settings_obj.model_dump()  # type: ignore[call-arg]
+    elif isinstance(settings_obj, Mapping):
+        settings_dict = dict(settings_obj)
+    else:
+        settings_dict = {}
+
+    settings_schema = UserSettingsSchema(**settings_dict)
 
     return UserSchema(
         id=user.id,
