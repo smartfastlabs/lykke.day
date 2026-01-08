@@ -1,17 +1,25 @@
 """Unit tests for UpdateUserHandler."""
 
+# pylint: disable=import-error
+import pathlib
+import sys
+
 import pytest
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
 
 from lykke.application.commands.user import UpdateUserHandler
 from lykke.domain.entities import UserEntity
-from lykke.domain.value_objects import UserSetting, UserUpdateObject, UserStatus
+from lykke.domain.value_objects import UserSetting, UserStatus, UserUpdateObject
 
 
 class _FakeUserReadOnlyRepo:
     def __init__(self, user: UserEntity) -> None:
         self._user = user
 
-    async def get(self, user_id):
+    async def get(self, _user_id):
         return self._user
 
 
@@ -35,8 +43,9 @@ class _FakeReadOnlyRepos:
 class _FakeUoW:
     """Minimal UnitOfWork that just collects added entities."""
 
-    def __init__(self) -> None:
+    def __init__(self, user_ro_repo) -> None:
         self.added = []
+        self.user_ro_repo = user_ro_repo
 
     async def __aenter__(self):
         return self
@@ -49,10 +58,10 @@ class _FakeUoW:
 
 
 class _FakeUoWFactory:
-    def __init__(self) -> None:
-        self.uow = _FakeUoW()
+    def __init__(self, user_ro_repo) -> None:
+        self.uow = _FakeUoW(user_ro_repo)
 
-    def create(self, user_id):
+    def create(self, _user_id):
         return self.uow
 
 
@@ -64,7 +73,7 @@ async def test_update_user_updates_fields_and_settings():
         settings=UserSetting(template_defaults=["default"] * 7),
     )
     ro_repos = _FakeReadOnlyRepos(user)
-    uow_factory = _FakeUoWFactory()
+    uow_factory = _FakeUoWFactory(ro_repos.user_ro_repo)
     handler = UpdateUserHandler(ro_repos, uow_factory, user.id)
 
     update_data = UserUpdateObject(
@@ -89,7 +98,7 @@ async def test_update_user_skips_none_fields():
         settings=UserSetting(template_defaults=["default"] * 7),
     )
     ro_repos = _FakeReadOnlyRepos(user)
-    uow_factory = _FakeUoWFactory()
+    uow_factory = _FakeUoWFactory(ro_repos.user_ro_repo)
     handler = UpdateUserHandler(ro_repos, uow_factory, user.id)
 
     update_data = UserUpdateObject(
@@ -104,4 +113,3 @@ async def test_update_user_skips_none_fields():
     assert updated.status == user.status
     assert updated.settings.template_defaults == user.settings.template_defaults
     assert uow_factory.uow.added == [updated]
-

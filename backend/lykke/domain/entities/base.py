@@ -1,14 +1,11 @@
 from __future__ import annotations
 
+# pylint: disable=protected-access,no-member
 from dataclasses import asdict, dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 from uuid import UUID, uuid4
 
-from lykke.domain.events.base import (
-    DomainEvent,
-    EntityCreatedEvent,
-    EntityDeletedEvent,
-)
+from lykke.domain.events.base import DomainEvent, EntityCreatedEvent, EntityDeletedEvent
 
 if TYPE_CHECKING:
     from lykke.domain.events.base import EntityUpdatedEvent
@@ -30,7 +27,7 @@ UpdateEventType = TypeVar("UpdateEventType", bound=_EntityUpdatedEvent)
 class BaseObject:
     """Base class for all domain objects."""
 
-    def clone(self, **kwargs: dict[str, Any]) -> Self:
+    def clone(self, **kwargs: Any) -> Self:
         # Exclude init=False fields from replace() call
         # These fields cannot be specified in replace() but we don't want to include them anyway
         from dataclasses import fields
@@ -139,6 +136,11 @@ class BaseEntityObject(BaseObject, Generic[UpdateObjectType, UpdateEventType]):
         # clone() returns Self, which for BaseEntityObject is the entity type
         # At runtime, this is definitely a BaseEntityObject since self is one
         updated_entity = self.clone(**update_dict)
+        # Automatically refresh updated_at if present on entity
+        if hasattr(updated_entity, "updated_at"):
+            from datetime import UTC, datetime
+
+            updated_entity = updated_entity.clone(updated_at=datetime.now(UTC))
 
         # Record domain event with update object
         # The event class should accept update_object as a parameter
@@ -146,7 +148,12 @@ class BaseEntityObject(BaseObject, Generic[UpdateObjectType, UpdateEventType]):
             update_object=update_object,
         )
         # Type checker limitation: clone() returns Self from BaseObject, but we know it's BaseEntityObject
-        updated_entity._add_event(event)
+        from typing import cast
+
+        event_entity = cast(
+            "BaseEntityObject[UpdateObjectType, UpdateEventType]", updated_entity
+        )
+        event_entity._add_event(event)
 
         return updated_entity
 
