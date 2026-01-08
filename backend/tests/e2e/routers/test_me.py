@@ -20,8 +20,9 @@ async def test_get_current_user_profile(authenticated_client):
 async def test_update_current_user_profile(authenticated_client):
     client, user = await authenticated_client()
 
+    phone_number = f"123-456-{user.id.hex[:6]}"
     payload = {
-        "phone_number": "123-456",
+        "phone_number": phone_number,
         "status": "new-lead",
         "is_active": True,
         "is_superuser": False,
@@ -35,7 +36,7 @@ async def test_update_current_user_profile(authenticated_client):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["phone_number"] == "123-456"
+    assert data["phone_number"] == phone_number
     assert data["status"] == "new-lead"
     assert data["is_verified"] is True
     assert data["settings"]["template_defaults"] == ["m", "t", "w", "th", "f", "sa", "su"]
@@ -65,8 +66,9 @@ async def test_update_current_user_persists_settings_and_updates_timestamp(
     client, user = await authenticated_client()
     original_updated_at = user.updated_at
 
+    phone_number = f"999-888-7777-{user.id.hex[:6]}"
     payload = {
-        "phone_number": "999-888-7777",
+        "phone_number": phone_number,
         "settings": {
             "template_defaults": ["x", "x", "x", "x", "x", "x", "x"],
         },
@@ -82,7 +84,7 @@ async def test_update_current_user_persists_settings_and_updates_timestamp(
     updated_user = await repo.get(user.id)
 
     assert updated_user.settings.template_defaults == ["x"] * 7
-    assert updated_user.phone_number == "999-888-7777"
+    assert updated_user.phone_number == phone_number
     assert updated_user.updated_at is not None
     assert updated_user.updated_at != original_updated_at
 

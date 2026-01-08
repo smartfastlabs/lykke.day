@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from .. import value_objects
 from ..value_objects.update import UserUpdateObject
@@ -29,6 +29,11 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime | None = None
 
+    def __post_init__(self) -> None:
+        """Ensure settings maintains the UserSetting dataclass invariant."""
+        if isinstance(self.settings, dict):
+            self.settings = value_objects.UserSetting(**self.settings)
+
     def apply_update(
         self,
         update_object: UserUpdateObject,
@@ -47,9 +52,9 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
                 raise TypeError(msg)
             update_dict["settings"] = settings_val
 
-        updated_entity: UserEntity = self.clone(**update_dict)  # type: ignore[assignment]
-        updated_entity = updated_entity.clone(updated_at=datetime.now(UTC))  # type: ignore[assignment]
+        updated_entity: UserEntity = self.clone(**update_dict)
+        updated_entity = updated_entity.clone(updated_at=datetime.now(UTC))
 
         event = update_event_class(update_object=update_object)
-        updated_entity._domain_events.append(event)  # type: ignore[attr-defined]
+        updated_entity._add_event(event)
         return updated_entity

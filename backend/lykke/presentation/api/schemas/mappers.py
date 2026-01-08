@@ -191,10 +191,6 @@ def map_calendar_to_schema(calendar: CalendarEntity) -> CalendarSchema:
 
 def map_user_to_schema(user: UserEntity) -> UserSchema:
     """Convert User entity to User schema."""
-    if not isinstance(user.settings, value_objects.UserSetting):
-        msg = "user.settings must be a UserSetting"
-        raise TypeError(msg)
-
     settings_dict = asdict(user.settings)
 
     settings_schema = UserSettingsSchema(**settings_dict)
