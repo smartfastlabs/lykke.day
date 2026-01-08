@@ -12,6 +12,10 @@ from .calendar_entry_repository import (
     CalendarEntryRepositoryReadOnlyProtocol,
     CalendarEntryRepositoryReadWriteProtocol,
 )
+from .calendar_entry_series_repository import (
+    CalendarEntrySeriesRepositoryReadOnlyProtocol,
+    CalendarEntrySeriesRepositoryReadWriteProtocol,
+)
 from .calendar_repository import (
     CalendarRepositoryReadOnlyProtocol,
     CalendarRepositoryReadWriteProtocol,
@@ -51,6 +55,8 @@ __all__ = [
     "AuthTokenRepositoryReadWriteProtocol",
     "CalendarEntryRepositoryReadOnlyProtocol",
     "CalendarEntryRepositoryReadWriteProtocol",
+    "CalendarEntrySeriesRepositoryReadOnlyProtocol",
+    "CalendarEntrySeriesRepositoryReadWriteProtocol",
     "CalendarRepositoryReadOnlyProtocol",
     "CalendarRepositoryReadWriteProtocol",
     "DayRepositoryReadOnlyProtocol",

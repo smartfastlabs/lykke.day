@@ -1,6 +1,7 @@
 from .auth_token import AuthTokenRepository
 from .calendar import CalendarRepository
 from .calendar_entry import CalendarEntryRepository
+from .calendar_entry_series import CalendarEntrySeriesRepository
 from .day import DayRepository
 from .day_template import DayTemplateRepository
 from .push_subscription import PushSubscriptionRepository
@@ -12,6 +13,7 @@ from .user import UserRepository
 __all__ = [
     "AuthTokenRepository",
     "CalendarEntryRepository",
+    "CalendarEntrySeriesRepository",
     "CalendarRepository",
     "DayRepository",
     "DayTemplateRepository",

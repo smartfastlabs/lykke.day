@@ -6,6 +6,7 @@ from .repository import BaseRepository, UserScopedBaseRepository
 AuthTokenQuery = value_objects.AuthTokenQuery
 BaseQuery = value_objects.BaseQuery
 CalendarEntryQuery = value_objects.CalendarEntryQuery
+CalendarEntrySeriesQuery = value_objects.CalendarEntrySeriesQuery
 DateQuery = value_objects.DateQuery
 DayTemplateQuery = value_objects.DayTemplateQuery
 UserQuery = value_objects.UserQuery
@@ -14,6 +15,7 @@ __all__ = [
     "AuthTokenQuery",
     "BaseQuery",
     "CalendarEntryQuery",
+    "CalendarEntrySeriesQuery",
     "BaseRepository",
     "DateQuery",
     "DayTemplateQuery",

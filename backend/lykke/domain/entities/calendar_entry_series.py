@@ -30,8 +30,12 @@ class CalendarEntrySeriesEntity(BaseEntityObject):
         """Ensure deterministic ID based on platform source."""
         current_id = object.__getattribute__(self, "id")
         if current_id is None:
-            namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "lykke.calendar_entry_series")
-            name = f"{self.platform}:{self.platform_id}"
-            generated_id = uuid.uuid5(namespace, name)
+            generated_id = self.id_from_platform(self.platform, self.platform_id)
             object.__setattr__(self, "id", generated_id)
+
+    @classmethod
+    def id_from_platform(cls, platform: str, platform_id: str) -> UUID:
+        namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "lykke.calendar_entry_series")
+        name = f"{platform}:{platform_id}"
+        return uuid.uuid5(namespace, name)
 

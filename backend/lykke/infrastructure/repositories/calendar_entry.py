@@ -61,6 +61,7 @@ class CalendarEntryRepository(
             "date": date_for_user,
             "name": calendar_entry.name,
             "calendar_id": calendar_entry.calendar_id,
+            "calendar_entry_series_id": calendar_entry.calendar_entry_series_id,
             "platform_id": calendar_entry.platform_id,
             "platform": calendar_entry.platform,
             "status": calendar_entry.status,

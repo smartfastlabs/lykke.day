@@ -9,6 +9,7 @@ from gcsa.event import Event as GoogleEvent
 from lykke.core.config import settings
 from lykke.domain import value_objects
 from lykke.domain.entities.base import BaseEntityObject
+from lykke.domain.entities.calendar_entry_series import CalendarEntrySeriesEntity
 
 
 def get_datetime(
@@ -117,6 +118,18 @@ class CalendarEntryEntity(BaseEntityObject):
             else None
         )
 
+        series_platform_id = getattr(google_event, "recurring_event_id", None)
+        if series_platform_id is None:
+            recurrence_rules = getattr(google_event, "recurrence", None)
+            if recurrence_rules:
+                series_platform_id = google_event.id
+
+        calendar_entry_series_id = (
+            CalendarEntrySeriesEntity.id_from_platform("google", series_platform_id)
+            if series_platform_id
+            else None
+        )
+
         calendar_entry = cls(
             user_id=user_id,
             frequency=frequency,
@@ -131,5 +144,6 @@ class CalendarEntryEntity(BaseEntityObject):
             updated_at=google_event.updated.astimezone(UTC),
             timezone=event_timezone,
             category=category,
+            calendar_entry_series_id=calendar_entry_series_id,
         )
         return calendar_entry

@@ -38,14 +38,23 @@ const Row: Component<{
   subtitle: string;
   time?: string;
   frequency: TaskFrequency;
+  category?: string;
 }> = (props) => (
   <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
     <div class="flex-1 min-w-0">
       <h3 class="text-base font-medium text-gray-900 truncate">{props.name}</h3>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
         <span class="text-xs uppercase tracking-wide text-gray-400">
           {props.subtitle}
         </span>
+        <Show when={props.category}>
+          <>
+            <span class="text-xs text-gray-300">•</span>
+            <span class="text-[11px] uppercase tracking-wide text-gray-500">
+              {props.category}
+            </span>
+          </>
+        </Show>
         <span class="text-xs text-gray-300">•</span>
         <span class="text-xs text-gray-400">
           {props.frequency.toLowerCase().replace("_", " ")}
@@ -135,6 +144,7 @@ export const DayPreview: Component<PreviewProps> = (props) => {
               <Row
                 name={event.name}
                 subtitle="Event"
+                category={event.category ?? "OTHER"}
                 time={formatTime(event.starts_at)}
                 frequency={event.frequency}
               />
@@ -156,6 +166,7 @@ export const DayPreview: Component<PreviewProps> = (props) => {
               <Row
                 name={event.name}
                 subtitle="Event"
+                category={event.category ?? "OTHER"}
                 time={formatTime(event.starts_at)}
                 frequency={event.frequency}
               />

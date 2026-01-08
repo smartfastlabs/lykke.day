@@ -69,6 +69,13 @@ class CalendarEntryQuery(DateQuery):
     platform_id: str | None = None
 
 
+class CalendarEntrySeriesQuery(BaseQuery):
+    """Query class for CalendarEntrySeries entities."""
+
+    calendar_id: UUID | None = None
+    platform_id: str | None = None
+
+
 class DayQuery(DateQuery):
     """Query class for Day entities."""
 
