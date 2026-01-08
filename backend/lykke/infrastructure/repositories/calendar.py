@@ -4,7 +4,11 @@ from uuid import UUID
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntity
 from lykke.infrastructure.database.tables import calendars_tbl
-from lykke.infrastructure.repositories.base.utils import filter_init_false_fields
+from lykke.infrastructure.repositories.base.utils import (
+    ensure_datetimes_utc,
+    ensure_datetime_utc,
+    filter_init_false_fields,
+)
 from sqlalchemy.sql import Select
 
 from .base import UserScopedBaseRepository
@@ -69,8 +73,12 @@ class CalendarRepository(UserScopedBaseRepository[CalendarEntity, CalendarQuery]
 
         sync_subscription = data.get("sync_subscription")
         if sync_subscription:
+            sync_subscription["expiration"] = ensure_datetime_utc(
+                sync_subscription.get("expiration")
+            )
             data["sync_subscription"] = value_objects.SyncSubscription(
                 **sync_subscription
             )
 
+        data = ensure_datetimes_utc(data, keys=("last_sync_at",))
         return CalendarEntity(**data)

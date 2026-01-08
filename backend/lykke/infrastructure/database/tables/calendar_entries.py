@@ -22,6 +22,7 @@ class CalendarEntry(Base):
     starts_at = Column(DateTime, nullable=False)
     frequency = Column(String, nullable=False)  # TaskFrequency enum as string
     ends_at = Column(DateTime)
+    timezone = Column(String, nullable=True)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=False)
     actions = Column(JSONB)  # list[Action]

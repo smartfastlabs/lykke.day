@@ -1,6 +1,4 @@
 # ruff: noqa: I001
-import json
-import time
 from datetime import time as dt_time
 from typing import Any, ClassVar
 from uuid import UUID
@@ -8,6 +6,7 @@ from uuid import UUID
 from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import TaskEntity
 from lykke.infrastructure.database.tables import tasks_tbl
+from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
 from sqlalchemy.sql import Select
 
 from .base import DateQuery, UserScopedBaseRepository
@@ -104,47 +103,6 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, DateQuery]):
         if isinstance(data.get("schedule"), dict):
             # TaskSchedule is a Pydantic model
             schedule_dict = data["schedule"]
-            # region agent log
-            try:
-                with open(
-                    "/Users/toddsifleet/Desktop/planned.day/.cursor/debug.log",
-                    "a",
-                    encoding="utf-8",
-                ) as _f:
-                    _f.write(
-                        json.dumps(
-                            {
-                                "sessionId": "debug-session",
-                                "runId": "run1",
-                                "hypothesisId": "H1",
-                                "location": "repositories/task.py:row_to_entity",
-                                "message": "schedule raw before parse",
-                                "data": {
-                                    "start_time": str(schedule_dict.get("start_time")),
-                                    "end_time": str(schedule_dict.get("end_time")),
-                                    "available_time": str(
-                                        schedule_dict.get("available_time")
-                                    ),
-                                    "types": {
-                                        "start_time": type(
-                                            schedule_dict.get("start_time")
-                                        ).__name__,
-                                        "end_time": type(
-                                            schedule_dict.get("end_time")
-                                        ).__name__,
-                                        "available_time": type(
-                                            schedule_dict.get("available_time")
-                                        ).__name__,
-                                    },
-                                },
-                                "timestamp": int(time.time() * 1000),
-                            }
-                        )
-                        + "\n"
-                    )
-            except OSError:
-                pass
-            # endregion agent log
             # Convert enum strings back to enums
             if "timing_type" in schedule_dict and isinstance(
                 schedule_dict["timing_type"], str
@@ -161,43 +119,6 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, DateQuery]):
                         schedule_dict[time_field]
                     )
             data["schedule"] = value_objects.TaskSchedule.model_validate(schedule_dict)
-
-            # region agent log
-            try:
-                schedule: value_objects.TaskSchedule = data["schedule"]
-                with open(
-                    "/Users/toddsifleet/Desktop/planned.day/.cursor/debug.log",
-                    "a",
-                    encoding="utf-8",
-                ) as _f:
-                    _f.write(
-                        json.dumps(
-                            {
-                                "sessionId": "debug-session",
-                                "runId": "run1",
-                                "hypothesisId": "H1",
-                                "location": "repositories/task.py:row_to_entity",
-                                "message": "schedule after parse",
-                                "data": {
-                                    "start_time": schedule.start_time.isoformat()
-                                    if schedule.start_time
-                                    else None,
-                                    "end_time": schedule.end_time.isoformat()
-                                    if schedule.end_time
-                                    else None,
-                                    "available_time": schedule.available_time.isoformat()
-                                    if schedule.available_time
-                                    else None,
-                                    "timing_type": str(schedule.timing_type),
-                                },
-                                "timestamp": int(time.time() * 1000),
-                            }
-                        )
-                        + "\n"
-                    )
-            except OSError:
-                pass
-            # endregion agent log
 
         if data.get("tags") and isinstance(data["tags"], list):
             # Tags are stored as strings, convert to TaskTag enums
@@ -218,4 +139,5 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, DateQuery]):
             ]
 
         data = filter_init_false_fields(data, TaskEntity)
+        data = ensure_datetimes_utc(data, keys=("completed_at",))
         return TaskEntity(**data)

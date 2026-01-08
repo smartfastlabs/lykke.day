@@ -80,6 +80,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             An instance of the entity class.
         """
         from lykke.infrastructure.repositories.base.utils import (
+            ensure_datetimes_utc,
             filter_init_false_fields,
         )
 
@@ -91,6 +92,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
         # Normalize None values to [] for list-typed fields
         data = normalize_list_fields(data, cls.Object)
+
+        # Normalize datetimes to UTC to avoid naive values propagating
+        data = ensure_datetimes_utc(data)
 
         # Filter out fields with init=False (e.g., _domain_events)
         data = filter_init_false_fields(data, cls.Object)

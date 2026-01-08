@@ -11,6 +11,15 @@ from zoneinfo import ZoneInfo
 from lykke.core.config import settings
 
 
+def ensure_utc(dt: datetime.datetime | None) -> datetime.datetime | None:
+    """Return a datetime guaranteed to be timezone-aware in UTC."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
+
+
 def get_current_date() -> datetime.date:
     """Get current date in the configured timezone."""
     desired_timezone = ZoneInfo(settings.TIMEZONE)

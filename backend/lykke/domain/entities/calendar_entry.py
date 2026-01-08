@@ -6,6 +6,7 @@ from datetime import datetime, time
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+from lykke.core.config import settings
 from gcsa.event import Event as GoogleEvent
 from lykke.domain import value_objects
 from lykke.domain.entities.base import BaseEntityObject
@@ -75,14 +76,8 @@ class CalendarEntryEntity(BaseEntityObject):
     def date(self) -> dt_date:
         """Get the date for this calendar entry."""
         dt = self.starts_at
-        tz = self.timezone
-        if tz:
-            return dt.astimezone(ZoneInfo(tz)).date()
-        # If no timezone set and datetime is timezone-aware, use its timezone
-        if dt.tzinfo:
-            return dt.date()
-        # Fallback: assume UTC for naive datetimes
-        return dt.date()
+        user_timezone = ZoneInfo(settings.TIMEZONE)
+        return dt.astimezone(user_timezone).date()
 
     @classmethod
     def from_google(

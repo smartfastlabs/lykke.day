@@ -5,6 +5,7 @@ from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.infrastructure.database.tables import days_tbl
+from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
 
 from .base import BaseQuery, UserScopedBaseRepository
 
@@ -142,4 +143,5 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
         )
 
         data = filter_init_false_fields(data, DayEntity)
+        data = ensure_datetimes_utc(data, keys=("scheduled_at",))
         return DayEntity(**data)

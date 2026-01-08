@@ -1,9 +1,11 @@
 """Utility functions for repository operations."""
 
 from dataclasses import fields, is_dataclass
-from typing import Any, get_origin, get_type_hints
+from datetime import datetime
+from typing import Any, Iterable, get_origin, get_type_hints
 
 import pydantic
+from lykke.core.utils.dates import ensure_utc
 
 
 def filter_init_false_fields(data: dict[str, Any], entity_class: type[Any]) -> dict[str, Any]:
@@ -86,5 +88,26 @@ def normalize_list_fields(data: dict[str, Any], model: type[Any]) -> dict[str, A
                 # This is a list type, normalize None to []
                 normalized[field_name] = []
     
+    return normalized
+
+
+def ensure_datetime_utc(value: datetime | None) -> datetime | None:
+    """Normalize a datetime to UTC with tzinfo set."""
+    return ensure_utc(value)
+
+
+def ensure_datetimes_utc(
+    data: dict[str, Any],
+    keys: Iterable[str] | None = None,
+) -> dict[str, Any]:
+    """Set tzinfo=UTC on datetimes, optionally limiting to specific keys."""
+    normalized = dict(data)
+    if keys is None:
+        keys = normalized.keys()
+
+    for key in keys:
+        value = normalized.get(key)
+        if isinstance(value, datetime):
+            normalized[key] = ensure_datetime_utc(value)
     return normalized
 

@@ -5,6 +5,7 @@ from typing import Any
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.database.tables import users_tbl
+from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
 from sqlalchemy.sql import Select
 
 from .base import BaseRepository
@@ -93,4 +94,5 @@ class UserRepository(BaseRepository[UserEntity, value_objects.UserQuery]):
         )
 
         data = filter_init_false_fields(data, UserEntity)
+        data = ensure_datetimes_utc(data, keys=("created_at", "updated_at"))
         return UserEntity(**data)
