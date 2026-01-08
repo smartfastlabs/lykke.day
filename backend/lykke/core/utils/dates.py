@@ -11,10 +11,17 @@ from zoneinfo import ZoneInfo
 from lykke.core.config import settings
 
 
-def ensure_utc(dt: datetime.datetime | None) -> datetime.datetime | None:
+def ensure_utc(dt: datetime.datetime | str | None) -> datetime.datetime | None:
     """Return a datetime guaranteed to be timezone-aware in UTC."""
     if dt is None:
         return None
+    if isinstance(dt, str):
+        normalized = dt.replace("Z", "+00:00")
+        try:
+            parsed = datetime.datetime.fromisoformat(normalized)
+        except ValueError:
+            return None
+        dt = parsed
     if dt.tzinfo is None:
         return dt.replace(tzinfo=UTC)
     return dt.astimezone(UTC)
