@@ -12,6 +12,8 @@ from lykke.application.repositories import (
     AuthTokenRepositoryReadWriteProtocol,
     CalendarEntryRepositoryReadOnlyProtocol,
     CalendarEntryRepositoryReadWriteProtocol,
+    CalendarEntrySeriesRepositoryReadOnlyProtocol,
+    CalendarEntrySeriesRepositoryReadWriteProtocol,
     CalendarRepositoryReadOnlyProtocol,
     CalendarRepositoryReadWriteProtocol,
     DayRepositoryReadOnlyProtocol,
@@ -38,6 +40,7 @@ from lykke.core.exceptions import BadRequestError, NotFoundError
 from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
+    CalendarEntrySeriesEntity,
     DayEntity,
     DayTemplateEntity,
     RoutineEntity,
@@ -61,6 +64,7 @@ from lykke.infrastructure.database.transaction import (
 from lykke.infrastructure.repositories import (
     AuthTokenRepository,
     CalendarEntryRepository,
+    CalendarEntrySeriesRepository,
     CalendarRepository,
     DayRepository,
     DayTemplateRepository,
@@ -91,6 +95,7 @@ class SqlAlchemyUnitOfWork:
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
+    calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
@@ -115,6 +120,9 @@ class SqlAlchemyUnitOfWork:
         self._auth_token_rw_repo: AuthTokenRepositoryReadWriteProtocol | None = None
         self._calendar_entry_rw_repo: (
             CalendarEntryRepositoryReadWriteProtocol | None
+        ) = None
+        self._calendar_entry_series_rw_repo: (
+            CalendarEntrySeriesRepositoryReadWriteProtocol | None
         ) = None
         self._calendar_rw_repo: CalendarRepositoryReadWriteProtocol | None = None
         self._day_rw_repo: DayRepositoryReadWriteProtocol | None = None
@@ -201,6 +209,16 @@ class SqlAlchemyUnitOfWork:
             "CalendarEntryRepositoryReadOnlyProtocol", calendar_entry_repo
         )
         self._calendar_entry_rw_repo = calendar_entry_repo
+
+        calendar_entry_series_repo = cast(
+            "CalendarEntrySeriesRepositoryReadWriteProtocol",
+            CalendarEntrySeriesRepository(user_id=self.user_id),
+        )
+        self.calendar_entry_series_ro_repo = cast(
+            "CalendarEntrySeriesRepositoryReadOnlyProtocol",
+            calendar_entry_series_repo,
+        )
+        self._calendar_entry_series_rw_repo = calendar_entry_series_repo
 
         push_subscription_repo = cast(
             "PushSubscriptionRepositoryReadWriteProtocol",
@@ -383,6 +401,8 @@ class SqlAlchemyUnitOfWork:
             return self._day_template_rw_repo
         elif entity_type == CalendarEntryEntity:
             return self._calendar_entry_rw_repo
+        elif entity_type == CalendarEntrySeriesEntity:
+            return self._calendar_entry_series_rw_repo
         elif entity_type == CalendarEntity:
             return self._calendar_rw_repo
         elif entity_type == TaskEntity:
@@ -421,6 +441,8 @@ class SqlAlchemyUnitOfWork:
             return self.day_template_ro_repo
         elif entity_type == CalendarEntryEntity:
             return self.calendar_entry_ro_repo
+        elif entity_type == CalendarEntrySeriesEntity:
+            return self.calendar_entry_series_ro_repo
         elif entity_type == CalendarEntity:
             return self.calendar_ro_repo
         elif entity_type == TaskEntity:
@@ -590,6 +612,12 @@ class SqlAlchemyReadOnlyRepositories:
             CalendarEntryRepository(user_id=self.user_id),
         )
         self.calendar_entry_ro_repo = calendar_entry_repo
+
+        calendar_entry_series_repo = cast(
+            "CalendarEntrySeriesRepositoryReadOnlyProtocol",
+            CalendarEntrySeriesRepository(user_id=self.user_id),
+        )
+        self.calendar_entry_series_ro_repo = calendar_entry_series_repo
 
         push_subscription_repo = cast(
             "PushSubscriptionRepositoryReadOnlyProtocol",

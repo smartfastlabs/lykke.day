@@ -14,6 +14,7 @@ from uuid import UUID
 from lykke.application.repositories import (
     AuthTokenRepositoryReadOnlyProtocol,
     CalendarEntryRepositoryReadOnlyProtocol,
+    CalendarEntrySeriesRepositoryReadOnlyProtocol,
     CalendarRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
@@ -48,6 +49,7 @@ class UnitOfWorkProtocol(Protocol):
     # Read-only repository properties (for reading entities)
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
@@ -167,6 +169,7 @@ class ReadOnlyRepositories(Protocol):
     # Read-only repository properties
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol

@@ -4,7 +4,11 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
 
 from lykke.domain import data_objects, value_objects
-from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.domain.entities import (
+    CalendarEntity,
+    CalendarEntryEntity,
+    CalendarEntrySeriesEntity,
+)
 
 if TYPE_CHECKING:
     from google_auth_oauthlib.flow import Flow
@@ -19,8 +23,13 @@ class GoogleCalendarGatewayProtocol(Protocol):
         lookback: datetime,
         token: data_objects.AuthToken,
         sync_token: str | None = None,
-    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity], str | None]:
-        """Load calendar entries from Google Calendar (full or incremental).
+    ) -> tuple[
+        list[CalendarEntryEntity],
+        list[CalendarEntryEntity],
+        list[CalendarEntrySeriesEntity],
+        str | None,
+    ]:
+        """Load calendar entries and series from Google Calendar (full or incremental).
 
         Args:
             calendar: The calendar to load entries from.
@@ -30,7 +39,7 @@ class GoogleCalendarGatewayProtocol(Protocol):
                 only changes since the token will be returned.
 
         Returns:
-            Tuple of (new/updated entries, deleted entries, next sync token).
+            Tuple of (new/updated entries, deleted entries, series, next sync token).
         """
         ...
 

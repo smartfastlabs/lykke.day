@@ -3,6 +3,7 @@ import json
 import re
 from datetime import UTC, datetime
 from typing import Any, cast
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from google.auth.exceptions import RefreshError
@@ -14,7 +15,11 @@ from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProt
 from lykke.core.config import settings
 from lykke.core.exceptions import TokenExpiredError
 from lykke.domain import data_objects, value_objects
-from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.domain.entities import (
+    CalendarEntity,
+    CalendarEntryEntity,
+    CalendarEntrySeriesEntity,
+)
 
 # Google OAuth Flow
 CLIENT_SECRET_FILE = ".credentials.json"
@@ -147,17 +152,25 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         event: dict[str, Any],
         frequency_cache: dict[str, value_objects.TaskFrequency],
         recurrence_lookup: Any,
-    ) -> CalendarEntryEntity:
-        """Convert a Google API event dict to CalendarEntryEntity."""
+    ) -> tuple[CalendarEntryEntity, CalendarEntrySeriesEntity | None]:
+        """Convert a Google API event dict to CalendarEntryEntity and optional series."""
         status = event.get("status", "confirmed")
         recurrence = event.get("recurrence")
         recurring_event_id = event.get("recurringEventId")
+        series_platform_id = recurring_event_id or (
+            event.get("id") if recurrence else None
+        )
         frequency = self._determine_frequency(
             calendar_id=calendar.platform_id,
             recurrence=recurrence,
             recurring_event_id=recurring_event_id,
             recurrence_lookup=recurrence_lookup,
             frequency_cache=frequency_cache,
+        )
+        series_id = (
+            CalendarEntrySeriesEntity.id_from_platform("google", series_platform_id)
+            if series_platform_id
+            else None
         )
 
         start_dt = self._parse_datetime(
@@ -184,9 +197,31 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             else datetime.now(UTC)
         )
 
-        return CalendarEntryEntity(
+        series_entity = None
+        if series_id and series_platform_id:
+            series_entity = CalendarEntrySeriesEntity(
+                id=series_id,
+                user_id=calendar.user_id,
+                calendar_id=calendar.id,
+                name=event.get("summary", "(no title)"),
+                platform_id=series_platform_id,
+                platform="google",
+                frequency=frequency,
+                event_category=calendar.default_event_category,
+                recurrence=recurrence or [],
+                starts_at=start_dt,
+                ends_at=end_dt,
+                created_at=created_dt,
+                updated_at=updated_dt,
+            )
+
+        entry_category = (
+            series_entity.event_category if series_entity and series_entity.event_category else calendar.default_event_category
+        )
+        entry = CalendarEntryEntity(
             user_id=calendar.user_id,
             calendar_id=calendar.id,
+            calendar_entry_series_id=series_id,
             platform_id=event.get("id", "NA"),
             platform="google",
             status=status,
@@ -197,8 +232,10 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             created_at=created_dt,
             updated_at=updated_dt,
             timezone=event.get("start", {}).get("timeZone", settings.TIMEZONE),
-            category=calendar.default_event_category,
+            category=entry_category,
         )
+
+        return entry, series_entity
 
     def _determine_frequency(
         self,
@@ -239,8 +276,13 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         lookback: datetime,
         token: data_objects.AuthToken,
         sync_token: str | None = None,
-    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity], str | None]:
-        """Load calendar entries from Google Calendar (full or incremental).
+    ) -> tuple[
+        list[CalendarEntryEntity],
+        list[CalendarEntryEntity],
+        list[CalendarEntrySeriesEntity],
+        str | None,
+    ]:
+        """Load calendar entries and series from Google Calendar (full or incremental).
 
         Args:
             calendar: The calendar to load entries from.
@@ -248,7 +290,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             token: The authentication token.
 
         Returns:
-            Tuple of (new/updated entries, deleted entries, next sync token).
+            Tuple of (new/updated entries, deleted entries, series, next sync token).
         """
         try:
             return await asyncio.to_thread(
@@ -267,7 +309,12 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         lookback: datetime,
         token: data_objects.AuthToken,
         sync_token: str | None,
-    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity], str | None]:
+    ) -> tuple[
+        list[CalendarEntryEntity],
+        list[CalendarEntryEntity],
+        list[CalendarEntrySeriesEntity],
+        str | None,
+    ]:
         """Fetch events using Google API with support for sync tokens."""
         credentials = token.google_credentials()
         if credentials.expired and credentials.refresh_token:
@@ -276,6 +323,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         service = build("calendar", "v3", credentials=credentials)
         events: list[CalendarEntryEntity] = []
         deleted: list[CalendarEntryEntity] = []
+        series_entities: dict[UUID, CalendarEntrySeriesEntity] = {}
         frequency_cache: dict[str, value_objects.TaskFrequency] = {}
         next_sync_token: str | None = None
         page_token: str | None = None
@@ -299,12 +347,19 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             recurrence_lookup = service
 
             for event in response.get("items", []):
-                entry = self._google_event_to_entity(
+                entry, series_entity = self._google_event_to_entity(
                     calendar=calendar,
                     event=event,
                     frequency_cache=frequency_cache,
                     recurrence_lookup=recurrence_lookup,
                 )
+                if series_entity:
+                    existing_series = series_entities.get(series_entity.id)
+                    if (
+                        existing_series is None
+                        or series_entity.updated_at > existing_series.updated_at
+                    ):
+                        series_entities[series_entity.id] = series_entity
                 if entry.status == "cancelled":
                     deleted.append(entry)
                 else:
@@ -315,7 +370,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             if not page_token:
                 break
 
-        return events, deleted, next_sync_token
+        return events, deleted, list(series_entities.values()), next_sync_token
 
     def _subscribe_to_calendar_sync(
         self,

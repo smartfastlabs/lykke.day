@@ -5,6 +5,7 @@ from uuid import UUID
 
 from googleapiclient.errors import HttpError
 from loguru import logger
+
 from lykke.application.commands.base import BaseCommandHandler
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.unit_of_work import (
@@ -13,9 +14,13 @@ from lykke.application.unit_of_work import (
     UnitOfWorkProtocol,
 )
 from lykke.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
-from lykke.core.exceptions import TokenExpiredError
+from lykke.core.exceptions import NotFoundError, TokenExpiredError
 from lykke.domain import data_objects, value_objects
-from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.domain.entities import (
+    CalendarEntity,
+    CalendarEntryEntity,
+    CalendarEntrySeriesEntity,
+)
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
 
@@ -78,6 +83,7 @@ class SyncCalendarHandler(BaseCommandHandler):
         (
             fetched_entries,
             fetched_deleted_entries,
+            fetched_series,
             next_sync_token,
         ) = await self._load_calendar_events(calendar, lookback, sync_token, token)
 
@@ -85,6 +91,13 @@ class SyncCalendarHandler(BaseCommandHandler):
         filtered_entries = [
             entry for entry in fetched_entries if entry.starts_at <= max_date
         ]
+
+        for series in fetched_series:
+            try:
+                await uow.calendar_entry_series_ro_repo.get(series.id)
+            except NotFoundError:
+                series.create()
+                uow.add(series)
 
         for entry in filtered_entries:
             if entry.status == "cancelled":
@@ -121,7 +134,12 @@ class SyncCalendarHandler(BaseCommandHandler):
         lookback: datetime,
         sync_token: str | None,
         token: data_objects.AuthToken,
-    ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity], str | None]:
+    ) -> tuple[
+        list[CalendarEntryEntity],
+        list[CalendarEntryEntity],
+        list[CalendarEntrySeriesEntity],
+        str | None,
+    ]:
         """Load events from the provider, handling sync token expiration."""
         if calendar.platform != "google":
             raise NotImplementedError(

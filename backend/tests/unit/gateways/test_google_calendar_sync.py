@@ -6,10 +6,11 @@ from uuid import uuid4
 
 import pytest
 from lykke.application.commands.calendar.sync_calendar import SyncCalendarHandler
-from lykke.domain import data_objects
+from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 from lykke.domain.value_objects import TaskFrequency
 from lykke.domain.value_objects.sync import SyncSubscription
+from lykke.infrastructure.gateways.google import GoogleCalendarGateway
 
 
 @pytest.fixture
@@ -71,6 +72,14 @@ def mock_calendar_entry_repo():
 
 
 @pytest.fixture
+def mock_calendar_entry_series_repo():
+    """Mock calendar entry series repository."""
+    repo = MagicMock()
+    repo.get = AsyncMock()
+    return repo
+
+
+@pytest.fixture
 def mock_calendar_repo():
     """Mock calendar repository."""
     repo = MagicMock()
@@ -101,6 +110,7 @@ def mock_uow(
     mock_calendar_repo,
     mock_auth_token_repo,
     mock_calendar_entry_repo,
+    mock_calendar_entry_series_repo,
 ):
     """Mock UnitOfWork for sync tests."""
     mock_calendar_repo.get = AsyncMock(return_value=test_calendar)
@@ -111,6 +121,7 @@ def mock_uow(
         calendar_ro_repo = mock_calendar_repo
         auth_token_ro_repo = mock_auth_token_repo
         calendar_entry_ro_repo = mock_calendar_entry_repo
+        calendar_entry_series_ro_repo = mock_calendar_entry_series_repo
         day_ro_repo = None
         day_template_ro_repo = None
         push_subscription_ro_repo = None
@@ -141,13 +152,19 @@ def mock_uow(
 
 
 @pytest.fixture
-def mock_ro_repos(mock_calendar_repo, mock_auth_token_repo, mock_calendar_entry_repo):
+def mock_ro_repos(
+    mock_calendar_repo,
+    mock_auth_token_repo,
+    mock_calendar_entry_repo,
+    mock_calendar_entry_series_repo,
+):
     """Mock read-only repositories with required attributes."""
 
     class DummyRORepos:
         def __init__(self) -> None:
             self.auth_token_ro_repo = mock_auth_token_repo
             self.calendar_entry_ro_repo = mock_calendar_entry_repo
+            self.calendar_entry_series_ro_repo = mock_calendar_entry_series_repo
             self.calendar_ro_repo = mock_calendar_repo
             self.day_ro_repo = None
             self.day_template_ro_repo = None
@@ -197,6 +214,7 @@ def test_sync_calendar_changes_with_new_events(
 
     mock_google_gateway.load_calendar_events.return_value = (
         [new_event],
+        [],
         [],
         "new-sync-token",
     )
@@ -255,6 +273,7 @@ def test_sync_calendar_changes_with_updated_events(
     mock_google_gateway.load_calendar_events.return_value = (
         [updated_event],
         [],
+        [],
         "new-sync-token",
     )
     mock_calendar_entry_repo.search_one_or_none.return_value = existing_event
@@ -301,6 +320,7 @@ def test_sync_calendar_changes_with_deleted_events(
     mock_google_gateway.load_calendar_events.return_value = (
         [cancelled_event],
         [],
+        [],
         "new-sync-token",
     )
     mock_calendar_entry_repo.search_one_or_none.return_value = existing_event
@@ -333,6 +353,7 @@ def test_sync_calendar_changes_filters_far_future_events(
     mock_google_gateway.load_calendar_events.return_value = (
         [far_future_event],
         [],
+        [],
         "new-sync-token",
     )
 
@@ -364,6 +385,7 @@ def test_sync_calendar_changes_handles_missing_deleted_events(
     mock_google_gateway.load_calendar_events.return_value = (
         [cancelled_event],
         [],
+        [],
         "new-sync-token",
     )
     mock_calendar_entry_repo.search_one_or_none.return_value = None
@@ -382,5 +404,45 @@ def test_sync_calendar_changes_updates_sync_token(
     mock_google_gateway.load_calendar_events.return_value = (
         [],
         [],
+        [],
         "brand-new-sync-token",
     )
+
+
+def test_google_event_conversion_includes_series(test_user_id):
+    """Ensure Google events produce series metadata."""
+    calendar = CalendarEntity(
+        id=uuid4(),
+        user_id=test_user_id,
+        name="Test Calendar",
+        platform="google",
+        platform_id="calendar-123",
+        auth_token_id=uuid4(),
+        default_event_category=value_objects.EventCategory.WORK,
+    )
+    gateway = GoogleCalendarGateway()
+    event = {
+        "id": "event-1",
+        "summary": "Weekly Standup",
+        "status": "confirmed",
+        "recurrence": ["RRULE:FREQ=WEEKLY;BYDAY=MO"],
+        "recurringEventId": "series-abc",
+        "start": {"dateTime": "2025-01-05T10:00:00Z", "timeZone": "UTC"},
+        "end": {"dateTime": "2025-01-05T11:00:00Z", "timeZone": "UTC"},
+        "created": "2025-01-01T00:00:00Z",
+        "updated": "2025-01-02T00:00:00Z",
+    }
+
+    entry, series = gateway._google_event_to_entity(
+        calendar=calendar,
+        event=event,
+        frequency_cache={},
+        recurrence_lookup=MagicMock(),
+    )
+
+    assert entry.calendar_entry_series_id is not None
+    assert series is not None
+    assert entry.calendar_entry_series_id == series.id
+    assert series.recurrence == ["RRULE:FREQ=WEEKLY;BYDAY=MO"]
+    assert entry.category == value_objects.EventCategory.WORK
+    assert not hasattr(series, "timezone")

@@ -110,5 +110,3 @@ class TaskEntity(BaseEntityObject):
         old_status = self.status
         self.status = value_objects.TaskStatus.READY
         return old_status
-        self.status = value_objects.TaskStatus.READY
-        return old_status

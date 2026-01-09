@@ -21,7 +21,6 @@ class CalendarEntrySeriesEntity(BaseEntityObject):
     recurrence: list[str] = field(default_factory=list)
     starts_at: datetime | None = None
     ends_at: datetime | None = None
-    timezone: str | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
@@ -38,4 +37,3 @@ class CalendarEntrySeriesEntity(BaseEntityObject):
         namespace = uuid.uuid5(uuid.NAMESPACE_DNS, "lykke.calendar_entry_series")
         name = f"{platform}:{platform_id}"
         return uuid.uuid5(namespace, name)
-
