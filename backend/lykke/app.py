@@ -8,9 +8,11 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
+
 from lykke.application.events import register_all_handlers
 from lykke.core.config import settings
 from lykke.core.exceptions import BaseError
+from lykke.core.observability import init_sentry_fastapi
 from lykke.core.utils import youtube
 from lykke.infrastructure.auth import UserCreate, UserRead, auth_backend, fastapi_users
 from lykke.infrastructure.unit_of_work import (
@@ -18,7 +20,6 @@ from lykke.infrastructure.unit_of_work import (
     SqlAlchemyUnitOfWorkFactory,
 )
 from lykke.presentation.api.routers import router
-from lykke.core.observability import init_sentry_fastapi
 
 
 def is_testing() -> bool:
@@ -80,13 +81,13 @@ if settings.ENVIRONMENT == "development":
     )
 else:
     origins = [
-        "lykke.day",
+        "https://lykke.day",
     ]
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE"],
+        allow_methods=["*"],
         allow_headers=["*"],
     )
 
