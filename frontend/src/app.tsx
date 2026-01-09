@@ -15,6 +15,8 @@ import EarlyAccess from "@/pages/early-access";
 import Landing from "@/pages/landing";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
+import FAQ from "@/pages/faq";
+import Books from "@/pages/books";
 import Home from "@/pages/me";
 import DayView from "@/pages/me/day/preview";
 import NavPage from "@/pages/me/navigation/links";
@@ -94,6 +96,8 @@ export default function App() {
         <Route path="/" component={Landing} />
         <Route path="/privacy" component={Privacy} />
         <Route path="/terms" component={Terms} />
+        <Route path="/faq" component={FAQ} />
+        <Route path="/books" component={Books} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
         <Route path="/forgot-password" component={ForgotPassword} />

@@ -9,6 +9,12 @@ const Footer: Component = () => {
         </p>
         <div class="flex items-center gap-6">
           <a
+            href="/faq"
+            class="text-stone-400 text-sm hover:text-stone-600 transition-colors"
+          >
+            FAQ
+          </a>
+          <a
             href="/privacy"
             class="text-stone-400 text-sm hover:text-stone-600 transition-colors"
           >
