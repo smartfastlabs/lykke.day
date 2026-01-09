@@ -25,7 +25,7 @@ class SearchTaskDefinitionsHandler(BaseQueryHandler):
         """
         if search_query is not None:
             result = await self.task_definition_ro_repo.paged_search(search_query)
-            return value_objects.PagedQueryResponse(**result.__dict__)
+            return result
         else:
             items = await self.task_definition_ro_repo.all()
             total = len(items)

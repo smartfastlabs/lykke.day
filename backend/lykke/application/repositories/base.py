@@ -1,22 +1,11 @@
 """Base types for repository protocol mixins."""
 
-from dataclasses import dataclass
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Any, Protocol, TypeVar
 from uuid import UUID
 
+from lykke.domain import value_objects
+
 T = TypeVar("T")
-
-
-@dataclass(kw_only=True)
-class PagedSearchResult(Generic[T]):
-    """Paginated search result wrapper."""
-
-    items: list[T]
-    total: int
-    limit: int
-    offset: int
-    has_next: bool
-    has_previous: bool
 
 
 class ReadOnlyRepositoryProtocol(Protocol[T]):
@@ -41,7 +30,7 @@ class ReadOnlyRepositoryProtocol(Protocol[T]):
         """Search for objects based on a query object."""
         ...
 
-    async def paged_search(self, query: object) -> PagedSearchResult[T]:
+    async def paged_search(self, query: object) -> value_objects.PagedQueryResponse[T]:
         """Search for objects based on a query object and return pagination metadata."""
         ...
 
@@ -93,7 +82,7 @@ class ReadWriteRepositoryProtocol(Protocol[T]):
         """Search for objects based on a query object."""
         ...
 
-    async def paged_search(self, query: object) -> PagedSearchResult[T]:
+    async def paged_search(self, query: object) -> value_objects.PagedQueryResponse[T]:
         """Search for objects based on a query object and return pagination metadata."""
         ...
 

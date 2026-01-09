@@ -18,9 +18,7 @@ class SearchCalendarEntrySeriesHandler(BaseQueryHandler):
         """Search calendar entry series with pagination."""
         if search_query is not None:
             result = await self.calendar_entry_series_ro_repo.paged_search(search_query)
-            return value_objects.PagedQueryResponse(
-                **result.__dict__,
-            )
+            return result
 
         items = await self.calendar_entry_series_ro_repo.all()
         total = len(items)

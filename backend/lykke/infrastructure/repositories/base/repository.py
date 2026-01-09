@@ -8,7 +8,6 @@ from contextlib import asynccontextmanager
 from typing import Any, ClassVar, Generic, TypeVar
 from uuid import UUID
 
-from lykke.application.repositories.base import PagedSearchResult
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities.base import BaseEntityObject
@@ -307,7 +306,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
             return [type(self).row_to_entity(dict(row)) for row in rows]
 
-    async def paged_search(self, query: QueryType) -> PagedSearchResult[ObjectType]:
+    async def paged_search(
+        self, query: QueryType
+    ) -> value_objects.PagedQueryResponse[ObjectType]:
         """Search for objects with pagination metadata."""
         items = await self.search(self._strip_pagination(query))
         limit = query.limit or 50
@@ -317,7 +318,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         total = len(items)
         paginated_items = items[start:end]
 
-        return PagedSearchResult(
+        return value_objects.PagedQueryResponse(
             items=paginated_items,
             total=total,
             limit=limit,
