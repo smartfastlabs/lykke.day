@@ -41,6 +41,9 @@ class CalendarEntryRepository(
         if query.platform_id is not None:
             stmt = stmt.where(self.table.c.platform_id == query.platform_id)
 
+        if query.platform_ids:
+            stmt = stmt.where(self.table.c.platform_id.in_(query.platform_ids))
+
         return stmt
 
     @staticmethod

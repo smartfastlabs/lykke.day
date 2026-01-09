@@ -139,7 +139,7 @@ async def test_multiple_operations_in_single_transaction(
     assert result_day.status == value_objects.DayStatus.SCHEDULED
 
     # Find the task
-    tasks = await task_repo.search(value_objects.DateQuery(date=test_date))
+    tasks = await task_repo.search(value_objects.TaskQuery(date=test_date))
     assert len(tasks) == 1
     assert tasks[0].name == "Test Task"
 

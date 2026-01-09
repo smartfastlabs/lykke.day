@@ -54,7 +54,7 @@ from lykke.domain.events.base import (
     EntityDeletedEvent,
     EntityUpdatedEvent,
 )
-from lykke.domain import data_objects
+from lykke.domain import data_objects, value_objects
 from lykke.infrastructure.database import get_engine
 from lykke.infrastructure.database.transaction import (
     get_transaction_connection,
@@ -379,6 +379,22 @@ class SqlAlchemyUnitOfWork:
         # Dispatch domain events after successful commit
         # This ensures events are only dispatched if the transaction succeeded
         await self._dispatch_domain_events(events)
+
+    async def bulk_delete_calendar_entries(
+        self, query: value_objects.CalendarEntryQuery
+    ) -> None:
+        """Bulk delete calendar entries matching the query."""
+        if self._calendar_entry_rw_repo is None:
+            raise RuntimeError("Calendar entry repository not initialized")
+
+        await self._calendar_entry_rw_repo.bulk_delete(query)
+
+    async def bulk_delete_tasks(self, query: value_objects.TaskQuery) -> None:
+        """Bulk delete tasks matching the query."""
+        if self._task_rw_repo is None:
+            raise RuntimeError("Task repository not initialized")
+
+        await self._task_rw_repo.bulk_delete(query)
 
     def _get_repository_for_entity(self, entity: BaseEntityObject) -> Any:
         """Get the appropriate read-write repository for an entity type.

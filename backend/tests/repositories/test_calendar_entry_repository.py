@@ -128,6 +128,17 @@ async def test_bulk_delete_ignores_pagination(test_date, calendar_entry_repo):
 
 
 @pytest.mark.asyncio
+async def test_bulk_delete_by_platform_ids(test_date, calendar_entry_repo):
+    await calendar_entry_repo.bulk_delete(
+        CalendarEntryQuery(platform_ids=["test-id", "test-id-2"])
+    )
+
+    results = await calendar_entry_repo.search(CalendarEntryQuery(date=test_date))
+
+    assert len(results) == 0
+
+
+@pytest.mark.asyncio
 async def test_put(test_calendar_entry, test_user, clear_repos):
     # clear_repos clears everything, so we need to ensure the user exists again
     user_repo = UserRepository()

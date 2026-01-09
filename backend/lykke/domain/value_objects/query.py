@@ -67,6 +67,7 @@ class CalendarEntryQuery(DateQuery):
 
     calendar_id: UUID | None = None
     platform_id: str | None = None
+    platform_ids: list[str] | None = None
 
 
 class CalendarEntrySeriesQuery(BaseQuery):
@@ -90,6 +91,9 @@ class RoutineQuery(BaseQuery):
 
 class TaskQuery(DateQuery):
     """Query class for Task entities."""
+
+    ids: list[UUID] | None = None
+    routine_ids: list[UUID] | None = None
 
 
 class TaskDefinitionQuery(BaseQuery):

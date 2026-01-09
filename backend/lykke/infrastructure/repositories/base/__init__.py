@@ -9,6 +9,7 @@ CalendarEntryQuery = value_objects.CalendarEntryQuery
 CalendarEntrySeriesQuery = value_objects.CalendarEntrySeriesQuery
 DateQuery = value_objects.DateQuery
 DayTemplateQuery = value_objects.DayTemplateQuery
+TaskQuery = value_objects.TaskQuery
 UserQuery = value_objects.UserQuery
 
 __all__ = [
@@ -19,6 +20,7 @@ __all__ = [
     "BaseRepository",
     "DateQuery",
     "DayTemplateQuery",
+    "TaskQuery",
     "UserQuery",
     "UserScopedBaseRepository",
 ]

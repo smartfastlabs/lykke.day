@@ -92,6 +92,15 @@ class SyncCalendarHandler(BaseCommandHandler):
             entry for entry in fetched_entries if entry.starts_at <= max_date
         ]
 
+        cancelled_platform_ids = [
+            entry.platform_id
+            for entry in filtered_entries
+            if entry.status == "cancelled"
+        ]
+        entries_to_upsert = [
+            entry for entry in filtered_entries if entry.status != "cancelled"
+        ]
+
         for series in fetched_series:
             try:
                 await uow.calendar_entry_series_ro_repo.get(series.id)
@@ -99,34 +108,27 @@ class SyncCalendarHandler(BaseCommandHandler):
                 series.create()
                 uow.add(series)
 
-        for entry in filtered_entries:
-            if entry.status == "cancelled":
-                await self._delete_if_exists(entry, uow)
-            else:
-                entry.create()
-                uow.add(entry)
+        for entry in entries_to_upsert:
+            entry.create()
+            uow.add(entry)
 
-        for entry in fetched_deleted_entries:
-            await self._delete_if_exists(entry, uow)
+        platform_ids_to_delete = [
+            pid
+            for pid in (
+                cancelled_platform_ids
+                + [entry.platform_id for entry in fetched_deleted_entries]
+            )
+            if pid
+        ]
+        if platform_ids_to_delete:
+            unique_platform_ids = list(dict.fromkeys(platform_ids_to_delete))
+            await uow.bulk_delete_calendar_entries(
+                value_objects.CalendarEntryQuery(platform_ids=unique_platform_ids)
+            )
 
         updated_calendar = self._apply_calendar_update(calendar, next_sync_token)
         uow.add(updated_calendar)
         return updated_calendar
-
-    async def _delete_if_exists(
-        self, entry: CalendarEntryEntity, uow: UnitOfWorkProtocol
-    ) -> None:
-        """Delete the entry if present, otherwise log and skip."""
-        existing = await uow.calendar_entry_ro_repo.search_one_or_none(
-            value_objects.CalendarEntryQuery(platform_id=entry.platform_id)
-        )
-        if existing:
-            await uow.delete(existing)
-        else:
-            logger.info(
-                "Skip delete for event without match",
-                event_id=entry.platform_id,
-            )
 
     async def _load_calendar_events(
         self,

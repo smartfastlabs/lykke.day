@@ -24,6 +24,7 @@ from lykke.application.repositories import (
     TaskRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
 )
+from lykke.domain import value_objects
 from lykke.domain.entities.base import BaseEntityObject
 
 
@@ -136,6 +137,16 @@ class UnitOfWorkProtocol(Protocol):
 
     async def rollback(self) -> None:
         """Rollback the current transaction."""
+        ...
+
+    async def bulk_delete_calendar_entries(
+        self, query: value_objects.CalendarEntryQuery
+    ) -> None:
+        """Bulk delete calendar entries matching query filters."""
+        ...
+
+    async def bulk_delete_tasks(self, query: value_objects.TaskQuery) -> None:
+        """Bulk delete tasks matching query filters."""
         ...
 
 

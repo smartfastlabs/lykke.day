@@ -1,6 +1,6 @@
 """Command to schedule a day with tasks from routines."""
 
-from datetime import date
+from datetime import date as dt_date
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler
@@ -24,7 +24,7 @@ class ScheduleDayHandler(BaseCommandHandler):
         self.preview_day_handler = preview_day_handler
 
     async def schedule_day(
-        self, date: date, template_id: UUID | None = None
+        self, date: dt_date, template_id: UUID | None = None
     ) -> value_objects.DayContext:
         """Schedule a day with tasks from routines.
 
@@ -37,12 +37,7 @@ class ScheduleDayHandler(BaseCommandHandler):
         """
         async with self.new_uow() as uow:
             # Delete existing tasks for this date
-            # Get all tasks for the date and mark them for deletion
-            existing_tasks = await uow.task_ro_repo.search(
-                value_objects.DateQuery(date=date)
-            )
-            for task in existing_tasks:
-                await uow.delete(task)
+            await uow.bulk_delete_tasks(value_objects.TaskQuery(date=date))
 
             # Get preview of what the day would look like
             preview_result = await self.preview_day_handler.preview_day(

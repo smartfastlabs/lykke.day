@@ -9,13 +9,13 @@ from lykke.infrastructure.database.tables import tasks_tbl
 from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
 from sqlalchemy.sql import Select
 
-from .base import DateQuery, UserScopedBaseRepository
+from .base import UserScopedBaseRepository
 
 
-class TaskRepository(UserScopedBaseRepository[TaskEntity, DateQuery]):
+class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuery]):
     Object = TaskEntity
     table = tasks_tbl
-    QueryClass = DateQuery
+    QueryClass = value_objects.TaskQuery
     # Exclude 'date' - it's a database-only field for querying (computed from scheduled_date)
     excluded_row_fields: ClassVar[set[str]] = {"date"}
 
@@ -23,13 +23,19 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, DateQuery]):
         """Initialize TaskRepository with user scoping."""
         super().__init__(user_id=user_id)
 
-    def build_query(self, query: DateQuery) -> Select[tuple]:
+    def build_query(self, query: value_objects.TaskQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
         stmt = super().build_query(query)
 
         # Add date filtering if specified
         if query.date is not None:
             stmt = stmt.where(self.table.c.date == query.date)
+
+        if query.ids:
+            stmt = stmt.where(self.table.c.id.in_(query.ids))
+
+        if query.routine_ids:
+            stmt = stmt.where(self.table.c.routine_id.in_(query.routine_ids))
 
         return stmt
 

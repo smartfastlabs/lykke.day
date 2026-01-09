@@ -9,7 +9,7 @@ from lykke.core.exceptions import NotFoundError
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain.entities import TaskEntity
 from lykke.domain import data_objects
-from lykke.domain.value_objects.query import DateQuery
+from lykke.domain.value_objects.query import TaskQuery
 from lykke.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
@@ -151,7 +151,7 @@ async def test_all(task_repo, test_user, test_date, test_date_tomorrow):
 
 @pytest.mark.asyncio
 async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow):
-    """Test searching tasks with DateQuery."""
+    """Test searching tasks with TaskQuery."""
     task1 = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
@@ -176,7 +176,7 @@ async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow)
     await task_repo.put(task2)
 
     # Search for specific date
-    results = await task_repo.search(DateQuery(date=test_date))
+    results = await task_repo.search(TaskQuery(date=test_date))
 
     assert len(results) == 1
     assert results[0].scheduled_date == test_date
