@@ -100,6 +100,40 @@ async def test_create_routine(authenticated_client):
 
 
 @pytest.mark.asyncio
+async def test_create_routine_with_tasks(authenticated_client):
+    """Create routine and ensure attached tasks are persisted."""
+    client, user = await authenticated_client()
+
+    task_definition_id = str(uuid4())
+    routine_data = {
+        "user_id": str(user.id),
+        "name": "Morning",
+        "category": "HOUSE",
+        "description": "With tasks",
+        "routine_schedule": {"frequency": "DAILY"},
+        "tasks": [
+            {
+                "task_definition_id": task_definition_id,
+                "name": "Make bed",
+                "schedule": {
+                    "timing_type": "FIXED_TIME",
+                    "start_time": "07:30:00",
+                },
+            }
+        ],
+    }
+
+    response = client.post("/routines/", json=routine_data)
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["tasks"]
+    assert body["tasks"][0]["task_definition_id"] == task_definition_id
+    assert body["tasks"][0]["name"] == "Make bed"
+    assert body["tasks"][0]["schedule"]["start_time"] == "07:30:00"
+
+
+@pytest.mark.asyncio
 async def test_update_routine(authenticated_client):
     """Test updating a routine via router."""
     client, user = await authenticated_client()

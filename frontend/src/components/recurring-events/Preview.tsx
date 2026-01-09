@@ -1,6 +1,7 @@
 import { Component, Show } from "solid-js";
 
 import { CalendarEntrySeries } from "@/types/api";
+import { formatRecurrenceInfo } from "@/components/recurring-events/recurrenceFormat";
 
 interface RecurringEventSeriesPreviewProps {
   series: CalendarEntrySeries;
@@ -15,6 +16,7 @@ const formatDateTime = (value?: string | null): string => {
 const RecurringEventSeriesPreview: Component<RecurringEventSeriesPreviewProps> = (
   props
 ) => {
+  const occurrence = formatRecurrenceInfo(props.series);
   return (
     <div class="flex flex-col items-center justify-center px-6 py-8">
       <div class="w-full max-w-md space-y-6">
@@ -29,7 +31,6 @@ const RecurringEventSeriesPreview: Component<RecurringEventSeriesPreviewProps> =
               <label class="text-sm font-medium text-neutral-500">Platform</label>
               <div class="mt-1 text-base text-neutral-900">
                 {props.series.platform}
-                {props.series.platform_id ? ` • ${props.series.platform_id}` : ""}
               </div>
             </div>
             <div>
@@ -43,6 +44,10 @@ const RecurringEventSeriesPreview: Component<RecurringEventSeriesPreviewProps> =
               <div class="mt-1 text-base text-neutral-900">
                 {props.series.frequency}
               </div>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-neutral-500">Occurs</label>
+              <div class="mt-1 text-base text-neutral-900">{occurrence}</div>
             </div>
             <div>
               <label class="text-sm font-medium text-neutral-500">Event Category</label>
@@ -62,16 +67,6 @@ const RecurringEventSeriesPreview: Component<RecurringEventSeriesPreviewProps> =
                 {formatDateTime(props.series.ends_at)}
               </div>
             </div>
-            <Show when={props.series.recurrence && props.series.recurrence?.length}>
-              {(recurrence) => (
-                <div>
-                  <label class="text-sm font-medium text-neutral-500">Recurrence</label>
-                  <div class="mt-1 text-xs text-neutral-900 break-words">
-                    {recurrence()?.join(", ")}
-                  </div>
-                </div>
-              )}
-            </Show>
           </div>
         </div>
       </div>

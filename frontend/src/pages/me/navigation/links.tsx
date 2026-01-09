@@ -7,6 +7,7 @@ import {
   faBell,
   faHouse,
   faMugHot,
+  faCompass,
 } from "@fortawesome/free-solid-svg-icons";
 
 import Page from "@/components/shared/layout/Page";
@@ -15,6 +16,7 @@ import { alarmAPI } from "@/utils/api";
 
 const navItems: LinkItem[] = [
   { label: "Home", icon: faHouse, url: "/me" },
+  { label: "Overview", icon: faCompass, url: "/me/overview" },
   { label: "Tomorrow", icon: faCalendarPlus, url: "/me/day/tomorrow" },
   { label: "Notifications", icon: faBell, url: "/me/notifications" },
   { label: "Calendar", icon: faCalendar, url: "/me/nav/calendar" },

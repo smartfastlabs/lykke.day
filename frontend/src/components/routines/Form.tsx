@@ -1,5 +1,5 @@
-import { Component, createSignal } from "solid-js";
-import { Routine, RoutineSchedule, TaskCategory } from "@/types/api";
+import { Component, JSX, Show, createEffect, createSignal } from "solid-js";
+import { Routine, RoutineSchedule, TaskCategory, RoutineTask } from "@/types/api";
 import { ALL_TASK_CATEGORIES } from "@/types/api/constants";
 import {
   FormError,
@@ -12,9 +12,12 @@ import RoutineScheduleForm from "./RoutineScheduleForm";
 
 interface FormProps {
   onSubmit: (routine: Partial<Routine>) => Promise<void>;
+  onChange?: (routine: Partial<Routine>) => void;
   isLoading?: boolean;
   error?: string;
   initialData?: Routine;
+  tasks?: RoutineTask[];
+  beforeSubmit?: JSX.Element;
 }
 
 const RoutineForm: Component<FormProps> = (props) => {
@@ -33,18 +36,21 @@ const RoutineForm: Component<FormProps> = (props) => {
     }
   );
 
+  const buildRoutine = (): Partial<Routine> => ({
+    name: name().trim(),
+    description: description().trim() || "",
+    category: category(),
+    routine_schedule: routineSchedule(),
+    tasks: props.tasks ?? props.initialData?.tasks ?? [],
+  });
+
+  createEffect(() => {
+    props.onChange?.(buildRoutine());
+  });
+
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
-
-    const routine: Partial<Routine> = {
-      name: name().trim(),
-      description: description().trim() || "",
-      category: category(),
-      routine_schedule: routineSchedule(),
-      tasks: props.initialData?.tasks ?? [],
-    };
-
-    await props.onSubmit(routine);
+    await props.onSubmit(buildRoutine());
   };
 
   const isUpdate = !!props.initialData;
@@ -82,6 +88,8 @@ const RoutineForm: Component<FormProps> = (props) => {
       />
 
       <FormError error={props.error} />
+
+      <Show when={props.beforeSubmit}>{props.beforeSubmit}</Show>
 
       <SubmitButton
         isLoading={props.isLoading}

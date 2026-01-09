@@ -38,6 +38,7 @@ import RecurringEventsPage from "@/pages/me/settings/recurring-events/index";
 import RecurringEventSeriesDetailPage from "@/pages/me/settings/recurring-events/detail";
 import CalendarRecurringEventsPage from "@/pages/me/settings/calendars/recurring-events";
 import Welcome from "@/pages/me/welcome";
+import OverviewPage from "@/pages/me/overview";
 import NotFound from "@/pages/not-found";
 
 import "@/utils/icons";
@@ -106,6 +107,7 @@ export default function App() {
 
         <Route path="/me" component={AuthGuard}>
           <Route path="/" component={Home} />
+          <Route path="/overview" component={OverviewPage} />
           <Route path="/welcome" component={Welcome} />
           <Route path="/day/:date" component={DayView} />
           <Route path="/nav/calendar" component={CalendarPage} />
