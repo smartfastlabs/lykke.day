@@ -34,6 +34,7 @@ from .task import (
 from .update import (
     BaseUpdateObject,
     CalendarUpdateObject,
+    CalendarEntrySeriesUpdateObject,
     DayTemplateUpdateObject,
     DayUpdateObject,
     RoutineUpdateObject,
@@ -54,6 +55,7 @@ __all__ = [
     "BaseValueObject",
     "CalendarSubscription",
     "CalendarUpdateObject",
+    "CalendarEntrySeriesUpdateObject",
     "DayContext",
     "DayMode",
     "DayStatus",

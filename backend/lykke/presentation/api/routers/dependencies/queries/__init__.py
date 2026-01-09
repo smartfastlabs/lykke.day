@@ -4,6 +4,10 @@ from .calendar import (
     get_get_calendar_handler,
     get_list_calendars_handler,
 )
+from .calendar_entry_series import (
+    get_get_calendar_entry_series_handler,
+    get_list_calendar_entry_series_handler,
+)
 from .calendar_entry import get_list_calendar_entries_handler
 from .day_template import (
     get_get_day_template_handler,
@@ -37,6 +41,9 @@ __all__ = [
     "get_list_push_subscriptions_handler",
     # CalendarEntry
     "get_list_calendar_entries_handler",
+    # CalendarEntrySeries
+    "get_get_calendar_entry_series_handler",
+    "get_list_calendar_entry_series_handler",
     # Task
     "get_list_tasks_handler",
 ]

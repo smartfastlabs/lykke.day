@@ -128,6 +128,21 @@ export interface Calendar {
   sync_subscription_id?: string | null;
   sync_enabled?: boolean;
 }
+export interface CalendarEntrySeries {
+  id?: string;
+  user_id: string;
+  calendar_id: string;
+  name: string;
+  platform_id: string;
+  platform: string;
+  frequency: TaskFrequency;
+  event_category?: EventCategory | null;
+  recurrence?: string[];
+  starts_at?: string | null;
+  ends_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
 export interface Day {
   id?: string;
   user_id: string;

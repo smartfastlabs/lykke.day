@@ -81,6 +81,14 @@ class CalendarUpdateObject(BaseUpdateObject):
 
 
 @dataclass(kw_only=True)
+class CalendarEntrySeriesUpdateObject(BaseUpdateObject):
+    """Update object for CalendarEntrySeries entity."""
+
+    name: str | None = None
+    event_category: EventCategory | None = None
+
+
+@dataclass(kw_only=True)
 class DayUpdateObject(BaseUpdateObject):
     """Update object for Day entity."""
 

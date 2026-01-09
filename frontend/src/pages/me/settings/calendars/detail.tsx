@@ -127,6 +127,13 @@ const CalendarDetailPage: Component = () => {
               </div>
             </div>
           }
+          additionalActionButtons={[
+            {
+              label: "Recurring Events",
+              onClick: () =>
+                navigate(`/me/settings/calendars/${current().id}/recurring-events`),
+            },
+          ]}
           onDelete={handleDelete}
         />
       )}

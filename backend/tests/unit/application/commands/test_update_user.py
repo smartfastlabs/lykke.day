@@ -30,6 +30,7 @@ class _FakeReadOnlyRepos:
         fake = object()
         self.auth_token_ro_repo = fake
         self.calendar_entry_ro_repo = fake
+        self.calendar_entry_series_ro_repo = fake
         self.calendar_ro_repo = fake
         self.day_ro_repo = fake
         self.day_template_ro_repo = fake

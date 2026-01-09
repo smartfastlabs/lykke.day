@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from . import (
     calendar_entries,
+    calendar_entry_series,
     calendars,
     day_templates,
     days,
@@ -57,6 +58,11 @@ router.include_router(
     calendar_entries.router,
     prefix="/calendar-entries",
     tags=["calendar-entries"],
+)
+router.include_router(
+    calendar_entry_series.router,
+    prefix="/calendar-entry-series",
+    tags=["calendar-entry-series"],
 )
 router.include_router(
     push_subscriptions.router,

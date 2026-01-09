@@ -34,6 +34,9 @@ import NewRoutinePage from "@/pages/me/settings/routines/new";
 import RoutineDetailPage from "@/pages/me/settings/routines/detail";
 import CalendarsPage from "@/pages/me/settings/calendars/index";
 import CalendarDetailPage from "@/pages/me/settings/calendars/detail";
+import RecurringEventsPage from "@/pages/me/settings/recurring-events/index";
+import RecurringEventSeriesDetailPage from "@/pages/me/settings/recurring-events/detail";
+import CalendarRecurringEventsPage from "@/pages/me/settings/calendars/recurring-events";
 import Welcome from "@/pages/me/welcome";
 import NotFound from "@/pages/not-found";
 
@@ -140,8 +143,20 @@ export default function App() {
           <Route path="/settings/routines/:id" component={RoutineDetailPage} />
           <Route path="/settings/calendars" component={CalendarsPage} />
           <Route
+            path="/settings/calendars/:id/recurring-events"
+            component={CalendarRecurringEventsPage}
+          />
+          <Route
             path="/settings/calendars/:id"
             component={CalendarDetailPage}
+          />
+          <Route
+            path="/settings/recurring-events"
+            component={RecurringEventsPage}
+          />
+          <Route
+            path="/settings/recurring-events/:id"
+            component={RecurringEventSeriesDetailPage}
           />
         </Route>
 

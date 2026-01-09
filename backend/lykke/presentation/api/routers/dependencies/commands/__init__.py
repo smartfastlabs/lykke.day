@@ -5,6 +5,7 @@ from .calendar import (
     get_delete_calendar_handler,
     get_update_calendar_handler,
 )
+from .calendar_entry_series import get_update_calendar_entry_series_handler
 from .day_template import (
     get_create_day_template_handler,
     get_delete_day_template_handler,
@@ -32,6 +33,8 @@ __all__ = [
     "get_create_calendar_handler",
     "get_update_calendar_handler",
     "get_delete_calendar_handler",
+    # CalendarEntrySeries
+    "get_update_calendar_entry_series_handler",
     # TaskDefinition
     "get_create_task_definition_handler",
     "get_update_task_definition_handler",

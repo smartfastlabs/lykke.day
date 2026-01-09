@@ -5,6 +5,7 @@ import {
   faUser,
   faCalendar,
   faListCheck,
+  faCalendarDays,
 } from "@fortawesome/free-solid-svg-icons";
 
 import Page from "@/components/shared/layout/Page";
@@ -20,6 +21,11 @@ const settingsItems: LinkItem[] = [
   { label: "Routines", icon: faRepeat, url: "/me/settings/routines" },
   { label: "Profile", icon: faUser, url: "/me/settings/profile" },
   { label: "Calendars", icon: faCalendar, url: "/me/settings/calendars" },
+  {
+    label: "Recurring Events",
+    icon: faCalendarDays,
+    url: "/me/settings/recurring-events",
+  },
 ];
 
 const SettingsPage: Component = () => {

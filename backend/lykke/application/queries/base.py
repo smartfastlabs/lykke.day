@@ -36,6 +36,7 @@ class BaseQueryHandler:
         # Explicitly expose read-only repositories
         self.auth_token_ro_repo = ro_repos.auth_token_ro_repo
         self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
+        self.calendar_entry_series_ro_repo = ro_repos.calendar_entry_series_ro_repo
         self.calendar_ro_repo = ro_repos.calendar_ro_repo
         self.day_ro_repo = ro_repos.day_ro_repo
         self.day_template_ro_repo = ro_repos.day_template_ro_repo

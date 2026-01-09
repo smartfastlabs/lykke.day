@@ -8,6 +8,10 @@ from .calendar import (
     SyncSubscriptionSchema,
     CalendarUpdateSchema,
 )
+from .calendar_entry_series import (
+    CalendarEntrySeriesSchema,
+    CalendarEntrySeriesUpdateSchema,
+)
 from .calendar_entry import CalendarEntrySchema
 from .day import DaySchema, DayUpdateSchema
 from .day_context import DayContextSchema
@@ -44,6 +48,8 @@ CalendarSchema.model_rebuild()
 SyncSubscriptionSchema.model_rebuild()
 CalendarEntrySchema.model_rebuild()
 CalendarUpdateSchema.model_rebuild()
+CalendarEntrySeriesSchema.model_rebuild()
+CalendarEntrySeriesUpdateSchema.model_rebuild()
 DaySchema.model_rebuild()
 DayTemplateCreateSchema.model_rebuild()
 DayTemplateRoutineCreateSchema.model_rebuild()
@@ -66,10 +72,12 @@ __all__ = [
     "ActionSchema",
     "AlarmSchema",
     "CalendarEntrySchema",
+    "CalendarEntrySeriesSchema",
     "CalendarCreateSchema",
     "CalendarSchema",
     "SyncSubscriptionSchema",
     "CalendarUpdateSchema",
+    "CalendarEntrySeriesUpdateSchema",
     "DayContextSchema",
     "DaySchema",
     "DayTemplateCreateSchema",

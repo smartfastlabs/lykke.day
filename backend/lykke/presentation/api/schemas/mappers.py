@@ -6,6 +6,7 @@ from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
+    CalendarEntrySeriesEntity,
     DayEntity,
     DayTemplateEntity,
     RoutineEntity,
@@ -16,6 +17,7 @@ from lykke.presentation.api.schemas import (
     ActionSchema,
     AlarmSchema,
     CalendarEntrySchema,
+    CalendarEntrySeriesSchema,
     CalendarSchema,
     DayContextSchema,
     DaySchema,
@@ -154,6 +156,27 @@ def map_day_context_to_schema(
         day=day_schema,
         calendar_entries=calendar_entry_schemas,
         tasks=task_schemas,
+    )
+
+
+def map_calendar_entry_series_to_schema(
+    series: CalendarEntrySeriesEntity,
+) -> CalendarEntrySeriesSchema:
+    """Convert CalendarEntrySeries entity to schema."""
+    return CalendarEntrySeriesSchema(
+        id=series.id,
+        user_id=series.user_id,
+        calendar_id=series.calendar_id,
+        name=series.name,
+        platform_id=series.platform_id,
+        platform=series.platform,
+        frequency=series.frequency,
+        event_category=series.event_category,
+        recurrence=series.recurrence or [],
+        starts_at=series.starts_at,
+        ends_at=series.ends_at,
+        created_at=series.created_at,
+        updated_at=series.updated_at,
     )
 
 
