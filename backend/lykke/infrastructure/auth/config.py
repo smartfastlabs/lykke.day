@@ -11,6 +11,8 @@ from fastapi_users.authentication import AuthenticationBackend, CookieTransport
 from fastapi_users.authentication.strategy import JWTStrategy
 from fastapi_users.exceptions import UserAlreadyExists
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
 from lykke.core.config import settings
 from lykke.domain import value_objects
 from lykke.domain.entities.day_template import DayTemplateEntity
@@ -18,18 +20,20 @@ from lykke.infrastructure.auth.schemas import UserCreate
 from lykke.infrastructure.database.tables import User
 from lykke.infrastructure.database.utils import get_engine
 from lykke.infrastructure.repositories import DayTemplateRepository
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 # JWT secret - using the same secret as session was using
 SECRET = settings.SESSION_SECRET
 
 # Cookie transport configuration
+cookie_domain = "lykke.day" if settings.ENVIRONMENT == "production" else None
+
 cookie_transport = CookieTransport(
     cookie_name="lykke_auth",
     cookie_max_age=3600 * 24 * 30,  # 30 days
     cookie_httponly=True,
-    cookie_secure=settings.ENVIRONMENT != "development",
+    cookie_secure=settings.ENVIRONMENT == "production",
     cookie_samesite="lax",
+    cookie_domain=cookie_domain,
 )
 
 
