@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from typing import Any, ClassVar, Generic, TypeVar
 from uuid import UUID
 
+from lykke.application.repositories.base import PagedSearchResult
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities.base import BaseEntityObject
@@ -163,6 +164,13 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             row["user_id"] = self.user_id
         return row
 
+    def _strip_pagination(self, query: QueryType) -> QueryType:
+        """Return a copy of the query with pagination removed."""
+        query_without_paging = query.model_copy()
+        query_without_paging.limit = None
+        query_without_paging.offset = None
+        return query_without_paging
+
     def _get_engine(self) -> AsyncEngine:
         """Get the database engine."""
         return get_engine()
@@ -290,7 +298,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         """Backward-compatible alias for search_one_or_none."""
         return await self.search_one_or_none(query)
 
-    async def search_query(self, query: QueryType) -> list[ObjectType]:
+    async def search(self, query: QueryType) -> list[ObjectType]:
         """Search for objects based on the provided query object."""
         async with self._get_connection(for_write=False) as conn:
             stmt = self.build_query(query)
@@ -298,6 +306,25 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             rows = result.mappings().all()
 
             return [type(self).row_to_entity(dict(row)) for row in rows]
+
+    async def paged_search(self, query: QueryType) -> PagedSearchResult[ObjectType]:
+        """Search for objects with pagination metadata."""
+        items = await self.search(self._strip_pagination(query))
+        limit = query.limit or 50
+        offset = query.offset or 0
+        start = offset
+        end = start + limit
+        total = len(items)
+        paginated_items = items[start:end]
+
+        return PagedSearchResult(
+            items=paginated_items,
+            total=total,
+            limit=limit,
+            offset=offset,
+            has_next=end < total,
+            has_previous=start > 0,
+        )
 
     async def all(self) -> list[ObjectType]:
         """Get all objects.
@@ -396,13 +423,16 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
         User scoping is automatically applied via build_query.
         """
+        await self.bulk_delete(query)
+
+    async def bulk_delete(self, query: QueryType) -> None:
+        """Delete all objects matching the query, ignoring pagination."""
+        query_without_paging = self._strip_pagination(query)
+
         async with self._get_connection(for_write=True) as conn:
-            # Build the select query to get the where clause
-            select_stmt = self.build_query(query)
-            # Remove limit/offset/order_by from delete (only keep where clause)
+            select_stmt = self.build_query(query_without_paging)
             where_clause = getattr(select_stmt, "whereclause", None)
 
-            # Build delete statement
             stmt = delete(self.table)
             if where_clause is not None:
                 stmt = stmt.where(where_clause)

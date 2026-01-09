@@ -19,23 +19,8 @@ class SearchCalendarEntrySeriesHandler(BaseQueryHandler):
     ) -> value_objects.PagedQueryResponse[CalendarEntrySeriesEntity]:
         """Search calendar entry series with pagination."""
         if search_query is not None:
-            items = await self.calendar_entry_series_ro_repo.search_query(
-                search_query
-            )
-            limit = search_query.limit or 50
-            offset = search_query.offset or 0
-            total = len(items)
-            start = offset
-            end = start + limit
-            paginated_items = items[start:end]
-
             return value_objects.PagedQueryResponse(
-                items=paginated_items,
-                total=total,
-                limit=limit,
-                offset=offset,
-                has_next=end < total,
-                has_previous=start > 0,
+                **self.calendar_entry_series_ro_repo.paged_search.__annotations__,  # type: ignore[misc]
             )
 
         items = await self.calendar_entry_series_ro_repo.all()
