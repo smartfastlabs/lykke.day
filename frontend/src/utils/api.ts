@@ -391,6 +391,10 @@ export const calendarAPI = {
     fetchData<Calendar>(`/api/calendars/${id}/subscribe`, { method: "DELETE" }),
   resync: (id: string): Promise<Calendar> =>
     fetchData<Calendar>(`/api/calendars/${id}/resync`, { method: "POST" }),
+  resetSubscriptions: (): Promise<Calendar[]> =>
+    fetchData<Calendar[]>("/api/calendars/reset-subscriptions", {
+      method: "POST",
+    }),
 };
 
 export const calendarEntrySeriesAPI = {

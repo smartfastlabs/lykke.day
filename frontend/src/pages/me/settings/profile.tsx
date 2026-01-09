@@ -5,7 +5,8 @@ import ProfileForm from "@/components/profile/Form";
 import ProfilePreview from "@/components/profile/Preview";
 import DetailPage from "@/components/shared/DetailPage";
 import { useAuth } from "@/providers/auth";
-import { authAPI } from "@/utils/api";
+import { globalNotifications } from "@/providers/notifications";
+import { authAPI, calendarAPI } from "@/utils/api";
 import type { UserProfileUpdate } from "@/types/api/user";
 
 const ProfileSettingsPage: Component = () => {
@@ -13,6 +14,7 @@ const ProfileSettingsPage: Component = () => {
   const { user, refetch } = useAuth();
   const [error, setError] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
+  const [isResettingCalendars, setIsResettingCalendars] = createSignal(false);
 
   const handleUpdate = async (payload: UserProfileUpdate) => {
     setError("");
@@ -26,6 +28,26 @@ const ProfileSettingsPage: Component = () => {
       setError(message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResetCalendars = async () => {
+    if (isResettingCalendars()) return;
+
+    setIsResettingCalendars(true);
+    try {
+      await calendarAPI.resetSubscriptions();
+      globalNotifications.addSuccess(
+        "Calendar entries cleared and subscriptions refreshed"
+      );
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to refresh calendar subscriptions";
+      globalNotifications.addError(message);
+    } finally {
+      setIsResettingCalendars(false);
     }
   };
 
@@ -51,6 +73,14 @@ const ProfileSettingsPage: Component = () => {
               </div>
             </div>
           }
+          additionalActionButtons={[
+            {
+              label: isResettingCalendars()
+                ? "Resetting..."
+                : "Reset calendar sync",
+              onClick: handleResetCalendars,
+            },
+          ]}
         />
       )}
     </Show>

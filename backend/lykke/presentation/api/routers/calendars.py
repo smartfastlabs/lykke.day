@@ -8,6 +8,7 @@ from lykke.application.commands.calendar import (
     CreateCalendarHandler,
     DeleteCalendarHandler,
     ResyncCalendarHandler,
+    ResetCalendarDataHandler,
     SubscribeCalendarHandler,
     UnsubscribeCalendarHandler,
     UpdateCalendarHandler,
@@ -30,6 +31,7 @@ from .dependencies.commands.calendar import (
     get_create_calendar_handler,
     get_delete_calendar_handler,
     get_resync_calendar_handler,
+    get_reset_calendar_data_handler,
     get_subscribe_calendar_handler,
     get_unsubscribe_calendar_handler,
     get_update_calendar_handler,
@@ -106,6 +108,24 @@ async def resync_calendar(
     calendar = await get_calendar_handler.run(calendar_id=uuid)
     updated = await resync_calendar_handler.resync(calendar=calendar)
     return map_calendar_to_schema(updated)
+
+
+@router.post("/reset-subscriptions", response_model=list[CalendarSchema])
+async def reset_calendar_subscriptions(
+    reset_calendar_data_handler: Annotated[
+        ResetCalendarDataHandler, Depends(get_reset_calendar_data_handler)
+    ],
+) -> list[CalendarSchema]:
+    """Delete all calendar data and refresh subscriptions for the user."""
+    updated_calendars = await reset_calendar_data_handler.reset()
+
+    for calendar in updated_calendars:
+        await sync_single_calendar_task.kiq(
+            user_id=calendar.user_id,
+            calendar_id=calendar.id,
+        )
+
+    return [map_calendar_to_schema(calendar) for calendar in updated_calendars]
 
 
 @router.get("/", response_model=value_objects.PagedQueryResponse[CalendarSchema])
