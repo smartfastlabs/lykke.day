@@ -20,8 +20,12 @@ const isAllDayEvent = (event: Event): boolean => {
   return diffHours >= 23;
 };
 
+const formatCategory = (category?: Event["category"]): string =>
+  (category ?? "OTHER").toLowerCase().replace("_", " ");
+
 const AllDayEventItem: Component<{ event: Event }> = (props) => {
   const icon = () => getTypeIcon("EVENT");
+  const categoryLabel = () => formatCategory(props.event.category);
 
   return (
     <div class="group px-5 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
@@ -35,7 +39,14 @@ const AllDayEventItem: Component<{ event: Event }> = (props) => {
               <Icon icon={icon()!} />
             </Show>
           </span>
-          <span class="text-sm text-gray-700 truncate">{props.event.name}</span>
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-sm text-gray-700 truncate">
+              {props.event.name}
+            </span>
+            <span class="text-[10px] font-medium uppercase tracking-wide text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
+              {categoryLabel()}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -44,6 +55,7 @@ const AllDayEventItem: Component<{ event: Event }> = (props) => {
 
 const TimedEventItem: Component<{ event: Event }> = (props) => {
   const icon = () => getTypeIcon("EVENT");
+  const categoryLabel = () => formatCategory(props.event.category);
 
   return (
     <div class="group px-5 py-3.5 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
@@ -59,9 +71,14 @@ const TimedEventItem: Component<{ event: Event }> = (props) => {
               <Icon icon={icon()!} />
             </Show>
           </span>
-          <span class="text-sm font-medium text-gray-800 truncate">
-            {props.event.name}
-          </span>
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-sm font-medium text-gray-800 truncate">
+              {props.event.name}
+            </span>
+            <span class="text-[10px] font-medium uppercase tracking-wide text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
+              {categoryLabel()}
+            </span>
+          </div>
         </div>
         <Show when={props.event.people?.length}>
           <span class="text-xs text-gray-400 truncate max-w-24">
