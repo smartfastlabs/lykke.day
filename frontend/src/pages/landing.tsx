@@ -190,6 +190,15 @@ const Landing: Component = () => {
               </p>
             </div>
           </div>
+
+          <div class="mt-8 mb-16">
+            <a
+              href="/books"
+              class="text-stone-600 text-base md:text-lg underline decoration-amber-400 underline-offset-4 hover:text-stone-800 transition-colors"
+            >
+              Not ready? Check out our bookshelf.
+            </a>
+          </div>
         </div>
       </div>
 

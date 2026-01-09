@@ -5,10 +5,9 @@ interface Book {
   title: string;
   author: string;
   summary: string;
-  isbn: string;
   amazonUrl: string;
   vibe?: string;
-  cover?: string;
+  cover: string;
 }
 
 const books: Book[] = [
@@ -17,156 +16,116 @@ const books: Book[] = [
     author: "Anna Lembke, MD",
     summary:
       "A look at why modern life overstimulates our reward systems and how to reset with intentional abstinence, balance, and honest self-inventory.",
-    isbn: "9781524746739",
-    amazonUrl: "https://www.amazon.com/dp/1524746730",
+    amazonUrl:
+      "https://www.amazon.com/Dopamine-Nation-Finding-Balance-Indulgence/dp/B08LQZCGDJ",
     vibe: "craving & balance",
-    cover: "/covers/dopamine-nation.jpg",
+    cover: "/images/books/dopamine-nation.jpg",
   },
   {
     title: "Build the Life You Want",
     author: "Arthur C. Brooks & Oprah Winfrey",
     summary:
       "Practical habits from positive psychology—agency, connection, and meaning—to design a steadier, happier daily rhythm.",
-    isbn: "9780593545400",
     amazonUrl: "https://www.amazon.com/dp/0593545400",
     vibe: "design your days",
-    cover: "/covers/build-the-life-you-want.jpg",
-  },
-  {
-    title: "The Alchemist",
-    author: "Paulo Coelho",
-    summary:
-      "A gentle parable about listening to your heart, following small omens, and trusting the slow path to your own personal legend.",
-    isbn: "9780061122415",
-    amazonUrl: "https://www.amazon.com/dp/0061122416",
-    vibe: "hopeful fiction",
-    cover: "/covers/the-alchemist.jpg",
+    cover: "/images/books/build-the-life-you-want.jpg",
   },
   {
     title: "The Little Book of Hygge",
     author: "Meik Wiking",
     summary:
       "Simple rituals—candles, cozy corners, shared meals—that turn ordinary days into warm, calm moments of hygge.",
-    isbn: "9780062658807",
     amazonUrl: "https://www.amazon.com/dp/0062658808",
     vibe: "cozy living",
-    cover: "/covers/the-little-book-of-hygge.jpg",
+    cover: "/images/books/the-little-book-of-hygge.jpg",
   },
   {
     title: "The Little Book of Lykke",
     author: "Meik Wiking",
     summary:
       "Stories and research on why certain communities feel happier, with small practices that travel well into daily life.",
-    isbn: "9780062820334",
     amazonUrl: "https://www.amazon.com/dp/0062820338",
     vibe: "everyday joy",
-    cover: "/covers/the-little-book-of-lykke.jpg",
+    cover: "/images/books/the-little-book-of-lykke.jpg",
   },
   {
     title: "Four Thousand Weeks",
     author: "Oliver Burkeman",
     summary:
       "A calming reset on time: accept limits, choose what matters, and let go of the productivity race.",
-    isbn: "9780374159125",
     amazonUrl: "https://www.amazon.com/dp/0374159122",
     vibe: "time sanity",
-    cover: "/covers/four-thousand-weeks.jpg",
+    cover: "/images/books/four-thousand-weeks.jpg",
   },
   {
     title: "Wintering",
     author: "Katherine May",
     summary:
       "A lyrical reminder that hard seasons are natural; we can rest, gather light, and reemerge with new strength.",
-    isbn: "9780525535857",
-    amazonUrl: "https://www.amazon.com/dp/0525535856",
+    amazonUrl:
+      "https://www.amazon.com/Wintering-Power-Retreat-Difficult-Times/dp/B085S72KVX",
     vibe: "gentle rest",
-    cover: "/covers/wintering.jpg",
+    cover: "/images/books/wintering.jpg",
   },
   {
     title: "Set Boundaries, Find Peace",
     author: "Nedra Glover Tawwab",
     summary:
       "Clear scripts and practices for saying no, reclaiming energy, and protecting relationships with healthy limits.",
-    isbn: "9780593192092",
     amazonUrl: "https://www.amazon.com/dp/0593192095",
     vibe: "calm boundaries",
-    cover: "/covers/set-boundaries-find-peace.jpg",
+    cover: "/images/books/set-boundaries-find-peace.jpg",
   },
   {
     title: "How to Do Nothing",
     author: "Jenny Odell",
     summary:
       "A reflection on attention as a scarce resource and how to step outside constant consumption to notice the real world again.",
-    isbn: "9781612197494",
     amazonUrl: "https://www.amazon.com/dp/1612197493",
     vibe: "attention & presence",
-    cover: "/covers/how-to-do-nothing.jpg",
+    cover: "/images/books/how-to-do-nothing.jpg",
   },
   {
     title: "Driven to Distraction",
     author: "Edward M. Hallowell & John J. Ratey",
     summary:
       "Classic ADHD guide on spotting patterns, reducing overwhelm, and building kinder systems for attention.",
-    isbn: "9780307743152",
     amazonUrl: "https://www.amazon.com/dp/0307743152",
     vibe: "attention support",
-    cover: "/covers/driven-to-distraction.jpg",
+    cover: "/images/books/driven-to-distraction.jpg",
   },
   {
     title: "The Happiness Trap",
     author: "Russ Harris",
     summary:
       "Acceptance and Commitment Therapy guide for getting unstuck from the pursuit of constant happiness and building a values-led life.",
-    isbn: "9781590305843",
     amazonUrl:
       "https://www.amazon.com/Happiness-Trap-Struggling-Start-Living/dp/1590305841",
     vibe: "mindful resilience",
+    cover: "/images/books/the-happiness-trap.jpg",
   },
   {
     title: "Focused Forward",
     author: "James M. Ochoa",
     summary:
       "Tools for adult ADHD to ride out emotional storms, calm shame spirals, and build steadier routines with compassion.",
-    isbn: "9781626342400",
     amazonUrl:
-      "https://www.amazon.com/Focused-Forward-Navigating-Storms-Adult/dp/1626342407",
+      "https://www.amazon.com/Focused-Forward-Navigating-Storms-Adult/dp/0996983902",
     vibe: "adhd grounding",
+    cover: "/images/books/focused-forward.jpg",
   },
   {
     title: "Ikigai: The Japanese Secret to a Long and Happy Life",
     author: "Héctor García & Francesc Miralles",
     summary:
       "A light guide to finding your everyday purpose (ikigai) with small habits, social ties, and mindful movement for a calmer, longer life.",
-    isbn: "9780143130727",
     amazonUrl: "https://www.amazon.com/dp/0143130722",
     vibe: "purpose & longevity",
-  },
-  {
-    title: "The Four-Way Path",
-    author:
-      "The Four-Way Path: A Guide to Purushartha and India's Spiritual Traditions for a Life of Happiness, Success, and Purpose",
-    summary:
-      "A guide to purushartha—dharma, artha, kama, and moksha—applying India’s four aims of life to modern purpose, prosperity, love, and liberation.",
-    isbn: "9781637588896",
-    amazonUrl: "https://www.amazon.com/dp/1637588895",
-    vibe: "purpose & dharma",
-  },
-  {
-    title: "The Mountain Is You",
-    author: "Brianna Wiest",
-    summary:
-      "On breaking self-sabotage loops by understanding emotional needs, healing patterns, and choosing self-led action.",
-    isbn: "9781949759228",
-    amazonUrl:
-      "https://www.amazon.com/dp/1949759229/ref=sspa_dk_detail_2?psc=1&pd_rd_i=1949759229&pd_rd_w=H9a35&content-id=amzn1.sym.8c2f9165-8e93-42a1-8313-73d3809141a2&pf_rd_p=8c2f9165-8e93-42a1-8313-73d3809141a2&pf_rd_r=5JCYSYT637EMTTDEZQ1A&pd_rd_wg=8aaxx&pd_rd_r=e9308a97-d2f6-4c38-bb3d-b2ab188e5b64&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWw",
-    vibe: "self-mastery",
+    cover: "/images/books/ikigai.jpg",
   },
 ];
 
-const coverUrl = (isbn: string) =>
-  `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;
 const fallbackCover = "https://placehold.co/240x320?text=No+Cover";
-const resolveCover = (book: Book) => book.cover ?? coverUrl(book.isbn);
 
 const Books: Component = () => {
   return (
@@ -204,18 +163,17 @@ const Books: Component = () => {
               {(book) => (
                 <div class="group bg-white border border-amber-100/60 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-4">
                   <div class="flex flex-col gap-4">
-                    <div class="relative w-full h-56 overflow-hidden rounded-xl shadow-sm shadow-stone-900/10 bg-amber-50">
+                    <div class="flex items-center justify-center w-full h-56 overflow-hidden">
                       <img
-                        src={resolveCover(book)}
+                        src={book.cover}
                         alt={`${book.title} cover`}
-                        class="w-full h-full object-cover"
+                        class="max-h-full object-contain shadow-sm shadow-stone-900/10"
                         loading="lazy"
                         onError={(event) => {
                           event.currentTarget.onerror = null;
                           event.currentTarget.src = fallbackCover;
                         }}
                       />
-                      <div class="absolute inset-0 bg-gradient-to-t from-stone-900/10 to-transparent" />
                     </div>
                     <div class="space-y-2">
                       {book.vibe && (
