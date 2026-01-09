@@ -19,8 +19,6 @@ interface PushPayload {
   url?: string;
 }
 
-const CACHE_NAME = "app-cache-v1";
-
 self.addEventListener("push", (event: PushEvent) => {
   const data = (event.data?.json() as PushPayload | undefined) ?? null;
 
@@ -89,33 +87,6 @@ self.addEventListener("install", () => {
 
 self.addEventListener("activate", (event: ExtendableEvent) => {
   event.waitUntil(self.clients.claim());
-});
-
-self.addEventListener("fetch", (event: FetchEvent) => {
-  const { request } = event;
-
-  if (request.method !== "GET") {
-    return;
-  }
-
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (!response.ok && response.type !== "basic") {
-          return response;
-        }
-
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-
-        return response;
-      })
-      .catch(() =>
-        caches
-          .match(request)
-          .then((cached) => cached ?? new Response(null, { status: 504 }))
-      )
-  );
 });
 
 export {};
