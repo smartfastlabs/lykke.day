@@ -57,7 +57,7 @@ class ResetCalendarDataHandler(BaseCommandHandler):
 
     async def _delete_calendar_entries(self, uow: UnitOfWorkProtocol) -> None:
         """Delete all calendar entries for the scoped user."""
-        entries: Iterable[CalendarEntryEntity] = await uow.calendar_entry_ro_repo.search_query(
+        entries: Iterable[CalendarEntryEntity] = await uow.calendar_entry_ro_repo.search(
             value_objects.CalendarEntryQuery()
         )
         for entry in entries:
@@ -67,7 +67,7 @@ class ResetCalendarDataHandler(BaseCommandHandler):
         """Delete all calendar entry series for the scoped user."""
         series_items: Iterable[
             CalendarEntrySeriesEntity
-        ] = await uow.calendar_entry_series_ro_repo.search_query(
+        ] = await uow.calendar_entry_series_ro_repo.search(
             value_objects.CalendarEntrySeriesQuery()
         )
         for series in series_items:

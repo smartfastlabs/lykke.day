@@ -38,7 +38,7 @@ class ScheduleDayHandler(BaseCommandHandler):
         async with self.new_uow() as uow:
             # Delete existing tasks for this date
             # Get all tasks for the date and mark them for deletion
-            existing_tasks = await uow.task_ro_repo.search_query(
+            existing_tasks = await uow.task_ro_repo.search(
                 value_objects.DateQuery(date=date)
             )
             for task in existing_tasks:

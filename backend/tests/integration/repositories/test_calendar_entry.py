@@ -195,7 +195,7 @@ async def test_search_query(calendar_entry_repo, test_user, test_date, test_date
     await calendar_entry_repo.put(calendar_entry2)
     
     # Search for specific date
-    results = await calendar_entry_repo.search_query(
+    results = await calendar_entry_repo.search(
         CalendarEntryQuery(date=test_date)
     )
     
@@ -293,13 +293,13 @@ async def test_delete_many(calendar_entry_repo, test_user, test_date, test_date_
     await calendar_entry_repo.delete_many(CalendarEntryQuery(date=test_date))
     
     # Calendar entries on test_date should be gone
-    results = await calendar_entry_repo.search_query(
+    results = await calendar_entry_repo.search(
         CalendarEntryQuery(date=test_date)
     )
     assert len(results) == 0
     
     # Calendar entry on test_date_tomorrow should still exist
-    results_tomorrow = await calendar_entry_repo.search_query(
+    results_tomorrow = await calendar_entry_repo.search(
         CalendarEntryQuery(date=test_date_tomorrow)
     )
     assert len(results_tomorrow) == 1

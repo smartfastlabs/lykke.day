@@ -56,7 +56,7 @@ class PreviewDayHandler(BaseQueryHandler):
         # Load preview tasks and existing data in parallel
         tasks, calendar_entries = await asyncio.gather(
             self._preview_tasks_handler.preview_tasks(date),
-            self.calendar_entry_ro_repo.search_query(
+            self.calendar_entry_ro_repo.search(
                 value_objects.CalendarEntryQuery(date=date)
             ),
         )

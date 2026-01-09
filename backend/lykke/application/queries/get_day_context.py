@@ -39,8 +39,8 @@ class GetDayContextHandler(BaseQueryHandler):
         day_id = DayEntity.id_from_date_and_user(date, self.user_id)
 
         tasks_result, calendar_entries_result, day_result = await asyncio.gather(
-            self.task_ro_repo.search_query(value_objects.DateQuery(date=date)),
-            self.calendar_entry_ro_repo.search_query(
+            self.task_ro_repo.search(value_objects.DateQuery(date=date)),
+            self.calendar_entry_ro_repo.search(
                 value_objects.CalendarEntryQuery(date=date)
             ),
             self.day_ro_repo.get(day_id),

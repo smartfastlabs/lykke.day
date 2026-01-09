@@ -176,7 +176,7 @@ async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow)
     await task_repo.put(task2)
 
     # Search for specific date
-    results = await task_repo.search_query(DateQuery(date=test_date))
+    results = await task_repo.search(DateQuery(date=test_date))
 
     assert len(results) == 1
     assert results[0].scheduled_date == test_date

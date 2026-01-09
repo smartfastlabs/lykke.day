@@ -1,9 +1,7 @@
 """Query to search calendar entry series with pagination."""
 
 from lykke.application.queries.base import BaseQueryHandler
-from lykke.application.repositories import (
-    CalendarEntrySeriesRepositoryReadOnlyProtocol,
-)
+from lykke.application.repositories import CalendarEntrySeriesRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntrySeriesEntity
 
@@ -19,8 +17,9 @@ class SearchCalendarEntrySeriesHandler(BaseQueryHandler):
     ) -> value_objects.PagedQueryResponse[CalendarEntrySeriesEntity]:
         """Search calendar entry series with pagination."""
         if search_query is not None:
+            result = await self.calendar_entry_series_ro_repo.paged_search(search_query)
             return value_objects.PagedQueryResponse(
-                **self.calendar_entry_series_ro_repo.paged_search.__annotations__,  # type: ignore[misc]
+                **result.__dict__,
             )
 
         items = await self.calendar_entry_series_ro_repo.all()
@@ -36,5 +35,3 @@ class SearchCalendarEntrySeriesHandler(BaseQueryHandler):
             has_next=False,
             has_previous=False,
         )
-
-

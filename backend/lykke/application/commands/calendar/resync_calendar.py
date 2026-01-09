@@ -59,7 +59,7 @@ class ResyncCalendarHandler(BaseCommandHandler):
         self, calendar_id: UUID, uow: UnitOfWorkProtocol
     ) -> None:
         """Remove all calendar entries for the calendar."""
-        entries = await uow.calendar_entry_ro_repo.search_query(
+        entries = await uow.calendar_entry_ro_repo.search(
             value_objects.CalendarEntryQuery(calendar_id=calendar_id)
         )
         for entry in entries:

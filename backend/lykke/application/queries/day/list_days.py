@@ -24,21 +24,9 @@ class SearchDaysHandler(BaseQueryHandler):
             PagedQueryResponse with days
         """
         if search_query is not None:
-            items = await self.day_ro_repo.search_query(search_query)
-            limit = search_query.limit or 50
-            offset = search_query.offset or 0
-            total = len(items)
-            start = offset
-            end = start + limit
-            paginated_items = items[start:end]
-
+            result = await self.day_ro_repo.paged_search(search_query)
             return value_objects.PagedQueryResponse(
-                items=paginated_items,
-                total=total,
-                limit=limit,
-                offset=offset,
-                has_next=end < total,
-                has_previous=start > 0,
+                **result.__dict__,
             )
         else:
             items = await self.day_ro_repo.all()
@@ -54,4 +42,3 @@ class SearchDaysHandler(BaseQueryHandler):
                 has_next=False,
                 has_previous=False,
             )
-

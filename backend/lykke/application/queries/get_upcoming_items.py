@@ -36,7 +36,7 @@ class GetUpcomingTasksHandler(BaseQueryHandler):
         Returns:
             List of tasks that are upcoming within the look-ahead window
         """
-        tasks = await self.task_ro_repo.search_query(value_objects.DateQuery(date=date))
+        tasks = await self.task_ro_repo.search(value_objects.DateQuery(date=date))
         return filter_upcoming_tasks(tasks, look_ahead)
 
 
@@ -61,7 +61,7 @@ class GetUpcomingCalendarEntriesHandler(BaseQueryHandler):
         Returns:
             List of calendar entries that are upcoming within the look-ahead window
         """
-        calendar_entries = await self.calendar_entry_ro_repo.search_query(
+        calendar_entries = await self.calendar_entry_ro_repo.search(
             value_objects.CalendarEntryQuery(date=date)
         )
         return filter_upcoming_calendar_entries(calendar_entries, look_ahead)

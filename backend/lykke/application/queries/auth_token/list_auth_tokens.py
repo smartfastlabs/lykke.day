@@ -24,22 +24,8 @@ class SearchAuthTokensHandler(BaseQueryHandler):
             PagedQueryResponse with auth tokens
         """
         if search_query is not None:
-            items = await self.auth_token_ro_repo.search_query(search_query)
-            limit = search_query.limit or 50
-            offset = search_query.offset or 0
-            total = len(items)
-            start = offset
-            end = start + limit
-            paginated_items = items[start:end]
-
-            return value_objects.PagedQueryResponse(
-                items=paginated_items,
-                total=total,
-                limit=limit,
-                offset=offset,
-                has_next=end < total,
-                has_previous=start > 0,
-            )
+            result = await self.auth_token_ro_repo.paged_search(search_query)
+            return value_objects.PagedQueryResponse(**result.__dict__)
         else:
             items = await self.auth_token_ro_repo.all()
             total = len(items)

@@ -22,7 +22,7 @@ class UnscheduleDayHandler(BaseCommandHandler):
         """
         async with self.new_uow() as uow:
             # Get all tasks for the date, filter for routine tasks, then delete them
-            tasks = await uow.task_ro_repo.search_query(value_objects.DateQuery(date=date))
+            tasks = await uow.task_ro_repo.search(value_objects.DateQuery(date=date))
             routine_tasks = [t for t in tasks if t.routine_id is not None]
             for task in routine_tasks:
                 await uow.delete(task)
