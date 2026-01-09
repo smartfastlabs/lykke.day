@@ -112,6 +112,55 @@ const books: Book[] = [
     vibe: "attention support",
     cover: "/covers/driven-to-distraction.jpg",
   },
+  {
+    title: "The Happiness Trap",
+    author: "Russ Harris",
+    summary:
+      "Acceptance and Commitment Therapy guide for getting unstuck from the pursuit of constant happiness and building a values-led life.",
+    isbn: "9781590305843",
+    amazonUrl:
+      "https://www.amazon.com/Happiness-Trap-Struggling-Start-Living/dp/1590305841",
+    vibe: "mindful resilience",
+  },
+  {
+    title: "Focused Forward",
+    author: "James M. Ochoa",
+    summary:
+      "Tools for adult ADHD to ride out emotional storms, calm shame spirals, and build steadier routines with compassion.",
+    isbn: "9781626342400",
+    amazonUrl:
+      "https://www.amazon.com/Focused-Forward-Navigating-Storms-Adult/dp/1626342407",
+    vibe: "adhd grounding",
+  },
+  {
+    title: "Ikigai: The Japanese Secret to a Long and Happy Life",
+    author: "Héctor García & Francesc Miralles",
+    summary:
+      "A light guide to finding your everyday purpose (ikigai) with small habits, social ties, and mindful movement for a calmer, longer life.",
+    isbn: "9780143130727",
+    amazonUrl: "https://www.amazon.com/dp/0143130722",
+    vibe: "purpose & longevity",
+  },
+  {
+    title: "The Four-Way Path",
+    author:
+      "The Four-Way Path: A Guide to Purushartha and India's Spiritual Traditions for a Life of Happiness, Success, and Purpose",
+    summary:
+      "A guide to purushartha—dharma, artha, kama, and moksha—applying India’s four aims of life to modern purpose, prosperity, love, and liberation.",
+    isbn: "9781637588896",
+    amazonUrl: "https://www.amazon.com/dp/1637588895",
+    vibe: "purpose & dharma",
+  },
+  {
+    title: "The Mountain Is You",
+    author: "Brianna Wiest",
+    summary:
+      "On breaking self-sabotage loops by understanding emotional needs, healing patterns, and choosing self-led action.",
+    isbn: "9781949759228",
+    amazonUrl:
+      "https://www.amazon.com/dp/1949759229/ref=sspa_dk_detail_2?psc=1&pd_rd_i=1949759229&pd_rd_w=H9a35&content-id=amzn1.sym.8c2f9165-8e93-42a1-8313-73d3809141a2&pf_rd_p=8c2f9165-8e93-42a1-8313-73d3809141a2&pf_rd_r=5JCYSYT637EMTTDEZQ1A&pd_rd_wg=8aaxx&pd_rd_r=e9308a97-d2f6-4c38-bb3d-b2ab188e5b64&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWw",
+    vibe: "self-mastery",
+  },
 ];
 
 const coverUrl = (isbn: string) =>
