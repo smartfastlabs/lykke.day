@@ -131,8 +131,9 @@ const Landing: Component = () => {
               transform: mounted() ? "translateY(0)" : "translateY(20px)",
             }}
           >
-            A daily companion app — not another endless task list. Just small
-            intentions, gentle check-ins, and space to breathe.
+            A daily companion — not an app. Just small intentions, gentle
+            check-ins, and space to breathe. Lykke is there when you need it,
+            and not when you don't.
           </p>
 
           <div class="grid sm:grid-cols-2 gap-4 md:gap-6 mb-16">
