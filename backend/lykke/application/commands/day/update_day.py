@@ -6,6 +6,7 @@ from lykke.application.commands.base import BaseCommandHandler
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
+from lykke.domain.events.day_events import DayUpdatedEvent
 from lykke.domain.value_objects import DayUpdateObject
 
 
@@ -62,6 +63,19 @@ class UpdateDayHandler(BaseCommandHandler):
                 day.scheduled_at = update_data.scheduled_at
             if update_data.tags is not None:
                 day.tags = update_data.tags
+
+            # Ensure at least one domain event is emitted for persistence
+            if not day.has_events() and any(
+                field is not None
+                for field in (
+                    update_data.status,
+                    update_data.template_id,
+                    update_data.alarm,
+                    update_data.scheduled_at,
+                    update_data.tags,
+                )
+            ):
+                day.add_event(DayUpdatedEvent(update_object=update_data))
 
             # Add entity to UoW for saving
             uow.add(day)

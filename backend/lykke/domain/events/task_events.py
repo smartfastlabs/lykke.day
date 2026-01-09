@@ -14,6 +14,7 @@ __all__ = [
     "TaskCompletedEvent",
     "TaskCreatedEvent",
     "TaskDefinitionUpdatedEvent",
+    "TaskStateUpdatedEvent",
     "TaskStatusChangedEvent",
 ]
 
@@ -50,6 +51,20 @@ class TaskActionRecordedEvent(DomainEvent):
 
     task_id: UUID
     action_type: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class TaskStateUpdatedEvent(DomainEvent):
+    """Event raised whenever a task's state mutates.
+
+    Used to ensure the task aggregate always emits an event when updated.
+    """
+
+    task_id: UUID
+    action_type: str
+    old_status: str
+    new_status: str
+    completed_at: str | None
 
 
 @dataclass(frozen=True, kw_only=True)

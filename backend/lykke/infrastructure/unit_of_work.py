@@ -458,7 +458,9 @@ class SqlAlchemyUnitOfWork:
             # and then put them back temporarily
             events = entity.collect_events()
             if not events:
-                continue
+                raise BadRequestError(
+                    f"Entity {type(entity).__name__} ({entity.id}) added to UoW without domain events"
+                )
 
             # Check for EntityCreatedEvent, EntityDeletedEvent, EntityUpdatedEvent
             has_created_event = any(isinstance(e, EntityCreatedEvent) for e in events)

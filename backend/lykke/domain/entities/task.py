@@ -1,11 +1,10 @@
 from dataclasses import dataclass, field
-from datetime import UTC
-from datetime import date as dt_date
-from datetime import datetime
+from datetime import UTC, date as dt_date, datetime
 from uuid import UUID
 
 from lykke.core.exceptions import DomainError
 from lykke.domain import data_objects, value_objects
+from lykke.domain.events.task_events import TaskStateUpdatedEvent
 
 from .base import BaseEntityObject
 
@@ -65,6 +64,19 @@ class TaskEntity(BaseEntityObject):
             # Other action types don't change status
             pass
 
+        # Record a task-level event so persistence is tied to a domain event
+        self._add_event(
+            TaskStateUpdatedEvent(
+                task_id=self.id,
+                action_type=action.type.value,
+                old_status=old_status.value,
+                new_status=self.status.value,
+                completed_at=self.completed_at.isoformat()
+                if self.completed_at
+                else None,
+            )
+        )
+
         # Return the old status so the aggregate root can raise events if needed
         return old_status
 
@@ -96,5 +108,7 @@ class TaskEntity(BaseEntityObject):
             return self.status  # Already ready
 
         old_status = self.status
+        self.status = value_objects.TaskStatus.READY
+        return old_status
         self.status = value_objects.TaskStatus.READY
         return old_status
