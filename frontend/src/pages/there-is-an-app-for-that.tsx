@@ -95,7 +95,7 @@ const ThereIsAnAppForThat: Component = () => {
       <div class="absolute bottom-32 left-10 w-48 h-48 bg-gradient-to-tr from-rose-200/25 to-amber-200/15 rounded-full blur-3xl" />
 
       <div class="relative z-10 flex flex-col items-center px-6 py-20 md:py-28">
-        <div class="max-w-4xl w-full">
+        <div class="max-w-2xl w-full">
           {/* Header */}
           <div
             class="text-center mb-16 transition-all duration-1000 ease-out"
@@ -151,7 +151,7 @@ const ThereIsAnAppForThat: Component = () => {
 
           {/* App Categories */}
           <div
-            class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 transition-all duration-1000 delay-200 ease-out"
+            class="grid md:grid-cols-1 lg:grid-cols-2 gap-6 mb-12 transition-all duration-1000 delay-200 ease-out"
             style={{
               opacity: mounted() ? 1 : 0,
               transform: mounted() ? "translateY(0)" : "translateY(30px)",
@@ -197,77 +197,73 @@ const ThereIsAnAppForThat: Component = () => {
             </For>
           </div>
 
-          {/* Reality Check */}
+          {/* Combined Reality Check & Resources Section */}
           <div
-            class="max-w-2xl mx-auto mb-12 transition-all duration-1000 delay-500 ease-out"
+            class="max-w-4xl mx-auto mb-12 transition-all duration-1000 delay-500 ease-out"
             style={{
               opacity: mounted() ? 1 : 0,
               transform: mounted() ? "translateY(0)" : "translateY(20px)",
             }}
           >
-            <div class="bg-gradient-to-r from-rose-50 to-amber-50 border border-rose-100 rounded-2xl p-8 text-center">
-              <div class="flex justify-center mb-4">
-                <Icon path={faceFrown} class="w-8 h-8 text-rose-600" />
+            <div class="bg-white/60 backdrop-blur-md border border-white/80 rounded-3xl shadow-xl shadow-stone-900/5 overflow-hidden">
+              {/* Top section - The Irony */}
+              <div class="bg-gradient-to-br from-stone-50 to-amber-50/50 px-8 py-10 text-center">
+                <div class="flex justify-center mb-4">
+                  <Icon path={faceFrown} class="w-10 h-10 text-rose-500" />
+                </div>
+                <h3 class="text-stone-900 font-bold text-2xl mb-4">
+                  The Irony Isn't Lost On Us
+                </h3>
+                <p class="text-stone-700 text-base leading-relaxed mb-3">
+                  Yes, lykke.day is also an app. But instead of asking you to
+                  track 47 metrics across 12 dashboards, we're trying something
+                  radical:{" "}
+                  <span class="font-semibold text-stone-900">
+                    one simple question each day
+                  </span>
+                  .
+                </p>
+                <p class="text-stone-600 text-lg italic font-serif">
+                  "What would make today feel good?"
+                </p>
               </div>
-              <h3 class="text-stone-800 font-semibold text-lg mb-3">
-                The Irony Isn't Lost On Us
-              </h3>
-              <p class="text-stone-600 text-base leading-relaxed mb-2">
-                Yes, lykke.day is also an app. But instead of asking you to
-                track 47 metrics across 12 dashboards, we're trying something
-                radical:{" "}
-                <span class="font-medium text-stone-800">
-                  one simple question each day
-                </span>
-                .
-              </p>
-              <p class="text-stone-500 text-sm italic">
-                "What would make today feel good?"
-              </p>
-            </div>
-          </div>
 
-          {/* Other Resources */}
-          <div
-            class="max-w-2xl mx-auto transition-all duration-1000 delay-700 ease-out"
-            style={{
-              opacity: mounted() ? 1 : 0,
-              transform: mounted() ? "translateY(0)" : "translateY(20px)",
-            }}
-          >
-            <h2 class="text-stone-800 font-semibold text-2xl mb-6 text-center">
-              Not Everything Needs an App
-            </h2>
+              {/* Bottom section - Not Everything Needs an App */}
+              <div class="px-8 py-10">
+                <h3 class="text-stone-900 font-bold text-2xl mb-6 text-center">
+                  Some non app-based resources :)
+                </h3>
 
-            <div class="grid sm:grid-cols-3 gap-4">
-              <For each={otherResources}>
-                {(resource) => (
-                  <a
-                    href={resource.link}
-                    class="group bg-white/50 backdrop-blur-sm border border-white/60 rounded-xl p-6 text-center hover:bg-white/70 hover:shadow-lg hover:shadow-amber-900/5 transition-all duration-300"
-                  >
-                    <div class="text-4xl mb-3">{resource.emoji}</div>
-                    <h3 class="text-stone-700 font-medium group-hover:text-stone-900 transition-colors">
-                      {resource.title}
-                    </h3>
-                  </a>
-                )}
-              </For>
+                <div class="grid sm:grid-cols-3 gap-5 mb-6">
+                  <For each={otherResources}>
+                    {(resource) => (
+                      <a
+                        href={resource.link}
+                        class="group relative bg-gradient-to-br from-stone-50 to-white border border-stone-200 rounded-2xl p-6 text-center hover:border-amber-300 hover:shadow-lg hover:shadow-amber-900/10 transition-all duration-300 hover:-translate-y-1"
+                      >
+                        <div class="text-5xl mb-3 group-hover:scale-110 transition-transform duration-300">
+                          {resource.emoji}
+                        </div>
+                        <h4 class="text-stone-800 font-semibold text-base group-hover:text-stone-900 transition-colors">
+                          {resource.title}
+                        </h4>
+                        <div class="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-100/0 to-orange-100/0 group-hover:from-amber-100/20 group-hover:to-orange-100/20 transition-all duration-300 pointer-events-none" />
+                      </a>
+                    )}
+                  </For>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Footer CTA */}
           <div
-            class="text-center mt-16 transition-all duration-1000 delay-900 ease-out"
+            class="text-center mt-16 transition-all duration-1000 delay-700 ease-out"
             style={{
               opacity: mounted() ? 1 : 0,
               transform: mounted() ? "translateY(0)" : "translateY(20px)",
             }}
           >
-            <p class="text-stone-500 text-sm mb-4">
-              Or, you know, try building a life that doesn't require constant
-              optimization.
-            </p>
             <a
               href="/early-access"
               class="inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-stone-800 to-stone-700 text-amber-50 rounded-xl hover:from-stone-700 hover:to-stone-600 transition-all duration-300 shadow-lg shadow-stone-900/20 hover:shadow-xl hover:-translate-y-0.5"

@@ -10,7 +10,7 @@ const books: MediaItem[] = [
       "A look at why modern life overstimulates our reward systems and how to reset with intentional abstinence, balance, and honest self-inventory.",
     url: "https://www.amazon.com/Dopamine-Nation-Finding-Balance-Indulgence/dp/B08LQZCGDJ",
     vibe: "craving & balance",
-    thumbnail: "/images/books/dopamine-nation.jpg",
+    thumbnail: "/images/covers/books/dopamine-nation.jpg",
   },
   {
     title: "Build the Life You Want",
@@ -19,7 +19,7 @@ const books: MediaItem[] = [
       "Practical habits from positive psychology—agency, connection, and meaning—to design a steadier, happier daily rhythm.",
     url: "https://www.amazon.com/dp/0593545400",
     vibe: "design your days",
-    thumbnail: "/images/books/build-the-life-you-want.jpg",
+    thumbnail: "/images/covers/books/build-the-life-you-want.jpg",
   },
   {
     title: "The Little Book of Hygge",
@@ -28,7 +28,7 @@ const books: MediaItem[] = [
       "Simple rituals—candles, cozy corners, shared meals—that turn ordinary days into warm, calm moments of hygge.",
     url: "https://www.amazon.com/dp/0062658808",
     vibe: "cozy living",
-    thumbnail: "/images/books/the-little-book-of-hygge.jpg",
+    thumbnail: "/images/covers/books/the-little-book-of-hygge.jpg",
   },
   {
     title: "The Little Book of Lykke",
@@ -37,7 +37,7 @@ const books: MediaItem[] = [
       "Stories and research on why certain communities feel happier, with small practices that travel well into daily life.",
     url: "https://www.amazon.com/dp/0062820338",
     vibe: "everyday joy",
-    thumbnail: "/images/books/the-little-book-of-lykke.jpg",
+    thumbnail: "/images/covers/books/the-little-book-of-lykke.jpg",
   },
   {
     title: "Four Thousand Weeks",
@@ -46,7 +46,7 @@ const books: MediaItem[] = [
       "A calming reset on time: accept limits, choose what matters, and let go of the productivity race.",
     url: "https://www.amazon.com/dp/0374159122",
     vibe: "time sanity",
-    thumbnail: "/images/books/four-thousand-weeks.jpg",
+    thumbnail: "/images/covers/books/four-thousand-weeks.jpg",
   },
   {
     title: "Wintering",
@@ -55,7 +55,7 @@ const books: MediaItem[] = [
       "A lyrical reminder that hard seasons are natural; we can rest, gather light, and reemerge with new strength.",
     url: "https://www.amazon.com/Wintering-Power-Retreat-Difficult-Times/dp/B085S72KVX",
     vibe: "gentle rest",
-    thumbnail: "/images/books/wintering.jpg",
+    thumbnail: "/images/covers/books/wintering.jpg",
   },
   {
     title: "Set Boundaries, Find Peace",
@@ -64,7 +64,7 @@ const books: MediaItem[] = [
       "Clear scripts and practices for saying no, reclaiming energy, and protecting relationships with healthy limits.",
     url: "https://www.amazon.com/dp/0593192095",
     vibe: "calm boundaries",
-    thumbnail: "/images/books/set-boundaries-find-peace.jpg",
+    thumbnail: "/images/covers/books/set-boundaries-find-peace.jpg",
   },
   {
     title: "How to Do Nothing",
@@ -73,7 +73,7 @@ const books: MediaItem[] = [
       "A reflection on attention as a scarce resource and how to step outside constant consumption to notice the real world again.",
     url: "https://www.amazon.com/dp/1612197493",
     vibe: "attention & presence",
-    thumbnail: "/images/books/how-to-do-nothing.jpg",
+    thumbnail: "/images/covers/books/how-to-do-nothing.jpg",
   },
   {
     title: "Driven to Distraction",
@@ -82,7 +82,7 @@ const books: MediaItem[] = [
       "Classic ADHD guide on spotting patterns, reducing overwhelm, and building kinder systems for attention.",
     url: "https://www.amazon.com/dp/0307743152",
     vibe: "attention support",
-    thumbnail: "/images/books/driven-to-distraction.jpg",
+    thumbnail: "/images/covers/books/driven-to-distraction.jpg",
   },
   {
     title: "The Happiness Trap",
@@ -91,7 +91,7 @@ const books: MediaItem[] = [
       "Acceptance and Commitment Therapy guide for getting unstuck from the pursuit of constant happiness and building a values-led life.",
     url: "https://www.amazon.com/Happiness-Trap-Struggling-Start-Living/dp/1590305841",
     vibe: "mindful resilience",
-    thumbnail: "/images/books/the-happiness-trap.jpg",
+    thumbnail: "/images/covers/books/the-happiness-trap.jpg",
   },
   {
     title: "Focused Forward",
@@ -100,7 +100,7 @@ const books: MediaItem[] = [
       "Tools for adult ADHD to ride out emotional storms, calm shame spirals, and build steadier routines with compassion.",
     url: "https://www.amazon.com/Focused-Forward-Navigating-Storms-Adult/dp/0996983902",
     vibe: "adhd grounding",
-    thumbnail: "/images/books/focused-forward.jpg",
+    thumbnail: "/images/covers/books/focused-forward.jpg",
   },
   {
     title: "Ikigai: The Japanese Secret to a Long and Happy Life",
@@ -109,7 +109,7 @@ const books: MediaItem[] = [
       "A light guide to finding your everyday purpose (ikigai) with small habits, social ties, and mindful movement for a calmer, longer life.",
     url: "https://www.amazon.com/dp/0143130722",
     vibe: "purpose & longevity",
-    thumbnail: "/images/books/ikigai.jpg",
+    thumbnail: "/images/covers/books/ikigai.jpg",
   },
 ];
 

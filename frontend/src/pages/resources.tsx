@@ -79,18 +79,23 @@ const Resources: Component = () => {
           </div>
 
           <div
-            class="mb-10 transition-all duration-1000 delay-200 ease-out"
+            class="max-w-xl mx-auto mb-16 transition-all duration-1000 delay-300 ease-out"
             style={{
               opacity: mounted() ? 1 : 0,
               transform: mounted() ? "translateY(0)" : "translateY(20px)",
             }}
           >
-            <div class="inline-block bg-white/60 backdrop-blur-md border border-white/80 rounded-2xl px-10 py-8 shadow-xl shadow-amber-900/5">
-              <p class="text-stone-700 text-xl md:text-2xl leading-relaxed mb-3 font-medium">
-                Resources
-              </p>
-              <p class="text-stone-500 text-sm md:text-base leading-relaxed max-w-2xl">
-                Real, lasting happiness doesn't come from willpower or hustle—it grows from steady, gentle routines that anchor your days. When you build rhythms that honor your energy, not drain it, everything else becomes easier: focus, rest, presence, joy. These aren't rigid schedules; they're loving containers that hold space for what matters most. Small, consistent rituals become the bedrock of a life you don't need to escape from.
+            <div class="relative py-8">
+              <div class="absolute left-0 top-0 w-8 h-8 border-l-2 border-t-2 border-amber-300/50" />
+              <div class="absolute right-0 bottom-0 w-8 h-8 border-r-2 border-b-2 border-amber-300/50" />
+              <p
+                class="text-stone-600 text-lg md:text-xl italic leading-relaxed px-6"
+                style={{
+                  "font-family": "'Cormorant Garamond', Georgia, serif",
+                }}
+              >
+                "True wisdom isn't found in the destination—it's gathered in the
+                quiet practice of showing up, day after day."
               </p>
             </div>
           </div>
@@ -135,14 +140,13 @@ const Resources: Component = () => {
           >
             <div class="bg-gradient-to-br from-stone-800 to-stone-700 rounded-2xl p-7 md:p-8 text-amber-50 shadow-lg shadow-stone-900/15 border border-white/10">
               <div class="space-y-4 text-center max-w-2xl mx-auto">
-                <p class="text-xs uppercase tracking-[0.25em] text-amber-200/80">
-                  looking for a shortcut?
-                </p>
                 <p class="text-xl md:text-2xl font-semibold leading-snug">
-                  Or... just want an app to "fix" everything? 👀
+                  Or... just want an app to "fix" that one thing? 👀
                 </p>
                 <p class="text-amber-50/80 text-sm md:text-base leading-relaxed">
-                  Look, we built this whole guide to help you understand the journey. But if you're dead-set on finding an app to download and call it progress... fine. We've got a list.
+                  Look, we built this whole guide to help you understand the
+                  journey. But if you're dead-set on finding an app to download
+                  and call it progress... fine. We've got a list.
                 </p>
                 <a
                   href="/theres-an-app-for-that"
@@ -165,4 +169,3 @@ const Resources: Component = () => {
 };
 
 export default Resources;
-

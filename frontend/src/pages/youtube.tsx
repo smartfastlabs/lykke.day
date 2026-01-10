@@ -10,7 +10,7 @@ const channels: MediaItem[] = [
       "Evidence-based strategies for managing ADHD with compassion, humor, and community—helping you understand your brain and build systems that actually work.",
     url: "https://www.youtube.com/@HowtoADHD",
     vibe: "adhd support",
-    thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_miWXKhDxGO8y8QhLa9jVx9u4bPqKTMz4m7A7v4Dw=s176-c-k-c0x00ffffff-no-rj",
+    thumbnail: "/images/covers/youtube/how-to-adhd.jpg",
   },
   {
     title: "Therapy in a Nutshell",
@@ -19,7 +19,7 @@ const channels: MediaItem[] = [
       "Accessible mental health education from a licensed therapist—CBT skills, anxiety tools, and practical ways to improve your emotional wellbeing.",
     url: "https://www.youtube.com/@TherapyinaNutshell",
     vibe: "mental health skills",
-    thumbnail: "https://yt3.googleusercontent.com/4g6d8W2QoPsI-tqmvKdEb5nfXPQPUPQZp6_1gW8g75kqJVs7iVL_3CW0eP-SqKW4U_4BXZyP=s176-c-k-c0x00ffffff-no-rj",
+    thumbnail: "/images/covers/youtube/therapy-in-a-nutshell.jpg",
   },
   {
     title: "HealthyGamerGG",
@@ -28,25 +28,7 @@ const channels: MediaItem[] = [
       "A Harvard-trained psychiatrist blending modern mental health science with ancient yogic wisdom—conversations on gaming, addiction, motivation, and finding purpose.",
     url: "https://www.youtube.com/@HealthyGamerGG",
     vibe: "mental wellness",
-    thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_kGP3t5pG5L6_8R8fJ8o3P1w_7Q5lYa_6kD3yWRdw=s176-c-k-c0x00ffffff-no-rj",
-  },
-  {
-    title: "CGP Grey",
-    creator: "CGP Grey",
-    summary:
-      "Deeply researched explanations of systems, productivity philosophy, and how to think about life's complex questions with clarity and curiosity.",
-    url: "https://www.youtube.com/@CGPGrey",
-    vibe: "systems thinking",
-    thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_kL-2P7xJXdJCVGpSLp6XYVpC3b7-3bQp6M3Q=s176-c-k-c0x00ffffff-no-rj",
-  },
-  {
-    title: "Kurzgesagt – In a Nutshell",
-    creator: "Kurzgesagt Team",
-    summary:
-      "Beautifully animated explorations of science, philosophy, and existential topics—making the universe's biggest questions accessible and wondrous.",
-    url: "https://www.youtube.com/@kurzgesagt",
-    vibe: "wonder & science",
-    thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_n5BHq3z7Fvqy86FPxPzZ5h5BdGlI9YdW-7yTpQ=s176-c-k-c0x00ffffff-no-rj",
+    thumbnail: "/images/covers/youtube/healthy-gamer.jpg",
   },
   {
     title: "Ali Abdaal",
@@ -55,7 +37,7 @@ const channels: MediaItem[] = [
       "A doctor-turned-creator sharing evidence-based productivity, happiness research, and reflections on building a meaningful life with intention.",
     url: "https://www.youtube.com/@aliabdaal",
     vibe: "productive joy",
-    thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_lxrFBPELZDrq97VBUcQCZ8h6BdPBvv5vBqow=s176-c-k-c0x00ffffff-no-rj",
+    thumbnail: "/images/covers/youtube/ali-abdaal.jpg",
   },
   {
     title: "Matt D'Avella",
@@ -64,16 +46,7 @@ const channels: MediaItem[] = [
       "Minimalism, intentional living, and habits—exploring what it means to live with less clutter, more purpose, and deeper presence.",
     url: "https://www.youtube.com/@mattdavella",
     vibe: "intentional living",
-    thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_mmkUPBT4KfnhJ0pRXb4k2Hn_5qP_6zLw=s176-c-k-c0x00ffffff-no-rj",
-  },
-  {
-    title: "Struthless",
-    creator: "Campbell Walker",
-    summary:
-      "Creative systems, productivity for messy brains, and honest reflections on building a life that works when your attention wanders.",
-    url: "https://www.youtube.com/@Struthless",
-    vibe: "creative systems",
-    thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_nQhVv9HjYPX3h7TQrZBLfqR6PZ5xaX-9M=s176-c-k-c0x00ffffff-no-rj",
+    thumbnail: "/images/covers/youtube/matt-d-avella.jpg",
   },
   {
     title: "The School of Life",
@@ -82,7 +55,7 @@ const channels: MediaItem[] = [
       "Philosophical guidance on relationships, work, meaning, and self-knowledge—tools for living more wisely and compassionately.",
     url: "https://www.youtube.com/@theschooloflifetv",
     vibe: "wisdom & meaning",
-    thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_l5PqMw8f3H6Y3Z9rH7L8Ej0BvLqQ=s176-c-k-c0x00ffffff-no-rj",
+    thumbnail: "/images/covers/youtube/the-school-of-life.jpg",
   },
   {
     title: "Nathaniel Drew",
@@ -91,7 +64,7 @@ const channels: MediaItem[] = [
       "Personal experiments in mindfulness, productivity, and living abroad—reflective storytelling on designing a life aligned with your values.",
     url: "https://www.youtube.com/@NathanielDrew",
     vibe: "mindful exploration",
-    thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_lW8Q5L6ZM8x7h9R5qX3Pw=s176-c-k-c0x00ffffff-no-rj",
+    thumbnail: "/images/covers/youtube/nathaniel-drew.jpg",
   },
   {
     title: "Elizabeth Filips",
@@ -100,7 +73,7 @@ const channels: MediaItem[] = [
       "A medical student and artist sharing research-backed methods for focus, learning, and managing attention in a distracted world.",
     url: "https://www.youtube.com/@elizabethfilips",
     vibe: "focus & learning",
-    thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_kZ5Y3P7H-qL9w8xB6R5pQ=s176-c-k-c0x00ffffff-no-rj",
+    thumbnail: "/images/covers/youtube/elizabeth-filips.jpg",
   },
   {
     title: "Sisyphus 55",
@@ -109,7 +82,7 @@ const channels: MediaItem[] = [
       "Philosophy through storytelling—existentialism, absurdism, and the search for meaning in everyday life, beautifully narrated.",
     url: "https://www.youtube.com/@Sisyphus55",
     vibe: "existential reflection",
-    thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_mK7Z5qH8R-9LwX6pM=s176-c-k-c0x00ffffff-no-rj",
+    thumbnail: "/images/covers/youtube/sisyphus-55.jpg",
   },
 ];
 
@@ -125,4 +98,3 @@ const YouTube: Component = () => {
 };
 
 export default YouTube;
-
