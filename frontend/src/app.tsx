@@ -17,8 +17,10 @@ import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
 import FAQ from "@/pages/faq";
 import Books from "@/pages/books";
+import TodoApps from "@/pages/todo-apps";
 import YouTube from "@/pages/youtube";
 import Podcasts from "@/pages/podcasts";
+import Resources from "@/pages/resources";
 import Home from "@/pages/me";
 import DayView from "@/pages/me/day/preview";
 import NavPage from "@/pages/me/navigation/links";
@@ -100,8 +102,10 @@ export default function App() {
         <Route path="/terms" component={Terms} />
         <Route path="/faq" component={FAQ} />
         <Route path="/books" component={Books} />
+        <Route path="/todo-apps" component={TodoApps} />
         <Route path="/youtube" component={YouTube} />
         <Route path="/podcasts" component={Podcasts} />
+        <Route path="/resources" component={Resources} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
         <Route path="/forgot-password" component={ForgotPassword} />
