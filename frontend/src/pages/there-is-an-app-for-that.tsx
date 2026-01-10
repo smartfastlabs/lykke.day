@@ -31,7 +31,7 @@ const ThereIsAnAppForThat: Component = () => {
       icon: checkCircle,
       title: "Todo Apps",
       subtitle: "For forgetting what you're supposed to do",
-      link: "/todo-apps",
+      link: "/apps/todo",
       satireText:
         "37 apps later, you're still not sure which one holds the grocery list from Tuesday.",
     },
@@ -39,7 +39,7 @@ const ThereIsAnAppForThat: Component = () => {
       icon: sparkles,
       title: "Meditation Apps",
       subtitle: "For stressing about whether you're relaxing correctly",
-      link: "/meditation-apps",
+      link: "/apps/meditation",
       satireText:
         "Nothing says 'inner peace' like comparing your streak to strangers and gamifying mindfulness.",
     },
@@ -47,7 +47,7 @@ const ThereIsAnAppForThat: Component = () => {
       icon: chartBar,
       title: "Weight Loss Apps",
       subtitle: "For turning food into a math problem",
-      link: "/weight-loss-apps",
+      link: "/apps/weight-loss",
       satireText:
         "Because eating intuitively is no match for scanning barcodes and judging your lunch in real-time.",
     },
@@ -55,7 +55,7 @@ const ThereIsAnAppForThat: Component = () => {
       icon: fire,
       title: "Habit Apps",
       subtitle: "For gamifying basic human functioning",
-      link: "/habit-apps",
+      link: "/apps/habits",
       satireText:
         "Lose your 847-day streak and watch your sense of self-worth crumble. At least you flossed consistently for two years though.",
     },
@@ -63,7 +63,7 @@ const ThereIsAnAppForThat: Component = () => {
       icon: heart,
       title: "Happiness Apps",
       subtitle: "For quantifying joy until it becomes homework",
-      link: "/happiness-apps",
+      link: "/apps/happiness",
       satireText:
         "Daily gratitude prompts and mood tracking—because being happy is so much easier when you journal about it at 11 PM.",
     },

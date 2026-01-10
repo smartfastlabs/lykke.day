@@ -1,6 +1,15 @@
 import { Component, For, createSignal, onMount } from "solid-js";
 import { Icon } from "solid-heroicons";
-import { sun, arrowPath, calendar, bellAlert } from "solid-heroicons/outline";
+import {
+  sun,
+  arrowPath,
+  calendar,
+  bellAlert,
+  heart,
+  sparkles,
+  checkCircle,
+  xCircle,
+} from "solid-heroicons/outline";
 import Footer from "@/components/shared/layout/Footer";
 import { useAuth } from "@/providers/auth";
 
@@ -169,26 +178,210 @@ const Landing: Component = () => {
           </div>
 
           <div
-            class="max-w-xl mx-auto transition-all duration-1000 delay-[900ms] ease-out"
+            class="my-20 transition-all duration-1000 delay-[900ms] ease-out"
             style={{
               opacity: mounted() ? 1 : 0,
               transform: mounted() ? "translateY(0)" : "translateY(20px)",
             }}
           >
-            <div class="relative py-8">
-              <div class="absolute left-0 top-0 w-8 h-8 border-l-2 border-t-2 border-amber-300/50" />
-              <div class="absolute right-0 bottom-0 w-8 h-8 border-r-2 border-b-2 border-amber-300/50" />
-              <p
-                class="text-stone-600 text-lg md:text-xl italic leading-relaxed px-6"
-                style={{
-                  "font-family": "'Cormorant Garamond', Georgia, serif",
-                }}
-              >
-                "In an age of infinite distraction, the rarest gift you can give
-                yourself is a single, unhurried hour devoted to what truly
-                matters."
+            <div class="max-w-2xl mx-auto mb-12 text-center">
+              <h2 class="text-2xl md:text-3xl font-semibold text-stone-800 mb-6 tracking-tight">
+                What is lykke.day?
+              </h2>
+              <p class="text-stone-600 text-base md:text-lg leading-relaxed mb-10">
+                A daily companion that helps you get the small stuff done so
+                you're more effective to do the big stuff.
               </p>
             </div>
+
+            <div class="max-w-5xl mx-auto">
+              <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white/60 backdrop-blur-sm border border-white/60 rounded-2xl p-6 hover:bg-white/70 transition-all duration-300">
+                  <div class="flex flex-col items-center text-center">
+                    <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center mb-4">
+                      <Icon path={arrowPath} class="w-7 h-7 text-amber-700" />
+                    </div>
+                    <div class="flex-1">
+                      <h3 class="text-stone-900 font-semibold text-lg mb-3">
+                        The comfort of routines
+                      </h3>
+                      <p class="text-stone-600 text-sm leading-relaxed">
+                        There's a quiet confidence that comes from knowing what
+                        to do next. Your routines become second nature, freeing
+                        your mind for what really matters.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-white/60 backdrop-blur-sm border border-white/60 rounded-2xl p-6 hover:bg-white/70 transition-all duration-300">
+                  <div class="flex flex-col items-center text-center">
+                    <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center mb-4">
+                      <Icon path={heart} class="w-7 h-7 text-amber-700" />
+                    </div>
+                    <div class="flex-1">
+                      <h3 class="text-stone-900 font-semibold text-lg mb-3">
+                        The calmness of successful days
+                      </h3>
+                      <p class="text-stone-600 text-sm leading-relaxed">
+                        End your day knowing you showed up. Not perfectly, but
+                        meaningfully. That sense of accomplishment creates a
+                        peace that compounds over time.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-white/60 backdrop-blur-sm border border-white/60 rounded-2xl p-6 hover:bg-white/70 transition-all duration-300">
+                  <div class="flex flex-col items-center text-center">
+                    <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center mb-4">
+                      <Icon path={sparkles} class="w-7 h-7 text-amber-700" />
+                    </div>
+                    <div class="flex-1">
+                      <h3 class="text-stone-900 font-semibold text-lg mb-3">
+                        The freedom to focus on what's big
+                      </h3>
+                      <p class="text-stone-600 text-sm leading-relaxed">
+                        When the small stuff is handled, your energy flows
+                        toward your dreams, your relationships, your growth. The
+                        things you can't outsource to an app.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="my-20 transition-all duration-1000 delay-[950ms] ease-out"
+            style={{
+              opacity: mounted() ? 1 : 0,
+              transform: mounted() ? "translateY(0)" : "translateY(20px)",
+            }}
+          >
+            <div class="max-w-2xl mx-auto mb-12 text-center">
+              <h2 class="text-2xl md:text-3xl font-semibold text-stone-800 mb-6 tracking-tight">
+                What lykke is not
+              </h2>
+              <p class="text-stone-600 text-base md:text-lg leading-relaxed mb-10">
+                We're intentionally different. Here's what you won't find here.
+              </p>
+            </div>
+
+            <div class="max-w-5xl mx-auto">
+              <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white/60 backdrop-blur-sm border border-white/60 rounded-2xl p-6 hover:bg-white/70 transition-all duration-300">
+                  <div class="flex flex-col items-center text-center">
+                    <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center mb-4">
+                      <Icon path={xCircle} class="w-7 h-7 text-stone-500" />
+                    </div>
+                    <div class="flex-1">
+                      <h3 class="text-stone-900 font-semibold text-lg mb-3">
+                        A Todo List App
+                      </h3>
+                      <p class="text-stone-600 text-sm leading-relaxed">
+                        No endless backlogs or overflowing task lists. Just what
+                        matters today.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-white/60 backdrop-blur-sm border border-white/60 rounded-2xl p-6 hover:bg-white/70 transition-all duration-300">
+                  <div class="flex flex-col items-center text-center">
+                    <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center mb-4">
+                      <Icon path={xCircle} class="w-7 h-7 text-stone-500" />
+                    </div>
+                    <div class="flex-1">
+                      <h3 class="text-stone-900 font-semibold text-lg mb-3">
+                        A Productivity Tool
+                      </h3>
+                      <p class="text-stone-600 text-sm leading-relaxed">
+                        We're not about doing more. We're about living better —
+                        with intention and ease.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-white/60 backdrop-blur-sm border border-white/60 rounded-2xl p-6 hover:bg-white/70 transition-all duration-300">
+                  <div class="flex flex-col items-center text-center">
+                    <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-stone-100 to-stone-200 flex items-center justify-center mb-4">
+                      <Icon path={xCircle} class="w-7 h-7 text-stone-500" />
+                    </div>
+                    <div class="flex-1">
+                      <h3 class="text-stone-900 font-semibold text-lg mb-3">
+                        An AI Personal Assistant
+                      </h3>
+                      <p class="text-stone-600 text-sm leading-relaxed">
+                        No chatbots or algorithms making decisions for you. Your
+                        life, your choices.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="my-16 transition-all duration-1000 delay-[1000ms] ease-out"
+            style={{
+              opacity: mounted() ? 1 : 0,
+              transform: mounted() ? "translateY(0)" : "translateY(20px)",
+            }}
+          >
+            <h2 class="text-2xl md:text-3xl font-semibold text-stone-800 mb-4 tracking-tight">
+              Is Lykke For You?
+            </h2>
+            <p class="text-stone-600 text-base md:text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
+              Missing commitments? Stuck in a rut? Feeling like life is passing
+              you by? Whether you're navigating specific challenges or just know
+              something needs to change, it all starts with the same thing: a
+              solid foundation.
+            </p>
+
+            <div class="grid sm:grid-cols-3 gap-4 md:gap-5 mb-6 max-w-3xl mx-auto">
+              <div class="bg-white/50 backdrop-blur-sm border border-amber-200/60 rounded-xl p-5 text-center hover:bg-white/70 hover:border-amber-300/70 transition-all duration-300">
+                <div class="text-2xl mb-2">🌱</div>
+                <h4 class="text-stone-800 font-medium text-sm mb-2">
+                  Anxiety & Depression
+                </h4>
+                <p class="text-stone-500 text-xs leading-relaxed">
+                  Daily structure and gentle routines create stability when
+                  everything feels overwhelming.
+                </p>
+              </div>
+
+              <div class="bg-white/50 backdrop-blur-sm border border-amber-200/60 rounded-xl p-5 text-center hover:bg-white/70 hover:border-amber-300/70 transition-all duration-300">
+                <div class="text-2xl mb-2">🎯</div>
+                <h4 class="text-stone-800 font-medium text-sm mb-2">
+                  ADD & ADHD
+                </h4>
+                <p class="text-stone-500 text-xs leading-relaxed">
+                  One day at a time, with reminders that help without adding to
+                  the noise.
+                </p>
+              </div>
+
+              <div class="bg-white/50 backdrop-blur-sm border border-amber-200/60 rounded-xl p-5 text-center hover:bg-white/70 hover:border-amber-300/70 transition-all duration-300">
+                <div class="text-2xl mb-2">💪</div>
+                <h4 class="text-stone-800 font-medium text-sm mb-2">
+                  Substance Abuse Recovery
+                </h4>
+                <p class="text-stone-500 text-xs leading-relaxed">
+                  Daily structure and accountability help build the foundation
+                  for lasting sobriety — one day at a time.
+                </p>
+              </div>
+            </div>
+
+            <p class="text-stone-500 text-sm max-w-2xl mx-auto leading-relaxed italic">
+              No matter your journey, lasting change comes from consistent,
+              manageable habits. Lykke helps you build that foundation — your
+              way, at your pace.
+            </p>
           </div>
 
           <div class="mt-8 mb-16 space-y-3">

@@ -107,15 +107,15 @@ export default function App() {
         <Route path="/terms" component={Terms} />
         <Route path="/faq" component={FAQ} />
         <Route path="/books" component={Books} />
-        <Route path="/todo-apps" component={TodoApps} />
-        <Route path="/meditation-apps" component={MeditationApps} />
-        <Route path="/weight-loss-apps" component={WeightLossApps} />
-        <Route path="/habit-apps" component={HabitApps} />
-        <Route path="/happiness-apps" component={HappinessApps} />
+        <Route path="/apps" component={ThereIsAnAppForThat} />
+        <Route path="/apps/todo" component={TodoApps} />
+        <Route path="/apps/meditation" component={MeditationApps} />
+        <Route path="/apps/weight-loss" component={WeightLossApps} />
+        <Route path="/apps/habits" component={HabitApps} />
+        <Route path="/apps/happiness" component={HappinessApps} />
         <Route path="/youtube" component={YouTube} />
         <Route path="/podcasts" component={Podcasts} />
         <Route path="/resources" component={Resources} />
-        <Route path="/theres-an-app-for-that" component={ThereIsAnAppForThat} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
         <Route path="/forgot-password" component={ForgotPassword} />

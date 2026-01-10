@@ -50,20 +50,13 @@ export default function EarlyAccess() {
               </p>
             </div>
             <p class="text-stone-600 text-sm leading-relaxed">
-              We&apos;ll reach out when lykke.day is ready. You can return to
-              the{" "}
+              We&apos;ll reach out when lykke.day is ready. In the meantime,
+              check out our{" "}
               <a
-                href="/"
+                href="/resources"
                 class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
               >
-                home page
-              </a>{" "}
-              or{" "}
-              <a
-                href="/login"
-                class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
-              >
-                log in
+                resources
               </a>
               .
             </p>
