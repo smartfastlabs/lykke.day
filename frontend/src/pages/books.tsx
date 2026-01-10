@@ -120,7 +120,6 @@ const Books: Component = () => {
       subtitle="lykke.day bookshelf"
       description="Books I leaned on while recovering from burnout and COVID—reflections, routines, and kinder ways to rebuild—that nudged me toward creating lykke.day."
       items={books}
-      linkText="Amazon"
     />
   );
 };

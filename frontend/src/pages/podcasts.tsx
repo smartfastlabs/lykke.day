@@ -120,7 +120,6 @@ const Podcasts: Component = () => {
       subtitle="lykke.day podcasts"
       description="Podcasts on attention, burnout recovery, and building a kinder relationship with productivity—voices that shaped my thinking while creating lykke.day."
       items={podcasts}
-      linkText="Website"
     />
   );
 };

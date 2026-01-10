@@ -89,9 +89,8 @@ const Resources: Component = () => {
               <p class="text-stone-700 text-xl md:text-2xl leading-relaxed mb-3 font-medium">
                 Resources
               </p>
-              <p class="text-stone-500 text-sm md:text-base leading-relaxed">
-                Curated channels, podcasts, and books that shaped the philosophy
-                behind lykke.day
+              <p class="text-stone-500 text-sm md:text-base leading-relaxed max-w-2xl">
+                Real, lasting happiness doesn't come from willpower or hustle—it grows from steady, gentle routines that anchor your days. When you build rhythms that honor your energy, not drain it, everything else becomes easier: focus, rest, presence, joy. These aren't rigid schedules; they're loving containers that hold space for what matters most. Small, consistent rituals become the bedrock of a life you don't need to escape from.
               </p>
             </div>
           </div>
@@ -125,6 +124,35 @@ const Resources: Component = () => {
                 </div>
               </a>
             ))}
+          </div>
+
+          <div
+            class="mt-16 transition-all duration-1000 delay-700 ease-out"
+            style={{
+              opacity: mounted() ? 1 : 0,
+              transform: mounted() ? "translateY(0)" : "translateY(20px)",
+            }}
+          >
+            <div class="bg-gradient-to-br from-stone-800 to-stone-700 rounded-2xl p-7 md:p-8 text-amber-50 shadow-lg shadow-stone-900/15 border border-white/10">
+              <div class="space-y-4 text-center max-w-2xl mx-auto">
+                <p class="text-xs uppercase tracking-[0.25em] text-amber-200/80">
+                  looking for a shortcut?
+                </p>
+                <p class="text-xl md:text-2xl font-semibold leading-snug">
+                  Or... just want an app to "fix" everything? 👀
+                </p>
+                <p class="text-amber-50/80 text-sm md:text-base leading-relaxed">
+                  Look, we built this whole guide to help you understand the journey. But if you're dead-set on finding an app to download and call it progress... fine. We've got a list.
+                </p>
+                <a
+                  href="/theres-an-app-for-that"
+                  class="group relative inline-flex items-center justify-center px-8 py-3 bg-amber-100 text-stone-900 rounded-xl font-medium tracking-wide hover:bg-amber-200 transition-all duration-300 shadow-md shadow-stone-900/20 hover:-translate-y-0.5"
+                >
+                  <span class="relative z-10">Fine, show me the apps</span>
+                  <div class="absolute inset-0 rounded-xl bg-amber-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -11,7 +11,6 @@ export interface MediaItem {
 
 interface MediaCardProps {
   item: MediaItem;
-  linkText?: string;
   fallbackImage?: string;
 }
 
@@ -19,7 +18,12 @@ const MediaCard: Component<MediaCardProps> = (props) => {
   const fallback = props.fallbackImage || "https://placehold.co/240x135?text=No+Image";
 
   return (
-    <div class="group bg-white border border-amber-100/60 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-4">
+    <a
+      href={props.item.url}
+      target="_blank"
+      rel="noreferrer"
+      class="group bg-white border border-amber-100/60 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-4 cursor-pointer no-underline"
+    >
       <div class="flex flex-col gap-4">
         <div class="flex items-center justify-center w-full h-56 overflow-hidden">
           <img
@@ -39,7 +43,7 @@ const MediaCard: Component<MediaCardProps> = (props) => {
               {props.item.vibe}
             </p>
           </Show>
-          <h2 class="text-lg font-semibold text-stone-800 leading-snug">
+          <h2 class="text-lg font-semibold text-stone-800 leading-snug group-hover:text-amber-700 transition-colors">
             {props.item.title}
           </h2>
           <p class="text-sm text-stone-500">{props.item.creator}</p>
@@ -48,17 +52,7 @@ const MediaCard: Component<MediaCardProps> = (props) => {
           </p>
         </div>
       </div>
-      <div class="flex items-center justify-end text-sm text-stone-500">
-        <a
-          href={props.item.url}
-          target="_blank"
-          rel="noreferrer"
-          class="text-amber-700 hover:text-amber-800 underline underline-offset-4 font-semibold"
-        >
-          {props.linkText || "Visit"}
-        </a>
-      </div>
-    </div>
+    </a>
   );
 };
 

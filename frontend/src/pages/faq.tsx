@@ -118,6 +118,15 @@ const FAQ: Component = () => {
               </a>
             </div>
           </div>
+
+          <div class="mt-6 text-center">
+            <a
+              href="/there-is-an-app-for-that"
+              class="text-stone-500 text-sm underline decoration-rose-300 underline-offset-4 hover:text-stone-700 transition-colors"
+            >
+              Looking for other apps &amp; resources? Check our guide →
+            </a>
+          </div>
         </div>
       </div>
 

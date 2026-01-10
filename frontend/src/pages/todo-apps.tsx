@@ -80,9 +80,9 @@ const todoApps: MediaItem[] = [
 const TodoApps: Component = () => {
   return (
     <MediaPage
-      title="Todo Apps We Admire"
-      subtitle="todo apps we admire"
-      description="Highly reviewed and popular task management tools that help millions organize their days—each with its own approach to turning chaos into calm."
+      title="Great Todo Apps"
+      subtitle="great todo apps"
+      description="lykke.day isn't a todo app—there are already plenty of excellent ones. These tools excel at capturing tasks and checking boxes. We focus on something different: designing days that feel good to live."
       items={todoApps}
       linkText="Visit Site"
     />

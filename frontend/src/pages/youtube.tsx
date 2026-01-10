@@ -120,7 +120,6 @@ const YouTube: Component = () => {
       subtitle="lykke.day youtube"
       description="Channels that explore attention, rest, purpose, and kinder systems—voices that helped me rethink productivity and presence while building lykke.day."
       items={channels}
-      linkText="YouTube"
     />
   );
 };

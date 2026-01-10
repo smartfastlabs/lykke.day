@@ -18,9 +18,14 @@ import Terms from "@/pages/terms";
 import FAQ from "@/pages/faq";
 import Books from "@/pages/books";
 import TodoApps from "@/pages/todo-apps";
+import MeditationApps from "@/pages/meditation-apps";
+import WeightLossApps from "@/pages/weight-loss-apps";
+import HabitApps from "@/pages/habit-apps";
+import HappinessApps from "@/pages/happiness-apps";
 import YouTube from "@/pages/youtube";
 import Podcasts from "@/pages/podcasts";
 import Resources from "@/pages/resources";
+import ThereIsAnAppForThat from "@/pages/there-is-an-app-for-that";
 import Home from "@/pages/me";
 import DayView from "@/pages/me/day/preview";
 import NavPage from "@/pages/me/navigation/links";
@@ -103,9 +108,14 @@ export default function App() {
         <Route path="/faq" component={FAQ} />
         <Route path="/books" component={Books} />
         <Route path="/todo-apps" component={TodoApps} />
+        <Route path="/meditation-apps" component={MeditationApps} />
+        <Route path="/weight-loss-apps" component={WeightLossApps} />
+        <Route path="/habit-apps" component={HabitApps} />
+        <Route path="/happiness-apps" component={HappinessApps} />
         <Route path="/youtube" component={YouTube} />
         <Route path="/podcasts" component={Podcasts} />
         <Route path="/resources" component={Resources} />
+        <Route path="/theres-an-app-for-that" component={ThereIsAnAppForThat} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
         <Route path="/forgot-password" component={ForgotPassword} />

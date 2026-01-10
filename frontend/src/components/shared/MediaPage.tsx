@@ -7,7 +7,6 @@ interface MediaPageProps {
   subtitle: string;
   description: string;
   items: MediaItem[];
-  linkText?: string;
 }
 
 const MediaPage: Component<MediaPageProps> = (props) => {
@@ -43,8 +42,7 @@ const MediaPage: Component<MediaPageProps> = (props) => {
             <For each={props.items}>
               {(item) => (
                 <MediaCard 
-                  item={item} 
-                  linkText={props.linkText}
+                  item={item}
                 />
               )}
             </For>
