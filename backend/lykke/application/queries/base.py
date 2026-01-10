@@ -44,6 +44,7 @@ class BaseQueryHandler:
         self.routine_ro_repo = ro_repos.routine_ro_repo
         self.task_definition_ro_repo = ro_repos.task_definition_ro_repo
         self.task_ro_repo = ro_repos.task_ro_repo
+        self.time_block_definition_ro_repo = ro_repos.time_block_definition_ro_repo
         self.user_ro_repo = ro_repos.user_ro_repo
 
 

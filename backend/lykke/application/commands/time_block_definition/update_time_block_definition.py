@@ -4,6 +4,9 @@ from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler
 from lykke.domain.data_objects import TimeBlockDefinition
+from lykke.domain.events.time_block_definition_events import (
+    TimeBlockDefinitionUpdatedEvent,
+)
 from lykke.domain.value_objects import TimeBlockDefinitionUpdateObject
 
 
@@ -30,10 +33,10 @@ class UpdateTimeBlockDefinitionHandler(BaseCommandHandler):
                 time_block_definition_id
             )
 
-            # Apply updates
-            updated_fields = update_data.model_dump(exclude_unset=True)
-            for field, value in updated_fields.items():
-                setattr(time_block_definition, field, value)
+            # Apply updates using domain method (adds EntityUpdatedEvent)
+            time_block_definition = time_block_definition.apply_update(
+                update_data, TimeBlockDefinitionUpdatedEvent
+            )
 
             # Add entity to UoW for saving
             uow.add(time_block_definition)

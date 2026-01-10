@@ -104,10 +104,6 @@ class TimeBlockDefinitionQuery(BaseQuery):
     """Query class for TimeBlockDefinition entities."""
 
 
-class TimeBlockDefinitionQuery(BaseQuery):
-    """Query class for TimeBlockDefinition entities."""
-
-
 T = TypeVar("T", bound=BaseQuery)
 
 

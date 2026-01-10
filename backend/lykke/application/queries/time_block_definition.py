@@ -19,11 +19,7 @@ class GetTimeBlockDefinitionHandler(BaseQueryHandler):
         Returns:
             The time block definition entity.
         """
-        async with self.new_ro_repo_factory() as repo_factory:
-            time_block_definition_repo = (
-                repo_factory.time_block_definition_ro_repository()
-            )
-            return await time_block_definition_repo.get(time_block_definition_id)
+        return await self.time_block_definition_ro_repo.get(time_block_definition_id)
 
 
 class SearchTimeBlockDefinitionsHandler(BaseQueryHandler):
@@ -41,9 +37,5 @@ class SearchTimeBlockDefinitionsHandler(BaseQueryHandler):
         Returns:
             Paged response containing time block definitions.
         """
-        async with self.new_ro_repo_factory() as repo_factory:
-            time_block_definition_repo = (
-                repo_factory.time_block_definition_ro_repository()
-            )
-            return await time_block_definition_repo.search(search_query)
+        return await self.time_block_definition_ro_repo.paged_search(search_query)
 
