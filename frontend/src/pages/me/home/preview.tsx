@@ -1,16 +1,9 @@
-import { Show, Component } from "solid-js";
-import { useSheppard } from "@/providers/sheppard";
-import DayPreview from "@/components/days/Preview";
+import { Component } from "solid-js";
 
 export const PreviewView: Component = () => {
-  const { dayContext } = useSheppard();
-
-  return (
-    <Show when={dayContext()}>
-      {(ctx) => <DayPreview dayContext={ctx()} />}
-    </Show>
-  );
+  // The DayOverview is now shown in the parent HomeLayout component
+  // This view is just a placeholder for the /me/today route
+  return null;
 };
 
 export default PreviewView;
-
