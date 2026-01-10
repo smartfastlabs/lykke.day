@@ -37,7 +37,8 @@ import NavPage from "@/pages/me/navigation/links";
 import CalendarPage from "@/pages/me/navigation/calendar";
 import NotificationsPage from "@/pages/me/notifications/index";
 import NotificationsSubscribePage from "@/pages/me/notifications/subscribe";
-import SettingsPage from "@/pages/me/settings/index";
+import SettingsLayout from "@/pages/me/settings/layout";
+import SettingsIndexPage from "@/pages/me/settings/index";
 import ProfileSettingsPage from "@/pages/me/settings/profile";
 import DayTemplatesPage from "@/pages/me/settings/day-templates/index";
 import NewDayTemplatePage from "@/pages/me/settings/day-templates/new";
@@ -151,49 +152,39 @@ export default function App() {
             path="/notifications/subscribe"
             component={NotificationsSubscribePage}
           />
-          <Route path="/settings" component={SettingsPage} />
-          <Route path="/settings/profile" component={ProfileSettingsPage} />
-          <Route path="/settings/day-templates" component={DayTemplatesPage} />
-          <Route
-            path="/settings/day-templates/new"
-            component={NewDayTemplatePage}
-          />
-          <Route
-            path="/settings/day-templates/:id"
-            component={DayTemplateDetailPage}
-          />
-          <Route
-            path="/settings/task-definitions"
-            component={TaskDefinitionsPage}
-          />
-          <Route
-            path="/settings/task-definitions/new"
-            component={NewTaskDefinitionPage}
-          />
-          <Route
-            path="/settings/task-definitions/:id"
-            component={TaskDefinitionDetailPage}
-          />
-          <Route path="/settings/routines" component={RoutinesPage} />
-          <Route path="/settings/routines/new" component={NewRoutinePage} />
-          <Route path="/settings/routines/:id" component={RoutineDetailPage} />
-          <Route path="/settings/calendars" component={CalendarsPage} />
-          <Route
-            path="/settings/calendars/:id/recurring-events"
-            component={CalendarRecurringEventsPage}
-          />
-          <Route
-            path="/settings/calendars/:id"
-            component={CalendarDetailPage}
-          />
-          <Route
-            path="/settings/recurring-events"
-            component={RecurringEventsPage}
-          />
-          <Route
-            path="/settings/recurring-events/:id"
-            component={RecurringEventSeriesDetailPage}
-          />
+          <Route path="/settings" component={SettingsLayout}>
+            <Route path="/" component={SettingsIndexPage} />
+            <Route path="/profile" component={ProfileSettingsPage} />
+            <Route path="/day-templates" component={DayTemplatesPage} />
+            <Route path="/day-templates/new" component={NewDayTemplatePage} />
+            <Route
+              path="/day-templates/:id"
+              component={DayTemplateDetailPage}
+            />
+            <Route path="/task-definitions" component={TaskDefinitionsPage} />
+            <Route
+              path="/task-definitions/new"
+              component={NewTaskDefinitionPage}
+            />
+            <Route
+              path="/task-definitions/:id"
+              component={TaskDefinitionDetailPage}
+            />
+            <Route path="/routines" component={RoutinesPage} />
+            <Route path="/routines/new" component={NewRoutinePage} />
+            <Route path="/routines/:id" component={RoutineDetailPage} />
+            <Route path="/calendars" component={CalendarsPage} />
+            <Route
+              path="/calendars/:id/recurring-events"
+              component={CalendarRecurringEventsPage}
+            />
+            <Route path="/calendars/:id" component={CalendarDetailPage} />
+            <Route path="/recurring-events" component={RecurringEventsPage} />
+            <Route
+              path="/recurring-events/:id"
+              component={RecurringEventSeriesDetailPage}
+            />
+          </Route>
         </Route>
 
         <Route path="*" component={NotFound} />

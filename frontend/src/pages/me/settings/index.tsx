@@ -8,7 +8,6 @@ import {
   faCalendarDays,
 } from "@fortawesome/free-solid-svg-icons";
 
-import Page from "@/components/shared/layout/Page";
 import LinkGrid, { LinkItem } from "@/components/shared/LinkGrid";
 
 const settingsItems: LinkItem[] = [
@@ -28,12 +27,8 @@ const settingsItems: LinkItem[] = [
   },
 ];
 
-const SettingsPage: Component = () => {
-  return (
-    <Page>
-      <LinkGrid items={settingsItems} />
-    </Page>
-  );
+const SettingsIndexPage: Component = () => {
+  return <LinkGrid items={settingsItems} />;
 };
 
-export default SettingsPage;
+export default SettingsIndexPage;
