@@ -15,6 +15,7 @@ from . import (
     sheppard,
     task_definitions,
     tasks,
+    time_block_definitions,
     utils,
 )
 
