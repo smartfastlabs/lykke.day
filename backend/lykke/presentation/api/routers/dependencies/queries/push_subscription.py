@@ -3,7 +3,10 @@
 from typing import Annotated
 
 from fastapi import Depends
-from lykke.application.queries.push_subscription import SearchPushSubscriptionsHandler
+from lykke.application.queries.push_subscription import (
+    GetPushSubscriptionHandler,
+    SearchPushSubscriptionsHandler,
+)
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.domain.entities import UserEntity
 
@@ -20,4 +23,15 @@ def get_list_push_subscriptions_handler(
     """Get a SearchPushSubscriptionsHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return SearchPushSubscriptionsHandler(ro_repos, user.id)
+
+
+def get_push_subscription_handler(
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> GetPushSubscriptionHandler:
+    """Get a GetPushSubscriptionHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return GetPushSubscriptionHandler(ro_repos, user.id)
 

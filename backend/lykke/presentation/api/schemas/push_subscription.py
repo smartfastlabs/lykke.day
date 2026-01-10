@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from .base import BaseEntitySchema
+from .base import BaseEntitySchema, BaseSchema
 
 
 class PushSubscriptionSchema(BaseEntitySchema):
@@ -15,4 +15,10 @@ class PushSubscriptionSchema(BaseEntitySchema):
     p256dh: str
     auth: str
     created_at: datetime
+
+
+class PushSubscriptionUpdateSchema(BaseSchema):
+    """API schema for PushSubscription update requests."""
+
+    device_name: str | None = None
 

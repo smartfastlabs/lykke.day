@@ -11,6 +11,7 @@ from .push_subscriptions import PushSubscription
 from .routines import Routine
 from .task_definitions import TaskDefinition
 from .tasks import Task
+from .time_block_definitions import TimeBlockDefinition
 from .users import User
 
 # Export table objects for Core-style queries
@@ -24,6 +25,7 @@ push_subscriptions_tbl = PushSubscription.__table__
 routines_tbl = Routine.__table__
 task_definitions_tbl = TaskDefinition.__table__
 tasks_tbl = Task.__table__
+time_block_definitions_tbl = TimeBlockDefinition.__table__
 users_tbl = User.__table__
 
 __all__ = [
@@ -41,6 +43,7 @@ __all__ = [
     "Routine",
     "Task",
     "TaskDefinition",
+    "TimeBlockDefinition",
     "User",
     # Table objects (for Core-style queries)
     "auth_tokens_tbl",
@@ -53,5 +56,6 @@ __all__ = [
     "routines_tbl",
     "task_definitions_tbl",
     "tasks_tbl",
+    "time_block_definitions_tbl",
     "users_tbl",
 ]

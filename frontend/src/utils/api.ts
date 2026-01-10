@@ -315,6 +315,15 @@ export const pushAPI = {
   getSubscriptions: (): Promise<PushSubscription[]> =>
     fetchData<PushSubscription[]>("/api/push/subscriptions/"),
 
+  get: (id: string): Promise<PushSubscription> =>
+    fetchData<PushSubscription>(`/api/push/subscriptions/${id}`),
+
+  update: (subscription: PushSubscription): Promise<PushSubscription> =>
+    fetchData<PushSubscription>(`/api/push/subscriptions/${subscription.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ device_name: subscription.device_name }),
+    }),
+
   deleteSubscription: (id: string): Promise<void> =>
     fetchData<void>(`/api/push/subscriptions/${id}`, { method: "DELETE" }),
 };

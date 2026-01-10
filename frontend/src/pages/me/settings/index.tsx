@@ -6,6 +6,7 @@ import {
   faCalendar,
   faListCheck,
   faCalendarDays,
+  faBell,
 } from "@fortawesome/free-solid-svg-icons";
 
 import LinkGrid, { LinkItem } from "@/components/shared/LinkGrid";
@@ -24,6 +25,11 @@ const settingsItems: LinkItem[] = [
     label: "Recurring Events",
     icon: faCalendarDays,
     url: "/me/settings/recurring-events",
+  },
+  {
+    label: "Push Subscriptions",
+    icon: faBell,
+    url: "/me/settings/push-subscriptions",
   },
 ];
 

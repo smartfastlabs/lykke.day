@@ -1,4 +1,5 @@
 """Update objects for entity updates."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,6 +12,12 @@ from .day import DayStatus, DayTag
 from .routine import RoutineSchedule, RoutineTask
 from .sync import SyncSubscription
 from .task import EventCategory, TaskCategory, TaskType
+from .time_block import (
+    DayTemplateTimeBlock,
+    DayTimeBlock,
+    TimeBlockCategory,
+    TimeBlockType,
+)
 from .user import UserSetting, UserStatus
 
 
@@ -31,6 +38,16 @@ class TaskDefinitionUpdateObject(BaseUpdateObject):
     name: str | None = None
     description: str | None = None
     type: TaskType | None = None
+
+
+@dataclass(kw_only=True)
+class TimeBlockDefinitionUpdateObject(BaseUpdateObject):
+    """Update object for TimeBlockDefinition entity."""
+
+    name: str | None = None
+    description: str | None = None
+    type: TimeBlockType | None = None
+    category: TimeBlockCategory | None = None
 
 
 @dataclass(kw_only=True)
@@ -66,6 +83,7 @@ class DayTemplateUpdateObject(BaseUpdateObject):
     alarm: Alarm | None = None
     icon: str | None = None
     routine_ids: list[UUID] | None = None
+    time_blocks: list[DayTemplateTimeBlock] | None = None
 
 
 @dataclass(kw_only=True)
@@ -97,4 +115,12 @@ class DayUpdateObject(BaseUpdateObject):
     scheduled_at: datetime | None = None
     tags: list[DayTag] | None = None
     template_id: UUID | None = None
+    time_blocks: list[DayTimeBlock] | None = None
+    active_time_block_id: UUID | None = None
 
+
+@dataclass(kw_only=True)
+class PushSubscriptionUpdateObject(BaseUpdateObject):
+    """Update object for PushSubscription entity."""
+
+    device_name: str | None = None

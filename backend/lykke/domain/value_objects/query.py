@@ -100,6 +100,10 @@ class TaskDefinitionQuery(BaseQuery):
     """Query class for TaskDefinition entities."""
 
 
+class TimeBlockDefinitionQuery(BaseQuery):
+    """Query class for TimeBlockDefinition entities."""
+
+
 T = TypeVar("T", bound=BaseQuery)
 
 

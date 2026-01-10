@@ -6,6 +6,7 @@ from fastapi import Depends
 from lykke.application.commands.push_subscription import (
     CreatePushSubscriptionHandler,
     DeletePushSubscriptionHandler,
+    UpdatePushSubscriptionHandler,
 )
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
@@ -36,4 +37,16 @@ def get_delete_push_subscription_handler(
     """Get a DeletePushSubscriptionHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return DeletePushSubscriptionHandler(ro_repos, uow_factory, user.id)
+
+
+def get_update_push_subscription_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> UpdatePushSubscriptionHandler:
+    """Get an UpdatePushSubscriptionHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return UpdatePushSubscriptionHandler(ro_repos, uow_factory, user.id)
 

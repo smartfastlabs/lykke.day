@@ -40,6 +40,8 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
     scheduled_at: datetime | None = None
     tags: list[value_objects.DayTag] = field(default_factory=list)
     template: DayTemplateEntity | None = None
+    time_blocks: list[value_objects.DayTimeBlock] = field(default_factory=list)
+    active_time_block_id: UUID | None = None
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:

@@ -22,6 +22,7 @@ class DayTemplateEntity(BaseEntityObject[DayTemplateUpdateObject, "DayTemplateUp
     alarm: value_objects.Alarm | None = None
     icon: str | None = None
     routine_ids: list[UUID] = field(default_factory=list)
+    time_blocks: list[value_objects.DayTemplateTimeBlock] = field(default_factory=list)
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
@@ -47,6 +48,7 @@ class DayTemplateEntity(BaseEntityObject[DayTemplateUpdateObject, "DayTemplateUp
             alarm=self.alarm,
             icon=self.icon,
             routine_ids=routine_ids,
+            time_blocks=self.time_blocks,
         )
 
     def add_routine(self, routine_id: UUID) -> DayTemplateEntity:

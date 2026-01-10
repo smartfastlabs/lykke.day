@@ -19,6 +19,8 @@ class Day(Base):
     alarm = Column(JSONB)  # Alarm | None
     status = Column(String, nullable=False)  # DayStatus enum as string
     scheduled_at = Column(DateTime)
+    time_blocks = Column(JSONB)  # list[DayTimeBlock]
+    active_time_block_id = Column(PGUUID)  # UUID | None
 
     __table_args__ = (
         Index("idx_days_date", "date"),

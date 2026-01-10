@@ -54,6 +54,8 @@ import CalendarDetailPage from "@/pages/me/settings/calendars/detail";
 import RecurringEventsPage from "@/pages/me/settings/recurring-events/index";
 import RecurringEventSeriesDetailPage from "@/pages/me/settings/recurring-events/detail";
 import CalendarRecurringEventsPage from "@/pages/me/settings/calendars/recurring-events";
+import PushSubscriptionsPage from "@/pages/me/settings/push-subscriptions/index";
+import PushSubscriptionDetailPage from "@/pages/me/settings/push-subscriptions/detail";
 import Welcome from "@/pages/me/welcome";
 import OverviewPage from "@/pages/me/overview";
 import NotFound from "@/pages/not-found";
@@ -183,6 +185,14 @@ export default function App() {
             <Route
               path="/recurring-events/:id"
               component={RecurringEventSeriesDetailPage}
+            />
+            <Route
+              path="/push-subscriptions"
+              component={PushSubscriptionsPage}
+            />
+            <Route
+              path="/push-subscriptions/:id"
+              component={PushSubscriptionDetailPage}
             />
           </Route>
         </Route>

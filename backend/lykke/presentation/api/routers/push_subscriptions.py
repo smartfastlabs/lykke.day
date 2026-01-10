@@ -5,20 +5,31 @@ from fastapi import APIRouter, BackgroundTasks, Depends
 from lykke.application.commands.push_subscription import (
     CreatePushSubscriptionHandler,
     DeletePushSubscriptionHandler,
+    UpdatePushSubscriptionHandler,
 )
-from lykke.application.queries.push_subscription import SearchPushSubscriptionsHandler
+from lykke.application.queries.push_subscription import (
+    GetPushSubscriptionHandler,
+    SearchPushSubscriptionsHandler,
+)
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain import data_objects
 from lykke.infrastructure.gateways import web_push
-from lykke.presentation.api.schemas import PushSubscriptionSchema
+from lykke.presentation.api.schemas import (
+    PushSubscriptionSchema,
+    PushSubscriptionUpdateSchema,
+)
 from lykke.presentation.api.schemas.mappers import map_push_subscription_to_schema
 
 from .dependencies.commands.push_subscription import (
     get_create_push_subscription_handler,
     get_delete_push_subscription_handler,
+    get_update_push_subscription_handler,
 )
-from .dependencies.queries.push_subscription import get_list_push_subscriptions_handler
+from .dependencies.queries.push_subscription import (
+    get_list_push_subscriptions_handler,
+    get_push_subscription_handler,
+)
 from .dependencies.user import get_current_user
 
 router = APIRouter()
@@ -43,6 +54,34 @@ async def list_subscriptions(
 ) -> list[PushSubscriptionSchema]:
     result = await list_push_subscriptions_handler.run()
     return [map_push_subscription_to_schema(sub) for sub in result.items]
+
+
+@router.get("/subscriptions/{subscription_id}", response_model=PushSubscriptionSchema)
+async def get_subscription(
+    subscription_id: str,
+    get_push_subscription_handler: Annotated[
+        GetPushSubscriptionHandler, Depends(get_push_subscription_handler)
+    ],
+) -> PushSubscriptionSchema:
+    result = await get_push_subscription_handler.run(subscription_id=UUID(subscription_id))
+    return map_push_subscription_to_schema(result)
+
+
+@router.put("/subscriptions/{subscription_id}", response_model=PushSubscriptionSchema)
+async def update_subscription(
+    subscription_id: str,
+    update_data: PushSubscriptionUpdateSchema,
+    update_push_subscription_handler: Annotated[
+        UpdatePushSubscriptionHandler, Depends(get_update_push_subscription_handler)
+    ],
+) -> PushSubscriptionSchema:
+    update_object = value_objects.PushSubscriptionUpdateObject(
+        device_name=update_data.device_name
+    )
+    result = await update_push_subscription_handler.run(
+        subscription_id=UUID(subscription_id), update_data=update_object
+    )
+    return map_push_subscription_to_schema(result)
 
 
 @router.delete("/subscriptions/{subscription_id}")
