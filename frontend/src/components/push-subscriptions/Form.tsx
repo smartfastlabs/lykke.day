@@ -24,16 +24,16 @@ const PushSubscriptionForm: Component<FormProps> = (props) => {
   return (
     <form onSubmit={handleSubmit} class="space-y-6">
       <Input
-        label="Device Name"
+        id="device-name"
         type="text"
-        value={deviceName()}
-        onInput={(e) => setDeviceName(e.currentTarget.value)}
+        value={deviceName}
+        onChange={setDeviceName}
         placeholder="Enter device name"
       />
 
       <FormError error={props.error} />
 
-      <Button type="submit" disabled={props.isLoading} fullWidth>
+      <Button type="submit" disabled={props.isLoading}>
         {props.isLoading ? "Saving..." : "Save Changes"}
       </Button>
     </form>

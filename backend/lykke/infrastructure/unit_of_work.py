@@ -28,6 +28,8 @@ from lykke.application.repositories import (
     TaskDefinitionRepositoryReadWriteProtocol,
     TaskRepositoryReadOnlyProtocol,
     TaskRepositoryReadWriteProtocol,
+    TimeBlockDefinitionRepositoryReadOnlyProtocol,
+    TimeBlockDefinitionRepositoryReadWriteProtocol,
     UserRepositoryReadOnlyProtocol,
     UserRepositoryReadWriteProtocol,
 )
@@ -72,6 +74,8 @@ from lykke.infrastructure.repositories import (
     RoutineRepository,
     TaskDefinitionRepository,
     TaskRepository,
+    TimeBlockDefinitionReadOnlyRepository,
+    TimeBlockDefinitionReadWriteRepository,
     UserRepository,
 )
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -102,6 +106,7 @@ class SqlAlchemyUnitOfWork:
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
+    time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
     def __init__(self, user_id: UUID) -> None:
@@ -135,6 +140,9 @@ class SqlAlchemyUnitOfWork:
             TaskDefinitionRepositoryReadWriteProtocol | None
         ) = None
         self._task_rw_repo: TaskRepositoryReadWriteProtocol | None = None
+        self._time_block_definition_rw_repo: (
+            TimeBlockDefinitionRepositoryReadWriteProtocol | None
+        ) = None
         self._user_rw_repo: UserRepositoryReadWriteProtocol | None = None
 
     async def __aenter__(self) -> Self:
@@ -251,6 +259,14 @@ class SqlAlchemyUnitOfWork:
         )
         self.task_ro_repo = cast("TaskRepositoryReadOnlyProtocol", task_repo)
         self._task_rw_repo = task_repo
+
+        time_block_definition_repo = TimeBlockDefinitionReadWriteRepository(
+            session=self._connection, user_id=self.user_id
+        )
+        self.time_block_definition_ro_repo = cast(
+            "TimeBlockDefinitionRepositoryReadOnlyProtocol", time_block_definition_repo
+        )
+        self._time_block_definition_rw_repo = time_block_definition_repo
 
         return self
 
@@ -427,6 +443,8 @@ class SqlAlchemyUnitOfWork:
             return self._routine_rw_repo
         elif entity_type == data_objects.TaskDefinition:
             return self._task_definition_rw_repo
+        elif entity_type == data_objects.TimeBlockDefinition:
+            return self._time_block_definition_rw_repo
         elif entity_type == UserEntity:
             return self._user_rw_repo
         elif entity_type == data_objects.PushSubscription:
@@ -467,6 +485,8 @@ class SqlAlchemyUnitOfWork:
             return self.routine_ro_repo
         elif entity_type == data_objects.TaskDefinition:
             return self.task_definition_ro_repo
+        elif entity_type == data_objects.TimeBlockDefinition:
+            return self.time_block_definition_ro_repo
         elif entity_type == UserEntity:
             return self.user_ro_repo
         elif entity_type == data_objects.PushSubscription:
@@ -657,6 +677,12 @@ class SqlAlchemyReadOnlyRepositories:
             "TaskRepositoryReadOnlyProtocol", TaskRepository(user_id=self.user_id)
         )
         self.task_ro_repo = task_repo
+
+        engine = get_engine()
+        time_block_definition_repo = TimeBlockDefinitionReadOnlyRepository(
+            session=engine, user_id=self.user_id
+        )
+        self.time_block_definition_ro_repo = time_block_definition_repo
 
 
 class SqlAlchemyReadOnlyRepositoryFactory:

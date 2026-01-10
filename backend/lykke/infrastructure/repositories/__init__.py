@@ -8,6 +8,10 @@ from .push_subscription import PushSubscriptionRepository
 from .routine import RoutineRepository
 from .task import TaskRepository
 from .task_definition import TaskDefinitionRepository
+from .time_block_definition import (
+    TimeBlockDefinitionReadOnlyRepository,
+    TimeBlockDefinitionReadWriteRepository,
+)
 from .user import UserRepository
 
 __all__ = [
@@ -21,5 +25,7 @@ __all__ = [
     "RoutineRepository",
     "TaskDefinitionRepository",
     "TaskRepository",
+    "TimeBlockDefinitionReadOnlyRepository",
+    "TimeBlockDefinitionReadWriteRepository",
     "UserRepository",
 ]

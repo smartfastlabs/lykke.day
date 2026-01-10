@@ -44,6 +44,10 @@ from .task_repository import (
     TaskRepositoryReadOnlyProtocol,
     TaskRepositoryReadWriteProtocol,
 )
+from .time_block_definition_repository import (
+    TimeBlockDefinitionRepositoryReadOnlyProtocol,
+    TimeBlockDefinitionRepositoryReadWriteProtocol,
+)
 from .user_repository import (
     UserRepositoryReadOnlyProtocol,
     UserRepositoryReadWriteProtocol,
@@ -71,6 +75,8 @@ __all__ = [
     "TaskDefinitionRepositoryReadWriteProtocol",
     "TaskRepositoryReadOnlyProtocol",
     "TaskRepositoryReadWriteProtocol",
+    "TimeBlockDefinitionRepositoryReadOnlyProtocol",
+    "TimeBlockDefinitionRepositoryReadWriteProtocol",
     "UserRepositoryReadOnlyProtocol",
     "UserRepositoryReadWriteProtocol",
 ]

@@ -28,6 +28,7 @@ from lykke.presentation.api.schemas import (
     TaskDefinitionSchema,
     TaskScheduleSchema,
     TaskSchema,
+    TimeBlockDefinitionSchema,
     UserSchema,
     UserSettingsSchema,
 )
@@ -48,6 +49,13 @@ def map_task_definition_to_schema(
 ) -> TaskDefinitionSchema:
     """Convert TaskDefinition data object to TaskDefinition schema."""
     return TaskDefinitionSchema(**asdict(task_definition))
+
+
+def map_time_block_definition_to_schema(
+    time_block_definition: data_objects.TimeBlockDefinition,
+) -> TimeBlockDefinitionSchema:
+    """Convert TimeBlockDefinition data object to TimeBlockDefinition schema."""
+    return TimeBlockDefinitionSchema(**asdict(time_block_definition))
 
 
 def map_task_schedule_to_schema(

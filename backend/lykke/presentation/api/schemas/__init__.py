@@ -41,6 +41,11 @@ from .task_definition import (
     TaskDefinitionSchema,
     TaskDefinitionUpdateSchema,
 )
+from .time_block_definition import (
+    TimeBlockDefinitionCreateSchema,
+    TimeBlockDefinitionSchema,
+    TimeBlockDefinitionUpdateSchema,
+)
 
 # Rebuild models with forward references after all classes are defined
 CalendarCreateSchema.model_rebuild()
@@ -69,6 +74,9 @@ UserSettingsUpdateSchema.model_rebuild()
 UserUpdateSchema.model_rebuild()
 PushSubscriptionSchema.model_rebuild()
 PushSubscriptionUpdateSchema.model_rebuild()
+TimeBlockDefinitionCreateSchema.model_rebuild()
+TimeBlockDefinitionSchema.model_rebuild()
+TimeBlockDefinitionUpdateSchema.model_rebuild()
 
 __all__ = [
     "ActionSchema",
@@ -99,6 +107,9 @@ __all__ = [
     "TaskDefinitionUpdateSchema",
     "TaskScheduleSchema",
     "TaskSchema",
+    "TimeBlockDefinitionCreateSchema",
+    "TimeBlockDefinitionSchema",
+    "TimeBlockDefinitionUpdateSchema",
     "UserSchema",
     "UserSettingsSchema",
     "UserSettingsUpdateSchema",
