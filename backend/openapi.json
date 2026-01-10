@@ -935,6 +935,242 @@
         ]
       }
     },
+    "/calendar-entry-series/{uuid}": {
+      "get": {
+        "tags": [
+          "calendar-entry-series"
+        ],
+        "summary": "Get Calendar Entry Series",
+        "description": "Get a single calendar entry series by ID.",
+        "operationId": "get_calendar_entry_series_calendar_entry_series__uuid__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarEntrySeriesSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "calendar-entry-series"
+        ],
+        "summary": "Update Calendar Entry Series",
+        "description": "Update a calendar entry series.",
+        "operationId": "update_calendar_entry_series_calendar_entry_series__uuid__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarEntrySeriesUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarEntrySeriesSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendar-entry-series/": {
+      "get": {
+        "tags": [
+          "calendar-entry-series"
+        ],
+        "summary": "List Calendar Entry Series",
+        "description": "List calendar entry series with optional calendar filtering.",
+        "operationId": "list_calendar_entry_series_calendar_entry_series__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "calendar_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Calendar Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedQueryResponse_CalendarEntrySeriesSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendar-entry-series/search": {
+      "post": {
+        "tags": [
+          "calendar-entry-series"
+        ],
+        "summary": "Search Calendar Entry Series",
+        "description": "Search calendar entry series.",
+        "operationId": "search_calendar_entry_series_calendar_entry_series_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarEntrySeriesQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarEntrySeriesSchema"
+                  },
+                  "type": "array",
+                  "title": "Response Search Calendar Entry Series Calendar Entry Series Search Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
     "/push/subscriptions/": {
       "get": {
         "tags": [
@@ -967,6 +1203,108 @@
       }
     },
     "/push/subscriptions/{subscription_id}": {
+      "get": {
+        "tags": [
+          "push",
+          "notifications"
+        ],
+        "summary": "Get Subscription",
+        "operationId": "get_subscription_push_subscriptions__subscription_id__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscription Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushSubscriptionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "push",
+          "notifications"
+        ],
+        "summary": "Update Subscription",
+        "operationId": "update_subscription_push_subscriptions__subscription_id__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscription Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushSubscriptionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "push",
@@ -2704,6 +3042,259 @@
         }
       }
     },
+    "/time-block-definitions/{uuid}": {
+      "get": {
+        "tags": [
+          "time-block-definitions"
+        ],
+        "summary": "Get Time Block Definition",
+        "description": "Get a single time block definition by ID.",
+        "operationId": "get_time_block_definition_time_block_definitions__uuid__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeBlockDefinitionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "time-block-definitions"
+        ],
+        "summary": "Update Time Block Definition",
+        "description": "Update an existing time block definition.",
+        "operationId": "update_time_block_definition_time_block_definitions__uuid__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeBlockDefinitionUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeBlockDefinitionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "time-block-definitions"
+        ],
+        "summary": "Delete Time Block Definition",
+        "description": "Delete a time block definition.",
+        "operationId": "delete_time_block_definition_time_block_definitions__uuid__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/time-block-definitions/": {
+      "get": {
+        "tags": [
+          "time-block-definitions"
+        ],
+        "summary": "List Time Block Definitions",
+        "description": "List time block definitions with pagination.",
+        "operationId": "list_time_block_definitions_time_block_definitions__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedQueryResponse_TimeBlockDefinitionSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "time-block-definitions"
+        ],
+        "summary": "Create Time Block Definition",
+        "description": "Create a new time block definition.",
+        "operationId": "create_time_block_definition_time_block_definitions__post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeBlockDefinitionCreateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeBlockDefinitionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/calendars/{uuid}": {
       "get": {
         "tags": [
@@ -2998,6 +3589,37 @@
             }
           }
         }
+      }
+    },
+    "/calendars/reset-subscriptions": {
+      "post": {
+        "tags": [
+          "calendars"
+        ],
+        "summary": "Reset Calendar Subscriptions",
+        "description": "Delete all calendar data and refresh subscriptions for the user.",
+        "operationId": "reset_calendar_subscriptions_calendars_reset_subscriptions_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarSchema"
+                  },
+                  "type": "array",
+                  "title": "Response Reset Calendar Subscriptions Calendars Reset Subscriptions Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
       }
     },
     "/calendars/": {
@@ -3565,6 +4187,237 @@
         ],
         "title": "CalendarEntrySchema",
         "description": "API schema for CalendarEntry entity."
+      },
+      "CalendarEntrySeriesQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          },
+          "calendar_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calendar Id"
+          },
+          "platform_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform Id"
+          }
+        },
+        "type": "object",
+        "title": "CalendarEntrySeriesQuery",
+        "description": "Query class for CalendarEntrySeries entities."
+      },
+      "CalendarEntrySeriesSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "calendar_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Calendar Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "platform_id": {
+            "type": "string",
+            "title": "Platform Id"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/TaskFrequency"
+          },
+          "event_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recurrence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recurrence"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "calendar_id",
+          "name",
+          "platform_id",
+          "platform",
+          "frequency",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CalendarEntrySeriesSchema",
+        "description": "API schema for CalendarEntrySeries entity."
+      },
+      "CalendarEntrySeriesUpdateSchema": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "event_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "CalendarEntrySeriesUpdateSchema",
+        "description": "API schema for updating a CalendarEntrySeries."
       },
       "CalendarSchema": {
         "properties": {
@@ -4149,6 +5002,47 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "PagedQueryResponse_CalendarEntrySeriesSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarEntrySeriesSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedQueryResponse"
+      },
       "PagedQueryResponse_CalendarSchema_": {
         "properties": {
           "items": {
@@ -4272,6 +5166,47 @@
         ],
         "title": "PagedQueryResponse"
       },
+      "PagedQueryResponse_TimeBlockDefinitionSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TimeBlockDefinitionSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedQueryResponse"
+      },
       "PushSubscriptionSchema": {
         "properties": {
           "id": {
@@ -4330,6 +5265,24 @@
         ],
         "title": "PushSubscriptionSchema",
         "description": "API schema for PushSubscription entity."
+      },
+      "PushSubscriptionUpdateSchema": {
+        "properties": {
+          "device_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Name"
+          }
+        },
+        "type": "object",
+        "title": "PushSubscriptionUpdateSchema",
+        "description": "API schema for PushSubscription update requests."
       },
       "RoutineCreateSchema": {
         "properties": {
@@ -5142,6 +6095,178 @@
           "TECHNOLOGY"
         ],
         "title": "TaskType"
+      },
+      "TimeBlockCategory": {
+        "type": "string",
+        "enum": [
+          "WORK",
+          "PROFESSIONAL",
+          "MEETING",
+          "PERSONAL_CARE",
+          "HEALTH",
+          "FITNESS",
+          "NUTRITION",
+          "SLEEP",
+          "HOUSEHOLD",
+          "CHORES",
+          "MAINTENANCE",
+          "FAMILY",
+          "SOCIAL",
+          "RELATIONSHIP",
+          "ENTERTAINMENT",
+          "HOBBY",
+          "RECREATION",
+          "EDUCATION",
+          "LEARNING",
+          "COMMUTE",
+          "TRAVEL",
+          "PLANNING",
+          "ADMIN",
+          "OTHER"
+        ],
+        "title": "TimeBlockCategory"
+      },
+      "TimeBlockDefinitionCreateSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TimeBlockType"
+          },
+          "category": {
+            "$ref": "#/components/schemas/TimeBlockCategory"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "type",
+          "category"
+        ],
+        "title": "TimeBlockDefinitionCreateSchema",
+        "description": "API schema for creating a TimeBlockDefinition."
+      },
+      "TimeBlockDefinitionSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TimeBlockType"
+          },
+          "category": {
+            "$ref": "#/components/schemas/TimeBlockCategory"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "name",
+          "description",
+          "type",
+          "category"
+        ],
+        "title": "TimeBlockDefinitionSchema",
+        "description": "API schema for TimeBlockDefinition entity."
+      },
+      "TimeBlockDefinitionUpdateSchema": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeBlockType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeBlockCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "TimeBlockDefinitionUpdateSchema",
+        "description": "API schema for TimeBlockDefinition update requests."
+      },
+      "TimeBlockType": {
+        "type": "string",
+        "enum": [
+          "WORK",
+          "BREAK",
+          "MEAL",
+          "EXERCISE",
+          "COMMUTE",
+          "MEETING",
+          "FOCUS",
+          "ADMIN",
+          "CREATIVE",
+          "LEARNING",
+          "SOCIAL",
+          "PERSONAL",
+          "ROUTINE",
+          "SLEEP",
+          "OTHER"
+        ],
+        "title": "TimeBlockType"
       },
       "TimingType": {
         "type": "string",

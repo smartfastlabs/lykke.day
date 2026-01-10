@@ -363,6 +363,10 @@ export const taskDefinitionAPI = {
     }),
 };
 
+export const timeBlockDefinitionAPI = {
+  ...createCrudMethods<TimeBlockDefinition>("time-block-definitions"),
+};
+
 export const routineAPI = {
   ...createCrudMethods<Routine>("routines"),
   addTask: (

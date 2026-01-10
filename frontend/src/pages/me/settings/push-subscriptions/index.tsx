@@ -66,7 +66,7 @@ const PushSubscriptionsPage: Component = () => {
       });
 
       // Send subscription to backend
-      await fetch("/api/push/subscribe", {
+      await fetch("/api/push/subscribe/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

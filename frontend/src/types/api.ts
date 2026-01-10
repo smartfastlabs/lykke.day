@@ -289,3 +289,52 @@ export interface User {
 export interface UserSetting {
   template_defaults?: string[];
 }
+export type TimeBlockType =
+  | "WORK"
+  | "BREAK"
+  | "MEAL"
+  | "EXERCISE"
+  | "COMMUTE"
+  | "MEETING"
+  | "FOCUS"
+  | "ADMIN"
+  | "CREATIVE"
+  | "LEARNING"
+  | "SOCIAL"
+  | "PERSONAL"
+  | "ROUTINE"
+  | "SLEEP"
+  | "OTHER";
+export type TimeBlockCategory =
+  | "WORK"
+  | "PROFESSIONAL"
+  | "MEETING"
+  | "PERSONAL_CARE"
+  | "HEALTH"
+  | "FITNESS"
+  | "NUTRITION"
+  | "SLEEP"
+  | "HOUSEHOLD"
+  | "CHORES"
+  | "MAINTENANCE"
+  | "FAMILY"
+  | "SOCIAL"
+  | "RELATIONSHIP"
+  | "ENTERTAINMENT"
+  | "HOBBY"
+  | "RECREATION"
+  | "EDUCATION"
+  | "LEARNING"
+  | "COMMUTE"
+  | "TRAVEL"
+  | "PLANNING"
+  | "ADMIN"
+  | "OTHER";
+export interface TimeBlockDefinition {
+  id?: string;
+  user_id: string;
+  name: string;
+  description: string;
+  type: TimeBlockType;
+  category: TimeBlockCategory;
+}

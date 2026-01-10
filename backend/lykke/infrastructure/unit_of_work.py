@@ -6,6 +6,8 @@ from contextvars import Token
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
+from sqlalchemy.ext.asyncio import AsyncConnection
+
 from lykke.application.events import send_domain_events
 from lykke.application.repositories import (
     AuthTokenRepositoryReadOnlyProtocol,
@@ -39,6 +41,7 @@ from lykke.application.unit_of_work import (
     UnitOfWorkProtocol,
 )
 from lykke.core.exceptions import BadRequestError, NotFoundError
+from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
@@ -56,7 +59,6 @@ from lykke.domain.events.base import (
     EntityDeletedEvent,
     EntityUpdatedEvent,
 )
-from lykke.domain import data_objects, value_objects
 from lykke.infrastructure.database import get_engine
 from lykke.infrastructure.database.transaction import (
     get_transaction_connection,
@@ -74,11 +76,9 @@ from lykke.infrastructure.repositories import (
     RoutineRepository,
     TaskDefinitionRepository,
     TaskRepository,
-    TimeBlockDefinitionReadOnlyRepository,
-    TimeBlockDefinitionReadWriteRepository,
+    TimeBlockDefinitionRepository,
     UserRepository,
 )
-from sqlalchemy.ext.asyncio import AsyncConnection
 
 if TYPE_CHECKING:
     from typing import Self
@@ -260,8 +260,9 @@ class SqlAlchemyUnitOfWork:
         self.task_ro_repo = cast("TaskRepositoryReadOnlyProtocol", task_repo)
         self._task_rw_repo = task_repo
 
-        time_block_definition_repo = TimeBlockDefinitionReadWriteRepository(
-            session=self._connection, user_id=self.user_id
+        time_block_definition_repo = cast(
+            "TimeBlockDefinitionRepositoryReadWriteProtocol",
+            TimeBlockDefinitionRepository(user_id=self.user_id),
         )
         self.time_block_definition_ro_repo = cast(
             "TimeBlockDefinitionRepositoryReadOnlyProtocol", time_block_definition_repo
@@ -678,9 +679,9 @@ class SqlAlchemyReadOnlyRepositories:
         )
         self.task_ro_repo = task_repo
 
-        engine = get_engine()
-        time_block_definition_repo = TimeBlockDefinitionReadOnlyRepository(
-            session=engine, user_id=self.user_id
+        time_block_definition_repo = cast(
+            "TimeBlockDefinitionRepositoryReadOnlyProtocol",
+            TimeBlockDefinitionRepository(user_id=self.user_id),
         )
         self.time_block_definition_ro_repo = time_block_definition_repo
 

@@ -426,6 +426,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/calendar-entry-series/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Calendar Entry Series
+         * @description Get a single calendar entry series by ID.
+         */
+        get: operations["get_calendar_entry_series_calendar_entry_series__uuid__get"];
+        /**
+         * Update Calendar Entry Series
+         * @description Update a calendar entry series.
+         */
+        put: operations["update_calendar_entry_series_calendar_entry_series__uuid__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendar-entry-series/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Calendar Entry Series
+         * @description List calendar entry series with optional calendar filtering.
+         */
+        get: operations["list_calendar_entry_series_calendar_entry_series__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendar-entry-series/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Calendar Entry Series
+         * @description Search calendar entry series.
+         */
+        post: operations["search_calendar_entry_series_calendar_entry_series_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/push/subscriptions/": {
         parameters: {
             query?: never;
@@ -450,8 +514,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
+        /** Get Subscription */
+        get: operations["get_subscription_push_subscriptions__subscription_id__get"];
+        /** Update Subscription */
+        put: operations["update_subscription_push_subscriptions__subscription_id__put"];
         post?: never;
         /** Delete Subscription */
         delete: operations["delete_subscription_push_subscriptions__subscription_id__delete"];
@@ -980,6 +1046,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/time-block-definitions/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Time Block Definition
+         * @description Get a single time block definition by ID.
+         */
+        get: operations["get_time_block_definition_time_block_definitions__uuid__get"];
+        /**
+         * Update Time Block Definition
+         * @description Update an existing time block definition.
+         */
+        put: operations["update_time_block_definition_time_block_definitions__uuid__put"];
+        post?: never;
+        /**
+         * Delete Time Block Definition
+         * @description Delete a time block definition.
+         */
+        delete: operations["delete_time_block_definition_time_block_definitions__uuid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/time-block-definitions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Time Block Definitions
+         * @description List time block definitions with pagination.
+         */
+        get: operations["list_time_block_definitions_time_block_definitions__get"];
+        put?: never;
+        /**
+         * Create Time Block Definition
+         * @description Create a new time block definition.
+         */
+        post: operations["create_time_block_definition_time_block_definitions__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/calendars/{uuid}": {
         parameters: {
             query?: never;
@@ -1046,6 +1164,26 @@ export interface paths {
          * @description Resubscribe and fully resync a calendar.
          */
         post: operations["resync_calendar_calendars__uuid__resync_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendars/reset-subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Calendar Subscriptions
+         * @description Delete all calendar data and refresh subscriptions for the user.
+         */
+        post: operations["reset_calendar_subscriptions_calendars_reset_subscriptions_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1300,6 +1438,79 @@ export interface components {
             date: string;
         };
         /**
+         * CalendarEntrySeriesQuery
+         * @description Query class for CalendarEntrySeries entities.
+         */
+        CalendarEntrySeriesQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Calendar Id */
+            calendar_id?: string | null;
+            /** Platform Id */
+            platform_id?: string | null;
+        };
+        /**
+         * CalendarEntrySeriesSchema
+         * @description API schema for CalendarEntrySeries entity.
+         */
+        CalendarEntrySeriesSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Calendar Id
+             * Format: uuid
+             */
+            calendar_id: string;
+            /** Name */
+            name: string;
+            /** Platform Id */
+            platform_id: string;
+            /** Platform */
+            platform: string;
+            frequency: components["schemas"]["TaskFrequency"];
+            event_category?: components["schemas"]["EventCategory"] | null;
+            /** Recurrence */
+            recurrence?: string[];
+            /** Starts At */
+            starts_at?: string | null;
+            /** Ends At */
+            ends_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * CalendarEntrySeriesUpdateSchema
+         * @description API schema for updating a CalendarEntrySeries.
+         */
+        CalendarEntrySeriesUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            event_category?: components["schemas"]["EventCategory"] | null;
+        };
+        /**
          * CalendarSchema
          * @description API schema for Calendar entity.
          */
@@ -1498,6 +1709,21 @@ export interface components {
             detail?: components["schemas"]["ValidationError"][];
         };
         /** PagedQueryResponse */
+        PagedQueryResponse_CalendarEntrySeriesSchema_: {
+            /** Items */
+            items: components["schemas"]["CalendarEntrySeriesSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedQueryResponse */
         PagedQueryResponse_CalendarSchema_: {
             /** Items */
             items: components["schemas"]["CalendarSchema"][];
@@ -1542,6 +1768,21 @@ export interface components {
             /** Has Previous */
             has_previous: boolean;
         };
+        /** PagedQueryResponse */
+        PagedQueryResponse_TimeBlockDefinitionSchema_: {
+            /** Items */
+            items: components["schemas"]["TimeBlockDefinitionSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
         /**
          * PushSubscriptionSchema
          * @description API schema for PushSubscription entity.
@@ -1567,6 +1808,14 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /**
+         * PushSubscriptionUpdateSchema
+         * @description API schema for PushSubscription update requests.
+         */
+        PushSubscriptionUpdateSchema: {
+            /** Device Name */
+            device_name?: string | null;
         };
         /**
          * RoutineCreateSchema
@@ -1841,6 +2090,59 @@ export interface components {
          * @enum {string}
          */
         TaskType: "MEAL" | "WORK" | "MEETING" | "EXERCISE" | "EVENT" | "SOCIAL" | "CHORE" | "ERRAND" | "SHOPPING" | "PERSONAL_CARE" | "ACTIVITY" | "ENTERTAINMENT" | "LEARNING" | "COMMUTE" | "TRAVEL" | "APPOINTMENT" | "COMMUNICATION" | "FINANCIAL" | "MAINTENANCE" | "PLANNING" | "TECHNOLOGY";
+        /**
+         * TimeBlockCategory
+         * @enum {string}
+         */
+        TimeBlockCategory: "WORK" | "PROFESSIONAL" | "MEETING" | "PERSONAL_CARE" | "HEALTH" | "FITNESS" | "NUTRITION" | "SLEEP" | "HOUSEHOLD" | "CHORES" | "MAINTENANCE" | "FAMILY" | "SOCIAL" | "RELATIONSHIP" | "ENTERTAINMENT" | "HOBBY" | "RECREATION" | "EDUCATION" | "LEARNING" | "COMMUTE" | "TRAVEL" | "PLANNING" | "ADMIN" | "OTHER";
+        /**
+         * TimeBlockDefinitionCreateSchema
+         * @description API schema for creating a TimeBlockDefinition.
+         */
+        TimeBlockDefinitionCreateSchema: {
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            type: components["schemas"]["TimeBlockType"];
+            category: components["schemas"]["TimeBlockCategory"];
+        };
+        /**
+         * TimeBlockDefinitionSchema
+         * @description API schema for TimeBlockDefinition entity.
+         */
+        TimeBlockDefinitionSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            type: components["schemas"]["TimeBlockType"];
+            category: components["schemas"]["TimeBlockCategory"];
+        };
+        /**
+         * TimeBlockDefinitionUpdateSchema
+         * @description API schema for TimeBlockDefinition update requests.
+         */
+        TimeBlockDefinitionUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+            type?: components["schemas"]["TimeBlockType"] | null;
+            category?: components["schemas"]["TimeBlockCategory"] | null;
+        };
+        /**
+         * TimeBlockType
+         * @enum {string}
+         */
+        TimeBlockType: "WORK" | "BREAK" | "MEAL" | "EXERCISE" | "COMMUTE" | "MEETING" | "FOCUS" | "ADMIN" | "CREATIVE" | "LEARNING" | "SOCIAL" | "PERSONAL" | "ROUTINE" | "SLEEP" | "OTHER";
         /**
          * TimingType
          * @enum {string}
@@ -2639,6 +2941,138 @@ export interface operations {
             };
         };
     };
+    get_calendar_entry_series_calendar_entry_series__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarEntrySeriesSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_calendar_entry_series_calendar_entry_series__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarEntrySeriesUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarEntrySeriesSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_calendar_entry_series_calendar_entry_series__get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                calendar_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedQueryResponse_CalendarEntrySeriesSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_calendar_entry_series_calendar_entry_series_search_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarEntrySeriesQuery"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarEntrySeriesSchema"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_subscriptions_push_subscriptions__get: {
         parameters: {
             query?: never;
@@ -2655,6 +3089,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PushSubscriptionSchema"][];
+                };
+            };
+        };
+    };
+    get_subscription_push_subscriptions__subscription_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subscription_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscriptionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_subscription_push_subscriptions__subscription_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subscription_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscriptionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -3719,6 +4219,166 @@ export interface operations {
             };
         };
     };
+    get_time_block_definition_time_block_definitions__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeBlockDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_time_block_definition_time_block_definitions__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimeBlockDefinitionUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeBlockDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_time_block_definition_time_block_definitions__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_time_block_definitions_time_block_definitions__get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedQueryResponse_TimeBlockDefinitionSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_time_block_definition_time_block_definitions__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimeBlockDefinitionCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeBlockDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_calendar_calendars__uuid__get: {
         parameters: {
             query?: never;
@@ -3905,6 +4565,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_calendar_subscriptions_calendars_reset_subscriptions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"][];
                 };
             };
         };

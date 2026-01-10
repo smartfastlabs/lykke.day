@@ -7,6 +7,7 @@ import {
   faListCheck,
   faCalendarDays,
   faBell,
+  faClock,
 } from "@fortawesome/free-solid-svg-icons";
 
 import LinkGrid, { LinkItem } from "@/components/shared/LinkGrid";
@@ -19,6 +20,7 @@ const settingsItems: LinkItem[] = [
     url: "/me/settings/task-definitions",
   },
   { label: "Routines", icon: faRepeat, url: "/me/settings/routines" },
+  { label: "Time Blocks", icon: faClock, url: "/me/settings/time-blocks" },
   { label: "Profile", icon: faUser, url: "/me/settings/profile" },
   { label: "Calendars", icon: faCalendar, url: "/me/settings/calendars" },
   {

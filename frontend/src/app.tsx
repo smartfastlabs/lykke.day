@@ -49,6 +49,9 @@ import TaskDefinitionDetailPage from "@/pages/me/settings/task-definitions/detai
 import RoutinesPage from "@/pages/me/settings/routines/index";
 import NewRoutinePage from "@/pages/me/settings/routines/new";
 import RoutineDetailPage from "@/pages/me/settings/routines/detail";
+import TimeBlocksPage from "@/pages/me/settings/time-blocks/index";
+import NewTimeBlockPage from "@/pages/me/settings/time-blocks/new";
+import TimeBlockDetailPage from "@/pages/me/settings/time-blocks/detail";
 import CalendarsPage from "@/pages/me/settings/calendars/index";
 import CalendarDetailPage from "@/pages/me/settings/calendars/detail";
 import RecurringEventsPage from "@/pages/me/settings/recurring-events/index";
@@ -175,6 +178,9 @@ export default function App() {
             <Route path="/routines" component={RoutinesPage} />
             <Route path="/routines/new" component={NewRoutinePage} />
             <Route path="/routines/:id" component={RoutineDetailPage} />
+            <Route path="/time-blocks" component={TimeBlocksPage} />
+            <Route path="/time-blocks/new" component={NewTimeBlockPage} />
+            <Route path="/time-blocks/:id" component={TimeBlockDetailPage} />
             <Route path="/calendars" component={CalendarsPage} />
             <Route
               path="/calendars/:id/recurring-events"
