@@ -312,11 +312,11 @@ const Landing: Component = () => {
                     </div>
                     <div class="flex-1">
                       <h3 class="text-stone-900 font-semibold text-lg mb-3">
-                        An AI Personal Assistant
+                        A Magic Bullet
                       </h3>
                       <p class="text-stone-600 text-sm leading-relaxed">
-                        No chatbots or algorithms making decisions for you. Your
-                        life, your choices.
+                        We're not about quick fixes. We're about building
+                        lasting routines and patterns.
                       </p>
                     </div>
                   </div>

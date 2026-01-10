@@ -26,7 +26,12 @@ import YouTube from "@/pages/youtube";
 import Podcasts from "@/pages/podcasts";
 import Resources from "@/pages/resources";
 import ThereIsAnAppForThat from "@/pages/there-is-an-app-for-that";
-import Home from "@/pages/me";
+import HomeLayout from "@/pages/me/home/layout";
+import PreviewView from "@/pages/me/home/preview";
+import DoItView from "@/pages/me/home/doit";
+import TasksView from "@/pages/me/home/tasks";
+import EventsView from "@/pages/me/home/events";
+import SheppardView from "@/pages/me/home/sheppard";
 import DayView from "@/pages/me/day/preview";
 import NavPage from "@/pages/me/navigation/links";
 import CalendarPage from "@/pages/me/navigation/calendar";
@@ -128,7 +133,14 @@ export default function App() {
         <Route path="/home" component={() => <Navigate href="/me" />} />
 
         <Route path="/me" component={AuthGuard}>
-          <Route path="/" component={Home} />
+          <Route path="/" component={() => <Navigate href="/me/today" />} />
+          <Route path="/today" component={HomeLayout}>
+            <Route path="/" component={PreviewView} />
+            <Route path="/doit" component={DoItView} />
+            <Route path="/tasks" component={TasksView} />
+            <Route path="/events" component={EventsView} />
+            <Route path="/sheppard" component={SheppardView} />
+          </Route>
           <Route path="/overview" component={OverviewPage} />
           <Route path="/welcome" component={Welcome} />
           <Route path="/day/:date" component={DayView} />
