@@ -2,52 +2,23 @@
 
 from uuid import UUID
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from lykke.application.repositories.time_block_definition_repository import (
-    TimeBlockDefinitionRepositoryReadOnlyProtocol,
-    TimeBlockDefinitionRepositoryReadWriteProtocol,
-)
 from lykke.domain import value_objects
 from lykke.domain.data_objects import TimeBlockDefinition
-from lykke.infrastructure.database import tables
+from lykke.infrastructure.database.tables import time_block_definitions_tbl
 
-from .base import ReadOnlyRepository, ReadWriteRepository
+from .base import BaseQuery, UserScopedBaseRepository
 
 
-class TimeBlockDefinitionReadOnlyRepository(
-    ReadOnlyRepository[TimeBlockDefinition],
-    TimeBlockDefinitionRepositoryReadOnlyProtocol,
+class TimeBlockDefinitionRepository(
+    UserScopedBaseRepository[TimeBlockDefinition, BaseQuery]
 ):
-    """Read-only repository for TimeBlockDefinition entities."""
+    """Repository for TimeBlockDefinition data objects."""
 
-    Query = value_objects.TimeBlockDefinitionQuery
+    Object = TimeBlockDefinition
+    table = time_block_definitions_tbl
+    QueryClass = BaseQuery
 
-    def __init__(self, session: AsyncSession, user_id: UUID) -> None:
-        """Initialize the repository with a database session and user_id."""
-        super().__init__(
-            session=session,
-            user_id=user_id,
-            table=tables.TimeBlockDefinition,
-            entity_class=TimeBlockDefinition,
-        )
-
-
-class TimeBlockDefinitionReadWriteRepository(
-    ReadWriteRepository[TimeBlockDefinition],
-    TimeBlockDefinitionRepositoryReadWriteProtocol,
-):
-    """Read-write repository for TimeBlockDefinition entities."""
-
-    Query = value_objects.TimeBlockDefinitionQuery
-
-    def __init__(self, session: AsyncSession, user_id: UUID) -> None:
-        """Initialize the repository with a database session and user_id."""
-        super().__init__(
-            session=session,
-            user_id=user_id,
-            table=tables.TimeBlockDefinition,
-            entity_class=TimeBlockDefinition,
-        )
+    def __init__(self, user_id: UUID) -> None:
+        """Initialize TimeBlockDefinitionRepository with user scoping."""
+        super().__init__(user_id=user_id)
 

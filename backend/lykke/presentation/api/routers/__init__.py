@@ -100,6 +100,11 @@ router.include_router(
     tags=["routines"],
 )
 router.include_router(
+    time_block_definitions.router,
+    prefix="/time-block-definitions",
+    tags=["time-block-definitions"],
+)
+router.include_router(
     calendars.router,
     prefix="/calendars",
     tags=["calendars"],

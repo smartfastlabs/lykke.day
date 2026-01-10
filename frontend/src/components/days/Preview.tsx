@@ -101,10 +101,7 @@ export const DayPreview: Component<PreviewProps> = (props) => {
   // All items
   const tasks = createMemo(() => props.dayContext?.tasks || []);
   const events = createMemo(
-    () =>
-      props.dayContext?.calendar_entries ??
-      props.dayContext?.events ??
-      []
+    () => props.dayContext?.calendar_entries ?? props.dayContext?.events ?? []
   );
   const alarm = createMemo(() => props.dayContext?.day.alarm);
 

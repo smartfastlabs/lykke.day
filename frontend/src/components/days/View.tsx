@@ -31,12 +31,18 @@ const DayView: Component<DayViewProps> = (props) => {
 
   const toggleStatus = (value: string) => {
     if (value === "ALL") {
-      setFilters("statuses", filters.statuses.length === ALL_STATUSES.length ? [] : [...ALL_STATUSES]);
+      setFilters(
+        "statuses",
+        filters.statuses.length === ALL_STATUSES.length ? [] : [...ALL_STATUSES]
+      );
     } else {
       const current = filters.statuses;
       if (current.includes(value as TaskStatus)) {
         if (current.length > 1) {
-          setFilters("statuses", current.filter((v) => v !== value));
+          setFilters(
+            "statuses",
+            current.filter((v) => v !== value)
+          );
         }
       } else {
         setFilters("statuses", [...current, value as TaskStatus]);
@@ -46,12 +52,18 @@ const DayView: Component<DayViewProps> = (props) => {
 
   const toggleType = (value: string) => {
     if (value === "ALL") {
-      setFilters("types", filters.types.length === ALL_TYPES.length ? [] : [...ALL_TYPES]);
+      setFilters(
+        "types",
+        filters.types.length === ALL_TYPES.length ? [] : [...ALL_TYPES]
+      );
     } else {
       const current = filters.types;
       if (current.includes(value as TaskType)) {
         if (current.length > 1) {
-          setFilters("types", current.filter((v) => v !== value));
+          setFilters(
+            "types",
+            current.filter((v) => v !== value)
+          );
         }
       } else {
         setFilters("types", [...current, value as TaskType]);
@@ -63,13 +75,18 @@ const DayView: Component<DayViewProps> = (props) => {
     if (value === "ALL") {
       setFilters(
         "frequencyGroups",
-        filters.frequencyGroups.length === FREQUENCY_GROUPS.length ? [] : [...FREQUENCY_GROUPS]
+        filters.frequencyGroups.length === FREQUENCY_GROUPS.length
+          ? []
+          : [...FREQUENCY_GROUPS]
       );
     } else {
       const current = filters.frequencyGroups;
       if (current.includes(value)) {
         if (current.length > 1) {
-          setFilters("frequencyGroups", current.filter((v) => v !== value));
+          setFilters(
+            "frequencyGroups",
+            current.filter((v) => v !== value)
+          );
         }
       } else {
         setFilters("frequencyGroups", [...current, value]);
