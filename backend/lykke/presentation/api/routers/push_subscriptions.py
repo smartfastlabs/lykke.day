@@ -2,6 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends
+
 from lykke.application.commands.push_subscription import (
     CreatePushSubscriptionHandler,
     DeletePushSubscriptionHandler,
@@ -11,9 +12,8 @@ from lykke.application.queries.push_subscription import (
     GetPushSubscriptionHandler,
     SearchPushSubscriptionsHandler,
 )
-from lykke.domain import value_objects
+from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import UserEntity
-from lykke.domain import data_objects
 from lykke.infrastructure.gateways import web_push
 from lykke.presentation.api.schemas import (
     PushSubscriptionSchema,
@@ -63,7 +63,9 @@ async def get_subscription(
         GetPushSubscriptionHandler, Depends(get_push_subscription_handler)
     ],
 ) -> PushSubscriptionSchema:
-    result = await get_push_subscription_handler.run(subscription_id=UUID(subscription_id))
+    result = await get_push_subscription_handler.run(
+        subscription_id=UUID(subscription_id)
+    )
     return map_push_subscription_to_schema(result)
 
 
