@@ -7,6 +7,7 @@ interface MediaPageProps {
   subtitle: string;
   description: string;
   items: MediaItem[];
+  linkText?: string;
 }
 
 const MediaPage: Component<MediaPageProps> = (props) => {

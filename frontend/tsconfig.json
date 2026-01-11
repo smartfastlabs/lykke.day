@@ -8,6 +8,7 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "target": "ESNext",
+    "lib": ["ESNext", "DOM"],
 
     // Modules
     "allowSyntheticDefaultImports": true,

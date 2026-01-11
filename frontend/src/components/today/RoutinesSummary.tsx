@@ -122,19 +122,11 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                     <div class="flex items-center gap-2">
                       <Icon
                         icon={isExpanded() ? faChevronDown : faChevronRight}
-                        class="w-3 h-3 transition-transform duration-200"
-                        classList={{
-                          "fill-green-600": isComplete(),
-                          "fill-amber-700": !isComplete(),
-                        }}
+                        class={`w-3 h-3 transition-transform duration-200 ${isComplete() ? "fill-green-600" : "fill-amber-700"}`}
                       />
                       <Icon
                         icon={getRoutineIcon(routine.routineName)}
-                        class="w-4 h-4"
-                        classList={{
-                          "fill-green-600": isComplete(),
-                          "fill-amber-700": !isComplete(),
-                        }}
+                        class={`w-4 h-4 ${isComplete() ? "fill-green-600" : "fill-amber-700"}`}
                       />
                       <span
                         class="text-sm font-semibold"
@@ -206,12 +198,7 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                             <div class="flex items-center gap-2 text-xs">
                               <Icon
                                 icon={getTaskIcon()}
-                                class="w-3 h-3 flex-shrink-0"
-                                classList={{
-                                  "fill-green-600": isTaskComplete(),
-                                  "fill-orange-500": isTaskPunted(),
-                                  "fill-stone-300": !isTaskComplete() && !isTaskPunted(),
-                                }}
+                                class={`w-3 h-3 flex-shrink-0 ${isTaskComplete() ? "fill-green-600" : isTaskPunted() ? "fill-orange-500" : "fill-stone-300"}`}
                               />
                               <span
                                 class="leading-tight"

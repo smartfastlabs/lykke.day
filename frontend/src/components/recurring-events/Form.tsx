@@ -38,7 +38,7 @@ const RecurringEventSeriesForm: Component<RecurringEventSeriesFormProps> = (prop
         id="eventCategory"
         value={eventCategory}
         onChange={setEventCategory}
-        options={EVENT_CATEGORY_OPTIONS}
+        options={[...EVENT_CATEGORY_OPTIONS]}
         placeholder="Event Category (optional)"
       />
 

@@ -16,7 +16,7 @@ class TaskEntity(BaseEntityObject):
     name: str
     status: value_objects.TaskStatus
     type: value_objects.TaskType
-    description: str
+    description: str | None = None
     category: value_objects.TaskCategory
     frequency: value_objects.TaskFrequency
     completed_at: datetime | None = None

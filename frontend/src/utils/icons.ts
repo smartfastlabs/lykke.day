@@ -55,7 +55,6 @@ import {
   faFileInvoice,
   // Task type icons
   faBowlFood,
-  faHandshake,
   faFilm,
   faCalendarCheck,
   faEnvelope,
@@ -101,7 +100,7 @@ export function getIcon(key: string): IconDefinition | null {
 }
 
 // Task Category icons
-const categoryIcons: Record<TaskCategory, IconDefinition> = {
+const categoryIcons: Record<string, IconDefinition> = {
   // Personal Care
   HYGIENE: faDroplet,
   GROOMING: faScissors,
@@ -158,7 +157,7 @@ export function getCategoryIcon(category?: TaskCategory): IconDefinition | null 
 }
 
 // Task Type icons
-const typeIcons: Record<TaskType, IconDefinition> = {
+const typeIcons: Record<string, IconDefinition> = {
   MEAL: faBowlFood,
   WORK: faBriefcase,
   MEETING: faHandshake,

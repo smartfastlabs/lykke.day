@@ -39,7 +39,7 @@ class TaskSchema(BaseEntitySchema):
     name: str
     status: TaskStatus
     type: TaskType
-    description: str
+    description: str | None = None
     category: TaskCategory
     frequency: TaskFrequency
     completed_at: datetime | None = None

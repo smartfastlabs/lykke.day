@@ -2,9 +2,10 @@ import type { JSX } from "solid-js";
 import Footer from "@/components/shared/layout/Footer";
 
 type ModalPageProps = {
-  subtitle: string;
-  title?: JSX.Element;
+  subtitle?: string;
+  title?: JSX.Element | string;
   children: JSX.Element;
+  onClose?: () => void;
 };
 
 export default function ModalPage({ subtitle, title, children }: ModalPageProps) {

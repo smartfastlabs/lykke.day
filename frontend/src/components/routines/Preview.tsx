@@ -1,4 +1,4 @@
-import { Component, Show, For, createMemo } from "solid-js";
+import { Component, Show, For, createMemo, Setter, Accessor } from "solid-js";
 import { Routine, RoutineTask, TaskDefinition, TaskSchedule } from "@/types/api";
 import { Icon } from "@/components/shared/Icon";
 import TaskScheduleForm from "@/components/tasks/ScheduleForm";
@@ -10,12 +10,12 @@ interface RoutinePreviewProps {
   onAddTask?: (taskDef: TaskDefinition) => void;
   onEditTask?: (task: RoutineTask) => void;
   onRemoveTask?: (taskDefinitionId: string) => void;
-  onTaskSubmit?: (schedule: TaskSchedule) => void;
+  onTaskSubmit?: (schedule: TaskSchedule) => Promise<void>;
   onTaskCancel?: () => void;
   selectedTaskDefinitionId?: () => string | null;
   selectedAction?: () => "add" | "edit" | null;
-  taskName?: () => string;
-  setTaskName?: (name: string) => void;
+  taskName?: Accessor<string>;
+  setTaskName?: Setter<string>;
   scheduleInitial?: () => TaskSchedule | null;
   isEditMode?: boolean;
   isLoading?: boolean;

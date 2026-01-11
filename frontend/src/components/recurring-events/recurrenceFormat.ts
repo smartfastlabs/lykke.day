@@ -79,7 +79,7 @@ const formatByFrequency = (frequency: TaskFrequency): string => {
     case "ONCE":
       return "One-time event";
     default:
-      return titleCase(frequency.replaceAll("_", " ").toLowerCase());
+      return titleCase((frequency as string).replaceAll("_", " ").toLowerCase());
   }
 };
 

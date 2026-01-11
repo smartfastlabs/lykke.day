@@ -76,6 +76,40 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                     template_data["user_id"], str
                 ):
                     template_data["user_id"] = UUID(template_data["user_id"])
+                
+                # Convert routine_ids from strings to UUIDs
+                if template_data.get("routine_ids"):
+                    template_data["routine_ids"] = [
+                        UUID(routine_id) if isinstance(routine_id, str) else routine_id
+                        for routine_id in template_data["routine_ids"]
+                    ]
+                
+                # Convert time_blocks from dicts to DayTemplateTimeBlock objects
+                if template_data.get("time_blocks"):
+                    from datetime import time as dt_time
+                    
+                    template_data["time_blocks"] = [
+                        value_objects.DayTemplateTimeBlock(
+                            time_block_definition_id=(
+                                UUID(tb["time_block_definition_id"])
+                                if isinstance(tb["time_block_definition_id"], str)
+                                else tb["time_block_definition_id"]
+                            ),
+                            start_time=(
+                                dt_time.fromisoformat(tb["start_time"])
+                                if isinstance(tb["start_time"], str)
+                                else tb["start_time"]
+                            ),
+                            end_time=(
+                                dt_time.fromisoformat(tb["end_time"])
+                                if isinstance(tb["end_time"], str)
+                                else tb["end_time"]
+                            ),
+                            name=tb["name"],
+                        )
+                        for tb in template_data["time_blocks"]
+                    ]
+                
                 # Convert nested alarm dict to Alarm value object if present
                 if template_data.get("alarm"):
                     if isinstance(template_data["alarm"], dict):

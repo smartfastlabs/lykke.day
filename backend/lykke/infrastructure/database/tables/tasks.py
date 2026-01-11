@@ -18,7 +18,7 @@ class Task(Base):
     name = Column(String, nullable=False)
     status = Column(String, nullable=False)  # TaskStatus enum as string
     type = Column(String, nullable=False)  # TaskType enum as string
-    description = Column(String, nullable=False)
+    description = Column(String, nullable=True)
     category = Column(String, nullable=False)  # TaskCategory enum as string
     frequency = Column(String, nullable=False)  # TaskFrequency enum as string
     completed_at = Column(DateTime)

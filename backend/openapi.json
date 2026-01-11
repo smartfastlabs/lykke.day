@@ -6514,7 +6514,14 @@
             "$ref": "#/components/schemas/TaskType"
           },
           "description": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Description"
           },
           "category": {
@@ -6579,7 +6586,6 @@
           "name",
           "status",
           "type",
-          "description",
           "category",
           "frequency"
         ],

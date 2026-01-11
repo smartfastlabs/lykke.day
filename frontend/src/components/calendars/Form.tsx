@@ -52,7 +52,7 @@ const CalendarForm: Component<CalendarFormProps> = (props) => {
         id="defaultEventCategory"
         value={defaultEventCategory}
         onChange={setDefaultEventCategory}
-        options={EVENT_CATEGORY_OPTIONS}
+        options={[...EVENT_CATEGORY_OPTIONS]}
         placeholder="Default Event Category (optional)"
       />
 

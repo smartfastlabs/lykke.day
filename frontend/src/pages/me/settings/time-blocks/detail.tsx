@@ -64,6 +64,16 @@ const TimeBlockDetailPage: Component = () => {
         <DetailPage
           heading="Time Block"
           bottomLink={{ label: "Back to Time Blocks", url: "/me/settings/time-blocks" }}
+          preview={
+            <div class="flex flex-col items-center justify-center px-6 py-8">
+              <div class="w-full max-w-xl space-y-4">
+                <div>
+                  <label class="text-sm font-medium text-neutral-500">Name</label>
+                  <div class="mt-1 text-base text-neutral-900">{current().name}</div>
+                </div>
+              </div>
+            </div>
+          }
           edit={
             <div class="flex flex-col items-center justify-center px-6 py-8">
               <div class="w-full max-w-xl">

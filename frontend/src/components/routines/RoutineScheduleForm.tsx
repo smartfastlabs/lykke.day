@@ -1,4 +1,4 @@
-import { Component, createSignal, Show, For } from "solid-js";
+import { Component, createSignal, Show, For, Setter } from "solid-js";
 import { RoutineSchedule, TaskFrequency, DayOfWeek } from "@/types/api";
 import { ALL_TASK_FREQUENCIES } from "@/types/api/constants";
 import { Select, Input } from "@/components/forms";
@@ -79,8 +79,9 @@ const RoutineScheduleForm: Component<RoutineScheduleFormProps> = (props) => {
     });
   };
 
-  const handleDayNumberChange = (value: string) => {
-    const num = value === "" ? null : parseInt(value, 10);
+  const handleDayNumberChange: Setter<string> = (value) => {
+    const actualValue = typeof value === 'function' ? value(dayNumber()?.toString() ?? "") : value;
+    const num = actualValue === "" ? null : parseInt(actualValue, 10);
     if (num !== null && (isNaN(num) || num < 1)) {
       return; // Invalid input
     }
@@ -116,7 +117,7 @@ const RoutineScheduleForm: Component<RoutineScheduleFormProps> = (props) => {
 
       <Show when={requiresWeekdays()}>
         <div>
-          <Label>Days of Week</Label>
+          <Label for="weekdays">Days of Week</Label>
           <div class="mt-2 space-y-2">
             <For each={DAYS_OF_WEEK}>
               {(day) => (

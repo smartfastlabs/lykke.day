@@ -6,7 +6,9 @@ import { authAPI } from "@/utils/api";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
-  const [token, setToken] = createSignal(searchParams.token ?? "");
+  const tokenParam = searchParams.token ?? "";
+  const tokenValue = Array.isArray(tokenParam) ? tokenParam[0] ?? "" : tokenParam;
+  const [token, setToken] = createSignal(tokenValue);
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [error, setError] = createSignal("");

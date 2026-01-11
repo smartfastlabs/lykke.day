@@ -5,12 +5,14 @@ const inputClass = "w-full px-4 py-3 bg-white border border-neutral-300 rounded-
 
 interface InputProps {
   id: string;
-  type?: "text" | "email" | "password" | "number";
+  type?: "text" | "email" | "password" | "number" | "time";
   placeholder: string;
   value: Accessor<string>;
   onChange: Setter<string>;
   required?: boolean;
   autocomplete?: string;
+  min?: string;
+  max?: string;
 }
 
 export const Input: Component<InputProps> = (props) => (
@@ -27,6 +29,8 @@ export const Input: Component<InputProps> = (props) => (
       class={inputClass}
       required={props.required}
       autocomplete={props.autocomplete}
+      min={props.min}
+      max={props.max}
     />
   </div>
 );
