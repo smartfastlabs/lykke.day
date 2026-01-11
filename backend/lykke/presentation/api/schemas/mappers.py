@@ -49,14 +49,27 @@ def map_task_definition_to_schema(
     task_definition: data_objects.TaskDefinition,
 ) -> TaskDefinitionSchema:
     """Convert TaskDefinition data object to TaskDefinition schema."""
-    return TaskDefinitionSchema(**asdict(task_definition))
+    return TaskDefinitionSchema(
+        id=task_definition.id,
+        user_id=task_definition.user_id,
+        name=task_definition.name,
+        description=task_definition.description,
+        type=task_definition.type,
+    )
 
 
 def map_time_block_definition_to_schema(
     time_block_definition: data_objects.TimeBlockDefinition,
 ) -> TimeBlockDefinitionSchema:
     """Convert TimeBlockDefinition data object to TimeBlockDefinition schema."""
-    return TimeBlockDefinitionSchema(**asdict(time_block_definition))
+    return TimeBlockDefinitionSchema(
+        id=time_block_definition.id,
+        user_id=time_block_definition.user_id,
+        name=time_block_definition.name,
+        description=time_block_definition.description,
+        type=time_block_definition.type,
+        category=time_block_definition.category,
+    )
 
 
 def map_task_schedule_to_schema(
@@ -65,8 +78,13 @@ def map_task_schedule_to_schema(
     """Convert TaskSchedule value object to TaskSchedule schema."""
     if schedule is None:
         return None
-    # TaskSchedule is already a Pydantic model, so we can validate it directly
-    return TaskScheduleSchema.model_validate(schedule, from_attributes=True)
+    # Convert dataclass to schema using field mapping
+    return TaskScheduleSchema(
+        available_time=schedule.available_time,
+        start_time=schedule.start_time,
+        end_time=schedule.end_time,
+        timing_type=schedule.timing_type,
+    )
 
 
 def map_task_to_schema(task: TaskEntity) -> TaskSchema:
@@ -203,21 +221,60 @@ def map_push_subscription_to_schema(
     subscription: data_objects.PushSubscription,
 ) -> PushSubscriptionSchema:
     """Convert PushSubscription entity to PushSubscription schema."""
-    return PushSubscriptionSchema(**asdict(subscription))
+    return PushSubscriptionSchema(
+        id=subscription.id,
+        user_id=subscription.user_id,
+        endpoint=subscription.endpoint,
+        p256dh=subscription.p256dh,
+        auth=subscription.auth,
+        device_name=subscription.device_name,
+        created_at=subscription.created_at,
+    )
 
 
 def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
     """Convert Routine entity to Routine schema."""
-    return RoutineSchema(**asdict(routine))
+    from .routine import RoutineScheduleSchema, RoutineTaskSchema
+    
+    # Convert routine schedule
+    routine_schedule_schema = RoutineScheduleSchema(
+        frequency=routine.routine_schedule.frequency,
+        weekdays=routine.routine_schedule.weekdays,
+        day_number=routine.routine_schedule.day_number,
+    )
+    
+    # Convert tasks
+    task_schemas = []
+    for task in routine.tasks:
+        schedule_schema = None
+        if task.schedule:
+            schedule_schema = map_task_schedule_to_schema(task.schedule)
+        
+        task_schema = RoutineTaskSchema(
+            id=task.id,
+            task_definition_id=task.task_definition_id,
+            name=task.name,
+            schedule=schedule_schema,
+        )
+        task_schemas.append(task_schema)
+    
+    return RoutineSchema(
+        id=routine.id,
+        user_id=routine.user_id,
+        name=routine.name,
+        category=routine.category,
+        routine_schedule=routine_schedule_schema,
+        description=routine.description,
+        tasks=task_schemas,
+    )
 
 
 def map_calendar_to_schema(calendar: CalendarEntity) -> CalendarSchema:
     """Convert Calendar entity to Calendar schema."""
-    sync_subscription = (
-        SyncSubscriptionSchema(**calendar.sync_subscription.model_dump())
-        if calendar.sync_subscription
-        else None
-    )
+    sync_subscription = None
+    if calendar.sync_subscription:
+        sync_subscription = SyncSubscriptionSchema(**asdict(calendar.sync_subscription))
+    
     return CalendarSchema(
         id=calendar.id,
         user_id=calendar.user_id,
@@ -236,7 +293,6 @@ def map_calendar_to_schema(calendar: CalendarEntity) -> CalendarSchema:
 def map_user_to_schema(user: UserEntity) -> UserSchema:
     """Convert User entity to User schema."""
     settings_dict = asdict(user.settings)
-
     settings_schema = UserSettingsSchema(**settings_dict)
 
     return UserSchema(

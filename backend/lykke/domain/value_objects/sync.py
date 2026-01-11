@@ -1,11 +1,13 @@
 """Sync-related value objects for calendar synchronization."""
 
+from dataclasses import dataclass
 from datetime import datetime
 
-from pydantic import BaseModel
+from .base import BaseValueObject
 
 
-class SyncSubscription(BaseModel):
+@dataclass(kw_only=True)
+class SyncSubscription(BaseValueObject):
     """Platform-agnostic subscription for calendar sync notifications.
 
     Stores the channel/subscription information needed to receive
@@ -18,4 +20,3 @@ class SyncSubscription(BaseModel):
     provider: str  # "google", "microsoft", etc.
     client_state: str | None = None  # Optional validation token
     sync_token: str | None = None  # For incremental sync
-

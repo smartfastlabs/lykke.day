@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 # pylint: disable=protected-access,no-member
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 from uuid import UUID, uuid4
 
@@ -132,9 +132,11 @@ class BaseEntityObject(BaseObject, Generic[UpdateObjectType, UpdateEventType]):
         Returns:
             A new instance of the entity with updates applied
         """
-        # Convert update object to dict and filter out None values
-        update_dict: dict[str, Any] = asdict(update_object)
-        update_dict = {k: v for k, v in update_dict.items() if v is not None}
+        # Extract non-None fields from update object without converting nested dataclasses to dicts
+        # We use __dict__ instead of asdict() to preserve nested dataclass instances
+        update_dict: dict[str, Any] = {
+            k: v for k, v in update_object.__dict__.items() if v is not None
+        }
 
         # Apply updates using clone (creates a new instance)
         # clone() returns Self, which for BaseEntityObject is the entity type

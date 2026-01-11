@@ -1,8 +1,8 @@
+from dataclasses import dataclass, field
 from enum import Enum
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
-
+from .base import BaseValueObject
 from .task import TaskFrequency, TaskSchedule
 
 
@@ -16,7 +16,8 @@ class DayOfWeek(int, Enum):
     SUNDAY = 6
 
 
-class RoutineSchedule(BaseModel):
+@dataclass(kw_only=True)
+class RoutineSchedule(BaseValueObject):
     frequency: TaskFrequency
     weekdays: list[DayOfWeek] | None = None
     day_number: int | None = (
@@ -24,8 +25,9 @@ class RoutineSchedule(BaseModel):
     )
 
 
-class RoutineTask(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
+@dataclass(kw_only=True)
+class RoutineTask(BaseValueObject):
+    id: UUID = field(default_factory=uuid4)
     task_definition_id: UUID
     name: str | None = None
     schedule: TaskSchedule | None = None

@@ -1,5 +1,6 @@
 """Command to sync calendar entries from external calendar providers."""
 
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -171,9 +172,7 @@ class SyncCalendarHandler(BaseCommandHandler):
     ) -> CalendarEntity:
         """Apply sync metadata updates and emit domain events."""
         updated_subscription = (
-            calendar.sync_subscription.model_copy(
-                update={"sync_token": next_sync_token}
-            )
+            replace(calendar.sync_subscription, sync_token=next_sync_token)
             if calendar.sync_subscription
             else None
         )

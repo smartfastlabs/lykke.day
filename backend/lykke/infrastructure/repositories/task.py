@@ -124,7 +124,7 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
                     schedule_dict[time_field] = dt_time.fromisoformat(
                         schedule_dict[time_field]
                     )
-            data["schedule"] = value_objects.TaskSchedule.model_validate(schedule_dict)
+            data["schedule"] = value_objects.TaskSchedule(**schedule_dict)
 
         if data.get("tags") and isinstance(data["tags"], list):
             # Tags are stored as strings, convert to TaskTag enums

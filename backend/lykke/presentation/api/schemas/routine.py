@@ -3,10 +3,28 @@
 from uuid import UUID
 
 from pydantic import Field
-from lykke.domain.value_objects.routine import RoutineSchedule, RoutineTask
-from lykke.domain.value_objects.task import TaskCategory, TaskSchedule
+from lykke.domain.value_objects.routine import DayOfWeek
+from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
 
 from .base import BaseEntitySchema, BaseSchema
+from .task import TaskScheduleSchema
+
+
+class RoutineScheduleSchema(BaseSchema):
+    """API schema for RoutineSchedule value object."""
+    
+    frequency: TaskFrequency
+    weekdays: list[DayOfWeek] | None = None
+    day_number: int | None = None
+
+
+class RoutineTaskSchema(BaseSchema):
+    """API schema for RoutineTask value object."""
+    
+    id: UUID | None = None
+    task_definition_id: UUID
+    name: str | None = None
+    schedule: TaskScheduleSchema | None = None
 
 
 class RoutineCreateSchema(BaseSchema):
@@ -14,9 +32,9 @@ class RoutineCreateSchema(BaseSchema):
 
     name: str
     category: TaskCategory
-    routine_schedule: RoutineSchedule
+    routine_schedule: RoutineScheduleSchema
     description: str = ""
-    tasks: list[RoutineTask] = Field(default_factory=list)
+    tasks: list[RoutineTaskSchema] = Field(default_factory=list)
 
 
 class RoutineSchema(BaseEntitySchema):
@@ -25,9 +43,9 @@ class RoutineSchema(BaseEntitySchema):
     user_id: UUID
     name: str
     category: TaskCategory
-    routine_schedule: RoutineSchedule
+    routine_schedule: RoutineScheduleSchema
     description: str = ""
-    tasks: list[RoutineTask] = Field(default_factory=list)
+    tasks: list[RoutineTaskSchema] = Field(default_factory=list)
 
 
 class RoutineUpdateSchema(BaseSchema):
@@ -35,9 +53,9 @@ class RoutineUpdateSchema(BaseSchema):
 
     name: str | None = None
     category: TaskCategory | None = None
-    routine_schedule: RoutineSchedule | None = None
+    routine_schedule: RoutineScheduleSchema | None = None
     description: str | None = None
-    tasks: list[RoutineTask] | None = None
+    tasks: list[RoutineTaskSchema] | None = None
 
 
 class RoutineTaskCreateSchema(BaseSchema):
@@ -45,11 +63,11 @@ class RoutineTaskCreateSchema(BaseSchema):
 
     task_definition_id: UUID
     name: str | None = None
-    schedule: TaskSchedule | None = None
+    schedule: TaskScheduleSchema | None = None
 
 
 class RoutineTaskUpdateSchema(BaseSchema):
     """API schema for updating an attached RoutineTask."""
 
     name: str | None = None
-    schedule: TaskSchedule | None = None
+    schedule: TaskScheduleSchema | None = None

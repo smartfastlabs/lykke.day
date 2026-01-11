@@ -1,7 +1,8 @@
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from .base import BaseValueObject
 
 if TYPE_CHECKING:
     from ..entities import CalendarEntryEntity, DayEntity, TaskEntity
@@ -27,14 +28,8 @@ class DayMode(str, Enum):
     POST_DAY = "POST_DAY"
 
 
-class DayContext(BaseModel):
+@dataclass(kw_only=True)
+class DayContext(BaseValueObject):
     day: "DayEntity"
-    calendar_entries: list["CalendarEntryEntity"] = Field(default_factory=list)
-    tasks: list["TaskEntity"] = Field(default_factory=list)
-
-
-def _rebuild_day_context() -> None:
-    """Rebuild DayContext model after all entity classes are defined."""
-    # These imports are here to rebuild the model after all entities are defined
-
-    DayContext.model_rebuild()
+    calendar_entries: list["CalendarEntryEntity"] = field(default_factory=list)
+    tasks: list["TaskEntity"] = field(default_factory=list)

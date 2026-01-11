@@ -92,13 +92,49 @@ async def create_routine(
     ],
 ) -> RoutineSchema:
     """Create a new routine."""
+    # Convert schema to domain dataclasses
+    from lykke.domain.value_objects.routine import RoutineSchedule, RoutineTask
+    from lykke.domain.value_objects.task import TaskSchedule
+    
+    routine_schedule = RoutineSchedule(
+        frequency=routine_data.routine_schedule.frequency,
+        weekdays=routine_data.routine_schedule.weekdays,
+        day_number=routine_data.routine_schedule.day_number,
+    )
+    
+    tasks = []
+    for task_schema in routine_data.tasks or []:
+        task_schedule = None
+        if task_schema.schedule:
+            task_schedule = TaskSchedule(
+                available_time=task_schema.schedule.available_time,
+                start_time=task_schema.schedule.start_time,
+                end_time=task_schema.schedule.end_time,
+                timing_type=task_schema.schedule.timing_type,
+            )
+        
+        if task_schema.id:
+            routine_task = RoutineTask(
+                id=task_schema.id,
+                task_definition_id=task_schema.task_definition_id,
+                name=task_schema.name,
+                schedule=task_schedule,
+            )
+        else:
+            routine_task = RoutineTask(
+                task_definition_id=task_schema.task_definition_id,
+                name=task_schema.name,
+                schedule=task_schedule,
+            )
+        tasks.append(routine_task)
+    
     routine = RoutineEntity(
         user_id=user.id,
         name=routine_data.name,
         category=routine_data.category,
-        routine_schedule=routine_data.routine_schedule,
+        routine_schedule=routine_schedule,
         description=routine_data.description,
-        tasks=routine_data.tasks or [],
+        tasks=tasks,
     )
     created = await create_routine_handler.run(routine=routine)
     return map_routine_to_schema(created)
@@ -113,12 +149,52 @@ async def update_routine(
     ],
 ) -> RoutineSchema:
     """Update an existing routine."""
+    # Convert schema to domain dataclasses
+    from lykke.domain.value_objects.routine import RoutineSchedule, RoutineTask
+    from lykke.domain.value_objects.task import TaskSchedule
+    
+    routine_schedule = None
+    if update_data.routine_schedule:
+        routine_schedule = RoutineSchedule(
+            frequency=update_data.routine_schedule.frequency,
+            weekdays=update_data.routine_schedule.weekdays,
+            day_number=update_data.routine_schedule.day_number,
+        )
+    
+    tasks = None
+    if update_data.tasks is not None:
+        tasks = []
+        for task_schema in update_data.tasks:
+            task_schedule = None
+            if task_schema.schedule:
+                task_schedule = TaskSchedule(
+                    available_time=task_schema.schedule.available_time,
+                    start_time=task_schema.schedule.start_time,
+                    end_time=task_schema.schedule.end_time,
+                    timing_type=task_schema.schedule.timing_type,
+                )
+            
+            if task_schema.id:
+                routine_task = RoutineTask(
+                    id=task_schema.id,
+                    task_definition_id=task_schema.task_definition_id,
+                    name=task_schema.name,
+                    schedule=task_schedule,
+                )
+            else:
+                routine_task = RoutineTask(
+                    task_definition_id=task_schema.task_definition_id,
+                    name=task_schema.name,
+                    schedule=task_schedule,
+                )
+            tasks.append(routine_task)
+    
     update_object = RoutineUpdateObject(
         name=update_data.name,
         category=update_data.category,
-        routine_schedule=update_data.routine_schedule,
+        routine_schedule=routine_schedule,
         description=update_data.description,
-        tasks=update_data.tasks,
+        tasks=tasks,
     )
     updated = await update_routine_handler.run(
         routine_id=uuid,
@@ -151,9 +227,24 @@ async def add_routine_task(
     ],
 ) -> RoutineSchema:
     """Attach a task definition to a routine."""
+    from lykke.domain.value_objects.task import TaskSchedule
+    
+    task_schedule = None
+    if routine_task.schedule:
+        task_schedule = TaskSchedule(
+            available_time=routine_task.schedule.available_time,
+            start_time=routine_task.schedule.start_time,
+            end_time=routine_task.schedule.end_time,
+            timing_type=routine_task.schedule.timing_type,
+        )
+    
     updated = await add_routine_task_handler.run(
         routine_id=uuid,
-        task=RoutineTask(**routine_task.model_dump()),
+        task=RoutineTask(
+            task_definition_id=routine_task.task_definition_id,
+            name=routine_task.name,
+            schedule=task_schedule,
+        ),
     )
     return map_routine_to_schema(updated)
 
@@ -171,6 +262,17 @@ async def update_routine_task(
     ],
 ) -> RoutineSchema:
     """Update an attached routine task (name/schedule)."""
+    from lykke.domain.value_objects.task import TaskSchedule
+    
+    task_schedule = None
+    if routine_task_update.schedule:
+        task_schedule = TaskSchedule(
+            available_time=routine_task_update.schedule.available_time,
+            start_time=routine_task_update.schedule.start_time,
+            end_time=routine_task_update.schedule.end_time,
+            timing_type=routine_task_update.schedule.timing_type,
+        )
+    
     updated = await update_routine_task_handler.run(
         routine_id=uuid,
         task_update=RoutineTask(
@@ -179,7 +281,7 @@ async def update_routine_task(
                 "00000000-0000-0000-0000-000000000000"
             ),  # Will be preserved from existing task
             name=routine_task_update.name,
-            schedule=routine_task_update.schedule,
+            schedule=task_schedule,
         ),
     )
     return map_routine_to_schema(updated)

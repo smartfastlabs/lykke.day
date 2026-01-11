@@ -1,3 +1,5 @@
+from dataclasses import asdict
+from datetime import datetime, time
 from typing import Any
 from uuid import UUID
 
@@ -14,6 +16,28 @@ from lykke.infrastructure.repositories.base.utils import (
 )
 
 from .base import UserScopedBaseRepository
+
+
+def dataclass_to_json_dict(obj: Any) -> dict[str, Any]:
+    """Convert a dataclass to a JSON-serializable dict, handling UUIDs, enums, datetime, and time."""
+    result = asdict(obj)
+    
+    def convert_value(value: Any) -> Any:
+        if isinstance(value, UUID):
+            return str(value)
+        elif isinstance(value, datetime):
+            return value.isoformat()
+        elif isinstance(value, time):
+            return value.isoformat()
+        elif isinstance(value, dict):
+            return {k: convert_value(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            return [convert_value(item) for item in value]
+        elif hasattr(value, 'value'):  # Enum
+            return value.value
+        return value
+    
+    return {k: convert_value(v) for k, v in result.items()}
 
 CalendarQuery = value_objects.CalendarQuery
 
@@ -67,9 +91,7 @@ class CalendarRepository(UserScopedBaseRepository[CalendarEntity, CalendarQuery]
         }
 
         if calendar.sync_subscription:
-            row["sync_subscription"] = calendar.sync_subscription.model_dump(
-                mode="json"
-            )
+            row["sync_subscription"] = dataclass_to_json_dict(calendar.sync_subscription)
 
         return row
 

@@ -165,10 +165,8 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     def _strip_pagination(self, query: QueryType) -> QueryType:
         """Return a copy of the query with pagination removed."""
-        query_without_paging = query.model_copy()
-        query_without_paging.limit = None
-        query_without_paging.offset = None
-        return query_without_paging
+        from dataclasses import replace
+        return replace(query, limit=None, offset=None)
 
     def _get_engine(self) -> AsyncEngine:
         """Get the database engine."""

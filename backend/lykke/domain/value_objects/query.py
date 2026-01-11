@@ -7,12 +7,11 @@ from datetime import date as dt_date, datetime
 from typing import Generic, TypeVar
 from uuid import UUID
 
-import pydantic
-
-from .base import BaseRequestObject, BaseResponseObject
+from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 
 
-class BaseQuery(pydantic.BaseModel):
+@dataclass(kw_only=True)
+class BaseQuery(BaseValueObject):
     """Base query class for building flexible queries with pagination, ordering, and filtering."""
 
     limit: int | None = None
@@ -22,18 +21,15 @@ class BaseQuery(pydantic.BaseModel):
     created_before: datetime | None = None
     created_after: datetime | None = None
 
-    model_config = pydantic.ConfigDict(
-        from_attributes=True,
-        populate_by_name=True,
-    )
 
-
+@dataclass(kw_only=True)
 class DateQuery(BaseQuery):
     """Query class for entities with a date column."""
 
     date: dt_date | None = None
 
 
+@dataclass(kw_only=True)
 class UserQuery(BaseQuery):
     """Query class for User entities."""
 
@@ -41,12 +37,14 @@ class UserQuery(BaseQuery):
     phone_number: str | None = None
 
 
+@dataclass(kw_only=True)
 class DayTemplateQuery(BaseQuery):
     """Query class for DayTemplate entities."""
 
     slug: str | None = None
 
 
+@dataclass(kw_only=True)
 class AuthTokenQuery(BaseQuery):
     """Query class for AuthToken entities."""
 
@@ -54,6 +52,7 @@ class AuthTokenQuery(BaseQuery):
     platform: str | None = None
 
 
+@dataclass(kw_only=True)
 class CalendarQuery(BaseQuery):
     """Query class for Calendar entities."""
 
@@ -61,6 +60,7 @@ class CalendarQuery(BaseQuery):
     resource_id: str | None = None
 
 
+@dataclass(kw_only=True)
 class CalendarEntryQuery(DateQuery):
     """Query class for CalendarEntry entities."""
 
@@ -69,6 +69,7 @@ class CalendarEntryQuery(DateQuery):
     platform_ids: list[str] | None = None
 
 
+@dataclass(kw_only=True)
 class CalendarEntrySeriesQuery(BaseQuery):
     """Query class for CalendarEntrySeries entities."""
 
@@ -76,18 +77,22 @@ class CalendarEntrySeriesQuery(BaseQuery):
     platform_id: str | None = None
 
 
+@dataclass(kw_only=True)
 class DayQuery(DateQuery):
     """Query class for Day entities."""
 
 
+@dataclass(kw_only=True)
 class PushSubscriptionQuery(BaseQuery):
     """Query class for PushSubscription entities."""
 
 
+@dataclass(kw_only=True)
 class RoutineQuery(BaseQuery):
     """Query class for Routine entities."""
 
 
+@dataclass(kw_only=True)
 class TaskQuery(DateQuery):
     """Query class for Task entities."""
 
@@ -95,10 +100,12 @@ class TaskQuery(DateQuery):
     routine_ids: list[UUID] | None = None
 
 
+@dataclass(kw_only=True)
 class TaskDefinitionQuery(BaseQuery):
     """Query class for TaskDefinition entities."""
 
 
+@dataclass(kw_only=True)
 class TimeBlockDefinitionQuery(BaseQuery):
     """Query class for TimeBlockDefinition entities."""
 
@@ -106,11 +113,12 @@ class TimeBlockDefinitionQuery(BaseQuery):
 T = TypeVar("T", bound=BaseQuery)
 
 
+@dataclass(kw_only=True)
 class PagedQueryRequest(BaseRequestObject, Generic[T]):
     """Request wrapper for paginated queries."""
 
-    limit: int = pydantic.Field(default=50, ge=1, le=1000)
-    offset: int = pydantic.Field(default=0, ge=0)
+    limit: int = 50
+    offset: int = 0
     query: T | None = None  # Optional nested query object (DateQuery, BaseQuery, etc.)
 
 

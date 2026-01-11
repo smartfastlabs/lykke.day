@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
@@ -40,17 +40,12 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
         update_event_class: type[UserUpdatedEvent],
     ) -> UserEntity:
         """Apply updates ensuring settings remain a UserSetting dataclass."""
-        update_dict: dict[str, Any] = asdict(update_object)
-        update_dict = {k: v for k, v in update_dict.items() if v is not None}
-
-        if "settings" in update_dict:
-            settings_val = update_dict["settings"]
-            if isinstance(settings_val, dict):
-                settings_val = value_objects.UserSetting(**settings_val)
-            if not isinstance(settings_val, value_objects.UserSetting):
-                msg = "settings must be a UserSetting"
-                raise TypeError(msg)
-            update_dict["settings"] = settings_val
+        # Extract non-None fields from update object without converting nested dataclasses to dicts
+        update_dict: dict[str, Any] = {
+            k: v for k, v in update_object.__dict__.items() if v is not None
+        }
+        
+        # No need to reconstruct settings since __dict__ preserves the dataclass instance
 
         updated_entity: UserEntity = self.clone(**update_dict)
         updated_entity = updated_entity.clone(updated_at=datetime.now(UTC))

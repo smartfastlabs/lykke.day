@@ -9,10 +9,7 @@ from .entities import (
 )
 from .value_objects import BaseRequestObject, BaseResponseObject, BaseValueObject, UserSetting
 
-# Rebuild DayContext after all entities are imported
-# Import here to avoid circular imports
-from .value_objects.day import DayContext as _DayContext
-_DayContext.model_rebuild()
+# DayContext is now a dataclass, no need to rebuild
 
 __all__ = [
     # Entities

@@ -1,8 +1,7 @@
+from dataclasses import dataclass
 from datetime import time
 from enum import Enum
 from uuid import UUID
-
-from pydantic import BaseModel
 
 
 class TimeBlockType(str, Enum):
@@ -58,7 +57,8 @@ class TimeBlockCategory(str, Enum):
     OTHER = "OTHER"
 
 
-class DayTemplateTimeBlock(BaseModel):
+@dataclass(frozen=True)
+class DayTemplateTimeBlock:
     """Represents a time block in a day template.
 
     This joins a TimeBlockDefinition to a specific time window in the template.
@@ -71,7 +71,8 @@ class DayTemplateTimeBlock(BaseModel):
     name: str  # Denormalized from TimeBlockDefinition
 
 
-class DayTimeBlock(BaseModel):
+@dataclass(frozen=True)
+class DayTimeBlock:
     """Represents a scheduled time block on a specific day.
 
     This is the instance that gets created when a Day is scheduled.

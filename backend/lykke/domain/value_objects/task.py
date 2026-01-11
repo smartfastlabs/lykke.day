@@ -1,7 +1,8 @@
+from dataclasses import dataclass
 from datetime import time
 from enum import Enum
 
-from pydantic import BaseModel
+from .base import BaseValueObject
 
 
 class TaskTag(str, Enum):
@@ -123,7 +124,8 @@ class TimingType(str, Enum):
     FLEXIBLE = "FLEXIBLE"
 
 
-class TaskSchedule(BaseModel):
+@dataclass(kw_only=True)
+class TaskSchedule(BaseValueObject):
     available_time: time | None = None
     start_time: time | None = None
     end_time: time | None = None
