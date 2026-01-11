@@ -17,7 +17,8 @@ class Task(Base):
     scheduled_date = Column(Date, nullable=False)
     name = Column(String, nullable=False)
     status = Column(String, nullable=False)  # TaskStatus enum as string
-    task_definition = Column(JSONB, nullable=False)  # TaskDefinition
+    type = Column(String, nullable=False)  # TaskType enum as string
+    description = Column(String, nullable=False)
     category = Column(String, nullable=False)  # TaskCategory enum as string
     frequency = Column(String, nullable=False)  # TaskFrequency enum as string
     completed_at = Column(DateTime)

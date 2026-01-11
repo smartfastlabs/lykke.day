@@ -3,7 +3,7 @@ from datetime import time as dt_time
 from typing import Any, ClassVar
 from uuid import UUID
 
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
 from lykke.domain.entities import TaskEntity
 from lykke.infrastructure.database.tables import tasks_tbl
 from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
@@ -49,16 +49,16 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
             "scheduled_date": task.scheduled_date,
             "name": task.name,
             "status": task.status.value,
+            "type": task.type.value,
+            "description": task.description,
             "category": task.category,
             "frequency": task.frequency,
             "completed_at": task.completed_at,
             "routine_id": task.routine_id,
         }
 
-        # Handle JSONB fields - task_definition is required, others are optional
+        # Handle JSONB fields
         from lykke.core.utils.serialization import dataclass_to_json_dict
-
-        row["task_definition"] = dataclass_to_json_dict(task.task_definition)
 
         if task.schedule:
             row["schedule"] = dataclass_to_json_dict(task.schedule)
@@ -90,21 +90,14 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
         # Convert enum strings back to enums if needed
         if "status" in data and isinstance(data["status"], str):
             data["status"] = value_objects.TaskStatus(data["status"])
+        if "type" in data and isinstance(data["type"], str):
+            data["type"] = value_objects.TaskType(data["type"])
         if "category" in data and isinstance(data["category"], str):
             data["category"] = value_objects.TaskCategory(data["category"])
         if "frequency" in data and isinstance(data["frequency"], str):
             data["frequency"] = value_objects.TaskFrequency(data["frequency"])
 
-        # Handle JSONB fields - task_definition, schedule, tags, actions
-        if "task_definition" in data and isinstance(data["task_definition"], dict):
-            # TaskDefinition is a dataclass
-            task_def_dict = filter_init_false_fields(
-                data["task_definition"], data_objects.TaskDefinition
-            )
-            # Convert enum strings back to enums
-            if "type" in task_def_dict and isinstance(task_def_dict["type"], str):
-                task_def_dict["type"] = value_objects.TaskType(task_def_dict["type"])
-            data["task_definition"] = data_objects.TaskDefinition(**task_def_dict)
+        # Handle JSONB fields - schedule, tags, actions
 
         if isinstance(data.get("schedule"), dict):
             # TaskSchedule is a Pydantic model

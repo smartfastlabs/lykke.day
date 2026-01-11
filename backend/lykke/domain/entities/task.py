@@ -3,7 +3,7 @@ from datetime import UTC, date as dt_date, datetime
 from uuid import UUID
 
 from lykke.core.exceptions import DomainError
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
 from lykke.domain.events.task_events import TaskStateUpdatedEvent
 
 from .base import BaseEntityObject
@@ -15,7 +15,8 @@ class TaskEntity(BaseEntityObject):
     scheduled_date: dt_date
     name: str
     status: value_objects.TaskStatus
-    task_definition: data_objects.TaskDefinition
+    type: value_objects.TaskType
+    description: str
     category: value_objects.TaskCategory
     frequency: value_objects.TaskFrequency
     completed_at: datetime | None = None

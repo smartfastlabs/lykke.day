@@ -13,24 +13,18 @@ from lykke.core.utils.task_filters import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import TaskEntity
-from lykke.domain import data_objects
 
 
 @pytest.fixture
 def test_task_pending(test_user_id: str) -> TaskEntity:
     """Create a pending task for testing."""
-    task_def = data_objects.TaskDefinition(
-        user_id=test_user_id,
-        name="Task Def",
-        description="Test",
-        type=value_objects.TaskType.CHORE,
-    )
     return TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
         status=value_objects.TaskStatus.PENDING,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
     )
@@ -39,12 +33,6 @@ def test_task_pending(test_user_id: str) -> TaskEntity:
 @pytest.fixture
 def test_task_with_schedule(test_user_id: str) -> TaskEntity:
     """Create a task with schedule for testing."""
-    task_def = data_objects.TaskDefinition(
-        user_id=test_user_id,
-        name="Task Def",
-        description="Test",
-        type=value_objects.TaskType.CHORE,
-    )
     schedule = value_objects.TaskSchedule(
         start_time=datetime.time(10, 0),
         end_time=datetime.time(12, 0),
@@ -55,7 +43,8 @@ def test_task_with_schedule(test_user_id: str) -> TaskEntity:
         scheduled_date=datetime.date(2025, 11, 27),
         name="Scheduled Task",
         status=value_objects.TaskStatus.READY,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
         schedule=schedule,
@@ -77,18 +66,13 @@ def test_is_task_eligible_for_upcoming_status(
     test_user_id: str, status: value_objects.TaskStatus, expected: bool
 ) -> None:
     """Test task eligibility based on status."""
-    task_def = data_objects.TaskDefinition(
-        user_id=test_user_id,
-        name="Task Def",
-        description="Test",
-        type=value_objects.TaskType.CHORE,
-    )
     task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
         status=status,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
         schedule=value_objects.TaskSchedule(
@@ -132,12 +116,6 @@ def test_is_task_eligible_for_upcoming_available_time_before_now(
     test_user_id: str,
 ) -> None:
     """Test task with available_time before now is eligible."""
-    task_def = data_objects.TaskDefinition(
-        user_id=test_user_id,
-        name="Task Def",
-        description="Test",
-        type=value_objects.TaskType.CHORE,
-    )
     schedule = value_objects.TaskSchedule(
         available_time=datetime.time(8, 0),
         start_time=datetime.time(10, 0),
@@ -148,7 +126,8 @@ def test_is_task_eligible_for_upcoming_available_time_before_now(
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
         status=value_objects.TaskStatus.READY,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
         schedule=schedule,
@@ -164,12 +143,6 @@ def test_is_task_eligible_for_upcoming_available_time_after_now(
     test_user_id: str,
 ) -> None:
     """Test task with available_time after now is not eligible."""
-    task_def = data_objects.TaskDefinition(
-        user_id=test_user_id,
-        name="Task Def",
-        description="Test",
-        type=value_objects.TaskType.CHORE,
-    )
     schedule = value_objects.TaskSchedule(
         available_time=datetime.time(10, 0),
         start_time=datetime.time(11, 0),
@@ -180,7 +153,8 @@ def test_is_task_eligible_for_upcoming_available_time_after_now(
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
         status=value_objects.TaskStatus.READY,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
         schedule=schedule,
@@ -196,12 +170,6 @@ def test_is_task_eligible_for_upcoming_start_time_after_cutoff(
     test_user_id: str,
 ) -> None:
     """Test task with start_time after cutoff is not eligible."""
-    task_def = data_objects.TaskDefinition(
-        user_id=test_user_id,
-        name="Task Def",
-        description="Test",
-        type=value_objects.TaskType.CHORE,
-    )
     schedule = value_objects.TaskSchedule(
         start_time=datetime.time(13, 0),
         timing_type=value_objects.TimingType.FIXED_TIME,
@@ -211,7 +179,8 @@ def test_is_task_eligible_for_upcoming_start_time_after_cutoff(
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
         status=value_objects.TaskStatus.READY,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
         schedule=schedule,
@@ -227,12 +196,6 @@ def test_is_task_eligible_for_upcoming_end_time_passed(
     test_user_id: str,
 ) -> None:
     """Test task with end_time that has passed is not eligible."""
-    task_def = data_objects.TaskDefinition(
-        user_id=test_user_id,
-        name="Task Def",
-        description="Test",
-        type=value_objects.TaskType.CHORE,
-    )
     schedule = value_objects.TaskSchedule(
         start_time=datetime.time(8, 0),
         end_time=datetime.time(9, 0),
@@ -243,7 +206,8 @@ def test_is_task_eligible_for_upcoming_end_time_passed(
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
         status=value_objects.TaskStatus.READY,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
         schedule=schedule,
@@ -277,18 +241,13 @@ def test_calculate_cutoff_time_crosses_midnight(test_date: datetime.date) -> Non
 
 def test_filter_upcoming_tasks(test_user_id: str) -> None:
     """Test filter_upcoming_tasks filters tasks correctly."""
-    task_def = data_objects.TaskDefinition(
-        user_id=test_user_id,
-        name="Task Def",
-        description="Test",
-        type=value_objects.TaskType.CHORE,
-    )
     eligible_task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Eligible Task",
         status=value_objects.TaskStatus.READY,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
         schedule=value_objects.TaskSchedule(
@@ -301,7 +260,8 @@ def test_filter_upcoming_tasks(test_user_id: str) -> None:
         scheduled_date=datetime.date(2025, 11, 27),
         name="Ineligible Task",
         status=value_objects.TaskStatus.COMPLETE,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
         schedule=value_objects.TaskSchedule(
@@ -314,7 +274,8 @@ def test_filter_upcoming_tasks(test_user_id: str) -> None:
         scheduled_date=datetime.date(2025, 11, 27),
         name="No Schedule Task",
         status=value_objects.TaskStatus.READY,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
     )
@@ -330,18 +291,13 @@ def test_filter_upcoming_tasks(test_user_id: str) -> None:
 
 def test_filter_upcoming_tasks_cutoff_before_now(test_user_id: str) -> None:
     """Test filter_upcoming_tasks returns all tasks when cutoff is before now."""
-    task_def = data_objects.TaskDefinition(
-        user_id=test_user_id,
-        name="Task Def",
-        description="Test",
-        type=value_objects.TaskType.CHORE,
-    )
     task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Task",
         status=value_objects.TaskStatus.READY,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
         schedule=value_objects.TaskSchedule(

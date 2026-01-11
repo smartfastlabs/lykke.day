@@ -12,6 +12,7 @@ from lykke.domain.value_objects.task import (
     TaskFrequency,
     TaskStatus,
     TaskTag,
+    TaskType,
     TimingType,
 )
 
@@ -19,7 +20,6 @@ from .base import BaseEntitySchema, BaseSchema
 
 if TYPE_CHECKING:
     from .action import ActionSchema
-    from .task_definition import TaskDefinitionSchema
 
 
 class TaskScheduleSchema(BaseSchema):
@@ -38,7 +38,8 @@ class TaskSchema(BaseEntitySchema):
     scheduled_date: date
     name: str
     status: TaskStatus
-    task_definition: "TaskDefinitionSchema"
+    type: TaskType
+    description: str
     category: TaskCategory
     frequency: TaskFrequency
     completed_at: datetime | None = None

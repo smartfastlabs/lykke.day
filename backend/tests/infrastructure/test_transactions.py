@@ -6,7 +6,6 @@ import pytest
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, TaskEntity
-from lykke.domain import data_objects
 from lykke.infrastructure.database.transaction import (
     TransactionManager,
     get_transaction_connection,
@@ -119,15 +118,11 @@ async def test_multiple_operations_in_single_transaction(
         user_id=test_user.id,
         name="Test Task",
         status=value_objects.TaskStatus.NOT_STARTED,
+        type=value_objects.TaskType.ACTIVITY,
+        description="Test",
         category=value_objects.TaskCategory.HOUSE,
         frequency=value_objects.TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=data_objects.TaskDefinition(
-            user_id=test_user.id,
-            name="Test Task",
-            description="Test",
-            type=value_objects.TaskType.ACTIVITY,
-        ),
     )
 
     async with TransactionManager():

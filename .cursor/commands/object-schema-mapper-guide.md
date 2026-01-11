@@ -75,6 +75,9 @@ class TaskDefinition(BaseEntityObject):
 - **Value Objects** are embedded as JSONB within other entities' tables
 - Data Objects are referenced by ID, Value Objects are embedded by value
 
+> **💡 Value Objects Note:**  
+> Value Objects (in `lykke/domain/value_objects/`) like `Action`, `Alarm`, `TaskSchedule`, `RoutineSchedule` are immutable dataclasses that are ONLY stored as JSONB within entity tables. They don't have their own tables or IDs. If something needs its own table, it should be a Data Object or Entity, not a Value Object.
+
 ---
 
 ### 3. **SQLAlchemy Tables** (`lykke/infrastructure/database/tables/`)
@@ -325,7 +328,46 @@ def row_to_entity(cls, row: dict[str, Any]) -> TaskEntity:
 
 ---
 
-### ❌ Mistake 4: Wrong Object Type in Layer
+### ❌ Mistake 4: Storing Data Objects as JSONB Instead of Their Own Table
+
+**Wrong:**
+
+```python
+# In entity - embedding a Data Object
+class TaskEntity:
+    task_definition: TaskDefinition  # ❌ Data Object should be referenced by ID!
+
+# In table - storing Data Object as JSONB
+class Task(Base):
+    task_definition = Column(JSONB)  # ❌ Should have task_definition_id instead!
+```
+
+**Right:**
+
+```python
+# In entity - reference Data Object by ID
+class TaskEntity:
+    task_definition_id: UUID  # ✅ Reference by ID
+    task_definition: TaskDefinition  # ✅ Loaded from repository, not embedded
+
+# In table - foreign key to Data Object's table
+class Task(Base):
+    task_definition_id = Column(PGUUID, nullable=False)  # ✅ Foreign key!
+
+# TaskDefinition has its own table
+class TaskDefinition(Base):
+    __tablename__ = "task_definitions"
+    id = Column(PGUUID, primary_key=True)  # ✅ Own table with ID
+```
+
+**Remember:**
+
+- **Data Objects** → Own table, referenced by ID
+- **Value Objects** → Embedded as JSONB
+
+---
+
+### ❌ Mistake 5: Wrong Object Type in Layer
 
 **Wrong:**
 
@@ -367,7 +409,8 @@ When an entity contains embedded value objects (stored as JSONB in the parent's 
 ```python
 @dataclass(kw_only=True)
 class TaskEntity:
-    task_definition: TaskDefinition  # Data object, not entity
+    schedule: TaskSchedule | None  # Value object embedded as JSONB
+    actions: list[Action]  # List of value objects as JSONB
 ```
 
 **In Repository `entity_to_row()`:**
@@ -375,23 +418,35 @@ class TaskEntity:
 ```python
 from lykke.core.utils.serialization import dataclass_to_json_dict
 
-row["task_definition"] = dataclass_to_json_dict(task.task_definition)
+if task.schedule:
+    row["schedule"] = dataclass_to_json_dict(task.schedule)
+
+if task.actions:
+    row["actions"] = [dataclass_to_json_dict(action) for action in task.actions]
 ```
 
 **In Repository `row_to_entity()`:**
 
 ```python
-if "task_definition" in data and isinstance(data["task_definition"], dict):
-    data["task_definition"] = TaskDefinition(**data["task_definition"])
+if isinstance(data.get("schedule"), dict):
+    data["schedule"] = TaskSchedule(**data["schedule"])
+
+if data.get("actions"):
+    data["actions"] = [
+        Action(**action) if isinstance(action, dict) else action
+        for action in data["actions"]
+    ]
 ```
 
 **In Mapper:**
 
 ```python
 def map_task_to_schema(task: TaskEntity) -> TaskSchema:
-    task_def_schema = map_task_definition_to_schema(task.task_definition)  # Map embedded
+    schedule_schema = map_task_schedule_to_schema(task.schedule) if task.schedule else None
+    action_schemas = [map_action_to_schema(action) for action in task.actions]
     return TaskSchema(
-        task_definition=task_def_schema,
+        schedule=schedule_schema,
+        actions=action_schemas,
         # ...
     )
 ```
@@ -527,11 +582,33 @@ class MyRepository(UserScopedBaseRepository):
 
 1. **Entities** for business logic (application & domain layers)
 2. **Data Objects** for things that need persistence but not business logic ("anemic entities")
-3. **Schemas** for API contracts (presentation layer only)
-4. **Tables** for database access (infrastructure layer only)
-5. **Mappers** for entity → schema conversion (in `mappers.py`)
-6. **Repository methods** for entity ↔ table conversion
-7. **ALWAYS** update all layers when adding/changing objects
-8. **NEVER** skip mappers or use wrong object type in a layer
+3. **Value Objects** for immutable data embedded as JSONB (no own table)
+4. **Schemas** for API contracts (presentation layer only)
+5. **Tables** for database access (infrastructure layer only)
+6. **Mappers** for entity → schema conversion (in `mappers.py`)
+7. **Repository methods** for entity ↔ table conversion
+8. **ALWAYS** update all layers when adding/changing objects
+9. **NEVER** skip mappers or use wrong object type in a layer
+10. **NEVER** store Data Objects as JSONB - they get their own tables!
+
+---
+
+**Decision Tree: Which Type Should I Use?**
+
+```
+Does it need business logic?
+├─ YES → Entity (domain/entities/)
+└─ NO → Does it need its own database table?
+    ├─ YES → Data Object (domain/data_objects/)
+    └─ NO → Value Object (domain/value_objects/, stored as JSONB)
+
+Is it for the API?
+└─ YES → Schema (presentation/api/schemas/)
+
+Is it for the database?
+└─ YES → Table (infrastructure/database/tables/)
+```
+
+---
 
 When in doubt, follow an existing object through all layers as a template.

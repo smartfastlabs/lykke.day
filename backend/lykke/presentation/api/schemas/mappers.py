@@ -90,7 +90,6 @@ def map_task_schedule_to_schema(
 def map_task_to_schema(task: TaskEntity) -> TaskSchema:
     """Convert Task entity to Task schema."""
     # Convert nested entities
-    task_definition_schema = map_task_definition_to_schema(task.task_definition)
     action_schemas = [map_action_to_schema(action) for action in task.actions]
     schedule_schema = map_task_schedule_to_schema(task.schedule)
 
@@ -100,7 +99,8 @@ def map_task_to_schema(task: TaskEntity) -> TaskSchema:
         scheduled_date=task.scheduled_date,
         name=task.name,
         status=task.status,
-        task_definition=task_definition_schema,
+        type=task.type,
+        description=task.description,
         category=task.category,
         frequency=task.frequency,
         completed_at=task.completed_at,

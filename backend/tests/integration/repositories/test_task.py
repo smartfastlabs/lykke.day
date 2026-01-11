@@ -6,9 +6,7 @@ from uuid import uuid4, uuid5
 import pytest
 
 from lykke.core.exceptions import NotFoundError
-from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain.entities import TaskEntity
-from lykke.domain import data_objects
 from lykke.domain.value_objects.query import TaskQuery
 from lykke.domain.value_objects.task import (
     TaskCategory,
@@ -21,22 +19,6 @@ from lykke.domain.value_objects.task import (
 from lykke.infrastructure.repositories import TaskRepository
 
 
-def _create_task_definition(user_id, task_id=None):
-    """Helper to create a task definition."""
-    if task_id is None:
-        task_id = uuid4()
-    else:
-        task_id = uuid5(user_id, task_id)
-
-    return data_objects.TaskDefinition(
-        user_id=user_id,
-        id=task_id,
-        name="Test Task",
-        description="Test description",
-        type=TaskType.ACTIVITY,
-    )
-
-
 @pytest.mark.asyncio
 async def test_get(task_repo, test_user, test_date):
     """Test getting a task by ID."""
@@ -45,10 +27,11 @@ async def test_get(task_repo, test_user, test_date):
         user_id=test_user.id,
         name="Test Task",
         status=TaskStatus.READY,
+        type=TaskType.ACTIVITY,
+        description="Test description",
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id),
     )
     await task_repo.put(task)
 
@@ -74,10 +57,11 @@ async def test_put(task_repo, test_user, test_date):
         user_id=test_user.id,
         name="New Task",
         status=TaskStatus.NOT_STARTED,
+        type=TaskType.ACTIVITY,
+        description="Test description",
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id),
     )
 
     result = await task_repo.put(task)
@@ -95,10 +79,11 @@ async def test_put_update(task_repo, test_user, test_date):
         user_id=test_user.id,
         name="Original Task",
         status=TaskStatus.NOT_STARTED,
+        type=TaskType.ACTIVITY,
+        description="Test description",
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id),
     )
     await task_repo.put(task)
 
@@ -124,20 +109,22 @@ async def test_all(task_repo, test_user, test_date, test_date_tomorrow):
         user_id=test_user.id,
         name="Task 1",
         status=TaskStatus.NOT_STARTED,
+        type=TaskType.ACTIVITY,
+        description="Test description",
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id, "task1"),
     )
     task2 = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Task 2",
         status=TaskStatus.READY,
+        type=TaskType.ACTIVITY,
+        description="Test description",
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date_tomorrow,
-        task_definition=_create_task_definition(test_user.id, "task2"),
     )
     await task_repo.put(task1)
     await task_repo.put(task2)
@@ -157,20 +144,22 @@ async def test_search_query(task_repo, test_user, test_date, test_date_tomorrow)
         user_id=test_user.id,
         name="Task Today",
         status=TaskStatus.NOT_STARTED,
+        type=TaskType.ACTIVITY,
+        description="Test description",
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id, "task1"),
     )
     task2 = TaskEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="Task Tomorrow",
         status=TaskStatus.READY,
+        type=TaskType.ACTIVITY,
+        description="Test description",
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date_tomorrow,
-        task_definition=_create_task_definition(test_user.id, "task2"),
     )
     await task_repo.put(task1)
     await task_repo.put(task2)
@@ -191,10 +180,11 @@ async def test_delete(task_repo, test_user, test_date):
         user_id=test_user.id,
         name="Task to Delete",
         status=TaskStatus.NOT_STARTED,
+        type=TaskType.ACTIVITY,
+        description="Test description",
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id),
     )
     await task_repo.put(task)
 
@@ -215,10 +205,11 @@ async def test_user_isolation(task_repo, test_user, create_test_user, test_date)
         user_id=test_user.id,
         name="User1 Task",
         status=TaskStatus.NOT_STARTED,
+        type=TaskType.ACTIVITY,
+        description="Test description",
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id),
     )
     await task_repo.put(task)
 
@@ -249,10 +240,11 @@ async def test_task_with_schedule(task_repo, test_user, test_date):
         user_id=test_user.id,
         name="Scheduled Task",
         status=TaskStatus.READY,
+        type=TaskType.ACTIVITY,
+        description="Test description",
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        task_definition=_create_task_definition(test_user.id),
         schedule=schedule,
     )
 
@@ -278,9 +270,8 @@ def test_row_to_entity_parses_time_strings(test_user, test_date):
         "scheduled_date": test_date,
         "name": "String schedule task",
         "status": TaskStatus.READY.value,
-        "task_definition": dataclass_to_json_dict(
-            _create_task_definition(test_user.id)
-        ),
+        "type": TaskType.ACTIVITY.value,
+        "description": "Test description",
         "category": TaskCategory.HOUSE.value,
         "frequency": TaskFrequency.DAILY.value,
         "completed_at": None,

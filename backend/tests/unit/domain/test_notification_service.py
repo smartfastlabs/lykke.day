@@ -12,24 +12,18 @@ from lykke.core.utils import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity, TaskEntity
-from lykke.domain import data_objects
 
 
 @pytest.fixture
 def test_task(test_user_id: str) -> TaskEntity:
     """Create a test task."""
-    task_def = data_objects.TaskDefinition(
-        user_id=test_user_id,
-        name="Test Task Definition",
-        description="Test description",
-        type=value_objects.TaskType.CHORE,
-    )
     return TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
         status=value_objects.TaskStatus.READY,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test description",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
     )
@@ -53,18 +47,13 @@ def test_build_for_tasks_single_task(test_task: TaskEntity) -> None:
 
 def test_build_for_tasks_multiple_tasks(test_user_id: str) -> None:
     """Test building notification payload for multiple tasks."""
-    task_def = data_objects.TaskDefinition(
-        user_id=test_user_id,
-        name="Task Definition",
-        description="Test description",
-        type=value_objects.TaskType.CHORE,
-    )
     task1 = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Task 1",
         status=value_objects.TaskStatus.READY,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test description",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
     )
@@ -73,7 +62,8 @@ def test_build_for_tasks_multiple_tasks(test_user_id: str) -> None:
         scheduled_date=datetime.date(2025, 11, 27),
         name="Task 2",
         status=value_objects.TaskStatus.READY,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test description",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
     )

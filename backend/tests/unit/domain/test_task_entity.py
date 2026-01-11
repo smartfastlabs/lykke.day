@@ -7,26 +7,19 @@ import pytest
 
 from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
-from lykke.domain import value_objects
 from lykke.domain.entities import TaskEntity
-from lykke.domain import data_objects
 
 
 @pytest.fixture
 def test_task(test_user_id: str) -> TaskEntity:
     """Create a test task."""
-    task_def = data_objects.TaskDefinition(
-        user_id=test_user_id,
-        name="Test Task Definition",
-        description="Test description",
-        type=value_objects.TaskType.CHORE,
-    )
     return TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
         name="Test Task",
         status=value_objects.TaskStatus.NOT_STARTED,
-        task_definition=task_def,
+        type=value_objects.TaskType.CHORE,
+        description="Test description",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
     )
