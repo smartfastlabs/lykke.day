@@ -26,10 +26,10 @@ import YouTube from "@/pages/youtube";
 import Podcasts from "@/pages/podcasts";
 import Resources from "@/pages/resources";
 import ThereIsAnAppForThat from "@/pages/there-is-an-app-for-that";
-import HomeLayout from "@/pages/me/home/layout";
-import PreviewView from "@/pages/me/home/preview";
-import TasksView from "@/pages/me/home/tasks";
-import EventsView from "@/pages/me/home/events";
+import HomeLayout from "@/pages/me/today/layout";
+import PreviewView from "@/pages/me/today/preview";
+import TasksView from "@/pages/me/today/tasks";
+import EventsView from "@/pages/me/today/events";
 import NavPage from "@/pages/me/navigation/links";
 import CalendarPage from "@/pages/me/navigation/calendar";
 import SettingsLayout from "@/pages/me/settings/layout";
@@ -95,94 +95,119 @@ export default function App() {
 
   return (
     <NotificationProvider>
-      <Router
-        root={(props) => (
-          <AuthProvider>
-            <NavigationHandler />
-            <MetaProvider>
-              <Title>Todd's Daily Planer</Title>
-              <Suspense>{props.children}</Suspense>
-            </MetaProvider>
-          </AuthProvider>
-        )}
-      >
-        <Route path="/" component={Landing} />
-        <Route path="/privacy" component={Privacy} />
-        <Route path="/terms" component={Terms} />
-        <Route path="/faq" component={FAQ} />
-        <Route path="/books" component={Books} />
-        <Route path="/apps" component={ThereIsAnAppForThat} />
-        <Route path="/apps/todo" component={TodoApps} />
-        <Route path="/apps/meditation" component={MeditationApps} />
-        <Route path="/apps/weight-loss" component={WeightLossApps} />
-        <Route path="/apps/habits" component={HabitApps} />
-        <Route path="/apps/happiness" component={HappinessApps} />
-        <Route path="/youtube" component={YouTube} />
-        <Route path="/podcasts" component={Podcasts} />
-        <Route path="/resources" component={Resources} />
-        <Route path="/login" component={Login} />
-        <Route path="/register" component={Register} />
-        <Route path="/forgot-password" component={ForgotPassword} />
-        <Route path="/reset-password" component={ResetPassword} />
-        <Route path="/early-access" component={EarlyAccess} />
-        <Route path="/home" component={() => <Navigate href="/me" />} />
+      <div class="min-h-screen relative overflow-hidden">
+        {/* Background gradients */}
+        <div class="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50" />
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(251,191,36,0.15)_0%,_transparent_50%)]" />
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(244,114,82,0.1)_0%,_transparent_50%)]" />
 
-        <Route path="/me" component={AuthGuard}>
-          <Route path="/today" component={HomeLayout}>
-            <Route path="/" component={PreviewView} />
-            <Route path="/tasks" component={TasksView} />
-            <Route path="/events" component={EventsView} />
-          </Route>
-          <Route path="/nav/calendar" component={CalendarPage} />
-          <Route path="/nav" component={NavPage} />
-          <Route path="/settings" component={SettingsLayout}>
-            <Route path="/" component={SettingsIndexPage} />
-            <Route path="/profile" component={ProfileSettingsPage} />
-            <Route path="/day-templates" component={DayTemplatesPage} />
-            <Route path="/day-templates/new" component={NewDayTemplatePage} />
-            <Route
-              path="/day-templates/:id"
-              component={DayTemplateDetailPage}
-            />
-            <Route path="/task-definitions" component={TaskDefinitionsPage} />
-            <Route
-              path="/task-definitions/new"
-              component={NewTaskDefinitionPage}
-            />
-            <Route
-              path="/task-definitions/:id"
-              component={TaskDefinitionDetailPage}
-            />
-            <Route path="/routines" component={RoutinesPage} />
-            <Route path="/routines/new" component={NewRoutinePage} />
-            <Route path="/routines/:id" component={RoutineDetailPage} />
-            <Route path="/time-blocks" component={TimeBlocksPage} />
-            <Route path="/time-blocks/new" component={NewTimeBlockPage} />
-            <Route path="/time-blocks/:id" component={TimeBlockDetailPage} />
-            <Route path="/calendars" component={CalendarsPage} />
-            <Route
-              path="/calendars/:id/recurring-events"
-              component={CalendarRecurringEventsPage}
-            />
-            <Route path="/calendars/:id" component={CalendarDetailPage} />
-            <Route path="/recurring-events" component={RecurringEventsPage} />
-            <Route
-              path="/recurring-events/:id"
-              component={RecurringEventSeriesDetailPage}
-            />
-            <Route
-              path="/push-subscriptions"
-              component={PushSubscriptionsPage}
-            />
-            <Route
-              path="/push-subscriptions/:id"
-              component={PushSubscriptionDetailPage}
-            />
-          </Route>
-        </Route>
+        {/* Decorative blurs */}
+        <div class="absolute top-20 right-10 w-64 h-64 bg-gradient-to-br from-amber-200/30 to-orange-200/20 rounded-full blur-3xl" />
+        <div class="absolute bottom-32 left-10 w-48 h-48 bg-gradient-to-tr from-rose-200/25 to-amber-200/15 rounded-full blur-3xl" />
 
-        <Route path="*" component={NotFound} />
-      </Router>
+        <div class="relative z-10">
+          <Router
+            root={(props) => (
+              <AuthProvider>
+                <NavigationHandler />
+                <MetaProvider>
+                  <Title>Todd's Daily Planer</Title>
+                  <Suspense>{props.children}</Suspense>
+                </MetaProvider>
+              </AuthProvider>
+            )}
+          >
+            <Route path="/" component={Landing} />
+            <Route path="/privacy" component={Privacy} />
+            <Route path="/terms" component={Terms} />
+            <Route path="/faq" component={FAQ} />
+            <Route path="/books" component={Books} />
+            <Route path="/apps" component={ThereIsAnAppForThat} />
+            <Route path="/apps/todo" component={TodoApps} />
+            <Route path="/apps/meditation" component={MeditationApps} />
+            <Route path="/apps/weight-loss" component={WeightLossApps} />
+            <Route path="/apps/habits" component={HabitApps} />
+            <Route path="/apps/happiness" component={HappinessApps} />
+            <Route path="/youtube" component={YouTube} />
+            <Route path="/podcasts" component={Podcasts} />
+            <Route path="/resources" component={Resources} />
+            <Route path="/login" component={Login} />
+            <Route path="/register" component={Register} />
+            <Route path="/forgot-password" component={ForgotPassword} />
+            <Route path="/reset-password" component={ResetPassword} />
+            <Route path="/early-access" component={EarlyAccess} />
+            <Route path="/home" component={() => <Navigate href="/me" />} />
+
+            <Route path="/me" component={AuthGuard}>
+              <Route path="/today" component={HomeLayout}>
+                <Route path="/" component={PreviewView} />
+                <Route path="/tasks" component={TasksView} />
+                <Route path="/events" component={EventsView} />
+              </Route>
+              <Route path="/nav/calendar" component={CalendarPage} />
+              <Route path="/nav" component={NavPage} />
+              <Route path="/settings" component={SettingsLayout}>
+                <Route path="/" component={SettingsIndexPage} />
+                <Route path="/profile" component={ProfileSettingsPage} />
+                <Route path="/day-templates" component={DayTemplatesPage} />
+                <Route
+                  path="/day-templates/new"
+                  component={NewDayTemplatePage}
+                />
+                <Route
+                  path="/day-templates/:id"
+                  component={DayTemplateDetailPage}
+                />
+                <Route
+                  path="/task-definitions"
+                  component={TaskDefinitionsPage}
+                />
+                <Route
+                  path="/task-definitions/new"
+                  component={NewTaskDefinitionPage}
+                />
+                <Route
+                  path="/task-definitions/:id"
+                  component={TaskDefinitionDetailPage}
+                />
+                <Route path="/routines" component={RoutinesPage} />
+                <Route path="/routines/new" component={NewRoutinePage} />
+                <Route path="/routines/:id" component={RoutineDetailPage} />
+                <Route path="/time-blocks" component={TimeBlocksPage} />
+                <Route path="/time-blocks/new" component={NewTimeBlockPage} />
+                <Route
+                  path="/time-blocks/:id"
+                  component={TimeBlockDetailPage}
+                />
+                <Route path="/calendars" component={CalendarsPage} />
+                <Route
+                  path="/calendars/:id/recurring-events"
+                  component={CalendarRecurringEventsPage}
+                />
+                <Route path="/calendars/:id" component={CalendarDetailPage} />
+                <Route
+                  path="/recurring-events"
+                  component={RecurringEventsPage}
+                />
+                <Route
+                  path="/recurring-events/:id"
+                  component={RecurringEventSeriesDetailPage}
+                />
+                <Route
+                  path="/push-subscriptions"
+                  component={PushSubscriptionsPage}
+                />
+                <Route
+                  path="/push-subscriptions/:id"
+                  component={PushSubscriptionDetailPage}
+                />
+              </Route>
+            </Route>
+
+            <Route path="*" component={NotFound} />
+          </Router>
+        </div>
+      </div>
     </NotificationProvider>
   );
 }
