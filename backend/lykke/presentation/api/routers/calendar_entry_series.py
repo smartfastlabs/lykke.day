@@ -15,6 +15,7 @@ from lykke.domain import value_objects
 from lykke.presentation.api.schemas import (
     CalendarEntrySeriesSchema,
     CalendarEntrySeriesUpdateSchema,
+    PagedResponseSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_calendar_entry_series_to_schema
 
@@ -43,7 +44,7 @@ async def get_calendar_entry_series(
 
 @router.get(
     "/",
-    response_model=value_objects.PagedQueryResponse[CalendarEntrySeriesSchema],
+    response_model=PagedResponseSchema[CalendarEntrySeriesSchema],
 )
 async def list_calendar_entry_series(
     list_handler: Annotated[
@@ -52,7 +53,7 @@ async def list_calendar_entry_series(
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
     calendar_id: UUID | None = Query(default=None),
-) -> value_objects.PagedQueryResponse[CalendarEntrySeriesSchema]:
+) -> PagedResponseSchema[CalendarEntrySeriesSchema]:
     """List calendar entry series with optional calendar filtering."""
     search_query = value_objects.CalendarEntrySeriesQuery(
         limit=limit,
@@ -61,7 +62,7 @@ async def list_calendar_entry_series(
     )
     result = await list_handler.run(search_query=search_query)
     items = [map_calendar_entry_series_to_schema(series) for series in result.items]
-    return value_objects.PagedQueryResponse(
+    return PagedResponseSchema(
         items=items,
         total=result.total,
         limit=result.limit,

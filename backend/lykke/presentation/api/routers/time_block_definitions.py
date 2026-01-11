@@ -18,6 +18,7 @@ from lykke.domain import value_objects
 from lykke.domain.data_objects import TimeBlockDefinition
 from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import (
+    PagedResponseSchema,
     TimeBlockDefinitionCreateSchema,
     TimeBlockDefinitionSchema,
     TimeBlockDefinitionUpdateSchema,
@@ -53,7 +54,7 @@ async def get_time_block_definition(
 
 
 @router.get(
-    "/", response_model=value_objects.PagedQueryResponse[TimeBlockDefinitionSchema]
+    "/", response_model=PagedResponseSchema[TimeBlockDefinitionSchema]
 )
 async def list_time_block_definitions(
     list_time_block_definitions_handler: Annotated[
@@ -62,7 +63,7 @@ async def list_time_block_definitions(
     ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
-) -> value_objects.PagedQueryResponse[TimeBlockDefinitionSchema]:
+) -> PagedResponseSchema[TimeBlockDefinitionSchema]:
     """List time block definitions with pagination."""
     result = await list_time_block_definitions_handler.run(
         search_query=value_objects.TimeBlockDefinitionQuery(limit=limit, offset=offset),
@@ -72,7 +73,7 @@ async def list_time_block_definitions(
     time_block_definition_schemas = [
         map_time_block_definition_to_schema(tbd) for tbd in paged_response.items
     ]
-    return value_objects.PagedQueryResponse(
+    return PagedResponseSchema(
         items=time_block_definition_schemas,
         total=paged_response.total,
         limit=paged_response.limit,

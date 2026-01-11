@@ -23,6 +23,7 @@ from .day_template import (
     DayTemplateTimeBlockSchema,
     DayTemplateUpdateSchema,
 )
+from .pagination import PagedResponseSchema
 from .user import (
     UserSchema,
     UserSettingsSchema,
@@ -106,6 +107,7 @@ __all__ = [
     "DayTemplateTimeBlockSchema",
     "DayTemplateUpdateSchema",
     "DayUpdateSchema",
+    "PagedResponseSchema",
     "PushSubscriptionCreateSchema",
     "PushSubscriptionKeysSchema",
     "PushSubscriptionSchema",

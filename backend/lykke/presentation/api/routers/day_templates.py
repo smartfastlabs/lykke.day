@@ -29,6 +29,7 @@ from lykke.presentation.api.schemas import (
     DayTemplateSchema,
     DayTemplateTimeBlockCreateSchema,
     DayTemplateUpdateSchema,
+    PagedResponseSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_day_template_to_schema
 
@@ -63,14 +64,14 @@ async def get_day_template(
     return map_day_template_to_schema(day_template)
 
 
-@router.get("/", response_model=value_objects.PagedQueryResponse[DayTemplateSchema])
+@router.get("/", response_model=PagedResponseSchema[DayTemplateSchema])
 async def list_day_templates(
     list_day_templates_handler: Annotated[
         SearchDayTemplatesHandler, Depends(get_list_day_templates_handler)
     ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
-) -> value_objects.PagedQueryResponse[DayTemplateSchema]:
+) -> PagedResponseSchema[DayTemplateSchema]:
     """List day templates with pagination."""
     result = await list_day_templates_handler.run(
         search_query=value_objects.DayTemplateQuery(limit=limit, offset=offset),
@@ -78,7 +79,7 @@ async def list_day_templates(
     paged_response = result
     # Convert entities to schemas
     template_schemas = [map_day_template_to_schema(dt) for dt in paged_response.items]
-    return value_objects.PagedQueryResponse(
+    return PagedResponseSchema(
         items=template_schemas,
         total=paged_response.total,
         limit=paged_response.limit,

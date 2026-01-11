@@ -18,6 +18,7 @@ from lykke.domain.entities import RoutineEntity, UserEntity
 from lykke.domain.value_objects import RoutineUpdateObject
 from lykke.domain.value_objects.routine import RoutineTask
 from lykke.presentation.api.schemas import (
+    PagedResponseSchema,
     RoutineCreateSchema,
     RoutineSchema,
     RoutineTaskCreateSchema,
@@ -53,14 +54,14 @@ async def get_routine(
     return map_routine_to_schema(routine)
 
 
-@router.get("/", response_model=value_objects.PagedQueryResponse[RoutineSchema])
+@router.get("/", response_model=PagedResponseSchema[RoutineSchema])
 async def list_routines(
     list_routines_handler: Annotated[
         SearchRoutinesHandler, Depends(get_list_routines_handler)
     ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
-) -> value_objects.PagedQueryResponse[RoutineSchema]:
+) -> PagedResponseSchema[RoutineSchema]:
     """List routines with pagination."""
     result = await list_routines_handler.run(
         search_query=value_objects.RoutineQuery(limit=limit, offset=offset),
@@ -68,7 +69,7 @@ async def list_routines(
     paged_response = result
     # Convert entities to schemas
     routine_schemas = [map_routine_to_schema(r) for r in paged_response.items]
-    return value_objects.PagedQueryResponse(
+    return PagedResponseSchema(
         items=routine_schemas,
         total=paged_response.total,
         limit=paged_response.limit,

@@ -23,6 +23,7 @@ from lykke.presentation.api.schemas import (
     CalendarCreateSchema,
     CalendarSchema,
     CalendarUpdateSchema,
+    PagedResponseSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_calendar_to_schema
 from lykke.presentation.workers.tasks import sync_single_calendar_task
@@ -128,14 +129,14 @@ async def reset_calendar_subscriptions(
     return [map_calendar_to_schema(calendar) for calendar in updated_calendars]
 
 
-@router.get("/", response_model=value_objects.PagedQueryResponse[CalendarSchema])
+@router.get("/", response_model=PagedResponseSchema[CalendarSchema])
 async def list_calendars(
     list_calendars_handler: Annotated[
         SearchCalendarsHandler, Depends(get_list_calendars_handler)
     ],
     limit: Annotated[int, Query(ge=1, le=1000)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
-) -> value_objects.PagedQueryResponse[CalendarSchema]:
+) -> PagedResponseSchema[CalendarSchema]:
     """List calendars with pagination."""
     result = await list_calendars_handler.run(
         search_query=value_objects.CalendarQuery(limit=limit, offset=offset),
@@ -143,7 +144,7 @@ async def list_calendars(
     paged_response = result
     # Convert entities to schemas
     calendar_schemas = [map_calendar_to_schema(c) for c in paged_response.items]
-    return value_objects.PagedQueryResponse(
+    return PagedResponseSchema(
         items=calendar_schemas,
         total=paged_response.total,
         limit=paged_response.limit,

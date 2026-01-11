@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date as dt_date
-from datetime import datetime
+from datetime import date as dt_date, datetime
 from typing import Generic, TypeVar
 from uuid import UUID
 
