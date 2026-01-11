@@ -110,8 +110,7 @@ class DayTemplateRepository(
                         if isinstance(tb["end_time"], str)
                         else tb["end_time"]
                     ),
-                    # Handle backward compatibility for time blocks without name
-                    name=tb.get("name", "Time Block"),
+                    name=tb["name"],
                 )
                 for tb in data["time_blocks"]
             ]
