@@ -120,28 +120,12 @@ const EmptyState: Component = () => (
 );
 
 export const TodaysEventsView: Component = () => {
-  const { events, day } = useSheppard();
+  const { events } = useSheppard();
   const [mounted, setMounted] = createSignal(false);
 
   onMount(() => {
     setTimeout(() => setMounted(true), 50);
   });
-
-  const date = createMemo(() => {
-    const dayValue = day();
-    return dayValue ? new Date(dayValue.date) : new Date();
-  });
-
-  const weekday = createMemo(() =>
-    new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date())
-  );
-
-  const monthDay = createMemo(() =>
-    new Intl.DateTimeFormat("en-US", {
-      month: "long",
-      day: "numeric",
-    }).format(date())
-  );
 
   const now = createMemo(() => new Date());
 
@@ -171,50 +155,19 @@ export const TodaysEventsView: Component = () => {
 
   return (
     <div class="w-full">
-      {/* Back link */}
-      <div class="mb-6">
-        <a
-          href="/me/today"
-          class="inline-flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors group"
-        >
-          <svg
-            class="w-5 h-5 transition-transform group-hover:-translate-x-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          <span class="text-sm font-medium">Back to Today</span>
-        </a>
-      </div>
-
-      {/* Header */}
+      {/* Summary section */}
       <div
-        class="mb-12 transition-all duration-1000 ease-out"
+        class="mb-8 md:mb-12 transition-all duration-1000 ease-out"
         style={{
           opacity: mounted() ? 1 : 0,
           transform: mounted() ? "translateY(0)" : "translateY(-20px)",
         }}
       >
-        <div class="text-center">
-          <p class="text-sm uppercase tracking-[0.2em] text-amber-600/80 mb-2">
-            {weekday()}
-          </p>
-          <h1 class="text-4xl md:text-5xl font-bold text-stone-800 mb-3">
-            {monthDay()}
-          </h1>
-          <p class="text-stone-600 text-lg">
-            <Show when={totalEvents() > 0} fallback="No events scheduled">
-              {totalEvents()} {totalEvents() === 1 ? "event" : "events"} today
-            </Show>
-          </p>
-        </div>
+        <p class="text-stone-600 text-lg">
+          <Show when={totalEvents() > 0} fallback="No events scheduled">
+            {totalEvents()} {totalEvents() === 1 ? "event" : "events"} today
+          </Show>
+        </p>
       </div>
 
       {/* Events list */}
