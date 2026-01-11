@@ -5,8 +5,8 @@ interface SectionHeaderProps {
 }
 
 export const SectionHeader: Component<SectionHeaderProps> = (props) => (
-  <div class="px-5 py-2 bg-gray-50 border-b border-gray-200">
-    <span class="text-xs uppercase tracking-wider text-gray-400">
+  <div class="px-0 py-2">
+    <span class="text-xs uppercase tracking-[0.25em] text-amber-600/80">
       {props.label}
     </span>
   </div>

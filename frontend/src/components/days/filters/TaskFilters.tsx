@@ -22,10 +22,10 @@ export const TaskFilters: Component<TaskFiltersProps> = (props) => {
   const [expanded, setExpanded] = createSignal(false);
 
   return (
-    <div class="border-b border-gray-100">
+    <div class="mb-4">
       {/* Toggle Button */}
       <button
-        class="w-full px-5 py-2.5 flex items-center justify-between text-gray-500 hover:text-gray-700 transition-colors"
+        class="w-full px-0 py-2.5 flex items-center justify-between text-stone-500 hover:text-stone-700 transition-colors"
         onClick={() => setExpanded(!expanded())}
       >
         <div class="flex items-center gap-2">
@@ -48,7 +48,7 @@ export const TaskFilters: Component<TaskFiltersProps> = (props) => {
 
       {/* Expanded Filters */}
       <Show when={expanded()}>
-        <div class="px-5 pb-3 space-y-1 border-t border-gray-50">
+        <div class="px-0 pb-3 space-y-1">
           <FilterGroup label="Status">
             <For each={["ALL", ...ALL_STATUSES]}>
               {(status) => (

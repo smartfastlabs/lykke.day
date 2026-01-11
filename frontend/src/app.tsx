@@ -28,15 +28,10 @@ import Resources from "@/pages/resources";
 import ThereIsAnAppForThat from "@/pages/there-is-an-app-for-that";
 import HomeLayout from "@/pages/me/home/layout";
 import PreviewView from "@/pages/me/home/preview";
-import DoItView from "@/pages/me/home/doit";
 import TasksView from "@/pages/me/home/tasks";
 import EventsView from "@/pages/me/home/events";
-import SheppardView from "@/pages/me/home/sheppard";
-import DayView from "@/pages/me/day/preview";
 import NavPage from "@/pages/me/navigation/links";
 import CalendarPage from "@/pages/me/navigation/calendar";
-import NotificationsPage from "@/pages/me/notifications/index";
-import NotificationsSubscribePage from "@/pages/me/notifications/subscribe";
 import SettingsLayout from "@/pages/me/settings/layout";
 import SettingsIndexPage from "@/pages/me/settings/index";
 import ProfileSettingsPage from "@/pages/me/settings/profile";
@@ -59,8 +54,6 @@ import RecurringEventSeriesDetailPage from "@/pages/me/settings/recurring-events
 import CalendarRecurringEventsPage from "@/pages/me/settings/calendars/recurring-events";
 import PushSubscriptionsPage from "@/pages/me/settings/push-subscriptions/index";
 import PushSubscriptionDetailPage from "@/pages/me/settings/push-subscriptions/detail";
-import Welcome from "@/pages/me/welcome";
-import OverviewPage from "@/pages/me/overview";
 import NotFound from "@/pages/not-found";
 
 import "@/utils/icons";
@@ -132,31 +125,19 @@ export default function App() {
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/early-access" component={EarlyAccess} />
-        <Route
-          path="/welcome"
-          component={() => <Navigate href="/me/welcome" />}
-        />
         <Route path="/home" component={() => <Navigate href="/me" />} />
 
         <Route path="/me" component={AuthGuard}>
-          <Route path="/" component={() => <Navigate href="/me/today" />} />
+          <Route path="/" component={HomeLayout}>
+            <Route path="/" component={PreviewView} />
+          </Route>
           <Route path="/today" component={HomeLayout}>
             <Route path="/" component={PreviewView} />
-            <Route path="/doit" component={DoItView} />
             <Route path="/tasks" component={TasksView} />
             <Route path="/events" component={EventsView} />
-            <Route path="/sheppard" component={SheppardView} />
           </Route>
-          <Route path="/overview" component={OverviewPage} />
-          <Route path="/welcome" component={Welcome} />
-          <Route path="/day/:date" component={DayView} />
           <Route path="/nav/calendar" component={CalendarPage} />
           <Route path="/nav" component={NavPage} />
-          <Route path="/notifications" component={NotificationsPage} />
-          <Route
-            path="/notifications/subscribe"
-            component={NotificationsSubscribePage}
-          />
           <Route path="/settings" component={SettingsLayout}>
             <Route path="/" component={SettingsIndexPage} />
             <Route path="/profile" component={ProfileSettingsPage} />

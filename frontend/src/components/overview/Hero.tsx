@@ -15,13 +15,15 @@ export const Hero: Component<HeroProps> = (props) => (
       <p class="text-sm uppercase tracking-[0.2em] text-amber-600/80">
         {props.weekday} {props.monthDay}
       </p>
-      <p
-        class="text-2xl md:text-3xl text-stone-700 italic"
-        style={{ "font-family": "'Cormorant Garamond', Georgia, serif" }}
-      >
-        {props.greeting ||
-          `Good morning${props.userName ? `, ${props.userName}` : ""}.`}
-      </p>
+      <Show when={props.greeting !== undefined}>
+        <p
+          class="text-2xl md:text-3xl text-stone-700 italic"
+          style={{ "font-family": "'Cormorant Garamond', Georgia, serif" }}
+        >
+          {props.greeting ||
+            `Good morning${props.userName ? `, ${props.userName}` : ""}.`}
+        </p>
+      </Show>
       <Show when={props.description}>
         <p class="text-stone-600 max-w-xl leading-relaxed">
           {props.description}

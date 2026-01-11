@@ -33,8 +33,7 @@ const CalendarPage: Component = () => {
   const days = getNextSevenDays();
 
   function onClick(item: DayItem) {
-    const dateStr = item.date.toISOString().split("T")[0];
-    navigate(`/me/day/${dateStr}`);
+    navigate("/me");
   }
 
   return (
