@@ -45,6 +45,7 @@ export const HomeLayout: Component<ParentProps> = (props) => {
               weekday={weekday()}
               monthDay={monthDay()}
               isWorkday={isWorkday()}
+              description="A balanced day ahead with a mix of focus work and personal tasks. You have a few meetings scheduled, but plenty of time for deep work in the morning. The afternoon looks lighter, perfect for catching up on tasks and taking a break."
             />
             {props.children}
           </div>
