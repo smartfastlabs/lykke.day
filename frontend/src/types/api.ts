@@ -222,11 +222,17 @@ export interface TaskSchedule {
   end_time?: string | null;
   timing_type: TimingType;
 }
+export interface DayTemplateTimeBlock {
+  time_block_definition_id: string;
+  start_time: string;
+  end_time: string;
+}
 export interface DayTemplate {
   id?: string;
   user_id: string;
   slug: string;
   routine_ids?: string[];
+  time_blocks?: DayTemplateTimeBlock[];
   alarm?: Alarm | null;
   icon?: string | null;
 }

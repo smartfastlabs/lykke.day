@@ -22,6 +22,7 @@ from lykke.presentation.api.schemas import (
     DayContextSchema,
     DaySchema,
     DayTemplateSchema,
+    DayTemplateTimeBlockSchema,
     PushSubscriptionSchema,
     RoutineSchema,
     SyncSubscriptionSchema,
@@ -97,6 +98,14 @@ def map_day_template_to_schema(
 ) -> DayTemplateSchema:
     """Convert DayTemplate data object to DayTemplate schema."""
     alarm_schema = map_alarm_to_schema(template.alarm) if template.alarm else None
+    time_blocks_schema = [
+        DayTemplateTimeBlockSchema(
+            time_block_definition_id=tb.time_block_definition_id,
+            start_time=tb.start_time,
+            end_time=tb.end_time,
+        )
+        for tb in template.time_blocks
+    ]
 
     return DayTemplateSchema(
         id=template.id,
@@ -105,6 +114,7 @@ def map_day_template_to_schema(
         alarm=alarm_schema,
         icon=template.icon,
         routine_ids=template.routine_ids,
+        time_blocks=time_blocks_schema,
     )
 
 

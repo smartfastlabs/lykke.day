@@ -19,6 +19,8 @@ from .day_template import (
     DayTemplateCreateSchema,
     DayTemplateRoutineCreateSchema,
     DayTemplateSchema,
+    DayTemplateTimeBlockCreateSchema,
+    DayTemplateTimeBlockSchema,
     DayTemplateUpdateSchema,
 )
 from .user import (
@@ -27,7 +29,12 @@ from .user import (
     UserSettingsUpdateSchema,
     UserUpdateSchema,
 )
-from .push_subscription import PushSubscriptionSchema, PushSubscriptionUpdateSchema
+from .push_subscription import (
+    PushSubscriptionCreateSchema,
+    PushSubscriptionKeysSchema,
+    PushSubscriptionSchema,
+    PushSubscriptionUpdateSchema,
+)
 from .routine import (
     RoutineCreateSchema,
     RoutineSchema,
@@ -72,6 +79,8 @@ UserSchema.model_rebuild()
 UserSettingsSchema.model_rebuild()
 UserSettingsUpdateSchema.model_rebuild()
 UserUpdateSchema.model_rebuild()
+PushSubscriptionCreateSchema.model_rebuild()
+PushSubscriptionKeysSchema.model_rebuild()
 PushSubscriptionSchema.model_rebuild()
 PushSubscriptionUpdateSchema.model_rebuild()
 TimeBlockDefinitionCreateSchema.model_rebuild()
@@ -93,8 +102,12 @@ __all__ = [
     "DayTemplateCreateSchema",
     "DayTemplateRoutineCreateSchema",
     "DayTemplateSchema",
+    "DayTemplateTimeBlockCreateSchema",
+    "DayTemplateTimeBlockSchema",
     "DayTemplateUpdateSchema",
     "DayUpdateSchema",
+    "PushSubscriptionCreateSchema",
+    "PushSubscriptionKeysSchema",
     "PushSubscriptionSchema",
     "PushSubscriptionUpdateSchema",
     "RoutineCreateSchema",

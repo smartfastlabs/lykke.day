@@ -6,9 +6,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 from lykke.application.commands.day_template import (
     AddDayTemplateRoutineHandler,
+    AddDayTemplateTimeBlockHandler,
     CreateDayTemplateHandler,
     DeleteDayTemplateHandler,
     RemoveDayTemplateRoutineHandler,
+    RemoveDayTemplateTimeBlockHandler,
     UpdateDayTemplateHandler,
 )
 from lykke.application.queries.day_template import (
@@ -22,15 +24,18 @@ from lykke.presentation.api.schemas import (
     DayTemplateCreateSchema,
     DayTemplateRoutineCreateSchema,
     DayTemplateSchema,
+    DayTemplateTimeBlockCreateSchema,
     DayTemplateUpdateSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_day_template_to_schema
 
 from .dependencies.commands.day_template import (
     get_add_day_template_routine_handler,
+    get_add_day_template_time_block_handler,
     get_create_day_template_handler,
     get_delete_day_template_handler,
     get_remove_day_template_routine_handler,
+    get_remove_day_template_time_block_handler,
     get_update_day_template_handler,
 )
 from .dependencies.queries.day_template import (
@@ -101,12 +106,23 @@ async def create_day_template(
             triggered_at=day_template_data.alarm.triggered_at,
         )
 
+    # Convert time blocks from schema to value objects
+    time_blocks = [
+        value_objects.DayTemplateTimeBlock(
+            time_block_definition_id=tb.time_block_definition_id,
+            start_time=tb.start_time,
+            end_time=tb.end_time,
+        )
+        for tb in day_template_data.time_blocks
+    ]
+
     day_template = DayTemplateEntity(
         user_id=user.id,
         slug=day_template_data.slug,
         alarm=alarm,
         icon=day_template_data.icon,
         routine_ids=day_template_data.routine_ids,
+        time_blocks=time_blocks,
     )
     created = await create_day_template_handler.run(day_template=day_template)
     return map_day_template_to_schema(created)
@@ -135,11 +151,24 @@ async def update_day_template(
             triggered_at=update_data.alarm.triggered_at,
         )
 
+    # Convert time blocks from schema to value objects if provided
+    time_blocks = None
+    if update_data.time_blocks is not None:
+        time_blocks = [
+            value_objects.DayTemplateTimeBlock(
+                time_block_definition_id=tb.time_block_definition_id,
+                start_time=tb.start_time,
+                end_time=tb.end_time,
+            )
+            for tb in update_data.time_blocks
+        ]
+
     update_object = DayTemplateUpdateObject(
         slug=update_data.slug,
         alarm=alarm,
         icon=update_data.icon,
         routine_ids=update_data.routine_ids,
+        time_blocks=time_blocks,
     )
     updated = await update_day_template_handler.run(
         day_template_id=uuid, update_data=update_object
@@ -193,5 +222,57 @@ async def remove_day_template_routine(
     """Detach a routine from a day template."""
     updated = await remove_day_template_routine_handler.run(
         day_template_id=uuid, routine_id=routine_id
+    )
+    return map_day_template_to_schema(updated)
+
+
+@router.post(
+    "/{uuid}/time-blocks",
+    response_model=DayTemplateSchema,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_day_template_time_block(
+    uuid: UUID,
+    time_block_data: DayTemplateTimeBlockCreateSchema,
+    add_day_template_time_block_handler: Annotated[
+        AddDayTemplateTimeBlockHandler,
+        Depends(get_add_day_template_time_block_handler),
+    ],
+) -> DayTemplateSchema:
+    """Add a time block to a day template."""
+    time_block = value_objects.DayTemplateTimeBlock(
+        time_block_definition_id=time_block_data.time_block_definition_id,
+        start_time=time_block_data.start_time,
+        end_time=time_block_data.end_time,
+    )
+    updated = await add_day_template_time_block_handler.run(
+        day_template_id=uuid, time_block=time_block
+    )
+    return map_day_template_to_schema(updated)
+
+
+@router.delete(
+    "/{uuid}/time-blocks/{time_block_definition_id}/{start_time}",
+    response_model=DayTemplateSchema,
+)
+async def remove_day_template_time_block(
+    uuid: UUID,
+    time_block_definition_id: UUID,
+    start_time: str,
+    remove_day_template_time_block_handler: Annotated[
+        RemoveDayTemplateTimeBlockHandler,
+        Depends(get_remove_day_template_time_block_handler),
+    ],
+) -> DayTemplateSchema:
+    """Remove a time block from a day template."""
+    from datetime import time as time_type
+
+    # Parse the time string (format: HH:MM:SS or HH:MM)
+    time_obj = time_type.fromisoformat(start_time)
+
+    updated = await remove_day_template_time_block_handler.run(
+        day_template_id=uuid,
+        time_block_definition_id=time_block_definition_id,
+        start_time=time_obj,
     )
     return map_day_template_to_schema(updated)

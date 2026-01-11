@@ -5,6 +5,7 @@ import {
   Day,
   DayContext,
   DayTemplate,
+  TimeBlockDefinition,
   Calendar,
   CalendarEntrySeries,
   TaskDefinition,
@@ -344,6 +345,31 @@ export const dayTemplateAPI = {
   ): Promise<DayTemplate> =>
     fetchData<DayTemplate>(
       `/api/day-templates/${dayTemplateId}/routines/${routineId}`,
+      {
+        method: "DELETE",
+      }
+    ),
+  addTimeBlock: (
+    dayTemplateId: string,
+    timeBlockDefinitionId: string,
+    startTime: string,
+    endTime: string
+  ): Promise<DayTemplate> =>
+    fetchData<DayTemplate>(`/api/day-templates/${dayTemplateId}/time-blocks`, {
+      method: "POST",
+      body: JSON.stringify({
+        time_block_definition_id: timeBlockDefinitionId,
+        start_time: startTime,
+        end_time: endTime,
+      }),
+    }),
+  removeTimeBlock: (
+    dayTemplateId: string,
+    timeBlockDefinitionId: string,
+    startTime: string
+  ): Promise<DayTemplate> =>
+    fetchData<DayTemplate>(
+      `/api/day-templates/${dayTemplateId}/time-blocks/${timeBlockDefinitionId}/${startTime}`,
       {
         method: "DELETE",
       }

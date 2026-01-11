@@ -3,8 +3,8 @@ import { Component, Show, createResource, createSignal } from "solid-js";
 import DetailPage from "@/components/shared/DetailPage";
 import DayTemplateForm from "@/components/dayTemplates/Form";
 import DayTemplatePreview from "@/components/dayTemplates/Preview";
-import { dayTemplateAPI, routineAPI } from "@/utils/api";
-import { DayTemplate, Routine } from "@/types/api";
+import { dayTemplateAPI, routineAPI, timeBlockDefinitionAPI } from "@/utils/api";
+import { DayTemplate, Routine, TimeBlockDefinition } from "@/types/api";
 
 const DayTemplateDetailPage: Component = () => {
   const params = useParams();
@@ -23,6 +23,9 @@ const DayTemplateDetailPage: Component = () => {
   );
 
   const [routines] = createResource<Routine[]>(routineAPI.getAll);
+  const [timeBlockDefinitions] = createResource<TimeBlockDefinition[]>(
+    timeBlockDefinitionAPI.getAll
+  );
 
   const handleUpdate = async (partialTemplate: Partial<DayTemplate>) => {
     const current = dayTemplate();
@@ -100,6 +103,58 @@ const DayTemplateDetailPage: Component = () => {
     }
   };
 
+  const handleAddTimeBlock = async (
+    timeBlockDefinitionId: string,
+    startTime: string,
+    endTime: string
+  ) => {
+    const current = dayTemplate();
+    if (!current?.id) return;
+
+    setIsRoutineLoading(true);
+    setActionError("");
+    try {
+      const updated = await dayTemplateAPI.addTimeBlock(
+        current.id,
+        timeBlockDefinitionId,
+        startTime,
+        endTime
+      );
+      mutateDayTemplate(updated);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to add time block";
+      setActionError(message);
+    } finally {
+      setIsRoutineLoading(false);
+    }
+  };
+
+  const handleRemoveTimeBlock = async (
+    timeBlockDefinitionId: string,
+    startTime: string
+  ) => {
+    const current = dayTemplate();
+    if (!current?.id) return;
+
+    setIsRoutineLoading(true);
+    setActionError("");
+    try {
+      const updated = await dayTemplateAPI.removeTimeBlock(
+        current.id,
+        timeBlockDefinitionId,
+        startTime
+      );
+      mutateDayTemplate(updated);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to remove time block";
+      setActionError(message);
+    } finally {
+      setIsRoutineLoading(false);
+    }
+  };
+
   return (
     <Show
       when={dayTemplate()}
@@ -118,6 +173,8 @@ const DayTemplateDetailPage: Component = () => {
               routines={routines()}
               onAddRoutine={handleAddRoutine}
               onRemoveRoutine={handleRemoveRoutine}
+              onAddTimeBlock={handleAddTimeBlock}
+              onRemoveTimeBlock={handleRemoveTimeBlock}
               isEditMode={false}
               isLoading={isRoutineLoading()}
               error={actionError()}
@@ -137,6 +194,8 @@ const DayTemplateDetailPage: Component = () => {
                   routines={routines()}
                   onAddRoutine={handleAddRoutine}
                   onRemoveRoutine={handleRemoveRoutine}
+                  onAddTimeBlock={handleAddTimeBlock}
+                  onRemoveTimeBlock={handleRemoveTimeBlock}
                   isEditMode={true}
                   isLoading={isRoutineLoading()}
                   error={actionError()}

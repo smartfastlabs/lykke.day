@@ -855,6 +855,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/day-templates/{uuid}/time-blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Day Template Time Block
+         * @description Add a time block to a day template.
+         */
+        post: operations["add_day_template_time_block_day_templates__uuid__time_blocks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/day-templates/{uuid}/time-blocks/{time_block_definition_id}/{start_time}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Day Template Time Block
+         * @description Remove a time block from a day template.
+         */
+        delete: operations["remove_day_template_time_block_day_templates__uuid__time_blocks__time_block_definition_id___start_time__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/task-definitions/available/": {
         parameters: {
             query?: never;
@@ -1621,6 +1661,8 @@ export interface components {
             icon?: string | null;
             /** Routine Ids */
             routine_ids?: string[];
+            /** Time Blocks */
+            time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][];
         };
         /**
          * DayTemplateRoutineCreateSchema
@@ -1647,11 +1689,55 @@ export interface components {
             icon?: string | null;
             /** Routine Ids */
             routine_ids?: string[];
+            /** Time Blocks */
+            time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][];
             /**
              * User Id
              * Format: uuid
              */
             user_id: string;
+        };
+        /**
+         * DayTemplateTimeBlockCreateSchema
+         * @description API schema for adding a time block to a day template.
+         */
+        DayTemplateTimeBlockCreateSchema: {
+            /**
+             * Time Block Definition Id
+             * Format: uuid
+             */
+            time_block_definition_id: string;
+            /**
+             * Start Time
+             * Format: time
+             */
+            start_time: string;
+            /**
+             * End Time
+             * Format: time
+             */
+            end_time: string;
+        };
+        /**
+         * DayTemplateTimeBlockSchema
+         * @description API schema for a time block in a day template.
+         */
+        DayTemplateTimeBlockSchema: {
+            /**
+             * Time Block Definition Id
+             * Format: uuid
+             */
+            time_block_definition_id: string;
+            /**
+             * Start Time
+             * Format: time
+             */
+            start_time: string;
+            /**
+             * End Time
+             * Format: time
+             */
+            end_time: string;
         };
         /**
          * DayTemplateUpdateSchema
@@ -1665,6 +1751,8 @@ export interface components {
             icon?: string | null;
             /** Routine Ids */
             routine_ids?: string[] | null;
+            /** Time Blocks */
+            time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][] | null;
         };
         /**
          * DayUpdateSchema
@@ -1782,6 +1870,27 @@ export interface components {
             has_next: boolean;
             /** Has Previous */
             has_previous: boolean;
+        };
+        /**
+         * PushSubscriptionCreateSchema
+         * @description API schema for PushSubscription create requests.
+         */
+        PushSubscriptionCreateSchema: {
+            /** Device Name */
+            device_name: string;
+            /** Endpoint */
+            endpoint: string;
+            keys: components["schemas"]["PushSubscriptionKeysSchema"];
+        };
+        /**
+         * PushSubscriptionKeysSchema
+         * @description API schema for push subscription keys.
+         */
+        PushSubscriptionKeysSchema: {
+            /** P256Dh */
+            p256dh: string;
+            /** Auth */
+            auth: string;
         };
         /**
          * PushSubscriptionSchema
@@ -1946,8 +2055,6 @@ export interface components {
              */
             ok: boolean;
         };
-        /** SubscriptionRequest */
-        SubscriptionRequest: Record<string, never>;
         /**
          * SyncSubscriptionSchema
          * @description Schema describing a calendar sync subscription.
@@ -3199,7 +3306,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SubscriptionRequest"];
+                "application/json": components["schemas"]["PushSubscriptionCreateSchema"];
             };
         };
         responses: {
@@ -3714,6 +3821,74 @@ export interface operations {
             path: {
                 uuid: string;
                 routine_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayTemplateSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_day_template_time_block_day_templates__uuid__time_blocks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DayTemplateTimeBlockCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayTemplateSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_day_template_time_block_day_templates__uuid__time_blocks__time_block_definition_id___start_time__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+                time_block_definition_id: string;
+                start_time: string;
             };
             cookie?: never;
         };

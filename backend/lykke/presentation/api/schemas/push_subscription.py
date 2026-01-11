@@ -22,3 +22,18 @@ class PushSubscriptionUpdateSchema(BaseSchema):
 
     device_name: str | None = None
 
+
+class PushSubscriptionKeysSchema(BaseSchema):
+    """API schema for push subscription keys."""
+
+    p256dh: str
+    auth: str
+
+
+class PushSubscriptionCreateSchema(BaseSchema):
+    """API schema for PushSubscription create requests."""
+
+    device_name: str
+    endpoint: str
+    keys: PushSubscriptionKeysSchema
+

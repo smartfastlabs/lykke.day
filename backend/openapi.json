@@ -1362,7 +1362,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SubscriptionRequest"
+                "$ref": "#/components/schemas/PushSubscriptionCreateSchema"
               }
             }
           },
@@ -2237,6 +2237,133 @@
               "type": "string",
               "format": "uuid",
               "title": "Routine Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayTemplateSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/day-templates/{uuid}/time-blocks": {
+      "post": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Add Day Template Time Block",
+        "description": "Add a time block to a day template.",
+        "operationId": "add_day_template_time_block_day_templates__uuid__time_blocks_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayTemplateTimeBlockCreateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayTemplateSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/day-templates/{uuid}/time-blocks/{time_block_definition_id}/{start_time}": {
+      "delete": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Remove Day Template Time Block",
+        "description": "Remove a time block from a day template.",
+        "operationId": "remove_day_template_time_block_day_templates__uuid__time_blocks__time_block_definition_id___start_time__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          },
+          {
+            "name": "time_block_definition_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Time Block Definition Id"
+            }
+          },
+          {
+            "name": "start_time",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Start Time"
             }
           }
         ],
@@ -4736,6 +4863,13 @@
             },
             "type": "array",
             "title": "Routine Ids"
+          },
+          "time_blocks": {
+            "items": {
+              "$ref": "#/components/schemas/DayTemplateTimeBlockSchema"
+            },
+            "type": "array",
+            "title": "Time Blocks"
           }
         },
         "type": "object",
@@ -4807,6 +4941,13 @@
             "type": "array",
             "title": "Routine Ids"
           },
+          "time_blocks": {
+            "items": {
+              "$ref": "#/components/schemas/DayTemplateTimeBlockSchema"
+            },
+            "type": "array",
+            "title": "Time Blocks"
+          },
           "user_id": {
             "type": "string",
             "format": "uuid",
@@ -4820,6 +4961,60 @@
         ],
         "title": "DayTemplateSchema",
         "description": "API schema for DayTemplate entity."
+      },
+      "DayTemplateTimeBlockCreateSchema": {
+        "properties": {
+          "time_block_definition_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Time Block Definition Id"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "time",
+            "title": "End Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time_block_definition_id",
+          "start_time",
+          "end_time"
+        ],
+        "title": "DayTemplateTimeBlockCreateSchema",
+        "description": "API schema for adding a time block to a day template."
+      },
+      "DayTemplateTimeBlockSchema": {
+        "properties": {
+          "time_block_definition_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Time Block Definition Id"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "time",
+            "title": "End Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time_block_definition_id",
+          "start_time",
+          "end_time"
+        ],
+        "title": "DayTemplateTimeBlockSchema",
+        "description": "API schema for a time block in a day template."
       },
       "DayTemplateUpdateSchema": {
         "properties": {
@@ -4869,6 +5064,20 @@
               }
             ],
             "title": "Routine Ids"
+          },
+          "time_blocks": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DayTemplateTimeBlockSchema"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Blocks"
           }
         },
         "type": "object",
@@ -5206,6 +5415,48 @@
           "has_previous"
         ],
         "title": "PagedQueryResponse"
+      },
+      "PushSubscriptionCreateSchema": {
+        "properties": {
+          "device_name": {
+            "type": "string",
+            "title": "Device Name"
+          },
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/PushSubscriptionKeysSchema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_name",
+          "endpoint",
+          "keys"
+        ],
+        "title": "PushSubscriptionCreateSchema",
+        "description": "API schema for PushSubscription create requests."
+      },
+      "PushSubscriptionKeysSchema": {
+        "properties": {
+          "p256dh": {
+            "type": "string",
+            "title": "P256Dh"
+          },
+          "auth": {
+            "type": "string",
+            "title": "Auth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "p256dh",
+          "auth"
+        ],
+        "title": "PushSubscriptionKeysSchema",
+        "description": "API schema for push subscription keys."
       },
       "PushSubscriptionSchema": {
         "properties": {
@@ -5625,11 +5876,6 @@
         "type": "object",
         "title": "StatusResponse",
         "description": "Simple OK response."
-      },
-      "SubscriptionRequest": {
-        "properties": {},
-        "type": "object",
-        "title": "SubscriptionRequest"
       },
       "SyncSubscriptionSchema": {
         "properties": {

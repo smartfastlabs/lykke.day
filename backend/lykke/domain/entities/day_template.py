@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
+from datetime import time
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -87,3 +88,76 @@ class DayTemplateEntity(BaseEntityObject[DayTemplateUpdateObject, "DayTemplateUp
         )
         return updated
 
+    def _copy_with_time_blocks(
+        self, time_blocks: list[value_objects.DayTemplateTimeBlock]
+    ) -> DayTemplateEntity:
+        """Return a copy of this day template with updated time_blocks."""
+        return DayTemplateEntity(
+            id=self.id,
+            user_id=self.user_id,
+            slug=self.slug,
+            alarm=self.alarm,
+            icon=self.icon,
+            routine_ids=self.routine_ids,
+            time_blocks=time_blocks,
+        )
+
+    def add_time_block(
+        self, time_block: value_objects.DayTemplateTimeBlock
+    ) -> DayTemplateEntity:
+        """Add a time block to the day template."""
+        # Check for overlapping time blocks
+        for existing_block in self.time_blocks:
+            if (
+                time_block.start_time < existing_block.end_time
+                and time_block.end_time > existing_block.start_time
+            ):
+                raise DomainError("Time block overlaps with existing time block")
+
+        updated = self._copy_with_time_blocks([*self.time_blocks, time_block])
+        from lykke.domain.events.day_template_events import (
+            DayTemplateTimeBlockAddedEvent,
+        )
+
+        updated._add_event(
+            DayTemplateTimeBlockAddedEvent(
+                day_template_id=updated.id,
+                time_block_definition_id=time_block.time_block_definition_id,
+                start_time=time_block.start_time,
+                end_time=time_block.end_time,
+            )
+        )
+        return updated
+
+    def remove_time_block(
+        self, time_block_definition_id: UUID, start_time: time
+    ) -> DayTemplateEntity:
+        """Remove a time block from the day template."""
+        # Find the time block to remove
+        time_block_to_remove = None
+        for tb in self.time_blocks:
+            if (
+                tb.time_block_definition_id == time_block_definition_id
+                and tb.start_time == start_time
+            ):
+                time_block_to_remove = tb
+                break
+
+        if time_block_to_remove is None:
+            raise NotFoundError("Time block not found in day template")
+
+        updated = self._copy_with_time_blocks(
+            [tb for tb in self.time_blocks if tb != time_block_to_remove]
+        )
+        from lykke.domain.events.day_template_events import (
+            DayTemplateTimeBlockRemovedEvent,
+        )
+
+        updated._add_event(
+            DayTemplateTimeBlockRemovedEvent(
+                day_template_id=updated.id,
+                time_block_definition_id=time_block_definition_id,
+                start_time=start_time,
+            )
+        )
+        return updated

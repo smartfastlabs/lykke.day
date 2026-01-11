@@ -5,9 +5,11 @@ from typing import Annotated
 from fastapi import Depends
 from lykke.application.commands.day_template import (
     AddDayTemplateRoutineHandler,
+    AddDayTemplateTimeBlockHandler,
     CreateDayTemplateHandler,
     DeleteDayTemplateHandler,
     RemoveDayTemplateRoutineHandler,
+    RemoveDayTemplateTimeBlockHandler,
     UpdateDayTemplateHandler,
 )
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
@@ -75,4 +77,28 @@ def get_remove_day_template_routine_handler(
     """Get a RemoveDayTemplateRoutineHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return RemoveDayTemplateRoutineHandler(ro_repos, uow_factory, user.id)
+
+
+def get_add_day_template_time_block_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> AddDayTemplateTimeBlockHandler:
+    """Get an AddDayTemplateTimeBlockHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return AddDayTemplateTimeBlockHandler(ro_repos, uow_factory, user.id)
+
+
+def get_remove_day_template_time_block_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> RemoveDayTemplateTimeBlockHandler:
+    """Get a RemoveDayTemplateTimeBlockHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return RemoveDayTemplateTimeBlockHandler(ro_repos, uow_factory, user.id)
 

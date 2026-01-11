@@ -16,6 +16,7 @@ from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import web_push
 from lykke.presentation.api.schemas import (
+    PushSubscriptionCreateSchema,
     PushSubscriptionSchema,
     PushSubscriptionUpdateSchema,
 )
@@ -33,17 +34,6 @@ from .dependencies.queries.push_subscription import (
 from .dependencies.user import get_current_user
 
 router = APIRouter()
-
-
-class Keys(value_objects.BaseValueObject):
-    p256dh: str
-    auth: str
-
-
-class SubscriptionRequest(value_objects.BaseRequestObject):
-    device_name: str
-    endpoint: str
-    keys: Keys
 
 
 @router.get("/subscriptions/", response_model=list[PushSubscriptionSchema])
@@ -99,7 +89,7 @@ async def delete_subscription(
 @router.post("/subscribe/", response_model=PushSubscriptionSchema)
 async def subscribe(
     background_tasks: BackgroundTasks,
-    request: SubscriptionRequest,
+    request: PushSubscriptionCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
     create_push_subscription_handler: Annotated[
         CreatePushSubscriptionHandler, Depends(get_create_push_subscription_handler)

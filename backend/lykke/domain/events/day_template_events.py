@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import time
 from uuid import UUID
 
 from lykke.domain.value_objects.update import DayTemplateUpdateObject
@@ -29,4 +30,23 @@ class DayTemplateRoutineRemovedEvent(DomainEvent):
 
     day_template_id: UUID
     routine_id: UUID
+
+
+@dataclass(frozen=True, kw_only=True)
+class DayTemplateTimeBlockAddedEvent(DomainEvent):
+    """Raised when a time block is added to a day template."""
+
+    day_template_id: UUID
+    time_block_definition_id: UUID
+    start_time: time
+    end_time: time
+
+
+@dataclass(frozen=True, kw_only=True)
+class DayTemplateTimeBlockRemovedEvent(DomainEvent):
+    """Raised when a time block is removed from a day template."""
+
+    day_template_id: UUID
+    time_block_definition_id: UUID
+    start_time: time
 
