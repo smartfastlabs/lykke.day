@@ -26,6 +26,7 @@ import YouTube from "@/pages/youtube";
 import Podcasts from "@/pages/podcasts";
 import Resources from "@/pages/resources";
 import ThereIsAnAppForThat from "@/pages/there-is-an-app-for-that";
+import MePage from "@/pages/me/index";
 import HomeLayout from "@/pages/me/today/layout";
 import PreviewView from "@/pages/me/today/preview";
 import TasksView from "@/pages/me/today/tasks";
@@ -143,7 +144,7 @@ export default function App() {
             />
 
             <Route path="/me" component={AuthGuard}>
-              <Route path="/" component={() => <Navigate href="/me/today" />} />
+              <Route path="/" component={MePage} />
               <Route path="/today" component={HomeLayout}>
                 <Route path="/" component={PreviewView} />
                 <Route path="/tasks" component={TasksView} />
