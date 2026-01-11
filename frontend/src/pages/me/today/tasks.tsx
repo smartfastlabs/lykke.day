@@ -43,18 +43,7 @@ export const TodaysTasksView: Component = () => {
   };
 
   return (
-    <div class="min-h-screen relative overflow-hidden">
-      {/* Background gradients */}
-      <div class="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50" />
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(251,191,36,0.15)_0%,_transparent_50%)]" />
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(244,114,82,0.1)_0%,_transparent_50%)]" />
-
-      {/* Decorative blurs */}
-      <div class="absolute top-20 right-10 w-64 h-64 bg-gradient-to-br from-amber-200/30 to-orange-200/20 rounded-full blur-3xl" />
-      <div class="absolute bottom-32 left-10 w-48 h-48 bg-gradient-to-tr from-rose-200/25 to-amber-200/15 rounded-full blur-3xl" />
-
-      {/* Main content */}
-      <div class="relative z-10 px-6 py-12 md:py-16 max-w-4xl mx-auto">
+    <div class="w-full">
         {/* Header section */}
         <div
           class="mb-12 text-center transition-all duration-1000 ease-out"
@@ -172,32 +161,31 @@ export const TodaysTasksView: Component = () => {
           </div>
         </div>
 
-        {/* Motivational quote */}
-        <div
-          class="mt-12 transition-all duration-1000 delay-500 ease-out"
-          style={{
-            opacity: mounted() ? 1 : 0,
-            transform: mounted() ? "translateY(0)" : "translateY(20px)",
-          }}
-        >
-          <div class="max-w-2xl mx-auto">
-            <div class="relative py-8 px-6">
-              <div class="absolute left-0 top-0 w-8 h-8 border-l-2 border-t-2 border-amber-300/50" />
-              <div class="absolute right-0 bottom-0 w-8 h-8 border-r-2 border-b-2 border-amber-300/50" />
-              <p
-                class="text-stone-600 text-base md:text-lg italic leading-relaxed text-center"
-                style={{
-                  "font-family": "'Cormorant Garamond', Georgia, serif",
-                }}
-              >
-                "The secret of getting ahead is getting started. The secret of
-                getting started is breaking your complex overwhelming tasks into
-                small manageable tasks."
-              </p>
-              <p class="text-stone-400 text-sm text-center mt-4">
-                — Mark Twain
-              </p>
-            </div>
+      {/* Motivational quote */}
+      <div
+        class="mt-12 transition-all duration-1000 delay-500 ease-out"
+        style={{
+          opacity: mounted() ? 1 : 0,
+          transform: mounted() ? "translateY(0)" : "translateY(20px)",
+        }}
+      >
+        <div class="max-w-2xl mx-auto">
+          <div class="relative py-8 px-6">
+            <div class="absolute left-0 top-0 w-8 h-8 border-l-2 border-t-2 border-amber-300/50" />
+            <div class="absolute right-0 bottom-0 w-8 h-8 border-r-2 border-b-2 border-amber-300/50" />
+            <p
+              class="text-stone-600 text-base md:text-lg italic leading-relaxed text-center"
+              style={{
+                "font-family": "'Cormorant Garamond', Georgia, serif",
+              }}
+            >
+              "The secret of getting ahead is getting started. The secret of
+              getting started is breaking your complex overwhelming tasks into
+              small manageable tasks."
+            </p>
+            <p class="text-stone-400 text-sm text-center mt-4">
+              — Mark Twain
+            </p>
           </div>
         </div>
       </div>

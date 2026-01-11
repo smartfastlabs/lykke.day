@@ -170,19 +170,9 @@ export const TodaysEventsView: Component = () => {
   );
 
   return (
-    <div class="min-h-screen relative overflow-hidden">
-      {/* Background gradients */}
-      <div class="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50" />
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(251,191,36,0.15)_0%,_transparent_50%)]" />
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(244,114,82,0.1)_0%,_transparent_50%)]" />
-
-      {/* Blur orbs */}
-      <div class="absolute top-20 right-10 w-64 h-64 bg-gradient-to-br from-amber-200/30 to-orange-200/20 rounded-full blur-3xl" />
-      <div class="absolute bottom-32 left-10 w-48 h-48 bg-gradient-to-tr from-rose-200/25 to-amber-200/15 rounded-full blur-3xl" />
-      <div class="absolute top-1/2 left-1/3 w-32 h-32 bg-gradient-to-r from-yellow-200/20 to-orange-200/20 rounded-full blur-2xl" />
-
+    <div class="w-full">
       {/* Back link */}
-      <div class="relative z-10 px-6 pt-6">
+      <div class="mb-6">
         <a
           href="/me/today"
           class="inline-flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors group"
@@ -204,89 +194,79 @@ export const TodaysEventsView: Component = () => {
         </a>
       </div>
 
-      {/* Main content */}
-      <div class="relative z-10 px-6 py-12 md:py-16">
-        <div class="max-w-4xl mx-auto">
-          {/* Header */}
-          <div
-            class="mb-12 transition-all duration-1000 ease-out"
-            style={{
-              opacity: mounted() ? 1 : 0,
-              transform: mounted() ? "translateY(0)" : "translateY(-20px)",
-            }}
-          >
-            <div class="text-center">
-              <p class="text-sm uppercase tracking-[0.2em] text-amber-600/80 mb-2">
-                {weekday()}
-              </p>
-              <h1 class="text-4xl md:text-5xl font-bold text-stone-800 mb-3">
-                {monthDay()}
-              </h1>
-              <p class="text-stone-600 text-lg">
-                <Show when={totalEvents() > 0} fallback="No events scheduled">
-                  {totalEvents()} {totalEvents() === 1 ? "event" : "events"}{" "}
-                  today
-                </Show>
-              </p>
+      {/* Header */}
+      <div
+        class="mb-12 transition-all duration-1000 ease-out"
+        style={{
+          opacity: mounted() ? 1 : 0,
+          transform: mounted() ? "translateY(0)" : "translateY(-20px)",
+        }}
+      >
+        <div class="text-center">
+          <p class="text-sm uppercase tracking-[0.2em] text-amber-600/80 mb-2">
+            {weekday()}
+          </p>
+          <h1 class="text-4xl md:text-5xl font-bold text-stone-800 mb-3">
+            {monthDay()}
+          </h1>
+          <p class="text-stone-600 text-lg">
+            <Show when={totalEvents() > 0} fallback="No events scheduled">
+              {totalEvents()} {totalEvents() === 1 ? "event" : "events"} today
+            </Show>
+          </p>
+        </div>
+      </div>
+
+      {/* Events list */}
+      <Show when={totalEvents() > 0} fallback={<EmptyState />}>
+        <div class="space-y-8">
+          {/* Upcoming Events */}
+          <Show when={upcomingEvents().length > 0}>
+            <div
+              class="transition-all duration-1000 delay-200 ease-out"
+              style={{
+                opacity: mounted() ? 1 : 0,
+                transform: mounted() ? "translateY(0)" : "translateY(20px)",
+              }}
+            >
+              <h2 class="text-xl font-semibold text-stone-800 mb-4 flex items-center gap-2">
+                <span>Upcoming</span>
+                <span class="text-sm font-normal text-stone-500">
+                  ({upcomingEvents().length})
+                </span>
+              </h2>
+              <div class="space-y-3">
+                <For each={upcomingEvents()}>
+                  {(event, index) => <EventCard event={event} index={index()} />}
+                </For>
+              </div>
             </div>
-          </div>
+          </Show>
 
-          {/* Events list */}
-          <Show when={totalEvents() > 0} fallback={<EmptyState />}>
-            <div class="space-y-8">
-              {/* Upcoming Events */}
-              <Show when={upcomingEvents().length > 0}>
-                <div
-                  class="transition-all duration-1000 delay-200 ease-out"
-                  style={{
-                    opacity: mounted() ? 1 : 0,
-                    transform: mounted() ? "translateY(0)" : "translateY(20px)",
-                  }}
-                >
-                  <h2 class="text-xl font-semibold text-stone-800 mb-4 flex items-center gap-2">
-                    <span>Upcoming</span>
-                    <span class="text-sm font-normal text-stone-500">
-                      ({upcomingEvents().length})
-                    </span>
-                  </h2>
-                  <div class="space-y-3">
-                    <For each={upcomingEvents()}>
-                      {(event, index) => (
-                        <EventCard event={event} index={index()} />
-                      )}
-                    </For>
-                  </div>
-                </div>
-              </Show>
-
-              {/* Past Events */}
-              <Show when={pastEvents().length > 0}>
-                <div
-                  class="transition-all duration-1000 delay-300 ease-out"
-                  style={{
-                    opacity: mounted() ? 1 : 0,
-                    transform: mounted() ? "translateY(0)" : "translateY(20px)",
-                  }}
-                >
-                  <h2 class="text-xl font-semibold text-stone-800 mb-4 flex items-center gap-2 opacity-60">
-                    <span>Earlier today</span>
-                    <span class="text-sm font-normal text-stone-500">
-                      ({pastEvents().length})
-                    </span>
-                  </h2>
-                  <div class="space-y-3 opacity-60">
-                    <For each={pastEvents()}>
-                      {(event, index) => (
-                        <EventCard event={event} index={index()} />
-                      )}
-                    </For>
-                  </div>
-                </div>
-              </Show>
+          {/* Past Events */}
+          <Show when={pastEvents().length > 0}>
+            <div
+              class="transition-all duration-1000 delay-300 ease-out"
+              style={{
+                opacity: mounted() ? 1 : 0,
+                transform: mounted() ? "translateY(0)" : "translateY(20px)",
+              }}
+            >
+              <h2 class="text-xl font-semibold text-stone-800 mb-4 flex items-center gap-2 opacity-60">
+                <span>Earlier today</span>
+                <span class="text-sm font-normal text-stone-500">
+                  ({pastEvents().length})
+                </span>
+              </h2>
+              <div class="space-y-3 opacity-60">
+                <For each={pastEvents()}>
+                  {(event, index) => <EventCard event={event} index={index()} />}
+                </For>
+              </div>
             </div>
           </Show>
         </div>
-      </div>
+      </Show>
 
       {/* Animation styles */}
       <style>{`

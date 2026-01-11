@@ -30,6 +30,7 @@ import HomeLayout from "@/pages/me/today/layout";
 import PreviewView from "@/pages/me/today/preview";
 import TasksView from "@/pages/me/today/tasks";
 import EventsView from "@/pages/me/today/events";
+import NavigationLayout from "@/pages/me/navigation/layout";
 import NavPage from "@/pages/me/navigation/links";
 import CalendarPage from "@/pages/me/navigation/calendar";
 import SettingsLayout from "@/pages/me/settings/layout";
@@ -144,8 +145,10 @@ export default function App() {
                 <Route path="/tasks" component={TasksView} />
                 <Route path="/events" component={EventsView} />
               </Route>
-              <Route path="/nav/calendar" component={CalendarPage} />
-              <Route path="/nav" component={NavPage} />
+              <Route path="/nav" component={NavigationLayout}>
+                <Route path="/" component={NavPage} />
+                <Route path="/calendar" component={CalendarPage} />
+              </Route>
               <Route path="/settings" component={SettingsLayout}>
                 <Route path="/" component={SettingsIndexPage} />
                 <Route path="/profile" component={ProfileSettingsPage} />
