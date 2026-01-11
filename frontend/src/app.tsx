@@ -17,15 +17,10 @@ import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
 import FAQ from "@/pages/faq";
 import Books from "@/pages/books";
-import TodoApps from "@/pages/todo-apps";
-import MeditationApps from "@/pages/meditation-apps";
-import WeightLossApps from "@/pages/weight-loss-apps";
-import HabitApps from "@/pages/habit-apps";
-import HappinessApps from "@/pages/happiness-apps";
+import Apps from "@/pages/apps";
 import YouTube from "@/pages/youtube";
 import Podcasts from "@/pages/podcasts";
 import Resources from "@/pages/resources";
-import ThereIsAnAppForThat from "@/pages/there-is-an-app-for-that";
 import MePage from "@/pages/me/index";
 import HomeLayout from "@/pages/me/today/layout";
 import PreviewView from "@/pages/me/today/preview";
@@ -124,12 +119,7 @@ export default function App() {
             <Route path="/terms" component={Terms} />
             <Route path="/faq" component={FAQ} />
             <Route path="/books" component={Books} />
-            <Route path="/apps" component={ThereIsAnAppForThat} />
-            <Route path="/apps/todo" component={TodoApps} />
-            <Route path="/apps/meditation" component={MeditationApps} />
-            <Route path="/apps/weight-loss" component={WeightLossApps} />
-            <Route path="/apps/habits" component={HabitApps} />
-            <Route path="/apps/happiness" component={HappinessApps} />
+            <Route path="/apps" component={Apps} />
             <Route path="/youtube" component={YouTube} />
             <Route path="/podcasts" component={Podcasts} />
             <Route path="/resources" component={Resources} />
