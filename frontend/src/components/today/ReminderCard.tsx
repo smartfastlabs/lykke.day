@@ -32,7 +32,7 @@ export const ReminderCard: Component<ReminderCardProps> = (props) => (
             <div class="flex-1">
               <p class="text-sm font-semibold text-stone-800">{task.name}</p>
               <p class="text-xs text-stone-500">
-                Before 8pm · {task.task_definition.description}
+                Before 8pm · {task.description}
               </p>
             </div>
           </div>

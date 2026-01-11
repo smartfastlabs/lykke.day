@@ -41,12 +41,7 @@ export type TaskStatus =
   | "PENDING";
 export type TaskType = "MEAL" | "EVENT" | "CHORE" | "ERRAND" | "ACTIVITY";
 export type TaskCategory = "HYGIENE" | "NUTRITION" | "HEALTH" | "PET" | "HOUSE";
-export type EventCategory =
-  | "WORK"
-  | "PERSONAL"
-  | "FAMILY"
-  | "SOCIAL"
-  | "OTHER";
+export type EventCategory = "WORK" | "PERSONAL" | "FAMILY" | "SOCIAL" | "OTHER";
 export type TimingType = "DEADLINE" | "FIXED_TIME" | "TIME_WINDOW" | "FLEXIBLE";
 export type TaskTag =
   | "AVOIDANT"
@@ -193,7 +188,8 @@ export interface Task {
   scheduled_date: string;
   name: string;
   status: TaskStatus;
-  task_definition: TaskDefinition;
+  type: TaskType;
+  description: string;
   category: TaskCategory;
   frequency: TaskFrequency;
   completed_at?: string | null;

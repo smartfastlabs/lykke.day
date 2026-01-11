@@ -31,7 +31,7 @@ const TaskItem: Component<{ task: Task }> = (props) => {
   const time = () => getTimeDisplay(props.task.schedule ?? undefined);
   const icon = () =>
     getCategoryIcon(props.task.category) ||
-    getTypeIcon(props.task.task_definition?.type);
+    getTypeIcon(props.task.type);
 
   return (
     <div class="flex items-start gap-3">
