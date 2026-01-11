@@ -6,6 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends
 from lykke.application.commands.push_subscription import (
     CreatePushSubscriptionHandler,
     DeletePushSubscriptionHandler,
+    SendPushNotificationHandler,
     UpdatePushSubscriptionHandler,
 )
 from lykke.application.queries.push_subscription import (
@@ -14,7 +15,6 @@ from lykke.application.queries.push_subscription import (
 )
 from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import UserEntity
-from lykke.infrastructure.gateways import web_push
 from lykke.presentation.api.schemas import (
     PushSubscriptionCreateSchema,
     PushSubscriptionSchema,
@@ -25,6 +25,7 @@ from lykke.presentation.api.schemas.mappers import map_push_subscription_to_sche
 from .dependencies.commands.push_subscription import (
     get_create_push_subscription_handler,
     get_delete_push_subscription_handler,
+    get_send_push_notification_handler,
     get_update_push_subscription_handler,
 )
 from .dependencies.queries.push_subscription import (
@@ -94,6 +95,9 @@ async def subscribe(
     create_push_subscription_handler: Annotated[
         CreatePushSubscriptionHandler, Depends(get_create_push_subscription_handler)
     ],
+    send_push_notification_handler: Annotated[
+        SendPushNotificationHandler, Depends(get_send_push_notification_handler)
+    ],
 ) -> PushSubscriptionSchema:
     subscription = data_objects.PushSubscription(
         user_id=user.id,
@@ -105,7 +109,7 @@ async def subscribe(
     result = await create_push_subscription_handler.run(subscription=subscription)
 
     background_tasks.add_task(
-        web_push.send_notification,
+        send_push_notification_handler.run,
         subscription=result,
         content={
             "title": "Notifications Enabled!",

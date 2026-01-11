@@ -442,6 +442,7 @@ async def test_remove_time_block_from_day_template_persists_to_database(
                 time_block_definition_id=time_block_def.id,
                 start_time=time(14, 0, 0),
                 end_time=time(17, 0, 0),
+                name=time_block_def.name,
             )
         ],
     )

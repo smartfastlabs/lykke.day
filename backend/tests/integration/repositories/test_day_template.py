@@ -100,11 +100,13 @@ async def test_put_with_time_blocks_persists_to_database(day_template_repo, test
                 time_block_definition_id=time_block_def_id,
                 start_time=time(9, 0, 0),
                 end_time=time(12, 0, 0),
+                name="Test Time Block",
             ),
             value_objects.DayTemplateTimeBlock(
                 time_block_definition_id=time_block_def_id,
                 start_time=time(14, 0, 0),
                 end_time=time(17, 0, 0),
+                name="Test Time Block",
             ),
         ],
     )

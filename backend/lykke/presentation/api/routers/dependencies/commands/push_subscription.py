@@ -6,10 +6,13 @@ from fastapi import Depends
 from lykke.application.commands.push_subscription import (
     CreatePushSubscriptionHandler,
     DeletePushSubscriptionHandler,
+    SendPushNotificationHandler,
     UpdatePushSubscriptionHandler,
 )
+from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
+from lykke.infrastructure.gateways import WebPushGateway
 
 from ..services import get_read_only_repository_factory, get_unit_of_work_factory
 from ..user import get_current_user
@@ -49,4 +52,18 @@ def get_update_push_subscription_handler(
     """Get an UpdatePushSubscriptionHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return UpdatePushSubscriptionHandler(ro_repos, uow_factory, user.id)
+
+
+def get_web_push_gateway() -> WebPushGatewayProtocol:
+    """Get an instance of WebPushGateway."""
+    return WebPushGateway()
+
+
+def get_send_push_notification_handler(
+    web_push_gateway: Annotated[
+        WebPushGatewayProtocol, Depends(get_web_push_gateway)
+    ],
+) -> SendPushNotificationHandler:
+    """Get a SendPushNotificationHandler instance."""
+    return SendPushNotificationHandler(web_push_gateway)
 

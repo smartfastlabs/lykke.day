@@ -1,9 +1,19 @@
-import { Component } from "solid-js";
+import { Component, createMemo } from "solid-js";
+import { useSheppard } from "@/providers/sheppard";
+import { TasksSection, EventsSection } from "@/components/overview";
 
 export const PreviewView: Component = () => {
-  // The DayOverview is now shown in the parent HomeLayout component
-  // This view is just a placeholder for the /me/today route
-  return null;
+  const { tasks, events } = useSheppard();
+
+  const allTasks = createMemo(() => tasks() ?? []);
+  const allEvents = createMemo(() => events() ?? []);
+
+  return (
+    <div class="grid md:grid-cols-2 gap-4 md:gap-6">
+      <TasksSection tasks={allTasks()} href="/me/today/tasks" />
+      <EventsSection events={allEvents()} href="/me/today/events" />
+    </div>
+  );
 };
 
 export default PreviewView;

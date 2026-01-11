@@ -1,11 +1,10 @@
 import Page from "@/components/shared/layout/Page";
 import { Show, Component, createMemo, ParentProps } from "solid-js";
 import { useSheppard } from "@/providers/sheppard";
-import { DayOverview } from "@/components/overview";
-import { faWater, faLeaf } from "@fortawesome/free-solid-svg-icons";
+import { Hero } from "@/components/overview";
 
 export const HomeLayout: Component<ParentProps> = (props) => {
-  const { dayContext, tasks, events, day, isLoading } = useSheppard();
+  const { dayContext, day, isLoading } = useSheppard();
 
   const date = createMemo(() => {
     const dayValue = day();
@@ -28,100 +27,28 @@ export const HomeLayout: Component<ParentProps> = (props) => {
     return Boolean(dayValue?.tags?.includes("WORKDAY"));
   });
 
-  const upcomingEvent = createMemo(() => {
-    const allEvents = events();
-    if (!allEvents || allEvents.length === 0) return undefined;
-
-    // Find the next upcoming event
-    const now = new Date();
-    const upcoming = allEvents
-      .filter((e) => new Date(e.starts_at) > now)
-      .sort(
-        (a, b) =>
-          new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
-      );
-
-    return upcoming[0];
-  });
-
-  const importantTasks = createMemo(() => {
-    const allTasks = tasks();
-    if (!allTasks || allTasks.length === 0) return [];
-
-    // Filter for important/pending tasks
-    return allTasks
-      .filter(
-        (t) =>
-          t.status !== "COMPLETE" &&
-          (t.tags?.includes("IMPORTANT") || t.category === "HOUSE")
-      )
-      .slice(0, 3);
-  });
-
-  const completion = createMemo(() => {
-    const allTasks = tasks();
-    if (!allTasks || allTasks.length === 0) return { done: 0, total: 0 };
-
-    const done = allTasks.filter((task) => task.status === "COMPLETE").length;
-    return { done, total: allTasks.length };
-  });
-
-  const completedTasks = createMemo(() => {
-    const allTasks = tasks();
-    if (!allTasks || allTasks.length === 0) return [];
-
-    return allTasks.filter((task) => task.status === "COMPLETE").slice(0, 2);
-  });
-
-  const flowItems = createMemo(() => {
-    const completed = completedTasks();
-    return completed.map((task, index) => ({
-      icon: index === 0 ? faWater : faLeaf,
-      text: `${task.name} completed`,
-    }));
-  });
-
   return (
     <Page>
       <Show
         when={!isLoading() && dayContext()}
         fallback={<div class="p-8 text-center text-gray-400">Loading...</div>}
       >
-        <DayOverview
-          withPageWrapper={false}
-          hero={{
-            weekday: weekday(),
-            monthDay: monthDay(),
-            isWorkday: isWorkday(),
-            description: `You have ${events().length} events and ${tasks().length} tasks scheduled for today.`,
-          }}
-          comingUp={
-            upcomingEvent()
-              ? {
-                  event: upcomingEvent()!,
-                  href: "/me/nav/calendar",
-                }
-              : undefined
-          }
-          reminder={
-            importantTasks().length > 0
-              ? {
-                  tasks: importantTasks(),
-                  href: `/me/day/${day()?.date || ""}`,
-                }
-              : undefined
-          }
-          flow={
-            completion().total > 0
-              ? {
-                  completionDone: completion().done,
-                  completionTotal: completion().total,
-                  items: flowItems(),
-                }
-              : undefined
-          }
-        />
-        {props.children}
+        <div class="relative min-h-screen overflow-hidden -mt-4 md:-mt-6">
+          <div class="absolute inset-0 bg-gradient-to-br from-amber-50/60 via-orange-50/50 to-rose-50/50" />
+          <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(251,191,36,0.12)_0%,_transparent_55%)]" />
+          <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(244,114,82,0.08)_0%,_transparent_55%)]" />
+          <div class="absolute top-24 right-10 w-44 h-44 bg-amber-200/25 rounded-full blur-3xl" />
+          <div class="absolute bottom-20 left-8 w-36 h-36 bg-rose-200/20 rounded-full blur-3xl" />
+
+          <div class="relative z-10 max-w-4xl mx-auto px-5 md:px-6 lg:px-8 py-8 md:py-10 space-y-6">
+            <Hero
+              weekday={weekday()}
+              monthDay={monthDay()}
+              isWorkday={isWorkday()}
+            />
+            {props.children}
+          </div>
+        </div>
       </Show>
     </Page>
   );
