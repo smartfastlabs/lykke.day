@@ -1,4 +1,5 @@
 import { Component, For, createSignal, onMount } from "solid-js";
+import { A } from "@solidjs/router";
 import { Icon } from "solid-heroicons";
 import {
   devicePhoneMobile,
@@ -256,12 +257,12 @@ const ThereIsAnAppForThat: Component = () => {
               transform: mounted() ? "translateY(0)" : "translateY(20px)",
             }}
           >
-            <a
+            <A
               href="/early-access"
               class="inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-stone-800 to-stone-700 text-amber-50 rounded-xl hover:from-stone-700 hover:to-stone-600 transition-all duration-300 shadow-lg shadow-stone-900/20 hover:shadow-xl hover:-translate-y-0.5"
             >
               <span class="font-medium">Try lykke.day instead</span>
-            </a>
+            </A>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { Component, createSignal, onMount } from "solid-js";
+import { A } from "@solidjs/router";
 import Footer from "@/components/shared/layout/Footer";
 import { useAuth } from "@/providers/auth";
 
@@ -148,13 +149,13 @@ const Resources: Component = () => {
                   journey. But if you're dead-set on finding an app to download
                   and call it progress... fine. We've got a list.
                 </p>
-                <a
+                <A
                   href="/apps"
                   class="group relative inline-flex items-center justify-center px-8 py-3 bg-amber-100 text-stone-900 rounded-xl font-medium tracking-wide hover:bg-amber-200 transition-all duration-300 shadow-md shadow-stone-900/20 hover:-translate-y-0.5"
                 >
                   <span class="relative z-10">Fine, show me the apps</span>
                   <div class="absolute inset-0 rounded-xl bg-amber-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </a>
+                </A>
               </div>
             </div>
           </div>

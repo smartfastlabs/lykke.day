@@ -1,9 +1,11 @@
 import { createSignal } from "solid-js";
+import { A, useNavigate } from "@solidjs/router";
 import { Input, SubmitButton, FormError } from "@/components/forms";
 import ModalPage from "@/components/shared/ModalPage";
 import { authAPI } from "@/utils/api";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [error, setError] = createSignal("");
@@ -27,7 +29,7 @@ export default function Login() {
 
     try {
       await authAPI.login(email(), password());
-      window.location.href = "/me";
+      navigate("/me");
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Authentication failed";
@@ -74,22 +76,22 @@ export default function Login() {
 
         <p class="text-sm text-center text-stone-600">
           Forgot your password?{" "}
-          <a
+          <A
             href="/forgot-password"
             class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
           >
             Reset it
-          </a>
+          </A>
         </p>
 
         <p class="text-sm text-center text-stone-600">
           Don't have an account?{" "}
-          <a
+          <A
             href="/early-access"
             class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
           >
             Join the waitlist
-          </a>
+          </A>
         </p>
       </form>
     </ModalPage>

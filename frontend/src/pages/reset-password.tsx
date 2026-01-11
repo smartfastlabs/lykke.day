@@ -1,5 +1,5 @@
 import { Show, createSignal } from "solid-js";
-import { useSearchParams } from "@solidjs/router";
+import { A, useSearchParams } from "@solidjs/router";
 import { Input, SubmitButton, FormError } from "@/components/forms";
 import ModalPage from "@/components/shared/ModalPage";
 import { authAPI } from "@/utils/api";
@@ -63,12 +63,12 @@ export default function ResetPassword() {
               Your password has been updated. You can now sign in with your new
               credentials.
             </p>
-            <a
+            <A
               href="/login"
               class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
             >
               Go to sign in
-            </a>
+            </A>
           </div>
         }
       >

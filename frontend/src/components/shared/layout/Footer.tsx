@@ -1,4 +1,5 @@
 import { Component } from "solid-js";
+import { A } from "@solidjs/router";
 
 const Footer: Component = () => {
   return (
@@ -8,24 +9,24 @@ const Footer: Component = () => {
           © {new Date().getFullYear()} lykke.day — All rights reserved.
         </p>
         <div class="flex items-center gap-6">
-          <a
+          <A
             href="/faq"
             class="text-stone-400 text-sm hover:text-stone-600 transition-colors"
           >
             FAQ
-          </a>
-          <a
+          </A>
+          <A
             href="/privacy"
             class="text-stone-400 text-sm hover:text-stone-600 transition-colors"
           >
             Privacy
-          </a>
-          <a
+          </A>
+          <A
             href="/terms"
             class="text-stone-400 text-sm hover:text-stone-600 transition-colors"
           >
             Terms
-          </a>
+          </A>
         </div>
       </div>
     </footer>

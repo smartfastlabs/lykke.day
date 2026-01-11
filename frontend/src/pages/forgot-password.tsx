@@ -1,4 +1,5 @@
 import { Show, createSignal } from "solid-js";
+import { A } from "@solidjs/router";
 import { Input, SubmitButton, FormError } from "@/components/forms";
 import ModalPage from "@/components/shared/ModalPage";
 import { authAPI } from "@/utils/api";
@@ -53,20 +54,20 @@ export default function ForgotPassword() {
               reset your password. The link will expire shortly for security.
             </p>
             <div class="space-y-2 text-sm text-stone-600">
-              <a
+              <A
                 href="/login"
                 class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
               >
                 Return to sign in
-              </a>
+              </A>
               <div>
                 or{" "}
-                <a
+                <A
                   href="/register"
                   class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
                 >
                   create an account
-                </a>
+                </A>
               </div>
             </div>
           </div>
@@ -103,12 +104,12 @@ export default function ForgotPassword() {
 
           <p class="text-sm text-center text-stone-600">
             Remember your password?{" "}
-            <a
+            <A
               href="/login"
               class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
             >
               Sign in
-            </a>
+            </A>
             .
           </p>
         </form>

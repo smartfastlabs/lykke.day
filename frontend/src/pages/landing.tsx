@@ -1,4 +1,5 @@
 import { Component, For, createSignal, onMount } from "solid-js";
+import { A } from "@solidjs/router";
 import { Icon } from "solid-heroicons";
 import {
   sun,
@@ -122,7 +123,7 @@ const Landing: Component = () => {
               transform: mounted() ? "translateY(0)" : "translateY(20px)",
             }}
           >
-            <a
+            <A
               href="/early-access"
               class="group relative inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-stone-800 to-stone-700 text-amber-50 rounded-xl hover:from-stone-700 hover:to-stone-600 transition-all duration-300 shadow-lg shadow-stone-900/20 hover:shadow-xl hover:shadow-stone-900/25 hover:-translate-y-0.5"
             >
@@ -130,7 +131,7 @@ const Landing: Component = () => {
                 Get early access
               </span>
               <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/20 to-orange-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </a>
+            </A>
           </div>
 
           <p
@@ -386,12 +387,12 @@ const Landing: Component = () => {
 
           <div class="mt-8 mb-16 space-y-3">
             <div>
-              <a
+              <A
                 href="/resources"
                 class="text-stone-600 text-base md:text-lg underline decoration-amber-400 underline-offset-4 hover:text-stone-800 transition-colors"
               >
                 Not ready? Check out our collection of resources.
-              </a>
+              </A>
             </div>
           </div>
         </div>

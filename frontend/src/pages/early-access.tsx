@@ -1,4 +1,5 @@
 import { Show, createSignal } from "solid-js";
+import { A } from "@solidjs/router";
 import { Input, SubmitButton, FormError } from "@/components/forms";
 import ModalPage from "@/components/shared/ModalPage";
 import { marketingAPI } from "@/utils/api";
@@ -52,12 +53,12 @@ export default function EarlyAccess() {
             <p class="text-stone-600 text-sm leading-relaxed">
               We&apos;ll reach out when lykke.day is ready. In the meantime,
               check out our{" "}
-              <a
+              <A
                 href="/resources"
                 class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
               >
                 resources
-              </a>
+              </A>
               .
             </p>
           </div>
@@ -96,12 +97,12 @@ export default function EarlyAccess() {
           </p>
           <p class="text-sm text-center text-stone-600">
             Prefer to sign in?{" "}
-            <a
+            <A
               href="/login"
               class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
             >
               Log in
-            </a>
+            </A>
             .
           </p>
         </form>

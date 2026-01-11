@@ -1,4 +1,5 @@
 import { Component, For } from "solid-js";
+import { A } from "@solidjs/router";
 import { Icon } from "solid-heroicons";
 import { chatBubbleLeftRight, heart, sparkles } from "solid-heroicons/outline";
 import Footer from "@/components/shared/layout/Footer";
@@ -102,23 +103,23 @@ const FAQ: Component = () => {
                   routines built for busy, changing seasons.
                 </p>
               </div>
-              <a
+              <A
                 href="/early-access"
                 class="group relative inline-flex items-center justify-center px-8 py-3 bg-amber-100 text-stone-900 rounded-xl font-medium tracking-wide hover:bg-amber-200 transition-all duration-300 shadow-md shadow-stone-900/20 hover:-translate-y-0.5"
               >
                 <span class="relative z-10">Get early access</span>
                 <div class="absolute inset-0 rounded-xl bg-amber-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </a>
+              </A>
             </div>
           </div>
 
           <div class="mt-6 text-center">
-            <a
+            <A
               href="/resources"
               class="text-stone-500 text-sm underline decoration-rose-300 underline-offset-4 hover:text-stone-700 transition-colors"
             >
               Looking for other apps &amp; resources? Check our guide →
-            </a>
+            </A>
           </div>
         </div>
       </div>

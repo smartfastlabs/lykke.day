@@ -1,9 +1,11 @@
 import { createSignal } from "solid-js";
+import { A, useNavigate } from "@solidjs/router";
 import { Input, SubmitButton, FormError } from "@/components/forms";
 import ModalPage from "@/components/shared/ModalPage";
 import { authAPI } from "@/utils/api";
 
 export default function Register() {
+  const navigate = useNavigate();
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
@@ -34,7 +36,7 @@ export default function Register() {
     try {
       await authAPI.register(email().trim(), password());
       await authAPI.login(email().trim(), password());
-      window.location.href = "/me";
+      navigate("/me");
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Registration failed";
@@ -93,12 +95,12 @@ export default function Register() {
 
         <p class="text-sm text-center text-stone-600">
           Already have an account?{" "}
-          <a
+          <A
             href="/login"
             class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
           >
             Sign in
-          </a>
+          </A>
         </p>
       </form>
     </ModalPage>
