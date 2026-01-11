@@ -83,3 +83,47 @@ async def test_user_isolation(
         value_objects.DayTemplateQuery(slug="default")
     )
     assert result.user_id == test_user.id
+
+
+@pytest.mark.asyncio
+async def test_put_with_time_blocks_persists_to_database(day_template_repo, test_user):
+    """Test that creating a day template with time blocks persists them to the database."""
+    from uuid import uuid4
+
+    # Create a template with time blocks
+    time_block_def_id = uuid4()
+    template = DayTemplateEntity(
+        user_id=test_user.id,
+        slug="time-block-test",
+        time_blocks=[
+            value_objects.DayTemplateTimeBlock(
+                time_block_definition_id=time_block_def_id,
+                start_time=time(9, 0, 0),
+                end_time=time(12, 0, 0),
+            ),
+            value_objects.DayTemplateTimeBlock(
+                time_block_definition_id=time_block_def_id,
+                start_time=time(14, 0, 0),
+                end_time=time(17, 0, 0),
+            ),
+        ],
+    )
+
+    # Save to database
+    result = await day_template_repo.put(template)
+
+    # Verify returned entity has time blocks
+    assert len(result.time_blocks) == 2
+    assert result.time_blocks[0].time_block_definition_id == time_block_def_id
+    assert result.time_blocks[0].start_time == time(9, 0, 0)
+    assert result.time_blocks[0].end_time == time(12, 0, 0)
+
+    # Fetch from database to verify persistence
+    fetched = await day_template_repo.get(result.id)
+    assert len(fetched.time_blocks) == 2
+    assert fetched.time_blocks[0].time_block_definition_id == time_block_def_id
+    assert fetched.time_blocks[0].start_time == time(9, 0, 0)
+    assert fetched.time_blocks[0].end_time == time(12, 0, 0)
+    assert fetched.time_blocks[1].time_block_definition_id == time_block_def_id
+    assert fetched.time_blocks[1].start_time == time(14, 0, 0)
+    assert fetched.time_blocks[1].end_time == time(17, 0, 0)

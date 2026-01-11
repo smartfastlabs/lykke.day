@@ -21,6 +21,7 @@ from lykke.application.repositories import (
     RoutineRepositoryReadWriteProtocol,
     TaskDefinitionRepositoryReadWriteProtocol,
     TaskRepositoryReadWriteProtocol,
+    TimeBlockDefinitionRepositoryReadOnlyProtocol,
     UserRepositoryReadWriteProtocol,
 )
 from lykke.domain.entities import UserEntity
@@ -34,6 +35,7 @@ from lykke.infrastructure.repositories import (
     RoutineRepository,
     TaskDefinitionRepository,
     TaskRepository,
+    TimeBlockDefinitionRepository,
     UserRepository,
 )
 
@@ -118,6 +120,16 @@ def get_task_definition_repo(
 def get_user_repo() -> UserRepositoryReadWriteProtocol:
     """Get an instance of UserRepository (not user-scoped)."""
     return cast("UserRepositoryReadWriteProtocol", UserRepository())
+
+
+def get_time_block_definition_ro_repo(
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> TimeBlockDefinitionRepositoryReadOnlyProtocol:
+    """Get a user-scoped instance of TimeBlockDefinitionRepository (read-only)."""
+    return cast(
+        "TimeBlockDefinitionRepositoryReadOnlyProtocol",
+        TimeBlockDefinitionRepository(user_id=user.id),
+    )
 
 
 def get_calendar_repo_by_user_id(

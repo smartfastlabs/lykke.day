@@ -19,6 +19,7 @@ class DayTemplateTimeBlockSchema(BaseModel):
     time_block_definition_id: UUID
     start_time: time
     end_time: time
+    name: str
 
 
 class DayTemplateCreateSchema(BaseSchema):
@@ -59,4 +60,5 @@ class DayTemplateTimeBlockCreateSchema(BaseSchema):
     time_block_definition_id: UUID
     start_time: time
     end_time: time
+    # Note: name is not required in create request - it will be fetched from the TimeBlockDefinition
 

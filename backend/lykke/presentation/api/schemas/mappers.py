@@ -103,6 +103,7 @@ def map_day_template_to_schema(
             time_block_definition_id=tb.time_block_definition_id,
             start_time=tb.start_time,
             end_time=tb.end_time,
+            name=tb.name,
         )
         for tb in template.time_blocks
     ]

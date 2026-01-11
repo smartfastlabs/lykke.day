@@ -63,27 +63,9 @@ const DayTemplatePreview: Component<DayTemplatePreviewProps> = (props) => {
   };
 
   return (
-    <div class="flex flex-col items-center justify-center px-6 py-8">
-      <div class="w-full max-w-3xl space-y-8">
-        {/* Basic Info */}
-        <div class="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm space-y-4">
-          <h2 class="text-lg font-medium text-neutral-900">Basic Information</h2>
-          <div class="space-y-3">
-            <div>
-              <label class="text-sm font-medium text-neutral-500">Slug</label>
-              <div class="mt-1 text-base text-neutral-900">{props.dayTemplate.slug}</div>
-            </div>
-            <Show when={props.dayTemplate.icon}>
-              <div>
-                <label class="text-sm font-medium text-neutral-500">Icon</label>
-                <div class="mt-1 text-base text-neutral-900">{props.dayTemplate.icon}</div>
-              </div>
-            </Show>
-          </div>
-        </div>
-
-        {/* Routines */}
-        <div class="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm space-y-4">
+    <div class="space-y-8">
+      {/* Routines */}
+      <div class="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm space-y-4">
           <div class="flex items-center justify-between">
             <div>
               <h2 class="text-lg font-medium text-neutral-900">Routines</h2>
@@ -182,21 +164,15 @@ const DayTemplatePreview: Component<DayTemplatePreviewProps> = (props) => {
             <div class="space-y-3">
               <For each={props.dayTemplate.time_blocks ?? []}>
                 {(timeBlock) => {
-                  const definition = getTimeBlockDefinition(timeBlock.time_block_definition_id);
                   return (
                     <div class="flex items-start justify-between rounded-md border border-neutral-200 px-3 py-2">
                       <div class="space-y-1">
                         <div class="text-sm font-medium text-neutral-900">
-                          {definition?.name || "Unknown"}
+                          {timeBlock.name}
                         </div>
                         <div class="text-xs text-neutral-500">
                           {formatTime(timeBlock.start_time)} - {formatTime(timeBlock.end_time)}
                         </div>
-                        <Show when={definition?.description}>
-                          <div class="text-xs text-neutral-400">
-                            {definition?.description}
-                          </div>
-                        </Show>
                       </div>
                       <Show when={props.isEditMode && props.onRemoveTimeBlock}>
                         <button
@@ -290,7 +266,6 @@ const DayTemplatePreview: Component<DayTemplatePreviewProps> = (props) => {
             <div class="text-sm text-red-600">{props.error}</div>
           </Show>
         </div>
-      </div>
     </div>
   );
 };

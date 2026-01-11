@@ -17,6 +17,9 @@ from lykke.application.queries.day_template import (
     GetDayTemplateHandler,
     SearchDayTemplatesHandler,
 )
+from lykke.application.repositories import (
+    TimeBlockDefinitionRepositoryReadOnlyProtocol,
+)
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
@@ -42,6 +45,7 @@ from .dependencies.queries.day_template import (
     get_get_day_template_handler,
     get_list_day_templates_handler,
 )
+from .dependencies.repositories import get_time_block_definition_ro_repo
 from .dependencies.user import get_current_user
 
 router = APIRouter()
@@ -112,6 +116,7 @@ async def create_day_template(
             time_block_definition_id=tb.time_block_definition_id,
             start_time=tb.start_time,
             end_time=tb.end_time,
+            name=tb.name,
         )
         for tb in day_template_data.time_blocks
     ]
@@ -159,6 +164,7 @@ async def update_day_template(
                 time_block_definition_id=tb.time_block_definition_id,
                 start_time=tb.start_time,
                 end_time=tb.end_time,
+                name=tb.name,
             )
             for tb in update_data.time_blocks
         ]
@@ -238,12 +244,22 @@ async def add_day_template_time_block(
         AddDayTemplateTimeBlockHandler,
         Depends(get_add_day_template_time_block_handler),
     ],
+    time_block_def_repo: Annotated[
+        TimeBlockDefinitionRepositoryReadOnlyProtocol,
+        Depends(get_time_block_definition_ro_repo),
+    ],
 ) -> DayTemplateSchema:
     """Add a time block to a day template."""
+    # Fetch the TimeBlockDefinition to get the name
+    time_block_def = await time_block_def_repo.get(
+        time_block_data.time_block_definition_id
+    )
+
     time_block = value_objects.DayTemplateTimeBlock(
         time_block_definition_id=time_block_data.time_block_definition_id,
         start_time=time_block_data.start_time,
         end_time=time_block_data.end_time,
+        name=time_block_def.name,
     )
     updated = await add_day_template_time_block_handler.run(
         day_template_id=uuid, time_block=time_block

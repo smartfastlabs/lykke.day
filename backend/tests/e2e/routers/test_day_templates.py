@@ -342,3 +342,123 @@ async def test_remove_nonexistent_routine_from_day_template(authenticated_client
     )
 
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_add_time_block_to_day_template_persists_to_database(
+    authenticated_client,
+):
+    """Test that adding a time block to a day template persists to the database."""
+    client, user = await authenticated_client()
+
+    # Create a day template
+    from lykke.domain.entities.day_template import DayTemplateEntity
+    from lykke.infrastructure.repositories import DayTemplateRepository
+
+    day_template_repo = DayTemplateRepository(user_id=user.id)
+    day_template = DayTemplateEntity(
+        user_id=user.id,
+        slug="time-block-test",
+        time_blocks=[],
+    )
+    day_template = await day_template_repo.put(day_template)
+
+    # Create a time block definition
+    from lykke.domain import data_objects
+    from lykke.domain.value_objects.time_block import TimeBlockCategory, TimeBlockType
+    from lykke.infrastructure.repositories import TimeBlockDefinitionRepository
+
+    time_block_def_repo = TimeBlockDefinitionRepository(user_id=user.id)
+    time_block_def = data_objects.TimeBlockDefinition(
+        id=uuid4(),
+        user_id=user.id,
+        name="Morning Work",
+        description="Focused work time",
+        type=TimeBlockType.WORK,
+        category=TimeBlockCategory.WORK,
+    )
+    time_block_def = await time_block_def_repo.put(time_block_def)
+
+    # Add time block to day template via API
+    response = client.post(
+        f"/day-templates/{day_template.id}/time-blocks",
+        json={
+            "time_block_definition_id": str(time_block_def.id),
+            "start_time": "09:00:00",
+            "end_time": "12:00:00",
+        },
+    )
+
+    assert response.status_code == 201
+    data = response.json()
+    assert len(data["time_blocks"]) == 1
+    assert data["time_blocks"][0]["time_block_definition_id"] == str(time_block_def.id)
+    assert data["time_blocks"][0]["start_time"] == "09:00:00"
+    assert data["time_blocks"][0]["end_time"] == "12:00:00"
+
+    # Verify persistence by fetching the day template again from the database
+    fetched_template = await day_template_repo.get(day_template.id)
+    assert len(fetched_template.time_blocks) == 1
+    assert fetched_template.time_blocks[0].time_block_definition_id == time_block_def.id
+    assert str(fetched_template.time_blocks[0].start_time) == "09:00:00"
+    assert str(fetched_template.time_blocks[0].end_time) == "12:00:00"
+
+
+@pytest.mark.asyncio
+async def test_remove_time_block_from_day_template_persists_to_database(
+    authenticated_client,
+):
+    """Test that removing a time block from a day template persists to the database."""
+    client, user = await authenticated_client()
+
+    # Create a time block definition
+    from lykke.domain import data_objects, value_objects
+    from lykke.domain.value_objects.time_block import TimeBlockCategory, TimeBlockType
+    from lykke.infrastructure.repositories import TimeBlockDefinitionRepository
+
+    time_block_def_repo = TimeBlockDefinitionRepository(user_id=user.id)
+    time_block_def = data_objects.TimeBlockDefinition(
+        id=uuid4(),
+        user_id=user.id,
+        name="Afternoon Work",
+        description="Afternoon focused work",
+        type=TimeBlockType.WORK,
+        category=TimeBlockCategory.WORK,
+    )
+    time_block_def = await time_block_def_repo.put(time_block_def)
+
+    # Create a day template with a time block
+    from datetime import time
+
+    from lykke.domain.entities.day_template import DayTemplateEntity
+    from lykke.infrastructure.repositories import DayTemplateRepository
+
+    day_template_repo = DayTemplateRepository(user_id=user.id)
+    day_template = DayTemplateEntity(
+        user_id=user.id,
+        slug="remove-time-block-test",
+        time_blocks=[
+            value_objects.DayTemplateTimeBlock(
+                time_block_definition_id=time_block_def.id,
+                start_time=time(14, 0, 0),
+                end_time=time(17, 0, 0),
+            )
+        ],
+    )
+    day_template = await day_template_repo.put(day_template)
+
+    # Verify it was created with the time block
+    assert len(day_template.time_blocks) == 1
+
+    # Remove time block from day template via API
+    response = client.delete(
+        f"/day-templates/{day_template.id}/time-blocks/{time_block_def.id}/14:00:00",
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["time_blocks"]) == 0
+
+    # Verify persistence by fetching the day template again from the database
+    fetched_template = await day_template_repo.get(day_template.id)
+    assert len(fetched_template.time_blocks) == 0

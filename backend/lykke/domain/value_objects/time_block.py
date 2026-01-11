@@ -62,11 +62,13 @@ class DayTemplateTimeBlock(BaseModel):
     """Represents a time block in a day template.
 
     This joins a TimeBlockDefinition to a specific time window in the template.
+    Name is denormalized for performance and UI convenience.
     """
 
     time_block_definition_id: UUID
     start_time: time
     end_time: time
+    name: str  # Denormalized from TimeBlockDefinition
 
 
 class DayTimeBlock(BaseModel):

@@ -1738,6 +1738,8 @@ export interface components {
              * Format: time
              */
             end_time: string;
+            /** Name */
+            name: string;
         };
         /**
          * DayTemplateUpdateSchema

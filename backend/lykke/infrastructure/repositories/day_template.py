@@ -57,6 +57,20 @@ class DayTemplateRepository(
         else:
             row["routine_ids"] = []
 
+        # Handle time_blocks - serialize to JSON
+        if template.time_blocks:
+            row["time_blocks"] = [
+                {
+                    "time_block_definition_id": str(tb.time_block_definition_id),
+                    "start_time": tb.start_time.isoformat(),
+                    "end_time": tb.end_time.isoformat(),
+                    "name": tb.name,
+                }
+                for tb in template.time_blocks
+            ]
+        else:
+            row["time_blocks"] = []
+
         return row
 
     @classmethod
@@ -75,6 +89,31 @@ class DayTemplateRepository(
             data["routine_ids"] = [
                 UUID(routine_id) if isinstance(routine_id, str) else routine_id
                 for routine_id in data["routine_ids"]
+            ]
+
+        # Handle time_blocks - deserialize from JSON
+        if data.get("time_blocks"):
+            data["time_blocks"] = [
+                value_objects.DayTemplateTimeBlock(
+                    time_block_definition_id=(
+                        UUID(tb["time_block_definition_id"])
+                        if isinstance(tb["time_block_definition_id"], str)
+                        else tb["time_block_definition_id"]
+                    ),
+                    start_time=(
+                        dt_time.fromisoformat(tb["start_time"])
+                        if isinstance(tb["start_time"], str)
+                        else tb["start_time"]
+                    ),
+                    end_time=(
+                        dt_time.fromisoformat(tb["end_time"])
+                        if isinstance(tb["end_time"], str)
+                        else tb["end_time"]
+                    ),
+                    # Handle backward compatibility for time blocks without name
+                    name=tb.get("name", "Time Block"),
+                )
+                for tb in data["time_blocks"]
             ]
 
         # Handle alarm - it comes as a dict from JSONB, need to convert to value object

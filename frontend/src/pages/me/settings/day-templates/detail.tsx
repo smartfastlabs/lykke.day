@@ -168,17 +168,21 @@ const DayTemplateDetailPage: Component = () => {
             url: "/me/settings/day-templates",
           }}
           preview={
-            <DayTemplatePreview
-              dayTemplate={current()}
-              routines={routines()}
-              onAddRoutine={handleAddRoutine}
-              onRemoveRoutine={handleRemoveRoutine}
-              onAddTimeBlock={handleAddTimeBlock}
-              onRemoveTimeBlock={handleRemoveTimeBlock}
-              isEditMode={false}
-              isLoading={isRoutineLoading()}
-              error={actionError()}
-            />
+            <div class="flex flex-col items-center justify-center px-6 py-8">
+              <div class="w-full max-w-3xl">
+                <DayTemplatePreview
+                  dayTemplate={current()}
+                  routines={routines()}
+                  onAddRoutine={handleAddRoutine}
+                  onRemoveRoutine={handleRemoveRoutine}
+                  onAddTimeBlock={handleAddTimeBlock}
+                  onRemoveTimeBlock={handleRemoveTimeBlock}
+                  isEditMode={false}
+                  isLoading={isRoutineLoading()}
+                  error={actionError()}
+                />
+              </div>
+            </div>
           }
           edit={
             <div class="flex flex-col items-center justify-center px-6 py-8">
