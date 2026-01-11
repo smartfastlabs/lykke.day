@@ -20,6 +20,7 @@ from lykke.infrastructure.repositories import (
     RoutineRepository,
     TaskDefinitionRepository,
     TaskRepository,
+    TimeBlockDefinitionRepository,
     UserRepository,
 )
 
@@ -157,3 +158,9 @@ async def routine_repo(test_user):
 async def task_definition_repo(test_user):
     """TaskDefinitionRepository scoped to test_user."""
     return TaskDefinitionRepository(user_id=test_user.id)
+
+
+@pytest_asyncio.fixture
+async def time_block_definition_repo(test_user):
+    """TimeBlockDefinitionRepository scoped to test_user."""
+    return TimeBlockDefinitionRepository(user_id=test_user.id)
