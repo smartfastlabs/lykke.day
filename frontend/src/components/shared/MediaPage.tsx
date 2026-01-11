@@ -18,13 +18,6 @@ const MediaPage: Component<MediaPageProps> = (props) => {
       <div class="absolute bottom-24 left-12 w-44 h-44 bg-gradient-to-tr from-rose-200/25 to-amber-200/15 rounded-full blur-3xl" />
 
       <div class="relative z-10 max-w-3xl mx-auto px-6 py-16 flex-1 w-full">
-        <a
-          href="/"
-          class="inline-block mb-8 text-stone-500 hover:text-stone-700 transition-colors text-sm"
-        >
-          ← Back
-        </a>
-
         <div class="bg-white/70 backdrop-blur-md border border-white/70 rounded-3xl shadow-xl shadow-amber-900/5 p-8 md:p-10">
           <div class="space-y-3">
             <p class="text-xs uppercase tracking-[0.25em] text-amber-400">

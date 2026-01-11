@@ -64,9 +64,9 @@ const getTimeDisplay = (schedule?: TaskSchedule): TimeDisplay | null => {
 const getStatusClasses = (status: TaskStatus): string => {
   switch (status) {
     case "COMPLETE":
-      return "bg-gray-100";
+      return "bg-stone-50/50";
     case "PUNT":
-      return "bg-gray-50 italic";
+      return "bg-amber-50/30 italic";
     case "NOT_READY":
       return "opacity-40";
     default:
@@ -132,20 +132,20 @@ const TaskItem: Component<{ task: Task }> = (props) => {
 
   return (
     <div
-      class="relative w-full overflow-hidden select-none"
+      class="relative w-full overflow-hidden select-none mb-3"
       style="touch-action: pan-y"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div class="absolute inset-0 bg-gray-100 flex justify-between items-center px-6 text-sm font-medium pointer-events-none">
-        <span class="text-green-600">✅ Complete Task</span>
-        <span class="text-red-600">🗑 Punt Task</span>
+      <div class="absolute inset-0 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 flex justify-between items-center px-6 text-sm font-medium pointer-events-none rounded-xl">
+        <span class="text-amber-600">✅ Complete Task</span>
+        <span class="text-rose-500">🗑 Punt Task</span>
       </div>
 
       {/* Foreground Card */}
       <div
-        class="relative bg-white p-3 transition-transform duration-150 active:scale-[0.97]"
+        class="relative transition-transform duration-150 active:scale-[0.97]"
         style={{
           transform: `translateX(${translateX()}px)`,
           transition: translateX() === 0 ? "transform 0.2s ease-out" : "none",
@@ -153,7 +153,7 @@ const TaskItem: Component<{ task: Task }> = (props) => {
         role="button"
       >
         <div
-          class={`group px-5 py-3.5 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${getStatusClasses(
+          class={`group px-5 py-3.5 bg-white/60 backdrop-blur-sm border border-white/80 rounded-xl hover:bg-white/80 hover:shadow-lg hover:shadow-amber-900/5 transition-all duration-300 cursor-pointer ${getStatusClasses(
             props.task.status
           )}`}
         >
@@ -162,13 +162,13 @@ const TaskItem: Component<{ task: Task }> = (props) => {
             <div class="w-14 flex-shrink-0 text-right">
               <Show
                 when={time()?.primary}
-                fallback={<span class="text-xs text-gray-300">—</span>}
+                fallback={<span class="text-xs text-stone-300">—</span>}
               >
                 <span
                   class={`text-xs tabular-nums ${
                     time()?.primary === "flexible"
-                      ? "text-gray-400 italic"
-                      : "text-gray-500"
+                      ? "text-stone-400 italic"
+                      : "text-stone-500"
                   }`}
                 >
                   {time()?.primary}
@@ -177,7 +177,7 @@ const TaskItem: Component<{ task: Task }> = (props) => {
             </div>
 
             {/* Category/Type icon */}
-            <span class="w-4 flex-shrink-0 flex items-center justify-center">
+            <span class="w-4 flex-shrink-0 flex items-center justify-center text-amber-600">
               <Show when={icon()}>
                 <Icon icon={icon()!} />
               </Show>
@@ -188,8 +188,8 @@ const TaskItem: Component<{ task: Task }> = (props) => {
               <span
                 class={`text-sm truncate block ${
                   props.task.status === "COMPLETE"
-                    ? "line-through text-gray-400"
-                    : "text-gray-800"
+                    ? "line-through text-stone-400"
+                    : "text-stone-800"
                 }`}
               >
                 {props.task.name.replace("Routine: ", "")}
@@ -197,7 +197,7 @@ const TaskItem: Component<{ task: Task }> = (props) => {
             </div>
 
             <Show when={props.task.status === "COMPLETE"}>
-              <div class="flex-shrink-0 w-4">
+              <div class="flex-shrink-0 w-4 text-amber-600">
                 <Icon key="checkMark" />
               </div>
             </Show>

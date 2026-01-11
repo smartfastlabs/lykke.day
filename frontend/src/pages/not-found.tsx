@@ -22,20 +22,12 @@ const NotFound: Component = () => {
           different schedule.
         </p>
 
-        <div class="flex gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            class="px-5 py-2.5 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
-          >
-            Go Back
-          </button>
-          <button
-            onClick={() => navigate("/")}
-            class="px-5 py-2.5 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-lg transition-colors"
-          >
-            Back to Today
-          </button>
-        </div>
+        <button
+          onClick={() => navigate("/")}
+          class="px-5 py-2.5 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-lg transition-colors"
+        >
+          Back to Today
+        </button>
       </div>
     </Page>
   );

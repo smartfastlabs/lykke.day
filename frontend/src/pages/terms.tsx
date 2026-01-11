@@ -5,13 +5,6 @@ const Terms: Component = () => {
   return (
     <div class="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex flex-col">
       <div class="max-w-2xl mx-auto px-6 py-16 flex-1">
-        <a
-          href="/landing"
-          class="inline-block mb-8 text-stone-500 hover:text-stone-700 transition-colors text-sm"
-        >
-          ← Back
-        </a>
-
         <h1 class="text-3xl font-bold text-stone-800 mb-2">Terms of Service</h1>
         <p class="text-stone-500 text-sm mb-10">Last updated: January 2026</p>
 
