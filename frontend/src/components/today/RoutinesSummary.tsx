@@ -9,6 +9,7 @@ import {
   faHeart,
   faChevronDown,
   faChevronRight,
+  faForward,
 } from "@fortawesome/free-solid-svg-icons";
 import type { Task, Routine } from "@/types/api";
 import { routineAPI } from "@/utils/api";
@@ -181,6 +182,7 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                       <For each={routine.tasks}>
                         {(task) => {
                           const isTaskComplete = () => task.status === "COMPLETE";
+                          const isTaskPunted = () => task.status === "PUNT";
                           // Extract just the task name after the routine prefix and dash
                           const taskDisplayName = () => {
                             let displayName = task.name;
@@ -194,24 +196,37 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                             return displayName;
                           };
 
+                          const getTaskIcon = () => {
+                            if (isTaskComplete()) return faCircleCheck;
+                            if (isTaskPunted()) return faForward;
+                            return faCircle;
+                          };
+
                           return (
                             <div class="flex items-center gap-2 text-xs">
                               <Icon
-                                icon={isTaskComplete() ? faCircleCheck : faCircle}
+                                icon={getTaskIcon()}
                                 class="w-3 h-3 flex-shrink-0"
                                 classList={{
                                   "fill-green-600": isTaskComplete(),
-                                  "fill-stone-300": !isTaskComplete(),
+                                  "fill-orange-500": isTaskPunted(),
+                                  "fill-stone-300": !isTaskComplete() && !isTaskPunted(),
                                 }}
                               />
                               <span
                                 class="leading-tight"
                                 classList={{
                                   "text-green-700 line-through": isTaskComplete(),
-                                  "text-stone-600": !isTaskComplete(),
+                                  "text-orange-600 italic": isTaskPunted(),
+                                  "text-stone-600": !isTaskComplete() && !isTaskPunted(),
                                 }}
                               >
                                 {taskDisplayName()}
+                                {isTaskPunted() && (
+                                  <span class="ml-1 text-[10px] text-orange-500">
+                                    (punted)
+                                  </span>
+                                )}
                               </span>
                             </div>
                           );

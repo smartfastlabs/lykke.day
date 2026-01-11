@@ -59,7 +59,7 @@ export const TodaysTasksView: Component = () => {
           </div>
 
           {/* Stats grid */}
-          <div class="grid grid-cols-3 gap-4">
+          <div class="grid grid-cols-4 gap-3">
             <div class="text-center p-3 bg-white/50 rounded-xl border border-stone-100">
               <div class="text-2xl font-bold text-stone-800">
                 {stats().total}
@@ -78,16 +78,13 @@ export const TodaysTasksView: Component = () => {
               </div>
               <div class="text-xs text-amber-600 mt-1">Pending</div>
             </div>
-          </div>
-
-          <Show when={stats().punted > 0}>
-            <div class="mt-4 p-3 bg-stone-50 rounded-xl border border-stone-200 text-center">
-              <span class="text-sm text-stone-600">
-                <span class="font-semibold">{stats().punted}</span> task
-                {stats().punted !== 1 ? "s" : ""} punted for later
-              </span>
+            <div class="text-center p-3 bg-gradient-to-br from-rose-50 to-red-50 rounded-xl border border-rose-200">
+              <div class="text-2xl font-bold text-rose-700">
+                {stats().punted}
+              </div>
+              <div class="text-xs text-rose-600 mt-1">Punted</div>
             </div>
-          </Show>
+          </div>
         </div>
       </div>
 

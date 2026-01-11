@@ -26,19 +26,15 @@ const MediaPage: Component<MediaPageProps> = (props) => {
             <h1 class="text-3xl md:text-4xl font-bold text-stone-800">
               {props.title}
             </h1>
-            <p class="text-stone-600 text-base md:text-lg leading-relaxed max-w-3xl">
-              {props.description}
-            </p>
+            <div class="text-stone-600 text-base md:text-lg leading-relaxed max-w-3xl space-y-4">
+              <For each={props.description.split("<br><br>")}>
+                {(paragraph) => <p innerHTML={paragraph} />}
+              </For>
+            </div>
           </div>
 
           <div class="mt-8 grid gap-5 sm:grid-cols-2">
-            <For each={props.items}>
-              {(item) => (
-                <MediaCard 
-                  item={item}
-                />
-              )}
-            </For>
+            <For each={props.items}>{(item) => <MediaCard item={item} />}</For>
           </div>
         </div>
       </div>
@@ -49,4 +45,3 @@ const MediaPage: Component<MediaPageProps> = (props) => {
 };
 
 export default MediaPage;
-

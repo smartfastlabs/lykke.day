@@ -91,7 +91,7 @@ const YouTube: Component = () => {
     <MediaPage
       title="Lykke.day YouTube Channels"
       subtitle="lykke.day youtube"
-      description="Channels that explore attention, rest, purpose, and kinder systems—voices that helped me rethink productivity and presence while building lykke.day."
+      description="These channels captivated me during my recovery—but they're just a starting point.<br><br>YouTube is incredible for visual learning and making complex ideas click. But here's the tradeoff: it's easy to lose three hours in a rabbit hole, emerging enlightened about dopamine regulation but having done nothing with your actual day.<br><br>YouTube can inspire change or become a way to avoid it. Watch, learn, get excited—then close the tab and go live. Consuming content about intentional living isn't the same as living intentionally."
       items={channels}
     />
   );

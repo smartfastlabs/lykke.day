@@ -118,7 +118,7 @@ const Books: Component = () => {
     <MediaPage
       title="Lykke.day Bookshelf"
       subtitle="lykke.day bookshelf"
-      description="Books I leaned on while recovering from burnout and COVID—reflections, routines, and kinder ways to rebuild—that nudged me toward creating lykke.day."
+      description="These books resonated with me during my recovery—but they're just a starting point.<br><br>There's something powerful about physically reading (yes, turning actual pages, not just listening at 2x speed while doing dishes). Books let you pause mid-sentence, sit with an idea. That depth is hard to replicate.<br><br>All the knowledge in the world won't change your life—it's what you do with your days. These are simply invitations to think differently about how you want to live yours."
       items={books}
     />
   );
