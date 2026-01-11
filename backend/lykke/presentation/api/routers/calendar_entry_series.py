@@ -3,7 +3,8 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
+
 from lykke.application.commands.calendar_entry_series import (
     UpdateCalendarEntrySeriesHandler,
 )
@@ -16,6 +17,7 @@ from lykke.presentation.api.schemas import (
     CalendarEntrySeriesSchema,
     CalendarEntrySeriesUpdateSchema,
     PagedResponseSchema,
+    QuerySchema,
 )
 from lykke.presentation.api.schemas.mappers import map_calendar_entry_series_to_schema
 
@@ -42,23 +44,29 @@ async def get_calendar_entry_series(
     return map_calendar_entry_series_to_schema(series)
 
 
-@router.get(
+@router.post(
     "/",
     response_model=PagedResponseSchema[CalendarEntrySeriesSchema],
 )
-async def list_calendar_entry_series(
+async def search_calendar_entry_series(
     list_handler: Annotated[
-        SearchCalendarEntrySeriesHandler, Depends(get_list_calendar_entry_series_handler)
+        SearchCalendarEntrySeriesHandler,
+        Depends(get_list_calendar_entry_series_handler),
     ],
-    limit: Annotated[int, Query(ge=1, le=1000)] = 50,
-    offset: Annotated[int, Query(ge=0)] = 0,
-    calendar_id: UUID | None = Query(default=None),
+    query: QuerySchema[value_objects.CalendarEntrySeriesQuery],
 ) -> PagedResponseSchema[CalendarEntrySeriesSchema]:
-    """List calendar entry series with optional calendar filtering."""
+    """Search calendar entry series with pagination and optional filters."""
+    # Build the search query from the request
+    filters = query.filters or value_objects.CalendarEntrySeriesQuery()
     search_query = value_objects.CalendarEntrySeriesQuery(
-        limit=limit,
-        offset=offset,
-        calendar_id=calendar_id,
+        limit=query.limit,
+        offset=query.offset,
+        calendar_id=filters.calendar_id,
+        platform_id=filters.platform_id,
+        created_before=filters.created_before,
+        created_after=filters.created_after,
+        order_by=filters.order_by,
+        order_by_desc=filters.order_by_desc,
     )
     result = await list_handler.run(search_query=search_query)
     items = [map_calendar_entry_series_to_schema(series) for series in result.items]
@@ -70,18 +78,6 @@ async def list_calendar_entry_series(
         has_next=result.has_next,
         has_previous=result.has_previous,
     )
-
-
-@router.post("/search", response_model=list[CalendarEntrySeriesSchema])
-async def search_calendar_entry_series(
-    list_handler: Annotated[
-        SearchCalendarEntrySeriesHandler, Depends(get_list_calendar_entry_series_handler)
-    ],
-    query: value_objects.CalendarEntrySeriesQuery,
-) -> list[CalendarEntrySeriesSchema]:
-    """Search calendar entry series."""
-    result = await list_handler.run(search_query=query)
-    return [map_calendar_entry_series_to_schema(series) for series in result.items]
 
 
 @router.put("/{uuid}", response_model=CalendarEntrySeriesSchema)
@@ -100,5 +96,3 @@ async def update_calendar_entry_series(
     )
     updated = await update_handler.run(series_id=uuid, update_data=update_object)
     return map_calendar_entry_series_to_schema(updated)
-
-

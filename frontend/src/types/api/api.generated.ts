@@ -317,33 +317,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * List Calendar Entry Series
-         * @description List calendar entry series with optional calendar filtering.
-         */
-        get: operations["list_calendar_entry_series_calendar_entry_series__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/calendar-entry-series/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
         get?: never;
         put?: never;
         /**
          * Search Calendar Entry Series
-         * @description Search calendar entry series.
+         * @description Search calendar entry series with pagination and optional filters.
          */
-        post: operations["search_calendar_entry_series_calendar_entry_series_search_post"];
+        post: operations["search_calendar_entry_series_calendar_entry_series__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -357,10 +337,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Subscriptions */
-        get: operations["list_subscriptions_push_subscriptions__get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Search Subscriptions
+         * @description Search push subscriptions with pagination and optional filters.
+         */
+        post: operations["search_subscriptions_push_subscriptions__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -658,17 +641,33 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get?: never;
+        put?: never;
         /**
-         * List Day Templates
-         * @description List day templates with pagination.
+         * Search Day Templates
+         * @description Search day templates with pagination and optional filters.
          */
-        get: operations["list_day_templates_day_templates__get"];
+        post: operations["search_day_templates_day_templates__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/day-templates/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         /**
          * Create Day Template
          * @description Create a new day template.
          */
-        post: operations["create_day_template_day_templates__post"];
+        post: operations["create_day_template_day_templates_create_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -813,17 +812,33 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get?: never;
+        put?: never;
         /**
-         * List Task Definitions
-         * @description List task definitions with pagination.
+         * Search Task Definitions
+         * @description Search task definitions with pagination and optional filters.
          */
-        get: operations["list_task_definitions_task_definitions__get"];
+        post: operations["search_task_definitions_task_definitions__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/task-definitions/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         /**
          * Create Task Definition
          * @description Create a new task definition.
          */
-        post: operations["create_task_definition_task_definitions__post"];
+        post: operations["create_task_definition_task_definitions_create_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -885,17 +900,33 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get?: never;
+        put?: never;
         /**
-         * List Routines
-         * @description List routines with pagination.
+         * Search Routines
+         * @description Search routines with pagination and optional filters.
          */
-        get: operations["list_routines_routines__get"];
+        post: operations["search_routines_routines__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routines/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         /**
          * Create Routine
          * @description Create a new routine.
          */
-        post: operations["create_routine_routines__post"];
+        post: operations["create_routine_routines_create_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -981,17 +1012,33 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get?: never;
+        put?: never;
         /**
-         * List Time Block Definitions
-         * @description List time block definitions with pagination.
+         * Search Time Block Definitions
+         * @description Search time block definitions with pagination and optional filters.
          */
-        get: operations["list_time_block_definitions_time_block_definitions__get"];
+        post: operations["search_time_block_definitions_time_block_definitions__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/time-block-definitions/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         /**
          * Create Time Block Definition
          * @description Create a new time block definition.
          */
-        post: operations["create_time_block_definition_time_block_definitions__post"];
+        post: operations["create_time_block_definition_time_block_definitions_create_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1097,17 +1144,33 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get?: never;
+        put?: never;
         /**
-         * List Calendars
-         * @description List calendars with pagination.
+         * Search Calendars
+         * @description Search calendars with pagination and optional filters.
          */
-        get: operations["list_calendars_calendars__get"];
+        post: operations["search_calendars_calendars__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendars/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         /**
          * Create Calendar
          * @description Create a new calendar.
          */
-        post: operations["create_calendar_calendars__post"];
+        post: operations["create_calendar_calendars_create_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1337,10 +1400,7 @@ export interface components {
              */
             date: string;
         };
-        /**
-         * CalendarEntrySeriesQuery
-         * @description Query class for CalendarEntrySeries entities.
-         */
+        /** CalendarEntrySeriesQuery */
         CalendarEntrySeriesQuery: {
             /** Limit */
             limit?: number | null;
@@ -1409,6 +1469,25 @@ export interface components {
             /** Name */
             name?: string | null;
             event_category?: components["schemas"]["EventCategory"] | null;
+        };
+        /** CalendarQuery */
+        CalendarQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Subscription Id */
+            subscription_id?: string | null;
+            /** Resource Id */
+            resource_id?: string | null;
         };
         /**
          * CalendarSchema
@@ -1523,6 +1602,23 @@ export interface components {
             routine_ids?: string[];
             /** Time Blocks */
             time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][];
+        };
+        /** DayTemplateQuery */
+        DayTemplateQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Slug */
+            slug?: string | null;
         };
         /**
          * DayTemplateRoutineCreateSchema
@@ -1703,10 +1799,40 @@ export interface components {
             /** Has Previous */
             has_previous: boolean;
         };
+        /** PagedResponseSchema[PushSubscriptionSchema] */
+        PagedResponseSchema_PushSubscriptionSchema_: {
+            /** Items */
+            items: components["schemas"]["PushSubscriptionSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
         /** PagedResponseSchema[RoutineSchema] */
         PagedResponseSchema_RoutineSchema_: {
             /** Items */
             items: components["schemas"]["RoutineSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[TaskDefinitionSchema] */
+        PagedResponseSchema_TaskDefinitionSchema_: {
+            /** Items */
+            items: components["schemas"]["TaskDefinitionSchema"][];
             /** Total */
             total: number;
             /** Limit */
@@ -1754,6 +1880,21 @@ export interface components {
             /** Auth */
             auth: string;
         };
+        /** PushSubscriptionQuery */
+        PushSubscriptionQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+        };
         /**
          * PushSubscriptionSchema
          * @description API schema for PushSubscription entity.
@@ -1788,6 +1929,104 @@ export interface components {
             /** Device Name */
             device_name?: string | null;
         };
+        /** QuerySchema[CalendarEntrySeriesQuery] */
+        QuerySchema_CalendarEntrySeriesQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["CalendarEntrySeriesQuery"] | null;
+        };
+        /** QuerySchema[CalendarQuery] */
+        QuerySchema_CalendarQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["CalendarQuery"] | null;
+        };
+        /** QuerySchema[DayTemplateQuery] */
+        QuerySchema_DayTemplateQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["DayTemplateQuery"] | null;
+        };
+        /** QuerySchema[PushSubscriptionQuery] */
+        QuerySchema_PushSubscriptionQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["PushSubscriptionQuery"] | null;
+        };
+        /** QuerySchema[RoutineQuery] */
+        QuerySchema_RoutineQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["RoutineQuery"] | null;
+        };
+        /** QuerySchema[TaskDefinitionQuery] */
+        QuerySchema_TaskDefinitionQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["TaskDefinitionQuery"] | null;
+        };
+        /** QuerySchema[TimeBlockDefinitionQuery] */
+        QuerySchema_TimeBlockDefinitionQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["TimeBlockDefinitionQuery"] | null;
+        };
         /**
          * RoutineCreateSchema
          * @description API schema for creating a Routine entity.
@@ -1796,17 +2035,35 @@ export interface components {
             /** Name */
             name: string;
             category: components["schemas"]["TaskCategory"];
-            routine_schedule: components["schemas"]["RoutineSchedule"];
+            routine_schedule: components["schemas"]["RoutineScheduleSchema"];
             /**
              * Description
              * @default
              */
             description: string;
             /** Tasks */
-            tasks?: components["schemas"]["RoutineTask-Input"][];
+            tasks?: components["schemas"]["RoutineTaskSchema-Input"][];
         };
-        /** RoutineSchedule */
-        RoutineSchedule: {
+        /** RoutineQuery */
+        RoutineQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+        };
+        /**
+         * RoutineScheduleSchema
+         * @description API schema for RoutineSchedule value object.
+         */
+        RoutineScheduleSchema: {
             frequency: components["schemas"]["TaskFrequency"];
             /** Weekdays */
             weekdays?: components["schemas"]["DayOfWeek"][] | null;
@@ -1828,46 +2085,14 @@ export interface components {
             /** Name */
             name: string;
             category: components["schemas"]["TaskCategory"];
-            routine_schedule: components["schemas"]["RoutineSchedule"];
+            routine_schedule: components["schemas"]["RoutineScheduleSchema"];
             /**
              * Description
              * @default
              */
             description: string;
             /** Tasks */
-            tasks?: components["schemas"]["RoutineTask-Output"][];
-        };
-        /** RoutineTask */
-        "RoutineTask-Input": {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id?: string;
-            /**
-             * Task Definition Id
-             * Format: uuid
-             */
-            task_definition_id: string;
-            /** Name */
-            name?: string | null;
-            schedule?: components["schemas"]["TaskSchedule"] | null;
-        };
-        /** RoutineTask */
-        "RoutineTask-Output": {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id?: string;
-            /**
-             * Task Definition Id
-             * Format: uuid
-             */
-            task_definition_id: string;
-            /** Name */
-            name?: string | null;
-            schedule?: components["schemas"]["TaskSchedule"] | null;
+            tasks?: components["schemas"]["RoutineTaskSchema-Output"][];
         };
         /**
          * RoutineTaskCreateSchema
@@ -1881,7 +2106,39 @@ export interface components {
             task_definition_id: string;
             /** Name */
             name?: string | null;
-            schedule?: components["schemas"]["TaskSchedule"] | null;
+            schedule?: components["schemas"]["TaskScheduleSchema"] | null;
+        };
+        /**
+         * RoutineTaskSchema
+         * @description API schema for RoutineTask value object.
+         */
+        "RoutineTaskSchema-Input": {
+            /** Id */
+            id?: string | null;
+            /**
+             * Task Definition Id
+             * Format: uuid
+             */
+            task_definition_id: string;
+            /** Name */
+            name?: string | null;
+            schedule?: components["schemas"]["TaskScheduleSchema"] | null;
+        };
+        /**
+         * RoutineTaskSchema
+         * @description API schema for RoutineTask value object.
+         */
+        "RoutineTaskSchema-Output": {
+            /** Id */
+            id?: string | null;
+            /**
+             * Task Definition Id
+             * Format: uuid
+             */
+            task_definition_id: string;
+            /** Name */
+            name?: string | null;
+            schedule?: components["schemas"]["TaskScheduleSchema"] | null;
         };
         /**
          * RoutineTaskUpdateSchema
@@ -1890,7 +2147,7 @@ export interface components {
         RoutineTaskUpdateSchema: {
             /** Name */
             name?: string | null;
-            schedule?: components["schemas"]["TaskSchedule"] | null;
+            schedule?: components["schemas"]["TaskScheduleSchema"] | null;
         };
         /**
          * RoutineUpdateSchema
@@ -1900,11 +2157,11 @@ export interface components {
             /** Name */
             name?: string | null;
             category?: components["schemas"]["TaskCategory"] | null;
-            routine_schedule?: components["schemas"]["RoutineSchedule"] | null;
+            routine_schedule?: components["schemas"]["RoutineScheduleSchema"] | null;
             /** Description */
             description?: string | null;
             /** Tasks */
-            tasks?: components["schemas"]["RoutineTask-Input"][] | null;
+            tasks?: components["schemas"]["RoutineTaskSchema-Input"][] | null;
         };
         /**
          * StatusResponse
@@ -1954,6 +2211,21 @@ export interface components {
             description: string;
             type: components["schemas"]["TaskType"];
         };
+        /** TaskDefinitionQuery */
+        TaskDefinitionQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+        };
         /**
          * TaskDefinitionSchema
          * @description API schema for TaskDefinition entity.
@@ -1988,16 +2260,6 @@ export interface components {
          * @enum {string}
          */
         TaskFrequency: "DAILY" | "CUSTOM_WEEKLY" | "WEEKLY" | "ONCE" | "YEARLY" | "MONTHLY" | "BI_WEEKLY" | "WORK_DAYS" | "WEEKENDS";
-        /** TaskSchedule */
-        TaskSchedule: {
-            /** Available Time */
-            available_time?: string | null;
-            /** Start Time */
-            start_time?: string | null;
-            /** End Time */
-            end_time?: string | null;
-            timing_type: components["schemas"]["TimingType"];
-        };
         /**
          * TaskScheduleSchema
          * @description API schema for TaskSchedule value object.
@@ -2075,6 +2337,21 @@ export interface components {
             description: string;
             type: components["schemas"]["TimeBlockType"];
             category: components["schemas"]["TimeBlockCategory"];
+        };
+        /** TimeBlockDefinitionQuery */
+        TimeBlockDefinitionQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
         };
         /**
          * TimeBlockDefinitionSchema
@@ -2814,18 +3091,18 @@ export interface operations {
             };
         };
     };
-    list_calendar_entry_series_calendar_entry_series__get: {
+    search_calendar_entry_series_calendar_entry_series__post: {
         parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-                calendar_id?: string | null;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_CalendarEntrySeriesQuery_"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -2847,7 +3124,7 @@ export interface operations {
             };
         };
     };
-    search_calendar_entry_series_calendar_entry_series_search_post: {
+    search_subscriptions_push_subscriptions__post: {
         parameters: {
             query?: never;
             header?: never;
@@ -2856,7 +3133,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CalendarEntrySeriesQuery"];
+                "application/json": components["schemas"]["QuerySchema_PushSubscriptionQuery_"];
             };
         };
         responses: {
@@ -2866,7 +3143,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CalendarEntrySeriesSchema"][];
+                    "application/json": components["schemas"]["PagedResponseSchema_PushSubscriptionSchema_"];
                 };
             };
             /** @description Validation Error */
@@ -2876,26 +3153,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_subscriptions_push_subscriptions__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PushSubscriptionSchema"][];
                 };
             };
         };
@@ -3414,17 +3671,18 @@ export interface operations {
             };
         };
     };
-    list_day_templates_day_templates__get: {
+    search_day_templates_day_templates__post: {
         parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_DayTemplateQuery_"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -3446,7 +3704,7 @@ export interface operations {
             };
         };
     };
-    create_day_template_day_templates__post: {
+    create_day_template_day_templates_create_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -3731,17 +3989,18 @@ export interface operations {
             };
         };
     };
-    list_task_definitions_task_definitions__get: {
+    search_task_definitions_task_definitions__post: {
         parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_TaskDefinitionQuery_"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -3749,7 +4008,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TaskDefinitionSchema"][];
+                    "application/json": components["schemas"]["PagedResponseSchema_TaskDefinitionSchema_"];
                 };
             };
             /** @description Validation Error */
@@ -3763,7 +4022,7 @@ export interface operations {
             };
         };
     };
-    create_task_definition_task_definitions__post: {
+    create_task_definition_task_definitions_create_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -3926,17 +4185,18 @@ export interface operations {
             };
         };
     };
-    list_routines_routines__get: {
+    search_routines_routines__post: {
         parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_RoutineQuery_"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -3958,7 +4218,7 @@ export interface operations {
             };
         };
     };
-    create_routine_routines__post: {
+    create_routine_routines_create_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -4189,17 +4449,18 @@ export interface operations {
             };
         };
     };
-    list_time_block_definitions_time_block_definitions__get: {
+    search_time_block_definitions_time_block_definitions__post: {
         parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_TimeBlockDefinitionQuery_"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -4221,7 +4482,7 @@ export interface operations {
             };
         };
     };
-    create_time_block_definition_time_block_definitions__post: {
+    create_time_block_definition_time_block_definitions_create_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -4464,17 +4725,18 @@ export interface operations {
             };
         };
     };
-    list_calendars_calendars__get: {
+    search_calendars_calendars__post: {
         parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_CalendarQuery_"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -4496,7 +4758,7 @@ export interface operations {
             };
         };
     };
-    create_calendar_calendars__post: {
+    create_calendar_calendars_create_post: {
         parameters: {
             query?: never;
             header?: never;

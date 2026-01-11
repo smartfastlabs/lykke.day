@@ -3,7 +3,8 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
+
 from lykke.application.commands.routine import (
     AddRoutineTaskHandler,
     CreateRoutineHandler,
@@ -19,6 +20,7 @@ from lykke.domain.value_objects import RoutineUpdateObject
 from lykke.domain.value_objects.routine import RoutineTask
 from lykke.presentation.api.schemas import (
     PagedResponseSchema,
+    QuerySchema,
     RoutineCreateSchema,
     RoutineSchema,
     RoutineTaskCreateSchema,
@@ -54,33 +56,39 @@ async def get_routine(
     return map_routine_to_schema(routine)
 
 
-@router.get("/", response_model=PagedResponseSchema[RoutineSchema])
-async def list_routines(
+@router.post("/", response_model=PagedResponseSchema[RoutineSchema])
+async def search_routines(
     list_routines_handler: Annotated[
         SearchRoutinesHandler, Depends(get_list_routines_handler)
     ],
-    limit: Annotated[int, Query(ge=1, le=1000)] = 50,
-    offset: Annotated[int, Query(ge=0)] = 0,
+    query: QuerySchema[value_objects.RoutineQuery],
 ) -> PagedResponseSchema[RoutineSchema]:
-    """List routines with pagination."""
-    result = await list_routines_handler.run(
-        search_query=value_objects.RoutineQuery(limit=limit, offset=offset),
+    """Search routines with pagination and optional filters."""
+    # Build the search query from the request
+    filters = query.filters or value_objects.RoutineQuery()
+    search_query = value_objects.RoutineQuery(
+        limit=query.limit,
+        offset=query.offset,
+        created_before=filters.created_before,
+        created_after=filters.created_after,
+        order_by=filters.order_by,
+        order_by_desc=filters.order_by_desc,
     )
-    paged_response = result
+    result = await list_routines_handler.run(search_query=search_query)
     # Convert entities to schemas
-    routine_schemas = [map_routine_to_schema(r) for r in paged_response.items]
+    routine_schemas = [map_routine_to_schema(r) for r in result.items]
     return PagedResponseSchema(
         items=routine_schemas,
-        total=paged_response.total,
-        limit=paged_response.limit,
-        offset=paged_response.offset,
-        has_next=paged_response.has_next,
-        has_previous=paged_response.has_previous,
+        total=result.total,
+        limit=result.limit,
+        offset=result.offset,
+        has_next=result.has_next,
+        has_previous=result.has_previous,
     )
 
 
 @router.post(
-    "/",
+    "/create",
     response_model=RoutineSchema,
     status_code=status.HTTP_201_CREATED,
 )
@@ -95,13 +103,13 @@ async def create_routine(
     # Convert schema to domain dataclasses
     from lykke.domain.value_objects.routine import RoutineSchedule, RoutineTask
     from lykke.domain.value_objects.task import TaskSchedule
-    
+
     routine_schedule = RoutineSchedule(
         frequency=routine_data.routine_schedule.frequency,
         weekdays=routine_data.routine_schedule.weekdays,
         day_number=routine_data.routine_schedule.day_number,
     )
-    
+
     tasks = []
     for task_schema in routine_data.tasks or []:
         task_schedule = None
@@ -112,7 +120,7 @@ async def create_routine(
                 end_time=task_schema.schedule.end_time,
                 timing_type=task_schema.schedule.timing_type,
             )
-        
+
         if task_schema.id:
             routine_task = RoutineTask(
                 id=task_schema.id,
@@ -127,7 +135,7 @@ async def create_routine(
                 schedule=task_schedule,
             )
         tasks.append(routine_task)
-    
+
     routine = RoutineEntity(
         user_id=user.id,
         name=routine_data.name,
@@ -152,7 +160,7 @@ async def update_routine(
     # Convert schema to domain dataclasses
     from lykke.domain.value_objects.routine import RoutineSchedule, RoutineTask
     from lykke.domain.value_objects.task import TaskSchedule
-    
+
     routine_schedule = None
     if update_data.routine_schedule:
         routine_schedule = RoutineSchedule(
@@ -160,7 +168,7 @@ async def update_routine(
             weekdays=update_data.routine_schedule.weekdays,
             day_number=update_data.routine_schedule.day_number,
         )
-    
+
     tasks = None
     if update_data.tasks is not None:
         tasks = []
@@ -173,7 +181,7 @@ async def update_routine(
                     end_time=task_schema.schedule.end_time,
                     timing_type=task_schema.schedule.timing_type,
                 )
-            
+
             if task_schema.id:
                 routine_task = RoutineTask(
                     id=task_schema.id,
@@ -188,7 +196,7 @@ async def update_routine(
                     schedule=task_schedule,
                 )
             tasks.append(routine_task)
-    
+
     update_object = RoutineUpdateObject(
         name=update_data.name,
         category=update_data.category,
@@ -228,7 +236,7 @@ async def add_routine_task(
 ) -> RoutineSchema:
     """Attach a task definition to a routine."""
     from lykke.domain.value_objects.task import TaskSchedule
-    
+
     task_schedule = None
     if routine_task.schedule:
         task_schedule = TaskSchedule(
@@ -237,7 +245,7 @@ async def add_routine_task(
             end_time=routine_task.schedule.end_time,
             timing_type=routine_task.schedule.timing_type,
         )
-    
+
     updated = await add_routine_task_handler.run(
         routine_id=uuid,
         task=RoutineTask(
@@ -263,7 +271,7 @@ async def update_routine_task(
 ) -> RoutineSchema:
     """Update an attached routine task (name/schedule)."""
     from lykke.domain.value_objects.task import TaskSchedule
-    
+
     task_schedule = None
     if routine_task_update.schedule:
         task_schedule = TaskSchedule(
@@ -272,7 +280,7 @@ async def update_routine_task(
             end_time=routine_task_update.schedule.end_time,
             timing_type=routine_task_update.schedule.timing_type,
         )
-    
+
     updated = await update_routine_task_handler.run(
         routine_id=uuid,
         task_update=RoutineTask(

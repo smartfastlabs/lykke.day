@@ -24,6 +24,7 @@ from .day_template import (
     DayTemplateUpdateSchema,
 )
 from .pagination import PagedResponseSchema
+from .query import QuerySchema
 from .user import (
     UserSchema,
     UserSettingsSchema,
@@ -108,6 +109,7 @@ __all__ = [
     "DayTemplateUpdateSchema",
     "DayUpdateSchema",
     "PagedResponseSchema",
+    "QuerySchema",
     "PushSubscriptionCreateSchema",
     "PushSubscriptionKeysSchema",
     "PushSubscriptionSchema",

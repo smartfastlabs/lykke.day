@@ -3,7 +3,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
 from lykke.application.commands.day_template import (
     AddDayTemplateRoutineHandler,
     AddDayTemplateTimeBlockHandler,
@@ -30,6 +30,7 @@ from lykke.presentation.api.schemas import (
     DayTemplateTimeBlockCreateSchema,
     DayTemplateUpdateSchema,
     PagedResponseSchema,
+    QuerySchema,
 )
 from lykke.presentation.api.schemas.mappers import map_day_template_to_schema
 
@@ -64,32 +65,39 @@ async def get_day_template(
     return map_day_template_to_schema(day_template)
 
 
-@router.get("/", response_model=PagedResponseSchema[DayTemplateSchema])
-async def list_day_templates(
+@router.post("/", response_model=PagedResponseSchema[DayTemplateSchema])
+async def search_day_templates(
     list_day_templates_handler: Annotated[
         SearchDayTemplatesHandler, Depends(get_list_day_templates_handler)
     ],
-    limit: Annotated[int, Query(ge=1, le=1000)] = 50,
-    offset: Annotated[int, Query(ge=0)] = 0,
+    query: QuerySchema[value_objects.DayTemplateQuery],
 ) -> PagedResponseSchema[DayTemplateSchema]:
-    """List day templates with pagination."""
-    result = await list_day_templates_handler.run(
-        search_query=value_objects.DayTemplateQuery(limit=limit, offset=offset),
+    """Search day templates with pagination and optional filters."""
+    # Build the search query from the request
+    filters = query.filters or value_objects.DayTemplateQuery()
+    search_query = value_objects.DayTemplateQuery(
+        limit=query.limit,
+        offset=query.offset,
+        slug=filters.slug,
+        created_before=filters.created_before,
+        created_after=filters.created_after,
+        order_by=filters.order_by,
+        order_by_desc=filters.order_by_desc,
     )
-    paged_response = result
+    result = await list_day_templates_handler.run(search_query=search_query)
     # Convert entities to schemas
-    template_schemas = [map_day_template_to_schema(dt) for dt in paged_response.items]
+    template_schemas = [map_day_template_to_schema(dt) for dt in result.items]
     return PagedResponseSchema(
         items=template_schemas,
-        total=paged_response.total,
-        limit=paged_response.limit,
-        offset=paged_response.offset,
-        has_next=paged_response.has_next,
-        has_previous=paged_response.has_previous,
+        total=result.total,
+        limit=result.limit,
+        offset=result.offset,
+        has_next=result.has_next,
+        has_previous=result.has_previous,
     )
 
 
-@router.post("/", response_model=DayTemplateSchema)
+@router.post("/create", response_model=DayTemplateSchema)
 async def create_day_template(
     day_template_data: DayTemplateCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],

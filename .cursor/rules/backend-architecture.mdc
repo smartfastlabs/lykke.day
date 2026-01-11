@@ -24,6 +24,7 @@ make test               # Run all tests
 make test-target TARGET=test_name   # Run specific test by name
 make test-target TARGET=path/to/test.py  # Run specific test file
 make typecheck          # Run mypy type checking
+make check-mappers      # Check for missing mappers/schemas
 make check              # Run both typecheck and tests
 
 # Type Generation
@@ -229,6 +230,11 @@ The codebase is organized into five layers, with strict dependency rules:
 
 ## Adding a New Feature
 
+> **⚠️ CRITICAL: Object & Mapper Management**  
+> This codebase has FOUR distinct object types (Entities, Data Objects, SQLAlchemy Tables, API Schemas) that must be kept in sync.  
+> **Before adding/modifying features, read:** `.cursor/commands/object-schema-mapper-guide.md`  
+> Missing mappers or using wrong object types are common errors that break the build.
+
 When adding a new feature, work bottom-up through the layers:
 
 ### 1. Domain Layer First
@@ -262,6 +268,7 @@ When adding a new feature, work bottom-up through the layers:
 ### 3. Infrastructure Layer Third
 
 - Implement repository protocols in `infrastructure/repositories/`
+- **CRITICAL:** Add `entity_to_row()` and `row_to_entity()` mappers in repository
 - Implement gateway protocols in `infrastructure/gateways/` if needed
 - Add database tables in `infrastructure/database/tables/` if needed
 - Create Alembic migrations if schema changes
@@ -271,11 +278,12 @@ When adding a new feature, work bottom-up through the layers:
 - Repository implementations: `planned/infrastructure/repositories/base/`
 - Table patterns: `planned/infrastructure/database/tables/`
 - Migration patterns: `backend/alembic/versions/`
+- **Mapping guide:** `.cursor/commands/object-schema-mapper-guide.md`
 
 ### 4. Presentation Layer Last
 
 - Add API schemas in `presentation/api/schemas/`
-- Add schema mappers in `presentation/api/schemas/mappers.py`
+- **CRITICAL:** Add `map_*_to_schema()` function in `presentation/api/schemas/mappers.py`
 - Add route handlers in `presentation/api/routers/`
 - Add dependency injection in `presentation/api/routers/dependencies/`
 
@@ -284,6 +292,7 @@ When adding a new feature, work bottom-up through the layers:
 - Router patterns: `planned/presentation/api/routers/`
 - Schema patterns: `planned/presentation/api/schemas/base.py`
 - Dependency patterns: `planned/presentation/api/routers/dependencies/`
+- **Mapping guide:** `.cursor/commands/object-schema-mapper-guide.md`
 
 ---
 

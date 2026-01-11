@@ -10,7 +10,7 @@ async def test_list_day_templates(authenticated_client):
     """Test listing day templates."""
     client, user = await authenticated_client()
 
-    response = client.get("/day-templates/")
+    response = client.post("/day-templates/", json={"limit": 50, "offset": 0})
 
     assert response.status_code == 200
     data = response.json()
@@ -30,7 +30,7 @@ async def test_get_day_template(authenticated_client):
     client, user = await authenticated_client()
 
     # First, list templates to get a UUID
-    list_response = client.get("/day-templates/")
+    list_response = client.post("/day-templates/", json={"limit": 50, "offset": 0})
     assert list_response.status_code == 200
     templates = list_response.json()["items"]
     template_id = templates[0]["id"]
@@ -71,7 +71,7 @@ async def test_create_day_template(authenticated_client):
         },
     }
 
-    response = client.post("/day-templates/", json=template_data)
+    response = client.post("/day-templates/create", json=template_data)
 
     assert response.status_code == 200
     data = response.json()
@@ -90,7 +90,7 @@ async def test_update_day_template(authenticated_client):
         "user_id": str(user.id),
         "slug": "update-test",
     }
-    create_response = client.post("/day-templates/", json=template_data)
+    create_response = client.post("/day-templates/create", json=template_data)
     assert create_response.status_code == 200
     template_id = create_response.json()["id"]
 
@@ -133,7 +133,7 @@ async def test_delete_day_template(authenticated_client):
         "user_id": str(user.id),
         "slug": "delete-test",
     }
-    create_response = client.post("/day-templates/", json=template_data)
+    create_response = client.post("/day-templates/create", json=template_data)
     assert create_response.status_code == 200
     template_id = create_response.json()["id"]
 
@@ -169,10 +169,10 @@ async def test_list_day_templates_pagination(authenticated_client):
             "user_id": str(user.id),
             "slug": f"pagination-test-{i}",
         }
-        client.post("/day-templates/", json=template_data)
+        client.post("/day-templates/create", json=template_data)
 
     # Test pagination
-    response = client.get("/day-templates/?limit=2&offset=0")
+    response = client.post("/day-templates/", json={"limit": 2, "offset": 0})
 
     assert response.status_code == 200
     data = response.json()

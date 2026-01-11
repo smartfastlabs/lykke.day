@@ -16,9 +16,11 @@ from lykke.application.queries.push_subscription import (
 from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import (
+    PagedResponseSchema,
     PushSubscriptionCreateSchema,
     PushSubscriptionSchema,
     PushSubscriptionUpdateSchema,
+    QuerySchema,
 )
 from lykke.presentation.api.schemas.mappers import map_push_subscription_to_schema
 
@@ -37,26 +39,48 @@ from .dependencies.user import get_current_user
 router = APIRouter()
 
 
-@router.get("/subscriptions/", response_model=list[PushSubscriptionSchema])
-async def list_subscriptions(
+@router.post(
+    "/subscriptions/", response_model=PagedResponseSchema[PushSubscriptionSchema]
+)
+async def search_subscriptions(
     list_push_subscriptions_handler: Annotated[
         SearchPushSubscriptionsHandler, Depends(get_list_push_subscriptions_handler)
     ],
-) -> list[PushSubscriptionSchema]:
-    result = await list_push_subscriptions_handler.run()
-    return [map_push_subscription_to_schema(sub) for sub in result.items]
+    query: QuerySchema[value_objects.PushSubscriptionQuery],
+) -> PagedResponseSchema[PushSubscriptionSchema]:
+    """Search push subscriptions with pagination and optional filters."""
+    # Build the search query from the request
+    filters = query.filters or value_objects.PushSubscriptionQuery()
+    search_query = value_objects.PushSubscriptionQuery(
+        limit=query.limit,
+        offset=query.offset,
+        created_before=filters.created_before,
+        created_after=filters.created_after,
+        order_by=filters.order_by,
+        order_by_desc=filters.order_by_desc,
+    )
+    result = await list_push_subscriptions_handler.run(search_query=search_query)
+    subscription_schemas = [
+        map_push_subscription_to_schema(sub) for sub in result.items
+    ]
+    return PagedResponseSchema(
+        items=subscription_schemas,
+        total=result.total,
+        limit=result.limit,
+        offset=result.offset,
+        has_next=result.has_next,
+        has_previous=result.has_previous,
+    )
 
 
 @router.get("/subscriptions/{subscription_id}", response_model=PushSubscriptionSchema)
 async def get_subscription(
     subscription_id: str,
-    get_push_subscription_handler: Annotated[
+    push_subscription_handler: Annotated[
         GetPushSubscriptionHandler, Depends(get_push_subscription_handler)
     ],
 ) -> PushSubscriptionSchema:
-    result = await get_push_subscription_handler.run(
-        subscription_id=UUID(subscription_id)
-    )
+    result = await push_subscription_handler.run(subscription_id=UUID(subscription_id))
     return map_push_subscription_to_schema(result)
 
 

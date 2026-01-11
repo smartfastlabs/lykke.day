@@ -3,7 +3,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
 
 from lykke.application.commands.time_block_definition import (
     CreateTimeBlockDefinitionHandler,
@@ -19,6 +19,7 @@ from lykke.domain.data_objects import TimeBlockDefinition
 from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import (
     PagedResponseSchema,
+    QuerySchema,
     TimeBlockDefinitionCreateSchema,
     TimeBlockDefinitionSchema,
     TimeBlockDefinitionUpdateSchema,
@@ -53,38 +54,44 @@ async def get_time_block_definition(
     return map_time_block_definition_to_schema(time_block_definition)
 
 
-@router.get(
+@router.post(
     "/", response_model=PagedResponseSchema[TimeBlockDefinitionSchema]
 )
-async def list_time_block_definitions(
+async def search_time_block_definitions(
     list_time_block_definitions_handler: Annotated[
         SearchTimeBlockDefinitionsHandler,
         Depends(get_list_time_block_definitions_handler),
     ],
-    limit: Annotated[int, Query(ge=1, le=1000)] = 50,
-    offset: Annotated[int, Query(ge=0)] = 0,
+    query: QuerySchema[value_objects.TimeBlockDefinitionQuery],
 ) -> PagedResponseSchema[TimeBlockDefinitionSchema]:
-    """List time block definitions with pagination."""
-    result = await list_time_block_definitions_handler.run(
-        search_query=value_objects.TimeBlockDefinitionQuery(limit=limit, offset=offset),
+    """Search time block definitions with pagination and optional filters."""
+    # Build the search query from the request
+    filters = query.filters or value_objects.TimeBlockDefinitionQuery()
+    search_query = value_objects.TimeBlockDefinitionQuery(
+        limit=query.limit,
+        offset=query.offset,
+        created_before=filters.created_before,
+        created_after=filters.created_after,
+        order_by=filters.order_by,
+        order_by_desc=filters.order_by_desc,
     )
-    paged_response = result
+    result = await list_time_block_definitions_handler.run(search_query=search_query)
     # Convert data objects to schemas
     time_block_definition_schemas = [
-        map_time_block_definition_to_schema(tbd) for tbd in paged_response.items
+        map_time_block_definition_to_schema(tbd) for tbd in result.items
     ]
     return PagedResponseSchema(
         items=time_block_definition_schemas,
-        total=paged_response.total,
-        limit=paged_response.limit,
-        offset=paged_response.offset,
-        has_next=paged_response.has_next,
-        has_previous=paged_response.has_previous,
+        total=result.total,
+        limit=result.limit,
+        offset=result.offset,
+        has_next=result.has_next,
+        has_previous=result.has_previous,
     )
 
 
 @router.post(
-    "/",
+    "/create",
     response_model=TimeBlockDefinitionSchema,
     status_code=status.HTTP_201_CREATED,
 )

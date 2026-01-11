@@ -130,12 +130,15 @@ function createCrudMethods<T extends EntityWithId>(type: string) {
     get: (id: string): Promise<T> => fetchData<T>(`/api/${type}/${id}`),
 
     getAll: async (): Promise<T[]> => {
-      const data = await fetchData<T[] | PaginatedResponse<T>>(`/api/${type}/`);
-      return extractItems(data);
+      const data = await fetchData<PaginatedResponse<T>>(`/api/${type}/`, {
+        method: "POST",
+        body: JSON.stringify({ limit: 1000, offset: 0 }),
+      });
+      return data.items;
     },
 
     create: (item: Omit<T, "id">): Promise<T> =>
-      fetchData<T>(`/api/${type}/`, {
+      fetchData<T>(`/api/${type}/create`, {
         method: "POST",
         body: JSON.stringify(item),
       }),
@@ -272,8 +275,16 @@ export const dayAPI = {
 };
 
 export const pushAPI = {
-  getSubscriptions: (): Promise<PushSubscription[]> =>
-    fetchData<PushSubscription[]>("/api/push/subscriptions/"),
+  getSubscriptions: async (): Promise<PushSubscription[]> => {
+    const data = await fetchData<PaginatedResponse<PushSubscription>>(
+      "/api/push/subscriptions/",
+      {
+        method: "POST",
+        body: JSON.stringify({ limit: 1000, offset: 0 }),
+      }
+    );
+    return data.items;
+  },
 
   get: (id: string): Promise<PushSubscription> =>
     fetchData<PushSubscription>(`/api/push/subscriptions/${id}`),
@@ -376,8 +387,14 @@ export const calendarAPI = {
   get: (id: string): Promise<Calendar> => fetchData<Calendar>(`/api/calendars/${id}`),
 
   getAll: async (): Promise<Calendar[]> => {
-    const data = await fetchData<Calendar[] | PaginatedResponse<Calendar>>(`/api/calendars/`);
-    return extractItems(data);
+    const data = await fetchData<PaginatedResponse<Calendar>>(
+      `/api/calendars/`,
+      {
+        method: "POST",
+        body: JSON.stringify({ limit: 1000, offset: 0 }),
+      }
+    );
+    return data.items;
   },
 
   update: (item: Calendar): Promise<Calendar> =>
@@ -406,10 +423,14 @@ export const calendarEntrySeriesAPI = {
     fetchData<CalendarEntrySeries>(`/api/calendar-entry-series/${id}`),
 
   getAll: async (): Promise<CalendarEntrySeries[]> => {
-    const data = await fetchData<CalendarEntrySeries[] | PaginatedResponse<CalendarEntrySeries>>(
-      `/api/calendar-entry-series/`
+    const data = await fetchData<PaginatedResponse<CalendarEntrySeries>>(
+      `/api/calendar-entry-series/`,
+      {
+        method: "POST",
+        body: JSON.stringify({ limit: 1000, offset: 0 }),
+      }
     );
-    return extractItems(data);
+    return data.items;
   },
 
   update: (item: CalendarEntrySeries): Promise<CalendarEntrySeries> =>
@@ -418,11 +439,20 @@ export const calendarEntrySeriesAPI = {
       body: JSON.stringify(item),
     }),
 
-  searchByCalendar: (calendarId: string): Promise<CalendarEntrySeries[]> =>
-    fetchData<CalendarEntrySeries[]>("/api/calendar-entry-series/search", {
-      method: "POST",
-      body: JSON.stringify({ calendar_id: calendarId }),
-    }),
+  searchByCalendar: async (calendarId: string): Promise<CalendarEntrySeries[]> => {
+    const data = await fetchData<PaginatedResponse<CalendarEntrySeries>>(
+      "/api/calendar-entry-series/",
+      {
+        method: "POST",
+        body: JSON.stringify({ 
+          limit: 1000, 
+          offset: 0,
+          filters: { calendar_id: calendarId }
+        }),
+      }
+    );
+    return data.items;
+  },
 };
 
 export const marketingAPI = {

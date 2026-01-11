@@ -28,6 +28,7 @@ python -m alembic upgrade head
 make test                           # Run all tests
 make test-target TARGET=test_name   # Run tests matching name
 make typecheck                      # Run mypy
+make check-mappers                  # Check for missing mappers/schemas
 make check                          # Run typecheck + tests
 
 # Development

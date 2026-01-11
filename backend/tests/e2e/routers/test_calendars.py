@@ -35,7 +35,7 @@ async def test_list_calendars(authenticated_client):
     )
     await calendar_repo.put(calendar)
 
-    response = client.get("/calendars/")
+    response = client.post("/calendars/", json={"limit": 50, "offset": 0})
 
     assert response.status_code == 200
     data = response.json()
@@ -120,7 +120,7 @@ async def test_create_calendar(authenticated_client):
         "platform_id": "new-platform-id",
     }
 
-    response = client.post("/calendars/", json=calendar_data)
+    response = client.post("/calendars/create", json=calendar_data)
 
     assert response.status_code == 200
     data = response.json()
@@ -154,7 +154,7 @@ async def test_update_calendar(authenticated_client):
         "platform": "google",
         "platform_id": "update-test-id",
     }
-    create_response = client.post("/calendars/", json=calendar_data)
+    create_response = client.post("/calendars/create", json=calendar_data)
     assert create_response.status_code == 200
     calendar_id = create_response.json()["id"]
 
@@ -227,7 +227,7 @@ async def test_delete_calendar(authenticated_client):
         "platform": "google",
         "platform_id": "delete-test-id",
     }
-    create_response = client.post("/calendars/", json=calendar_data)
+    create_response = client.post("/calendars/create", json=calendar_data)
     assert create_response.status_code == 200
     calendar_id = create_response.json()["id"]
 
@@ -281,7 +281,7 @@ async def test_list_calendars_pagination(authenticated_client):
         await calendar_repo.put(calendar)
 
     # Test pagination
-    response = client.get("/calendars/?limit=2&offset=0")
+    response = client.post("/calendars/", json={"limit": 2, "offset": 0})
 
     assert response.status_code == 200
     data = response.json()

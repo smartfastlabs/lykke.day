@@ -805,97 +805,18 @@
       }
     },
     "/calendar-entry-series/": {
-      "get": {
-        "tags": [
-          "calendar-entry-series"
-        ],
-        "summary": "List Calendar Entry Series",
-        "description": "List calendar entry series with optional calendar filtering.",
-        "operationId": "list_calendar_entry_series_calendar_entry_series__get",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          },
-          {
-            "name": "calendar_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Calendar Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PagedResponseSchema_CalendarEntrySeriesSchema_"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/calendar-entry-series/search": {
       "post": {
         "tags": [
           "calendar-entry-series"
         ],
         "summary": "Search Calendar Entry Series",
-        "description": "Search calendar entry series.",
-        "operationId": "search_calendar_entry_series_calendar_entry_series_search_post",
+        "description": "Search calendar entry series with pagination and optional filters.",
+        "operationId": "search_calendar_entry_series_calendar_entry_series__post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CalendarEntrySeriesQuery"
+                "$ref": "#/components/schemas/QuerySchema_CalendarEntrySeriesQuery_"
               }
             }
           },
@@ -907,11 +828,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/CalendarEntrySeriesSchema"
-                  },
-                  "type": "array",
-                  "title": "Response Search Calendar Entry Series Calendar Entry Series Search Post"
+                  "$ref": "#/components/schemas/PagedResponseSchema_CalendarEntrySeriesSchema_"
                 }
               }
             }
@@ -935,24 +852,41 @@
       }
     },
     "/push/subscriptions/": {
-      "get": {
+      "post": {
         "tags": [
           "push",
           "notifications"
         ],
-        "summary": "List Subscriptions",
-        "operationId": "list_subscriptions_push_subscriptions__get",
+        "summary": "Search Subscriptions",
+        "description": "Search push subscriptions with pagination and optional filters.",
+        "operationId": "search_subscriptions_push_subscriptions__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_PushSubscriptionQuery_"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PushSubscriptionSchema"
-                  },
-                  "type": "array",
-                  "title": "Response List Subscriptions Push Subscriptions  Get"
+                  "$ref": "#/components/schemas/PagedResponseSchema_PushSubscriptionSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -1803,43 +1737,23 @@
       }
     },
     "/day-templates/": {
-      "get": {
+      "post": {
         "tags": [
           "day-templates"
         ],
-        "summary": "List Day Templates",
-        "description": "List day templates with pagination.",
-        "operationId": "list_day_templates_day_templates__get",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
+        "summary": "Search Day Templates",
+        "description": "Search day templates with pagination and optional filters.",
+        "operationId": "search_day_templates_day_templates__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_DayTemplateQuery_"
+              }
             }
           },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1861,29 +1775,31 @@
               }
             }
           }
-        }
-      },
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/day-templates/create": {
       "post": {
         "tags": [
           "day-templates"
         ],
         "summary": "Create Day Template",
         "description": "Create a new day template.",
-        "operationId": "create_day_template_day_templates__post",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
+        "operationId": "create_day_template_day_templates_create_post",
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/DayTemplateCreateSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1906,7 +1822,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
       }
     },
     "/day-templates/{uuid}/routines": {
@@ -2328,54 +2249,30 @@
       }
     },
     "/task-definitions/": {
-      "get": {
+      "post": {
         "tags": [
           "task-definitions"
         ],
-        "summary": "List Task Definitions",
-        "description": "List task definitions with pagination.",
-        "operationId": "list_task_definitions_task_definitions__get",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
+        "summary": "Search Task Definitions",
+        "description": "Search task definitions with pagination and optional filters.",
+        "operationId": "search_task_definitions_task_definitions__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_TaskDefinitionQuery_"
+              }
             }
           },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TaskDefinitionSchema"
-                  },
-                  "title": "Response List Task Definitions Task Definitions  Get"
+                  "$ref": "#/components/schemas/PagedResponseSchema_TaskDefinitionSchema_"
                 }
               }
             }
@@ -2390,29 +2287,31 @@
               }
             }
           }
-        }
-      },
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/task-definitions/create": {
       "post": {
         "tags": [
           "task-definitions"
         ],
         "summary": "Create Task Definition",
         "description": "Create a new task definition.",
-        "operationId": "create_task_definition_task_definitions__post",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
+        "operationId": "create_task_definition_task_definitions_create_post",
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TaskDefinitionCreateSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -2435,7 +2334,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
       }
     },
     "/task-definitions/bulk/": {
@@ -2641,43 +2545,23 @@
       }
     },
     "/routines/": {
-      "get": {
+      "post": {
         "tags": [
           "routines"
         ],
-        "summary": "List Routines",
-        "description": "List routines with pagination.",
-        "operationId": "list_routines_routines__get",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
+        "summary": "Search Routines",
+        "description": "Search routines with pagination and optional filters.",
+        "operationId": "search_routines_routines__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_RoutineQuery_"
+              }
             }
           },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2699,29 +2583,31 @@
               }
             }
           }
-        }
-      },
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/routines/create": {
       "post": {
         "tags": [
           "routines"
         ],
         "summary": "Create Routine",
         "description": "Create a new routine.",
-        "operationId": "create_routine_routines__post",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
+        "operationId": "create_routine_routines_create_post",
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RoutineCreateSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -2744,7 +2630,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
       }
     },
     "/routines/{uuid}/tasks": {
@@ -3079,43 +2970,23 @@
       }
     },
     "/time-block-definitions/": {
-      "get": {
+      "post": {
         "tags": [
           "time-block-definitions"
         ],
-        "summary": "List Time Block Definitions",
-        "description": "List time block definitions with pagination.",
-        "operationId": "list_time_block_definitions_time_block_definitions__get",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
+        "summary": "Search Time Block Definitions",
+        "description": "Search time block definitions with pagination and optional filters.",
+        "operationId": "search_time_block_definitions_time_block_definitions__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_TimeBlockDefinitionQuery_"
+              }
             }
           },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3137,29 +3008,31 @@
               }
             }
           }
-        }
-      },
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/time-block-definitions/create": {
       "post": {
         "tags": [
           "time-block-definitions"
         ],
         "summary": "Create Time Block Definition",
         "description": "Create a new time block definition.",
-        "operationId": "create_time_block_definition_time_block_definitions__post",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
+        "operationId": "create_time_block_definition_time_block_definitions_create_post",
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/TimeBlockDefinitionCreateSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -3182,7 +3055,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
       }
     },
     "/calendars/{uuid}": {
@@ -3513,43 +3391,23 @@
       }
     },
     "/calendars/": {
-      "get": {
+      "post": {
         "tags": [
           "calendars"
         ],
-        "summary": "List Calendars",
-        "description": "List calendars with pagination.",
-        "operationId": "list_calendars_calendars__get",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
+        "summary": "Search Calendars",
+        "description": "Search calendars with pagination and optional filters.",
+        "operationId": "search_calendars_calendars__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_CalendarQuery_"
+              }
             }
           },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3571,29 +3429,31 @@
               }
             }
           }
-        }
-      },
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/calendars/create": {
       "post": {
         "tags": [
           "calendars"
         ],
         "summary": "Create Calendar",
         "description": "Create a new calendar.",
-        "operationId": "create_calendar_calendars__post",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
+        "operationId": "create_calendar_calendars_create_post",
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CalendarCreateSchema"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -3616,7 +3476,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
       }
     },
     "/utils/trigger-example-task": {
@@ -4173,8 +4038,7 @@
           }
         },
         "type": "object",
-        "title": "CalendarEntrySeriesQuery",
-        "description": "Query class for CalendarEntrySeries entities."
+        "title": "CalendarEntrySeriesQuery"
       },
       "CalendarEntrySeriesSchema": {
         "properties": {
@@ -4308,6 +4172,102 @@
         "type": "object",
         "title": "CalendarEntrySeriesUpdateSchema",
         "description": "API schema for updating a CalendarEntrySeries."
+      },
+      "CalendarQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          },
+          "subscription_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Id"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Id"
+          }
+        },
+        "type": "object",
+        "title": "CalendarQuery"
       },
       "CalendarSchema": {
         "properties": {
@@ -4641,6 +4601,91 @@
         ],
         "title": "DayTemplateCreateSchema",
         "description": "API schema for creating a DayTemplate entity."
+      },
+      "DayTemplateQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          }
+        },
+        "type": "object",
+        "title": "DayTemplateQuery"
       },
       "DayTemplateRoutineCreateSchema": {
         "properties": {
@@ -5102,6 +5147,47 @@
         ],
         "title": "PagedResponseSchema[DayTemplateSchema]"
       },
+      "PagedResponseSchema_PushSubscriptionSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PushSubscriptionSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedResponseSchema[PushSubscriptionSchema]"
+      },
       "PagedResponseSchema_RoutineSchema_": {
         "properties": {
           "items": {
@@ -5142,6 +5228,47 @@
           "has_previous"
         ],
         "title": "PagedResponseSchema[RoutineSchema]"
+      },
+      "PagedResponseSchema_TaskDefinitionSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TaskDefinitionSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedResponseSchema[TaskDefinitionSchema]"
       },
       "PagedResponseSchema_TimeBlockDefinitionSchema_": {
         "properties": {
@@ -5226,6 +5353,80 @@
         "title": "PushSubscriptionKeysSchema",
         "description": "API schema for push subscription keys."
       },
+      "PushSubscriptionQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          }
+        },
+        "type": "object",
+        "title": "PushSubscriptionQuery"
+      },
       "PushSubscriptionSchema": {
         "properties": {
           "id": {
@@ -5303,6 +5504,209 @@
         "title": "PushSubscriptionUpdateSchema",
         "description": "API schema for PushSubscription update requests."
       },
+      "QuerySchema_CalendarEntrySeriesQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalendarEntrySeriesQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[CalendarEntrySeriesQuery]"
+      },
+      "QuerySchema_CalendarQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalendarQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[CalendarQuery]"
+      },
+      "QuerySchema_DayTemplateQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DayTemplateQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[DayTemplateQuery]"
+      },
+      "QuerySchema_PushSubscriptionQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PushSubscriptionQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[PushSubscriptionQuery]"
+      },
+      "QuerySchema_RoutineQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoutineQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[RoutineQuery]"
+      },
+      "QuerySchema_TaskDefinitionQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskDefinitionQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[TaskDefinitionQuery]"
+      },
+      "QuerySchema_TimeBlockDefinitionQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeBlockDefinitionQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[TimeBlockDefinitionQuery]"
+      },
       "RoutineCreateSchema": {
         "properties": {
           "name": {
@@ -5313,7 +5717,7 @@
             "$ref": "#/components/schemas/TaskCategory"
           },
           "routine_schedule": {
-            "$ref": "#/components/schemas/RoutineSchedule"
+            "$ref": "#/components/schemas/RoutineScheduleSchema"
           },
           "description": {
             "type": "string",
@@ -5322,7 +5726,7 @@
           },
           "tasks": {
             "items": {
-              "$ref": "#/components/schemas/RoutineTask-Input"
+              "$ref": "#/components/schemas/RoutineTaskSchema-Input"
             },
             "type": "array",
             "title": "Tasks"
@@ -5337,7 +5741,81 @@
         "title": "RoutineCreateSchema",
         "description": "API schema for creating a Routine entity."
       },
-      "RoutineSchedule": {
+      "RoutineQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          }
+        },
+        "type": "object",
+        "title": "RoutineQuery"
+      },
+      "RoutineScheduleSchema": {
         "properties": {
           "frequency": {
             "$ref": "#/components/schemas/TaskFrequency"
@@ -5372,7 +5850,8 @@
         "required": [
           "frequency"
         ],
-        "title": "RoutineSchedule"
+        "title": "RoutineScheduleSchema",
+        "description": "API schema for RoutineSchedule value object."
       },
       "RoutineSchema": {
         "properties": {
@@ -5401,7 +5880,7 @@
             "$ref": "#/components/schemas/TaskCategory"
           },
           "routine_schedule": {
-            "$ref": "#/components/schemas/RoutineSchedule"
+            "$ref": "#/components/schemas/RoutineScheduleSchema"
           },
           "description": {
             "type": "string",
@@ -5410,7 +5889,7 @@
           },
           "tasks": {
             "items": {
-              "$ref": "#/components/schemas/RoutineTask-Output"
+              "$ref": "#/components/schemas/RoutineTaskSchema-Output"
             },
             "type": "array",
             "title": "Tasks"
@@ -5425,86 +5904,6 @@
         ],
         "title": "RoutineSchema",
         "description": "API schema for Routine entity."
-      },
-      "RoutineTask-Input": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "task_definition_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Task Definition Id"
-          },
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "schedule": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/TaskSchedule"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "task_definition_id"
-        ],
-        "title": "RoutineTask"
-      },
-      "RoutineTask-Output": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "task_definition_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Task Definition Id"
-          },
-          "name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          },
-          "schedule": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/TaskSchedule"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "task_definition_id"
-        ],
-        "title": "RoutineTask"
       },
       "RoutineTaskCreateSchema": {
         "properties": {
@@ -5527,7 +5926,7 @@
           "schedule": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/TaskSchedule"
+                "$ref": "#/components/schemas/TaskScheduleSchema"
               },
               {
                 "type": "null"
@@ -5541,6 +5940,102 @@
         ],
         "title": "RoutineTaskCreateSchema",
         "description": "API schema for attaching a RoutineTask."
+      },
+      "RoutineTaskSchema-Input": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "task_definition_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Definition Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_definition_id"
+        ],
+        "title": "RoutineTaskSchema",
+        "description": "API schema for RoutineTask value object."
+      },
+      "RoutineTaskSchema-Output": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "task_definition_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Definition Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_definition_id"
+        ],
+        "title": "RoutineTaskSchema",
+        "description": "API schema for RoutineTask value object."
       },
       "RoutineTaskUpdateSchema": {
         "properties": {
@@ -5558,7 +6053,7 @@
           "schedule": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/TaskSchedule"
+                "$ref": "#/components/schemas/TaskScheduleSchema"
               },
               {
                 "type": "null"
@@ -5596,7 +6091,7 @@
           "routine_schedule": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/RoutineSchedule"
+                "$ref": "#/components/schemas/RoutineScheduleSchema"
               },
               {
                 "type": "null"
@@ -5618,7 +6113,7 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/RoutineTask-Input"
+                  "$ref": "#/components/schemas/RoutineTaskSchema-Input"
                 },
                 "type": "array"
               },
@@ -5766,6 +6261,80 @@
         "title": "TaskDefinitionCreateSchema",
         "description": "API schema for creating a TaskDefinition entity."
       },
+      "TaskDefinitionQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          }
+        },
+        "type": "object",
+        "title": "TaskDefinitionQuery"
+      },
       "TaskDefinitionSchema": {
         "properties": {
           "id": {
@@ -5860,54 +6429,6 @@
           "WEEKENDS"
         ],
         "title": "TaskFrequency"
-      },
-      "TaskSchedule": {
-        "properties": {
-          "available_time": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Available Time"
-          },
-          "start_time": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Start Time"
-          },
-          "end_time": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "End Time"
-          },
-          "timing_type": {
-            "$ref": "#/components/schemas/TimingType"
-          }
-        },
-        "type": "object",
-        "required": [
-          "timing_type"
-        ],
-        "title": "TaskSchedule"
       },
       "TaskScheduleSchema": {
         "properties": {
@@ -6166,6 +6687,80 @@
         ],
         "title": "TimeBlockDefinitionCreateSchema",
         "description": "API schema for creating a TimeBlockDefinition."
+      },
+      "TimeBlockDefinitionQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          }
+        },
+        "type": "object",
+        "title": "TimeBlockDefinitionQuery"
       },
       "TimeBlockDefinitionSchema": {
         "properties": {

@@ -3,7 +3,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from lykke.application.commands.calendar import (
     CreateCalendarHandler,
     DeleteCalendarHandler,
@@ -24,6 +24,7 @@ from lykke.presentation.api.schemas import (
     CalendarSchema,
     CalendarUpdateSchema,
     PagedResponseSchema,
+    QuerySchema,
 )
 from lykke.presentation.api.schemas.mappers import map_calendar_to_schema
 from lykke.presentation.workers.tasks import sync_single_calendar_task
@@ -129,32 +130,40 @@ async def reset_calendar_subscriptions(
     return [map_calendar_to_schema(calendar) for calendar in updated_calendars]
 
 
-@router.get("/", response_model=PagedResponseSchema[CalendarSchema])
-async def list_calendars(
+@router.post("/", response_model=PagedResponseSchema[CalendarSchema])
+async def search_calendars(
     list_calendars_handler: Annotated[
         SearchCalendarsHandler, Depends(get_list_calendars_handler)
     ],
-    limit: Annotated[int, Query(ge=1, le=1000)] = 50,
-    offset: Annotated[int, Query(ge=0)] = 0,
+    query: QuerySchema[value_objects.CalendarQuery],
 ) -> PagedResponseSchema[CalendarSchema]:
-    """List calendars with pagination."""
-    result = await list_calendars_handler.run(
-        search_query=value_objects.CalendarQuery(limit=limit, offset=offset),
+    """Search calendars with pagination and optional filters."""
+    # Build the search query from the request
+    filters = query.filters or value_objects.CalendarQuery()
+    search_query = value_objects.CalendarQuery(
+        limit=query.limit,
+        offset=query.offset,
+        subscription_id=filters.subscription_id,
+        resource_id=filters.resource_id,
+        created_before=filters.created_before,
+        created_after=filters.created_after,
+        order_by=filters.order_by,
+        order_by_desc=filters.order_by_desc,
     )
-    paged_response = result
+    result = await list_calendars_handler.run(search_query=search_query)
     # Convert entities to schemas
-    calendar_schemas = [map_calendar_to_schema(c) for c in paged_response.items]
+    calendar_schemas = [map_calendar_to_schema(c) for c in result.items]
     return PagedResponseSchema(
         items=calendar_schemas,
-        total=paged_response.total,
-        limit=paged_response.limit,
-        offset=paged_response.offset,
-        has_next=paged_response.has_next,
-        has_previous=paged_response.has_previous,
+        total=result.total,
+        limit=result.limit,
+        offset=result.offset,
+        has_next=result.has_next,
+        has_previous=result.has_previous,
     )
 
 
-@router.post("/", response_model=CalendarSchema)
+@router.post("/create", response_model=CalendarSchema)
 async def create_calendar(
     calendar_data: CalendarCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],

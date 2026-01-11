@@ -3,7 +3,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from lykke.application.commands.task_definition import (
     BulkCreateTaskDefinitionsHandler,
     CreateTaskDefinitionHandler,
@@ -21,6 +21,8 @@ from lykke.infrastructure.data.default_task_definitions import (
     DEFAULT_TASK_DEFINITIONS,
 )
 from lykke.presentation.api.schemas import (
+    PagedResponseSchema,
+    QuerySchema,
     TaskDefinitionCreateSchema,
     TaskDefinitionSchema,
     TaskDefinitionUpdateSchema,
@@ -64,22 +66,37 @@ async def get_task_definition(
     return map_task_definition_to_schema(task_definition)
 
 
-@router.get("/", response_model=list[TaskDefinitionSchema])
-async def list_task_definitions(
+@router.post("/", response_model=PagedResponseSchema[TaskDefinitionSchema])
+async def search_task_definitions(
     list_task_definitions_handler: Annotated[
         SearchTaskDefinitionsHandler, Depends(get_list_task_definitions_handler)
     ],
-    limit: Annotated[int, Query(ge=1, le=1000)] = 50,
-    offset: Annotated[int, Query(ge=0)] = 0,
-) -> list[TaskDefinitionSchema]:
-    """List task definitions with pagination."""
-    result = await list_task_definitions_handler.run(
-        search_query=value_objects.TaskDefinitionQuery(limit=limit, offset=offset),
+    query: QuerySchema[value_objects.TaskDefinitionQuery],
+) -> PagedResponseSchema[TaskDefinitionSchema]:
+    """Search task definitions with pagination and optional filters."""
+    # Build the search query from the request
+    filters = query.filters or value_objects.TaskDefinitionQuery()
+    search_query = value_objects.TaskDefinitionQuery(
+        limit=query.limit,
+        offset=query.offset,
+        created_before=filters.created_before,
+        created_after=filters.created_after,
+        order_by=filters.order_by,
+        order_by_desc=filters.order_by_desc,
     )
-    return [map_task_definition_to_schema(td) for td in result.items]
+    result = await list_task_definitions_handler.run(search_query=search_query)
+    task_definition_schemas = [map_task_definition_to_schema(td) for td in result.items]
+    return PagedResponseSchema(
+        items=task_definition_schemas,
+        total=result.total,
+        limit=result.limit,
+        offset=result.offset,
+        has_next=result.has_next,
+        has_previous=result.has_previous,
+    )
 
 
-@router.post("/", response_model=TaskDefinitionSchema)
+@router.post("/create", response_model=TaskDefinitionSchema)
 async def create_task_definition(
     task_definition_data: TaskDefinitionCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],

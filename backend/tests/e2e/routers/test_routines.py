@@ -28,7 +28,7 @@ async def test_list_routines(authenticated_client):
     )
     await routine_repo.put(routine)
 
-    response = client.get("/routines/")
+    response = client.post("/routines/", json={"limit": 50, "offset": 0})
 
     assert response.status_code == 200
     data = response.json()
@@ -94,7 +94,7 @@ async def test_create_routine(authenticated_client):
         "tasks": [],
     }
 
-    response = client.post("/routines/", json=routine_data)
+    response = client.post("/routines/create", json=routine_data)
 
     assert response.status_code == 201
 
@@ -123,7 +123,7 @@ async def test_create_routine_with_tasks(authenticated_client):
         ],
     }
 
-    response = client.post("/routines/", json=routine_data)
+    response = client.post("/routines/create", json=routine_data)
 
     assert response.status_code == 201
     body = response.json()
@@ -208,7 +208,7 @@ async def test_list_routines_pagination(authenticated_client):
         await routine_repo.put(routine)
 
     # Test pagination
-    response = client.get("/routines/?limit=2&offset=0")
+    response = client.post("/routines/", json={"limit": 2, "offset": 0})
 
     assert response.status_code == 200
     data = response.json()
