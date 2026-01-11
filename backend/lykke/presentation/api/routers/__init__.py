@@ -9,7 +9,6 @@ from . import (
     early_access,
     google,
     me,
-    planning,
     push_subscriptions,
     routines,
     sheppard,
@@ -33,12 +32,6 @@ router.include_router(
         "planning",
     ],
 )
-router.include_router(
-    planning.router,
-    prefix="/planning",
-    tags=["routine"],
-)
-
 router.include_router(
     google.router,
     prefix="/google",

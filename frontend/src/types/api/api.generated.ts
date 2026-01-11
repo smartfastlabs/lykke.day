@@ -160,146 +160,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/planning/routines/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Routines
-         * @description Get all routines for the current user.
-         */
-        get: operations["list_routines_planning_routines__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/planning/preview/today": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Preview Today
-         * @description Preview what today would look like if scheduled.
-         */
-        get: operations["preview_today_planning_preview_today_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/planning/tomorrow/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Preview Tomorrow
-         * @description Preview what tomorrow would look like if scheduled.
-         */
-        get: operations["preview_tomorrow_planning_tomorrow_preview_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/planning/date/{date}/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Preview Date
-         * @description Preview what a specific date would look like if scheduled.
-         */
-        get: operations["preview_date_planning_date__date__preview_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/planning/schedule/today": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Schedule Today
-         * @description Schedule today with tasks from routines.
-         */
-        put: operations["schedule_today_planning_schedule_today_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/planning/tomorrow/schedule": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Schedule Tomorrow
-         * @description Schedule tomorrow with tasks from routines.
-         */
-        put: operations["schedule_tomorrow_planning_tomorrow_schedule_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/planning/date/{date}/schedule": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Schedule Date
-         * @description Schedule a specific date with tasks from routines.
-         */
-        put: operations["schedule_date_planning_date__date__schedule_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/google/login": {
         parameters: {
             query?: never;
@@ -1798,8 +1658,8 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
-        /** PagedQueryResponse */
-        PagedQueryResponse_CalendarEntrySeriesSchema_: {
+        /** PagedResponseSchema[CalendarEntrySeriesSchema] */
+        PagedResponseSchema_CalendarEntrySeriesSchema_: {
             /** Items */
             items: components["schemas"]["CalendarEntrySeriesSchema"][];
             /** Total */
@@ -1813,8 +1673,8 @@ export interface components {
             /** Has Previous */
             has_previous: boolean;
         };
-        /** PagedQueryResponse */
-        PagedQueryResponse_CalendarSchema_: {
+        /** PagedResponseSchema[CalendarSchema] */
+        PagedResponseSchema_CalendarSchema_: {
             /** Items */
             items: components["schemas"]["CalendarSchema"][];
             /** Total */
@@ -1828,8 +1688,8 @@ export interface components {
             /** Has Previous */
             has_previous: boolean;
         };
-        /** PagedQueryResponse */
-        PagedQueryResponse_DayTemplateSchema_: {
+        /** PagedResponseSchema[DayTemplateSchema] */
+        PagedResponseSchema_DayTemplateSchema_: {
             /** Items */
             items: components["schemas"]["DayTemplateSchema"][];
             /** Total */
@@ -1843,8 +1703,8 @@ export interface components {
             /** Has Previous */
             has_previous: boolean;
         };
-        /** PagedQueryResponse */
-        PagedQueryResponse_RoutineSchema_: {
+        /** PagedResponseSchema[RoutineSchema] */
+        PagedResponseSchema_RoutineSchema_: {
             /** Items */
             items: components["schemas"]["RoutineSchema"][];
             /** Total */
@@ -1858,8 +1718,8 @@ export interface components {
             /** Has Previous */
             has_previous: boolean;
         };
-        /** PagedQueryResponse */
-        PagedQueryResponse_TimeBlockDefinitionSchema_: {
+        /** PagedResponseSchema[TimeBlockDefinitionSchema] */
+        PagedResponseSchema_TimeBlockDefinitionSchema_: {
             /** Items */
             items: components["schemas"]["TimeBlockDefinitionSchema"][];
             /** Total */
@@ -2708,168 +2568,6 @@ export interface operations {
             };
         };
     };
-    list_routines_planning_routines__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoutineSchema"][];
-                };
-            };
-        };
-    };
-    preview_today_planning_preview_today_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-        };
-    };
-    preview_tomorrow_planning_tomorrow_preview_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-        };
-    };
-    preview_date_planning_date__date__preview_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                date: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    schedule_today_planning_schedule_today_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-        };
-    };
-    schedule_tomorrow_planning_tomorrow_schedule_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-        };
-    };
-    schedule_date_planning_date__date__schedule_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                date: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     google_login_google_login_get: {
         parameters: {
             query?: never;
@@ -3135,7 +2833,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PagedQueryResponse_CalendarEntrySeriesSchema_"];
+                    "application/json": components["schemas"]["PagedResponseSchema_CalendarEntrySeriesSchema_"];
                 };
             };
             /** @description Validation Error */
@@ -3734,7 +3432,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PagedQueryResponse_DayTemplateSchema_"];
+                    "application/json": components["schemas"]["PagedResponseSchema_DayTemplateSchema_"];
                 };
             };
             /** @description Validation Error */
@@ -4246,7 +3944,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PagedQueryResponse_RoutineSchema_"];
+                    "application/json": components["schemas"]["PagedResponseSchema_RoutineSchema_"];
                 };
             };
             /** @description Validation Error */
@@ -4509,7 +4207,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PagedQueryResponse_TimeBlockDefinitionSchema_"];
+                    "application/json": components["schemas"]["PagedResponseSchema_TimeBlockDefinitionSchema_"];
                 };
             };
             /** @description Validation Error */
@@ -4784,7 +4482,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PagedQueryResponse_CalendarSchema_"];
+                    "application/json": components["schemas"]["PagedResponseSchema_CalendarSchema_"];
                 };
             };
             /** @description Validation Error */

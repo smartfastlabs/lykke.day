@@ -10,6 +10,7 @@ import { useSheppard } from "@/providers/sheppard";
 import type { Event } from "@/types/api";
 import { Icon } from "solid-heroicons";
 import { calendar, clock, users } from "solid-heroicons/outline";
+import { isBackForwardNavigation } from "@/utils/navigation";
 
 const formatTime = (dateTimeStr: string): string => {
   const date = new Date(dateTimeStr);
@@ -124,7 +125,12 @@ export const TodaysEventsView: Component = () => {
   const [mounted, setMounted] = createSignal(false);
 
   onMount(() => {
-    setTimeout(() => setMounted(true), 50);
+    // Skip animations if navigating via back/forward buttons
+    if (isBackForwardNavigation()) {
+      setMounted(true);
+    } else {
+      setTimeout(() => setMounted(true), 50);
+    }
   });
 
   const now = createMemo(() => new Date());

@@ -404,243 +404,6 @@
         }
       }
     },
-    "/planning/routines/": {
-      "get": {
-        "tags": [
-          "routine"
-        ],
-        "summary": "List Routines",
-        "description": "Get all routines for the current user.",
-        "operationId": "list_routines_planning_routines__get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/RoutineSchema"
-                  },
-                  "type": "array",
-                  "title": "Response List Routines Planning Routines  Get"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
-    "/planning/preview/today": {
-      "get": {
-        "tags": [
-          "routine"
-        ],
-        "summary": "Preview Today",
-        "description": "Preview what today would look like if scheduled.",
-        "operationId": "preview_today_planning_preview_today_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
-    "/planning/tomorrow/preview": {
-      "get": {
-        "tags": [
-          "routine"
-        ],
-        "summary": "Preview Tomorrow",
-        "description": "Preview what tomorrow would look like if scheduled.",
-        "operationId": "preview_tomorrow_planning_tomorrow_preview_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
-    "/planning/date/{date}/preview": {
-      "get": {
-        "tags": [
-          "routine"
-        ],
-        "summary": "Preview Date",
-        "description": "Preview what a specific date would look like if scheduled.",
-        "operationId": "preview_date_planning_date__date__preview_get",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "date",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date",
-              "title": "Date"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/planning/schedule/today": {
-      "put": {
-        "tags": [
-          "routine"
-        ],
-        "summary": "Schedule Today",
-        "description": "Schedule today with tasks from routines.",
-        "operationId": "schedule_today_planning_schedule_today_put",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
-    "/planning/tomorrow/schedule": {
-      "put": {
-        "tags": [
-          "routine"
-        ],
-        "summary": "Schedule Tomorrow",
-        "description": "Schedule tomorrow with tasks from routines.",
-        "operationId": "schedule_tomorrow_planning_tomorrow_schedule_put",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
-    "/planning/date/{date}/schedule": {
-      "put": {
-        "tags": [
-          "routine"
-        ],
-        "summary": "Schedule Date",
-        "description": "Schedule a specific date with tasks from routines.",
-        "operationId": "schedule_date_planning_date__date__schedule_put",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "date",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date",
-              "title": "Date"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/google/login": {
       "get": {
         "tags": [
@@ -1102,7 +865,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedQueryResponse_CalendarEntrySeriesSchema_"
+                  "$ref": "#/components/schemas/PagedResponseSchema_CalendarEntrySeriesSchema_"
                 }
               }
             }
@@ -2083,7 +1846,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedQueryResponse_DayTemplateSchema_"
+                  "$ref": "#/components/schemas/PagedResponseSchema_DayTemplateSchema_"
                 }
               }
             }
@@ -2921,7 +2684,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedQueryResponse_RoutineSchema_"
+                  "$ref": "#/components/schemas/PagedResponseSchema_RoutineSchema_"
                 }
               }
             }
@@ -3359,7 +3122,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedQueryResponse_TimeBlockDefinitionSchema_"
+                  "$ref": "#/components/schemas/PagedResponseSchema_TimeBlockDefinitionSchema_"
                 }
               }
             }
@@ -3793,7 +3556,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedQueryResponse_CalendarSchema_"
+                  "$ref": "#/components/schemas/PagedResponseSchema_CalendarSchema_"
                 }
               }
             }
@@ -5216,7 +4979,7 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "PagedQueryResponse_CalendarEntrySeriesSchema_": {
+      "PagedResponseSchema_CalendarEntrySeriesSchema_": {
         "properties": {
           "items": {
             "items": {
@@ -5255,9 +5018,9 @@
           "has_next",
           "has_previous"
         ],
-        "title": "PagedQueryResponse"
+        "title": "PagedResponseSchema[CalendarEntrySeriesSchema]"
       },
-      "PagedQueryResponse_CalendarSchema_": {
+      "PagedResponseSchema_CalendarSchema_": {
         "properties": {
           "items": {
             "items": {
@@ -5296,9 +5059,9 @@
           "has_next",
           "has_previous"
         ],
-        "title": "PagedQueryResponse"
+        "title": "PagedResponseSchema[CalendarSchema]"
       },
-      "PagedQueryResponse_DayTemplateSchema_": {
+      "PagedResponseSchema_DayTemplateSchema_": {
         "properties": {
           "items": {
             "items": {
@@ -5337,9 +5100,9 @@
           "has_next",
           "has_previous"
         ],
-        "title": "PagedQueryResponse"
+        "title": "PagedResponseSchema[DayTemplateSchema]"
       },
-      "PagedQueryResponse_RoutineSchema_": {
+      "PagedResponseSchema_RoutineSchema_": {
         "properties": {
           "items": {
             "items": {
@@ -5378,9 +5141,9 @@
           "has_next",
           "has_previous"
         ],
-        "title": "PagedQueryResponse"
+        "title": "PagedResponseSchema[RoutineSchema]"
       },
-      "PagedQueryResponse_TimeBlockDefinitionSchema_": {
+      "PagedResponseSchema_TimeBlockDefinitionSchema_": {
         "properties": {
           "items": {
             "items": {
@@ -5419,7 +5182,7 @@
           "has_next",
           "has_previous"
         ],
-        "title": "PagedQueryResponse"
+        "title": "PagedResponseSchema[TimeBlockDefinitionSchema]"
       },
       "PushSubscriptionCreateSchema": {
         "properties": {

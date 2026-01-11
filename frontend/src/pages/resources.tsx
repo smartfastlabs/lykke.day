@@ -2,6 +2,7 @@ import { Component, createSignal, onMount } from "solid-js";
 import { A } from "@solidjs/router";
 import Footer from "@/components/shared/layout/Footer";
 import { useAuth } from "@/providers/auth";
+import { isBackForwardNavigation } from "@/utils/navigation";
 
 interface ResourceBlock {
   title: string;
@@ -15,7 +16,12 @@ const Resources: Component = () => {
   const [mounted, setMounted] = createSignal(false);
 
   onMount(() => {
-    setTimeout(() => setMounted(true), 50);
+    // Skip animations if navigating via back/forward buttons
+    if (isBackForwardNavigation()) {
+      setMounted(true);
+    } else {
+      setTimeout(() => setMounted(true), 50);
+    }
   });
 
   const AccountLink: Component = () => (

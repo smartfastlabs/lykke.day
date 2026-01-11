@@ -301,17 +301,6 @@ export const dayAPI = {
     fetchData<DayTemplate[]>("/api/days/templates/"),
 };
 
-export const planningAPI = {
-  scheduleToday: (): Promise<DayContext> =>
-    fetchData<DayContext>("/api/planning/schedule/today", { method: "PUT" }),
-
-  previewToday: (): Promise<DayContext> =>
-    fetchData<DayContext>("/api/planning/preview/today"),
-
-  previewTomorrow: (): Promise<DayContext> =>
-    fetchData<DayContext>("/api/planning/preview/tomorrow"),
-};
-
 export const pushAPI = {
   getSubscriptions: (): Promise<PushSubscription[]> =>
     fetchData<PushSubscription[]>("/api/push/subscriptions/"),

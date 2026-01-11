@@ -2,6 +2,7 @@ import { Component, createSignal, onMount, Show } from "solid-js";
 import { useSheppard } from "@/providers/sheppard";
 import TaskList from "@/components/tasks/List";
 import { Task } from "@/types/api";
+import { isBackForwardNavigation } from "@/utils/navigation";
 
 const getTaskStats = (tasks: Task[]) => {
   const total = tasks.length;
@@ -16,7 +17,12 @@ export const TodaysTasksView: Component = () => {
   const [mounted, setMounted] = createSignal(false);
 
   onMount(() => {
-    setTimeout(() => setMounted(true), 50);
+    // Skip animations if navigating via back/forward buttons
+    if (isBackForwardNavigation()) {
+      setMounted(true);
+    } else {
+      setTimeout(() => setMounted(true), 50);
+    }
   });
 
   const stats = () => getTaskStats(tasks());

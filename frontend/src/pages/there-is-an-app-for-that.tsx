@@ -11,6 +11,7 @@ import {
   fire,
 } from "solid-heroicons/outline";
 import Footer from "@/components/shared/layout/Footer";
+import { isBackForwardNavigation } from "@/utils/navigation";
 
 interface AppCategory {
   icon: typeof devicePhoneMobile;
@@ -24,7 +25,12 @@ const ThereIsAnAppForThat: Component = () => {
   const [mounted, setMounted] = createSignal(false);
 
   onMount(() => {
-    setTimeout(() => setMounted(true), 50);
+    // Skip animations if navigating via back/forward buttons
+    if (isBackForwardNavigation()) {
+      setMounted(true);
+    } else {
+      setTimeout(() => setMounted(true), 50);
+    }
   });
 
   const categories: AppCategory[] = [
