@@ -141,7 +141,7 @@ export default function App() {
 
             <Route path="/me" component={AuthGuard}>
               <Route path="/today" component={HomeLayout}>
-                <Route path="/" component={PreviewView} />
+                <Route path="/" component={HomeLayout} />
                 <Route path="/tasks" component={TasksView} />
                 <Route path="/events" component={EventsView} />
               </Route>
