@@ -112,8 +112,8 @@ const DayView: Component<DayViewProps> = (props) => {
       const statusMatch = filters.statuses.includes(task.status);
       const frequencyMatch = allowedFrequencies().includes(task.frequency);
       const typeMatch =
-        !task.task_definition?.type ||
-        filters.types.includes(task.task_definition.type as TaskType);
+        !task.type ||
+        filters.types.includes(task.type as TaskType);
 
       return statusMatch && frequencyMatch && typeMatch;
     });

@@ -2293,7 +2293,9 @@ export interface components {
             /** Name */
             name: string;
             status: components["schemas"]["TaskStatus"];
-            task_definition: components["schemas"]["TaskDefinitionSchema"];
+            type: components["schemas"]["TaskType"];
+            /** Description */
+            description: string;
             category: components["schemas"]["TaskCategory"];
             frequency: components["schemas"]["TaskFrequency"];
             /** Completed At */

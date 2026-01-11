@@ -6510,8 +6510,12 @@
           "status": {
             "$ref": "#/components/schemas/TaskStatus"
           },
-          "task_definition": {
-            "$ref": "#/components/schemas/TaskDefinitionSchema"
+          "type": {
+            "$ref": "#/components/schemas/TaskType"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
           },
           "category": {
             "$ref": "#/components/schemas/TaskCategory"
@@ -6574,7 +6578,8 @@
           "scheduled_date",
           "name",
           "status",
-          "task_definition",
+          "type",
+          "description",
           "category",
           "frequency"
         ],
