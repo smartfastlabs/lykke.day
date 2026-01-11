@@ -38,6 +38,7 @@ class _FakeReadOnlyRepos:
         self.routine_ro_repo = fake
         self.task_definition_ro_repo = fake
         self.task_ro_repo = fake
+        self.time_block_definition_ro_repo = fake
         self.user_ro_repo = _FakeUserReadOnlyRepo(user)
 
 

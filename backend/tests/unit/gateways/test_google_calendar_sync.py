@@ -128,6 +128,7 @@ def mock_uow(
         routine_ro_repo = None
         task_definition_ro_repo = None
         task_ro_repo = None
+        time_block_definition_ro_repo = None
         user_ro_repo = None
 
         def __init__(self) -> None:
@@ -172,6 +173,7 @@ def mock_ro_repos(
             self.routine_ro_repo = None
             self.task_definition_ro_repo = None
             self.task_ro_repo = None
+            self.time_block_definition_ro_repo = None
             self.user_ro_repo = None
 
     return DummyRORepos()
