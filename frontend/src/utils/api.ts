@@ -1,8 +1,6 @@
 import { globalNotifications } from "@/providers/notifications";
 import {
-  Event,
   Task,
-  Day,
   DayContext,
   DayTemplate,
   TimeBlockDefinition,
@@ -150,28 +148,12 @@ function createCrudMethods<T extends EntityWithId>(type: string) {
 
     delete: (id: string): Promise<void> =>
       fetchData<void>(`/api/${type}/${id}`, { method: "DELETE" }),
-
-    search: <Q>(query: Q): Promise<T[]> =>
-      fetchData<T[]>(`/api/${type}/search`, {
-        method: "POST",
-        body: JSON.stringify(query),
-      }),
   };
 }
 
 // --- API Modules ---
 
-export const eventAPI = {
-  ...createCrudMethods<Event>("events"),
-
-  getTodays: (): Promise<Event[]> => fetchData<Event[]>("/api/events/today"),
-};
-
 export const taskAPI = {
-  ...createCrudMethods<Task>("tasks"),
-
-  getTodays: (): Promise<Task[]> => fetchData<Task[]>("/api/tasks/today/"),
-
   setTaskStatus: (task: Task, status: string): Promise<Task> =>
     fetchData<Task>(`/api/tasks/${task.id}/actions`, {
       method: "POST",
@@ -287,18 +269,6 @@ export const alarmAPI = {
 export const dayAPI = {
   getToday: (): Promise<DayContext> =>
     fetchData<DayContext>("/api/days/today/context"),
-
-  getTomorrow: (): Promise<DayContext> =>
-    fetchData<DayContext>("/api/days/tomorrow/context"),
-
-  getContext: (date: string): Promise<DayContext> =>
-    fetchData<DayContext>(`/api/days/${date}/context`),
-
-  scheduleToday: (): Promise<Day> =>
-    fetchData<Day>("/api/days/today/schedule", { method: "PUT" }),
-
-  getTemplates: (): Promise<DayTemplate[]> =>
-    fetchData<DayTemplate[]>("/api/days/templates/"),
 };
 
 export const pushAPI = {
@@ -367,15 +337,6 @@ export const dayTemplateAPI = {
 
 export const taskDefinitionAPI = {
   ...createCrudMethods<TaskDefinition>("task-definitions"),
-
-  getAvailable: (): Promise<TaskDefinition[]> =>
-    fetchData<TaskDefinition[]>("/api/task-definitions/available/"),
-
-  bulkCreate: (taskDefinitions: TaskDefinition[]): Promise<TaskDefinition[]> =>
-    fetchData<TaskDefinition[]>("/api/task-definitions/bulk/", {
-      method: "POST",
-      body: JSON.stringify(taskDefinitions),
-    }),
 };
 
 export const timeBlockDefinitionAPI = {
@@ -412,7 +373,22 @@ export const routineAPI = {
 };
 
 export const calendarAPI = {
-  ...createCrudMethods<Calendar>("calendars"),
+  get: (id: string): Promise<Calendar> => fetchData<Calendar>(`/api/calendars/${id}`),
+
+  getAll: async (): Promise<Calendar[]> => {
+    const data = await fetchData<Calendar[] | PaginatedResponse<Calendar>>(`/api/calendars/`);
+    return extractItems(data);
+  },
+
+  update: (item: Calendar): Promise<Calendar> =>
+    fetchData<Calendar>(`/api/calendars/${item.id}`, {
+      method: "PUT",
+      body: JSON.stringify(item),
+    }),
+
+  delete: (id: string): Promise<void> =>
+    fetchData<void>(`/api/calendars/${id}`, { method: "DELETE" }),
+
   subscribe: (id: string): Promise<Calendar> =>
     fetchData<Calendar>(`/api/calendars/${id}/subscribe`, { method: "POST" }),
   unsubscribe: (id: string): Promise<Calendar> =>
@@ -426,7 +402,22 @@ export const calendarAPI = {
 };
 
 export const calendarEntrySeriesAPI = {
-  ...createCrudMethods<CalendarEntrySeries>("calendar-entry-series"),
+  get: (id: string): Promise<CalendarEntrySeries> =>
+    fetchData<CalendarEntrySeries>(`/api/calendar-entry-series/${id}`),
+
+  getAll: async (): Promise<CalendarEntrySeries[]> => {
+    const data = await fetchData<CalendarEntrySeries[] | PaginatedResponse<CalendarEntrySeries>>(
+      `/api/calendar-entry-series/`
+    );
+    return extractItems(data);
+  },
+
+  update: (item: CalendarEntrySeries): Promise<CalendarEntrySeries> =>
+    fetchData<CalendarEntrySeries>(`/api/calendar-entry-series/${item.id}`, {
+      method: "PUT",
+      body: JSON.stringify(item),
+    }),
+
   searchByCalendar: (calendarId: string): Promise<CalendarEntrySeries[]> =>
     fetchData<CalendarEntrySeries[]>("/api/calendar-entry-series/search", {
       method: "POST",
