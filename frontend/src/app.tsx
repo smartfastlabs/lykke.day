@@ -137,11 +137,15 @@ export default function App() {
             <Route path="/forgot-password" component={ForgotPassword} />
             <Route path="/reset-password" component={ResetPassword} />
             <Route path="/early-access" component={EarlyAccess} />
-            <Route path="/home" component={() => <Navigate href="/me" />} />
+            <Route
+              path="/home"
+              component={() => <Navigate href="/me/today" />}
+            />
 
             <Route path="/me" component={AuthGuard}>
+              <Route path="/" component={() => <Navigate href="/me/today" />} />
               <Route path="/today" component={HomeLayout}>
-                <Route path="/" component={HomeLayout} />
+                <Route path="/" component={PreviewView} />
                 <Route path="/tasks" component={TasksView} />
                 <Route path="/events" component={EventsView} />
               </Route>
