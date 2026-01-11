@@ -128,9 +128,6 @@ export default function App() {
         <Route path="/home" component={() => <Navigate href="/me" />} />
 
         <Route path="/me" component={AuthGuard}>
-          <Route path="/" component={HomeLayout}>
-            <Route path="/" component={PreviewView} />
-          </Route>
           <Route path="/today" component={HomeLayout}>
             <Route path="/" component={PreviewView} />
             <Route path="/tasks" component={TasksView} />
