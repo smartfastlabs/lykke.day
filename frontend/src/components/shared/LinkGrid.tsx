@@ -26,20 +26,22 @@ const LinkGrid: Component<LinkGridProps> = (props) => {
   }
 
   return (
-    <div class="grid grid-cols-2 p-5 gap-10 max-w-md mx-auto">
+    <div class="grid grid-cols-2 p-5 gap-6 max-w-md mx-auto">
       <For each={props.items}>
         {(item) => (
           <button
             onClick={() => onClick(item)}
-            class="p-4 aspect-square flex flex-col items-center justify-center gap-2 bg-gray-100 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-600 transition-colors duration-150"
+            class="group p-6 aspect-square flex flex-col items-center justify-center gap-3 bg-white/70 backdrop-blur-md border border-white/70 rounded-2xl shadow-lg shadow-amber-900/5 hover:bg-white/90 hover:shadow-xl hover:shadow-amber-900/10 hover:border-amber-100/80 transition-all duration-200"
           >
             <svg
               viewBox={`0 0 ${item.icon.icon[0]} ${item.icon.icon[1]}`}
-              class="w-18 h-18 fill-gray-400"
+              class="w-16 h-16 fill-amber-500/80 group-hover:fill-amber-600 group-hover:scale-110 transition-all duration-200"
             >
               <path d={item.icon.icon[4] as string} />
             </svg>
-            <span class="text-sm font-medium">{item.label}</span>
+            <span class="text-sm font-semibold text-stone-700 group-hover:text-stone-800 transition-colors duration-200">
+              {item.label}
+            </span>
           </button>
         )}
       </For>

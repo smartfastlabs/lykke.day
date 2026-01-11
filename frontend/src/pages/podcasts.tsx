@@ -100,7 +100,7 @@ const Podcasts: Component = () => {
     <MediaPage
       title="Lykke.day Podcasts"
       subtitle="lykke.day podcasts"
-      description="These podcasts accompanied me through my recovery—but they're just a starting point.<br><br>Podcasts are brilliant companions for in-between moments: walking in nature, commuting, doing dishes. Learning about mindfulness while watching trees sway is different than staring at a screen. They're intimate and conversational.<br><br>But remember: you can listen to every episode about living better and still not change a thing. Let these voices inspire you, then step outside and practice what resonates."
+      description="These podcasts accompanied me through my journey to adapting to life after covid—but they're just a starting point.<br><br>Podcasts are brilliant companions for in-between moments: walking in nature, commuting, doing dishes. Learning about mindfulness while watching trees sway is different than staring at a screen. They're intimate and conversational.<br><br>But remember: you can listen to every episode about living better and still not change a thing. Let these voices inspire you, then step outside and practice what resonates."
       items={podcasts}
     />
   );

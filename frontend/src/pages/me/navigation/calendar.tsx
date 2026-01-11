@@ -36,23 +36,35 @@ const CalendarPage: Component = () => {
   }
 
   return (
-    <div class="grid grid-cols-2 gap-10 max-w-md mx-auto">
+    <div class="grid grid-cols-2 gap-6 max-w-md mx-auto p-5">
       <For each={days}>
         {(item) => (
           <button
             onClick={() => onClick(item)}
-            class={`p-4 aspect-square flex flex-col items-center justify-center gap-2 rounded-lg transition-colors duration-150 ${
+            class={`group p-6 aspect-square flex flex-col items-center justify-center gap-2 rounded-2xl transition-all duration-200 ${
               item.isToday
-                ? "bg-gray-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:border-gray-400 hover:text-gray-600"
+                ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-900/20 border border-amber-400/50"
+                : "bg-white/70 backdrop-blur-md border border-white/70 text-stone-700 shadow-lg shadow-amber-900/5 hover:bg-white/90 hover:shadow-xl hover:shadow-amber-900/10 hover:border-amber-100/80 hover:scale-105"
             }`}
           >
             <span
-              class={`text-4xl font-semibold ${item.isToday ? "text-white" : "text-gray-400"}`}
+              class={`text-4xl font-bold ${
+                item.isToday
+                  ? "text-white"
+                  : "text-amber-500/80 group-hover:text-amber-600"
+              }`}
             >
               {item.dayOfMonth}
             </span>
-            <span class="text-sm font-medium">{item.label}</span>
+            <span
+              class={`text-sm font-semibold ${
+                item.isToday
+                  ? "text-white/95"
+                  : "text-stone-600 group-hover:text-stone-800"
+              }`}
+            >
+              {item.label}
+            </span>
           </button>
         )}
       </For>

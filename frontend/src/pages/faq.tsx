@@ -114,7 +114,7 @@ const FAQ: Component = () => {
 
           <div class="mt-6 text-center">
             <a
-              href="/there-is-an-app-for-that"
+              href="/resources"
               class="text-stone-500 text-sm underline decoration-rose-300 underline-offset-4 hover:text-stone-700 transition-colors"
             >
               Looking for other apps &amp; resources? Check our guide →

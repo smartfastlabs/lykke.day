@@ -91,7 +91,7 @@ const YouTube: Component = () => {
     <MediaPage
       title="Lykke.day YouTube Channels"
       subtitle="lykke.day youtube"
-      description="These channels captivated me during my recovery—but they're just a starting point.<br><br>YouTube is incredible for visual learning and making complex ideas click. But here's the tradeoff: it's easy to lose three hours in a rabbit hole, emerging enlightened about dopamine regulation but having done nothing with your actual day.<br><br>YouTube can inspire change or become a way to avoid it. Watch, learn, get excited—then close the tab and go live. Consuming content about intentional living isn't the same as living intentionally."
+      description="These channels captivated me during my journey to adapting to life after covid—but they're just a starting point.<br><br>YouTube is incredible for visual learning and making complex ideas click. But here's the tradeoff: it's easy to lose three hours in a rabbit hole, emerging enlightened about dopamine regulation but having done nothing with your actual day.<br><br>YouTube can inspire change or become a way to avoid it. Watch, learn, get excited—then close the tab and go live. Consuming content about intentional living isn't the same as living intentionally."
       items={channels}
     />
   );
