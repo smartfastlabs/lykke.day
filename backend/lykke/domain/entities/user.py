@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from .. import value_objects
 from ..value_objects.update import UserUpdateObject
@@ -26,6 +27,8 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
     settings: value_objects.UserSetting = field(
         default_factory=value_objects.UserSetting
     )
+    default_conversation_id: UUID | None = None
+    sms_conversation_id: UUID | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime | None = None
 

@@ -73,6 +73,8 @@ class UserUpdateObject(BaseUpdateObject):
     is_verified: bool | None = None
     settings: UserSetting | None = None
     status: UserStatus | None = None
+    default_conversation_id: UUID | None = None
+    sms_conversation_id: UUID | None = None
 
 
 @dataclass(kw_only=True)
