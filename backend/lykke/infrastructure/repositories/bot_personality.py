@@ -46,12 +46,6 @@ class BotPersonalityRepository(
                 self.table.c.base_bot_personality_id == query.base_bot_personality_id
             )
 
-        # When user_id is set on the repository, allow both user-specific and system-wide
-        if self._is_user_scoped:
-            stmt = stmt.where(
-                (self.table.c.user_id == self.user_id) | (self.table.c.user_id.is_(None))
-            )
-
         return stmt
 
     @staticmethod
