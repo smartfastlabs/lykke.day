@@ -48,11 +48,11 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
             "date": task.scheduled_date,  # Extract date from scheduled_date for querying
             "scheduled_date": task.scheduled_date,
             "name": task.name,
-            "status": str(task.status) if task.status else None,
-            "type": str(task.type) if task.type else None,
+            "status": task.status.value if task.status else None,
+            "type": task.type.value if task.type else None,
             "description": task.description,
-            "category": task.category,
-            "frequency": task.frequency,
+            "category": task.category.value if task.category else None,
+            "frequency": task.frequency.value if task.frequency else None,
             "completed_at": task.completed_at,
             "routine_id": task.routine_id,
         }
