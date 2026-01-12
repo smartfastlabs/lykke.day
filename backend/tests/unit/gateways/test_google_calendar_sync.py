@@ -164,11 +164,15 @@ def mock_ro_repos(
     class DummyRORepos:
         def __init__(self) -> None:
             self.auth_token_ro_repo = mock_auth_token_repo
+            self.bot_personality_ro_repo = None
             self.calendar_entry_ro_repo = mock_calendar_entry_repo
             self.calendar_entry_series_ro_repo = mock_calendar_entry_series_repo
             self.calendar_ro_repo = mock_calendar_repo
+            self.conversation_ro_repo = None
             self.day_ro_repo = None
             self.day_template_ro_repo = None
+            self.factoid_ro_repo = None
+            self.message_ro_repo = None
             self.push_subscription_ro_repo = None
             self.routine_ro_repo = None
             self.task_definition_ro_repo = None

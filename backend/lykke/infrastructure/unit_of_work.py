@@ -12,16 +12,24 @@ from lykke.application.events import send_domain_events
 from lykke.application.repositories import (
     AuthTokenRepositoryReadOnlyProtocol,
     AuthTokenRepositoryReadWriteProtocol,
+    BotPersonalityRepositoryReadOnlyProtocol,
+    BotPersonalityRepositoryReadWriteProtocol,
     CalendarEntryRepositoryReadOnlyProtocol,
     CalendarEntryRepositoryReadWriteProtocol,
     CalendarEntrySeriesRepositoryReadOnlyProtocol,
     CalendarEntrySeriesRepositoryReadWriteProtocol,
     CalendarRepositoryReadOnlyProtocol,
     CalendarRepositoryReadWriteProtocol,
+    ConversationRepositoryReadOnlyProtocol,
+    ConversationRepositoryReadWriteProtocol,
     DayRepositoryReadOnlyProtocol,
     DayRepositoryReadWriteProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadWriteProtocol,
+    FactoidRepositoryReadOnlyProtocol,
+    FactoidRepositoryReadWriteProtocol,
+    MessageRepositoryReadOnlyProtocol,
+    MessageRepositoryReadWriteProtocol,
     PushSubscriptionRepositoryReadOnlyProtocol,
     PushSubscriptionRepositoryReadWriteProtocol,
     RoutineRepositoryReadOnlyProtocol,
@@ -43,11 +51,15 @@ from lykke.application.unit_of_work import (
 from lykke.core.exceptions import BadRequestError, NotFoundError
 from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import (
+    BotPersonalityEntity,
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
+    ConversationEntity,
     DayEntity,
     DayTemplateEntity,
+    FactoidEntity,
+    MessageEntity,
     RoutineEntity,
     TaskEntity,
     UserEntity,
@@ -67,11 +79,15 @@ from lykke.infrastructure.database.transaction import (
 )
 from lykke.infrastructure.repositories import (
     AuthTokenRepository,
+    BotPersonalityRepository,
     CalendarEntryRepository,
     CalendarEntrySeriesRepository,
     CalendarRepository,
+    ConversationRepository,
     DayRepository,
     DayTemplateRepository,
+    FactoidRepository,
+    MessageRepository,
     PushSubscriptionRepository,
     RoutineRepository,
     TaskDefinitionRepository,
@@ -97,11 +113,15 @@ class SqlAlchemyUnitOfWork:
 
     # Read-only repository type annotations (public API for commands)
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
+    bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
     calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
+    conversation_ro_repo: ConversationRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
@@ -112,6 +132,7 @@ class SqlAlchemyUnitOfWork:
     # Entity type to repository attribute name mapping
     # Maps: entity_type -> (ro_repo_attr, rw_repo_attr)
     _ENTITY_REPO_MAP: dict[type, tuple[str, str]] = {
+        BotPersonalityEntity: ("bot_personality_ro_repo", "_bot_personality_rw_repo"),
         DayEntity: ("day_ro_repo", "_day_rw_repo"),
         DayTemplateEntity: ("day_template_ro_repo", "_day_template_rw_repo"),
         CalendarEntryEntity: ("calendar_entry_ro_repo", "_calendar_entry_rw_repo"),
@@ -120,6 +141,9 @@ class SqlAlchemyUnitOfWork:
             "_calendar_entry_series_rw_repo",
         ),
         CalendarEntity: ("calendar_ro_repo", "_calendar_rw_repo"),
+        ConversationEntity: ("conversation_ro_repo", "_conversation_rw_repo"),
+        FactoidEntity: ("factoid_ro_repo", "_factoid_rw_repo"),
+        MessageEntity: ("message_ro_repo", "_message_rw_repo"),
         TaskEntity: ("task_ro_repo", "_task_rw_repo"),
         RoutineEntity: ("routine_ro_repo", "_routine_rw_repo"),
         data_objects.TaskDefinition: (
@@ -152,6 +176,9 @@ class SqlAlchemyUnitOfWork:
         self._added_entities: list[BaseEntityObject] = []
         # Internal read-write repositories (not exposed to commands)
         self._auth_token_rw_repo: AuthTokenRepositoryReadWriteProtocol | None = None
+        self._bot_personality_rw_repo: (
+            BotPersonalityRepositoryReadWriteProtocol | None
+        ) = None
         self._calendar_entry_rw_repo: (
             CalendarEntryRepositoryReadWriteProtocol | None
         ) = None
@@ -159,8 +186,11 @@ class SqlAlchemyUnitOfWork:
             CalendarEntrySeriesRepositoryReadWriteProtocol | None
         ) = None
         self._calendar_rw_repo: CalendarRepositoryReadWriteProtocol | None = None
+        self._conversation_rw_repo: ConversationRepositoryReadWriteProtocol | None = None
         self._day_rw_repo: DayRepositoryReadWriteProtocol | None = None
         self._day_template_rw_repo: DayTemplateRepositoryReadWriteProtocol | None = None
+        self._factoid_rw_repo: FactoidRepositoryReadWriteProtocol | None = None
+        self._message_rw_repo: MessageRepositoryReadWriteProtocol | None = None
         self._push_subscription_rw_repo: (
             PushSubscriptionRepositoryReadWriteProtocol | None
         ) = None
@@ -297,6 +327,39 @@ class SqlAlchemyUnitOfWork:
             "TimeBlockDefinitionRepositoryReadOnlyProtocol", time_block_definition_repo
         )
         self._time_block_definition_rw_repo = time_block_definition_repo
+
+        # Chatbot-related repositories
+        bot_personality_repo = cast(
+            "BotPersonalityRepositoryReadWriteProtocol",
+            BotPersonalityRepository(user_id=self.user_id),
+        )
+        self.bot_personality_ro_repo = cast(
+            "BotPersonalityRepositoryReadOnlyProtocol", bot_personality_repo
+        )
+        self._bot_personality_rw_repo = bot_personality_repo
+
+        conversation_repo = cast(
+            "ConversationRepositoryReadWriteProtocol",
+            ConversationRepository(user_id=self.user_id),
+        )
+        self.conversation_ro_repo = cast(
+            "ConversationRepositoryReadOnlyProtocol", conversation_repo
+        )
+        self._conversation_rw_repo = conversation_repo
+
+        message_repo = cast(
+            "MessageRepositoryReadWriteProtocol",
+            MessageRepository(user_id=self.user_id),
+        )
+        self.message_ro_repo = cast("MessageRepositoryReadOnlyProtocol", message_repo)
+        self._message_rw_repo = message_repo
+
+        factoid_repo = cast(
+            "FactoidRepositoryReadWriteProtocol",
+            FactoidRepository(user_id=self.user_id),
+        )
+        self.factoid_ro_repo = cast("FactoidRepositoryReadOnlyProtocol", factoid_repo)
+        self._factoid_rw_repo = factoid_repo
 
         return self
 
@@ -669,6 +732,31 @@ class SqlAlchemyReadOnlyRepositories:
             TimeBlockDefinitionRepository(user_id=self.user_id),
         )
         self.time_block_definition_ro_repo = time_block_definition_repo
+
+        # Chatbot-related repositories
+        bot_personality_repo = cast(
+            "BotPersonalityRepositoryReadOnlyProtocol",
+            BotPersonalityRepository(user_id=self.user_id),
+        )
+        self.bot_personality_ro_repo = bot_personality_repo
+
+        conversation_repo = cast(
+            "ConversationRepositoryReadOnlyProtocol",
+            ConversationRepository(user_id=self.user_id),
+        )
+        self.conversation_ro_repo = conversation_repo
+
+        message_repo = cast(
+            "MessageRepositoryReadOnlyProtocol",
+            MessageRepository(user_id=self.user_id),
+        )
+        self.message_ro_repo = message_repo
+
+        factoid_repo = cast(
+            "FactoidRepositoryReadOnlyProtocol",
+            FactoidRepository(user_id=self.user_id),
+        )
+        self.factoid_ro_repo = factoid_repo
 
 
 class SqlAlchemyReadOnlyRepositoryFactory:

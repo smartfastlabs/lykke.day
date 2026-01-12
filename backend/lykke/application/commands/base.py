@@ -41,11 +41,15 @@ class BaseCommandHandler:
         self._ro_repos = ro_repos
         # Explicitly expose read-only repositories for convenience
         self.auth_token_ro_repo = ro_repos.auth_token_ro_repo
+        self.bot_personality_ro_repo = ro_repos.bot_personality_ro_repo
         self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
         self.calendar_entry_series_ro_repo = ro_repos.calendar_entry_series_ro_repo
         self.calendar_ro_repo = ro_repos.calendar_ro_repo
+        self.conversation_ro_repo = ro_repos.conversation_ro_repo
         self.day_ro_repo = ro_repos.day_ro_repo
         self.day_template_ro_repo = ro_repos.day_template_ro_repo
+        self.factoid_ro_repo = ro_repos.factoid_ro_repo
+        self.message_ro_repo = ro_repos.message_ro_repo
         self.push_subscription_ro_repo = ro_repos.push_subscription_ro_repo
         self.routine_ro_repo = ro_repos.routine_ro_repo
         self.task_definition_ro_repo = ro_repos.task_definition_ro_repo

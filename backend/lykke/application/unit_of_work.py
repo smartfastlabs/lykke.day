@@ -13,11 +13,15 @@ from uuid import UUID
 
 from lykke.application.repositories import (
     AuthTokenRepositoryReadOnlyProtocol,
+    BotPersonalityRepositoryReadOnlyProtocol,
     CalendarEntryRepositoryReadOnlyProtocol,
     CalendarEntrySeriesRepositoryReadOnlyProtocol,
     CalendarRepositoryReadOnlyProtocol,
+    ConversationRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
+    FactoidRepositoryReadOnlyProtocol,
+    MessageRepositoryReadOnlyProtocol,
     PushSubscriptionRepositoryReadOnlyProtocol,
     RoutineRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
@@ -50,11 +54,15 @@ class UnitOfWorkProtocol(Protocol):
 
     # Read-only repository properties (for reading entities)
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
+    bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
     calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
+    conversation_ro_repo: ConversationRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
@@ -181,11 +189,15 @@ class ReadOnlyRepositories(Protocol):
 
     # Read-only repository properties
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
+    bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
     calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
+    conversation_ro_repo: ConversationRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
+    message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol

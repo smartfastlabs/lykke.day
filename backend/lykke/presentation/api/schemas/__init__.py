@@ -2,6 +2,8 @@
 
 from .action import ActionSchema
 from .alarm import AlarmSchema
+from .conversation import ConversationSchema
+from .message import MessageSchema, SendMessageRequestSchema, SendMessageResponseSchema
 from .calendar import (
     CalendarCreateSchema,
     CalendarSchema,
@@ -88,10 +90,18 @@ PushSubscriptionUpdateSchema.model_rebuild()
 TimeBlockDefinitionCreateSchema.model_rebuild()
 TimeBlockDefinitionSchema.model_rebuild()
 TimeBlockDefinitionUpdateSchema.model_rebuild()
+ConversationSchema.model_rebuild()
+MessageSchema.model_rebuild()
+SendMessageRequestSchema.model_rebuild()
+SendMessageResponseSchema.model_rebuild()
 
 __all__ = [
     "ActionSchema",
     "AlarmSchema",
+    "ConversationSchema",
+    "MessageSchema",
+    "SendMessageRequestSchema",
+    "SendMessageResponseSchema",
     "CalendarEntrySchema",
     "CalendarEntrySeriesSchema",
     "CalendarCreateSchema",
