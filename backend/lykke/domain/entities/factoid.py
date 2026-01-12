@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 from lykke.domain import value_objects
@@ -15,17 +16,17 @@ class FactoidEntity(BaseEntityObject):
     """Factoid entity representing a piece of information stored from conversations."""
 
     user_id: UUID
-    conversation_id: UUID | None  # None for global factoids
+    conversation_id: UUID | None = None  # None for global factoids
     factoid_type: value_objects.FactoidType
-    criticality: value_objects.FactoidCriticality
+    criticality: value_objects.FactoidCriticality = value_objects.FactoidCriticality.NORMAL
     content: str
-    embedding: list[float] | None  # Vector embedding for semantic search
-    ai_suggested: bool  # AI marked as important
-    user_confirmed: bool  # User confirmed criticality
-    last_accessed: datetime
-    access_count: int
-    meta: dict = field(default_factory=dict)  # Additional metadata
-    created_at: datetime
+    embedding: list[float] | None = None  # Vector embedding for semantic search
+    ai_suggested: bool = False  # AI marked as important
+    user_confirmed: bool = False  # User confirmed criticality
+    last_accessed: datetime = field(default_factory=lambda: datetime.now(UTC))
+    access_count: int = 0
+    meta: dict[str, Any] = field(default_factory=dict)  # Additional metadata
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def is_global(self) -> bool:
         """Check if this is a global factoid (not tied to a specific conversation).

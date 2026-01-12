@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 from lykke.domain import value_objects
@@ -20,11 +21,11 @@ class ConversationEntity(
     user_id: UUID
     bot_personality_id: UUID
     channel: value_objects.ConversationChannel
-    status: value_objects.ConversationStatus
-    llm_provider: value_objects.LLMProvider
-    context: dict = field(default_factory=dict)  # Conversation-specific metadata
-    created_at: datetime
-    last_message_at: datetime
+    status: value_objects.ConversationStatus = value_objects.ConversationStatus.ACTIVE
+    llm_provider: value_objects.LLMProvider = value_objects.LLMProvider.ANTHROPIC
+    context: dict[str, Any] = field(default_factory=dict)  # Conversation-specific metadata
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    last_message_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def update_last_message_time(self) -> "ConversationEntity":
         """Update the last_message_at timestamp to now."""

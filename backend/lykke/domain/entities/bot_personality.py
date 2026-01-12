@@ -1,7 +1,8 @@
 """Bot personality entity for AI chatbot system."""
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 from lykke.domain.events.ai_chat_events import BotPersonalityUpdatedEvent
@@ -16,13 +17,13 @@ class BotPersonalityEntity(
 ):
     """Bot personality entity representing an AI bot personality configuration."""
 
-    user_id: UUID | None  # None for system defaults
+    user_id: UUID | None = None  # None for system defaults
     name: str
-    base_bot_personality_id: UUID | None  # Inherits from base
+    base_bot_personality_id: UUID | None = None  # Inherits from base
     system_prompt: str
     user_amendments: str = ""  # User customizations
-    meta: dict = field(default_factory=dict)  # Additional config
-    created_at: datetime
+    meta: dict[str, Any] = field(default_factory=dict)  # Additional config
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def get_full_prompt(self) -> str:
         """Get the full system prompt including amendments.
