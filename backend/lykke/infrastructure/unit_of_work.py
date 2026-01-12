@@ -109,6 +109,35 @@ class SqlAlchemyUnitOfWork:
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
+    # Entity type to repository attribute name mapping
+    # Maps: entity_type -> (ro_repo_attr, rw_repo_attr)
+    _ENTITY_REPO_MAP: dict[type, tuple[str, str]] = {
+        DayEntity: ("day_ro_repo", "_day_rw_repo"),
+        DayTemplateEntity: ("day_template_ro_repo", "_day_template_rw_repo"),
+        CalendarEntryEntity: ("calendar_entry_ro_repo", "_calendar_entry_rw_repo"),
+        CalendarEntrySeriesEntity: (
+            "calendar_entry_series_ro_repo",
+            "_calendar_entry_series_rw_repo",
+        ),
+        CalendarEntity: ("calendar_ro_repo", "_calendar_rw_repo"),
+        TaskEntity: ("task_ro_repo", "_task_rw_repo"),
+        RoutineEntity: ("routine_ro_repo", "_routine_rw_repo"),
+        data_objects.TaskDefinition: (
+            "task_definition_ro_repo",
+            "_task_definition_rw_repo",
+        ),
+        data_objects.TimeBlockDefinition: (
+            "time_block_definition_ro_repo",
+            "_time_block_definition_rw_repo",
+        ),
+        UserEntity: ("user_ro_repo", "_user_rw_repo"),
+        data_objects.PushSubscription: (
+            "push_subscription_ro_repo",
+            "_push_subscription_rw_repo",
+        ),
+        data_objects.AuthToken: ("auth_token_ro_repo", "_auth_token_rw_repo"),
+    }
+
     def __init__(self, user_id: UUID) -> None:
         """Initialize the unit of work for a specific user.
 
@@ -427,33 +456,11 @@ class SqlAlchemyUnitOfWork:
         """
         entity_type = type(entity)
 
-        # Map entity types to their repositories
-        if entity_type == DayEntity:
-            return self._day_rw_repo
-        elif entity_type == DayTemplateEntity:
-            return self._day_template_rw_repo
-        elif entity_type == CalendarEntryEntity:
-            return self._calendar_entry_rw_repo
-        elif entity_type == CalendarEntrySeriesEntity:
-            return self._calendar_entry_series_rw_repo
-        elif entity_type == CalendarEntity:
-            return self._calendar_rw_repo
-        elif entity_type == TaskEntity:
-            return self._task_rw_repo
-        elif entity_type == RoutineEntity:
-            return self._routine_rw_repo
-        elif entity_type == data_objects.TaskDefinition:
-            return self._task_definition_rw_repo
-        elif entity_type == data_objects.TimeBlockDefinition:
-            return self._time_block_definition_rw_repo
-        elif entity_type == UserEntity:
-            return self._user_rw_repo
-        elif entity_type == data_objects.PushSubscription:
-            return self._push_subscription_rw_repo
-        elif entity_type == data_objects.AuthToken:
-            return self._auth_token_rw_repo
-        else:
+        if entity_type not in self._ENTITY_REPO_MAP:
             raise ValueError(f"No repository found for entity type {entity_type}")
+
+        _, rw_attr = self._ENTITY_REPO_MAP[entity_type]
+        return getattr(self, rw_attr)
 
     def _get_read_only_repository_for_entity(self, entity: BaseEntityObject) -> Any:
         """Get the appropriate read-only repository for an entity type.
@@ -469,33 +476,11 @@ class SqlAlchemyUnitOfWork:
         """
         entity_type = type(entity)
 
-        # Map entity types to their read-only repositories
-        if entity_type == DayEntity:
-            return self.day_ro_repo
-        elif entity_type == DayTemplateEntity:
-            return self.day_template_ro_repo
-        elif entity_type == CalendarEntryEntity:
-            return self.calendar_entry_ro_repo
-        elif entity_type == CalendarEntrySeriesEntity:
-            return self.calendar_entry_series_ro_repo
-        elif entity_type == CalendarEntity:
-            return self.calendar_ro_repo
-        elif entity_type == TaskEntity:
-            return self.task_ro_repo
-        elif entity_type == RoutineEntity:
-            return self.routine_ro_repo
-        elif entity_type == data_objects.TaskDefinition:
-            return self.task_definition_ro_repo
-        elif entity_type == data_objects.TimeBlockDefinition:
-            return self.time_block_definition_ro_repo
-        elif entity_type == UserEntity:
-            return self.user_ro_repo
-        elif entity_type == data_objects.PushSubscription:
-            return self.push_subscription_ro_repo
-        elif entity_type == data_objects.AuthToken:
-            return self.auth_token_ro_repo
-        else:
+        if entity_type not in self._ENTITY_REPO_MAP:
             raise ValueError(f"No repository found for entity type {entity_type}")
+
+        ro_attr, _ = self._ENTITY_REPO_MAP[entity_type]
+        return getattr(self, ro_attr)
 
     async def _process_added_entities(self) -> None:
         """Process all added entities based on their domain events.
