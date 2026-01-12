@@ -7,6 +7,7 @@ import pytest
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import BotPersonalityEntity
+from lykke.domain.events.ai_chat_events import BotPersonalityUpdatedEvent
 
 
 @pytest.mark.asyncio
@@ -70,7 +71,7 @@ async def test_put_update(bot_personality_repo, test_user):
     update = value_objects.BotPersonalityUpdateObject(
         name="Updated Name", user_amendments="New amendments"
     )
-    updated = personality.apply_update(update)
+    updated = personality.apply_update(update, BotPersonalityUpdatedEvent)
     result = await bot_personality_repo.put(updated)
 
     assert result.name == "Updated Name"

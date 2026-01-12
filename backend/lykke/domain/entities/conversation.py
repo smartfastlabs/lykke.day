@@ -1,5 +1,6 @@
 """Conversation entity for AI chatbot system."""
 
+# pylint: disable=protected-access,no-member
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
@@ -23,22 +24,54 @@ class ConversationEntity(
     channel: value_objects.ConversationChannel
     status: value_objects.ConversationStatus = value_objects.ConversationStatus.ACTIVE
     llm_provider: value_objects.LLMProvider = value_objects.LLMProvider.ANTHROPIC
-    context: dict[str, Any] = field(default_factory=dict)  # Conversation-specific metadata
+    context: dict[str, Any] = field(
+        default_factory=dict
+    )  # Conversation-specific metadata
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     last_message_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def update_last_message_time(self) -> "ConversationEntity":
         """Update the last_message_at timestamp to now."""
-        return self.clone(last_message_at=datetime.now(UTC))
+        updated = self.clone(last_message_at=datetime.now(UTC))
+        # Add update event with empty update object since last_message_at
+        # is an internal timestamp field not exposed in the update object
+        updated._add_event(
+            ConversationUpdatedEvent(update_object=ConversationUpdateObject())
+        )
+        return updated
 
     def archive(self) -> "ConversationEntity":
         """Archive this conversation."""
-        return self.clone(status=value_objects.ConversationStatus.ARCHIVED)
+        updated = self.clone(status=value_objects.ConversationStatus.ARCHIVED)
+        updated._add_event(
+            ConversationUpdatedEvent(
+                update_object=ConversationUpdateObject(
+                    status=value_objects.ConversationStatus.ARCHIVED.value
+                )
+            )
+        )
+        return updated
 
     def pause(self) -> "ConversationEntity":
         """Pause this conversation."""
-        return self.clone(status=value_objects.ConversationStatus.PAUSED)
+        updated = self.clone(status=value_objects.ConversationStatus.PAUSED)
+        updated._add_event(
+            ConversationUpdatedEvent(
+                update_object=ConversationUpdateObject(
+                    status=value_objects.ConversationStatus.PAUSED.value
+                )
+            )
+        )
+        return updated
 
     def resume(self) -> "ConversationEntity":
         """Resume this conversation."""
-        return self.clone(status=value_objects.ConversationStatus.ACTIVE)
+        updated = self.clone(status=value_objects.ConversationStatus.ACTIVE)
+        updated._add_event(
+            ConversationUpdatedEvent(
+                update_object=ConversationUpdateObject(
+                    status=value_objects.ConversationStatus.ACTIVE.value
+                )
+            )
+        )
+        return updated

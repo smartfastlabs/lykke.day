@@ -33,6 +33,48 @@ class BotPersonalityRepository(
         """
         super().__init__(user_id=user_id)
 
+    def _prepare_entity_for_save(
+        self, obj: BotPersonalityEntity
+    ) -> BotPersonalityEntity:
+        """Prepare entity for save.
+
+        For BotPersonality, we preserve the entity's user_id even if it's None,
+        since system personalities (user_id=None) are valid.
+
+        Args:
+            obj: The entity to prepare.
+
+        Returns:
+            The entity unchanged (preserving its user_id).
+        """
+        # Don't force user_id on bot personalities - preserve entity's user_id
+        return obj
+
+    def _apply_user_scope(self, stmt: Select[tuple]) -> Select[tuple]:
+        """Apply user scoping to a query.
+
+        For BotPersonality, when user_id is set, we want to include:
+        - Personalities belonging to this user
+        - System personalities (user_id=None)
+
+        Args:
+            stmt: The select statement to apply scoping to.
+
+        Returns:
+            The select statement with user scoping applied.
+        """
+        from sqlalchemy import or_
+
+        if self._is_user_scoped:
+            # Include both user's personalities AND system personalities (user_id=None)
+            stmt = stmt.where(
+                or_(
+                    self.table.c.user_id == self.user_id,
+                    self.table.c.user_id.is_(None),
+                )
+            )
+        return stmt
+
     def build_query(self, query: value_objects.BotPersonalityQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
         stmt = super().build_query(query)
