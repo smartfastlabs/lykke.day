@@ -18,7 +18,7 @@ class Factoid(Base):
     factoid_type = Column(String, nullable=False)  # FactoidType enum as string
     criticality = Column(String, nullable=False)  # FactoidCriticality enum as string
     content = Column(Text, nullable=False)  # Factoid content
-    embedding = Column(ARRAY(Float), nullable=True)  # For semantic search (vector embeddings)
+    embedding: Column[ARRAY[Float]] = Column(ARRAY(Float), nullable=True)  # For semantic search (vector embeddings)
     ai_suggested = Column(String, nullable=False, default="false")  # AI marked as important (stored as string for compatibility)
     user_confirmed = Column(String, nullable=False, default="false")  # User confirmed criticality (stored as string for compatibility)
     last_accessed = Column(DateTime, nullable=False)

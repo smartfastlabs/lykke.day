@@ -124,3 +124,19 @@ class PushSubscriptionUpdateObject(BaseUpdateObject):
     """Update object for PushSubscription entity."""
 
     device_name: str | None = None
+
+
+@dataclass(kw_only=True)
+class BotPersonalityUpdateObject(BaseUpdateObject):
+    """Update object for BotPersonality entity."""
+
+    name: str | None = None
+    user_amendments: str | None = None
+
+
+@dataclass(kw_only=True)
+class ConversationUpdateObject(BaseUpdateObject):
+    """Update object for Conversation entity."""
+
+    status: str | None = None  # ConversationStatus enum as string
+    context: dict | None = None

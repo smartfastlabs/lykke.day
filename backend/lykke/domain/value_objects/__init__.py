@@ -1,4 +1,12 @@
 from .action import Action, ActionType
+from .ai_chat import (
+    ConversationChannel,
+    ConversationStatus,
+    FactoidCriticality,
+    FactoidType,
+    LLMProvider,
+    MessageRole,
+)
 from .alarm import Alarm, AlarmType
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .calendar_subscription import CalendarSubscription
@@ -41,8 +49,10 @@ from .time_block import (
 )
 from .update import (
     BaseUpdateObject,
+    BotPersonalityUpdateObject,
     CalendarEntrySeriesUpdateObject,
     CalendarUpdateObject,
+    ConversationUpdateObject,
     DayTemplateUpdateObject,
     DayUpdateObject,
     PushSubscriptionUpdateObject,
@@ -64,12 +74,16 @@ __all__ = [
     "BaseResponseObject",
     "BaseUpdateObject",
     "BaseValueObject",
+    "BotPersonalityUpdateObject",
     "CalendarEntryQuery",
     "CalendarEntrySeriesQuery",
     "CalendarEntrySeriesUpdateObject",
     "CalendarQuery",
     "CalendarSubscription",
     "CalendarUpdateObject",
+    "ConversationChannel",
+    "ConversationStatus",
+    "ConversationUpdateObject",
     "DateQuery",
     "DayContext",
     "DayMode",
@@ -83,6 +97,10 @@ __all__ = [
     "DayTimeBlock",
     "DayUpdateObject",
     "EventCategory",
+    "FactoidCriticality",
+    "FactoidType",
+    "LLMProvider",
+    "MessageRole",
     "NotificationAction",
     "NotificationPayload",
     "PagedQueryResponse",
