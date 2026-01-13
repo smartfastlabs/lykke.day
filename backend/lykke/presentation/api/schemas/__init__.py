@@ -2,19 +2,18 @@
 
 from .action import ActionSchema
 from .alarm import AlarmSchema
-from .conversation import ConversationSchema
-from .message import MessageSchema, SendMessageRequestSchema, SendMessageResponseSchema
 from .calendar import (
     CalendarCreateSchema,
     CalendarSchema,
-    SyncSubscriptionSchema,
     CalendarUpdateSchema,
+    SyncSubscriptionSchema,
 )
+from .calendar_entry import CalendarEntrySchema
 from .calendar_entry_series import (
     CalendarEntrySeriesSchema,
     CalendarEntrySeriesUpdateSchema,
 )
-from .calendar_entry import CalendarEntrySchema
+from .conversation import ConversationSchema
 from .day import DaySchema, DayUpdateSchema
 from .day_context import DayContextSchema
 from .day_template import (
@@ -25,20 +24,15 @@ from .day_template import (
     DayTemplateTimeBlockSchema,
     DayTemplateUpdateSchema,
 )
+from .message import MessageSchema, SendMessageRequestSchema, SendMessageResponseSchema
 from .pagination import PagedResponseSchema
-from .query import QuerySchema
-from .user import (
-    UserSchema,
-    UserSettingsSchema,
-    UserSettingsUpdateSchema,
-    UserUpdateSchema,
-)
 from .push_subscription import (
     PushSubscriptionCreateSchema,
     PushSubscriptionKeysSchema,
     PushSubscriptionSchema,
     PushSubscriptionUpdateSchema,
 )
+from .query import QuerySchema
 from .routine import (
     RoutineCreateSchema,
     RoutineSchema,
@@ -56,6 +50,19 @@ from .time_block_definition import (
     TimeBlockDefinitionCreateSchema,
     TimeBlockDefinitionSchema,
     TimeBlockDefinitionUpdateSchema,
+)
+from .user import (
+    UserSchema,
+    UserSettingsSchema,
+    UserSettingsUpdateSchema,
+    UserUpdateSchema,
+)
+from .websocket_message import (
+    WebSocketAssistantMessageSchema,
+    WebSocketConnectionAckSchema,
+    WebSocketErrorSchema,
+    WebSocketMessageReceivedSchema,
+    WebSocketUserMessageSchema,
 )
 
 # Rebuild models with forward references after all classes are defined
@@ -94,21 +101,22 @@ ConversationSchema.model_rebuild()
 MessageSchema.model_rebuild()
 SendMessageRequestSchema.model_rebuild()
 SendMessageResponseSchema.model_rebuild()
+WebSocketUserMessageSchema.model_rebuild()
+WebSocketMessageReceivedSchema.model_rebuild()
+WebSocketAssistantMessageSchema.model_rebuild()
+WebSocketConnectionAckSchema.model_rebuild()
+WebSocketErrorSchema.model_rebuild()
 
 __all__ = [
     "ActionSchema",
     "AlarmSchema",
-    "ConversationSchema",
-    "MessageSchema",
-    "SendMessageRequestSchema",
-    "SendMessageResponseSchema",
+    "CalendarCreateSchema",
     "CalendarEntrySchema",
     "CalendarEntrySeriesSchema",
-    "CalendarCreateSchema",
-    "CalendarSchema",
-    "SyncSubscriptionSchema",
-    "CalendarUpdateSchema",
     "CalendarEntrySeriesUpdateSchema",
+    "CalendarSchema",
+    "CalendarUpdateSchema",
+    "ConversationSchema",
     "DayContextSchema",
     "DaySchema",
     "DayTemplateCreateSchema",
@@ -118,17 +126,21 @@ __all__ = [
     "DayTemplateTimeBlockSchema",
     "DayTemplateUpdateSchema",
     "DayUpdateSchema",
+    "MessageSchema",
     "PagedResponseSchema",
-    "QuerySchema",
     "PushSubscriptionCreateSchema",
     "PushSubscriptionKeysSchema",
     "PushSubscriptionSchema",
     "PushSubscriptionUpdateSchema",
+    "QuerySchema",
     "RoutineCreateSchema",
     "RoutineSchema",
     "RoutineTaskCreateSchema",
     "RoutineTaskUpdateSchema",
     "RoutineUpdateSchema",
+    "SendMessageRequestSchema",
+    "SendMessageResponseSchema",
+    "SyncSubscriptionSchema",
     "TaskDefinitionCreateSchema",
     "TaskDefinitionSchema",
     "TaskDefinitionUpdateSchema",
@@ -141,4 +153,9 @@ __all__ = [
     "UserSettingsSchema",
     "UserSettingsUpdateSchema",
     "UserUpdateSchema",
+    "WebSocketAssistantMessageSchema",
+    "WebSocketConnectionAckSchema",
+    "WebSocketErrorSchema",
+    "WebSocketMessageReceivedSchema",
+    "WebSocketUserMessageSchema",
 ]
