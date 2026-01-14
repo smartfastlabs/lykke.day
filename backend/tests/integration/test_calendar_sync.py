@@ -8,7 +8,7 @@ from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 from lykke.domain.value_objects import TaskFrequency
 from lykke.domain.value_objects.sync import SyncSubscription
 from lykke.domain import value_objects
-from lykke.infrastructure.gateways.google import GoogleCalendarGateway
+from lykke.infrastructure.gateways import GoogleCalendarGateway, StubPubSubGateway
 from lykke.infrastructure.repositories import CalendarEntryRepository
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
@@ -80,7 +80,7 @@ async def test_sync_creates_new_events(test_user_id, test_calendar, calendar_ent
     )
     
     # Save the event using repository
-    uow_factory = SqlAlchemyUnitOfWorkFactory()
+    uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
     uow = uow_factory.create(test_user_id)
     
     async with uow:
@@ -117,7 +117,7 @@ async def test_sync_updates_existing_events(
         frequency=TaskFrequency.ONCE,
     )
     
-    uow_factory = SqlAlchemyUnitOfWorkFactory()
+    uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
     uow = uow_factory.create(test_user_id)
     
     # Create initial event
@@ -173,7 +173,7 @@ async def test_sync_deletes_cancelled_events(
         frequency=TaskFrequency.ONCE,
     )
     
-    uow_factory = SqlAlchemyUnitOfWorkFactory()
+    uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
     uow = uow_factory.create(test_user_id)
     
     # Create event
@@ -224,7 +224,7 @@ async def test_upsert_with_same_platform_id(test_user_id, test_calendar, calenda
         frequency=TaskFrequency.ONCE,
     )
     
-    uow_factory = SqlAlchemyUnitOfWorkFactory()
+    uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
     uow = uow_factory.create(test_user_id)
     
     # Create first version

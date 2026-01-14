@@ -10,6 +10,7 @@ from lykke.application.commands.calendar.subscribe_calendar import (
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.infrastructure.gateways import StubPubSubGateway
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositories,
     SqlAlchemyUnitOfWorkFactory,
@@ -96,7 +97,7 @@ async def test_subscribe_calendar_persists_subscription(
 
     handler = SubscribeCalendarHandler(
         ro_repos=SqlAlchemyReadOnlyRepositories(user_id=test_user.id),
-        uow_factory=SqlAlchemyUnitOfWorkFactory(),
+        uow_factory=SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway()),
         user_id=test_user.id,
         google_gateway=google_gateway,
     )

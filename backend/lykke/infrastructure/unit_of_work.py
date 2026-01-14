@@ -169,13 +169,13 @@ class SqlAlchemyUnitOfWork:
     }
 
     def __init__(
-        self, user_id: UUID, pubsub_gateway: PubSubGatewayProtocol | None = None
+        self, user_id: UUID, pubsub_gateway: PubSubGatewayProtocol
     ) -> None:
         """Initialize the unit of work for a specific user.
 
         Args:
             user_id: The UUID of the user to scope repositories to.
-            pubsub_gateway: Optional PubSub gateway for broadcasting events
+            pubsub_gateway: PubSub gateway for broadcasting events
         """
         self.user_id = user_id
         self._connection: AsyncConnection | None = None
@@ -656,7 +656,7 @@ class SqlAlchemyUnitOfWork:
         Publishes audit log events to user-specific channels for real-time
         monitoring and notifications (e.g., via WebSocket handlers).
         """
-        if not self._pubsub_gateway or not self._audit_logs_to_broadcast:
+        if not self._audit_logs_to_broadcast:
             return
 
         from lykke.core.utils.serialization import dataclass_to_json_dict
@@ -699,11 +699,11 @@ class SqlAlchemyUnitOfWork:
 class SqlAlchemyUnitOfWorkFactory:
     """Factory for creating SqlAlchemyUnitOfWork instances."""
 
-    def __init__(self, pubsub_gateway: PubSubGatewayProtocol | None = None) -> None:
+    def __init__(self, pubsub_gateway: PubSubGatewayProtocol) -> None:
         """Initialize the factory.
 
         Args:
-            pubsub_gateway: Optional PubSub gateway for broadcasting events
+            pubsub_gateway: PubSub gateway for broadcasting events
         """
         self._pubsub_gateway = pubsub_gateway
 

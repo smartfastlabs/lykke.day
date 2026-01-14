@@ -5,7 +5,7 @@ These tests verify that dependencies are properly configured and injected.
 
 import pytest
 
-from lykke.infrastructure.gateways import RedisPubSubGateway
+from lykke.infrastructure.gateways import RedisPubSubGateway, StubPubSubGateway
 from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 from lykke.presentation.api.routers.dependencies.services import (
     get_pubsub_gateway,
@@ -51,18 +51,20 @@ def test_get_unit_of_work_factory_requires_pubsub_gateway():
     assert uow._pubsub_gateway is pubsub_gateway
 
 
-def test_unit_of_work_factory_without_pubsub_gateway_creates_uow_with_none():
-    """Test that creating a factory without pubsub_gateway results in None gateway.
+def test_unit_of_work_factory_requires_pubsub_gateway():
+    """Test that SqlAlchemyUnitOfWorkFactory requires a pubsub_gateway parameter.
     
-    This documents the behavior when pubsub_gateway is not provided.
+    This ensures that pubsub_gateway is always provided, preventing audit logs
+    from not being broadcast.
     """
-    # Create factory without pubsub_gateway
-    factory = SqlAlchemyUnitOfWorkFactory()
+    # Create factory with a stub pubsub_gateway
+    stub_gateway = StubPubSubGateway()
+    factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=stub_gateway)
     
     # Create a UoW
     from uuid import uuid4
     uow = factory.create(user_id=uuid4())
     
-    # The UoW should have _pubsub_gateway as None
+    # The UoW should have the pubsub_gateway set
     assert hasattr(uow, "_pubsub_gateway")
-    assert uow._pubsub_gateway is None
+    assert uow._pubsub_gateway is stub_gateway
