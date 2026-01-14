@@ -5,12 +5,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import UUID
 
+from lykke.domain.entities import AuditLogEntity
+from lykke.domain.value_objects import ActivityType
 from lykke.domain.value_objects.update import (
     BotPersonalityUpdateObject,
     ConversationUpdateObject,
 )
 
-from .base import DomainEvent, EntityUpdatedEvent
+from .base import AuditedEvent, DomainEvent, EntityUpdatedEvent
 
 __all__ = [
     "ConversationCreatedEvent",
@@ -38,13 +40,31 @@ class ConversationUpdatedEvent(EntityUpdatedEvent[ConversationUpdateObject]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MessageSentEvent(DomainEvent):
+class MessageSentEvent(DomainEvent, AuditedEvent):
     """Event raised when a message is sent in a conversation."""
 
     message_id: UUID
     conversation_id: UUID
     role: str  # MessageRole enum as string
     content_preview: str  # First 100 chars of content
+
+    def to_audit_log(self, user_id: UUID) -> AuditLogEntity:
+        """Create audit log for message sent.
+
+        Returns:
+            AuditLogEntity for message sent.
+        """
+        return AuditLogEntity(
+            user_id=user_id,
+            activity_type=ActivityType.MESSAGE_SENT,
+            entity_id=self.message_id,
+            entity_type="message",
+            meta={
+                "conversation_id": str(self.conversation_id),
+                "role": self.role,
+                "content_preview": self.content_preview,
+            },
+        )
 
 
 @dataclass(frozen=True, kw_only=True)

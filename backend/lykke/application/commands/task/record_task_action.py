@@ -5,7 +5,7 @@ from uuid import UUID
 from lykke.application.commands.base import BaseCommandHandler
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.entities import AuditLogEntity, DayEntity, TaskEntity
+from lykke.domain.entities import DayEntity, TaskEntity
 
 
 class RecordTaskActionHandler(BaseCommandHandler):
@@ -56,27 +56,8 @@ class RecordTaskActionHandler(BaseCommandHandler):
             # Use Day aggregate root method to record action
             # This ensures proper aggregate boundaries and domain event handling
             # The method mutates the task in place and returns the updated task
+            # Audit logs are automatically created by the UOW for audited events
             updated_task = day.record_task_action(task, action)
-
-            # Create audit log entry for significant actions
-            if action.type == value_objects.ActionType.COMPLETE:
-                audit_log = AuditLogEntity(
-                    user_id=self.user_id,
-                    activity_type=value_objects.ActivityType.TASK_COMPLETED,
-                    entity_id=task_id,
-                    entity_type="task",
-                    meta={"action_created_at": action.created_at.isoformat()},
-                )
-                await uow.create(audit_log)
-            elif action.type == value_objects.ActionType.PUNT:
-                audit_log = AuditLogEntity(
-                    user_id=self.user_id,
-                    activity_type=value_objects.ActivityType.TASK_PUNTED,
-                    entity_id=task_id,
-                    entity_type="task",
-                    meta={"action_created_at": action.created_at.isoformat()},
-                )
-                await uow.create(audit_log)
 
             # Add both Day (for events) and Task (for state changes) to UoW
             # Only add day if we didn't create it (create() already adds it)

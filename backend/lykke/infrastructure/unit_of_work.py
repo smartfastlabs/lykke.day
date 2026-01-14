@@ -577,9 +577,15 @@ class SqlAlchemyUnitOfWork:
         - If it has EntityCreatedEvent: insert it
         - If it has EntityUpdatedEvent or other events: update it
 
+        Also automatically creates AuditLog entities for events that implement
+        the AuditedEvent protocol.
+
         Note: Events are not collected here - they remain on entities
         to be collected after processing.
         """
+        # Process entities and collect audit logs to create
+        audit_logs_to_create: list[AuditLogEntity] = []
+
         for entity in self._added_entities:
             repo = self._get_repository_for_entity(entity)
 
@@ -598,6 +604,14 @@ class SqlAlchemyUnitOfWork:
             has_deleted_event = any(isinstance(e, EntityDeletedEvent) for e in events)
             has_updated_event = any(isinstance(e, EntityUpdatedEvent) for e in events)
 
+            # Create audit logs from audited events (skip for AuditLogEntity itself to avoid loops)
+            if not isinstance(entity, AuditLogEntity):
+                for event in events:
+                    # Check if event implements AuditedEvent protocol
+                    if hasattr(event, "to_audit_log") and callable(event.to_audit_log):
+                        audit_log = event.to_audit_log(self.user_id)
+                        audit_logs_to_create.append(audit_log)
+
             # Put events back so they can be collected later for dispatching
             for event in events:
                 entity._add_event(event)
@@ -615,6 +629,17 @@ class SqlAlchemyUnitOfWork:
             else:
                 # Update the entity (existing entity with changes)
                 await repo.put(entity)
+
+        # Process auto-created audit logs immediately
+        # We need to process them in a separate pass to avoid modifying _added_entities during iteration
+        if audit_logs_to_create:
+            audit_log_repo = self._get_repository_for_entity(audit_logs_to_create[0])
+            for audit_log in audit_logs_to_create:
+                audit_log.create()
+                # Track for PubSub broadcasting
+                self._audit_logs_to_broadcast.append(audit_log)
+                # Persist immediately
+                await audit_log_repo.put(audit_log)
 
     def _collect_domain_events_from_entities(self) -> list[DomainEvent]:
         """Collect domain events from all added entities.
