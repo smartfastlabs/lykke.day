@@ -9,7 +9,13 @@ import pytest
 from lykke.application.commands.task import RecordTaskActionHandler
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity, DayTemplateEntity, TaskEntity, UserEntity
+from lykke.domain.entities import (
+    AuditLogEntity,
+    DayEntity,
+    DayTemplateEntity,
+    TaskEntity,
+    UserEntity,
+)
 from lykke.domain.events.task_events import TaskActionRecordedEvent, TaskStateUpdatedEvent
 
 
@@ -71,6 +77,7 @@ class _FakeReadOnlyRepos:
         user_repo: _FakeUserReadOnlyRepo,
     ) -> None:
         fake = object()
+        self.audit_log_ro_repo = fake
         self.auth_token_ro_repo = fake
         self.bot_personality_ro_repo = fake
         self.calendar_entry_ro_repo = fake
@@ -186,6 +193,14 @@ async def test_record_task_action_adds_task_and_day_to_uow():
     assert any(isinstance(e, DayEntity) for e in added_entities)
     assert any(isinstance(e, TaskEntity) for e in added_entities)
 
+    # Verify audit log was created
+    assert len(uow_factory.uow.created) == 1
+    created_audit_log = uow_factory.uow.created[0]
+    assert isinstance(created_audit_log, AuditLogEntity)
+    assert created_audit_log.activity_type == value_objects.ActivityType.TASK_COMPLETED
+    assert created_audit_log.entity_id == task.id
+    assert created_audit_log.user_id == user_id
+
 
 @pytest.mark.asyncio
 async def test_record_task_action_raises_domain_events():
@@ -293,12 +308,15 @@ async def test_record_task_action_creates_day_if_not_exists():
     # Act
     result = await handler.record_task_action(task.id, action)
 
-    # Assert - day should have been created
-    assert len(uow_factory.uow.created) == 1
-    created_day = uow_factory.uow.created[0]
-    assert isinstance(created_day, DayEntity)
+    # Assert - day and audit log should have been created
+    assert len(uow_factory.uow.created) == 2
+    created_entities = uow_factory.uow.created
+    created_day = next(e for e in created_entities if isinstance(e, DayEntity))
+    created_audit_log = next(e for e in created_entities if isinstance(e, AuditLogEntity))
     assert created_day.date == task_date
     assert created_day.user_id == user_id
+    assert created_audit_log.activity_type == value_objects.ActivityType.TASK_COMPLETED
+    assert created_audit_log.entity_id == task.id
 
 
 @pytest.mark.asyncio
@@ -354,3 +372,11 @@ async def test_record_task_action_punt_updates_status():
     assert len(result.actions) == 1
     assert result.actions[0].type == value_objects.ActionType.PUNT
     assert result.completed_at is None  # Punt doesn't set completed_at
+
+    # Verify audit log was created for punt action
+    assert len(uow_factory.uow.created) == 1
+    created_audit_log = uow_factory.uow.created[0]
+    assert isinstance(created_audit_log, AuditLogEntity)
+    assert created_audit_log.activity_type == value_objects.ActivityType.TASK_PUNTED
+    assert created_audit_log.entity_id == task.id
+    assert created_audit_log.user_id == user_id

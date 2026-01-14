@@ -1,4 +1,5 @@
 from .action import Action, ActionType
+from .activity_type import ActivityType
 from .ai_chat import (
     ConversationChannel,
     ConversationStatus,
@@ -13,6 +14,7 @@ from .calendar_subscription import CalendarSubscription
 from .day import DayContext, DayMode, DayStatus, DayTag
 from .push import NotificationAction, NotificationPayload
 from .query import (
+    AuditLogQuery,
     AuthTokenQuery,
     BaseQuery,
     BotPersonalityQuery,
@@ -70,8 +72,10 @@ from .user import UserSetting, UserStatus
 __all__ = [
     "Action",
     "ActionType",
+    "ActivityType",
     "Alarm",
     "AlarmType",
+    "AuditLogQuery",
     "AuthTokenQuery",
     "BaseQuery",
     "BaseRequestObject",

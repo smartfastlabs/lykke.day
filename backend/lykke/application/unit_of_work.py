@@ -12,6 +12,7 @@ from typing import Protocol, Self
 from uuid import UUID
 
 from lykke.application.repositories import (
+    AuditLogRepositoryReadOnlyProtocol,
     AuthTokenRepositoryReadOnlyProtocol,
     BotPersonalityRepositoryReadOnlyProtocol,
     CalendarEntryRepositoryReadOnlyProtocol,
@@ -53,6 +54,7 @@ class UnitOfWorkProtocol(Protocol):
     """
 
     # Read-only repository properties (for reading entities)
+    audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
     bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
@@ -188,6 +190,7 @@ class ReadOnlyRepositories(Protocol):
     """
 
     # Read-only repository properties
+    audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
     bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol

@@ -1,5 +1,6 @@
 """SQLAlchemy ORM table definitions."""
 
+from .audit_logs import AuditLog
 from .auth_tokens import AuthToken
 from .base import Base, metadata
 from .bot_personalities import BotPersonality
@@ -19,6 +20,7 @@ from .time_block_definitions import TimeBlockDefinition
 from .users import User
 
 # Export table objects for Core-style queries
+audit_logs_tbl = AuditLog.__table__
 auth_tokens_tbl = AuthToken.__table__
 bot_personalities_tbl = BotPersonality.__table__
 calendar_entries_tbl = CalendarEntry.__table__
@@ -41,6 +43,7 @@ __all__ = [
     "Base",
     "metadata",
     # ORM Models
+    "AuditLog",
     "AuthToken",
     "BotPersonality",
     "Calendar",
@@ -58,6 +61,7 @@ __all__ = [
     "TimeBlockDefinition",
     "User",
     # Table objects (for Core-style queries)
+    "audit_logs_tbl",
     "auth_tokens_tbl",
     "bot_personalities_tbl",
     "calendar_entries_tbl",

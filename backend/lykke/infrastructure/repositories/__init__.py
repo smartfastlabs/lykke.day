@@ -1,3 +1,4 @@
+from .audit_log import AuditLogRepository
 from .auth_token import AuthTokenRepository
 from .bot_personality import BotPersonalityRepository
 from .calendar import CalendarRepository
@@ -16,6 +17,7 @@ from .time_block_definition import TimeBlockDefinitionRepository
 from .user import UserRepository
 
 __all__ = [
+    "AuditLogRepository",
     "AuthTokenRepository",
     "BotPersonalityRepository",
     "CalendarEntryRepository",

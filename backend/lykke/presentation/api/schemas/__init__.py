@@ -2,6 +2,7 @@
 
 from .action import ActionSchema
 from .alarm import AlarmSchema
+from .audit_log import AuditLogSchema
 from .calendar import (
     CalendarCreateSchema,
     CalendarSchema,
@@ -110,6 +111,7 @@ WebSocketErrorSchema.model_rebuild()
 __all__ = [
     "ActionSchema",
     "AlarmSchema",
+    "AuditLogSchema",
     "CalendarCreateSchema",
     "CalendarEntrySchema",
     "CalendarEntrySeriesSchema",

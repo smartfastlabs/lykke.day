@@ -4,6 +4,7 @@ These protocols define the interface that repositories must implement,
 allowing services to depend on abstractions rather than concrete implementations.
 """
 
+from .audit_log_repository import AuditLogRepositoryReadOnlyProtocol
 from .auth_token_repository import (
     AuthTokenRepositoryReadOnlyProtocol,
     AuthTokenRepositoryReadWriteProtocol,
@@ -71,6 +72,7 @@ from .user_repository import (
 
 # Exported repository protocols (sorted alphabetically)
 __all__ = [
+    "AuditLogRepositoryReadOnlyProtocol",
     "AuthTokenRepositoryReadOnlyProtocol",
     "AuthTokenRepositoryReadWriteProtocol",
     "BotPersonalityRepositoryReadOnlyProtocol",

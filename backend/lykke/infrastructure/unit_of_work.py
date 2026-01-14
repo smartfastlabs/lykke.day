@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from lykke.application.events import send_domain_events
 from lykke.application.repositories import (
+    AuditLogRepositoryReadOnlyProtocol,
     AuthTokenRepositoryReadOnlyProtocol,
     AuthTokenRepositoryReadWriteProtocol,
     BotPersonalityRepositoryReadOnlyProtocol,
@@ -51,6 +52,7 @@ from lykke.application.unit_of_work import (
 from lykke.core.exceptions import BadRequestError, NotFoundError
 from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import (
+    AuditLogEntity,
     BotPersonalityEntity,
     CalendarEntity,
     CalendarEntryEntity,
@@ -78,6 +80,7 @@ from lykke.infrastructure.database.transaction import (
     set_transaction_connection,
 )
 from lykke.infrastructure.repositories import (
+    AuditLogRepository,
     AuthTokenRepository,
     BotPersonalityRepository,
     CalendarEntryRepository,
@@ -112,6 +115,7 @@ class SqlAlchemyUnitOfWork:
     """
 
     # Read-only repository type annotations (public API for commands)
+    audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
     bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
@@ -132,6 +136,7 @@ class SqlAlchemyUnitOfWork:
     # Entity type to repository attribute name mapping
     # Maps: entity_type -> (ro_repo_attr, rw_repo_attr)
     _ENTITY_REPO_MAP: dict[type, tuple[str, str]] = {
+        AuditLogEntity: ("audit_log_ro_repo", "audit_log_ro_repo"),  # Read-only, uses same repo
         BotPersonalityEntity: ("bot_personality_ro_repo", "_bot_personality_rw_repo"),
         DayEntity: ("day_ro_repo", "_day_rw_repo"),
         DayTemplateEntity: ("day_template_ro_repo", "_day_template_rw_repo"),
@@ -360,6 +365,13 @@ class SqlAlchemyUnitOfWork:
         )
         self.factoid_ro_repo = cast("FactoidRepositoryReadOnlyProtocol", factoid_repo)
         self._factoid_rw_repo = factoid_repo
+
+        # AuditLogRepository is read-only (immutable entities)
+        # Even though it's read-only in protocol, the implementation has put() for creates
+        audit_log_repo = AuditLogRepository(user_id=self.user_id)
+        self.audit_log_ro_repo = cast(
+            "AuditLogRepositoryReadOnlyProtocol", audit_log_repo
+        )
 
         return self
 
@@ -757,6 +769,13 @@ class SqlAlchemyReadOnlyRepositories:
             FactoidRepository(user_id=self.user_id),
         )
         self.factoid_ro_repo = factoid_repo
+
+        # AuditLogRepository is read-only (immutable entities)
+        audit_log_repo = cast(
+            "AuditLogRepositoryReadOnlyProtocol",
+            AuditLogRepository(user_id=self.user_id),
+        )
+        self.audit_log_ro_repo = audit_log_repo
 
 
 class SqlAlchemyReadOnlyRepositoryFactory:
