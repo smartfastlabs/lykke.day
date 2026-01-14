@@ -94,28 +94,35 @@ async def get_current_user_from_token(websocket: WebSocket) -> UserEntity:
 
     try:
         # Decode JWT token
-        jwt_strategy = get_jwt_strategy()
-        # Pass None for user_manager since we only need to decode the token
-        user_id_str = await jwt_strategy.read_token(token, user_manager=None)  # type: ignore[arg-type]
-
-        if user_id_str is None:
-            raise AuthenticationError("Invalid authentication token")
-
-        # Get user from database using the generator pattern
-        from lykke.infrastructure.auth import get_async_session
+        # We need to create a user_manager to parse the token
+        from lykke.infrastructure.auth import get_async_session, get_user_db, get_user_manager
 
         async for session in get_async_session():
             async for user_db in get_user_db(session):
-                user = await user_db.get(user_id_str)
+                async for user_manager in get_user_manager(user_db):
+                    jwt_strategy = get_jwt_strategy()
+                    result = await jwt_strategy.read_token(token, user_manager=user_manager)
 
-                if user is None:
-                    raise UserNotExists()
+                    if result is None:
+                        raise AuthenticationError("Invalid authentication token")
 
-                if not user.is_active:
-                    raise AuthenticationError("User is not active")
+                    # read_token can return either a user object or a user ID string
+                    # Check if it's already a user object
+                    from lykke.infrastructure.database.tables import User as UserDB
+                    
+                    if isinstance(result, UserDB):
+                        user = result
+                    else:
+                        # It's a user ID string, fetch the user
+                        user = await user_db.get(result)
+                        if user is None:
+                            raise UserNotExists()
 
-                # Convert to domain entity
-                return _db_user_to_entity(user)
+                    if not user.is_active:
+                        raise AuthenticationError("User is not active")
+
+                    # Convert to domain entity
+                    return _db_user_to_entity(user)
 
         raise AuthenticationError("Failed to get database session")
 

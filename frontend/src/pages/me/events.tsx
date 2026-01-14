@@ -9,6 +9,7 @@ import {
 import Page from "@/components/shared/layout/Page";
 import { Icon } from "solid-heroicons";
 import { signal, circleStack } from "solid-heroicons/outline";
+import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 
 interface AuditLog {
   id: string;
@@ -162,13 +163,9 @@ export const EventsPage: Component = () => {
     setConnectionStatus("connecting");
     setError(null);
 
-    // Determine WebSocket protocol based on current page protocol
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-
-    // For development, connect directly to backend (port 8000)
-    // For production, use the same host (proxy should handle it)
-    const isDev = import.meta.env.DEV;
-    const backendHost = isDev ? "localhost:8000" : window.location.host;
+    // Get WebSocket configuration
+    const protocol = getWebSocketProtocol();
+    const baseUrl = getWebSocketBaseUrl();
 
     // Get auth token from cookie (same cookie used for API requests)
     const getCookie = (name: string): string | null => {
@@ -182,7 +179,7 @@ export const EventsPage: Component = () => {
 
     // Build WebSocket URL with token as query parameter if available
     // API_PREFIX is empty, so route is at /events/ws
-    let wsUrl = `${protocol}//${window.location.host}/events/ws`;
+    let wsUrl = `${protocol}//${baseUrl}/events/ws`;
     if (token) {
       wsUrl += `?token=${encodeURIComponent(token)}`;
     }
