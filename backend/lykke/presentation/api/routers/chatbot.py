@@ -185,16 +185,23 @@ async def unified_websocket(
 
                 if audit_log_message:
                     # Convert the AuditLog dict to schema and send to client
+                    from datetime import datetime
+                    from uuid import UUID
+
                     from lykke.domain.entities import AuditLogEntity
                     from lykke.domain.value_objects import ActivityType
 
                     # Reconstruct the AuditLogEntity from the dict
+                    # Note: Redis pub/sub serializes UUIDs to strings and datetimes to ISO strings
+                    entity_id_raw = audit_log_message.get("entity_id")
                     audit_log_entity = AuditLogEntity(
-                        id=audit_log_message["id"],
-                        user_id=audit_log_message["user_id"],
+                        id=UUID(audit_log_message["id"]),
+                        user_id=UUID(audit_log_message["user_id"]),
                         activity_type=ActivityType(audit_log_message["activity_type"]),
-                        occurred_at=audit_log_message["occurred_at"],
-                        entity_id=audit_log_message.get("entity_id"),
+                        occurred_at=datetime.fromisoformat(
+                            audit_log_message["occurred_at"]
+                        ),
+                        entity_id=UUID(entity_id_raw) if entity_id_raw else None,
                         entity_type=audit_log_message.get("entity_type"),
                         meta=audit_log_message.get("meta", {}),
                     )
