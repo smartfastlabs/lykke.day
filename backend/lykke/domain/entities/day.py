@@ -234,6 +234,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
                     TaskPuntedEvent(
                         task_id=task.id,
                         old_status=old_status.value,
+                        new_status=task.status.value,
                     )
                 )
 

@@ -82,20 +82,6 @@ async def test_put_update(bot_personality_repo, test_user):
     assert retrieved.name == "Updated Name"
 
 
-@pytest.mark.asyncio
-async def test_system_personality(bot_personality_repo):
-    """Test creating a system-wide personality (no user_id)."""
-    personality = BotPersonalityEntity(
-        id=uuid4(),
-        user_id=None,
-        name="Default Assistant",
-        system_prompt="You are a helpful AI assistant.",
-    )
-    await bot_personality_repo.put(personality)
-
-    result = await bot_personality_repo.get(personality.id)
-    assert result.user_id is None
-    assert result.is_system_default()
 
 
 @pytest.mark.asyncio
@@ -124,30 +110,6 @@ async def test_search_by_name(bot_personality_repo, test_user):
     assert results[0].id == personality1.id
 
 
-@pytest.mark.asyncio
-async def test_search_includes_system_personalities(bot_personality_repo, test_user):
-    """Test that user-scoped search includes both user and system personalities."""
-    user_personality = BotPersonalityEntity(
-        id=uuid4(),
-        user_id=test_user.id,
-        name="User Personality",
-        system_prompt="User prompt",
-    )
-    system_personality = BotPersonalityEntity(
-        id=uuid4(),
-        user_id=None,
-        name="System Personality",
-        system_prompt="System prompt",
-    )
-    await bot_personality_repo.put(user_personality)
-    await bot_personality_repo.put(system_personality)
-
-    # When searching with user-scoped repo, should get both
-    results = await bot_personality_repo.all()
-
-    personality_ids = [p.id for p in results]
-    assert user_personality.id in personality_ids
-    assert system_personality.id in personality_ids
 
 
 @pytest.mark.asyncio
@@ -155,7 +117,7 @@ async def test_personality_inheritance(bot_personality_repo, test_user):
     """Test bot personality with base personality inheritance."""
     base_personality = BotPersonalityEntity(
         id=uuid4(),
-        user_id=None,
+        user_id=test_user.id,
         name="Base Personality",
         system_prompt="Base system prompt",
     )

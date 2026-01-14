@@ -1,7 +1,6 @@
 # ruff: noqa: I001
 from datetime import time as dt_time
 from typing import Any, ClassVar
-from uuid import UUID
 
 from lykke.domain import value_objects
 from lykke.domain.entities import TaskEntity
@@ -18,10 +17,6 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
     QueryClass = value_objects.TaskQuery
     # Exclude 'date' - it's a database-only field for querying (computed from scheduled_date)
     excluded_row_fields: ClassVar[set[str]] = {"date"}
-
-    def __init__(self, user_id: UUID) -> None:
-        """Initialize TaskRepository with user scoping."""
-        super().__init__(user_id=user_id)
 
     def build_query(self, query: value_objects.TaskQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""

@@ -174,7 +174,7 @@ async def time_block_definition_repo(test_user):
 # AI Chatbot repository fixtures
 @pytest_asyncio.fixture
 async def bot_personality_repo(test_user):
-    """BotPersonalityRepository with optional user scoping."""
+    """BotPersonalityRepository with user scoping."""
     return BotPersonalityRepository(user_id=test_user.id)
 
 

@@ -1,5 +1,4 @@
 from typing import Any
-from uuid import UUID
 
 from sqlalchemy.sql import Select
 
@@ -17,9 +16,6 @@ class CalendarEntrySeriesRepository(
     Object = CalendarEntrySeriesEntity
     table = calendar_entry_series_tbl
     QueryClass = CalendarEntrySeriesQuery
-
-    def __init__(self, user_id: UUID) -> None:
-        super().__init__(user_id=user_id)
 
     def build_query(self, query: BaseQuery) -> Select[tuple]:
         stmt = super().build_query(query)  # type: ignore[arg-type]

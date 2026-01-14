@@ -1,7 +1,6 @@
 """Factoid repository implementation."""
 
 from typing import Any
-from uuid import UUID
 
 from lykke.domain import value_objects
 from lykke.domain.entities import FactoidEntity
@@ -19,10 +18,6 @@ class FactoidRepository(
     Object = FactoidEntity
     table = factoids_tbl
     QueryClass = value_objects.FactoidQuery
-
-    def __init__(self, user_id: UUID) -> None:
-        """Initialize FactoidRepository with user scoping."""
-        super().__init__(user_id=user_id)
 
     def build_query(self, query: value_objects.FactoidQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""

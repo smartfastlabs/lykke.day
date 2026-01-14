@@ -1,16 +1,16 @@
-from typing import Any
-from uuid import UUID
+from typing import Any, ClassVar
 from zoneinfo import ZoneInfo
+
+from sqlalchemy.sql import Select
 
 from lykke.core.config import settings
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntryEntity
 from lykke.infrastructure.database.tables import calendar_entries_tbl
 from lykke.infrastructure.repositories.base.utils import (
-    ensure_datetimes_utc,
     ensure_datetime_utc,
+    ensure_datetimes_utc,
 )
-from sqlalchemy.sql import Select
 
 from .base import CalendarEntryQuery, UserScopedBaseRepository
 
@@ -22,11 +22,7 @@ class CalendarEntryRepository(
     table = calendar_entries_tbl
     QueryClass = CalendarEntryQuery
     # Exclude 'date' - it's a database-only field for querying (computed from starts_at)
-    excluded_row_fields = {"date"}
-
-    def __init__(self, user_id: UUID) -> None:
-        """Initialize CalendarEntryRepository with user scoping."""
-        super().__init__(user_id=user_id)
+    excluded_row_fields: ClassVar[set[str]] = {"date"}
 
     def build_query(self, query: CalendarEntryQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""

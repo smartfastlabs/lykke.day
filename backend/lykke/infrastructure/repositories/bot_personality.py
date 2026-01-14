@@ -1,7 +1,6 @@
 """BotPersonality repository implementation."""
 
 from typing import Any
-from uuid import UUID
 
 from sqlalchemy.sql import Select
 
@@ -9,47 +8,17 @@ from lykke.domain import value_objects
 from lykke.domain.entities import BotPersonalityEntity
 from lykke.infrastructure.database.tables import bot_personalities_tbl
 
-from .base import BaseRepository
+from .base import UserScopedBaseRepository
 
 
 class BotPersonalityRepository(
-    BaseRepository[BotPersonalityEntity, value_objects.BotPersonalityQuery]
+    UserScopedBaseRepository[BotPersonalityEntity, value_objects.BotPersonalityQuery]
 ):
-    """Repository for managing BotPersonality entities.
-
-    Note: BotPersonalities can be user-scoped (user_id set) or system-wide (user_id is None).
-    The user_id on the repository is optional to support querying both.
-    """
+    """Repository for managing BotPersonality entities."""
 
     Object = BotPersonalityEntity
     table = bot_personalities_tbl
     QueryClass = value_objects.BotPersonalityQuery
-
-    def __init__(self, user_id: UUID | None = None) -> None:
-        """Initialize BotPersonalityRepository with optional user scoping.
-
-        Args:
-            user_id: Optional user ID. When set, queries will include both user-specific
-                    and system-wide (user_id=None) personalities.
-        """
-        super().__init__(user_id=user_id)
-
-    def _prepare_entity_for_save(
-        self, obj: BotPersonalityEntity
-    ) -> BotPersonalityEntity:
-        """Prepare entity for save.
-
-        For BotPersonality, we preserve the entity's user_id even if it's None,
-        since system personalities (user_id=None) are valid.
-
-        Args:
-            obj: The entity to prepare.
-
-        Returns:
-            The entity unchanged (preserving its user_id).
-        """
-        # Don't force user_id on bot personalities - preserve entity's user_id
-        return obj
 
     def build_query(self, query: value_objects.BotPersonalityQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""

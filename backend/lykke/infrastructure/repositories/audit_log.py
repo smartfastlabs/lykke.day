@@ -1,7 +1,6 @@
 """AuditLog repository implementation."""
 
 from typing import Any
-from uuid import UUID
 
 from sqlalchemy.sql import Select
 
@@ -21,10 +20,6 @@ class AuditLogRepository(
     Object = AuditLogEntity
     table = audit_logs_tbl
     QueryClass = value_objects.AuditLogQuery
-
-    def __init__(self, user_id: UUID) -> None:
-        """Initialize AuditLogRepository with user scoping."""
-        super().__init__(user_id=user_id)
 
     def build_query(self, query: value_objects.AuditLogQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
@@ -47,6 +42,13 @@ class AuditLogRepository(
 
         if query.occurred_before is not None:
             stmt = stmt.where(self.table.c.occurred_at < query.occurred_before)
+
+        # Default ordering: most recent first (descending by occurred_at)
+        # Override any default ordering from base class
+        if not query.order_by:
+            # Clear any existing ordering and apply default for audit logs
+            stmt = stmt.order_by(None).order_by(self.table.c.occurred_at.desc())
+        # If query.order_by is set, base class will handle it
 
         return stmt
 

@@ -21,23 +21,22 @@ from .base import UserScopedBaseRepository
 def dataclass_to_json_dict(obj: Any) -> dict[str, Any]:
     """Convert a dataclass to a JSON-serializable dict, handling UUIDs, enums, datetime, and time."""
     result = asdict(obj)
-    
+
     def convert_value(value: Any) -> Any:
         if isinstance(value, UUID):
             return str(value)
-        elif isinstance(value, datetime):
-            return value.isoformat()
-        elif isinstance(value, time):
+        elif isinstance(value, (datetime, time)):
             return value.isoformat()
         elif isinstance(value, dict):
             return {k: convert_value(v) for k, v in value.items()}
         elif isinstance(value, list):
             return [convert_value(item) for item in value]
-        elif hasattr(value, 'value'):  # Enum
+        elif hasattr(value, "value"):  # Enum
             return value.value
         return value
-    
+
     return {k: convert_value(v) for k, v in result.items()}
+
 
 CalendarQuery = value_objects.CalendarQuery
 
@@ -48,10 +47,6 @@ class CalendarRepository(UserScopedBaseRepository[CalendarEntity, CalendarQuery]
     Object = CalendarEntity
     table = calendars_tbl
     QueryClass = CalendarQuery
-
-    def __init__(self, user_id: UUID) -> None:
-        """Initialize CalendarRepository with user scoping."""
-        super().__init__(user_id=user_id)
 
     def build_query(self, query: CalendarQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
@@ -91,7 +86,9 @@ class CalendarRepository(UserScopedBaseRepository[CalendarEntity, CalendarQuery]
         }
 
         if calendar.sync_subscription:
-            row["sync_subscription"] = dataclass_to_json_dict(calendar.sync_subscription)
+            row["sync_subscription"] = dataclass_to_json_dict(
+                calendar.sync_subscription
+            )
 
         return row
 

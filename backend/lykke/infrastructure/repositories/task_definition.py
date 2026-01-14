@@ -1,5 +1,4 @@
 from typing import Any
-from uuid import UUID
 
 from lykke.domain import data_objects
 from lykke.infrastructure.database.tables import task_definitions_tbl
@@ -13,10 +12,6 @@ class TaskDefinitionRepository(
     Object = data_objects.TaskDefinition
     table = task_definitions_tbl
     QueryClass = BaseQuery
-
-    def __init__(self, user_id: UUID) -> None:
-        """Initialize TaskDefinitionRepository with user scoping."""
-        super().__init__(user_id=user_id)
 
     @staticmethod
     def entity_to_row(task_definition: data_objects.TaskDefinition) -> dict[str, Any]:

@@ -47,6 +47,7 @@ class TaskPuntedEvent(DomainEvent, AuditedEvent):
 
     task_id: UUID
     old_status: str
+    new_status: str
 
 
 @dataclass(frozen=True, kw_only=True)

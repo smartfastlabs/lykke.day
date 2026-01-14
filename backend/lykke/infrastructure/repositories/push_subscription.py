@@ -1,5 +1,4 @@
 from typing import Any
-from uuid import UUID
 
 from lykke.domain import data_objects
 
@@ -11,10 +10,6 @@ class PushSubscriptionRepository(UserScopedBaseRepository[data_objects.PushSubsc
     Object = data_objects.PushSubscription
     table = push_subscriptions_tbl
     QueryClass = BaseQuery
-
-    def __init__(self, user_id: UUID) -> None:
-        """Initialize PushSubscriptionRepository with user scoping."""
-        super().__init__(user_id=user_id)
 
     @staticmethod
     def entity_to_row(push_subscription: data_objects.PushSubscription) -> dict[str, Any]:

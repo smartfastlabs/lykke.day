@@ -1,7 +1,6 @@
 """SQLAlchemy implementation of TimeBlockDefinitionRepository."""
 
 from typing import Any
-from uuid import UUID
 
 from lykke.domain import value_objects
 from lykke.domain.data_objects import TimeBlockDefinition
@@ -18,10 +17,6 @@ class TimeBlockDefinitionRepository(
     Object = TimeBlockDefinition
     table = time_block_definitions_tbl
     QueryClass = BaseQuery
-
-    def __init__(self, user_id: UUID) -> None:
-        """Initialize TimeBlockDefinitionRepository with user scoping."""
-        super().__init__(user_id=user_id)
 
     @staticmethod
     def entity_to_row(time_block_definition: TimeBlockDefinition) -> dict[str, Any]:

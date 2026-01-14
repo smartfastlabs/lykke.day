@@ -39,10 +39,6 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, BaseQuery]):
     table = routines_tbl
     QueryClass = BaseQuery
 
-    def __init__(self, user_id: UUID) -> None:
-        """Initialize RoutineRepository with user scoping."""
-        super().__init__(user_id=user_id)
-
     @staticmethod
     def entity_to_row(routine: RoutineEntity) -> dict[str, Any]:
         """Convert a Routine entity to a database row dict.

@@ -22,10 +22,6 @@ class DayTemplateRepository(
     table = day_templates_tbl
     QueryClass = DayTemplateQuery
 
-    def __init__(self, user_id: UUID) -> None:
-        """Initialize DayTemplateRepository with user scoping."""
-        super().__init__(user_id=user_id)
-
     def build_query(self, query: DayTemplateQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
         stmt = super().build_query(query)
