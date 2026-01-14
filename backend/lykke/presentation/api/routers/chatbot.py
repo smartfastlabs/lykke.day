@@ -1,26 +1,30 @@
-"""Chatbot WebSocket API route."""
+"""WebSocket API route for real-time AuditLog events."""
 
+import asyncio
 import json
-from typing import Annotated
-from uuid import UUID
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from loguru import logger
 
+from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
-from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import MessageEntity
+from lykke.presentation.api.schemas.mappers import (
+    map_audit_log_to_schema,
+    map_message_to_schema,
+)
 from lykke.presentation.api.schemas.websocket_message import (
-    WebSocketAssistantMessageSchema,
+    WebSocketAuditLogEventSchema,
     WebSocketConnectionAckSchema,
     WebSocketErrorSchema,
-    WebSocketMessageReceivedSchema,
+    WebSocketMessageEventSchema,
     WebSocketUserMessageSchema,
 )
-from lykke.presentation.api.websocket import ConnectionState
 
 from .dependencies.services import (
+    get_pubsub_gateway,
     get_read_only_repository_factory,
     get_unit_of_work_factory,
 )
@@ -29,7 +33,7 @@ from .dependencies.user import get_current_user_from_token
 router = APIRouter()
 
 
-async def send_ws_message(websocket: WebSocket, message: dict) -> None:
+async def send_ws_message(websocket: WebSocket, message: dict[str, Any]) -> None:
     """Send a JSON message over WebSocket.
 
     Args:
@@ -51,192 +55,223 @@ async def send_error(websocket: WebSocket, code: str, message: str) -> None:
     await send_ws_message(websocket, error_schema.model_dump(mode="json"))
 
 
-async def generate_dummy_response(
-    state: ConnectionState, user_message: MessageEntity
-) -> MessageEntity | None:
-    """Generate a dummy response (placeholder for LLM integration).
-
-    Args:
-        state: Connection state with cached entities
-        user_message: The user's message
-
-    Returns:
-        An optional assistant message entity
-    """
-    # For now, return a simple canned response
-    # In the future, this will be replaced with actual LLM integration
-    import random
-
-    if random.random() < 0.8:  # 80% chance of response
-        return MessageEntity(
-            conversation_id=state.conversation_id,
-            role=value_objects.MessageRole.ASSISTANT,
-            content=f"I received your message: '{user_message.content}'. This is a dummy response - LLM integration coming soon!",
-        )
-
-    return None
-
-
 async def handle_user_message(
-    websocket: WebSocket,
-    state: ConnectionState,
-    message_data: dict,
+    message_data: dict[str, Any],
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
+    pubsub_gateway: PubSubGatewayProtocol,
+    user_id: Any,
 ) -> None:
     """Handle incoming user message.
 
     Args:
-        websocket: The WebSocket connection
-        state: Connection state with cached entities
         message_data: Parsed message data from client
+        uow_factory: Unit of work factory
+        ro_repo_factory: Read-only repository factory
+        pubsub_gateway: PubSub gateway for publishing messages
+        user_id: User ID
     """
     try:
         # Parse and validate message
         user_msg_schema = WebSocketUserMessageSchema(**message_data)
+
+        # Create read-only repositories scoped to user
+        ro_repos = ro_repo_factory.create(user_id)
+
+        # Load conversation to verify it exists and belongs to user
+        conversation = await ro_repos.conversation_ro_repo.get(
+            user_msg_schema.conversation_id
+        )
 
         # Create user message entity
         # Only pass id if client provided one (for idempotency)
         if user_msg_schema.message_id:
             user_message = MessageEntity(
                 id=user_msg_schema.message_id,
-                conversation_id=state.conversation_id,
+                conversation_id=conversation.id,
                 role=value_objects.MessageRole.USER,
                 content=user_msg_schema.content,
             )
         else:
             user_message = MessageEntity(
-                conversation_id=state.conversation_id,
+                conversation_id=conversation.id,
                 role=value_objects.MessageRole.USER,
                 content=user_msg_schema.content,
             )
 
         # Persist user message
-        async with state.new_uow() as uow:
+        async with uow_factory.create(user_id) as uow:
             await uow.create(user_message)
 
             # Update conversation's last_message_at
-            updated_conversation = state.conversation.update_last_message_time()
+            updated_conversation = conversation.update_last_message_time()
             uow.add(updated_conversation)
-            state.conversation = updated_conversation  # Update cached conversation
 
-        logger.info(f"Persisted user message {user_message.id}")
-
-        # Send acknowledgment
-        from lykke.presentation.api.schemas.mappers import map_message_to_schema
-
-        ack = WebSocketMessageReceivedSchema(
-            message=map_message_to_schema(user_message),
+        logger.info(
+            f"Persisted user message {user_message.id} for conversation {conversation.id}"
         )
-        await send_ws_message(websocket, ack.model_dump(mode="json"))
 
-        # Generate assistant response
-        assistant_message = await generate_dummy_response(state, user_message)
+        # Publish message to messages channel
+        message_schema = map_message_to_schema(user_message)
+        await pubsub_gateway.publish_to_user_channel(
+            user_id=user_id,
+            channel_type="messages",
+            message=message_schema.model_dump(mode="json"),
+        )
 
-        if assistant_message:
-            # Persist assistant message
-            async with state.new_uow() as uow:
-                await uow.create(assistant_message)
+        logger.debug(f"Published message {user_message.id} to messages channel")
 
-                # Update conversation timestamp again
-                updated_conversation = state.conversation.update_last_message_time()
-                uow.add(updated_conversation)
-                state.conversation = updated_conversation
-
-            logger.info(f"Persisted assistant message {assistant_message.id}")
-
-            # Send complete assistant message
-            assistant_msg_schema = WebSocketAssistantMessageSchema(
-                message=map_message_to_schema(assistant_message),
-            )
-            await send_ws_message(
-                websocket, assistant_msg_schema.model_dump(mode="json")
-            )
+        # No immediate response - the assistant will generate a response asynchronously
+        # which will be sent via the messages pubsub channel
 
     except Exception as e:
         logger.error(f"Error handling user message: {e}")
-        await send_error(websocket, "MESSAGE_ERROR", str(e))
+        raise
 
 
-@router.websocket("/conversations/{conversation_id}/ws")
-async def chatbot_websocket(
+@router.websocket("/ws")
+async def unified_websocket(
     websocket: WebSocket,
-    conversation_id: str,
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
+    pubsub_gateway: Annotated[PubSubGatewayProtocol, Depends(get_pubsub_gateway)],
 ) -> None:
-    """WebSocket endpoint for real-time chatbot communication.
+    """WebSocket endpoint for real-time events.
 
     This endpoint:
     1. Accepts WebSocket connection
     2. Authenticates user
-    3. Loads and caches conversation, bot personality, user
-    4. Handles bidirectional message streaming
-    5. Maintains connection state until disconnect
+    3. Subscribes to user's AuditLog and Messages channels
+    4. Forwards all events to the client
+    5. Accepts incoming messages and processes them asynchronously
 
     Args:
         websocket: WebSocket connection
-        conversation_id: UUID of the conversation
         uow_factory: Unit of work factory (injected)
         ro_repo_factory: Read-only repository factory (injected)
+        pubsub_gateway: PubSub gateway for subscribing to events (injected)
     """
     await websocket.accept()
 
     try:
         # Authenticate user from WebSocket query params or headers
         user = await get_current_user_from_token(websocket)
+        user_id = user.id
 
-        # Create read-only repositories scoped to user
-        ro_repos = ro_repo_factory.create(user.id)
-
-        # Initialize connection state (loads all required entities)
-        state = await ConnectionState.create(
-            conversation_id=UUID(conversation_id),
-            user=user,
-            ro_repos=ro_repos,
-            uow_factory=uow_factory,
-        )
-
-        logger.info(
-            f"WebSocket connection established for user {user.id}, "
-            f"conversation {conversation_id}"
-        )
+        logger.info(f"WebSocket connection established for user {user_id}")
 
         # Send connection acknowledgment
-        ack = WebSocketConnectionAckSchema(
-            conversation_id=state.conversation_id,
-            user_id=state.user_id,
-            bot_personality_name=state.bot_personality.name,
-        )
+        ack = WebSocketConnectionAckSchema(user_id=user_id)
         await send_ws_message(websocket, ack.model_dump(mode="json"))
 
-        # Message loop
-        while True:
-            # Receive message from client
-            data = await websocket.receive_text()
-            message_data = json.loads(data)
+        # Subscribe to both user's AuditLog and Messages channels
+        async with (
+            pubsub_gateway.subscribe_to_user_channel(
+                user_id=user_id, channel_type="auditlog"
+            ) as auditlog_subscription,
+            pubsub_gateway.subscribe_to_user_channel(
+                user_id=user_id, channel_type="messages"
+            ) as messages_subscription,
+        ):
+            # Give subscriptions a moment to be ready
+            await asyncio.sleep(0.1)
 
-            # Route based on message type
-            msg_type = message_data.get("type")
+            # Bidirectional message loop
+            while True:
+                # Non-blocking check for AuditLog events from Redis
+                audit_log_message = await auditlog_subscription.get_message(timeout=0.1)
 
-            if msg_type == "user_message":
-                await handle_user_message(websocket, state, message_data)
-            else:
-                await send_error(
-                    websocket,
-                    "UNKNOWN_MESSAGE_TYPE",
-                    f"Unknown message type: {msg_type}",
-                )
+                if audit_log_message:
+                    # Convert the AuditLog dict to schema and send to client
+                    from lykke.domain.entities import AuditLogEntity
+                    from lykke.domain.value_objects import ActivityType
+
+                    # Reconstruct the AuditLogEntity from the dict
+                    audit_log_entity = AuditLogEntity(
+                        id=audit_log_message["id"],
+                        user_id=audit_log_message["user_id"],
+                        activity_type=ActivityType(audit_log_message["activity_type"]),
+                        occurred_at=audit_log_message["occurred_at"],
+                        entity_id=audit_log_message.get("entity_id"),
+                        entity_type=audit_log_message.get("entity_type"),
+                        meta=audit_log_message.get("meta", {}),
+                    )
+
+                    # Convert to schema
+                    audit_log_schema = map_audit_log_to_schema(audit_log_entity)
+                    event_schema = WebSocketAuditLogEventSchema(
+                        audit_log=audit_log_schema
+                    )
+
+                    await send_ws_message(
+                        websocket, event_schema.model_dump(mode="json")
+                    )
+                    logger.debug(
+                        f"Sent AuditLog event {audit_log_entity.id} to user {user_id}"
+                    )
+
+                # Non-blocking check for Message events from Redis
+                message_event = await messages_subscription.get_message(timeout=0.1)
+
+                if message_event:
+                    # Convert the message dict to schema and send to client
+                    from lykke.presentation.api.schemas.message import MessageSchema
+
+                    # The message from Redis is already in schema format
+                    message_schema = MessageSchema(**message_event)
+                    message_event_schema = WebSocketMessageEventSchema(
+                        message=message_schema
+                    )
+
+                    await send_ws_message(
+                        websocket, message_event_schema.model_dump(mode="json")
+                    )
+                    logger.debug(
+                        f"Sent Message event {message_schema.id} to user {user_id}"
+                    )
+
+                # Non-blocking check for WebSocket messages from client
+                try:
+                    data = await asyncio.wait_for(websocket.receive_text(), timeout=0.1)
+                    message_data = json.loads(data)
+
+                    # Route based on message type
+                    msg_type = message_data.get("type")
+
+                    if msg_type == "user_message":
+                        # Process message asynchronously (don't wait for response)
+                        await handle_user_message(
+                            message_data,
+                            uow_factory,
+                            ro_repo_factory,
+                            pubsub_gateway,
+                            user_id,
+                        )
+                    else:
+                        await send_error(
+                            websocket,
+                            "UNKNOWN_MESSAGE_TYPE",
+                            f"Unknown message type: {msg_type}",
+                        )
+
+                except TimeoutError:
+                    # No message from client, continue loop
+                    pass
 
     except WebSocketDisconnect:
-        logger.info(f"WebSocket disconnected for conversation {conversation_id}")
-
-    except NotFoundError as e:
-        logger.error(f"Not found error: {e}")
-        await send_error(websocket, "NOT_FOUND", str(e))
-        await websocket.close()
+        logger.info(
+            f"WebSocket disconnected for user {user.id if 'user' in locals() else 'unknown'}"
+        )
 
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
-        await send_error(websocket, "INTERNAL_ERROR", "An unexpected error occurred")
-        await websocket.close()
+        try:
+            await send_error(
+                websocket, "INTERNAL_ERROR", "An unexpected error occurred"
+            )
+            await websocket.close()
+        except Exception:
+            # Connection may already be closed
+            pass

@@ -13,12 +13,14 @@ from lykke.application.commands import (
     ScheduleDayHandler,
     UpdateDayHandler,
 )
+from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import GetDayContextHandler, PreviewDayHandler
 from lykke.application.unit_of_work import (
     ReadOnlyRepositoryFactory,
     UnitOfWorkFactory,
 )
 from lykke.domain.entities import UserEntity
+from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
@@ -30,6 +32,11 @@ from ..user import get_current_user
 def get_unit_of_work_factory() -> UnitOfWorkFactory:
     """Get a UnitOfWorkFactory instance."""
     return SqlAlchemyUnitOfWorkFactory()
+
+
+def get_pubsub_gateway() -> PubSubGatewayProtocol:
+    """Get a PubSubGateway instance."""
+    return RedisPubSubGateway()
 
 
 def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
