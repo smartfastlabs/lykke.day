@@ -9,6 +9,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from lykke.application.events import send_domain_events
+from lykke.application.gateways import PubSubGatewayProtocol
 from lykke.application.repositories import (
     AuditLogRepositoryReadOnlyProtocol,
     AuthTokenRepositoryReadOnlyProtocol,
@@ -167,11 +168,14 @@ class SqlAlchemyUnitOfWork:
         data_objects.AuthToken: ("auth_token_ro_repo", "_auth_token_rw_repo"),
     }
 
-    def __init__(self, user_id: UUID) -> None:
+    def __init__(
+        self, user_id: UUID, pubsub_gateway: PubSubGatewayProtocol | None = None
+    ) -> None:
         """Initialize the unit of work for a specific user.
 
         Args:
             user_id: The UUID of the user to scope repositories to.
+            pubsub_gateway: Optional PubSub gateway for broadcasting events
         """
         self.user_id = user_id
         self._connection: AsyncConnection | None = None
@@ -179,6 +183,10 @@ class SqlAlchemyUnitOfWork:
         self._is_nested = False
         # Track entities that need to be saved
         self._added_entities: list[BaseEntityObject] = []
+        # Track AuditLog entities for PubSub broadcasting
+        self._audit_logs_to_broadcast: list[AuditLogEntity] = []
+        # PubSub gateway for broadcasting events
+        self._pubsub_gateway = pubsub_gateway
         # Internal read-write repositories (not exposed to commands)
         self._auth_token_rw_repo: AuthTokenRepositoryReadWriteProtocol | None = None
         self._bot_personality_rw_repo: (
@@ -480,6 +488,7 @@ class SqlAlchemyUnitOfWork:
         2. Collect domain events from all aggregates
         3. Commit the database transaction
         4. Dispatch domain events (after successful commit)
+        5. Broadcast AuditLog events via PubSub (after successful commit)
         """
         if self._connection is None:
             raise RuntimeError("Cannot commit: not in a transaction context")
@@ -500,6 +509,9 @@ class SqlAlchemyUnitOfWork:
         # Dispatch domain events after successful commit
         # This ensures events are only dispatched if the transaction succeeded
         await self._dispatch_domain_events(events)
+
+        # Broadcast AuditLog events via PubSub after successful commit
+        await self._broadcast_audit_logs()
 
     async def bulk_delete_calendar_entries(
         self, query: value_objects.CalendarEntryQuery
@@ -590,6 +602,10 @@ class SqlAlchemyUnitOfWork:
             for event in events:
                 entity._add_event(event)
 
+            # Track AuditLog entities being created for PubSub broadcasting
+            if isinstance(entity, AuditLogEntity) and has_created_event:
+                self._audit_logs_to_broadcast.append(entity)
+
             if has_deleted_event:
                 # Delete the entity
                 await repo.delete(entity)
@@ -634,6 +650,40 @@ class SqlAlchemyUnitOfWork:
         """
         await send_domain_events(events)
 
+    async def _broadcast_audit_logs(self) -> None:
+        """Broadcast AuditLog entities via PubSub after successful commit.
+
+        Publishes audit log events to user-specific channels for real-time
+        monitoring and notifications (e.g., via WebSocket handlers).
+        """
+        if not self._pubsub_gateway or not self._audit_logs_to_broadcast:
+            return
+
+        from lykke.core.utils.serialization import dataclass_to_json_dict
+
+        for audit_log in self._audit_logs_to_broadcast:
+            try:
+                # Convert audit log to JSON-serializable dict
+                message = dataclass_to_json_dict(audit_log)
+
+                # Publish to user-specific auditlog channel
+                await self._pubsub_gateway.publish_to_user_channel(
+                    user_id=audit_log.user_id,
+                    channel_type="auditlog",
+                    message=message,
+                )
+            except Exception as e:
+                # Log error but don't fail the commit
+                # PubSub failures shouldn't affect the transaction
+                from loguru import logger
+
+                logger.error(
+                    f"Failed to broadcast AuditLog {audit_log.id} via PubSub: {e}"
+                )
+
+        # Clear the list after broadcasting
+        self._audit_logs_to_broadcast.clear()
+
     async def rollback(self) -> None:
         """Rollback the current transaction."""
         if self._connection is None:
@@ -649,6 +699,14 @@ class SqlAlchemyUnitOfWork:
 class SqlAlchemyUnitOfWorkFactory:
     """Factory for creating SqlAlchemyUnitOfWork instances."""
 
+    def __init__(self, pubsub_gateway: PubSubGatewayProtocol | None = None) -> None:
+        """Initialize the factory.
+
+        Args:
+            pubsub_gateway: Optional PubSub gateway for broadcasting events
+        """
+        self._pubsub_gateway = pubsub_gateway
+
     def create(self, user_id: UUID) -> UnitOfWorkProtocol:
         """Create a new UnitOfWork instance for the given user.
 
@@ -658,7 +716,9 @@ class SqlAlchemyUnitOfWorkFactory:
         Returns:
             A new UnitOfWork instance (not yet entered).
         """
-        return SqlAlchemyUnitOfWork(user_id=user_id)
+        return SqlAlchemyUnitOfWork(
+            user_id=user_id, pubsub_gateway=self._pubsub_gateway
+        )
 
 
 class SqlAlchemyReadOnlyRepositories:
