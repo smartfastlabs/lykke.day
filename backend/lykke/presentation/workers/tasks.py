@@ -14,7 +14,7 @@ from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProt
 from lykke.application.queries import PreviewDayHandler
 from lykke.application.repositories import UserRepositoryReadOnlyProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
-from lykke.infrastructure.gateways import GoogleCalendarGateway
+from lykke.infrastructure.gateways import GoogleCalendarGateway, StubPubSubGateway
 from lykke.infrastructure.repositories import UserRepository
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
@@ -35,8 +35,11 @@ def get_google_gateway() -> GoogleCalendarGatewayProtocol:
 
 
 def get_unit_of_work_factory() -> UnitOfWorkFactory:
-    """Get a UnitOfWorkFactory instance."""
-    return SqlAlchemyUnitOfWorkFactory()
+    """Get a UnitOfWorkFactory instance.
+    
+    Uses StubPubSubGateway since background workers don't need to broadcast events.
+    """
+    return SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
 
 
 def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:

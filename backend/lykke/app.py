@@ -15,6 +15,7 @@ from lykke.core.exceptions import BaseError
 from lykke.core.observability import init_sentry_fastapi
 from lykke.core.utils import youtube
 from lykke.infrastructure.auth import UserCreate, UserRead, auth_backend, fastapi_users
+from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
@@ -40,9 +41,12 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
     """
     Lifespan context manager for FastAPI application.
     """
+    # Initialize Redis PubSub gateway for real-time event broadcasting
+    pubsub_gateway = RedisPubSubGateway()
+
     # Auto-register all domain event handlers
     ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
-    uow_factory = SqlAlchemyUnitOfWorkFactory()
+    uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
     register_all_handlers(
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
@@ -54,6 +58,9 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
     )
 
     yield  # type: ignore
+
+    # Clean up Redis connection on shutdown
+    await pubsub_gateway.close()
 
     if not is_testing():
         youtube.kill_current_player()

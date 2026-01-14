@@ -5,31 +5,46 @@ Each function returns an instance of a service, which can be used
 with FastAPI's Depends() in route handlers.
 """
 
+from collections.abc import AsyncIterator
 from typing import Annotated
 
 from fastapi import Depends
+
 from lykke.application.commands import (
     RecordTaskActionHandler,
     ScheduleDayHandler,
     UpdateDayHandler,
 )
+from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import GetDayContextHandler, PreviewDayHandler
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositoryFactory,
-    UnitOfWorkFactory,
-)
+from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
+from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
 )
+from lykke.presentation.api.routers.dependencies.user import get_current_user
 
-from ..user import get_current_user
+
+async def get_pubsub_gateway() -> AsyncIterator[PubSubGatewayProtocol]:
+    """Get a PubSubGateway instance with automatic cleanup.
+
+    This is a generator-based dependency that ensures the Redis connection
+    is properly closed when the request/WebSocket connection ends.
+    """
+    gateway = RedisPubSubGateway()
+    try:
+        yield gateway
+    finally:
+        await gateway.close()
 
 
-def get_unit_of_work_factory() -> UnitOfWorkFactory:
+def get_unit_of_work_factory(
+    pubsub_gateway: Annotated[PubSubGatewayProtocol, Depends(get_pubsub_gateway)],
+) -> UnitOfWorkFactory:
     """Get a UnitOfWorkFactory instance."""
-    return SqlAlchemyUnitOfWorkFactory()
+    return SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
 
 
 def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:

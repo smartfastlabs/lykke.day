@@ -20,6 +20,7 @@ from ..value_objects.update import DayUpdateObject
 from ..events.task_events import (
     TaskActionRecordedEvent,
     TaskCompletedEvent,
+    TaskPuntedEvent,
     TaskStatusChangedEvent,
 )
 from lykke.domain.entities.day_template import DayTemplateEntity
@@ -226,6 +227,15 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
                     new_status=task.status.value,
                 )
             )
+            
+            # Emit specific event for PUNT status changes (for audit logging)
+            if task.status == value_objects.TaskStatus.PUNT:
+                self._add_event(
+                    TaskPuntedEvent(
+                        task_id=task.id,
+                        old_status=old_status.value,
+                    )
+                )
 
         # Record action event
         self._add_event(

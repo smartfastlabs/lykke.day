@@ -9,7 +9,9 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from lykke.application.events import send_domain_events
+from lykke.application.gateways import PubSubGatewayProtocol
 from lykke.application.repositories import (
+    AuditLogRepositoryReadOnlyProtocol,
     AuthTokenRepositoryReadOnlyProtocol,
     AuthTokenRepositoryReadWriteProtocol,
     BotPersonalityRepositoryReadOnlyProtocol,
@@ -51,6 +53,7 @@ from lykke.application.unit_of_work import (
 from lykke.core.exceptions import BadRequestError, NotFoundError
 from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import (
+    AuditLogEntity,
     BotPersonalityEntity,
     CalendarEntity,
     CalendarEntryEntity,
@@ -78,6 +81,7 @@ from lykke.infrastructure.database.transaction import (
     set_transaction_connection,
 )
 from lykke.infrastructure.repositories import (
+    AuditLogRepository,
     AuthTokenRepository,
     BotPersonalityRepository,
     CalendarEntryRepository,
@@ -112,6 +116,7 @@ class SqlAlchemyUnitOfWork:
     """
 
     # Read-only repository type annotations (public API for commands)
+    audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
     bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
@@ -132,6 +137,7 @@ class SqlAlchemyUnitOfWork:
     # Entity type to repository attribute name mapping
     # Maps: entity_type -> (ro_repo_attr, rw_repo_attr)
     _ENTITY_REPO_MAP: dict[type, tuple[str, str]] = {
+        AuditLogEntity: ("audit_log_ro_repo", "audit_log_ro_repo"),  # Read-only, uses same repo
         BotPersonalityEntity: ("bot_personality_ro_repo", "_bot_personality_rw_repo"),
         DayEntity: ("day_ro_repo", "_day_rw_repo"),
         DayTemplateEntity: ("day_template_ro_repo", "_day_template_rw_repo"),
@@ -162,11 +168,14 @@ class SqlAlchemyUnitOfWork:
         data_objects.AuthToken: ("auth_token_ro_repo", "_auth_token_rw_repo"),
     }
 
-    def __init__(self, user_id: UUID) -> None:
+    def __init__(
+        self, user_id: UUID, pubsub_gateway: PubSubGatewayProtocol
+    ) -> None:
         """Initialize the unit of work for a specific user.
 
         Args:
             user_id: The UUID of the user to scope repositories to.
+            pubsub_gateway: PubSub gateway for broadcasting events
         """
         self.user_id = user_id
         self._connection: AsyncConnection | None = None
@@ -174,6 +183,10 @@ class SqlAlchemyUnitOfWork:
         self._is_nested = False
         # Track entities that need to be saved
         self._added_entities: list[BaseEntityObject] = []
+        # Track AuditLog entities for PubSub broadcasting
+        self._audit_logs_to_broadcast: list[AuditLogEntity] = []
+        # PubSub gateway for broadcasting events
+        self._pubsub_gateway = pubsub_gateway
         # Internal read-write repositories (not exposed to commands)
         self._auth_token_rw_repo: AuthTokenRepositoryReadWriteProtocol | None = None
         self._bot_personality_rw_repo: (
@@ -361,6 +374,13 @@ class SqlAlchemyUnitOfWork:
         self.factoid_ro_repo = cast("FactoidRepositoryReadOnlyProtocol", factoid_repo)
         self._factoid_rw_repo = factoid_repo
 
+        # AuditLogRepository is read-only (immutable entities)
+        # Even though it's read-only in protocol, the implementation has put() for creates
+        audit_log_repo = AuditLogRepository(user_id=self.user_id)
+        self.audit_log_ro_repo = cast(
+            "AuditLogRepositoryReadOnlyProtocol", audit_log_repo
+        )
+
         return self
 
     async def __aexit__(
@@ -468,6 +488,7 @@ class SqlAlchemyUnitOfWork:
         2. Collect domain events from all aggregates
         3. Commit the database transaction
         4. Dispatch domain events (after successful commit)
+        5. Broadcast AuditLog events via PubSub (after successful commit)
         """
         if self._connection is None:
             raise RuntimeError("Cannot commit: not in a transaction context")
@@ -488,6 +509,9 @@ class SqlAlchemyUnitOfWork:
         # Dispatch domain events after successful commit
         # This ensures events are only dispatched if the transaction succeeded
         await self._dispatch_domain_events(events)
+
+        # Broadcast AuditLog events via PubSub after successful commit
+        await self._broadcast_audit_logs()
 
     async def bulk_delete_calendar_entries(
         self, query: value_objects.CalendarEntryQuery
@@ -553,9 +577,15 @@ class SqlAlchemyUnitOfWork:
         - If it has EntityCreatedEvent: insert it
         - If it has EntityUpdatedEvent or other events: update it
 
+        Also automatically creates AuditLog entities for events that implement
+        the AuditedEvent protocol.
+
         Note: Events are not collected here - they remain on entities
         to be collected after processing.
         """
+        # Process entities and collect audit logs to create
+        audit_logs_to_create: list[AuditLogEntity] = []
+
         for entity in self._added_entities:
             repo = self._get_repository_for_entity(entity)
 
@@ -574,9 +604,21 @@ class SqlAlchemyUnitOfWork:
             has_deleted_event = any(isinstance(e, EntityDeletedEvent) for e in events)
             has_updated_event = any(isinstance(e, EntityUpdatedEvent) for e in events)
 
+            # Create audit logs from audited events (skip for AuditLogEntity itself to avoid loops)
+            if not isinstance(entity, AuditLogEntity):
+                for event in events:
+                    # Check if event implements AuditedEvent protocol
+                    if hasattr(event, "to_audit_log") and callable(event.to_audit_log):
+                        audit_log = event.to_audit_log(self.user_id)
+                        audit_logs_to_create.append(audit_log)
+
             # Put events back so they can be collected later for dispatching
             for event in events:
                 entity._add_event(event)
+
+            # Track AuditLog entities being created for PubSub broadcasting
+            if isinstance(entity, AuditLogEntity) and has_created_event:
+                self._audit_logs_to_broadcast.append(entity)
 
             if has_deleted_event:
                 # Delete the entity
@@ -587,6 +629,17 @@ class SqlAlchemyUnitOfWork:
             else:
                 # Update the entity (existing entity with changes)
                 await repo.put(entity)
+
+        # Process auto-created audit logs immediately
+        # We need to process them in a separate pass to avoid modifying _added_entities during iteration
+        if audit_logs_to_create:
+            audit_log_repo = self._get_repository_for_entity(audit_logs_to_create[0])
+            for audit_log in audit_logs_to_create:
+                audit_log.create()
+                # Track for PubSub broadcasting
+                self._audit_logs_to_broadcast.append(audit_log)
+                # Persist immediately
+                await audit_log_repo.put(audit_log)
 
     def _collect_domain_events_from_entities(self) -> list[DomainEvent]:
         """Collect domain events from all added entities.
@@ -622,6 +675,40 @@ class SqlAlchemyUnitOfWork:
         """
         await send_domain_events(events)
 
+    async def _broadcast_audit_logs(self) -> None:
+        """Broadcast AuditLog entities via PubSub after successful commit.
+
+        Publishes audit log events to user-specific channels for real-time
+        monitoring and notifications (e.g., via WebSocket handlers).
+        """
+        if not self._audit_logs_to_broadcast:
+            return
+
+        from lykke.core.utils.serialization import dataclass_to_json_dict
+
+        for audit_log in self._audit_logs_to_broadcast:
+            try:
+                # Convert audit log to JSON-serializable dict
+                message = dataclass_to_json_dict(audit_log)
+
+                # Publish to user-specific auditlog channel
+                await self._pubsub_gateway.publish_to_user_channel(
+                    user_id=audit_log.user_id,
+                    channel_type="auditlog",
+                    message=message,
+                )
+            except Exception as e:
+                # Log error but don't fail the commit
+                # PubSub failures shouldn't affect the transaction
+                from loguru import logger
+
+                logger.error(
+                    f"Failed to broadcast AuditLog {audit_log.id} via PubSub: {e}"
+                )
+
+        # Clear the list after broadcasting
+        self._audit_logs_to_broadcast.clear()
+
     async def rollback(self) -> None:
         """Rollback the current transaction."""
         if self._connection is None:
@@ -637,6 +724,14 @@ class SqlAlchemyUnitOfWork:
 class SqlAlchemyUnitOfWorkFactory:
     """Factory for creating SqlAlchemyUnitOfWork instances."""
 
+    def __init__(self, pubsub_gateway: PubSubGatewayProtocol) -> None:
+        """Initialize the factory.
+
+        Args:
+            pubsub_gateway: PubSub gateway for broadcasting events
+        """
+        self._pubsub_gateway = pubsub_gateway
+
     def create(self, user_id: UUID) -> UnitOfWorkProtocol:
         """Create a new UnitOfWork instance for the given user.
 
@@ -646,7 +741,9 @@ class SqlAlchemyUnitOfWorkFactory:
         Returns:
             A new UnitOfWork instance (not yet entered).
         """
-        return SqlAlchemyUnitOfWork(user_id=user_id)
+        return SqlAlchemyUnitOfWork(
+            user_id=user_id, pubsub_gateway=self._pubsub_gateway
+        )
 
 
 class SqlAlchemyReadOnlyRepositories:
@@ -757,6 +854,13 @@ class SqlAlchemyReadOnlyRepositories:
             FactoidRepository(user_id=self.user_id),
         )
         self.factoid_ro_repo = factoid_repo
+
+        # AuditLogRepository is read-only (immutable entities)
+        audit_log_repo = cast(
+            "AuditLogRepositoryReadOnlyProtocol",
+            AuditLogRepository(user_id=self.user_id),
+        )
+        self.audit_log_ro_repo = audit_log_repo
 
 
 class SqlAlchemyReadOnlyRepositoryFactory:

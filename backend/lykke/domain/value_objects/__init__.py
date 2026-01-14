@@ -13,6 +13,7 @@ from .calendar_subscription import CalendarSubscription
 from .day import DayContext, DayMode, DayStatus, DayTag
 from .push import NotificationAction, NotificationPayload
 from .query import (
+    AuditLogQuery,
     AuthTokenQuery,
     BaseQuery,
     BotPersonalityQuery,
@@ -72,6 +73,7 @@ __all__ = [
     "ActionType",
     "Alarm",
     "AlarmType",
+    "AuditLogQuery",
     "AuthTokenQuery",
     "BaseQuery",
     "BaseRequestObject",

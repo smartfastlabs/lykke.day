@@ -7,13 +7,14 @@ from uuid import UUID
 
 from lykke.domain.value_objects.update import TaskDefinitionUpdateObject
 
-from .base import DomainEvent, EntityUpdatedEvent
+from .base import AuditedEvent, DomainEvent, EntityUpdatedEvent
 
 __all__ = [
     "TaskActionRecordedEvent",
     "TaskCompletedEvent",
     "TaskCreatedEvent",
     "TaskDefinitionUpdatedEvent",
+    "TaskPuntedEvent",
     "TaskStateUpdatedEvent",
     "TaskStatusChangedEvent",
 ]
@@ -38,7 +39,18 @@ class TaskStatusChangedEvent(DomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class TaskCompletedEvent(DomainEvent):
+class TaskPuntedEvent(DomainEvent, AuditedEvent):
+    """Event raised when a task is punted.
+
+    This event is specifically for PUNT status changes and always creates an audit log.
+    """
+
+    task_id: UUID
+    old_status: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class TaskCompletedEvent(DomainEvent, AuditedEvent):
     """Event raised when a task is completed."""
 
     task_id: UUID

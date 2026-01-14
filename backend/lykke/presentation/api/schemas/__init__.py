@@ -2,6 +2,7 @@
 
 from .action import ActionSchema
 from .alarm import AlarmSchema
+from .audit_log import AuditLogSchema
 from .calendar import (
     CalendarCreateSchema,
     CalendarSchema,
@@ -58,10 +59,10 @@ from .user import (
     UserUpdateSchema,
 )
 from .websocket_message import (
-    WebSocketAssistantMessageSchema,
+    WebSocketAuditLogEventSchema,
     WebSocketConnectionAckSchema,
     WebSocketErrorSchema,
-    WebSocketMessageReceivedSchema,
+    WebSocketMessageEventSchema,
     WebSocketUserMessageSchema,
 )
 
@@ -102,14 +103,15 @@ MessageSchema.model_rebuild()
 SendMessageRequestSchema.model_rebuild()
 SendMessageResponseSchema.model_rebuild()
 WebSocketUserMessageSchema.model_rebuild()
-WebSocketMessageReceivedSchema.model_rebuild()
-WebSocketAssistantMessageSchema.model_rebuild()
+WebSocketMessageEventSchema.model_rebuild()
+WebSocketAuditLogEventSchema.model_rebuild()
 WebSocketConnectionAckSchema.model_rebuild()
 WebSocketErrorSchema.model_rebuild()
 
 __all__ = [
     "ActionSchema",
     "AlarmSchema",
+    "AuditLogSchema",
     "CalendarCreateSchema",
     "CalendarEntrySchema",
     "CalendarEntrySeriesSchema",
@@ -153,9 +155,9 @@ __all__ = [
     "UserSettingsSchema",
     "UserSettingsUpdateSchema",
     "UserUpdateSchema",
-    "WebSocketAssistantMessageSchema",
+    "WebSocketAuditLogEventSchema",
     "WebSocketConnectionAckSchema",
     "WebSocketErrorSchema",
-    "WebSocketMessageReceivedSchema",
+    "WebSocketMessageEventSchema",
     "WebSocketUserMessageSchema",
 ]

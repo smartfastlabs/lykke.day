@@ -1,5 +1,6 @@
 """E2E tests for task routes."""
 
+import asyncio
 from uuid import uuid4
 
 import pytest
@@ -12,6 +13,7 @@ from lykke.domain.value_objects.task import (
     TaskStatus,
     TaskType,
 )
+from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.repositories import TaskRepository
 
 
@@ -97,3 +99,128 @@ async def test_punt_task_action(authenticated_client, test_date):
     data = response.json()
     assert data["status"] == "PUNT"
     assert data["id"] == str(test_task.id)
+
+
+@pytest.mark.asyncio
+async def test_complete_task_broadcasts_audit_log(authenticated_client, test_date):
+    """Test that completing a task via API broadcasts audit log to PubSub.
+    
+    This is a regression test for a bug where the UnitOfWorkFactory
+    was not initialized with a PubSubGateway, causing audit logs
+    to not be broadcast when tasks were completed via the API.
+    """
+    client, user = await authenticated_client()
+
+    # Create a test task
+    task_repo = TaskRepository(user_id=user.id)
+    test_task = TaskEntity(
+        id=uuid4(),
+        user_id=user.id,
+        name="Test Task for PubSub",
+        status=TaskStatus.NOT_STARTED,
+        type=TaskType.ACTIVITY,
+        description="Test task for PubSub broadcast",
+        category=TaskCategory.HOUSE,
+        frequency=TaskFrequency.DAILY,
+        scheduled_date=test_date,
+    )
+    await task_repo.put(test_task)
+
+    # Set up PubSub subscription BEFORE making the API call
+    pubsub_gateway = RedisPubSubGateway()
+    
+    try:
+        async with pubsub_gateway.subscribe_to_user_channel(
+            user_id=user.id, channel_type="auditlog"
+        ) as subscription:
+            # Give subscription a moment to be ready
+            await asyncio.sleep(0.1)
+
+            # Complete the task via API
+            response = client.post(
+                f"/tasks/{test_task.id}/actions",
+                json={"type": "COMPLETE"},
+            )
+
+            # Verify the API call was successful
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+            assert data["status"] == "COMPLETE"
+
+            # Verify the audit log was broadcast via PubSub
+            received = await subscription.get_message(timeout=2.0)
+            
+            # This assertion would fail before the fix because
+            # get_unit_of_work_factory() wasn't passing pubsub_gateway
+            assert received is not None, (
+                "Audit log was not broadcast via PubSub. "
+                "This likely means the UnitOfWorkFactory was not "
+                "initialized with a PubSubGateway."
+            )
+            
+            # Verify the broadcast message content
+            assert received["activity_type"] == "TaskCompletedEvent"
+            assert received["entity_id"] == str(test_task.id)
+            assert received["entity_type"] == "task"
+            assert received["user_id"] == str(user.id)
+    finally:
+        await pubsub_gateway.close()
+
+
+@pytest.mark.asyncio
+async def test_punt_task_broadcasts_audit_log(authenticated_client, test_date):
+    """Test that punting a task via API broadcasts audit log to PubSub."""
+    client, user = await authenticated_client()
+
+    # Create a test task
+    task_repo = TaskRepository(user_id=user.id)
+    test_task = TaskEntity(
+        id=uuid4(),
+        user_id=user.id,
+        name="Test Task for Punt PubSub",
+        status=TaskStatus.NOT_STARTED,
+        type=TaskType.ACTIVITY,
+        description="Test task for punt PubSub broadcast",
+        category=TaskCategory.HOUSE,
+        frequency=TaskFrequency.DAILY,
+        scheduled_date=test_date,
+    )
+    await task_repo.put(test_task)
+
+    # Set up PubSub subscription BEFORE making the API call
+    pubsub_gateway = RedisPubSubGateway()
+    
+    try:
+        async with pubsub_gateway.subscribe_to_user_channel(
+            user_id=user.id, channel_type="auditlog"
+        ) as subscription:
+            # Give subscription a moment to be ready
+            await asyncio.sleep(0.1)
+
+            # Punt the task via API
+            response = client.post(
+                f"/tasks/{test_task.id}/actions",
+                json={"type": "PUNT"},
+            )
+
+            # Verify the API call was successful
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+            assert data["status"] == "PUNT"
+
+            # Verify the audit log was broadcast via PubSub
+            received = await subscription.get_message(timeout=2.0)
+            
+            assert received is not None, (
+                "Audit log was not broadcast via PubSub for punt action. "
+                "This likely means the UnitOfWorkFactory was not "
+                "initialized with a PubSubGateway."
+            )
+            
+            # Verify the broadcast message content
+            assert received["activity_type"] == "TaskPuntedEvent"
+            assert received["entity_id"] == str(test_task.id)
+            assert received["entity_type"] == "task"
+            assert received["user_id"] == str(user.id)
+    finally:
+        await pubsub_gateway.close()

@@ -10,15 +10,15 @@ from lykke.domain.value_objects.update import (
     ConversationUpdateObject,
 )
 
-from .base import DomainEvent, EntityUpdatedEvent
+from .base import AuditedEvent, DomainEvent, EntityUpdatedEvent
 
 __all__ = [
+    "BotPersonalityUpdatedEvent",
     "ConversationCreatedEvent",
     "ConversationUpdatedEvent",
-    "MessageSentEvent",
     "FactoidCreatedEvent",
     "FactoidCriticalityUpdatedEvent",
-    "BotPersonalityUpdatedEvent",
+    "MessageSentEvent",
 ]
 
 
@@ -38,7 +38,7 @@ class ConversationUpdatedEvent(EntityUpdatedEvent[ConversationUpdateObject]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MessageSentEvent(DomainEvent):
+class MessageSentEvent(DomainEvent, AuditedEvent):
     """Event raised when a message is sent in a conversation."""
 
     message_id: UUID

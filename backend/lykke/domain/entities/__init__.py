@@ -1,3 +1,4 @@
+from .audit_log import AuditLogEntity
 from .base import BaseConfigObject, BaseEntityObject, BaseObject
 from .bot_personality import BotPersonalityEntity
 from .calendar import CalendarEntity
@@ -13,6 +14,7 @@ from .task import TaskEntity
 from .user import UserEntity
 
 __all__ = [
+    "AuditLogEntity",
     "BaseConfigObject",
     "BaseEntityObject",
     "BaseObject",

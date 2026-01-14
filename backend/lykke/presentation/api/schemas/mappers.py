@@ -4,6 +4,7 @@ from dataclasses import asdict
 
 from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import (
+    AuditLogEntity,
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
@@ -18,6 +19,7 @@ from lykke.domain.entities import (
 from lykke.presentation.api.schemas import (
     ActionSchema,
     AlarmSchema,
+    AuditLogSchema,
     CalendarEntrySchema,
     CalendarEntrySeriesSchema,
     CalendarSchema,
@@ -337,4 +339,17 @@ def map_conversation_to_schema(conversation: ConversationEntity) -> Conversation
         context=conversation.context,
         created_at=conversation.created_at,
         last_message_at=conversation.last_message_at,
+    )
+
+
+def map_audit_log_to_schema(audit_log: AuditLogEntity) -> AuditLogSchema:
+    """Convert AuditLog entity to AuditLog schema."""
+    return AuditLogSchema(
+        id=audit_log.id,
+        user_id=audit_log.user_id,
+        activity_type=audit_log.activity_type,
+        occurred_at=audit_log.occurred_at,
+        entity_id=audit_log.entity_id,
+        entity_type=audit_log.entity_type,
+        meta=audit_log.meta,
     )

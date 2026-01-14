@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date as dt_date, datetime
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 from uuid import UUID
 
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
+
 
 
 @dataclass(kw_only=True)
@@ -143,6 +144,17 @@ class FactoidQuery(BaseQuery):
     factoid_type: str | None = None
     criticality: str | None = None
     is_global: bool | None = None  # Filter for global vs conversation-specific factoids
+
+
+@dataclass(kw_only=True)
+class AuditLogQuery(BaseQuery):
+    """Query class for AuditLog entities."""
+
+    activity_type: str | None = None
+    entity_id: UUID | None = None
+    entity_type: str | None = None
+    occurred_after: datetime | None = None
+    occurred_before: datetime | None = None
 
 
 T = TypeVar("T", bound=BaseQuery)

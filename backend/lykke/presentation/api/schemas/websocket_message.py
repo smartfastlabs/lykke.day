@@ -1,8 +1,9 @@
-"""WebSocket message schemas for chatbot communication."""
+"""WebSocket message schemas for real-time communication."""
 
 from typing import Literal
 from uuid import UUID
 
+from .audit_log import AuditLogSchema
 from .base import BaseSchema
 from .message import MessageSchema
 
@@ -11,22 +12,23 @@ class WebSocketUserMessageSchema(BaseSchema):
     """Client → Server: User sends a message."""
 
     type: Literal["user_message"] = "user_message"
+    conversation_id: UUID
     content: str
     message_id: UUID | None = None  # Client can provide for idempotency
 
 
-class WebSocketMessageReceivedSchema(BaseSchema):
-    """Server → Client: Acknowledgment that user message was received."""
+class WebSocketMessageEventSchema(BaseSchema):
+    """Server → Client: Message event (message sent, received, etc)."""
 
-    type: Literal["message_received"] = "message_received"
+    type: Literal["message_event"] = "message_event"
     message: MessageSchema
 
 
-class WebSocketAssistantMessageSchema(BaseSchema):
-    """Server → Client: Complete assistant response."""
+class WebSocketAuditLogEventSchema(BaseSchema):
+    """Server → Client: AuditLog event occurred."""
 
-    type: Literal["assistant_message"] = "assistant_message"
-    message: MessageSchema
+    type: Literal["audit_log_event"] = "audit_log_event"
+    audit_log: AuditLogSchema
 
 
 class WebSocketErrorSchema(BaseSchema):
@@ -41,6 +43,4 @@ class WebSocketConnectionAckSchema(BaseSchema):
     """Server → Client: Connection established successfully."""
 
     type: Literal["connection_ack"] = "connection_ack"
-    conversation_id: UUID
     user_id: UUID
-    bot_personality_name: str

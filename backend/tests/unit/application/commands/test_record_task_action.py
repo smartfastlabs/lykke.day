@@ -9,7 +9,12 @@ import pytest
 from lykke.application.commands.task import RecordTaskActionHandler
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity, DayTemplateEntity, TaskEntity, UserEntity
+from lykke.domain.entities import (
+    DayEntity,
+    DayTemplateEntity,
+    TaskEntity,
+    UserEntity,
+)
 from lykke.domain.events.task_events import TaskActionRecordedEvent, TaskStateUpdatedEvent
 
 
@@ -71,6 +76,7 @@ class _FakeReadOnlyRepos:
         user_repo: _FakeUserReadOnlyRepo,
     ) -> None:
         fake = object()
+        self.audit_log_ro_repo = fake
         self.auth_token_ro_repo = fake
         self.bot_personality_ro_repo = fake
         self.calendar_entry_ro_repo = fake
@@ -186,6 +192,10 @@ async def test_record_task_action_adds_task_and_day_to_uow():
     assert any(isinstance(e, DayEntity) for e in added_entities)
     assert any(isinstance(e, TaskEntity) for e in added_entities)
 
+    # Verify audit logs are no longer manually created
+    # (They are now automatically created by the UOW when processing entities with audited events)
+    assert len(uow_factory.uow.created) == 0
+
 
 @pytest.mark.asyncio
 async def test_record_task_action_raises_domain_events():
@@ -294,9 +304,10 @@ async def test_record_task_action_creates_day_if_not_exists():
     result = await handler.record_task_action(task.id, action)
 
     # Assert - day should have been created
+    # Audit logs are now automatically created by the UOW when processing entities with audited events
     assert len(uow_factory.uow.created) == 1
-    created_day = uow_factory.uow.created[0]
-    assert isinstance(created_day, DayEntity)
+    created_entities = uow_factory.uow.created
+    created_day = next(e for e in created_entities if isinstance(e, DayEntity))
     assert created_day.date == task_date
     assert created_day.user_id == user_id
 
@@ -354,3 +365,7 @@ async def test_record_task_action_punt_updates_status():
     assert len(result.actions) == 1
     assert result.actions[0].type == value_objects.ActionType.PUNT
     assert result.completed_at is None  # Punt doesn't set completed_at
+
+    # Verify audit logs are no longer manually created
+    # (They are now automatically created by the UOW when processing entities with audited events)
+    assert len(uow_factory.uow.created) == 0

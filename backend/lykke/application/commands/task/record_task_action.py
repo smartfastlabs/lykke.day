@@ -56,6 +56,7 @@ class RecordTaskActionHandler(BaseCommandHandler):
             # Use Day aggregate root method to record action
             # This ensures proper aggregate boundaries and domain event handling
             # The method mutates the task in place and returns the updated task
+            # Audit logs are automatically created by the UOW for audited events
             updated_task = day.record_task_action(task, action)
 
             # Add both Day (for events) and Task (for state changes) to UoW
