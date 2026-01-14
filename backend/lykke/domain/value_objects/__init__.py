@@ -1,4 +1,12 @@
 from .action import Action, ActionType
+from .ai_chat import (
+    ConversationChannel,
+    ConversationStatus,
+    FactoidCriticality,
+    FactoidType,
+    LLMProvider,
+    MessageRole,
+)
 from .alarm import Alarm, AlarmType
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .calendar_subscription import CalendarSubscription
@@ -7,12 +15,16 @@ from .push import NotificationAction, NotificationPayload
 from .query import (
     AuthTokenQuery,
     BaseQuery,
+    BotPersonalityQuery,
     CalendarEntryQuery,
     CalendarEntrySeriesQuery,
     CalendarQuery,
+    ConversationQuery,
     DateQuery,
     DayQuery,
     DayTemplateQuery,
+    FactoidQuery,
+    MessageQuery,
     PagedQueryResponse,
     PushSubscriptionQuery,
     RoutineQuery,
@@ -41,8 +53,10 @@ from .time_block import (
 )
 from .update import (
     BaseUpdateObject,
+    BotPersonalityUpdateObject,
     CalendarEntrySeriesUpdateObject,
     CalendarUpdateObject,
+    ConversationUpdateObject,
     DayTemplateUpdateObject,
     DayUpdateObject,
     PushSubscriptionUpdateObject,
@@ -64,12 +78,18 @@ __all__ = [
     "BaseResponseObject",
     "BaseUpdateObject",
     "BaseValueObject",
+    "BotPersonalityQuery",
+    "BotPersonalityUpdateObject",
     "CalendarEntryQuery",
     "CalendarEntrySeriesQuery",
     "CalendarEntrySeriesUpdateObject",
     "CalendarQuery",
     "CalendarSubscription",
     "CalendarUpdateObject",
+    "ConversationChannel",
+    "ConversationQuery",
+    "ConversationStatus",
+    "ConversationUpdateObject",
     "DateQuery",
     "DayContext",
     "DayMode",
@@ -83,6 +103,12 @@ __all__ = [
     "DayTimeBlock",
     "DayUpdateObject",
     "EventCategory",
+    "FactoidCriticality",
+    "FactoidQuery",
+    "FactoidType",
+    "LLMProvider",
+    "MessageQuery",
+    "MessageRole",
     "NotificationAction",
     "NotificationPayload",
     "PagedQueryResponse",

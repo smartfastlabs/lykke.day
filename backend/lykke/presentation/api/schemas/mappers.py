@@ -7,8 +7,10 @@ from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
+    ConversationEntity,
     DayEntity,
     DayTemplateEntity,
+    MessageEntity,
     RoutineEntity,
     TaskEntity,
     UserEntity,
@@ -19,10 +21,12 @@ from lykke.presentation.api.schemas import (
     CalendarEntrySchema,
     CalendarEntrySeriesSchema,
     CalendarSchema,
+    ConversationSchema,
     DayContextSchema,
     DaySchema,
     DayTemplateSchema,
     DayTemplateTimeBlockSchema,
+    MessageSchema,
     PushSubscriptionSchema,
     RoutineSchema,
     SyncSubscriptionSchema,
@@ -306,4 +310,31 @@ def map_user_to_schema(user: UserEntity) -> UserSchema:
         settings=settings_schema,
         created_at=user.created_at,
         updated_at=user.updated_at,
+    )
+
+
+def map_message_to_schema(message: MessageEntity) -> MessageSchema:
+    """Convert Message entity to Message schema."""
+    return MessageSchema(
+        id=message.id,
+        conversation_id=message.conversation_id,
+        role=message.role.value,
+        content=message.content,
+        meta=message.meta,
+        created_at=message.created_at,
+    )
+
+
+def map_conversation_to_schema(conversation: ConversationEntity) -> ConversationSchema:
+    """Convert Conversation entity to Conversation schema."""
+    return ConversationSchema(
+        id=conversation.id,
+        user_id=conversation.user_id,
+        bot_personality_id=conversation.bot_personality_id,
+        channel=conversation.channel.value,
+        status=conversation.status.value,
+        llm_provider=conversation.llm_provider.value,
+        context=conversation.context,
+        created_at=conversation.created_at,
+        last_message_at=conversation.last_message_at,
     )

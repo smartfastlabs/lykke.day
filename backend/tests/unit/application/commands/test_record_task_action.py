@@ -72,11 +72,15 @@ class _FakeReadOnlyRepos:
     ) -> None:
         fake = object()
         self.auth_token_ro_repo = fake
+        self.bot_personality_ro_repo = fake
         self.calendar_entry_ro_repo = fake
         self.calendar_entry_series_ro_repo = fake
         self.calendar_ro_repo = fake
+        self.conversation_ro_repo = fake
         self.day_ro_repo = day_repo
         self.day_template_ro_repo = day_template_repo
+        self.factoid_ro_repo = fake
+        self.message_ro_repo = fake
         self.push_subscription_ro_repo = fake
         self.routine_ro_repo = fake
         self.task_definition_ro_repo = fake

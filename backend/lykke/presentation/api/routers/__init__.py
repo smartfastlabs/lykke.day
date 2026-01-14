@@ -4,6 +4,7 @@ from . import (
     calendar_entries,
     calendar_entry_series,
     calendars,
+    chatbot,
     day_templates,
     days,
     early_access,
@@ -106,4 +107,9 @@ router.include_router(
     utils.router,
     prefix="/utils",
     tags=["utils"],
+)
+router.include_router(
+    chatbot.router,
+    prefix="/chatbot",
+    tags=["chatbot", "ai"],
 )

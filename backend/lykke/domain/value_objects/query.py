@@ -110,6 +110,41 @@ class TimeBlockDefinitionQuery(BaseQuery):
     """Query class for TimeBlockDefinition entities."""
 
 
+@dataclass(kw_only=True)
+class ConversationQuery(BaseQuery):
+    """Query class for Conversation entities."""
+
+    channel: str | None = None
+    status: str | None = None
+    bot_personality_id: UUID | None = None
+
+
+@dataclass(kw_only=True)
+class MessageQuery(BaseQuery):
+    """Query class for Message entities."""
+
+    conversation_id: UUID | None = None
+    role: str | None = None
+
+
+@dataclass(kw_only=True)
+class BotPersonalityQuery(BaseQuery):
+    """Query class for BotPersonality entities."""
+
+    name: str | None = None
+    base_bot_personality_id: UUID | None = None
+
+
+@dataclass(kw_only=True)
+class FactoidQuery(BaseQuery):
+    """Query class for Factoid entities."""
+
+    conversation_id: UUID | None = None
+    factoid_type: str | None = None
+    criticality: str | None = None
+    is_global: bool | None = None  # Filter for global vs conversation-specific factoids
+
+
 T = TypeVar("T", bound=BaseQuery)
 
 

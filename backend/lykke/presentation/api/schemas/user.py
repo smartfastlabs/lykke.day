@@ -27,6 +27,8 @@ class UserSchema(BaseSchema):
     is_superuser: bool
     is_verified: bool
     settings: UserSettingsSchema
+    default_conversation_id: UUID | None = None
+    sms_conversation_id: UUID | None = None
     created_at: datetime
     updated_at: datetime | None = None
 
@@ -48,4 +50,6 @@ class UserUpdateSchema(BaseSchema):
     is_superuser: bool | None = None
     is_verified: bool | None = None
     settings: UserSettingsUpdateSchema | None = None
+    default_conversation_id: UUID | None = None
+    sms_conversation_id: UUID | None = None
 
