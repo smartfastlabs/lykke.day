@@ -8,7 +8,7 @@ import pytest
 
 from lykke.domain.entities import AuditLogEntity, UserEntity
 from lykke.domain.value_objects import ActivityType
-from lykke.infrastructure.gateways import RedisPubSubGateway
+from lykke.infrastructure.gateways import RedisPubSubGateway, StubPubSubGateway
 from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWork
 
 
@@ -112,10 +112,14 @@ async def test_multiple_audit_logs_broadcast(test_user: UserEntity) -> None:
 
 @pytest.mark.asyncio
 async def test_no_broadcast_without_pubsub_gateway(test_user: UserEntity) -> None:
-    """Test that UnitOfWork works without PubSub gateway (no broadcasting)."""
+    """Test that UnitOfWork works with StubPubSubGateway (no broadcasting).
+    
+    StubPubSubGateway is a no-op implementation that doesn't broadcast messages,
+    useful for tests and background workers that don't need real-time broadcasting.
+    """
     user_id = test_user.id
     
-    # Create an AuditLog entity through UnitOfWork WITHOUT PubSub gateway
+    # Create an AuditLog entity through UnitOfWork with StubPubSubGateway
     task_id = uuid4()
     audit_log = AuditLogEntity(
         user_id=user_id,
@@ -124,13 +128,13 @@ async def test_no_broadcast_without_pubsub_gateway(test_user: UserEntity) -> Non
         entity_type="task",
     )
 
-    # Commit without PubSub gateway
-    uow = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=None)
+    # Commit with StubPubSubGateway (no broadcasting)
+    uow = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=StubPubSubGateway())
     async with uow:
         await uow.create(audit_log)
 
     # Verify the entity was saved to database
-    uow_read = SqlAlchemyUnitOfWork(user_id=user_id)
+    uow_read = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=StubPubSubGateway())
     async with uow_read:
         saved_log = await uow_read.audit_log_ro_repo.get(audit_log.id)
         assert saved_log.id == audit_log.id
