@@ -8,6 +8,7 @@ from . import (
     day_templates,
     days,
     early_access,
+    events,
     google,
     me,
     push_subscriptions,
@@ -112,4 +113,9 @@ router.include_router(
     chatbot.router,
     prefix="/chatbot",
     tags=["chatbot", "ai"],
+)
+router.include_router(
+    events.router,
+    prefix="/events",
+    tags=["events", "audit-logs"],
 )

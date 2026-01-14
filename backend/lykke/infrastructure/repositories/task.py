@@ -37,17 +37,25 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
     @staticmethod
     def entity_to_row(task: TaskEntity) -> dict[str, Any]:
         """Convert a Task entity to a database row dict."""
+        # Helper to safely get enum value (handles both enum and string)
+        def get_enum_value(val) -> str | None:
+            if val is None:
+                return None
+            if isinstance(val, str):
+                return val
+            return val.value
+
         row: dict[str, Any] = {
             "id": task.id,
             "user_id": task.user_id,
             "date": task.scheduled_date,  # Extract date from scheduled_date for querying
             "scheduled_date": task.scheduled_date,
             "name": task.name,
-            "status": task.status.value if task.status else None,
-            "type": task.type.value if task.type else None,
+            "status": get_enum_value(task.status),
+            "type": get_enum_value(task.type),
             "description": task.description,
-            "category": task.category.value if task.category else None,
-            "frequency": task.frequency.value if task.frequency else None,
+            "category": get_enum_value(task.category),
+            "frequency": get_enum_value(task.frequency),
             "completed_at": task.completed_at,
             "routine_id": task.routine_id,
         }

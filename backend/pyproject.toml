@@ -11,7 +11,7 @@ packages = [{include = "lykke"}]
 python = "^3.13"
 notion-client = "2.3.0"
 gcsa = "2.5.1"
-uvicorn = "^0.23.0"
+uvicorn = {extras = ["standard"], version = "^0.40.0"}
 alembic = "^1.11.0"
 fastapi = "^0.122.0"
 fastapi-users = {extras = ["sqlalchemy2"], version = "^15.0.3"}

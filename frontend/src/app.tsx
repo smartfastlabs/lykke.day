@@ -26,6 +26,7 @@ import HomeLayout from "@/pages/me/today/layout";
 import PreviewView from "@/pages/me/today/preview";
 import TasksView from "@/pages/me/today/tasks";
 import EventsView from "@/pages/me/today/events";
+import EventsPage from "@/pages/me/events";
 import NavigationLayout from "@/pages/me/navigation/layout";
 import NavPage from "@/pages/me/navigation/links";
 import CalendarPage from "@/pages/me/navigation/calendar";
@@ -135,6 +136,7 @@ export default function App() {
 
             <Route path="/me" component={AuthGuard}>
               <Route path="/" component={MePage} />
+              <Route path="/events" component={EventsPage} />
               <Route path="/today" component={HomeLayout}>
                 <Route path="/" component={PreviewView} />
                 <Route path="/tasks" component={TasksView} />
