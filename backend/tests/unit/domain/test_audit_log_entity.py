@@ -23,10 +23,12 @@ def test_task_id():
 
 
 def test_create_task_completed(test_user_id, test_task_id):
-    """Test create_task_completed factory method."""
-    audit_log = AuditLogEntity.create_task_completed(
+    """Test creating a TASK_COMPLETED audit log entry."""
+    audit_log = AuditLogEntity(
         user_id=test_user_id,
-        task_id=test_task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=test_task_id,
+        entity_type="task",
         meta={"key": "value"},
     )
 
@@ -39,20 +41,24 @@ def test_create_task_completed(test_user_id, test_task_id):
 
 
 def test_create_task_completed_default_meta(test_user_id, test_task_id):
-    """Test create_task_completed with default empty meta."""
-    audit_log = AuditLogEntity.create_task_completed(
+    """Test creating a TASK_COMPLETED audit log entry with default empty meta."""
+    audit_log = AuditLogEntity(
         user_id=test_user_id,
-        task_id=test_task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=test_task_id,
+        entity_type="task",
     )
 
     assert audit_log.meta == {}
 
 
 def test_create_task_punted(test_user_id, test_task_id):
-    """Test create_task_punted factory method."""
-    audit_log = AuditLogEntity.create_task_punted(
+    """Test creating a TASK_PUNTED audit log entry."""
+    audit_log = AuditLogEntity(
         user_id=test_user_id,
-        task_id=test_task_id,
+        activity_type=ActivityType.TASK_PUNTED,
+        entity_id=test_task_id,
+        entity_type="task",
         meta={"reason": "not ready"},
     )
 
@@ -64,10 +70,12 @@ def test_create_task_punted(test_user_id, test_task_id):
 
 
 def test_create_task_punted_default_meta(test_user_id, test_task_id):
-    """Test create_task_punted with default empty meta."""
-    audit_log = AuditLogEntity.create_task_punted(
+    """Test creating a TASK_PUNTED audit log entry with default empty meta."""
+    audit_log = AuditLogEntity(
         user_id=test_user_id,
-        task_id=test_task_id,
+        activity_type=ActivityType.TASK_PUNTED,
+        entity_id=test_task_id,
+        entity_type="task",
     )
 
     assert audit_log.meta == {}
@@ -75,9 +83,11 @@ def test_create_task_punted_default_meta(test_user_id, test_task_id):
 
 def test_delete_raises_error(test_user_id, test_task_id):
     """Test that delete() raises DomainError."""
-    audit_log = AuditLogEntity.create_task_completed(
+    audit_log = AuditLogEntity(
         user_id=test_user_id,
-        task_id=test_task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=test_task_id,
+        entity_type="task",
     )
 
     with pytest.raises(DomainError, match="cannot be deleted"):
@@ -86,9 +96,11 @@ def test_delete_raises_error(test_user_id, test_task_id):
 
 def test_apply_update_raises_error(test_user_id, test_task_id):
     """Test that apply_update() raises DomainError."""
-    audit_log = AuditLogEntity.create_task_completed(
+    audit_log = AuditLogEntity(
         user_id=test_user_id,
-        task_id=test_task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=test_task_id,
+        entity_type="task",
     )
 
     # Create a dummy update object
@@ -104,9 +116,11 @@ def test_apply_update_raises_error(test_user_id, test_task_id):
 
 def test_audit_log_immutability(test_user_id, test_task_id):
     """Test that audit log is immutable - cannot be modified after creation."""
-    audit_log = AuditLogEntity.create_task_completed(
+    audit_log = AuditLogEntity(
         user_id=test_user_id,
-        task_id=test_task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=test_task_id,
+        entity_type="task",
         meta={"original": "value"},
     )
 
@@ -122,9 +136,11 @@ def test_audit_log_immutability(test_user_id, test_task_id):
 def test_audit_log_occurred_at_auto_set(test_user_id, test_task_id):
     """Test that occurred_at is automatically set to current time."""
     before = datetime.now(UTC)
-    audit_log = AuditLogEntity.create_task_completed(
+    audit_log = AuditLogEntity(
         user_id=test_user_id,
-        task_id=test_task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=test_task_id,
+        entity_type="task",
     )
     after = datetime.now(UTC)
 

@@ -15,9 +15,11 @@ from lykke.infrastructure.repositories import AuditLogRepository
 async def test_get(audit_log_repo, test_user):
     """Test getting an audit log by ID."""
     task_id = uuid4()
-    audit_log = AuditLogEntity.create_task_completed(
+    audit_log = AuditLogEntity(
         user_id=test_user.id,
-        task_id=task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=task_id,
+        entity_type="task",
         meta={"test": "data"},
     )
     await audit_log_repo.put(audit_log)
@@ -43,9 +45,11 @@ async def test_get_not_found(audit_log_repo):
 async def test_put(audit_log_repo, test_user):
     """Test creating a new audit log."""
     task_id = uuid4()
-    audit_log = AuditLogEntity.create_task_completed(
+    audit_log = AuditLogEntity(
         user_id=test_user.id,
-        task_id=task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=task_id,
+        entity_type="task",
         meta={"action": "completed"},
     )
 
@@ -65,17 +69,23 @@ async def test_search_by_activity_type(audit_log_repo, test_user):
     task_id2 = uuid4()
     task_id3 = uuid4()
 
-    log1 = AuditLogEntity.create_task_completed(
+    log1 = AuditLogEntity(
         user_id=test_user.id,
-        task_id=task_id1,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=task_id1,
+        entity_type="task",
     )
-    log2 = AuditLogEntity.create_task_punted(
+    log2 = AuditLogEntity(
         user_id=test_user.id,
-        task_id=task_id2,
+        activity_type=ActivityType.TASK_PUNTED,
+        entity_id=task_id2,
+        entity_type="task",
     )
-    log3 = AuditLogEntity.create_task_completed(
+    log3 = AuditLogEntity(
         user_id=test_user.id,
-        task_id=task_id3,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=task_id3,
+        entity_type="task",
     )
 
     await audit_log_repo.put(log1)
@@ -99,17 +109,23 @@ async def test_search_by_entity_id(audit_log_repo, test_user):
     task_id = uuid4()
     other_task_id = uuid4()
 
-    log1 = AuditLogEntity.create_task_completed(
+    log1 = AuditLogEntity(
         user_id=test_user.id,
-        task_id=task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=task_id,
+        entity_type="task",
     )
-    log2 = AuditLogEntity.create_task_punted(
+    log2 = AuditLogEntity(
         user_id=test_user.id,
-        task_id=task_id,
+        activity_type=ActivityType.TASK_PUNTED,
+        entity_id=task_id,
+        entity_type="task",
     )
-    log3 = AuditLogEntity.create_task_completed(
+    log3 = AuditLogEntity(
         user_id=test_user.id,
-        task_id=other_task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=other_task_id,
+        entity_type="task",
     )
 
     await audit_log_repo.put(log1)
@@ -131,9 +147,11 @@ async def test_search_by_entity_type(audit_log_repo, test_user):
     task_id = uuid4()
     message_id = uuid4()
 
-    log1 = AuditLogEntity.create_task_completed(
+    log1 = AuditLogEntity(
         user_id=test_user.id,
-        task_id=task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=task_id,
+        entity_type="task",
     )
     log2 = AuditLogEntity(
         user_id=test_user.id,
@@ -248,9 +266,11 @@ async def test_search_default_ordering(audit_log_repo, test_user):
 async def test_entity_to_row_and_back(audit_log_repo, test_user):
     """Test round-trip conversion: entity -> row -> entity."""
     task_id = uuid4()
-    original = AuditLogEntity.create_task_completed(
+    original = AuditLogEntity(
         user_id=test_user.id,
-        task_id=task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=task_id,
+        entity_type="task",
         meta={"key": "value", "nested": {"data": 123}},
     )
 
@@ -282,9 +302,11 @@ async def test_entity_to_row_and_back(audit_log_repo, test_user):
 async def test_empty_meta_handling(audit_log_repo, test_user):
     """Test that empty meta is properly handled."""
     task_id = uuid4()
-    audit_log = AuditLogEntity.create_task_completed(
+    audit_log = AuditLogEntity(
         user_id=test_user.id,
-        task_id=task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=task_id,
+        entity_type="task",
         meta={},
     )
     await audit_log_repo.put(audit_log)
@@ -300,13 +322,17 @@ async def test_user_scoping(audit_log_repo, test_user, create_test_user):
     other_user_repo = AuditLogRepository(user_id=other_user.id)
 
     task_id = uuid4()
-    log1 = AuditLogEntity.create_task_completed(
+    log1 = AuditLogEntity(
         user_id=test_user.id,
-        task_id=task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=task_id,
+        entity_type="task",
     )
-    log2 = AuditLogEntity.create_task_completed(
+    log2 = AuditLogEntity(
         user_id=other_user.id,
-        task_id=task_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=task_id,
+        entity_type="task",
     )
 
     await audit_log_repo.put(log1)
@@ -328,9 +354,11 @@ async def test_paged_search(audit_log_repo, test_user):
     # Create multiple audit logs
     for i in range(5):
         task_id = uuid4()
-        log = AuditLogEntity.create_task_completed(
+        log = AuditLogEntity(
             user_id=test_user.id,
-            task_id=task_id,
+            activity_type=ActivityType.TASK_COMPLETED,
+            entity_id=task_id,
+            entity_type="task",
         )
         await audit_log_repo.put(log)
 

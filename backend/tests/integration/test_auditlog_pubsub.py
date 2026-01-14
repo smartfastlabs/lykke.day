@@ -29,8 +29,12 @@ async def test_audit_log_broadcast_on_commit(test_user: UserEntity) -> None:
 
         # Create an AuditLog entity through UnitOfWork
         task_id = uuid4()
-        audit_log = AuditLogEntity.create_task_completed(
-            user_id=user_id, task_id=task_id, meta={"test": "data"}
+        audit_log = AuditLogEntity(
+            user_id=user_id,
+            activity_type=ActivityType.TASK_COMPLETED,
+            entity_id=task_id,
+            entity_type="task",
+            meta={"test": "data"},
         )
 
         # Commit the entity using UnitOfWork with PubSub gateway
@@ -70,10 +74,18 @@ async def test_multiple_audit_logs_broadcast(test_user: UserEntity) -> None:
         task1_id = uuid4()
         task2_id = uuid4()
 
-        audit_log1 = AuditLogEntity.create_task_completed(
-            user_id=user_id, task_id=task1_id
+        audit_log1 = AuditLogEntity(
+            user_id=user_id,
+            activity_type=ActivityType.TASK_COMPLETED,
+            entity_id=task1_id,
+            entity_type="task",
         )
-        audit_log2 = AuditLogEntity.create_task_punted(user_id=user_id, task_id=task2_id)
+        audit_log2 = AuditLogEntity(
+            user_id=user_id,
+            activity_type=ActivityType.TASK_PUNTED,
+            entity_id=task2_id,
+            entity_type="task",
+        )
 
         # Commit both entities in one transaction
         uow = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=pubsub_gateway)
@@ -105,8 +117,11 @@ async def test_no_broadcast_without_pubsub_gateway(test_user: UserEntity) -> Non
     
     # Create an AuditLog entity through UnitOfWork WITHOUT PubSub gateway
     task_id = uuid4()
-    audit_log = AuditLogEntity.create_task_completed(
-        user_id=user_id, task_id=task_id
+    audit_log = AuditLogEntity(
+        user_id=user_id,
+        activity_type=ActivityType.TASK_COMPLETED,
+        entity_id=task_id,
+        entity_type="task",
     )
 
     # Commit without PubSub gateway
@@ -135,8 +150,11 @@ async def test_broadcast_only_on_successful_commit(test_user: UserEntity) -> Non
         await asyncio.sleep(0.1)
 
         task_id = uuid4()
-        audit_log = AuditLogEntity.create_task_completed(
-            user_id=user_id, task_id=task_id
+        audit_log = AuditLogEntity(
+            user_id=user_id,
+            activity_type=ActivityType.TASK_COMPLETED,
+            entity_id=task_id,
+            entity_type="task",
         )
 
         # Try to commit but raise an exception before commit
@@ -179,8 +197,11 @@ async def test_user_isolation_in_broadcast(test_user: UserEntity) -> None:
 
             # Create AuditLog for user1
             task_id = uuid4()
-            audit_log = AuditLogEntity.create_task_completed(
-                user_id=user_id, task_id=task_id
+            audit_log = AuditLogEntity(
+                user_id=user_id,
+                activity_type=ActivityType.TASK_COMPLETED,
+                entity_id=task_id,
+                entity_type="task",
             )
 
             uow = SqlAlchemyUnitOfWork(user_id=user_id, pubsub_gateway=pubsub_gateway)

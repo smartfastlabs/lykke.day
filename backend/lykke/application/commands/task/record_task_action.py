@@ -60,16 +60,20 @@ class RecordTaskActionHandler(BaseCommandHandler):
 
             # Create audit log entry for significant actions
             if action.type == value_objects.ActionType.COMPLETE:
-                audit_log = AuditLogEntity.create_task_completed(
+                audit_log = AuditLogEntity(
                     user_id=self.user_id,
-                    task_id=task_id,
+                    activity_type=value_objects.ActivityType.TASK_COMPLETED,
+                    entity_id=task_id,
+                    entity_type="task",
                     meta={"action_created_at": action.created_at.isoformat()},
                 )
                 await uow.create(audit_log)
             elif action.type == value_objects.ActionType.PUNT:
-                audit_log = AuditLogEntity.create_task_punted(
+                audit_log = AuditLogEntity(
                     user_id=self.user_id,
-                    task_id=task_id,
+                    activity_type=value_objects.ActivityType.TASK_PUNTED,
+                    entity_id=task_id,
+                    entity_type="task",
                     meta={"action_created_at": action.created_at.isoformat()},
                 )
                 await uow.create(audit_log)
