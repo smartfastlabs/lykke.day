@@ -1,5 +1,4 @@
 from .action import Action, ActionType
-from .activity_type import ActivityType
 from .ai_chat import (
     ConversationChannel,
     ConversationStatus,
@@ -72,7 +71,6 @@ from .user import UserSetting, UserStatus
 __all__ = [
     "Action",
     "ActionType",
-    "ActivityType",
     "Alarm",
     "AlarmType",
     "AuditLogQuery",

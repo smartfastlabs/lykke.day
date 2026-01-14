@@ -9,8 +9,6 @@ from uuid import UUID
 
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 
-if TYPE_CHECKING:
-    from .activity_type import ActivityType
 
 
 @dataclass(kw_only=True)
@@ -152,7 +150,7 @@ class FactoidQuery(BaseQuery):
 class AuditLogQuery(BaseQuery):
     """Query class for AuditLog entities."""
 
-    activity_type: "ActivityType | None" = None
+    activity_type: str | None = None
     entity_id: UUID | None = None
     entity_type: str | None = None
     occurred_after: datetime | None = None

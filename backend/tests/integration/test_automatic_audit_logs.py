@@ -60,7 +60,7 @@ async def test_task_completed_event_auto_creates_audit_log(
     audit_logs = await audit_log_repo.search(value_objects.AuditLogQuery())
     assert len(audit_logs) == 1
     audit_log = audit_logs[0]
-    assert audit_log.activity_type == value_objects.ActivityType.TASK_COMPLETED
+    assert audit_log.activity_type == "TaskCompletedEvent"
     assert audit_log.entity_id == task.id
     assert audit_log.entity_type == "task"
     assert audit_log.user_id == user_id
@@ -115,7 +115,7 @@ async def test_task_punt_event_auto_creates_audit_log(
     audit_logs = await audit_log_repo.search(value_objects.AuditLogQuery())
     assert len(audit_logs) == 1
     audit_log = audit_logs[0]
-    assert audit_log.activity_type == value_objects.ActivityType.TASK_PUNTED
+    assert audit_log.activity_type == "TaskPuntedEvent"
     assert audit_log.entity_id == task.id
     assert audit_log.entity_type == "task"
     assert audit_log.user_id == user_id
@@ -135,7 +135,7 @@ async def test_audit_log_entity_does_not_trigger_more_audit_logs(
     # Create an audit log entity directly
     audit_log = AuditLogEntity(
         user_id=user_id,
-        activity_type=value_objects.ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=uuid4(),
         entity_type="task",
     )

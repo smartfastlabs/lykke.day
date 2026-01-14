@@ -43,7 +43,7 @@ class AuditLogRepository(
         # Add audit log-specific filtering
         if query.activity_type is not None:
             stmt = stmt.where(
-                self.table.c.activity_type == query.activity_type.value
+                self.table.c.activity_type == query.activity_type
             )
 
         if query.entity_id is not None:
@@ -79,7 +79,7 @@ class AuditLogRepository(
         row: dict[str, Any] = {
             "id": audit_log.id,
             "user_id": audit_log.user_id,
-            "activity_type": audit_log.activity_type.value,
+            "activity_type": audit_log.activity_type,
             "occurred_at": audit_log.occurred_at,
             "entity_id": audit_log.entity_id,
             "entity_type": audit_log.entity_type,
@@ -102,10 +102,6 @@ class AuditLogRepository(
         )
 
         data = normalize_list_fields(dict(row), AuditLogEntity)
-
-        # Convert enum string back to enum
-        if "activity_type" in data and isinstance(data["activity_type"], str):
-            data["activity_type"] = value_objects.ActivityType(data["activity_type"])
 
         # Ensure meta is a dict
         if data.get("meta") is None:

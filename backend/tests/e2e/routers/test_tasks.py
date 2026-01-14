@@ -159,7 +159,7 @@ async def test_complete_task_broadcasts_audit_log(authenticated_client, test_dat
             )
             
             # Verify the broadcast message content
-            assert received["activity_type"] == "TASK_COMPLETED"
+            assert received["activity_type"] == "TaskCompletedEvent"
             assert received["entity_id"] == str(test_task.id)
             assert received["entity_type"] == "task"
             assert received["user_id"] == str(user.id)
@@ -218,7 +218,7 @@ async def test_punt_task_broadcasts_audit_log(authenticated_client, test_date):
             )
             
             # Verify the broadcast message content
-            assert received["activity_type"] == "TASK_PUNTED"
+            assert received["activity_type"] == "TaskPuntedEvent"
             assert received["entity_id"] == str(test_task.id)
             assert received["entity_type"] == "task"
             assert received["user_id"] == str(user.id)

@@ -6,7 +6,6 @@ from typing import Any
 from uuid import UUID
 
 from lykke.core.exceptions import DomainError
-from lykke.domain.value_objects.activity_type import ActivityType
 
 from .base import BaseEntityObject
 
@@ -17,10 +16,12 @@ class AuditLogEntity(BaseEntityObject):
 
     AuditLog entries are append-only and cannot be updated or deleted once created.
     They track significant user actions for audit, analytics, and context purposes.
+    
+    The activity_type is the name of the domain event that triggered this audit log.
     """
 
     user_id: UUID
-    activity_type: ActivityType
+    activity_type: str  # Domain event class name (e.g., "TaskCompletedEvent")
     occurred_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     entity_id: UUID | None = None
     entity_type: str | None = None

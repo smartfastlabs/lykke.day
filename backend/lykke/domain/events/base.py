@@ -77,7 +77,7 @@ class AuditedEvent(Protocol):
             def to_audit_log(self, user_id: UUID) -> AuditLogEntity | None:
                 return AuditLogEntity(
                     user_id=user_id,
-                    activity_type=ActivityType.MY_ACTIVITY,
+                    activity_type=self.__class__.__name__,
                     entity_id=self.task_id,
                     entity_type="task",
                     meta={},

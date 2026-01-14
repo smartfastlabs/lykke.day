@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.domain.entities import AuditLogEntity
-from lykke.domain.value_objects import ActivityType, TaskStatus
+from lykke.domain.value_objects import TaskStatus
 from lykke.domain.value_objects.update import TaskDefinitionUpdateObject
 
 from .base import AuditedEvent, DomainEvent, EntityUpdatedEvent
@@ -58,7 +58,7 @@ class TaskPuntedEvent(DomainEvent, AuditedEvent):
         """
         return AuditLogEntity(
             user_id=user_id,
-            activity_type=ActivityType.TASK_PUNTED,
+            activity_type=self.__class__.__name__,
             entity_id=self.task_id,
             entity_type="task",
             meta={
@@ -83,7 +83,7 @@ class TaskCompletedEvent(DomainEvent, AuditedEvent):
         """
         return AuditLogEntity(
             user_id=user_id,
-            activity_type=ActivityType.TASK_COMPLETED,
+            activity_type=self.__class__.__name__,
             entity_id=self.task_id,
             entity_type="task",
             meta={"completed_at": self.completed_at},

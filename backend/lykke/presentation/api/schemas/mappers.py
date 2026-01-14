@@ -347,7 +347,7 @@ def map_audit_log_to_schema(audit_log: AuditLogEntity) -> AuditLogSchema:
     return AuditLogSchema(
         id=audit_log.id,
         user_id=audit_log.user_id,
-        activity_type=audit_log.activity_type.value,
+        activity_type=audit_log.activity_type,
         occurred_at=audit_log.occurred_at,
         entity_id=audit_log.entity_id,
         entity_type=audit_log.entity_type,

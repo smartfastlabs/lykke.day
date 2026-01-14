@@ -6,7 +6,6 @@ from uuid import uuid4
 import pytest
 from lykke.core.exceptions import NotFoundError
 from lykke.domain.entities import AuditLogEntity
-from lykke.domain.value_objects.activity_type import ActivityType
 from lykke.domain.value_objects.query import AuditLogQuery
 from lykke.infrastructure.repositories import AuditLogRepository
 
@@ -17,7 +16,7 @@ async def test_get(audit_log_repo, test_user):
     task_id = uuid4()
     audit_log = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id,
         entity_type="task",
         meta={"test": "data"},
@@ -28,7 +27,7 @@ async def test_get(audit_log_repo, test_user):
 
     assert result.id == audit_log.id
     assert result.user_id == test_user.id
-    assert result.activity_type == ActivityType.TASK_COMPLETED
+    assert result.activity_type == "TaskCompletedEvent"
     assert result.entity_id == task_id
     assert result.entity_type == "task"
     assert result.meta == {"test": "data"}
@@ -47,7 +46,7 @@ async def test_put(audit_log_repo, test_user):
     task_id = uuid4()
     audit_log = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id,
         entity_type="task",
         meta={"action": "completed"},
@@ -57,7 +56,7 @@ async def test_put(audit_log_repo, test_user):
 
     assert result.id == audit_log.id
     assert result.user_id == test_user.id
-    assert result.activity_type == ActivityType.TASK_COMPLETED
+    assert result.activity_type == "TaskCompletedEvent"
     assert result.entity_id == task_id
     assert result.meta == {"action": "completed"}
 
@@ -71,19 +70,19 @@ async def test_search_by_activity_type(audit_log_repo, test_user):
 
     log1 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id1,
         entity_type="task",
     )
     log2 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_PUNTED,
+        activity_type="TaskPuntedEvent",
         entity_id=task_id2,
         entity_type="task",
     )
     log3 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id3,
         entity_type="task",
     )
@@ -93,7 +92,7 @@ async def test_search_by_activity_type(audit_log_repo, test_user):
     await audit_log_repo.put(log3)
 
     results = await audit_log_repo.search(
-        AuditLogQuery(activity_type=ActivityType.TASK_COMPLETED)
+        AuditLogQuery(activity_type="TaskCompletedEvent")
     )
 
     assert len(results) == 2
@@ -111,19 +110,19 @@ async def test_search_by_entity_id(audit_log_repo, test_user):
 
     log1 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id,
         entity_type="task",
     )
     log2 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_PUNTED,
+        activity_type="TaskPuntedEvent",
         entity_id=task_id,
         entity_type="task",
     )
     log3 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=other_task_id,
         entity_type="task",
     )
@@ -149,13 +148,13 @@ async def test_search_by_entity_type(audit_log_repo, test_user):
 
     log1 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id,
         entity_type="task",
     )
     log2 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.MESSAGE_SENT,
+        activity_type="MessageSentEvent",
         entity_id=message_id,
         entity_type="message",
     )
@@ -181,21 +180,21 @@ async def test_search_by_time_range(audit_log_repo, test_user):
 
     log1 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id1,
         entity_type="task",
         occurred_at=base_time - timedelta(hours=2),
     )
     log2 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id2,
         entity_type="task",
         occurred_at=base_time,
     )
     log3 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id3,
         entity_type="task",
         occurred_at=base_time + timedelta(hours=2),
@@ -228,21 +227,21 @@ async def test_search_default_ordering(audit_log_repo, test_user):
 
     log1 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id1,
         entity_type="task",
         occurred_at=base_time,
     )
     log2 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id2,
         entity_type="task",
         occurred_at=base_time + timedelta(hours=1),
     )
     log3 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id3,
         entity_type="task",
         occurred_at=base_time - timedelta(hours=1),
@@ -268,7 +267,7 @@ async def test_entity_to_row_and_back(audit_log_repo, test_user):
     task_id = uuid4()
     original = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id,
         entity_type="task",
         meta={"key": "value", "nested": {"data": 123}},
@@ -280,7 +279,7 @@ async def test_entity_to_row_and_back(audit_log_repo, test_user):
     # Verify row structure
     assert row["id"] == original.id
     assert row["user_id"] == test_user.id
-    assert row["activity_type"] == "TASK_COMPLETED"
+    assert row["activity_type"] == "TaskCompletedEvent"
     assert row["entity_id"] == task_id
     assert row["entity_type"] == "task"
     assert row["meta"] == original.meta
@@ -304,7 +303,7 @@ async def test_empty_meta_handling(audit_log_repo, test_user):
     task_id = uuid4()
     audit_log = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id,
         entity_type="task",
         meta={},
@@ -324,13 +323,13 @@ async def test_user_scoping(audit_log_repo, test_user, create_test_user):
     task_id = uuid4()
     log1 = AuditLogEntity(
         user_id=test_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id,
         entity_type="task",
     )
     log2 = AuditLogEntity(
         user_id=other_user.id,
-        activity_type=ActivityType.TASK_COMPLETED,
+        activity_type="TaskCompletedEvent",
         entity_id=task_id,
         entity_type="task",
     )
@@ -356,7 +355,7 @@ async def test_paged_search(audit_log_repo, test_user):
         task_id = uuid4()
         log = AuditLogEntity(
             user_id=test_user.id,
-            activity_type=ActivityType.TASK_COMPLETED,
+            activity_type="TaskCompletedEvent",
             entity_id=task_id,
             entity_type="task",
         )
