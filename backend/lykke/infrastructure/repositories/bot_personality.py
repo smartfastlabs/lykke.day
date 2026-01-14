@@ -3,10 +3,11 @@
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy.sql import Select
+
 from lykke.domain import value_objects
 from lykke.domain.entities import BotPersonalityEntity
 from lykke.infrastructure.database.tables import bot_personalities_tbl
-from sqlalchemy.sql import Select
 
 from .base import BaseRepository
 
@@ -49,31 +50,6 @@ class BotPersonalityRepository(
         """
         # Don't force user_id on bot personalities - preserve entity's user_id
         return obj
-
-    def _apply_user_scope(self, stmt: Select[tuple]) -> Select[tuple]:
-        """Apply user scoping to a query.
-
-        For BotPersonality, when user_id is set, we want to include:
-        - Personalities belonging to this user
-        - System personalities (user_id=None)
-
-        Args:
-            stmt: The select statement to apply scoping to.
-
-        Returns:
-            The select statement with user scoping applied.
-        """
-        from sqlalchemy import or_
-
-        if self._is_user_scoped:
-            # Include both user's personalities AND system personalities (user_id=None)
-            stmt = stmt.where(
-                or_(
-                    self.table.c.user_id == self.user_id,
-                    self.table.c.user_id.is_(None),
-                )
-            )
-        return stmt
 
     def build_query(self, query: value_objects.BotPersonalityQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""

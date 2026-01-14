@@ -3,11 +3,12 @@
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy.sql import Select
+
 from lykke.domain import value_objects
 from lykke.domain.entities import AuditLogEntity
 from lykke.infrastructure.database.tables import audit_logs_tbl
 from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
-from sqlalchemy.sql import Select
 
 from .base import UserScopedBaseRepository
 
@@ -27,24 +28,12 @@ class AuditLogRepository(
 
     def build_query(self, query: value_objects.AuditLogQuery) -> Select[tuple]:
         """Build a SQLAlchemy Core select statement from a query object."""
-        from sqlalchemy import select
 
-        # Build base query with user scoping
-        stmt: Select[tuple] = select(self.table)
-        stmt = self._apply_user_scope(stmt)
-
-        # Apply pagination
-        if query.limit is not None:
-            stmt = stmt.limit(query.limit)
-
-        if query.offset:
-            stmt = stmt.offset(query.offset)
+        stmt: Select[tuple] = super().build_query(query)
 
         # Add audit log-specific filtering
         if query.activity_type is not None:
-            stmt = stmt.where(
-                self.table.c.activity_type == query.activity_type
-            )
+            stmt = stmt.where(self.table.c.activity_type == query.activity_type)
 
         if query.entity_id is not None:
             stmt = stmt.where(self.table.c.entity_id == query.entity_id)
@@ -58,18 +47,6 @@ class AuditLogRepository(
 
         if query.occurred_before is not None:
             stmt = stmt.where(self.table.c.occurred_at < query.occurred_before)
-
-        # Handle ordering - default to occurred_at descending (most recent first)
-        if query.order_by:
-            col = getattr(self.table.c, query.order_by, None)
-            if col is not None:
-                if query.order_by_desc:
-                    stmt = stmt.order_by(col.desc())
-                else:
-                    stmt = stmt.order_by(col)
-        else:
-            # Default ordering by occurred_at descending (most recent first)
-            stmt = stmt.order_by(self.table.c.occurred_at.desc())
 
         return stmt
 
