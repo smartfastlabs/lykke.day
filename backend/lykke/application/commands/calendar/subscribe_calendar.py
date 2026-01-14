@@ -82,6 +82,7 @@ class SubscribeCalendarHandler(BaseCommandHandler):
                         expiration=subscription.expiration,
                         provider="google",
                         client_state=client_state,
+                        webhook_url=webhook_url,
                     ),
                     sync_subscription_id=subscription.channel_id,
                 )

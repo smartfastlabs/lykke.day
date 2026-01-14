@@ -127,6 +127,7 @@ class ResyncCalendarHandler(BaseCommandHandler):
                 provider="google",
                 client_state=client_state,
                 sync_token=None,
+                webhook_url=webhook_url,
             ),
             sync_subscription_id=subscription.channel_id,
         )

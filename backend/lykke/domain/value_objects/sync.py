@@ -20,3 +20,4 @@ class SyncSubscription(BaseValueObject):
     provider: str  # "google", "microsoft", etc.
     client_state: str | None = None  # Optional validation token
     sync_token: str | None = None  # For incremental sync
+    webhook_url: str | None = None  # Webhook URL for debugging purposes

@@ -43,6 +43,7 @@ def test_calendar(test_user_id, test_calendar_id, test_auth_token_id):
             provider="google",
             sync_token="old-sync-token",
             client_state="test-secret",
+            webhook_url="https://example.com/webhook/test",
         ),
     )
 

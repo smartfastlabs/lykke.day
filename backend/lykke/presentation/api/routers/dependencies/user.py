@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from typing import Annotated, Any, cast
+from uuid import UUID
 
 from fastapi import Depends, WebSocket
 from fastapi_users.exceptions import UserNotExists
@@ -101,7 +102,7 @@ async def get_current_user_from_token(websocket: WebSocket) -> UserEntity:
             async for user_db in get_user_db(session):
                 async for user_manager in get_user_manager(user_db):
                     jwt_strategy = get_jwt_strategy()
-                    result = await jwt_strategy.read_token(token, user_manager=user_manager)
+                    result: Any = await jwt_strategy.read_token(token, user_manager=user_manager)
 
                     if result is None:
                         raise AuthenticationError("Invalid authentication token")
@@ -112,11 +113,15 @@ async def get_current_user_from_token(websocket: WebSocket) -> UserEntity:
                     
                     if isinstance(result, UserDB):
                         user = result
-                    else:
-                        # It's a user ID string, fetch the user
-                        user = await user_db.get(result)
-                        if user is None:
+                    elif isinstance(result, (str, UUID)):
+                        # It's a user ID (string or UUID), fetch the user
+                        user_id = UUID(result) if isinstance(result, str) else result
+                        fetched_user = await user_db.get(user_id)
+                        if fetched_user is None:
                             raise UserNotExists()
+                        user = fetched_user
+                    else:
+                        raise AuthenticationError("Invalid token result type")
 
                     if not user.is_active:
                         raise AuthenticationError("User is not active")

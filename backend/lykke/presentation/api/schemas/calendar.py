@@ -17,6 +17,7 @@ class SyncSubscriptionSchema(BaseSchema):
     provider: str
     client_state: str | None = None
     sync_token: str | None = None
+    webhook_url: str | None = None
 
 
 class CalendarCreateSchema(BaseSchema):
