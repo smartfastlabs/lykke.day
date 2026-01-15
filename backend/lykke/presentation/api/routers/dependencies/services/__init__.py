@@ -9,6 +9,7 @@ from collections.abc import AsyncIterator
 from typing import Annotated
 
 from fastapi import Depends, Request
+from redis import asyncio as aioredis  # type: ignore
 
 from lykke.application.commands import (
     RecordTaskActionHandler,
@@ -30,16 +31,18 @@ from lykke.presentation.api.routers.dependencies.user import get_current_user
 async def get_pubsub_gateway(
     request: Request,
 ) -> AsyncIterator[PubSubGatewayProtocol]:
-    """Get a PubSubGateway instance with automatic cleanup.
+    """Get a PubSubGateway instance using the shared Redis connection pool.
 
-    Uses the shared Redis connection pool from app state for better performance.
-    This is a generator-based dependency that ensures the Redis connection
-    is properly closed when the request/WebSocket connection ends.
+    Uses the shared Redis connection pool from app.state. The gateway uses
+    the shared pool, so closing it only closes the client connection, not
+    the pool itself. This maintains compatibility with FastAPI's dependency
+    injection pattern.
 
     Args:
         request: FastAPI request object to access app state
     """
     # Get the shared Redis connection pool from app state
+    # If None (e.g., in tests), gateway will create its own connection
     redis_pool = getattr(request.app.state, "redis_pool", None)
 
     # Create gateway with shared pool if available, otherwise create new connection
@@ -47,6 +50,7 @@ async def get_pubsub_gateway(
     try:
         yield gateway
     finally:
+        # Close the gateway (only closes client connection, not the shared pool)
         await gateway.close()
 
 
