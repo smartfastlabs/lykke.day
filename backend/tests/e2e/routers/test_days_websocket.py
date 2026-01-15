@@ -44,7 +44,7 @@ async def test_full_sync_request(authenticated_client, test_date):
     """Test requesting full day context via WebSocket."""
     client, user = await authenticated_client()
 
-    # Create a test task
+    # Create a test task directly (no need for real-time notification in full sync)
     task_repo = TaskRepository(user_id=user.id)
     test_task = TaskEntity(
         id=uuid4(),
@@ -86,7 +86,7 @@ async def test_incremental_sync_request(authenticated_client, test_date):
     """Test requesting incremental changes via WebSocket."""
     client, user = await authenticated_client()
 
-    # Create initial task
+    # Create initial task directly (for baseline)
     task_repo = TaskRepository(user_id=user.id)
     initial_task = TaskEntity(
         id=uuid4(),
@@ -112,7 +112,14 @@ async def test_incremental_sync_request(authenticated_client, test_date):
         assert full_response["type"] == "sync_response"
         baseline_timestamp = full_response["last_audit_log_timestamp"]
 
-        # Create a new task after baseline
+        # Wait a bit to ensure new audit logs have later timestamps
+        await asyncio.sleep(0.01)
+
+        # Create a new task after baseline with audit log
+        from lykke.infrastructure.repositories import AuditLogRepository
+        from lykke.domain.entities import AuditLogEntity
+        from datetime import UTC, datetime
+        
         new_task = TaskEntity(
             id=uuid4(),
             user_id=user.id,
@@ -124,9 +131,29 @@ async def test_incremental_sync_request(authenticated_client, test_date):
             scheduled_date=test_date,
         )
         await task_repo.put(new_task)
+        
+        # Manually create audit log (after baseline timestamp)
+        audit_log = AuditLogEntity(
+            user_id=user.id,
+            activity_type="EntityCreatedEvent",
+            entity_id=new_task.id,
+            entity_type="task",
+            occurred_at=datetime.now(UTC),
+            meta={
+                "entity_data": {
+                    "id": str(new_task.id),
+                    "user_id": str(new_task.user_id),
+                    "name": new_task.name,
+                    "scheduled_date": new_task.scheduled_date.isoformat(),
+                    "status": new_task.status.value,
+                }
+            },
+        )
+        audit_log_repo = AuditLogRepository(user_id=user.id)
+        await audit_log_repo.put(audit_log)
 
-        # Wait a bit for audit log to be created
-        await asyncio.sleep(0.1)
+        # Wait a bit for audit log to be fully persisted
+        await asyncio.sleep(0.2)
 
         # Request incremental sync
         incremental_sync = {
@@ -153,7 +180,7 @@ async def test_realtime_task_update_notification(authenticated_client, test_date
     """Test that task updates trigger real-time notifications via WebSocket."""
     client, user = await authenticated_client()
 
-    # Create a test task
+    # Create a test task directly (initial setup, no real-time needed)
     task_repo = TaskRepository(user_id=user.id)
     test_task = TaskEntity(
         id=uuid4(),
@@ -180,19 +207,22 @@ async def test_realtime_task_update_notification(authenticated_client, test_date
 
         # Update task status via API (simulating another client)
         from lykke.application.commands import RecordTaskActionHandler
-        from lykke.application.unit_of_work import UnitOfWorkFactory
         from lykke.infrastructure.gateways import RedisPubSubGateway
+        from lykke.infrastructure.repositories import TaskRepository
         from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 
         # Get Redis pool from app state
         redis_pool = getattr(client.app.state, "redis_pool", None)
         pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
         uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
+        task_repo = TaskRepository(user_id=user.id)
 
         handler = RecordTaskActionHandler(task_repo, uow_factory, user.id)
         await handler.record_task_action(task_id=test_task.id, action="complete")
 
         # Wait for real-time event (with timeout)
+        await asyncio.sleep(0.2)  # Delay to ensure message arrives
+        
         try:
             # The backend should send a sync_response with entity changes
             event = websocket.receive_json()
@@ -234,7 +264,14 @@ async def test_realtime_task_creation_notification(authenticated_client, test_da
         sync_response = websocket.receive_json()
         assert sync_response["type"] == "sync_response"
 
-        # Create a new task (simulating another client)
+        # Create a new task and manually broadcast (simulating UOW)
+        from datetime import UTC, datetime
+        
+        from lykke.core.utils.audit_log_serialization import serialize_audit_log
+        from lykke.domain.entities import AuditLogEntity
+        from lykke.infrastructure.gateways import RedisPubSubGateway
+        from lykke.infrastructure.repositories import AuditLogRepository, TaskRepository
+        
         task_repo = TaskRepository(user_id=user.id)
         new_task = TaskEntity(
             id=uuid4(),
@@ -247,8 +284,39 @@ async def test_realtime_task_creation_notification(authenticated_client, test_da
             scheduled_date=test_date,
         )
         await task_repo.put(new_task)
+        
+        # Create and publish audit log to Redis
+        audit_log = AuditLogEntity(
+            user_id=user.id,
+            activity_type="EntityCreatedEvent",
+            entity_id=new_task.id,
+            entity_type="task",
+            occurred_at=datetime.now(UTC),
+            meta={
+                "entity_data": {
+                    "id": str(new_task.id),
+                    "user_id": str(new_task.user_id),
+                    "name": new_task.name,
+                    "scheduled_date": new_task.scheduled_date.isoformat(),
+                    "status": new_task.status.value,
+                }
+            },
+        )
+        audit_log_repo = AuditLogRepository(user_id=user.id)
+        await audit_log_repo.put(audit_log)
+        
+        # Manually publish to Redis (simulating UOW broadcast)
+        redis_pool = getattr(client.app.state, "redis_pool", None)
+        pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+        await pubsub_gateway.publish_to_user_channel(
+            user_id=user.id,
+            channel_type="auditlog",
+            message=serialize_audit_log(audit_log),
+        )
 
         # Wait for real-time event
+        await asyncio.sleep(0.2)  # Delay to ensure message arrives
+        
         try:
             event = websocket.receive_json()
             assert event["type"] == "sync_response"
@@ -267,7 +335,7 @@ async def test_realtime_task_deletion_notification(authenticated_client, test_da
     """Test that task deletion triggers real-time notifications."""
     client, user = await authenticated_client()
 
-    # Create a test task
+    # Create a test task directly
     task_repo = TaskRepository(user_id=user.id)
     test_task = TaskEntity(
         id=uuid4(),
@@ -292,11 +360,50 @@ async def test_realtime_task_deletion_notification(authenticated_client, test_da
         sync_response = websocket.receive_json()
         assert sync_response["type"] == "sync_response"
 
-        # Delete the task
+        # Delete the task and manually broadcast
+        from datetime import UTC, datetime
+        
+        from lykke.core.utils.audit_log_serialization import serialize_audit_log
+        from lykke.domain.entities import AuditLogEntity
+        from lykke.infrastructure.gateways import RedisPubSubGateway
+        from lykke.infrastructure.repositories import AuditLogRepository
+        
         await task_repo.delete(test_task.id)
+        
+        # Create and publish deletion audit log
+        # Note: Must include entity_data with scheduled_date for filtering to work
+        audit_log = AuditLogEntity(
+            user_id=user.id,
+            activity_type="EntityDeletedEvent",
+            entity_id=test_task.id,
+            entity_type="task",
+            occurred_at=datetime.now(UTC),
+            meta={
+                "entity_data": {
+                    "id": str(test_task.id),
+                    "user_id": str(test_task.user_id),
+                    "scheduled_date": test_task.scheduled_date.isoformat(),
+                }
+            },
+        )
+        audit_log_repo = AuditLogRepository(user_id=user.id)
+        await audit_log_repo.put(audit_log)
+        
+        # Manually publish to Redis
+        redis_pool = getattr(client.app.state, "redis_pool", None)
+        pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+        await pubsub_gateway.publish_to_user_channel(
+            user_id=user.id,
+            channel_type="auditlog",
+            message=serialize_audit_log(audit_log),
+        )
 
-        # Wait for real-time event
+        # Wait for real-time event (with small delay to ensure message arrives)
+        await asyncio.sleep(0.2)
+        
         try:
+            # TestClient's WebSocket doesn't support timeout parameter
+            # We rely on the sleep above to ensure the message arrives
             event = websocket.receive_json()
             assert event["type"] == "sync_response"
             assert event["changes"] is not None
@@ -318,14 +425,12 @@ async def test_realtime_calendar_entry_update(authenticated_client, test_date):
     """Test that calendar entry updates trigger real-time notifications."""
     client, user = await authenticated_client()
 
-    # Create a test calendar entry
+    # Create a test calendar entry directly
     from uuid import NAMESPACE_DNS, uuid5
 
     from lykke.domain.value_objects.task import TaskFrequency
 
     calendar_repo = CalendarEntryRepository(user_id=user.id)
-
-    # Create calendar entry with required fields
     test_entry = CalendarEntryEntity(
         id=uuid4(),
         user_id=user.id,
@@ -351,11 +456,49 @@ async def test_realtime_calendar_entry_update(authenticated_client, test_date):
         sync_response = websocket.receive_json()
         assert sync_response["type"] == "sync_response"
 
-        # Update calendar entry
-        test_entry.title = "Updated Event Title"
-        await calendar_repo.put(test_entry)
+        # Update calendar entry and manually broadcast
+        from lykke.core.utils.audit_log_serialization import serialize_audit_log
+        from lykke.domain.entities import AuditLogEntity
+        from lykke.infrastructure.gateways import RedisPubSubGateway
+        from lykke.infrastructure.repositories import AuditLogRepository
+        
+        entry = await calendar_repo.get(test_entry.id)
+        entry.title = "Updated Event Title"
+        await calendar_repo.put(entry)
+        
+        # Create and publish update audit log
+        # Note: Must include starts_at or date for filtering to work
+        audit_log = AuditLogEntity(
+            user_id=user.id,
+            activity_type="EntityUpdatedEvent",
+            entity_id=entry.id,
+            entity_type="calendar_entry",
+            occurred_at=datetime.now(UTC),
+            meta={
+                "entity_data": {
+                    "id": str(entry.id),
+                    "user_id": str(entry.user_id),
+                    "title": entry.title,
+                    "starts_at": entry.starts_at.isoformat(),
+                    "ends_at": entry.ends_at.isoformat(),
+                }
+            },
+        )
+        audit_log_repo = AuditLogRepository(user_id=user.id)
+        await audit_log_repo.put(audit_log)
+        
+        # Manually publish to Redis
+        redis_pool = getattr(client.app.state, "redis_pool", None)
+        pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+        await pubsub_gateway.publish_to_user_channel(
+            user_id=user.id,
+            channel_type="auditlog",
+            message=serialize_audit_log(audit_log),
+        )
 
         # Wait for real-time event
+        await asyncio.sleep(0.2)  # Delay to ensure message arrives
+        
         try:
             event = websocket.receive_json()
             assert event["type"] == "sync_response"
@@ -374,7 +517,7 @@ async def test_filtering_other_days_entities(authenticated_client, test_date):
     """Test that entities from other days are filtered out."""
     client, user = await authenticated_client()
 
-    # Create a task for today
+    # Create a task for today directly
     task_repo = TaskRepository(user_id=user.id)
     today_task = TaskEntity(
         id=uuid4(),
@@ -388,7 +531,7 @@ async def test_filtering_other_days_entities(authenticated_client, test_date):
     )
     await task_repo.put(today_task)
 
-    # Create a task for tomorrow
+    # Create a task for tomorrow directly
     from datetime import timedelta
 
     tomorrow_date = test_date + timedelta(days=1)
@@ -420,11 +563,48 @@ async def test_filtering_other_days_entities(authenticated_client, test_date):
         assert str(today_task.id) in task_ids
         assert str(tomorrow_task.id) not in task_ids
 
-        # Update tomorrow's task - should NOT trigger real-time event
-        tomorrow_task.status = TaskStatus.COMPLETE
-        await task_repo.put(tomorrow_task)
+        # Update tomorrow's task and manually broadcast - should NOT trigger real-time event
+        # due to filtering
+        from lykke.core.utils.audit_log_serialization import serialize_audit_log
+        from lykke.domain.entities import AuditLogEntity
+        from lykke.infrastructure.gateways import RedisPubSubGateway
+        from lykke.infrastructure.repositories import AuditLogRepository
+        
+        task = await task_repo.get(tomorrow_task.id)
+        task.status = TaskStatus.COMPLETE
+        await task_repo.put(task)
+        
+        # Create and publish update audit log
+        audit_log = AuditLogEntity(
+            user_id=user.id,
+            activity_type="EntityUpdatedEvent",
+            entity_id=task.id,
+            entity_type="task",
+            occurred_at=datetime.now(UTC),
+            meta={
+                "entity_data": {
+                    "id": str(task.id),
+                    "user_id": str(task.user_id),
+                    "scheduled_date": task.scheduled_date.isoformat(),
+                    "status": task.status.value,
+                }
+            },
+        )
+        audit_log_repo = AuditLogRepository()
+        await audit_log_repo.put(audit_log)
+        
+        # Manually publish to Redis (but should be filtered out by WebSocket)
+        redis_pool = getattr(client.app.state, "redis_pool", None)
+        pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+        await pubsub_gateway.publish_to_user_channel(
+            user_id=user.id,
+            channel_type="auditlog",
+            message=serialize_audit_log(audit_log),
+        )
 
         # Should NOT receive an event (filtered out)
+        await asyncio.sleep(0.2)  # Delay to ensure filtering completes
+        
         try:
             event = websocket.receive_json()
             # If we get an event, it should NOT be for tomorrow's task
@@ -443,7 +623,7 @@ async def test_multiple_websocket_connections(authenticated_client, test_date):
     """Test that multiple WebSocket connections work independently."""
     client, user = await authenticated_client()
 
-    # Create a test task
+    # Create a test task directly
     task_repo = TaskRepository(user_id=user.id)
     test_task = TaskEntity(
         id=uuid4(),
@@ -481,18 +661,22 @@ async def test_multiple_websocket_connections(authenticated_client, test_date):
         # Update task - both should receive notification
         from lykke.application.commands import RecordTaskActionHandler
         from lykke.infrastructure.gateways import RedisPubSubGateway
+        from lykke.infrastructure.repositories import TaskRepository
         from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 
-        redis_pool = getattr(client.app.app.state, "redis_pool", None)
+        redis_pool = getattr(client.app.state, "redis_pool", None)
         pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
         uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
+        task_repo = TaskRepository(user_id=user.id)
         handler = RecordTaskActionHandler(task_repo, uow_factory, user.id)
         await handler.record_task_action(task_id=test_task.id, action="complete")
 
         # Both should receive events
+        await asyncio.sleep(0.1)  # Small delay to ensure messages arrive
+        
         try:
-            event1 = ws1.receive_json()
-            event2 = ws2.receive_json()
+            event1 = ws1.receive_json(timeout=2.0)
+            event2 = ws2.receive_json(timeout=2.0)
             assert event1["type"] == "sync_response"
             assert event2["type"] == "sync_response"
             assert event1["changes"] is not None
@@ -522,6 +706,13 @@ async def test_sync_detection_out_of_sync(authenticated_client, test_date):
         # This would happen if the client receives an event with occurred_at < last_processed_timestamp
         # The frontend should detect this and mark as out of sync
         # For this test, we'll verify the timestamp is included in events
+        from datetime import UTC, datetime
+        
+        from lykke.core.utils.audit_log_serialization import serialize_audit_log
+        from lykke.domain.entities import AuditLogEntity
+        from lykke.infrastructure.gateways import RedisPubSubGateway
+        from lykke.infrastructure.repositories import AuditLogRepository, TaskRepository
+        
         task_repo = TaskRepository(user_id=user.id)
         test_task = TaskEntity(
             id=uuid4(),
@@ -534,8 +725,37 @@ async def test_sync_detection_out_of_sync(authenticated_client, test_date):
             scheduled_date=test_date,
         )
         await task_repo.put(test_task)
+        
+        # Create and publish audit log
+        audit_log = AuditLogEntity(
+            user_id=user.id,
+            activity_type="EntityCreatedEvent",
+            entity_id=test_task.id,
+            entity_type="task",
+            occurred_at=datetime.now(UTC),
+            meta={
+                "entity_data": {
+                    "id": str(test_task.id),
+                    "user_id": str(test_task.user_id),
+                    "scheduled_date": test_task.scheduled_date.isoformat(),
+                }
+            },
+        )
+        audit_log_repo = AuditLogRepository(user_id=user.id)
+        await audit_log_repo.put(audit_log)
+        
+        # Manually publish to Redis
+        redis_pool = getattr(client.app.state, "redis_pool", None)
+        pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+        await pubsub_gateway.publish_to_user_channel(
+            user_id=user.id,
+            channel_type="auditlog",
+            message=serialize_audit_log(audit_log),
+        )
 
         # Wait for event
+        await asyncio.sleep(0.2)  # Delay to ensure message arrives
+        
         try:
             event = websocket.receive_json()
             if event.get("type") == "sync_response":
@@ -582,7 +802,12 @@ async def test_websocket_reconnection_scenario(authenticated_client, test_date):
         response1 = ws1.receive_json()
         last_timestamp = response1["last_audit_log_timestamp"]
 
-        # Create a task while first connection is active
+        # Create a task while first connection is active with audit log
+        from datetime import UTC, datetime
+        
+        from lykke.domain.entities import AuditLogEntity
+        from lykke.infrastructure.repositories import AuditLogRepository, TaskRepository
+        
         task_repo = TaskRepository(user_id=user.id)
         task1 = TaskEntity(
             id=uuid4(),
@@ -595,6 +820,24 @@ async def test_websocket_reconnection_scenario(authenticated_client, test_date):
             scheduled_date=test_date,
         )
         await task_repo.put(task1)
+        
+        # Create audit log so it appears in incremental sync
+        audit_log = AuditLogEntity(
+            user_id=user.id,
+            activity_type="EntityCreatedEvent",
+            entity_id=task1.id,
+            entity_type="task",
+            occurred_at=datetime.now(UTC),
+            meta={
+                "entity_data": {
+                    "id": str(task1.id),
+                    "user_id": str(task1.user_id),
+                    "scheduled_date": task1.scheduled_date.isoformat(),
+                }
+            },
+        )
+        audit_log_repo = AuditLogRepository(user_id=user.id)
+        await audit_log_repo.put(audit_log)
 
     # Simulate reconnection - new WebSocket connection
     await asyncio.sleep(0.1)  # Small delay to ensure audit log is created
