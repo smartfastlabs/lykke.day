@@ -13,6 +13,7 @@ from loguru import logger
 
 from lykke.application.commands import (
     CreateOrGetDayHandler,
+    RescheduleDayHandler,
     ScheduleDayHandler,
     UpdateDayHandler,
 )
@@ -52,6 +53,7 @@ from .dependencies.services import (
     day_context_handler_websocket,
     get_create_or_get_day_handler_websocket,
     get_pubsub_gateway,
+    get_reschedule_day_handler,
     get_schedule_day_handler,
     get_update_day_handler,
     incremental_changes_handler,
@@ -143,6 +145,26 @@ async def schedule_day(
 ) -> DayContextSchema:
     """Schedule a specific day with tasks from routines."""
     context = await handler.schedule_day(date=date, template_id=template_id)
+    return map_day_context_to_schema(context)
+
+
+@router.put("/today/reschedule", response_model=DayContextSchema)
+async def reschedule_today(
+    handler: Annotated[RescheduleDayHandler, Depends(get_reschedule_day_handler)],
+) -> DayContextSchema:
+    """Reschedule today by cleaning up and recreating all tasks."""
+    context = await handler.reschedule_day(date=get_current_date())
+    return map_day_context_to_schema(context)
+
+
+@router.put("/{date}/reschedule", response_model=DayContextSchema)
+async def reschedule_day(
+    date: datetime.date,
+    handler: Annotated[RescheduleDayHandler, Depends(get_reschedule_day_handler)],
+    template_id: UUID | None = None,
+) -> DayContextSchema:
+    """Reschedule a specific day by cleaning up and recreating all tasks."""
+    context = await handler.reschedule_day(date=date, template_id=template_id)
     return map_day_context_to_schema(context)
 
 

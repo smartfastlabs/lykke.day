@@ -155,6 +155,7 @@ class AuditLogQuery(BaseQuery):
     entity_type: str | None = None
     occurred_after: datetime | None = None
     occurred_before: datetime | None = None
+    date: dt_date | None = None
 
 
 T = TypeVar("T", bound=BaseQuery)

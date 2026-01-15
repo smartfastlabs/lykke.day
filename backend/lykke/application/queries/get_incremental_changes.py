@@ -19,6 +19,8 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
         super().__init__(ro_repos, user_id)
         # Access audit_log_ro_repo from ro_repos (not exposed by BaseQueryHandler)
         self.audit_log_ro_repo = ro_repos.audit_log_ro_repo
+        self.task_ro_repo = ro_repos.task_ro_repo
+        self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
 
     async def get_incremental_changes(
         self, since_timestamp: datetime, target_date: dt_date
@@ -75,9 +77,12 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
 
             entity_data: dict[str, Any] | None = None
 
-            # For created/updated, load the entity and include its data
-            if change_type in ("created", "updated"):
-                entity_data = _get_audit_log_entity_data(audit_log)
+            # For created/updated, load the full entity from the database
+            if change_type in ("created", "updated") and audit_log.entity_id:
+                entity_data = await self._load_entity_data(
+                    audit_log.entity_type or "unknown",
+                    audit_log.entity_id,
+                )
 
             change = EntityChangeSchema(
                 change_type=change_type,
@@ -105,7 +110,44 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
 
         return changes, last_timestamp
 
+    async def _load_entity_data(
+        self, entity_type: str, entity_id: UUID
+    ) -> dict[str, Any] | None:
+        """Load the full entity data from the repository and convert to dict.
 
-def _get_audit_log_entity_data(audit_log: AuditLogEntity) -> dict[str, Any] | None:
-    return audit_log.meta.get("entity_data", None)
-    return audit_log.meta.get("entity_data", None)
+        Args:
+            entity_type: The type of entity (task, calendar_entry, etc.)
+            entity_id: The ID of the entity
+
+        Returns:
+            Dictionary representation of the entity, or None if not found
+        """
+        try:
+            if entity_type == "task":
+                task = await self.task_ro_repo.get(entity_id)
+                if not task:
+                    return None
+                # Convert task entity to dict using schema mapper
+                from lykke.presentation.api.schemas.mappers import map_task_to_schema
+
+                task_schema = map_task_to_schema(task)
+                return task_schema.model_dump(mode="json")
+
+            elif entity_type == "calendar_entry":
+                entry = await self.calendar_entry_ro_repo.get(entity_id)
+                if not entry:
+                    return None
+                # Convert calendar entry to dict using schema mapper
+                from lykke.presentation.api.schemas.mappers import (
+                    map_calendar_entry_to_schema,
+                )
+
+                entry_schema = map_calendar_entry_to_schema(entry)
+                return entry_schema.model_dump(mode="json")
+
+            return None
+        except Exception:
+            # If we can't load the entity, return None
+            # The change will still be sent but without entity_data
+            return None
+            return None

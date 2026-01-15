@@ -32,6 +32,7 @@ const TaskItem: Component<{ task: Task }> = (props) => {
   const icon = () =>
     getCategoryIcon(props.task.category) ||
     getTypeIcon(props.task.type);
+  const isComplete = () => props.task.status === "COMPLETE";
 
   return (
     <div class="flex items-start gap-3">
@@ -41,9 +42,25 @@ const TaskItem: Component<{ task: Task }> = (props) => {
         </Show>
       </div>
       <div class="flex-1">
-        <p class="text-sm font-semibold text-stone-800">{props.task.name}</p>
+        <p
+          class="text-sm font-semibold"
+          classList={{
+            "line-through text-stone-400": isComplete(),
+            "text-stone-800": !isComplete(),
+          }}
+        >
+          {props.task.name}
+        </p>
         <Show when={time()}>
-          <p class="text-xs text-stone-500">{time()}</p>
+          <p
+            class="text-xs"
+            classList={{
+              "text-stone-400": isComplete(),
+              "text-stone-500": !isComplete(),
+            }}
+          >
+            {time()}
+          </p>
         </Show>
       </div>
     </div>
@@ -52,15 +69,11 @@ const TaskItem: Component<{ task: Task }> = (props) => {
 
 export const TasksSection: Component<TasksSectionProps> = (props) => {
   const importantTasks = createMemo(() =>
-    props.tasks.filter(
-      (t) => t.status !== "COMPLETE" && t.tags?.includes("IMPORTANT")
-    )
+    props.tasks.filter((t) => t.tags?.includes("IMPORTANT"))
   );
 
   const otherCount = createMemo(() =>
-    props.tasks.filter(
-      (t) => t.status !== "COMPLETE" && !t.tags?.includes("IMPORTANT")
-    ).length
+    props.tasks.filter((t) => !t.tags?.includes("IMPORTANT")).length
   );
 
   return (

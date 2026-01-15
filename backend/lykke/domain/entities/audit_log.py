@@ -1,7 +1,7 @@
 """AuditLog entity for tracking user activities."""
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date as dt_date, datetime
 from typing import Any
 from uuid import UUID
 
@@ -20,11 +20,13 @@ class AuditLogEntity(BaseEntityObject):
     generated the audit log under the "entity_data" key.
 
     The activity_type is the name of the domain event that triggered this audit log.
+    The date field is the date (in user's timezone) when the activity occurred.
     """
 
     user_id: UUID
     activity_type: str  # Domain event class name (e.g., "TaskCompletedEvent")
     occurred_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    date: dt_date = field(default_factory=lambda: datetime.now(UTC).date())
     entity_id: UUID | None = None
     entity_type: str | None = None
     meta: dict[str, Any] = field(default_factory=dict)

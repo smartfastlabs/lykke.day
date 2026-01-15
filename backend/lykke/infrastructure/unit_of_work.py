@@ -388,6 +388,7 @@ class SqlAlchemyUnitOfWork:
         self.audit_log_ro_repo = cast(
             "AuditLogRepositoryReadOnlyProtocol", audit_log_repo
         )
+        self._audit_log_rw_repo = audit_log_repo
 
         return self
 
@@ -547,6 +548,17 @@ class SqlAlchemyUnitOfWork:
             raise RuntimeError("Task repository not initialized")
 
         await self._task_rw_repo.bulk_delete(query)
+
+    async def bulk_delete_audit_logs(self, query: value_objects.AuditLogQuery) -> None:
+        """Bulk delete audit logs matching the query.
+
+        Note: This is a special operation that bypasses the normal immutability
+        of audit logs. Use with caution.
+        """
+        if self._audit_log_rw_repo is None:
+            raise RuntimeError("Audit log repository not initialized")
+
+        await self._audit_log_rw_repo.bulk_delete(query)
 
     def _get_repository_for_entity(self, entity: BaseEntityObject) -> Any:
         """Get the appropriate read-write repository for an entity type.
@@ -794,7 +806,7 @@ def _attach_entity_snapshot(
     meta: dict[str, Any] | None, entity_snapshot: dict[str, Any]
 ) -> dict[str, Any]:
     """Attach entity snapshot data to audit log meta.
-    
+
     Only attaches if entity_data is not already present in meta.
     This allows custom to_audit_log() implementations to provide their own entity_data.
     """

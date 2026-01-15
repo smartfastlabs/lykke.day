@@ -14,6 +14,7 @@ from redis import asyncio as aioredis  # type: ignore
 from lykke.application.commands import (
     CreateOrGetDayHandler,
     RecordTaskActionHandler,
+    RescheduleDayHandler,
     ScheduleDayHandler,
     UpdateDayHandler,
 )
@@ -191,6 +192,19 @@ def get_schedule_day_handler(
     """Get a ScheduleDayHandler instance for HTTP handlers."""
     ro_repos = ro_repo_factory.create(user.id)
     return ScheduleDayHandler(ro_repos, uow_factory, user.id, preview_handler)
+
+
+def get_reschedule_day_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    preview_handler: Annotated[PreviewDayHandler, Depends(preview_day_handler)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> RescheduleDayHandler:
+    """Get a RescheduleDayHandler instance for HTTP handlers."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return RescheduleDayHandler(ro_repos, uow_factory, user.id, preview_handler)
 
 
 # For WebSocket routes - use get_current_user_from_token
