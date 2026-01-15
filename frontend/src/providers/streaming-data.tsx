@@ -83,12 +83,16 @@ interface EntityChange {
 }
 
 export function StreamingDataProvider(props: ParentProps) {
-  const [dayContextStore, setDayContextStore] = createStore<DayContext | undefined>(undefined);
+  const [dayContextStore, setDayContextStore] = createStore<
+    DayContext | undefined
+  >(undefined);
   const [isLoading, setIsLoading] = createSignal(true);
   const [error, setError] = createSignal<Error | undefined>(undefined);
   const [isConnected, setIsConnected] = createSignal(false);
   const [isOutOfSync, setIsOutOfSync] = createSignal(false);
-  const [lastProcessedTimestamp, setLastProcessedTimestamp] = createSignal<string | null>(null);
+  const [lastProcessedTimestamp, setLastProcessedTimestamp] = createSignal<
+    string | null
+  >(null);
 
   let ws: WebSocket | null = null;
   let reconnectTimeout: number | null = null;
@@ -141,7 +145,10 @@ export function StreamingDataProvider(props: ParentProps) {
 
           if (message.type === "connection_ack") {
             const ack = message as ConnectionAckMessage;
-            console.log("StreamingDataProvider: Connection acknowledged for user:", ack.user_id);
+            console.log(
+              "StreamingDataProvider: Connection acknowledged for user:",
+              ack.user_id
+            );
             // Request initial data after connection is established
             requestFullSync();
           } else if (message.type === "sync_response") {
@@ -151,10 +158,17 @@ export function StreamingDataProvider(props: ParentProps) {
           } else if (message.type === "error") {
             const errorMsg = message as ErrorMessage;
             setError(new Error(errorMsg.message || "Unknown error"));
-            console.error("StreamingDataProvider: WebSocket error:", errorMsg.code, errorMsg.message);
+            console.error(
+              "StreamingDataProvider: WebSocket error:",
+              errorMsg.code,
+              errorMsg.message
+            );
           }
         } catch (err) {
-          console.error("StreamingDataProvider: Error parsing WebSocket message:", err);
+          console.error(
+            "StreamingDataProvider: Error parsing WebSocket message:",
+            err
+          );
         }
       };
 
@@ -246,7 +260,9 @@ export function StreamingDataProvider(props: ParentProps) {
 
       const updated = { ...current };
       const updatedTasks = [...(updated.tasks ?? [])];
-      const updatedEvents = [...(updated.calendar_entries ?? updated.events ?? [])];
+      const updatedEvents = [
+        ...(updated.calendar_entries ?? updated.events ?? []),
+      ];
 
       for (const change of changes) {
         if (change.entity_type === "task") {
@@ -262,7 +278,9 @@ export function StreamingDataProvider(props: ParentProps) {
               updatedTasks.push(task);
             }
           } else if (change.change_type === "deleted") {
-            const index = updatedTasks.findIndex((t) => t.id === change.entity_id);
+            const index = updatedTasks.findIndex(
+              (t) => t.id === change.entity_id
+            );
             if (index >= 0) {
               updatedTasks.splice(index, 1);
             }
@@ -280,7 +298,9 @@ export function StreamingDataProvider(props: ParentProps) {
               updatedEvents.push(event);
             }
           } else if (change.change_type === "deleted") {
-            const index = updatedEvents.findIndex((e) => e.id === change.entity_id);
+            const index = updatedEvents.findIndex(
+              (e) => e.id === change.entity_id
+            );
             if (index >= 0) {
               updatedEvents.splice(index, 1);
             }
@@ -315,7 +335,9 @@ export function StreamingDataProvider(props: ParentProps) {
     if (lastTimestamp && occurredAt < lastTimestamp) {
       // Received older event than what we've already processed
       setIsOutOfSync(true);
-      console.warn("StreamingDataProvider: Out of sync detected - received older event");
+      console.warn(
+        "StreamingDataProvider: Out of sync detected - received older event"
+      );
     }
 
     // Update timestamp (always move forward)
@@ -328,11 +350,20 @@ export function StreamingDataProvider(props: ParentProps) {
     const activityType = auditLog.activity_type;
     let changeType: "created" | "updated" | "deleted" | null = null;
 
-    if (activityType.includes("Created") || activityType === "EntityCreatedEvent") {
+    if (
+      activityType.includes("Created") ||
+      activityType === "EntityCreatedEvent"
+    ) {
       changeType = "created";
-    } else if (activityType.includes("Deleted") || activityType === "EntityDeletedEvent") {
+    } else if (
+      activityType.includes("Deleted") ||
+      activityType === "EntityDeletedEvent"
+    ) {
       changeType = "deleted";
-    } else if (activityType.includes("Updated") || activityType === "EntityUpdatedEvent") {
+    } else if (
+      activityType.includes("Updated") ||
+      activityType === "EntityUpdatedEvent"
+    ) {
       changeType = "updated";
     }
 
@@ -390,7 +421,10 @@ export function StreamingDataProvider(props: ParentProps) {
     });
   };
 
-  const setTaskStatus = async (task: Task, status: TaskStatus): Promise<void> => {
+  const setTaskStatus = async (
+    task: Task,
+    status: TaskStatus
+  ): Promise<void> => {
     // Optimistic update
     const previousTask = task;
     updateTaskLocally({ ...task, status });
@@ -423,7 +457,7 @@ export function StreamingDataProvider(props: ParentProps) {
   onCleanup(() => {
     // Set isMounted to false first to prevent reconnection attempts
     isMounted = false;
-    
+
     if (reconnectTimeout) {
       clearTimeout(reconnectTimeout);
     }
@@ -459,7 +493,9 @@ export function StreamingDataProvider(props: ParentProps) {
 export function useStreamingData(): StreamingDataContextValue {
   const context = useContext(StreamingDataContext);
   if (!context) {
-    throw new Error("useStreamingData must be used within a StreamingDataProvider");
+    throw new Error(
+      "useStreamingData must be used within a StreamingDataProvider"
+    );
   }
   return context;
 }
