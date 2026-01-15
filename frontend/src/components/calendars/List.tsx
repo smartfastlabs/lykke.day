@@ -19,4 +19,3 @@ const CalendarList: Component<CalendarListProps> = (props) => {
 };
 
 export default CalendarList;
-

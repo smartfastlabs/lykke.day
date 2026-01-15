@@ -2,7 +2,13 @@ import { Component, createSignal } from "solid-js";
 import { Calendar } from "@/types/api";
 import { FormError, Input, Select, SubmitButton } from "@/components/forms";
 
-const EVENT_CATEGORY_OPTIONS = ["WORK", "PERSONAL", "FAMILY", "SOCIAL", "OTHER"] as const;
+const EVENT_CATEGORY_OPTIONS = [
+  "WORK",
+  "PERSONAL",
+  "FAMILY",
+  "SOCIAL",
+  "OTHER",
+] as const;
 type EventCategory = (typeof EVENT_CATEGORY_OPTIONS)[number];
 
 export type CalendarWithCategory = Calendar & {
@@ -18,10 +24,12 @@ interface CalendarFormProps {
 
 const CalendarForm: Component<CalendarFormProps> = (props) => {
   const [name, setName] = createSignal(props.initialData?.name ?? "");
-  const [authTokenId, setAuthTokenId] = createSignal(props.initialData?.auth_token_id ?? "");
-  const [defaultEventCategory, setDefaultEventCategory] = createSignal<EventCategory | "">(
-    props.initialData?.default_event_category ?? ""
+  const [authTokenId, setAuthTokenId] = createSignal(
+    props.initialData?.auth_token_id ?? ""
   );
+  const [defaultEventCategory, setDefaultEventCategory] = createSignal<
+    EventCategory | ""
+  >(props.initialData?.default_event_category ?? "");
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
@@ -39,7 +47,13 @@ const CalendarForm: Component<CalendarFormProps> = (props) => {
 
   return (
     <form onSubmit={handleSubmit} class="space-y-6">
-      <Input id="name" placeholder="Name" value={name} onChange={setName} required />
+      <Input
+        id="name"
+        placeholder="Name"
+        value={name}
+        onChange={setName}
+        required
+      />
 
       <Input
         id="authTokenId"
@@ -68,4 +82,3 @@ const CalendarForm: Component<CalendarFormProps> = (props) => {
 };
 
 export default CalendarForm;
-

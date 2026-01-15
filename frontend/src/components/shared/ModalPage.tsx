@@ -8,7 +8,7 @@ type ModalPageProps = {
   onClose?: () => void;
 };
 
-export default function ModalPage({ subtitle, title, children }: ModalPageProps) {
+export default function ModalPage(props: ModalPageProps) {
   return (
     <div class="relative min-h-screen overflow-hidden">
       <div class="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50" />
@@ -21,17 +21,17 @@ export default function ModalPage({ subtitle, title, children }: ModalPageProps)
         <div class="w-full max-w-md space-y-8">
           <div class="text-center space-y-2">
             <h1 class="text-4xl font-bold tracking-tight text-stone-800">
-              {title ?? (
+              {props.title ?? (
                 <>
                   lykke<span class="text-amber-500">.</span>day
                 </>
               )}
             </h1>
-            <p class="text-stone-500 text-sm md:text-base">{subtitle}</p>
+            <p class="text-stone-500 text-sm md:text-base">{props.subtitle}</p>
           </div>
 
           <div class="bg-white/70 backdrop-blur-md border border-white/70 rounded-2xl shadow-xl shadow-amber-900/10 p-8 space-y-6">
-            {children}
+            {props.children}
           </div>
         </div>
       </div>
