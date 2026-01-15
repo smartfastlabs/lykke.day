@@ -54,6 +54,7 @@ from lykke.application.unit_of_work import (
     UnitOfWorkProtocol,
 )
 from lykke.core.exceptions import BadRequestError, NotFoundError
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import (
     AuditLogEntity,
@@ -592,6 +593,7 @@ class SqlAlchemyUnitOfWork:
 
         for entity in self._added_entities:
             repo = self._get_repository_for_entity(entity)
+            entity_snapshot = _build_entity_snapshot(entity)
 
             # Check events without collecting them (use has_events to peek)
             # We need to check what events exist to determine the operation
@@ -614,6 +616,9 @@ class SqlAlchemyUnitOfWork:
                     # Check if event implements AuditedEvent protocol
                     if hasattr(event, "to_audit_log") and callable(event.to_audit_log):
                         audit_log = event.to_audit_log(self.user_id)
+                        audit_log.meta = _attach_entity_snapshot(
+                            audit_log.meta, entity_snapshot
+                        )
                         audit_logs_to_create.append(audit_log)
                     # For AuditableEntity, also create audit logs for EntityCreated/Updated/Deleted events
                     elif isinstance(entity, AuditableEntity):
@@ -643,7 +648,7 @@ class SqlAlchemyUnitOfWork:
                                 activity_type=type(event).__name__,
                                 entity_id=entity.id,
                                 entity_type=entity_type,
-                                meta=meta,
+                                meta=_attach_entity_snapshot(meta, entity_snapshot),
                             )
                             audit_logs_to_create.append(audit_log)
 
@@ -743,6 +748,33 @@ class SqlAlchemyUnitOfWork:
 
         # Clear the list after broadcasting
         self._audit_logs_to_broadcast.clear()
+
+
+def _build_entity_snapshot(entity: BaseEntityObject) -> dict[str, Any]:
+    """Create a JSON-safe snapshot of an entity for audit logs."""
+    serialized = dataclass_to_json_dict(entity)
+    if not isinstance(serialized, dict):
+        return {}
+
+    snapshot = {key: value for key, value in serialized.items() if not key.startswith("_")}
+
+    entity_date = getattr(entity, "date", None)
+    if isinstance(entity_date, dt_date):
+        snapshot["date"] = entity_date.isoformat()
+
+    return snapshot
+
+
+def _attach_entity_snapshot(
+    meta: dict[str, Any] | None, entity_snapshot: dict[str, Any]
+) -> dict[str, Any]:
+    """Attach entity snapshot data to audit log meta."""
+    if not entity_snapshot:
+        return meta or {}
+
+    merged = dict(meta) if meta else {}
+    merged["entity_data"] = entity_snapshot
+    return merged
 
     async def rollback(self) -> None:
         """Rollback the current transaction."""

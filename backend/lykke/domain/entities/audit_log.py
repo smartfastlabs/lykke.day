@@ -16,7 +16,9 @@ class AuditLogEntity(BaseEntityObject):
 
     AuditLog entries are append-only and cannot be updated or deleted once created.
     They track significant user actions for audit, analytics, and context purposes.
-    
+    The meta field includes a JSON-serializable snapshot of the entity that
+    generated the audit log under the "entity_data" key.
+
     The activity_type is the name of the domain event that triggered this audit log.
     """
 

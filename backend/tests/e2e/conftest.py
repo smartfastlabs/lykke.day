@@ -13,7 +13,10 @@ from lykke.domain.value_objects.user import UserSetting
 from lykke.infrastructure.database.tables import User as UserDB
 from lykke.infrastructure.database.utils import reset_engine
 from lykke.infrastructure.repositories import DayTemplateRepository, UserRepository
-from lykke.presentation.api.routers.dependencies.user import get_current_user
+from lykke.presentation.api.routers.dependencies.user import (
+    get_current_user,
+    get_current_user_from_token,
+)
 
 
 @pytest.fixture
@@ -79,6 +82,12 @@ def authenticated_client(test_client, setup_test_user_day_template, request):
         # Override get_current_user dependency to return our test user
         # This bypasses the actual authentication for testing
         app.dependency_overrides[get_current_user] = lambda: user
+        
+        # Also override get_current_user_from_token for WebSocket endpoints
+        from fastapi import WebSocket
+        async def _get_user_from_token(websocket: WebSocket) -> UserEntity:
+            return user
+        app.dependency_overrides[get_current_user_from_token] = _get_user_from_token
 
         return test_client, user
 

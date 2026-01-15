@@ -1,22 +1,13 @@
 """Query handler to get incremental changes since a timestamp."""
 
-from datetime import UTC, date as dt_date, datetime
+from datetime import date as dt_date, datetime
 from typing import Any, Literal
 from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler
-from lykke.application.repositories import (
-    AuditLogRepositoryReadOnlyProtocol,
-    CalendarEntryRepositoryReadOnlyProtocol,
-    TaskRepositoryReadOnlyProtocol,
-)
 from lykke.core.utils.audit_log_filtering import is_audit_log_for_today
 from lykke.domain import value_objects
-from lykke.domain.entities import AuditLogEntity, CalendarEntryEntity, TaskEntity
-from lykke.presentation.api.schemas.mappers import (
-    map_calendar_entry_to_schema,
-    map_task_to_schema,
-)
+from lykke.domain.entities import AuditLogEntity
 from lykke.presentation.api.schemas.websocket_message import EntityChangeSchema
 
 
@@ -48,12 +39,7 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
         # Filter to only include entities for target_date
         filtered_logs: list[AuditLogEntity] = []
         for audit_log in audit_logs:
-            if await is_audit_log_for_today(
-                audit_log,
-                target_date,
-                self.task_ro_repo,
-                self.calendar_entry_ro_repo,
-            ):
+            if await is_audit_log_for_today(audit_log, target_date):
                 filtered_logs.append(audit_log)
 
         # Sort by occurred_at to process in order
@@ -79,20 +65,8 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
             entity_data: dict[str, Any] | None = None
 
             # For created/updated, load the entity and include its data
-            if change_type in ("created", "updated") and audit_log.entity_id and audit_log.entity_type:
-                try:
-                    if audit_log.entity_type == "task":
-                        task = await self.task_ro_repo.get(audit_log.entity_id)
-                        task_schema = map_task_to_schema(task)
-                        entity_data = task_schema.model_dump(mode="json")
-                    elif audit_log.entity_type == "calendar_entry":
-                        calendar_entry = await self.calendar_entry_ro_repo.get(audit_log.entity_id)
-                        calendar_entry_schema = map_calendar_entry_to_schema(calendar_entry)
-                        entity_data = calendar_entry_schema.model_dump(mode="json")
-                except Exception:
-                    # If we can't load the entity, skip this change
-                    # This can happen if entity was deleted between audit log creation and now
-                    continue
+            if change_type in ("created", "updated"):
+                entity_data = _get_audit_log_entity_data(audit_log)
 
             change = EntityChangeSchema(
                 change_type=change_type,
@@ -114,3 +88,13 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
                 last_timestamp = sorted_logs[0].occurred_at
 
         return changes, last_timestamp
+
+
+def _get_audit_log_entity_data(audit_log: AuditLogEntity) -> dict[str, Any] | None:
+    meta = audit_log.meta
+    if not isinstance(meta, dict):
+        return None
+    entity_data = meta.get("entity_data")
+    if isinstance(entity_data, dict):
+        return entity_data
+    return None

@@ -5,30 +5,24 @@ import contextlib
 import datetime
 import json
 from datetime import UTC, date, datetime as dt_datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from loguru import logger
 
 from lykke.application.commands import ScheduleDayHandler, UpdateDayHandler
-from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import (
     GetDayContextHandler,
     GetIncrementalChangesHandler,
     PreviewDayHandler,
 )
 from lykke.application.queries.day_template import SearchDayTemplatesHandler
-from lykke.application.repositories import (
-    AuditLogRepositoryReadOnlyProtocol,
-    CalendarEntryRepositoryReadOnlyProtocol,
-    TaskRepositoryReadOnlyProtocol,
-)
 from lykke.core.exceptions import NotFoundError
 from lykke.core.utils.audit_log_filtering import is_audit_log_for_today
 from lykke.core.utils.audit_log_serialization import deserialize_audit_log
 from lykke.core.utils.dates import get_current_date, get_tomorrows_date
-from lykke.domain.entities import AuditLogEntity
+from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.presentation.api.schemas import (
     DayContextSchema,
     DaySchema,
@@ -36,14 +30,12 @@ from lykke.presentation.api.schemas import (
     DayUpdateSchema,
 )
 from lykke.presentation.api.schemas.mappers import (
-    map_audit_log_to_schema,
     map_day_context_to_schema,
     map_day_template_to_schema,
     map_day_to_schema,
 )
 from lykke.presentation.api.schemas.websocket_message import (
     EntityChangeSchema,
-    WebSocketAuditLogEventSchema,
     WebSocketConnectionAckSchema,
     WebSocketErrorSchema,
     WebSocketSyncRequestSchema,
@@ -53,12 +45,9 @@ from lykke.presentation.api.schemas.websocket_message import (
 from .dependencies.queries.day_template import get_list_day_templates_handler
 from .dependencies.services import (
     day_context_handler,
-    day_context_handler_websocket,
-    get_pubsub_gateway,
     get_schedule_day_handler,
     get_update_day_handler,
     incremental_changes_handler,
-    incremental_changes_handler_websocket,
     preview_day_handler,
 )
 from .dependencies.user import get_current_user_from_token
@@ -232,15 +221,6 @@ async def send_error(websocket: WebSocket, code: str, message: str) -> None:
 @router.websocket("/today/context")
 async def days_context_websocket(
     websocket: WebSocket,
-    pubsub_gateway: Annotated[
-        PubSubGatewayProtocol, Depends(get_pubsub_gateway)
-    ],
-    day_context_handler: Annotated[
-        GetDayContextHandler, Depends(day_context_handler_websocket)
-    ],
-    incremental_changes_handler: Annotated[
-        GetIncrementalChangesHandler, Depends(incremental_changes_handler_websocket)
-    ],
 ) -> None:
     """WebSocket endpoint for real-time DayContext sync.
 
@@ -253,15 +233,38 @@ async def days_context_websocket(
 
     Args:
         websocket: WebSocket connection
-        pubsub_gateway: PubSub gateway for subscribing to events (injected)
-        day_context_handler: Handler for getting day context (injected)
-        incremental_changes_handler: Handler for getting incremental changes (injected)
     """
     await websocket.accept()
 
     try:
-        # Get user_id from the handler (user was authenticated via dependency)
-        user_id = day_context_handler.user_id
+        # Authenticate user from WebSocket (must happen after accept)
+        try:
+            user = await get_current_user_from_token(websocket)
+            user_id = user.id
+        except Exception as auth_error:
+            logger.warning(f"Authentication failed for WebSocket: {auth_error}")
+            await send_error(
+                websocket,
+                "AUTHENTICATION_ERROR",
+                f"Authentication failed: {auth_error!s}",
+            )
+            await websocket.close(code=1008, reason="Authentication failed")
+            return
+
+        # Get pubsub gateway from app state
+        redis_pool = getattr(websocket.app.state, "redis_pool", None)
+        pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+
+        # Get handlers for processing sync requests
+        from lykke.presentation.api.routers.dependencies.services import (
+            get_read_only_repository_factory,
+        )
+
+        ro_repo_factory = get_read_only_repository_factory()
+        ro_repos = ro_repo_factory.create(user_id)
+
+        day_context_handler = GetDayContextHandler(ro_repos, user_id)
+        incremental_changes_handler = GetIncrementalChangesHandler(ro_repos, user_id)
 
         logger.info(f"Days context WebSocket connection established for user {user_id}")
 
@@ -271,10 +274,6 @@ async def days_context_websocket(
 
         # Get today's date
         today_date = get_current_date()
-
-        # Get repositories from handlers for filtering
-        task_repo = incremental_changes_handler.task_ro_repo
-        calendar_entry_repo = incremental_changes_handler.calendar_entry_ro_repo
 
         # Subscribe to user's AuditLog channel for real-time updates
         async with pubsub_gateway.subscribe_to_user_channel(
@@ -293,8 +292,6 @@ async def days_context_websocket(
                 _handle_realtime_events(
                     websocket,
                     auditlog_subscription,
-                    task_repo,
-                    calendar_entry_repo,
                     today_date,
                 )
             )
@@ -325,6 +322,10 @@ async def days_context_websocket(
         except Exception:
             # Connection may already be closed
             pass
+    finally:
+        # Clean up pubsub gateway if it was created
+        if "pubsub_gateway" in locals():
+            await pubsub_gateway.close()
 
 
 async def _handle_client_messages(
@@ -440,17 +441,13 @@ async def _handle_client_messages(
 async def _handle_realtime_events(
     websocket: WebSocket,
     auditlog_subscription: Any,
-    task_repo: TaskRepositoryReadOnlyProtocol,
-    calendar_entry_repo: CalendarEntryRepositoryReadOnlyProtocol,
     today_date: date,
 ) -> None:
-    """Handle real-time audit log events from pubsub.
+    """Handle real-time audit log events from pubsub and convert to entity changes.
 
     Args:
         websocket: WebSocket connection
         auditlog_subscription: PubSub subscription for audit logs
-        task_repo: Repository for loading tasks
-        calendar_entry_repo: Repository for loading calendar entries
         today: Today's date for filtering
     """
     while True:
@@ -464,24 +461,64 @@ async def _handle_realtime_events(
                     audit_log_entity = deserialize_audit_log(audit_log_message)
 
                     # Filter to only include entities for today
-                    if await is_audit_log_for_today(
+                    if not await is_audit_log_for_today(
                         audit_log_entity,
                         today_date,
-                        task_repo,
-                        calendar_entry_repo,
                     ):
-                        # Convert to schema and send
-                        audit_log_schema = map_audit_log_to_schema(audit_log_entity)
-                        event_schema = WebSocketAuditLogEventSchema(
-                            audit_log=audit_log_schema
-                        )
+                        # Skip events for other days
+                        continue
 
-                        await send_ws_message(
-                            websocket, event_schema.model_dump(mode="json")
-                        )
-                        logger.debug(
-                            f"Sent filtered AuditLog event {audit_log_entity.id} to user"
-                        )
+                    # Convert audit log to entity change (like GetIncrementalChangesHandler does)
+                    change_type: Literal["created", "updated", "deleted"] | None = None
+                    if (
+                        "Created" in audit_log_entity.activity_type
+                        or audit_log_entity.activity_type == "EntityCreatedEvent"
+                    ):
+                        change_type = "created"
+                    elif (
+                        "Deleted" in audit_log_entity.activity_type
+                        or audit_log_entity.activity_type == "EntityDeletedEvent"
+                    ):
+                        change_type = "deleted"
+                    elif (
+                        "Updated" in audit_log_entity.activity_type
+                        or audit_log_entity.activity_type == "EntityUpdatedEvent"
+                    ):
+                        change_type = "updated"
+                    else:
+                        # Skip events we don't know how to handle
+                        continue
+
+                    entity_data: dict[str, Any] | None = None
+
+                    # For created/updated, use the entity snapshot from the audit log
+                    if change_type in ("created", "updated"):
+                        meta = audit_log_entity.meta
+                        if isinstance(meta, dict):
+                            entity_snapshot = meta.get("entity_data")
+                            if isinstance(entity_snapshot, dict):
+                                entity_data = entity_snapshot
+
+                    # Create entity change schema
+                    entity_change = EntityChangeSchema(
+                        change_type=change_type,
+                        entity_type=audit_log_entity.entity_type or "unknown",
+                        entity_id=audit_log_entity.entity_id
+                        or UUID("00000000-0000-0000-0000-000000000000"),
+                        entity_data=entity_data,
+                    )
+
+                    # Send as sync response with single change (for immediate application)
+                    response = WebSocketSyncResponseSchema(
+                        day_context=None,
+                        changes=[entity_change],
+                        last_audit_log_timestamp=audit_log_entity.occurred_at.isoformat(),
+                    )
+
+                    await send_ws_message(websocket, response.model_dump(mode="json"))
+                    logger.debug(
+                        f"Sent real-time entity change for {audit_log_entity.entity_type} {audit_log_entity.entity_id}"
+                    )
                 except Exception as deserialize_error:
                     logger.error(
                         f"Failed to deserialize audit log message: {deserialize_error}"
