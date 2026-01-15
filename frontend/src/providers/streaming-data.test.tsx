@@ -1,9 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, waitFor } from "@solidjs/testing-library";
-import {
-  StreamingDataProvider,
-  useStreamingData,
-} from "./streaming-data";
+import { StreamingDataProvider, useStreamingData } from "./streaming-data";
 import { createSignal } from "solid-js";
 import type { DayContext, Task, TaskStatus } from "@/types/api";
 import type { Event as CalendarEvent } from "@/types/api";
@@ -719,7 +716,9 @@ describe("StreamingDataProvider", () => {
           useStreamingData();
           return <div>Test</div>;
         });
-      }).toThrow("useStreamingData must be used within a StreamingDataProvider");
+      }).toThrow(
+        "useStreamingData must be used within a StreamingDataProvider"
+      );
     });
   });
 
