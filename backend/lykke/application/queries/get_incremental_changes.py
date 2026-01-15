@@ -52,11 +52,20 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
         for audit_log in filtered_logs:
             # Determine change type from activity_type
             change_type: Literal["created", "updated", "deleted"] | None = None
-            if "Created" in audit_log.activity_type or audit_log.activity_type == "EntityCreatedEvent":
+            if (
+                "Created" in audit_log.activity_type
+                or audit_log.activity_type == "EntityCreatedEvent"
+            ):
                 change_type = "created"
-            elif "Deleted" in audit_log.activity_type or audit_log.activity_type == "EntityDeletedEvent":
+            elif (
+                "Deleted" in audit_log.activity_type
+                or audit_log.activity_type == "EntityDeletedEvent"
+            ):
                 change_type = "deleted"
-            elif "Updated" in audit_log.activity_type or audit_log.activity_type == "EntityUpdatedEvent":
+            elif (
+                "Updated" in audit_log.activity_type
+                or audit_log.activity_type == "EntityUpdatedEvent"
+            ):
                 change_type = "updated"
             else:
                 # Skip events we don't know how to handle
@@ -71,7 +80,8 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
             change = EntityChangeSchema(
                 change_type=change_type,
                 entity_type=audit_log.entity_type or "unknown",
-                entity_id=audit_log.entity_id or UUID("00000000-0000-0000-0000-000000000000"),
+                entity_id=audit_log.entity_id
+                or UUID("00000000-0000-0000-0000-000000000000"),
                 entity_data=entity_data,
             )
             changes.append(change)
@@ -82,19 +92,17 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
 
         # If no changes, get the most recent audit log timestamp anyway
         if not last_timestamp:
-            all_logs = await self.audit_log_ro_repo.search(value_objects.AuditLogQuery())
+            all_logs = await self.audit_log_ro_repo.search(
+                value_objects.AuditLogQuery()
+            )
             if all_logs:
-                sorted_logs = sorted(all_logs, key=lambda x: x.occurred_at, reverse=True)
+                sorted_logs = sorted(
+                    all_logs, key=lambda x: x.occurred_at, reverse=True
+                )
                 last_timestamp = sorted_logs[0].occurred_at
 
         return changes, last_timestamp
 
 
 def _get_audit_log_entity_data(audit_log: AuditLogEntity) -> dict[str, Any] | None:
-    meta = audit_log.meta
-    if not isinstance(meta, dict):
-        return None
-    entity_data = meta.get("entity_data")
-    if isinstance(entity_data, dict):
-        return entity_data
-    return None
+    return audit_log.meta.get("entity_data", None)

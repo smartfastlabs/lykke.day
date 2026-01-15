@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from loguru import logger
 
 from lykke.application.commands import ScheduleDayHandler, UpdateDayHandler
+from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import (
     GetDayContextHandler,
     GetIncrementalChangesHandler,
@@ -22,7 +23,6 @@ from lykke.core.exceptions import NotFoundError
 from lykke.core.utils.audit_log_filtering import is_audit_log_for_today
 from lykke.core.utils.audit_log_serialization import deserialize_audit_log
 from lykke.core.utils.dates import get_current_date, get_tomorrows_date
-from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.presentation.api.schemas import (
     DayContextSchema,
     DaySchema,
@@ -45,12 +45,14 @@ from lykke.presentation.api.schemas.websocket_message import (
 from .dependencies.queries.day_template import get_list_day_templates_handler
 from .dependencies.services import (
     day_context_handler,
+    day_context_handler_websocket,
+    get_pubsub_gateway,
     get_schedule_day_handler,
     get_update_day_handler,
     incremental_changes_handler,
+    incremental_changes_handler_websocket,
     preview_day_handler,
 )
-from .dependencies.user import get_current_user_from_token
 
 router = APIRouter()
 
@@ -221,6 +223,16 @@ async def send_error(websocket: WebSocket, code: str, message: str) -> None:
 @router.websocket("/today/context")
 async def days_context_websocket(
     websocket: WebSocket,
+    pubsub_gateway: Annotated[
+        PubSubGatewayProtocol, Depends(get_pubsub_gateway)
+    ],
+    day_context_handler: Annotated[
+        GetDayContextHandler, Depends(day_context_handler_websocket)
+    ],
+    incremental_changes_handler_ws: Annotated[
+        GetIncrementalChangesHandler,
+        Depends(incremental_changes_handler_websocket),
+    ],
 ) -> None:
     """WebSocket endpoint for real-time DayContext sync.
 
@@ -237,35 +249,8 @@ async def days_context_websocket(
     await websocket.accept()
 
     try:
-        # Authenticate user from WebSocket (must happen after accept)
-        try:
-            user = await get_current_user_from_token(websocket)
-            user_id = user.id
-        except Exception as auth_error:
-            logger.warning(f"Authentication failed for WebSocket: {auth_error}")
-            await send_error(
-                websocket,
-                "AUTHENTICATION_ERROR",
-                f"Authentication failed: {auth_error!s}",
-            )
-            await websocket.close(code=1008, reason="Authentication failed")
-            return
-
-        # Get pubsub gateway from app state
-        redis_pool = getattr(websocket.app.state, "redis_pool", None)
-        pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
-
-        # Get handlers for processing sync requests
-        from lykke.presentation.api.routers.dependencies.services import (
-            get_read_only_repository_factory,
-        )
-
-        ro_repo_factory = get_read_only_repository_factory()
-        ro_repos = ro_repo_factory.create(user_id)
-
-        day_context_handler = GetDayContextHandler(ro_repos, user_id)
-        incremental_changes_handler = GetIncrementalChangesHandler(ro_repos, user_id)
-
+        # Get user_id from the handler (user was authenticated via dependency)
+        user_id = day_context_handler.user_id
         logger.info(f"Days context WebSocket connection established for user {user_id}")
 
         # Send connection acknowledgment
@@ -284,7 +269,7 @@ async def days_context_websocket(
                 _handle_client_messages(
                     websocket,
                     day_context_handler,
-                    incremental_changes_handler,
+                    incremental_changes_handler_ws,
                     today_date,
                 )
             )
@@ -322,10 +307,6 @@ async def days_context_websocket(
         except Exception:
             # Connection may already be closed
             pass
-    finally:
-        # Clean up pubsub gateway if it was created
-        if "pubsub_gateway" in locals():
-            await pubsub_gateway.close()
 
 
 async def _handle_client_messages(

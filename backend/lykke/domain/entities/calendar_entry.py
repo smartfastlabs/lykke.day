@@ -148,4 +148,3 @@ class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
             calendar_entry_series_id=calendar_entry_series_id,
         )
         return calendar_entry
-        return calendar_entry

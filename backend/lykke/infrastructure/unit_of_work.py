@@ -518,6 +518,17 @@ class SqlAlchemyUnitOfWork:
         # Broadcast AuditLog events via PubSub after successful commit
         await self._broadcast_audit_logs()
 
+    async def rollback(self) -> None:
+        """Rollback the current transaction."""
+        if self._connection is None:
+            raise RuntimeError("Cannot rollback: not in a transaction context")
+
+        if self._is_nested:
+            # Nested transactions don't rollback - outer transaction handles it
+            return
+
+        await self._connection.rollback()
+
     async def bulk_delete_calendar_entries(
         self, query: value_objects.CalendarEntryQuery
     ) -> None:
@@ -775,17 +786,6 @@ def _attach_entity_snapshot(
     merged = dict(meta) if meta else {}
     merged["entity_data"] = entity_snapshot
     return merged
-
-    async def rollback(self) -> None:
-        """Rollback the current transaction."""
-        if self._connection is None:
-            raise RuntimeError("Cannot rollback: not in a transaction context")
-
-        if self._is_nested:
-            # Nested transactions don't rollback - outer transaction handles it
-            return
-
-        await self._connection.rollback()
 
 
 class SqlAlchemyUnitOfWorkFactory:

@@ -56,13 +56,7 @@ async def is_audit_log_for_today(
 
 
 def _get_entity_data(audit_log: AuditLogEntity) -> dict[str, Any] | None:
-    meta = audit_log.meta
-    if not isinstance(meta, dict):
-        return None
-    entity_data = meta.get("entity_data")
-    if not isinstance(entity_data, dict):
-        return None
-    return entity_data
+    return audit_log.meta.get("entity_data", None)
 
 
 def _parse_date_value(value: Any) -> dt_date | None:
