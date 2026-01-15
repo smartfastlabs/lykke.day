@@ -4,10 +4,26 @@ from dataclasses import dataclass, field
 from datetime import UTC, date as dt_date, datetime
 from typing import Any
 from uuid import UUID
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from lykke.core.config import settings
 from lykke.core.exceptions import DomainError
 
 from .base import BaseEntityObject
+
+
+def _get_user_timezone_date() -> dt_date:
+    """Get the current date in the user's timezone.
+
+    This is used as a fallback default_factory for the date field.
+    In practice, the date should always be set explicitly from the entity.
+    """
+    try:
+        tz = ZoneInfo(settings.TIMEZONE)
+        return datetime.now(UTC).astimezone(tz).date()
+    except (ZoneInfoNotFoundError, ValueError):
+        # Fallback to UTC date if timezone is invalid
+        return datetime.now(UTC).date()
 
 
 @dataclass(kw_only=True)
@@ -26,7 +42,7 @@ class AuditLogEntity(BaseEntityObject):
     user_id: UUID
     activity_type: str  # Domain event class name (e.g., "TaskCompletedEvent")
     occurred_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    date: dt_date = field(default_factory=lambda: datetime.now(UTC).date())
+    date: dt_date = field(default_factory=_get_user_timezone_date)
     entity_id: UUID | None = None
     entity_type: str | None = None
     meta: dict[str, Any] = field(default_factory=dict)

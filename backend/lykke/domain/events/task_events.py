@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date as dt_date
 from typing import Any
 from uuid import UUID
 
@@ -88,11 +89,25 @@ class TaskPuntedEvent(DomainEvent, AuditedEvent):
 
         meta["entity_data"] = entity_data
 
+        # Extract date from task_scheduled_date if available
+        date: dt_date | None = None
+        if self.task_scheduled_date:
+            try:
+                date = dt_date.fromisoformat(self.task_scheduled_date)
+            except (ValueError, TypeError):
+                pass
+
+        # Use default factory if date is None
+        if date is None:
+            from lykke.domain.entities.audit_log import _get_user_timezone_date
+            date = _get_user_timezone_date()
+
         return AuditLogEntity(
             user_id=user_id,
             activity_type=self.__class__.__name__,
             entity_id=self.task_id,
             entity_type="task",
+            date=date,
             meta=meta,
         )
 
@@ -140,11 +155,25 @@ class TaskCompletedEvent(DomainEvent, AuditedEvent):
 
         meta["entity_data"] = entity_data
 
+        # Extract date from task_scheduled_date if available
+        date: dt_date | None = None
+        if self.task_scheduled_date:
+            try:
+                date = dt_date.fromisoformat(self.task_scheduled_date)
+            except (ValueError, TypeError):
+                pass
+
+        # Use default factory if date is None
+        if date is None:
+            from lykke.domain.entities.audit_log import _get_user_timezone_date
+            date = _get_user_timezone_date()
+
         return AuditLogEntity(
             user_id=user_id,
             activity_type=self.__class__.__name__,
             entity_id=self.task_id,
             entity_type="task",
+            date=date,
             meta=meta,
         )
 

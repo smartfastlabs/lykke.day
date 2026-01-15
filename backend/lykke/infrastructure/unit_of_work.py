@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from contextvars import Token
 from dataclasses import asdict
-from datetime import date as dt_date, datetime
+from datetime import UTC, date as dt_date, datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -53,6 +54,7 @@ from lykke.application.unit_of_work import (
     ReadOnlyRepositoryFactory,
     UnitOfWorkProtocol,
 )
+from lykke.core.config import settings
 from lykke.core.exceptions import BadRequestError, NotFoundError
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import data_objects, value_objects
@@ -638,10 +640,23 @@ class SqlAlchemyUnitOfWork:
 
             # Create audit logs from audited events (skip for AuditLogEntity itself to avoid loops)
             if not isinstance(entity, AuditLogEntity):
+                # Get occurred_at from the first event (all events should have similar timestamps)
+                occurred_at = datetime.now(UTC)
+                if events:
+                    # Try to get timestamp from event if available
+                    event_timestamp = getattr(events[0], "occurred_at", None)
+                    if event_timestamp is not None:
+                        occurred_at = event_timestamp
+
+                # Extract user-facing date from entity
+                entity_date = _extract_entity_date(entity, occurred_at)
+
                 for event in events:
                     # Check if event implements AuditedEvent protocol
                     if hasattr(event, "to_audit_log") and callable(event.to_audit_log):
                         audit_log = event.to_audit_log(self.user_id)
+                        # Override date with entity date to ensure consistency
+                        audit_log.date = entity_date
                         audit_log.meta = _attach_entity_snapshot(
                             audit_log.meta, entity_snapshot
                         )
@@ -683,6 +698,7 @@ class SqlAlchemyUnitOfWork:
                                 activity_type=type(event).__name__,
                                 entity_id=entity.id,
                                 entity_type=entity_type,
+                                date=entity_date,
                                 meta=_attach_entity_snapshot(meta, entity_snapshot),
                             )
                             audit_logs_to_create.append(audit_log)
@@ -783,6 +799,45 @@ class SqlAlchemyUnitOfWork:
 
         # Clear the list after broadcasting
         self._audit_logs_to_broadcast.clear()
+
+
+def _extract_entity_date(entity: BaseEntityObject, occurred_at: datetime) -> dt_date:
+    """Extract the user-facing date from an entity.
+
+    For entities with date fields (like TaskEntity with scheduled_date),
+    use that date directly. For entities with datetime fields (like
+    CalendarEntryEntity with starts_at), convert to user timezone.
+    Otherwise, convert occurred_at to user timezone.
+
+    Args:
+        entity: The entity to extract date from
+        occurred_at: The datetime when the event occurred (UTC)
+
+    Returns:
+        The date in the user's timezone
+    """
+    # For TaskEntity, use scheduled_date directly (already user-facing date)
+    if isinstance(entity, TaskEntity):
+        return entity.scheduled_date
+
+    # For CalendarEntryEntity, convert starts_at to user timezone
+    if isinstance(entity, CalendarEntryEntity):
+        # Use entity timezone if available, otherwise use settings timezone
+        user_timezone = entity.timezone or settings.TIMEZONE
+        try:
+            tz = ZoneInfo(user_timezone)
+        except (ZoneInfoNotFoundError, ValueError):
+            tz = ZoneInfo(settings.TIMEZONE)
+        return entity.starts_at.astimezone(tz).date()
+
+    # For other entities, convert occurred_at to user timezone
+    user_timezone = settings.TIMEZONE
+    try:
+        tz = ZoneInfo(user_timezone)
+    except (ZoneInfoNotFoundError, ValueError):
+        # Fallback to UTC if timezone is invalid
+        return occurred_at.date()
+    return occurred_at.astimezone(tz).date()
 
 
 def _build_entity_snapshot(entity: BaseEntityObject) -> dict[str, Any]:
