@@ -43,6 +43,9 @@ class AuditLogRepository(
         if query.occurred_before is not None:
             stmt = stmt.where(self.table.c.occurred_at < query.occurred_before)
 
+        if query.date is not None:
+            stmt = stmt.where(self.table.c.date == query.date)
+
         # Default ordering: most recent first (descending by occurred_at)
         # Override any default ordering from base class
         if not query.order_by:
@@ -60,6 +63,7 @@ class AuditLogRepository(
             "user_id": audit_log.user_id,
             "activity_type": audit_log.activity_type,
             "occurred_at": audit_log.occurred_at,
+            "date": audit_log.date,
             "entity_id": audit_log.entity_id,
             "entity_type": audit_log.entity_type,
         }

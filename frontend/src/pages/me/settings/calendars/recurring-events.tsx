@@ -13,7 +13,7 @@ const CalendarRecurringEventsPage: Component = () => {
     calendarEntrySeriesAPI.searchByCalendar(calendarId)
   );
 
-  const handleNavigate = (id?: string) => {
+  const handleNavigate = (id?: string | null) => {
     if (!id) return;
     navigate(`/me/settings/recurring-events/${id}`);
   };

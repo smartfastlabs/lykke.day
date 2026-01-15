@@ -6,6 +6,7 @@ Command handlers execute operations that change state, persist changes, and retu
 from .calendar import SyncAllCalendarsHandler, SyncCalendarHandler
 from .day import (
     CreateOrGetDayHandler,
+    RescheduleDayHandler,
     SaveDayHandler,
     ScheduleDayHandler,
     UnscheduleDayHandler,
@@ -16,6 +17,7 @@ from .task import RecordTaskActionHandler
 __all__ = [
     "CreateOrGetDayHandler",
     "RecordTaskActionHandler",
+    "RescheduleDayHandler",
     "SaveDayHandler",
     "ScheduleDayHandler",
     "SyncAllCalendarsHandler",

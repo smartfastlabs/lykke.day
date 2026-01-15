@@ -6,11 +6,12 @@ from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
 from lykke.domain.events.task_events import TaskStateUpdatedEvent
 
+from .auditable import AuditableEntity
 from .base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class TaskEntity(BaseEntityObject):
+class TaskEntity(BaseEntityObject, AuditableEntity):
     user_id: UUID
     scheduled_date: dt_date
     name: str

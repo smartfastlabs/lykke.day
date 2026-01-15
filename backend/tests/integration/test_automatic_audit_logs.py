@@ -65,6 +65,9 @@ async def test_task_completed_event_auto_creates_audit_log(
     assert audit_log.entity_type == "task"
     assert audit_log.user_id == user_id
     assert "completed_at" in audit_log.meta
+    assert "entity_data" in audit_log.meta
+    assert audit_log.meta["entity_data"]["id"] == str(task.id)
+    assert audit_log.meta["entity_data"]["scheduled_date"] == task_date.isoformat()
 
 
 @pytest.mark.asyncio
@@ -121,6 +124,9 @@ async def test_task_punt_event_auto_creates_audit_log(
     assert audit_log.user_id == user_id
     assert audit_log.meta["old_status"] == value_objects.TaskStatus.READY.value
     assert audit_log.meta["new_status"] == value_objects.TaskStatus.PUNT.value
+    assert "entity_data" in audit_log.meta
+    assert audit_log.meta["entity_data"]["id"] == str(task.id)
+    assert audit_log.meta["entity_data"]["scheduled_date"] == task_date.isoformat()
 
 
 @pytest.mark.asyncio

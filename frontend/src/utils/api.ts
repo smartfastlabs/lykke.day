@@ -122,7 +122,7 @@ function extractItems<T>(data: T[] | PaginatedResponse<T>): T[] {
 // --- Generic CRUD Factory ---
 
 interface EntityWithId {
-  id?: string;
+  id?: string | null;
 }
 
 function createCrudMethods<T extends EntityWithId>(type: string) {

@@ -3,7 +3,7 @@ import type { Accessor } from "solid-js";
 import { getCategoryIcon, getTypeIcon } from "@/utils/icons";
 import { TaskStatus, Task, TaskSchedule } from "@/types/api";
 import { Icon } from "@/components/shared/Icon";
-import { useSheppard } from "@/providers/sheppard";
+import { useStreamingData } from "@/providers/streaming-data";
 
 export const formatTimeString = (timeStr: string): string => {
   const [h, m] = timeStr.split(":");
@@ -77,10 +77,9 @@ const getStatusClasses = (status: TaskStatus): string => {
 const TaskItem: Component<{ task: Task }> = (props) => {
   const time = () => getTimeDisplay(props.task.schedule ?? undefined);
   const icon = () =>
-    getCategoryIcon(props.task.category) ||
-    getTypeIcon(props.task.type);
+    getCategoryIcon(props.task.category) || getTypeIcon(props.task.type);
 
-  const { setTaskStatus } = useSheppard();
+  const { setTaskStatus } = useStreamingData();
 
   const [translateX, setTranslateX] = createSignal(0);
   let startX = 0;

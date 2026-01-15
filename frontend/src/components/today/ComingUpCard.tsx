@@ -45,9 +45,6 @@ export const ComingUpCard: Component<ComingUpCardProps> = (props) => {
         <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium">
           {props.event.category}
         </span>
-        <span class="px-3 py-1 rounded-full bg-stone-50 text-stone-600 text-xs">
-          With {props.event.people?.[0]?.name ?? "team"}
-        </span>
       </div>
     </div>
   );

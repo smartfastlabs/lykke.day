@@ -30,6 +30,7 @@ import EventsPage from "@/pages/me/events";
 import NavigationLayout from "@/pages/me/navigation/layout";
 import NavPage from "@/pages/me/navigation/links";
 import CalendarPage from "@/pages/me/navigation/calendar";
+import CommandsPage from "@/pages/me/navigation/commands";
 import SettingsLayout from "@/pages/me/settings/layout";
 import SettingsIndexPage from "@/pages/me/settings/index";
 import ProfileSettingsPage from "@/pages/me/settings/profile";
@@ -145,6 +146,7 @@ export default function App() {
               <Route path="/nav" component={NavigationLayout}>
                 <Route path="/" component={NavPage} />
                 <Route path="/calendar" component={CalendarPage} />
+                <Route path="/commands" component={CommandsPage} />
               </Route>
               <Route path="/settings" component={SettingsLayout}>
                 <Route path="/" component={SettingsIndexPage} />

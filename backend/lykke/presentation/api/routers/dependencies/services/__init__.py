@@ -6,18 +6,24 @@ with FastAPI's Depends() in route handlers.
 """
 
 from collections.abc import AsyncIterator
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import Depends, Request
+from fastapi import Depends, Request, WebSocket
 from redis import asyncio as aioredis  # type: ignore
 
 from lykke.application.commands import (
+    CreateOrGetDayHandler,
     RecordTaskActionHandler,
+    RescheduleDayHandler,
     ScheduleDayHandler,
     UpdateDayHandler,
 )
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
-from lykke.application.queries import GetDayContextHandler, PreviewDayHandler
+from lykke.application.queries import (
+    GetDayContextHandler,
+    GetIncrementalChangesHandler,
+    PreviewDayHandler,
+)
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import RedisPubSubGateway
@@ -25,11 +31,14 @@ from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
 )
-from lykke.presentation.api.routers.dependencies.user import get_current_user
+from lykke.presentation.api.routers.dependencies.user import (
+    get_current_user,
+    get_current_user_from_token,
+)
 
 
 async def get_pubsub_gateway(
-    request: Request,
+    websocket: WebSocket,
 ) -> AsyncIterator[PubSubGatewayProtocol]:
     """Get a PubSubGateway instance using the shared Redis connection pool.
 
@@ -39,11 +48,11 @@ async def get_pubsub_gateway(
     injection pattern.
 
     Args:
-        request: FastAPI request object to access app state
+        websocket: FastAPI WebSocket object to access app state
     """
     # Get the shared Redis connection pool from app state
     # If None (e.g., in tests), gateway will create its own connection
-    redis_pool = getattr(request.app.state, "redis_pool", None)
+    redis_pool = getattr(websocket.app.state, "redis_pool", None)
 
     # Create gateway with shared pool if available, otherwise create new connection
     gateway = RedisPubSubGateway(redis_pool=redis_pool)
@@ -54,11 +63,46 @@ async def get_pubsub_gateway(
         await gateway.close()
 
 
-def get_unit_of_work_factory(
-    pubsub_gateway: Annotated[PubSubGatewayProtocol, Depends(get_pubsub_gateway)],
-) -> UnitOfWorkFactory:
-    """Get a UnitOfWorkFactory instance."""
-    return SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
+async def get_unit_of_work_factory(
+    request: Request,
+) -> AsyncIterator[UnitOfWorkFactory]:
+    """Get a UnitOfWorkFactory instance for HTTP requests.
+
+    Creates a RedisPubSubGateway with proper cleanup to avoid connection leaks.
+
+    Args:
+        request: FastAPI Request object
+
+    Yields:
+        UnitOfWorkFactory instance
+    """
+    redis_pool = getattr(request.app.state, "redis_pool", None)
+    pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+    try:
+        yield SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
+    finally:
+        await pubsub_gateway.close()
+
+
+async def get_unit_of_work_factory_websocket(
+    websocket: WebSocket,
+) -> AsyncIterator[UnitOfWorkFactory]:
+    """Get a UnitOfWorkFactory instance for WebSocket requests.
+
+    Creates a RedisPubSubGateway with proper cleanup to avoid connection leaks.
+
+    Args:
+        websocket: FastAPI WebSocket object
+
+    Yields:
+        UnitOfWorkFactory instance
+    """
+    redis_pool = getattr(websocket.app.state, "redis_pool", None)
+    pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+    try:
+        yield SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
+    finally:
+        await pubsub_gateway.close()
 
 
 def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
@@ -67,40 +111,132 @@ def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
 
 
 # Query Handler Dependencies
-def get_get_day_context_handler(
+# For HTTP routes - use get_current_user
+def day_context_handler(
     user: Annotated[UserEntity, Depends(get_current_user)],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
 ) -> GetDayContextHandler:
-    """Get a GetDayContextHandler instance."""
+    """Get a GetDayContextHandler instance for HTTP handlers."""
     ro_repos = ro_repo_factory.create(user.id)
     return GetDayContextHandler(ro_repos, user.id)
 
 
-def get_preview_day_handler(
+# For WebSocket routes - use get_current_user_from_token
+async def day_context_handler_websocket(
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> GetDayContextHandler:
+    """Get a GetDayContextHandler instance for WebSocket handlers."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return GetDayContextHandler(ro_repos, user.id)
+
+
+def preview_day_handler(
     user: Annotated[UserEntity, Depends(get_current_user)],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
 ) -> PreviewDayHandler:
-    """Get a PreviewDayHandler instance."""
+    """Get a PreviewDayHandler instance for HTTP handlers."""
     ro_repos = ro_repo_factory.create(user.id)
     return PreviewDayHandler(ro_repos, user.id)
 
 
+async def preview_day_handler_websocket(
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> PreviewDayHandler:
+    """Get a PreviewDayHandler instance for WebSocket handlers."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return PreviewDayHandler(ro_repos, user.id)
+
+
+def incremental_changes_handler(
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> GetIncrementalChangesHandler:
+    """Get a GetIncrementalChangesHandler instance for HTTP handlers."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return GetIncrementalChangesHandler(ro_repos, user.id)
+
+
+async def incremental_changes_handler_websocket(
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> GetIncrementalChangesHandler:
+    """Get a GetIncrementalChangesHandler instance for WebSocket handlers."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return GetIncrementalChangesHandler(ro_repos, user.id)
+
+
 # Command Handler Dependencies
+# For HTTP routes - use get_current_user
 def get_schedule_day_handler(
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
-    preview_day_handler: Annotated[PreviewDayHandler, Depends(get_preview_day_handler)],
+    preview_handler: Annotated[PreviewDayHandler, Depends(preview_day_handler)],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> ScheduleDayHandler:
-    """Get a ScheduleDayHandler instance."""
+    """Get a ScheduleDayHandler instance for HTTP handlers."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ScheduleDayHandler(ro_repos, uow_factory, user.id, preview_day_handler)
+    return ScheduleDayHandler(ro_repos, uow_factory, user.id, preview_handler)
+
+
+def get_reschedule_day_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    preview_handler: Annotated[PreviewDayHandler, Depends(preview_day_handler)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> RescheduleDayHandler:
+    """Get a RescheduleDayHandler instance for HTTP handlers."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return RescheduleDayHandler(ro_repos, uow_factory, user.id, preview_handler)
+
+
+# For WebSocket routes - use get_current_user_from_token
+async def get_schedule_day_handler_websocket(
+    uow_factory: Annotated[
+        UnitOfWorkFactory, Depends(get_unit_of_work_factory_websocket)
+    ],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    preview_handler: Annotated[
+        PreviewDayHandler, Depends(preview_day_handler_websocket)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+) -> ScheduleDayHandler:
+    """Get a ScheduleDayHandler instance for WebSocket handlers."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return ScheduleDayHandler(ro_repos, uow_factory, user.id, preview_handler)
+
+
+async def get_create_or_get_day_handler_websocket(
+    uow_factory: Annotated[
+        UnitOfWorkFactory, Depends(get_unit_of_work_factory_websocket)
+    ],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+) -> CreateOrGetDayHandler:
+    """Get a CreateOrGetDayHandler instance for WebSocket handlers."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return CreateOrGetDayHandler(ro_repos, uow_factory, user.id)
 
 
 def get_update_day_handler(

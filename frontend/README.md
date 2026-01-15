@@ -1,44 +1,67 @@
-## Usage
+# Frontend
 
-Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+SolidJS + Vite + TypeScript application.
 
-This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
+## Requirements
+
+- **Node.js 20+** (required for running tests, linting, and development tooling)
+- npm 8+
+
+## Development
 
 ```bash
-$ npm install # or pnpm install or yarn install
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
 ```
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+## Testing
 
-## Available Scripts
+```bash
+# Run tests
+npm test
 
-In the project directory, you can run:
+# Run tests in watch mode
+npm run test:watch
 
-### `npm run dev` or `npm start`
+# Run tests with UI
+npm run test:ui
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+# Run tests with coverage
+npm run test:coverage
+```
 
-The page will reload if you make edits.<br>
+## Code Quality
 
-### `npm run dev:local`
+```bash
+# Type check
+npm run type-check
 
-Runs the app with Netlify Dev, connecting to the local backend API at `http://localhost:8080`.<br>
-Use this when you want to test against your local backend server.
+# Lint
+npm run lint
 
-**Note:** The default `netlify dev` command connects to the production API at `https://api.lykke.day`. Use `npm run dev:local` to connect to your local server instead. The script temporarily swaps the config file and restores it when you exit, so your `netlify.toml` remains unchanged.
+# Fix linting issues
+npm run lint:fix
 
+# Run all checks (type check + lint + tests)
+npm run check
+```
 
-### `npm run build`
+## Architecture
 
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
+The frontend follows a component-based architecture using SolidJS:
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+- `/src/components` - Reusable UI components
+- `/src/pages` - Page components and routes
+- `/src/providers` - Context providers for global state
+- `/src/utils` - Utility functions and API clients
+- `/src/types` - TypeScript type definitions
 
-## Deployment
+### Real-time Data
 
-You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
-
-## This project was created with the [Solid CLI](https://github.com/solidjs-community/solid-cli)
+The application uses WebSocket connections for real-time data synchronization via the `StreamingDataProvider`. See `src/providers/streaming-data.tsx` for implementation details.

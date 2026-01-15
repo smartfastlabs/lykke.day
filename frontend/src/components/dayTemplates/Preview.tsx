@@ -219,7 +219,7 @@ const DayTemplatePreview: Component<DayTemplatePreviewProps> = (props) => {
                       <option value="">Select a time block definition...</option>
                       <For each={timeBlockDefinitions()}>
                         {(def) => (
-                          <option value={def.id}>
+                          <option value={def.id ?? undefined}>
                             {def.name} ({def.type})
                           </option>
                         )}

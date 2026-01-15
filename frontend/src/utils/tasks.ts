@@ -18,7 +18,7 @@ export function groupTasks(tasks: Task[]): GroupedTasks {
   };
 
   for (const task of tasks) {
-    const taskDate = task.scheduled_date ?? task.date;
+    const taskDate = task.scheduled_date;
     if (!taskDate) {
       // If no date is available, treat as pending and skip time-based logic
       result.pending.push(task);

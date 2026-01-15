@@ -9,7 +9,7 @@ const RoutinesPage: Component = () => {
   const navigate = useNavigate();
   const [routines] = createResource(routineAPI.getAll);
 
-  const handleNavigate = (id?: string) => {
+  const handleNavigate = (id?: string | null) => {
     if (!id) return;
     navigate(`/me/settings/routines/${id}`);
   };

@@ -6,7 +6,7 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
-import { useSheppard } from "@/providers/sheppard";
+import { useStreamingData } from "@/providers/streaming-data";
 import type { Event } from "@/types/api";
 import { Icon } from "solid-heroicons";
 import { calendar, clock, users } from "solid-heroicons/outline";
@@ -58,7 +58,6 @@ const getCategoryLabel = (category?: Event["category"]): string => {
 const EventCard: Component<{ event: Event; index: number }> = (props) => {
   const duration = () =>
     formatDuration(props.event.starts_at, props.event.ends_at);
-  const hasAttendees = () => (props.event.people?.length ?? 0) > 0;
 
   return (
     <div
@@ -93,16 +92,6 @@ const EventCard: Component<{ event: Event; index: number }> = (props) => {
                 <span class="text-stone-500">{duration()}</span>
               </Show>
             </div>
-
-            <Show when={hasAttendees()}>
-              <div class="flex items-center gap-1.5">
-                <Icon path={users} class="w-4 h-4" />
-                <span>
-                  {props.event.people!.length}{" "}
-                  {props.event.people!.length === 1 ? "person" : "people"}
-                </span>
-              </div>
-            </Show>
           </div>
         </div>
       </div>
@@ -121,7 +110,7 @@ const EmptyState: Component = () => (
 );
 
 export const TodaysEventsView: Component = () => {
-  const { events } = useSheppard();
+  const { events } = useStreamingData();
   const [mounted, setMounted] = createSignal(false);
 
   onMount(() => {

@@ -7,17 +7,16 @@ from .twilio import TwilioGateway
 from .web_push import WebPushGateway
 
 __all__ = [
-    "google",
-    "mailgun",
-    "redis_pubsub",
-    "stub_pubsub",
-    "twilio",
-    "web_push",
     "GoogleCalendarGateway",
     "MailGunGateway",
     "RedisPubSubGateway",
     "StubPubSubGateway",
     "TwilioGateway",
     "WebPushGateway",
+    "google",
+    "mailgun",
+    "redis_pubsub",
+    "stub_pubsub",
+    "twilio",
+    "web_push",
 ]
-

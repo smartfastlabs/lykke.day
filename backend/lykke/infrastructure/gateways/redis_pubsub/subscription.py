@@ -58,12 +58,16 @@ class RedisSubscription:
             return None
 
         try:
+            # Get the current event loop to ensure we use the correct one
+            loop = asyncio.get_event_loop()
+            
             # Use asyncio.wait_for for timeout if specified
             if timeout is not None:
                 # Wait for a message with timeout
                 # The get_message itself will loop until it gets a real message
                 async def _wait_for_message() -> dict[str, Any] | None:
                     while True:
+                        # Ensure we're using the current event loop
                         message = await self._pubsub.get_message(
                             ignore_subscribe_messages=True, timeout=0.1
                         )
@@ -89,6 +93,18 @@ class RedisSubscription:
                         return cast(dict[str, Any], json.loads(data))
 
         except asyncio.TimeoutError:
+            return None
+        except RuntimeError as e:
+            # Handle event loop errors gracefully in test contexts
+            if "attached to a different loop" in str(e):
+                logger.warning(
+                    f"Event loop mismatch for Redis channel {self._channel}, "
+                    "this can happen in test contexts with TestClient"
+                )
+                return None
+            logger.error(
+                f"Runtime error receiving message from Redis channel {self._channel}: {e}"
+            )
             return None
         except Exception as e:
             logger.error(

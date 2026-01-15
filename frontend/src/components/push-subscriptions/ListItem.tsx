@@ -23,7 +23,7 @@ const PushSubscriptionListItem: Component<ListItemProps> = (props) => {
           {props.subscription.device_name || "Unnamed Device"}
         </span>
         <span class="text-xs text-gray-500">
-          Created {formatDate(props.subscription.createdAt)}
+          Created {formatDate(props.subscription.created_at)}
         </span>
       </div>
     </div>

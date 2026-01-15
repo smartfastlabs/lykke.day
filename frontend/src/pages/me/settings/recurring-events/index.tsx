@@ -9,7 +9,7 @@ const RecurringEventsPage: Component = () => {
   const navigate = useNavigate();
   const [series] = createResource(calendarEntrySeriesAPI.getAll);
 
-  const handleNavigate = (id?: string) => {
+  const handleNavigate = (id?: string | null) => {
     if (!id) return;
     navigate(`/me/settings/recurring-events/${id}`);
   };

@@ -161,6 +161,10 @@ class UnitOfWorkProtocol(Protocol):
         """Bulk delete tasks matching query filters."""
         ...
 
+    async def bulk_delete_audit_logs(self, query: value_objects.AuditLogQuery) -> None:
+        """Bulk delete audit logs matching query filters."""
+        ...
+
 
 class UnitOfWorkFactory(Protocol):
     """Factory protocol for creating UnitOfWork instances.
