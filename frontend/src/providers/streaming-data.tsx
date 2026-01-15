@@ -93,6 +93,7 @@ export function StreamingDataProvider(props: ParentProps) {
   let ws: WebSocket | null = null;
   let reconnectTimeout: number | null = null;
   let syncDebounceTimeout: number | null = null;
+  let isMounted = false;
 
   // Derived values from the store
   const dayContext = createMemo(() => dayContextStore);
@@ -165,12 +166,16 @@ export function StreamingDataProvider(props: ParentProps) {
 
       ws.onclose = () => {
         setIsConnected(false);
+        // Only attempt to reconnect if the component is still mounted
+        if (!isMounted) {
+          return;
+        }
         // Attempt to reconnect after 3 seconds
         if (reconnectTimeout) {
           clearTimeout(reconnectTimeout);
         }
         reconnectTimeout = window.setTimeout(() => {
-          if (!isConnected()) {
+          if (!isConnected() && isMounted) {
             connectWebSocket();
           }
         }, 3000);
@@ -410,11 +415,15 @@ export function StreamingDataProvider(props: ParentProps) {
 
   // Connect on mount
   onMount(() => {
+    isMounted = true;
     connectWebSocket();
   });
 
   // Cleanup on unmount
   onCleanup(() => {
+    // Set isMounted to false first to prevent reconnection attempts
+    isMounted = false;
+    
     if (reconnectTimeout) {
       clearTimeout(reconnectTimeout);
     }
