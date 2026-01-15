@@ -62,48 +62,46 @@ async def get_pubsub_gateway(
         await gateway.close()
 
 
-def _create_unit_of_work_factory(
-    app_state: Any,
-) -> UnitOfWorkFactory:
-    """Internal helper to create UnitOfWorkFactory from app state.
-    
-    Args:
-        app_state: Application state object with redis_pool attribute
-        
-    Returns:
-        UnitOfWorkFactory instance
-    """
-    redis_pool = getattr(app_state, "redis_pool", None)
-    pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
-    return SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
-
-
-def get_unit_of_work_factory(
+async def get_unit_of_work_factory(
     request: Request,
-) -> UnitOfWorkFactory:
+) -> AsyncIterator[UnitOfWorkFactory]:
     """Get a UnitOfWorkFactory instance for HTTP requests.
-    
+
+    Creates a RedisPubSubGateway with proper cleanup to avoid connection leaks.
+
     Args:
         request: FastAPI Request object
-        
-    Returns:
+
+    Yields:
         UnitOfWorkFactory instance
     """
-    return _create_unit_of_work_factory(request.app.state)
+    redis_pool = getattr(request.app.state, "redis_pool", None)
+    pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+    try:
+        yield SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
+    finally:
+        await pubsub_gateway.close()
 
 
-def get_unit_of_work_factory_websocket(
+async def get_unit_of_work_factory_websocket(
     websocket: WebSocket,
-) -> UnitOfWorkFactory:
+) -> AsyncIterator[UnitOfWorkFactory]:
     """Get a UnitOfWorkFactory instance for WebSocket requests.
-    
+
+    Creates a RedisPubSubGateway with proper cleanup to avoid connection leaks.
+
     Args:
         websocket: FastAPI WebSocket object
-        
-    Returns:
+
+    Yields:
         UnitOfWorkFactory instance
     """
-    return _create_unit_of_work_factory(websocket.app.state)
+    redis_pool = getattr(websocket.app.state, "redis_pool", None)
+    pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+    try:
+        yield SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
+    finally:
+        await pubsub_gateway.close()
 
 
 def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:

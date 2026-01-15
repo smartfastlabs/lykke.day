@@ -30,9 +30,11 @@ async def test_get_pubsub_gateway_returns_redis_gateway():
     This test also verifies that the gateway is properly cleaned up when the
     generator exits, preventing Redis connection leaks.
     """
-    # Use the generator-based dependency with mock request
-    request = _create_mock_request()
-    gen = get_pubsub_gateway(request)
+    # Use the generator-based dependency with mock websocket
+    websocket = MagicMock()
+    # Set redis_pool to None for tests (they don't need a real pool)
+    websocket.app.state.redis_pool = None
+    gen = get_pubsub_gateway(websocket)
     gateway = await gen.__anext__()
     
     assert isinstance(gateway, RedisPubSubGateway)
@@ -46,7 +48,8 @@ async def test_get_pubsub_gateway_returns_redis_gateway():
         pass
 
 
-def test_get_unit_of_work_factory_requires_pubsub_gateway():
+@pytest.mark.asyncio
+async def test_get_unit_of_work_factory_requires_pubsub_gateway():
     """Test that get_unit_of_work_factory creates factory with pubsub_gateway.
 
     This is a regression test for a critical bug where the UnitOfWorkFactory
@@ -54,12 +57,14 @@ def test_get_unit_of_work_factory_requires_pubsub_gateway():
     when tasks were completed via the API.
 
     The function now takes a Request and creates the pubsub_gateway from app state.
+    This test also verifies proper cleanup of the RedisPubSubGateway.
     """
     # Create a mock request
     request = _create_mock_request()
     
-    # Call the dependency function with the request
-    factory = get_unit_of_work_factory(request)
+    # Call the dependency function with the request (it's now an async generator)
+    gen = get_unit_of_work_factory(request)
+    factory = await gen.__anext__()
 
     # Verify it returns a factory
     assert isinstance(factory, SqlAlchemyUnitOfWorkFactory)
@@ -72,6 +77,12 @@ def test_get_unit_of_work_factory_requires_pubsub_gateway():
     # The UoW should have the pubsub_gateway set
     assert hasattr(uow, "_pubsub_gateway")
     assert uow._pubsub_gateway is not None
+    
+    # Clean up by exhausting the generator
+    try:
+        await gen.__anext__()
+    except StopAsyncIteration:
+        pass
 
 
 def test_unit_of_work_factory_requires_pubsub_gateway():
