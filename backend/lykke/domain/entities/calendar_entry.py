@@ -8,6 +8,7 @@ from gcsa.event import Event as GoogleEvent
 
 from lykke.core.config import settings
 from lykke.domain import value_objects
+from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.base import BaseEntityObject
 from lykke.domain.entities.calendar_entry_series import CalendarEntrySeriesEntity
 
@@ -42,7 +43,7 @@ def get_datetime(
 
 
 @dataclass(kw_only=True)
-class CalendarEntryEntity(BaseEntityObject):
+class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
     user_id: UUID
     name: str
     calendar_id: UUID
@@ -146,4 +147,5 @@ class CalendarEntryEntity(BaseEntityObject):
             category=category,
             calendar_entry_series_id=calendar_entry_series_id,
         )
+        return calendar_entry
         return calendar_entry

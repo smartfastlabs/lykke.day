@@ -1,5 +1,5 @@
 import { Component, createSignal, onMount, Show } from "solid-js";
-import { useSheppard } from "@/providers/sheppard";
+import { useStreamingData } from "@/providers/streaming-data";
 import TaskList from "@/components/tasks/List";
 import { Task } from "@/types/api";
 import { isBackForwardNavigation } from "@/utils/navigation";
@@ -13,7 +13,7 @@ const getTaskStats = (tasks: Task[]) => {
 };
 
 export const TodaysTasksView: Component = () => {
-  const { tasks } = useSheppard();
+  const { tasks } = useStreamingData();
   const [mounted, setMounted] = createSignal(false);
 
   onMount(() => {

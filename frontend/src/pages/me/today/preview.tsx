@@ -1,5 +1,5 @@
 import { Component, createMemo } from "solid-js";
-import { useSheppard } from "@/providers/sheppard";
+import { useStreamingData } from "@/providers/streaming-data";
 import {
   TasksSection,
   EventsSection,
@@ -8,7 +8,7 @@ import {
 import { Hero } from "@/components/today";
 
 export const TodayPage: Component = () => {
-  const { tasks, events, day } = useSheppard();
+  const { tasks, events, day } = useStreamingData();
 
   const allTasks = createMemo(() => tasks() ?? []);
   const allEvents = createMemo(() => events() ?? []);

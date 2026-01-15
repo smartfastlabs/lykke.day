@@ -2,7 +2,7 @@ import { useNavigate } from "@solidjs/router";
 import { Show, createEffect, createMemo, type ParentProps } from "solid-js";
 
 import { useAuth } from "@/providers/auth";
-import { SheppardProvider } from "@/providers/sheppard";
+import { StreamingDataProvider } from "@/providers/streaming-data";
 
 function AuthenticatedBoundary(props: ParentProps) {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ function AuthenticatedBoundary(props: ParentProps) {
         </div>
       }
     >
-      <SheppardProvider>{props.children}</SheppardProvider>
+      <StreamingDataProvider>{props.children}</StreamingDataProvider>
     </Show>
   );
 }

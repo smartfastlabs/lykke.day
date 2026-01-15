@@ -59,10 +59,13 @@ from .user import (
     UserUpdateSchema,
 )
 from .websocket_message import (
+    EntityChangeSchema,
     WebSocketAuditLogEventSchema,
     WebSocketConnectionAckSchema,
     WebSocketErrorSchema,
     WebSocketMessageEventSchema,
+    WebSocketSyncRequestSchema,
+    WebSocketSyncResponseSchema,
     WebSocketUserMessageSchema,
 )
 
@@ -107,6 +110,9 @@ WebSocketMessageEventSchema.model_rebuild()
 WebSocketAuditLogEventSchema.model_rebuild()
 WebSocketConnectionAckSchema.model_rebuild()
 WebSocketErrorSchema.model_rebuild()
+EntityChangeSchema.model_rebuild()
+WebSocketSyncRequestSchema.model_rebuild()
+WebSocketSyncResponseSchema.model_rebuild()
 
 __all__ = [
     "ActionSchema",
@@ -155,9 +161,12 @@ __all__ = [
     "UserSettingsSchema",
     "UserSettingsUpdateSchema",
     "UserUpdateSchema",
+    "EntityChangeSchema",
     "WebSocketAuditLogEventSchema",
     "WebSocketConnectionAckSchema",
     "WebSocketErrorSchema",
     "WebSocketMessageEventSchema",
+    "WebSocketSyncRequestSchema",
+    "WebSocketSyncResponseSchema",
     "WebSocketUserMessageSchema",
 ]

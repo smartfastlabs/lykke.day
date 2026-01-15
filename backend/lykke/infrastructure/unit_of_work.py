@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from contextvars import Token
+from dataclasses import asdict
+from datetime import date as dt_date, datetime
+from enum import Enum
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
@@ -67,6 +70,7 @@ from lykke.domain.entities import (
     TaskEntity,
     UserEntity,
 )
+from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.base import BaseEntityObject
 from lykke.domain.events.base import (
     DomainEvent,
@@ -611,6 +615,37 @@ class SqlAlchemyUnitOfWork:
                     if hasattr(event, "to_audit_log") and callable(event.to_audit_log):
                         audit_log = event.to_audit_log(self.user_id)
                         audit_logs_to_create.append(audit_log)
+                    # For AuditableEntity, also create audit logs for EntityCreated/Updated/Deleted events
+                    elif isinstance(entity, AuditableEntity):
+                        if isinstance(event, (EntityCreatedEvent, EntityUpdatedEvent, EntityDeletedEvent)):
+                            # Infer entity_type from entity class name (e.g., "TaskEntity" -> "task")
+                            entity_type = type(entity).__name__.replace("Entity", "").lower()
+                            # For EntityUpdatedEvent, include update_object in meta
+                            meta: dict[str, Any] = {}
+                            if isinstance(event, EntityUpdatedEvent):
+                                # Convert update_object to dict for meta
+                                update_dict = asdict(cast(Any, event.update_object))
+                                # Convert non-JSON-serializable values
+                                json_safe_meta: dict[str, Any] = {}
+                                for key, value in update_dict.items():
+                                    if isinstance(value, (datetime, dt_date)):
+                                        json_safe_meta[key] = value.isoformat()
+                                    elif isinstance(value, UUID):
+                                        json_safe_meta[key] = str(value)
+                                    elif isinstance(value, Enum):
+                                        json_safe_meta[key] = value.value
+                                    else:
+                                        json_safe_meta[key] = value
+                                meta = json_safe_meta
+                            
+                            audit_log = AuditLogEntity(
+                                user_id=self.user_id,
+                                activity_type=type(event).__name__,
+                                entity_id=entity.id,
+                                entity_type=entity_type,
+                                meta=meta,
+                            )
+                            audit_logs_to_create.append(audit_log)
 
             # Put events back so they can be collected later for dispatching
             for event in events:

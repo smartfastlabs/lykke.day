@@ -6,7 +6,7 @@ import {
   createSignal,
   onMount,
 } from "solid-js";
-import { useSheppard } from "@/providers/sheppard";
+import { useStreamingData } from "@/providers/streaming-data";
 import type { Event } from "@/types/api";
 import { Icon } from "solid-heroicons";
 import { calendar, clock, users } from "solid-heroicons/outline";
@@ -121,7 +121,7 @@ const EmptyState: Component = () => (
 );
 
 export const TodaysEventsView: Component = () => {
-  const { events } = useSheppard();
+  const { events } = useStreamingData();
   const [mounted, setMounted] = createSignal(false);
 
   onMount(() => {

@@ -17,7 +17,11 @@ from lykke.application.commands import (
     UpdateDayHandler,
 )
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
-from lykke.application.queries import GetDayContextHandler, PreviewDayHandler
+from lykke.application.queries import (
+    GetDayContextHandler,
+    GetIncrementalChangesHandler,
+    PreviewDayHandler,
+)
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import RedisPubSubGateway
@@ -87,6 +91,17 @@ def get_preview_day_handler(
     """Get a PreviewDayHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return PreviewDayHandler(ro_repos, user.id)
+
+
+def get_get_incremental_changes_handler(
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> GetIncrementalChangesHandler:
+    """Get a GetIncrementalChangesHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return GetIncrementalChangesHandler(ro_repos, user.id)
 
 
 # Command Handler Dependencies
