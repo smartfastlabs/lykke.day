@@ -103,7 +103,10 @@ export function StreamingDataProvider(props: ParentProps) {
   const dayContext = createMemo(() => dayContextStore.data);
   const tasks = createMemo(() => dayContextStore.data?.tasks ?? []);
   const events = createMemo(
-    () => dayContextStore.data?.calendar_entries ?? dayContextStore.data?.events ?? []
+    () =>
+      dayContextStore.data?.calendar_entries ??
+      dayContextStore.data?.events ??
+      []
   );
   const day = createMemo(() => dayContextStore.data?.day);
 
