@@ -3,8 +3,8 @@ import { Component, Show, createResource, createSignal } from "solid-js";
 import DetailPage from "@/components/shared/DetailPage";
 import DayTemplateForm from "@/components/dayTemplates/Form";
 import DayTemplatePreview from "@/components/dayTemplates/Preview";
-import { dayTemplateAPI, routineAPI, timeBlockDefinitionAPI } from "@/utils/api";
-import { DayTemplate, Routine, TimeBlockDefinition } from "@/types/api";
+import { dayTemplateAPI, routineAPI } from "@/utils/api";
+import { DayTemplate, Routine } from "@/types/api";
 
 const DayTemplateDetailPage: Component = () => {
   const params = useParams();
@@ -23,9 +23,6 @@ const DayTemplateDetailPage: Component = () => {
   );
 
   const [routines] = createResource<Routine[]>(routineAPI.getAll);
-  const [timeBlockDefinitions] = createResource<TimeBlockDefinition[]>(
-    timeBlockDefinitionAPI.getAll
-  );
 
   const handleUpdate = async (partialTemplate: Partial<DayTemplate>) => {
     const current = dayTemplate();

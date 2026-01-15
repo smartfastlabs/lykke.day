@@ -1,4 +1,4 @@
-import { Component, For, type JSX } from "solid-js";
+import { For, type JSX } from "solid-js";
 
 interface GenericListProps<T> {
   items: T[];

@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, waitFor } from "@solidjs/testing-library";
 import { StreamingDataProvider, useStreamingData } from "./streaming-data";
-import { createSignal } from "solid-js";
 import type { DayContext, Task, TaskStatus } from "@/types/api";
-import type { Event as CalendarEvent } from "@/types/api";
 
 // Mock the API and config modules
 vi.mock("@/utils/api", () => ({
@@ -25,10 +23,10 @@ class ControllableWebSocket {
 
   url: string;
   readyState = 0;
-  onopen: ((event: Event) => void) | null = null;
-  onclose: ((event: CloseEvent) => void) | null = null;
-  onmessage: ((event: MessageEvent) => void) | null = null;
-  onerror: ((event: Event) => void) | null = null;
+  onopen: ((_event: Event) => void) | null = null;
+  onclose: ((_event: CloseEvent) => void) | null = null;
+  onmessage: ((_event: MessageEvent) => void) | null = null;
+  onerror: ((_event: Event) => void) | null = null;
   _sentData: string[] = [];
 
   constructor(url: string) {
@@ -86,7 +84,7 @@ describe("StreamingDataProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     ControllableWebSocket.instances = [];
-    (global as any).WebSocket = ControllableWebSocket;
+    (global as unknown as { WebSocket: typeof ControllableWebSocket }).WebSocket = ControllableWebSocket;
     document.cookie = "lykke_auth=test-token";
     vi.useFakeTimers();
   });
@@ -700,7 +698,7 @@ describe("StreamingDataProvider", () => {
       // Wait for the promise to settle
       try {
         await statusPromise;
-      } catch (error) {
+      } catch (_error) {
         // Error already caught above
       }
       expect(caughtError).toBeDefined();

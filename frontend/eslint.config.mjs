@@ -40,15 +40,40 @@ export default [
         MessageEvent: "readonly",
         CloseEvent: "readonly",
         fetch: "readonly",
+        navigator: "readonly",
+        TouchEvent: "readonly",
+        HTMLElement: "readonly",
+        confirm: "readonly",
+        btoa: "readonly",
+        Notification: "readonly",
+        crypto: "readonly",
+        ServiceWorkerGlobalScope: "readonly",
+        PushEvent: "readonly",
+        NotificationOptions: "readonly",
+        NotificationEvent: "readonly",
+        ExtendableEvent: "readonly",
+        RequestInit: "readonly",
+        URLSearchParams: "readonly",
+        localStorage: "readonly",
+        performance: "readonly",
+        PerformanceNavigationTiming: "readonly",
+        global: "readonly",
       },
     },
     rules: {
       // TypeScript rules
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { argsIgnorePattern: "^_" },
+        { 
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          args: "all",
+          caughtErrors: "all",
+          caughtErrorsIgnorePattern: "^_",
+        },
       ],
       "@typescript-eslint/no-explicit-any": "warn",
+      "no-unused-vars": "off", // Turn off base rule as it conflicts with @typescript-eslint/no-unused-vars
 
       // Solid.js rules
       "solid/reactivity": "warn",

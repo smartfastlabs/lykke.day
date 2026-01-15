@@ -1,4 +1,4 @@
-import { Component, Show } from "solid-js";
+import { Component } from "solid-js";
 
 import { CalendarEntrySeries } from "@/types/api";
 import { formatRecurrenceInfo } from "@/components/recurring-events/recurrenceFormat";
@@ -16,7 +16,7 @@ const formatDateTime = (value?: string | null): string => {
 const RecurringEventSeriesPreview: Component<RecurringEventSeriesPreviewProps> = (
   props
 ) => {
-  const occurrence = formatRecurrenceInfo(props.series);
+  const occurrence = () => formatRecurrenceInfo(props.series);
   return (
     <div class="flex flex-col items-center justify-center px-6 py-8">
       <div class="w-full max-w-md space-y-6">
@@ -47,7 +47,7 @@ const RecurringEventSeriesPreview: Component<RecurringEventSeriesPreviewProps> =
             </div>
             <div>
               <label class="text-sm font-medium text-neutral-500">Occurs</label>
-              <div class="mt-1 text-base text-neutral-900">{occurrence}</div>
+              <div class="mt-1 text-base text-neutral-900">{occurrence()}</div>
             </div>
             <div>
               <label class="text-sm font-medium text-neutral-500">Event Category</label>

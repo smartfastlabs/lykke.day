@@ -9,7 +9,7 @@ import {
 import { useStreamingData } from "@/providers/streaming-data";
 import type { Event } from "@/types/api";
 import { Icon } from "solid-heroicons";
-import { calendar, clock, users } from "solid-heroicons/outline";
+import { calendar, clock } from "solid-heroicons/outline";
 import { isBackForwardNavigation } from "@/utils/navigation";
 
 const formatTime = (dateTimeStr: string): string => {

@@ -20,18 +20,22 @@ interface IconProps {
  * - With custom classes: <Icon key="plus" class="w-6 h-6 fill-blue-500" />
  */
 export function Icon(props: IconProps): JSX.Element {
-  const icon = props.icon ?? getIcon(props.key ?? "") ?? getIcon("square");
-  
-  if (!icon) {
-    return <></>;
-  }
-  
   return (
-    <svg
-      viewBox={`0 0 ${icon.icon[0]} ${icon.icon[1]}`}
-      class={props.class ?? "w-4 h-4 fill-gray-400"}
-    >
-      <path d={icon.icon[4] as string} />
-    </svg>
+    <>
+      {(() => {
+        const iconValue = props.icon ?? getIcon(props.key ?? "") ?? getIcon("square");
+        if (!iconValue) {
+          return null;
+        }
+        return (
+          <svg
+            viewBox={`0 0 ${iconValue.icon[0]} ${iconValue.icon[1]}`}
+            class={props.class ?? "w-4 h-4 fill-gray-400"}
+          >
+            <path d={iconValue.icon[4] as string} />
+          </svg>
+        );
+      })()}
+    </>
   );
 }

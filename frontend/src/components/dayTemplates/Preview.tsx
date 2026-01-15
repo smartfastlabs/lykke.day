@@ -33,13 +33,6 @@ const DayTemplatePreview: Component<DayTemplatePreviewProps> = (props) => {
     (props.routines ?? []).filter((routine) => !routine.id || !attachedRoutineIds().has(routine.id))
   );
 
-  const attachedTimeBlockIds = createMemo(() =>
-    new Set((props.dayTemplate.time_blocks ?? []).map((tb) => tb.time_block_definition_id))
-  );
-
-  const getTimeBlockDefinition = (id: string): TimeBlockDefinition | undefined => {
-    return timeBlockDefinitions()?.find((def) => def.id === id);
-  };
 
   const formatTime = (time: string): string => {
     // time is in HH:MM:SS format, return HH:MM

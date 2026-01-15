@@ -15,7 +15,7 @@ interface MediaCardProps {
 }
 
 const MediaCard: Component<MediaCardProps> = (props) => {
-  const fallback = props.fallbackImage || "https://placehold.co/240x135?text=No+Image";
+  const fallback = () => props.fallbackImage || "https://placehold.co/240x135?text=No+Image";
 
   return (
     <a
@@ -33,7 +33,7 @@ const MediaCard: Component<MediaCardProps> = (props) => {
             loading="lazy"
             onError={(event) => {
               event.currentTarget.onerror = null;
-              event.currentTarget.src = fallback;
+              event.currentTarget.src = fallback();
             }}
           />
         </div>

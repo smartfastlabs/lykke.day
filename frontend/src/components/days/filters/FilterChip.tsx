@@ -13,7 +13,7 @@ export const FilterChip: Component<FilterChipProps> = (props) => (
         ? "bg-gray-700 text-white border-gray-700"
         : "bg-white text-gray-400 border-gray-200 hover:border-gray-400 hover:text-gray-600"
     }`}
-    onClick={props.onClick}
+    onClick={() => props.onClick()}
   >
     {props.label}
   </button>

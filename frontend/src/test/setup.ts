@@ -1,11 +1,11 @@
 import "@testing-library/jest-dom";
-import { expect, afterEach, vi } from "vitest";
+import { afterEach } from "vitest";
 import { cleanup } from "@solidjs/testing-library";
 import { webcrypto } from "node:crypto";
 
 // Polyfill for crypto.getRandomValues (needed for older Node versions)
 if (!globalThis.crypto) {
-  (globalThis as any).crypto = webcrypto;
+  (globalThis as unknown as { crypto: typeof webcrypto }).crypto = webcrypto;
 }
 
 // Cleanup after each test
@@ -27,10 +27,10 @@ global.WebSocket = class MockWebSocket {
 
   url: string;
   readyState: number = 0;
-  onopen: ((event: Event) => void) | null = null;
-  onclose: ((event: CloseEvent) => void) | null = null;
-  onmessage: ((event: MessageEvent) => void) | null = null;
-  onerror: ((event: Event) => void) | null = null;
+  onopen: ((_event: Event) => void) | null = null;
+  onclose: ((_event: CloseEvent) => void) | null = null;
+  onmessage: ((_event: MessageEvent) => void) | null = null;
+  onerror: ((_event: Event) => void) | null = null;
 
   constructor(url: string) {
     this.url = url;
@@ -45,8 +45,9 @@ global.WebSocket = class MockWebSocket {
 
   send(data: string) {
     // Store sent data for testing
-    (this as any)._sentData = (this as any)._sentData || [];
-    (this as any)._sentData.push(data);
+    const self = this as unknown as { _sentData?: string[] };
+    self._sentData = self._sentData || [];
+    self._sentData.push(data);
   }
 
   close() {
@@ -55,7 +56,7 @@ global.WebSocket = class MockWebSocket {
       this.onclose(new CloseEvent("close"));
     }
   }
-} as any;
+} as unknown as typeof WebSocket;
 
 // Mock document.cookie
 Object.defineProperty(document, "cookie", {

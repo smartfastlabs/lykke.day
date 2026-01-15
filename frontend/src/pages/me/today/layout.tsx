@@ -1,11 +1,9 @@
 import Page from "@/components/shared/layout/Page";
 import { Show, Component, ParentProps, createMemo } from "solid-js";
 import { useStreamingData } from "@/providers/streaming-data";
-import { useLocation } from "@solidjs/router";
 
 export const TodayPageLayout: Component<ParentProps> = (props) => {
   const { dayContext, isLoading, day } = useStreamingData();
-  const location = useLocation();
 
   const date = createMemo(() => {
     const dayValue = day();

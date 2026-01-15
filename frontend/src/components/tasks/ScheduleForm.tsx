@@ -116,7 +116,7 @@ const TaskScheduleForm: Component<TaskScheduleFormProps> = (props) => {
           <button
             type="button"
             class="text-sm text-gray-600 hover:text-gray-800"
-            onClick={props.onCancel}
+            onClick={() => props.onCancel?.()}
             disabled={props.isLoading}
           >
             Cancel

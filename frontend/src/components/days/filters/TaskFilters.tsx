@@ -88,10 +88,17 @@ export const TaskFilters: Component<TaskFiltersProps> = (props) => {
                   label={group === "ALL" ? "All" : group}
                   active={
                     group === "ALL"
-                      ? props.filters.frequencyGroups.length === FREQUENCY_GROUPS.length
-                      : props.filters.frequencyGroups.includes(group as FrequencyGroup)
+                      ? props.filters.frequencyGroups.length ===
+                        FREQUENCY_GROUPS.length
+                      : props.filters.frequencyGroups.includes(
+                          group as FrequencyGroup
+                        )
                   }
-                  onClick={() => props.onToggleFrequencyGroup(group as FrequencyGroup | "ALL")}
+                  onClick={() =>
+                    props.onToggleFrequencyGroup(
+                      group as FrequencyGroup | "ALL"
+                    )
+                  }
                 />
               )}
             </For>
@@ -101,4 +108,3 @@ export const TaskFilters: Component<TaskFiltersProps> = (props) => {
     </div>
   );
 };
-

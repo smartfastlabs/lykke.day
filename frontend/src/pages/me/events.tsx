@@ -138,14 +138,14 @@ const ConnectionStatus: Component<{
     },
   };
 
-  const config = statusConfig[props.status];
+  const config = () => statusConfig[props.status];
 
   return (
     <div
-      class={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${config.bg} ${config.color} text-sm font-medium`}
+      class={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${config().bg} ${config().color} text-sm font-medium`}
     >
-      <Icon path={config.icon} class="w-4 h-4" />
-      <span>{config.text}</span>
+      <Icon path={config().icon} class="w-4 h-4" />
+      <span>{config().text}</span>
     </div>
   );
 };

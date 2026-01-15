@@ -8,7 +8,6 @@ import {
   bellAlert,
   heart,
   sparkles,
-  checkCircle,
   xCircle,
 } from "solid-heroicons/outline";
 import Footer from "@/components/shared/layout/Footer";

@@ -20,13 +20,18 @@ import type {
 
 // Custom error class for API errors
 export class ApiRequestError extends Error {
+  public status: number;
+  public detail?: string;
+  
   constructor(
     message: string,
-    public status: number,
-    public detail?: string
+    status: number,
+    detail?: string
   ) {
     super(message);
     this.name = "ApiRequestError";
+    this.status = status;
+    this.detail = detail;
   }
 }
 
@@ -111,12 +116,12 @@ async function fetchData<T>(
   return response.data;
 }
 
-// Helper for paginated responses
-function extractItems<T>(data: T[] | PaginatedResponse<T>): T[] {
-  if (Array.isArray(data)) {
-    return data;
+// Helper for paginated responses (currently unused but kept for future use)
+function _extractItems<T>(_data: T[] | PaginatedResponse<T>): T[] {
+  if (Array.isArray(_data)) {
+    return _data;
   }
-  return data.items;
+  return _data.items;
 }
 
 // --- Generic CRUD Factory ---
