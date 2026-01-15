@@ -3,6 +3,8 @@
 These tests verify that dependencies are properly configured and injected.
 """
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from lykke.infrastructure.gateways import RedisPubSubGateway, StubPubSubGateway
@@ -13,6 +15,14 @@ from lykke.presentation.api.routers.dependencies.services import (
 )
 
 
+def _create_mock_request():
+    """Create a mock Request object for testing."""
+    request = MagicMock()
+    # Set redis_pool to None for tests (they don't need a real pool)
+    request.app.state.redis_pool = None
+    return request
+
+
 @pytest.mark.asyncio
 async def test_get_pubsub_gateway_returns_redis_gateway():
     """Test that get_pubsub_gateway returns a RedisPubSubGateway instance.
@@ -20,12 +30,20 @@ async def test_get_pubsub_gateway_returns_redis_gateway():
     This test also verifies that the gateway is properly cleaned up when the
     generator exits, preventing Redis connection leaks.
     """
-    # Use the generator-based dependency
-    async for gateway in get_pubsub_gateway():
-        assert isinstance(gateway, RedisPubSubGateway)
-        # Gateway should be usable
-        assert gateway is not None
-        break  # Exit the generator to trigger cleanup
+    # Use the generator-based dependency with mock request
+    request = _create_mock_request()
+    gen = get_pubsub_gateway(request)
+    gateway = await gen.__anext__()
+    
+    assert isinstance(gateway, RedisPubSubGateway)
+    # Gateway should be usable
+    assert gateway is not None
+    
+    # Clean up by exhausting the generator
+    try:
+        await gen.__anext__()
+    except StopAsyncIteration:
+        pass
 
 
 @pytest.mark.asyncio
@@ -42,22 +60,30 @@ async def test_get_unit_of_work_factory_requires_pubsub_gateway():
     self._pubsub_gateway was None.
     """
     # Create a mock pubsub gateway using the generator
-    async for pubsub_gateway in get_pubsub_gateway():
-        # Call the dependency function with the gateway
-        factory = get_unit_of_work_factory(pubsub_gateway=pubsub_gateway)
+    request = _create_mock_request()
+    gen = get_pubsub_gateway(request)
+    pubsub_gateway = await gen.__anext__()
+    
+    # Call the dependency function with the gateway
+    factory = get_unit_of_work_factory(pubsub_gateway=pubsub_gateway)
 
-        # Verify it returns a factory
-        assert isinstance(factory, SqlAlchemyUnitOfWorkFactory)
+    # Verify it returns a factory
+    assert isinstance(factory, SqlAlchemyUnitOfWorkFactory)
 
-        # Verify the factory has the pubsub_gateway configured
-        # by checking that it passes it through when creating a UoW
-        from uuid import uuid4
-        uow = factory.create(user_id=uuid4())
+    # Verify the factory has the pubsub_gateway configured
+    # by checking that it passes it through when creating a UoW
+    from uuid import uuid4
+    uow = factory.create(user_id=uuid4())
 
-        # The UoW should have the pubsub_gateway set
-        assert hasattr(uow, "_pubsub_gateway")
-        assert uow._pubsub_gateway is pubsub_gateway
-        break  # Exit the generator to trigger cleanup
+    # The UoW should have the pubsub_gateway set
+    assert hasattr(uow, "_pubsub_gateway")
+    assert uow._pubsub_gateway is pubsub_gateway
+    
+    # Clean up by exhausting the generator
+    try:
+        await gen.__anext__()
+    except StopAsyncIteration:
+        pass
 
 
 def test_unit_of_work_factory_requires_pubsub_gateway():

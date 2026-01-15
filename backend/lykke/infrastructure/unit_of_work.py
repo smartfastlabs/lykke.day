@@ -684,12 +684,12 @@ class SqlAlchemyUnitOfWork:
         if not self._audit_logs_to_broadcast:
             return
 
-        from lykke.core.utils.serialization import dataclass_to_json_dict
+        from lykke.core.utils.audit_log_serialization import serialize_audit_log
 
         for audit_log in self._audit_logs_to_broadcast:
             try:
-                # Convert audit log to JSON-serializable dict
-                message = dataclass_to_json_dict(audit_log)
+                # Convert audit log to JSON-serializable dict using shared utility
+                message = serialize_audit_log(audit_log)
 
                 # Publish to user-specific auditlog channel
                 await self._pubsub_gateway.publish_to_user_channel(

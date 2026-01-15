@@ -5,10 +5,20 @@ were created for each request/WebSocket connection but never cleaned up, causing
 Redis connection leaks.
 """
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.presentation.api.routers.dependencies.services import get_pubsub_gateway
+
+
+def _create_mock_request():
+    """Create a mock Request object for testing."""
+    request = MagicMock()
+    # Set redis_pool to None for tests (they don't need a real pool)
+    request.app.state.redis_pool = None
+    return request
 
 
 @pytest.mark.asyncio
@@ -22,8 +32,9 @@ async def test_pubsub_gateway_cleanup_is_called():
     """
     cleanup_called = False
 
-    # Create the async generator
-    gen = get_pubsub_gateway()
+    # Create the async generator with mock request
+    request = _create_mock_request()
+    gen = get_pubsub_gateway(request)
 
     # Get the gateway (simulates FastAPI calling the dependency)
     gateway = await gen.__anext__()
@@ -65,8 +76,9 @@ async def test_pubsub_gateway_cleanup_on_exception():
     """
     cleanup_called = False
 
-    # Create the async generator
-    gen = get_pubsub_gateway()
+    # Create the async generator with mock request
+    request = _create_mock_request()
+    gen = get_pubsub_gateway(request)
 
     try:
         # Get the gateway
@@ -108,11 +120,13 @@ async def test_multiple_gateway_instances_are_independent():
     gateways = []
 
     # Simulate two concurrent requests
-    gen1 = get_pubsub_gateway()
+    request1 = _create_mock_request()
+    request2 = _create_mock_request()
+    gen1 = get_pubsub_gateway(request1)
     gateway1 = await gen1.__anext__()
     gateways.append(gateway1)
 
-    gen2 = get_pubsub_gateway()
+    gen2 = get_pubsub_gateway(request2)
     gateway2 = await gen2.__anext__()
     gateways.append(gateway2)
 

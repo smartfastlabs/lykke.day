@@ -1,16 +1,13 @@
 """WebSocket API route for real-time AuditLog events."""
 
-import asyncio
 import json
-from datetime import datetime
 from typing import Annotated, Any
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from loguru import logger
 
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
-from lykke.domain.entities import AuditLogEntity
+from lykke.core.utils.audit_log_serialization import deserialize_audit_log
 from lykke.presentation.api.schemas.mappers import map_audit_log_to_schema
 from lykke.presentation.api.schemas.websocket_message import (
     WebSocketAuditLogEventSchema,
@@ -90,45 +87,35 @@ async def events_websocket(
         async with pubsub_gateway.subscribe_to_user_channel(
             user_id=user_id, channel_type="auditlog"
         ) as auditlog_subscription:
-            # Give subscription a moment to be ready
-            await asyncio.sleep(0.1)
-
             # Event streaming loop
+            # The get_message(timeout=...) already provides backoff, no need for additional sleep
             while True:
-                # Non-blocking check for AuditLog events from Redis
-                audit_log_message = await auditlog_subscription.get_message(timeout=0.1)
+                # Wait for AuditLog events from Redis with timeout
+                # This blocks until a message arrives or timeout expires
+                audit_log_message = await auditlog_subscription.get_message(timeout=1.0)
 
                 if audit_log_message:
-                    # Reconstruct the AuditLogEntity from the dict
-                    # Note: Redis pub/sub serializes UUIDs to strings and datetimes to ISO strings
-                    entity_id_raw = audit_log_message.get("entity_id")
-                    audit_log_entity = AuditLogEntity(
-                        id=UUID(audit_log_message["id"]),
-                        user_id=UUID(audit_log_message["user_id"]),
-                        activity_type=audit_log_message["activity_type"],
-                        occurred_at=datetime.fromisoformat(
-                            audit_log_message["occurred_at"]
-                        ),
-                        entity_id=UUID(entity_id_raw) if entity_id_raw else None,
-                        entity_type=audit_log_message.get("entity_type"),
-                        meta=audit_log_message.get("meta", {}),
-                    )
+                    try:
+                        # Deserialize using shared utility for consistency
+                        audit_log_entity = deserialize_audit_log(audit_log_message)
 
-                    # Convert to schema
-                    audit_log_schema = map_audit_log_to_schema(audit_log_entity)
-                    event_schema = WebSocketAuditLogEventSchema(
-                        audit_log=audit_log_schema
-                    )
+                        # Convert to schema
+                        audit_log_schema = map_audit_log_to_schema(audit_log_entity)
+                        event_schema = WebSocketAuditLogEventSchema(
+                            audit_log=audit_log_schema
+                        )
 
-                    await send_ws_message(
-                        websocket, event_schema.model_dump(mode="json")
-                    )
-                    logger.debug(
-                        f"Sent AuditLog event {audit_log_entity.id} to user {user_id}"
-                    )
-
-                # Small sleep to prevent tight loop
-                await asyncio.sleep(0.01)
+                        await send_ws_message(
+                            websocket, event_schema.model_dump(mode="json")
+                        )
+                        logger.debug(
+                            f"Sent AuditLog event {audit_log_entity.id} to user {user_id}"
+                        )
+                    except Exception as deserialize_error:
+                        logger.error(
+                            f"Failed to deserialize audit log message for user {user_id}: {deserialize_error}"
+                        )
+                        # Continue loop to avoid breaking the connection on bad messages
 
     except WebSocketDisconnect:
         logger.info(

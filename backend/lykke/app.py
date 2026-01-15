@@ -8,6 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
+from redis import asyncio as aioredis  # type: ignore
 
 from lykke.application.events import register_all_handlers
 from lykke.core.config import settings
@@ -41,8 +42,22 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
     """
     Lifespan context manager for FastAPI application.
     """
-    # Initialize Redis PubSub gateway for real-time event broadcasting
-    pubsub_gateway = RedisPubSubGateway()
+    # Create Redis connection pool for shared use across all gateway instances
+    redis_pool = aioredis.ConnectionPool.from_url(
+        settings.REDIS_URL,
+        max_connections=settings.REDIS_MAX_CONNECTIONS,
+        encoding="utf-8",
+        decode_responses=False,  # We'll handle decoding manually
+    )
+    logger.info(
+        f"Created Redis connection pool (max_connections={settings.REDIS_MAX_CONNECTIONS})"
+    )
+
+    # Store the pool in app state for dependency injection
+    fastapi_app.state.redis_pool = redis_pool
+
+    # Initialize Redis PubSub gateway with shared connection pool
+    pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
 
     # Auto-register all domain event handlers
     ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
@@ -59,8 +74,11 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
 
     yield  # type: ignore
 
-    # Clean up Redis connection on shutdown
+    # Clean up Redis connection pool on shutdown
     await pubsub_gateway.close()
+    # Disconnect all connections in the pool
+    redis_pool.disconnect()
+    logger.info("Closed Redis connection pool")
 
     if not is_testing():
         youtube.kill_current_player()

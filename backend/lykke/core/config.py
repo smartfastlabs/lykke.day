@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     DATA_PATH: str = "../data"
     DATABASE_URL: str = "postgresql+psycopg://localhost/lykke"
     REDIS_URL: str = "redis://localhost:6379"
+    REDIS_MAX_CONNECTIONS: int = 50  # Maximum connections in the pool
     SESSION_SECRET: str = ""
     ANTHROPIC_API_KEY: str = ""
     PRINTER_NAME: str = "HP_OfficeJet_Pro_9010_series"

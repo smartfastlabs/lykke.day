@@ -8,7 +8,7 @@ with FastAPI's Depends() in route handlers.
 from collections.abc import AsyncIterator
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 
 from lykke.application.commands import (
     RecordTaskActionHandler,
@@ -27,13 +27,23 @@ from lykke.infrastructure.unit_of_work import (
 from lykke.presentation.api.routers.dependencies.user import get_current_user
 
 
-async def get_pubsub_gateway() -> AsyncIterator[PubSubGatewayProtocol]:
+async def get_pubsub_gateway(
+    request: Request,
+) -> AsyncIterator[PubSubGatewayProtocol]:
     """Get a PubSubGateway instance with automatic cleanup.
 
+    Uses the shared Redis connection pool from app state for better performance.
     This is a generator-based dependency that ensures the Redis connection
     is properly closed when the request/WebSocket connection ends.
+
+    Args:
+        request: FastAPI request object to access app state
     """
-    gateway = RedisPubSubGateway()
+    # Get the shared Redis connection pool from app state
+    redis_pool = getattr(request.app.state, "redis_pool", None)
+
+    # Create gateway with shared pool if available, otherwise create new connection
+    gateway = RedisPubSubGateway(redis_pool=redis_pool)
     try:
         yield gateway
     finally:

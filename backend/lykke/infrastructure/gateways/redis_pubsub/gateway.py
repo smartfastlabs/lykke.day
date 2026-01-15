@@ -21,24 +21,47 @@ class RedisPubSubGateway(PubSubGatewayProtocol):
     """Redis-based implementation of pub/sub gateway.
 
     Uses Redis Pub/Sub for real-time message broadcasting to user-specific channels.
+
+    Can use a shared connection pool for better performance, or create its own connection
+    if no pool is provided.
     """
 
-    def __init__(self) -> None:
-        """Initialize the Redis PubSub gateway."""
+    def __init__(self, redis_pool: aioredis.ConnectionPool | None = None) -> None:
+        """Initialize the Redis PubSub gateway.
+
+        Args:
+            redis_pool: Optional shared Redis connection pool. If provided, the gateway
+                will use this pool instead of creating its own connection. If None,
+                a new connection will be created lazily when needed.
+        """
         self._redis: aioredis.Redis | None = None
+        self._redis_pool = redis_pool
+        self._owns_connection = redis_pool is None
 
     async def _get_redis(self) -> aioredis.Redis:
         """Get or create the Redis client.
+
+        If a connection pool was provided during initialization, uses that pool.
+        Otherwise, creates a new connection lazily.
 
         Returns:
             Redis client instance
         """
         if self._redis is None:
-            self._redis = await aioredis.from_url(
-                settings.REDIS_URL,
-                encoding="utf-8",
-                decode_responses=False,  # We'll handle decoding manually
-            )
+            if self._redis_pool is not None:
+                # Use the provided connection pool
+                self._redis = aioredis.Redis(
+                    connection_pool=self._redis_pool,
+                    encoding="utf-8",
+                    decode_responses=False,  # We'll handle decoding manually
+                )
+            else:
+                # Create a new connection (legacy behavior for backward compatibility)
+                self._redis = await aioredis.from_url(
+                    settings.REDIS_URL,
+                    encoding="utf-8",
+                    decode_responses=False,  # We'll handle decoding manually
+                )
         return self._redis
 
     def _get_channel_name(self, user_id: UUID, channel_type: str) -> str:
@@ -107,7 +130,11 @@ class RedisPubSubGateway(PubSubGatewayProtocol):
         return _SubscriptionContextManager(self, user_id, channel_type)
 
     async def close(self) -> None:
-        """Close the Redis connection."""
+        """Close the Redis connection.
+
+        If using a shared connection pool, only closes the client connection,
+        not the pool itself. If using a dedicated connection, closes it completely.
+        """
         if self._redis is not None:
             await self._redis.close()
             self._redis = None
