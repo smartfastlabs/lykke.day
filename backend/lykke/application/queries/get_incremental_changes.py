@@ -108,3 +108,4 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
 
 def _get_audit_log_entity_data(audit_log: AuditLogEntity) -> dict[str, Any] | None:
     return audit_log.meta.get("entity_data", None)
+    return audit_log.meta.get("entity_data", None)
