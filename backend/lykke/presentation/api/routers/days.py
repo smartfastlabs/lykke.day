@@ -52,12 +52,14 @@ from lykke.presentation.api.schemas.websocket_message import (
 
 from .dependencies.queries.day_template import get_list_day_templates_handler
 from .dependencies.services import (
-    get_get_day_context_handler,
-    get_get_incremental_changes_handler,
-    get_preview_day_handler,
+    day_context_handler,
+    day_context_handler_websocket,
     get_pubsub_gateway,
     get_schedule_day_handler,
     get_update_day_handler,
+    incremental_changes_handler,
+    incremental_changes_handler_websocket,
+    preview_day_handler,
 )
 from .dependencies.user import get_current_user_from_token
 
@@ -71,7 +73,7 @@ router = APIRouter()
 
 @router.get("/today/context", response_model=DayContextSchema)
 async def get_context_today(
-    handler: Annotated[GetDayContextHandler, Depends(get_get_day_context_handler)],
+    handler: Annotated[GetDayContextHandler, Depends(day_context_handler)],
     schedule_handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
 ) -> DayContextSchema:
     """Get the complete context for today."""
@@ -86,7 +88,7 @@ async def get_context_today(
 
 @router.get("/tomorrow/context", response_model=DayContextSchema)
 async def get_context_tomorrow(
-    handler: Annotated[GetDayContextHandler, Depends(get_get_day_context_handler)],
+    handler: Annotated[GetDayContextHandler, Depends(day_context_handler)],
     schedule_handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
 ) -> DayContextSchema:
     """Get the complete context for tomorrow."""
@@ -101,7 +103,7 @@ async def get_context_tomorrow(
 @router.get("/{date}/context", response_model=DayContextSchema)
 async def get_context(
     date: datetime.date,
-    handler: Annotated[GetDayContextHandler, Depends(get_get_day_context_handler)],
+    handler: Annotated[GetDayContextHandler, Depends(day_context_handler)],
     schedule_handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
 ) -> DayContextSchema:
     """Get the complete context for a specific date."""
@@ -115,7 +117,7 @@ async def get_context(
 @router.get("/{date}/preview", response_model=DayContextSchema)
 async def preview_day(
     date: datetime.date,
-    handler: Annotated[PreviewDayHandler, Depends(get_preview_day_handler)],
+    handler: Annotated[PreviewDayHandler, Depends(preview_day_handler)],
     template_id: UUID | None = None,
 ) -> DayContextSchema:
     """Preview what a day would look like if scheduled."""
@@ -230,7 +232,15 @@ async def send_error(websocket: WebSocket, code: str, message: str) -> None:
 @router.websocket("/today/context")
 async def days_context_websocket(
     websocket: WebSocket,
-    pubsub_gateway: Annotated[PubSubGatewayProtocol, Depends(get_pubsub_gateway)],
+    pubsub_gateway: Annotated[
+        PubSubGatewayProtocol, Depends(get_pubsub_gateway)
+    ],
+    day_context_handler: Annotated[
+        GetDayContextHandler, Depends(day_context_handler_websocket)
+    ],
+    incremental_changes_handler: Annotated[
+        GetIncrementalChangesHandler, Depends(incremental_changes_handler_websocket)
+    ],
 ) -> None:
     """WebSocket endpoint for real-time DayContext sync.
 
@@ -244,23 +254,14 @@ async def days_context_websocket(
     Args:
         websocket: WebSocket connection
         pubsub_gateway: PubSub gateway for subscribing to events (injected)
+        day_context_handler: Handler for getting day context (injected)
+        incremental_changes_handler: Handler for getting incremental changes (injected)
     """
     await websocket.accept()
 
     try:
-        # Authenticate user from WebSocket query params or headers
-        try:
-            user = await get_current_user_from_token(websocket)
-            user_id = user.id
-        except Exception as auth_error:
-            logger.warning(f"Authentication failed for WebSocket: {auth_error}")
-            await send_error(
-                websocket,
-                "AUTHENTICATION_ERROR",
-                f"Authentication failed: {auth_error!s}",
-            )
-            await websocket.close(code=1008, reason="Authentication failed")
-            return
+        # Get user_id from the handler (user was authenticated via dependency)
+        user_id = day_context_handler.user_id
 
         logger.info(f"Days context WebSocket connection established for user {user_id}")
 
@@ -271,18 +272,9 @@ async def days_context_websocket(
         # Get today's date
         today_date = get_current_date()
 
-        # Get handlers for processing sync requests
-        from lykke.presentation.api.routers.dependencies.services import (
-            get_read_only_repository_factory,
-        )
-
-        ro_repo_factory = get_read_only_repository_factory()
-        ro_repos = ro_repo_factory.create(user_id)
-
-        get_day_context_handler = GetDayContextHandler(ro_repos, user_id)
-        get_incremental_changes_handler = GetIncrementalChangesHandler(
-            ro_repos, user_id
-        )
+        # Get repositories from handlers for filtering
+        task_repo = incremental_changes_handler.task_ro_repo
+        calendar_entry_repo = incremental_changes_handler.calendar_entry_ro_repo
 
         # Subscribe to user's AuditLog channel for real-time updates
         async with pubsub_gateway.subscribe_to_user_channel(
@@ -292,8 +284,8 @@ async def days_context_websocket(
             message_task = asyncio.create_task(
                 _handle_client_messages(
                     websocket,
-                    get_day_context_handler,
-                    get_incremental_changes_handler,
+                    day_context_handler,
+                    incremental_changes_handler,
                     today_date,
                 )
             )
@@ -301,8 +293,8 @@ async def days_context_websocket(
                 _handle_realtime_events(
                     websocket,
                     auditlog_subscription,
-                    ro_repos.task_ro_repo,
-                    ro_repos.calendar_entry_ro_repo,
+                    task_repo,
+                    calendar_entry_repo,
                     today_date,
                 )
             )
@@ -320,7 +312,7 @@ async def days_context_websocket(
 
     except WebSocketDisconnect:
         logger.info(
-            f"Days context WebSocket disconnected for user {user.id if 'user' in locals() else 'unknown'}"
+            f"Days context WebSocket disconnected for user {user_id if 'user_id' in locals() else 'unknown'}"
         )
 
     except Exception as e:

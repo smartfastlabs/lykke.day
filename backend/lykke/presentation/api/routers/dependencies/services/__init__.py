@@ -8,7 +8,7 @@ with FastAPI's Depends() in route handlers.
 from collections.abc import AsyncIterator
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends, Request, WebSocket
 from redis import asyncio as aioredis  # type: ignore
 
 from lykke.application.commands import (
@@ -29,11 +29,14 @@ from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
 )
-from lykke.presentation.api.routers.dependencies.user import get_current_user
+from lykke.presentation.api.routers.dependencies.user import (
+    get_current_user,
+    get_current_user_from_token,
+)
 
 
 async def get_pubsub_gateway(
-    request: Request,
+    websocket: WebSocket,
 ) -> AsyncIterator[PubSubGatewayProtocol]:
     """Get a PubSubGateway instance using the shared Redis connection pool.
 
@@ -43,11 +46,11 @@ async def get_pubsub_gateway(
     injection pattern.
 
     Args:
-        request: FastAPI request object to access app state
+        websocket: FastAPI WebSocket object to access app state
     """
     # Get the shared Redis connection pool from app state
     # If None (e.g., in tests), gateway will create its own connection
-    redis_pool = getattr(request.app.state, "redis_pool", None)
+    redis_pool = getattr(websocket.app.state, "redis_pool", None)
 
     # Create gateway with shared pool if available, otherwise create new connection
     gateway = RedisPubSubGateway(redis_pool=redis_pool)
@@ -59,9 +62,12 @@ async def get_pubsub_gateway(
 
 
 def get_unit_of_work_factory(
-    pubsub_gateway: Annotated[PubSubGatewayProtocol, Depends(get_pubsub_gateway)],
+    request: Request,
 ) -> UnitOfWorkFactory:
-    """Get a UnitOfWorkFactory instance."""
+    """Get a UnitOfWorkFactory instance for HTTP requests."""
+    # Get pubsub gateway from app state for HTTP requests
+    redis_pool = getattr(request.app.state, "redis_pool", None)
+    pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
     return SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
 
 
@@ -71,7 +77,7 @@ def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
 
 
 # Query Handler Dependencies
-def get_get_day_context_handler(
+def day_context_handler(
     user: Annotated[UserEntity, Depends(get_current_user)],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
@@ -82,7 +88,7 @@ def get_get_day_context_handler(
     return GetDayContextHandler(ro_repos, user.id)
 
 
-def get_preview_day_handler(
+def preview_day_handler(
     user: Annotated[UserEntity, Depends(get_current_user)],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
@@ -93,7 +99,7 @@ def get_preview_day_handler(
     return PreviewDayHandler(ro_repos, user.id)
 
 
-def get_get_incremental_changes_handler(
+def incremental_changes_handler(
     user: Annotated[UserEntity, Depends(get_current_user)],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
@@ -104,13 +110,38 @@ def get_get_incremental_changes_handler(
     return GetIncrementalChangesHandler(ro_repos, user.id)
 
 
+# WebSocket-specific handler dependencies
+async def day_context_handler_websocket(
+    websocket: WebSocket,
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> GetDayContextHandler:
+    """Get a GetDayContextHandler instance for WebSocket handlers."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return GetDayContextHandler(ro_repos, user.id)
+
+
+async def incremental_changes_handler_websocket(
+    websocket: WebSocket,
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> GetIncrementalChangesHandler:
+    """Get a GetIncrementalChangesHandler instance for WebSocket handlers."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return GetIncrementalChangesHandler(ro_repos, user.id)
+
+
 # Command Handler Dependencies
 def get_schedule_day_handler(
     uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
-    preview_day_handler: Annotated[PreviewDayHandler, Depends(get_preview_day_handler)],
+    preview_day_handler: Annotated[PreviewDayHandler, Depends(preview_day_handler)],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> ScheduleDayHandler:
     """Get a ScheduleDayHandler instance."""
