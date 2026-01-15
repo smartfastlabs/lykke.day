@@ -12,6 +12,7 @@ from fastapi import Depends, Request, WebSocket
 from redis import asyncio as aioredis  # type: ignore
 
 from lykke.application.commands import (
+    CreateOrGetDayHandler,
     RecordTaskActionHandler,
     ScheduleDayHandler,
     UpdateDayHandler,
@@ -71,6 +72,15 @@ def get_unit_of_work_factory(
     return SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
 
 
+def get_unit_of_work_factory_websocket(
+    websocket: WebSocket,
+) -> UnitOfWorkFactory:
+    """Get a UnitOfWorkFactory instance for WebSocket requests."""
+    redis_pool = getattr(websocket.app.state, "redis_pool", None)
+    pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+    return SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
+
+
 def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
     """Get a ReadOnlyRepositoryFactory instance."""
     return SqlAlchemyReadOnlyRepositoryFactory()
@@ -95,6 +105,17 @@ def preview_day_handler(
     ],
 ) -> PreviewDayHandler:
     """Get a PreviewDayHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return PreviewDayHandler(ro_repos, user.id)
+
+
+def preview_day_handler_websocket(
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> PreviewDayHandler:
+    """Get a PreviewDayHandler instance for WebSocket handlers."""
     ro_repos = ro_repo_factory.create(user.id)
     return PreviewDayHandler(ro_repos, user.id)
 
@@ -147,6 +168,37 @@ def get_schedule_day_handler(
     """Get a ScheduleDayHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return ScheduleDayHandler(ro_repos, uow_factory, user.id, preview_day_handler)
+
+
+def get_schedule_day_handler_websocket(
+    uow_factory: Annotated[
+        UnitOfWorkFactory, Depends(get_unit_of_work_factory_websocket)
+    ],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    preview_handler: Annotated[
+        PreviewDayHandler, Depends(preview_day_handler_websocket)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+) -> ScheduleDayHandler:
+    """Get a ScheduleDayHandler instance for WebSocket handlers."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return ScheduleDayHandler(ro_repos, uow_factory, user.id, preview_handler)
+
+
+def get_create_or_get_day_handler_websocket(
+    uow_factory: Annotated[
+        UnitOfWorkFactory, Depends(get_unit_of_work_factory_websocket)
+    ],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+) -> CreateOrGetDayHandler:
+    """Get a CreateOrGetDayHandler instance for WebSocket handlers."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return CreateOrGetDayHandler(ro_repos, uow_factory, user.id)
 
 
 def get_update_day_handler(

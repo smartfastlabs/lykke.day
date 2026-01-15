@@ -142,7 +142,10 @@ class SqlAlchemyUnitOfWork:
     # Entity type to repository attribute name mapping
     # Maps: entity_type -> (ro_repo_attr, rw_repo_attr)
     _ENTITY_REPO_MAP: dict[type, tuple[str, str]] = {
-        AuditLogEntity: ("audit_log_ro_repo", "audit_log_ro_repo"),  # Read-only, uses same repo
+        AuditLogEntity: (
+            "audit_log_ro_repo",
+            "audit_log_ro_repo",
+        ),  # Read-only, uses same repo
         BotPersonalityEntity: ("bot_personality_ro_repo", "_bot_personality_rw_repo"),
         DayEntity: ("day_ro_repo", "_day_rw_repo"),
         DayTemplateEntity: ("day_template_ro_repo", "_day_template_rw_repo"),
@@ -173,9 +176,7 @@ class SqlAlchemyUnitOfWork:
         data_objects.AuthToken: ("auth_token_ro_repo", "_auth_token_rw_repo"),
     }
 
-    def __init__(
-        self, user_id: UUID, pubsub_gateway: PubSubGatewayProtocol
-    ) -> None:
+    def __init__(self, user_id: UUID, pubsub_gateway: PubSubGatewayProtocol) -> None:
         """Initialize the unit of work for a specific user.
 
         Args:
@@ -204,7 +205,9 @@ class SqlAlchemyUnitOfWork:
             CalendarEntrySeriesRepositoryReadWriteProtocol | None
         ) = None
         self._calendar_rw_repo: CalendarRepositoryReadWriteProtocol | None = None
-        self._conversation_rw_repo: ConversationRepositoryReadWriteProtocol | None = None
+        self._conversation_rw_repo: ConversationRepositoryReadWriteProtocol | None = (
+            None
+        )
         self._day_rw_repo: DayRepositoryReadWriteProtocol | None = None
         self._day_template_rw_repo: DayTemplateRepositoryReadWriteProtocol | None = None
         self._factoid_rw_repo: FactoidRepositoryReadWriteProtocol | None = None
@@ -633,14 +636,23 @@ class SqlAlchemyUnitOfWork:
                         audit_logs_to_create.append(audit_log)
                     # For AuditableEntity, also create audit logs for EntityCreated/Updated/Deleted events
                     elif isinstance(entity, AuditableEntity):
-                        if isinstance(event, (EntityCreatedEvent, EntityUpdatedEvent, EntityDeletedEvent)):
+                        if isinstance(
+                            event,
+                            (
+                                EntityCreatedEvent,
+                                EntityUpdatedEvent,
+                                EntityDeletedEvent,
+                            ),
+                        ):
                             # Infer entity_type from entity class name (e.g., "TaskEntity" -> "task")
-                            entity_type = type(entity).__name__.replace("Entity", "").lower()
+                            entity_type = (
+                                type(entity).__name__.replace("Entity", "").lower()
+                            )
                             # For EntityUpdatedEvent, include update_object in meta
                             meta: dict[str, Any] = {}
                             if isinstance(event, EntityUpdatedEvent):
                                 # Convert update_object to dict for meta
-                                update_dict = asdict(cast(Any, event.update_object))
+                                update_dict = asdict(cast("Any", event.update_object))
                                 # Convert non-JSON-serializable values
                                 json_safe_meta: dict[str, Any] = {}
                                 for key, value in update_dict.items():
@@ -653,7 +665,7 @@ class SqlAlchemyUnitOfWork:
                                     else:
                                         json_safe_meta[key] = value
                                 meta = json_safe_meta
-                            
+
                             audit_log = AuditLogEntity(
                                 user_id=self.user_id,
                                 activity_type=type(event).__name__,
@@ -767,7 +779,9 @@ def _build_entity_snapshot(entity: BaseEntityObject) -> dict[str, Any]:
     if not isinstance(serialized, dict):
         return {}
 
-    snapshot = {key: value for key, value in serialized.items() if not key.startswith("_")}
+    snapshot = {
+        key: value for key, value in serialized.items() if not key.startswith("_")
+    }
 
     entity_date = getattr(entity, "date", None)
     if isinstance(entity_date, dt_date):

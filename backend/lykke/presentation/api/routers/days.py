@@ -11,7 +11,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from loguru import logger
 
-from lykke.application.commands import ScheduleDayHandler, UpdateDayHandler
+from lykke.application.commands import (
+    CreateOrGetDayHandler,
+    ScheduleDayHandler,
+    UpdateDayHandler,
+)
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import (
     GetDayContextHandler,
@@ -46,6 +50,7 @@ from .dependencies.queries.day_template import get_list_day_templates_handler
 from .dependencies.services import (
     day_context_handler,
     day_context_handler_websocket,
+    get_create_or_get_day_handler_websocket,
     get_pubsub_gateway,
     get_schedule_day_handler,
     get_update_day_handler,
@@ -223,11 +228,12 @@ async def send_error(websocket: WebSocket, code: str, message: str) -> None:
 @router.websocket("/today/context")
 async def days_context_websocket(
     websocket: WebSocket,
-    pubsub_gateway: Annotated[
-        PubSubGatewayProtocol, Depends(get_pubsub_gateway)
-    ],
+    pubsub_gateway: Annotated[PubSubGatewayProtocol, Depends(get_pubsub_gateway)],
     day_context_handler: Annotated[
         GetDayContextHandler, Depends(day_context_handler_websocket)
+    ],
+    create_or_get_day_handler: Annotated[
+        CreateOrGetDayHandler, Depends(get_create_or_get_day_handler_websocket)
     ],
     incremental_changes_handler_ws: Annotated[
         GetIncrementalChangesHandler,
@@ -269,6 +275,7 @@ async def days_context_websocket(
                 _handle_client_messages(
                     websocket,
                     day_context_handler,
+                    create_or_get_day_handler,
                     incremental_changes_handler_ws,
                     today_date,
                 )
@@ -312,6 +319,7 @@ async def days_context_websocket(
 async def _handle_client_messages(
     websocket: WebSocket,
     get_day_context_handler: GetDayContextHandler,
+    create_or_get_day_handler: CreateOrGetDayHandler,
     get_incremental_changes_handler: GetIncrementalChangesHandler,
     today_date: date,
 ) -> None:
@@ -374,9 +382,23 @@ async def _handle_client_messages(
             else:
                 # Full sync
                 try:
-                    context = await get_day_context_handler.get_day_context(
-                        date=today_date
-                    )
+                    try:
+                        context = await get_day_context_handler.get_day_context(
+                            date=today_date
+                        )
+                    except NotFoundError:
+                        try:
+                            await create_or_get_day_handler.create_or_get_day(
+                                date=today_date
+                            )
+                        except Exception as create_error:
+                            logger.warning(
+                                "Failed to create day in websocket sync: "
+                                f"{create_error}"
+                            )
+                        context = await get_day_context_handler.get_day_context(
+                            date=today_date
+                        )
 
                     # Get most recent audit log timestamp
                     from lykke.domain import value_objects
@@ -392,6 +414,9 @@ async def _handle_client_messages(
                             audit_logs, key=lambda x: x.occurred_at, reverse=True
                         )
                         last_audit_timestamp = sorted_logs[0].occurred_at
+
+                    if last_audit_timestamp is None:
+                        last_audit_timestamp = dt_datetime.now(UTC)
 
                     response = WebSocketSyncResponseSchema(
                         day_context=map_day_context_to_schema(context),

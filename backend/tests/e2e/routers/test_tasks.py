@@ -104,7 +104,7 @@ async def test_punt_task_action(authenticated_client, test_date):
 @pytest.mark.asyncio
 async def test_complete_task_broadcasts_audit_log(authenticated_client, test_date):
     """Test that completing a task via API broadcasts audit log to PubSub.
-    
+
     This is a regression test for a bug where the UnitOfWorkFactory
     was not initialized with a PubSubGateway, causing audit logs
     to not be broadcast when tasks were completed via the API.
@@ -128,7 +128,7 @@ async def test_complete_task_broadcasts_audit_log(authenticated_client, test_dat
 
     # Set up PubSub subscription BEFORE making the API call
     pubsub_gateway = RedisPubSubGateway()
-    
+
     try:
         async with pubsub_gateway.subscribe_to_user_channel(
             user_id=user.id, channel_type="auditlog"
@@ -149,7 +149,7 @@ async def test_complete_task_broadcasts_audit_log(authenticated_client, test_dat
 
             # Verify the audit log was broadcast via PubSub
             received = await subscription.get_message(timeout=2.0)
-            
+
             # This assertion would fail before the fix because
             # get_unit_of_work_factory() wasn't passing pubsub_gateway
             assert received is not None, (
@@ -157,7 +157,7 @@ async def test_complete_task_broadcasts_audit_log(authenticated_client, test_dat
                 "This likely means the UnitOfWorkFactory was not "
                 "initialized with a PubSubGateway."
             )
-            
+
             # Verify the broadcast message content
             assert received["activity_type"] == "TaskCompletedEvent"
             assert received["entity_id"] == str(test_task.id)
@@ -189,7 +189,7 @@ async def test_punt_task_broadcasts_audit_log(authenticated_client, test_date):
 
     # Set up PubSub subscription BEFORE making the API call
     pubsub_gateway = RedisPubSubGateway()
-    
+
     try:
         async with pubsub_gateway.subscribe_to_user_channel(
             user_id=user.id, channel_type="auditlog"
@@ -210,13 +210,13 @@ async def test_punt_task_broadcasts_audit_log(authenticated_client, test_date):
 
             # Verify the audit log was broadcast via PubSub
             received = await subscription.get_message(timeout=2.0)
-            
+
             assert received is not None, (
                 "Audit log was not broadcast via PubSub for punt action. "
                 "This likely means the UnitOfWorkFactory was not "
                 "initialized with a PubSubGateway."
             )
-            
+
             # Verify the broadcast message content
             assert received["activity_type"] == "TaskPuntedEvent"
             assert received["entity_id"] == str(test_task.id)

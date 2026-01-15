@@ -9,6 +9,7 @@ import pytest
 from fastapi import WebSocket
 from fastapi.testclient import TestClient
 
+from lykke.core.config import settings
 from lykke.domain.entities import CalendarEntryEntity, TaskEntity
 from lykke.domain.value_objects.task import (
     TaskCategory,
@@ -19,13 +20,19 @@ from lykke.domain.value_objects.task import (
 from lykke.infrastructure.repositories import CalendarEntryRepository, TaskRepository
 
 
+API_PREFIX = settings.API_PREFIX.rstrip("/")
+WS_CONTEXT_PATH = (
+    f"{API_PREFIX}/days/today/context" if API_PREFIX else "/days/today/context"
+)
+
+
 @pytest.mark.asyncio
 async def test_websocket_connection_and_authentication(authenticated_client, test_date):
     """Test WebSocket connection and authentication."""
     client, user = await authenticated_client()
 
     # Connect to WebSocket (authentication is handled via dependency override)
-    with client.websocket_connect("/api/days/today/context") as websocket:
+    with client.websocket_connect(WS_CONTEXT_PATH) as websocket:
         # Should receive connection acknowledgment
         message = websocket.receive_json()
         assert message["type"] == "connection_ack"
@@ -51,9 +58,7 @@ async def test_full_sync_request(authenticated_client, test_date):
     )
     await task_repo.put(test_task)
 
-    with client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as websocket:
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
         ack = websocket.receive_json()
         assert ack["type"] == "connection_ack"
@@ -95,9 +100,7 @@ async def test_incremental_sync_request(authenticated_client, test_date):
     )
     await task_repo.put(initial_task)
 
-    with client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as websocket:
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
         ack = websocket.receive_json()
         assert ack["type"] == "connection_ack"
@@ -164,9 +167,7 @@ async def test_realtime_task_update_notification(authenticated_client, test_date
     )
     await task_repo.put(test_task)
 
-    with client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as websocket:
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
         ack = websocket.receive_json()
         assert ack["type"] == "connection_ack"
@@ -184,21 +185,17 @@ async def test_realtime_task_update_notification(authenticated_client, test_date
         from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 
         # Get Redis pool from app state
-        redis_pool = getattr(client.app.app.state, "redis_pool", None)
+        redis_pool = getattr(client.app.state, "redis_pool", None)
         pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
         uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
 
-        handler = RecordTaskActionHandler(
-            task_repo, uow_factory, user.id
-        )
-        await handler.record_task_action(
-            task_id=test_task.id, action="complete"
-        )
+        handler = RecordTaskActionHandler(task_repo, uow_factory, user.id)
+        await handler.record_task_action(task_id=test_task.id, action="complete")
 
         # Wait for real-time event (with timeout)
         try:
             # The backend should send a sync_response with entity changes
-            event = websocket.receive_json(timeout=2.0)
+            event = websocket.receive_json()
             assert event["type"] == "sync_response"
             assert event["changes"] is not None
             assert len(event["changes"]) > 0
@@ -210,7 +207,7 @@ async def test_realtime_task_update_notification(authenticated_client, test_date
             # Verify the change includes entity data (for updated tasks)
             task_change = next(
                 (c for c in event["changes"] if c["entity_id"] == str(test_task.id)),
-                None
+                None,
             )
             assert task_change is not None
             assert task_change["change_type"] == "updated"
@@ -226,9 +223,7 @@ async def test_realtime_task_creation_notification(authenticated_client, test_da
     """Test that task creation triggers real-time notifications."""
     client, user = await authenticated_client()
 
-    with client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as websocket:
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
         ack = websocket.receive_json()
         assert ack["type"] == "connection_ack"
@@ -255,7 +250,7 @@ async def test_realtime_task_creation_notification(authenticated_client, test_da
 
         # Wait for real-time event
         try:
-            event = websocket.receive_json(timeout=2.0)
+            event = websocket.receive_json()
             assert event["type"] == "sync_response"
             assert event["changes"] is not None
             assert len(event["changes"]) > 0
@@ -286,9 +281,7 @@ async def test_realtime_task_deletion_notification(authenticated_client, test_da
     )
     await task_repo.put(test_task)
 
-    with client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as websocket:
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
         ack = websocket.receive_json()
         assert ack["type"] == "connection_ack"
@@ -304,7 +297,7 @@ async def test_realtime_task_deletion_notification(authenticated_client, test_da
 
         # Wait for real-time event
         try:
-            event = websocket.receive_json(timeout=2.0)
+            event = websocket.receive_json()
             assert event["type"] == "sync_response"
             assert event["changes"] is not None
             assert len(event["changes"]) > 0
@@ -312,7 +305,7 @@ async def test_realtime_task_deletion_notification(authenticated_client, test_da
             # Verify the change is for our deleted task
             task_change = next(
                 (c for c in event["changes"] if c["entity_id"] == str(test_task.id)),
-                None
+                None,
             )
             assert task_change is not None
             assert task_change["change_type"] == "deleted"
@@ -326,11 +319,12 @@ async def test_realtime_calendar_entry_update(authenticated_client, test_date):
     client, user = await authenticated_client()
 
     # Create a test calendar entry
+    from uuid import NAMESPACE_DNS, uuid5
+
     from lykke.domain.value_objects.task import TaskFrequency
-    from uuid import uuid5, NAMESPACE_DNS
-    
+
     calendar_repo = CalendarEntryRepository(user_id=user.id)
-    
+
     # Create calendar entry with required fields
     test_entry = CalendarEntryEntity(
         id=uuid4(),
@@ -346,9 +340,7 @@ async def test_realtime_calendar_entry_update(authenticated_client, test_date):
     )
     await calendar_repo.put(test_entry)
 
-    with client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as websocket:
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
         ack = websocket.receive_json()
         assert ack["type"] == "connection_ack"
@@ -365,7 +357,7 @@ async def test_realtime_calendar_entry_update(authenticated_client, test_date):
 
         # Wait for real-time event
         try:
-            event = websocket.receive_json(timeout=2.0)
+            event = websocket.receive_json()
             assert event["type"] == "sync_response"
             assert event["changes"] is not None
             assert len(event["changes"]) > 0
@@ -398,6 +390,7 @@ async def test_filtering_other_days_entities(authenticated_client, test_date):
 
     # Create a task for tomorrow
     from datetime import timedelta
+
     tomorrow_date = test_date + timedelta(days=1)
     tomorrow_task = TaskEntity(
         id=uuid4(),
@@ -411,9 +404,7 @@ async def test_filtering_other_days_entities(authenticated_client, test_date):
     )
     await task_repo.put(tomorrow_task)
 
-    with client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as websocket:
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
         ack = websocket.receive_json()
         assert ack["type"] == "connection_ack"
@@ -435,7 +426,7 @@ async def test_filtering_other_days_entities(authenticated_client, test_date):
 
         # Should NOT receive an event (filtered out)
         try:
-            event = websocket.receive_json(timeout=1.0)
+            event = websocket.receive_json()
             # If we get an event, it should NOT be for tomorrow's task
             if event.get("type") == "sync_response":
                 changes = event.get("changes", [])
@@ -467,11 +458,10 @@ async def test_multiple_websocket_connections(authenticated_client, test_date):
     await task_repo.put(test_task)
 
     # Connect two WebSocket clients
-    with client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as ws1, client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as ws2:
+    with (
+        client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as ws1,
+        client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as ws2,
+    ):
         # Both should receive connection acks
         ack1 = ws1.receive_json()
         ack2 = ws2.receive_json()
@@ -501,8 +491,8 @@ async def test_multiple_websocket_connections(authenticated_client, test_date):
 
         # Both should receive events
         try:
-            event1 = ws1.receive_json(timeout=2.0)
-            event2 = ws2.receive_json(timeout=2.0)
+            event1 = ws1.receive_json()
+            event2 = ws2.receive_json()
             assert event1["type"] == "sync_response"
             assert event2["type"] == "sync_response"
             assert event1["changes"] is not None
@@ -516,9 +506,7 @@ async def test_sync_detection_out_of_sync(authenticated_client, test_date):
     """Test that out-of-sync detection works correctly."""
     client, user = await authenticated_client()
 
-    with client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as websocket:
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
         ack = websocket.receive_json()
         assert ack["type"] == "connection_ack"
@@ -549,7 +537,7 @@ async def test_sync_detection_out_of_sync(authenticated_client, test_date):
 
         # Wait for event
         try:
-            event = websocket.receive_json(timeout=2.0)
+            event = websocket.receive_json()
             if event.get("type") == "sync_response":
                 # Verify timestamp is present for sync detection
                 assert "last_audit_log_timestamp" in event
@@ -563,9 +551,7 @@ async def test_error_handling_invalid_request(authenticated_client, test_date):
     """Test error handling for invalid requests."""
     client, user = await authenticated_client()
 
-    with client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as websocket:
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
         ack = websocket.receive_json()
         assert ack["type"] == "connection_ack"
@@ -587,9 +573,7 @@ async def test_websocket_reconnection_scenario(authenticated_client, test_date):
     client, user = await authenticated_client()
 
     # First connection
-    with client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as ws1:
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as ws1:
         ack1 = ws1.receive_json()
         assert ack1["type"] == "connection_ack"
 
@@ -615,9 +599,7 @@ async def test_websocket_reconnection_scenario(authenticated_client, test_date):
     # Simulate reconnection - new WebSocket connection
     await asyncio.sleep(0.1)  # Small delay to ensure audit log is created
 
-    with client.websocket_connect(
-        f"/api/days/today/context?token={user.id}"
-    ) as ws2:
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as ws2:
         ack2 = ws2.receive_json()
         assert ack2["type"] == "connection_ack"
 
@@ -632,7 +614,5 @@ async def test_websocket_reconnection_scenario(authenticated_client, test_date):
         assert response2["changes"] is not None
 
         # Verify task1 is in the changes
-        change_entity_ids = [
-            change["entity_id"] for change in response2["changes"]
-        ]
+        change_entity_ids = [change["entity_id"] for change in response2["changes"]]
         assert str(task1.id) in change_entity_ids
