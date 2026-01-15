@@ -49,13 +49,13 @@ const PushSubscriptionPreview: Component<PushSubscriptionPreviewProps> = (
                 {truncateEndpoint(props.subscription.endpoint)}
               </div>
             </div>
-            <Show when={props.subscription.createdAt}>
+            <Show when={props.subscription.created_at}>
               <div>
                 <label class="text-sm font-medium text-neutral-500">
                   Created
                 </label>
                 <div class="mt-1 text-base text-neutral-900">
-                  {formatDate(props.subscription.createdAt)}
+                  {formatDate(props.subscription.created_at)}
                 </div>
               </div>
             </Show>

@@ -25,7 +25,7 @@ export const TaskStorage = {
   },
 
   saveTask(task: Task) {
-    const taskDate = task.scheduled_date ?? task.date;
+    const taskDate = task.scheduled_date;
     if (!taskDate) {
       throw new Error("Task is missing a scheduled date");
     }

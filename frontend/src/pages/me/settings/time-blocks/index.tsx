@@ -9,7 +9,7 @@ const TimeBlocksPage: Component = () => {
   const navigate = useNavigate();
   const [timeBlockDefinitions] = createResource(timeBlockDefinitionAPI.getAll);
 
-  const handleNavigate = (id?: string) => {
+  const handleNavigate = (id?: string | null) => {
     if (!id) return;
     navigate(`/me/settings/time-blocks/${id}`);
   };

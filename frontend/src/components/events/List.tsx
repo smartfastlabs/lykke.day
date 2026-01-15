@@ -80,11 +80,6 @@ const TimedEventItem: Component<{ event: Event }> = (props) => {
             </span>
           </div>
         </div>
-        <Show when={props.event.people?.length}>
-          <span class="text-xs text-gray-400 truncate max-w-24">
-            {props.event.people!.map((p) => p.name).join(", ")}
-          </span>
-        </Show>
       </div>
     </div>
   );

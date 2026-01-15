@@ -83,9 +83,9 @@ interface EntityChange {
 }
 
 export function StreamingDataProvider(props: ParentProps) {
-  const [dayContextStore, setDayContextStore] = createStore<
-    DayContext | undefined
-  >(undefined);
+  const [dayContextStore, setDayContextStore] = createStore<{
+    data: DayContext | undefined;
+  }>({ data: undefined });
   const [isLoading, setIsLoading] = createSignal(true);
   const [error, setError] = createSignal<Error | undefined>(undefined);
   const [isConnected, setIsConnected] = createSignal(false);
@@ -100,12 +100,12 @@ export function StreamingDataProvider(props: ParentProps) {
   let isMounted = false;
 
   // Derived values from the store
-  const dayContext = createMemo(() => dayContextStore);
-  const tasks = createMemo(() => dayContextStore?.tasks ?? []);
+  const dayContext = createMemo(() => dayContextStore.data);
+  const tasks = createMemo(() => dayContextStore.data?.tasks ?? []);
   const events = createMemo(
-    () => dayContextStore?.calendar_entries ?? dayContextStore?.events ?? []
+    () => dayContextStore.data?.calendar_entries ?? dayContextStore.data?.events ?? []
   );
-  const day = createMemo(() => dayContextStore?.day);
+  const day = createMemo(() => dayContextStore.data?.day);
 
   // Get auth token from cookie
   const getCookie = (name: string): string | null => {
@@ -234,7 +234,7 @@ export function StreamingDataProvider(props: ParentProps) {
 
     if (message.day_context) {
       // Full context - replace store
-      setDayContextStore(message.day_context);
+      setDayContextStore({ data: message.day_context });
       if (message.last_audit_log_timestamp) {
         setLastProcessedTimestamp(message.last_audit_log_timestamp);
       }
@@ -251,14 +251,14 @@ export function StreamingDataProvider(props: ParentProps) {
   // Apply incremental changes to store
   const applyChanges = (changes: EntityChange[]) => {
     setDayContextStore((current) => {
-      if (!current) {
+      if (!current.data) {
         // If no current context, we can't apply incremental changes
         // This shouldn't happen, but request full sync if it does
         requestFullSync();
         return current;
       }
 
-      const updated = { ...current };
+      const updated = { ...current.data };
       const updatedTasks = [...(updated.tasks ?? [])];
       const updatedEvents = [
         ...(updated.calendar_entries ?? updated.events ?? []),
@@ -312,7 +312,7 @@ export function StreamingDataProvider(props: ParentProps) {
       updated.calendar_entries = updatedEvents;
       updated.events = updatedEvents;
 
-      return updated;
+      return { data: updated };
     });
   };
 
@@ -389,9 +389,9 @@ export function StreamingDataProvider(props: ParentProps) {
     } else if (changeType === "deleted") {
       // Apply deletion immediately
       setDayContextStore((current) => {
-        if (!current) return current;
+        if (!current.data) return current;
 
-        const updated = { ...current };
+        const updated = { ...current.data };
         if (auditLog.entity_type === "task") {
           updated.tasks = (updated.tasks ?? []).filter(
             (t) => t.id !== auditLog.entity_id
@@ -403,7 +403,7 @@ export function StreamingDataProvider(props: ParentProps) {
           updated.events = updated.calendar_entries;
         }
 
-        return updated;
+        return { data: updated };
       });
     }
   };
@@ -411,12 +411,14 @@ export function StreamingDataProvider(props: ParentProps) {
   // Optimistically update a task in the local state
   const updateTaskLocally = (updatedTask: Task) => {
     setDayContextStore((current) => {
-      if (!current) return current;
+      if (!current.data) return current;
       return {
-        ...current,
-        tasks: (current.tasks ?? []).map((t) =>
-          t.id === updatedTask.id ? updatedTask : t
-        ),
+        data: {
+          ...current.data,
+          tasks: (current.data.tasks ?? []).map((t) =>
+            t.id === updatedTask.id ? updatedTask : t
+          ),
+        },
       };
     });
   };

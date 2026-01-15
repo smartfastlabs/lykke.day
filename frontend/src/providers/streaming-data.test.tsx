@@ -225,22 +225,19 @@ describe("StreamingDataProvider", () => {
         id: "day-1",
         user_id: "user-1",
         date: "2026-01-15",
-        created_at: "2026-01-15T00:00:00Z",
-        updated_at: "2026-01-15T00:00:00Z",
+        status: "IN_PROGRESS",
       },
       tasks: [
         {
           id: "task-1",
           user_id: "user-1",
-          title: "Test Task",
-          status: "incomplete" as TaskStatus,
-          created_at: "2026-01-15T00:00:00Z",
-          updated_at: "2026-01-15T00:00:00Z",
+          name: "Test Task",
+          status: "NOT_STARTED" as TaskStatus,
           scheduled_date: "2026-01-15",
+          type: "WORK",
+          category: "WORK",
+          frequency: "ONCE",
           description: null,
-          duration: null,
-          scheduled_time: null,
-          priority: null,
         },
       ],
       calendar_entries: [],
@@ -300,15 +297,13 @@ describe("StreamingDataProvider", () => {
       const newTask: Task = {
         id: "task-2",
         user_id: "user-1",
-        title: "New Task",
-        status: "incomplete",
-        created_at: "2026-01-15T01:00:00Z",
-        updated_at: "2026-01-15T01:00:00Z",
+        name: "New Task",
+        status: "NOT_STARTED",
         scheduled_date: "2026-01-15",
+        type: "WORK",
+        category: "WORK",
+        frequency: "ONCE",
         description: null,
-        duration: null,
-        scheduled_time: null,
-        priority: null,
       };
 
       ws.simulateMessage({
@@ -352,8 +347,8 @@ describe("StreamingDataProvider", () => {
       });
 
       const updatedTask: Task = {
-        ...mockDayContext.tasks[0],
-        title: "Updated Task",
+        ...mockDayContext.tasks![0],
+        name: "Updated Task",
       };
 
       ws.simulateMessage({
@@ -420,22 +415,19 @@ describe("StreamingDataProvider", () => {
         id: "day-1",
         user_id: "user-1",
         date: "2026-01-15",
-        created_at: "2026-01-15T00:00:00Z",
-        updated_at: "2026-01-15T00:00:00Z",
+        status: "IN_PROGRESS",
       },
       tasks: [
         {
           id: "task-1",
           user_id: "user-1",
-          title: "Test Task",
-          status: "incomplete" as TaskStatus,
-          created_at: "2026-01-15T00:00:00Z",
-          updated_at: "2026-01-15T00:00:00Z",
+          name: "Test Task",
+          status: "NOT_STARTED" as TaskStatus,
           scheduled_date: "2026-01-15",
+          type: "WORK",
+          category: "WORK",
+          frequency: "ONCE",
           description: null,
-          duration: null,
-          scheduled_time: null,
-          priority: null,
         },
       ],
       calendar_entries: [],
@@ -585,22 +577,19 @@ describe("StreamingDataProvider", () => {
         id: "day-1",
         user_id: "user-1",
         date: "2026-01-15",
-        created_at: "2026-01-15T00:00:00Z",
-        updated_at: "2026-01-15T00:00:00Z",
+        status: "IN_PROGRESS",
       },
       tasks: [
         {
           id: "task-1",
           user_id: "user-1",
-          title: "Test Task",
-          status: "incomplete" as TaskStatus,
-          created_at: "2026-01-15T00:00:00Z",
-          updated_at: "2026-01-15T00:00:00Z",
+          name: "Test Task",
+          status: "NOT_STARTED" as TaskStatus,
           scheduled_date: "2026-01-15",
+          type: "WORK",
+          category: "WORK",
+          frequency: "ONCE",
           description: null,
-          duration: null,
-          scheduled_time: null,
-          priority: null,
         },
       ],
       calendar_entries: [],
@@ -610,8 +599,8 @@ describe("StreamingDataProvider", () => {
     it("should optimistically update task status", async () => {
       const { taskAPI } = await import("@/utils/api");
       (taskAPI.setTaskStatus as any).mockResolvedValue({
-        ...mockDayContext.tasks[0],
-        status: "complete",
+        ...mockDayContext.tasks![0],
+        status: "COMPLETE",
       });
 
       let context: ReturnType<typeof useStreamingData> | null = null;
@@ -649,10 +638,10 @@ describe("StreamingDataProvider", () => {
       });
 
       // Update task status
-      await context!.setTaskStatus(mockDayContext.tasks[0], "complete");
+      await context!.setTaskStatus(mockDayContext.tasks![0], "COMPLETE");
 
       await waitFor(() => {
-        expect(getByTestId("task-status").textContent).toBe("complete");
+        expect(getByTestId("task-status").textContent).toBe("COMPLETE");
       });
     });
 
@@ -698,13 +687,13 @@ describe("StreamingDataProvider", () => {
 
       // Try to update task status
       try {
-        await context!.setTaskStatus(mockDayContext.tasks[0], "complete");
+        await context!.setTaskStatus(mockDayContext.tasks![0], "COMPLETE");
       } catch (error) {
         // Expected error
       }
 
       await waitFor(() => {
-        expect(getByTestId("task-status").textContent).toBe("incomplete");
+        expect(getByTestId("task-status").textContent).toBe("NOT_STARTED");
       });
     });
   });

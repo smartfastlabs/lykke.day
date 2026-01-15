@@ -9,7 +9,7 @@ const CalendarsPage: Component = () => {
   const navigate = useNavigate();
   const [calendars] = createResource(calendarAPI.getAll);
 
-  const handleNavigate = (id?: string) => {
+  const handleNavigate = (id?: string | null) => {
     if (!id) return;
     navigate(`/me/settings/calendars/${id}`);
   };

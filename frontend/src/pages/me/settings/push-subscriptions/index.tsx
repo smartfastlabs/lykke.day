@@ -19,7 +19,7 @@ const PushSubscriptionsPage: Component = () => {
   const [error, setError] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
 
-  const handleNavigate = (id?: string) => {
+  const handleNavigate = (id?: string | null) => {
     if (!id) return;
     navigate(`/me/settings/push-subscriptions/${id}`);
   };
