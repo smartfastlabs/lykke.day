@@ -489,6 +489,8 @@ async def _handle_realtime_events(
                     elif (
                         "Updated" in audit_log_entity.activity_type
                         or audit_log_entity.activity_type == "EntityUpdatedEvent"
+                        or audit_log_entity.activity_type == "TaskCompletedEvent"
+                        or audit_log_entity.activity_type == "TaskPuntedEvent"
                     ):
                         change_type = "updated"
                     else:

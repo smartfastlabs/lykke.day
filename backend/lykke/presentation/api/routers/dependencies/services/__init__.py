@@ -195,7 +195,9 @@ def get_schedule_day_handler(
 
 # For WebSocket routes - use get_current_user_from_token
 async def get_schedule_day_handler_websocket(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory_websocket)],
+    uow_factory: Annotated[
+        UnitOfWorkFactory, Depends(get_unit_of_work_factory_websocket)
+    ],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
@@ -210,7 +212,9 @@ async def get_schedule_day_handler_websocket(
 
 
 async def get_create_or_get_day_handler_websocket(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory_websocket)],
+    uow_factory: Annotated[
+        UnitOfWorkFactory, Depends(get_unit_of_work_factory_websocket)
+    ],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],

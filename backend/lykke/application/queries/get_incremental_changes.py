@@ -65,6 +65,8 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
             elif (
                 "Updated" in audit_log.activity_type
                 or audit_log.activity_type == "EntityUpdatedEvent"
+                or audit_log.activity_type == "TaskCompletedEvent"
+                or audit_log.activity_type == "TaskPuntedEvent"
             ):
                 change_type = "updated"
             else:
