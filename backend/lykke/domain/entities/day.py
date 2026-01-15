@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC
-from datetime import date as dt_date
-from datetime import datetime
+from datetime import UTC, date as dt_date, datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 from lykke.core.exceptions import DomainError
+from lykke.domain.entities.day_template import DayTemplateEntity
 
 from .. import value_objects
 from ..events.day_events import (
@@ -16,15 +15,13 @@ from ..events.day_events import (
     DayScheduledEvent,
     DayUnscheduledEvent,
 )
-from ..value_objects.update import DayUpdateObject
 from ..events.task_events import (
     TaskActionRecordedEvent,
     TaskCompletedEvent,
     TaskPuntedEvent,
     TaskStatusChangedEvent,
 )
-from lykke.domain.entities.day_template import DayTemplateEntity
-
+from ..value_objects.update import DayUpdateObject
 from .base import BaseEntityObject
 from .task import TaskEntity
 
@@ -75,8 +72,8 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
         cls,
         date: dt_date,
         user_id: UUID,
-        template: "DayTemplateEntity",
-    ) -> "DayEntity":
+        template: DayTemplateEntity,
+    ) -> DayEntity:
         """Create a new day for the given date and user.
 
         Factory method for creating days. This is the preferred way to create
@@ -98,7 +95,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
             alarm=template.alarm,
         )
 
-    def schedule(self, template: "DayTemplateEntity") -> None:
+    def schedule(self, template: DayTemplateEntity) -> None:
         """Schedule the day with the given template.
 
         This method enforces the business rule that only unscheduled days
@@ -165,7 +162,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
         self.status = value_objects.DayStatus.COMPLETE
         self._add_event(DayCompletedEvent(day_id=self.id, date=self.date))
 
-    def update_template(self, template: "DayTemplateEntity") -> None:
+    def update_template(self, template: DayTemplateEntity) -> None:
         """Update the day's template.
 
         Args:
@@ -177,8 +174,8 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
             self.alarm = template.alarm
 
     def record_task_action(
-        self, task: "TaskEntity", action: "value_objects.Action"
-    ) -> "TaskEntity":
+        self, task: TaskEntity, action: value_objects.Action
+    ) -> TaskEntity:
         """Record an action on a task within this day aggregate.
 
         This method ensures all task modifications go through the Day aggregate root.
@@ -215,6 +212,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
                 TaskCompletedEvent(
                     task_id=task.id,
                     completed_at=task.completed_at.isoformat(),
+                    task_scheduled_date=task.scheduled_date.isoformat(),
                 )
             )
 
@@ -227,7 +225,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
                     new_status=task.status.value,
                 )
             )
-            
+
             # Emit specific event for PUNT status changes (for audit logging)
             if task.status == value_objects.TaskStatus.PUNT:
                 self._add_event(
@@ -235,6 +233,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
                         task_id=task.id,
                         old_status=old_status.value,
                         new_status=task.status.value,
+                        task_scheduled_date=task.scheduled_date.isoformat(),
                     )
                 )
 

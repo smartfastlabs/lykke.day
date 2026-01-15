@@ -793,12 +793,18 @@ def _build_entity_snapshot(entity: BaseEntityObject) -> dict[str, Any]:
 def _attach_entity_snapshot(
     meta: dict[str, Any] | None, entity_snapshot: dict[str, Any]
 ) -> dict[str, Any]:
-    """Attach entity snapshot data to audit log meta."""
+    """Attach entity snapshot data to audit log meta.
+    
+    Only attaches if entity_data is not already present in meta.
+    This allows custom to_audit_log() implementations to provide their own entity_data.
+    """
     if not entity_snapshot:
         return meta or {}
 
     merged = dict(meta) if meta else {}
-    merged["entity_data"] = entity_snapshot
+    # Only attach if entity_data is not already set
+    if "entity_data" not in merged:
+        merged["entity_data"] = entity_snapshot
     return merged
 
 

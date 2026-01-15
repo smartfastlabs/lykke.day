@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 from uuid import UUID
 
+from lykke.domain.entities.audit_log import AuditLogEntity
 from lykke.domain.value_objects.update import TaskDefinitionUpdateObject
 
 from .base import AuditedEvent, DomainEvent, EntityUpdatedEvent
@@ -48,6 +50,41 @@ class TaskPuntedEvent(DomainEvent, AuditedEvent):
     task_id: UUID
     old_status: str
     new_status: str
+    task_scheduled_date: str | None = None  # ISO format date string
+
+    def to_audit_log(self, user_id: UUID) -> AuditLogEntity:
+        """Create audit log with task-specific entity_data.
+
+        Since this event is raised by the Day aggregate but refers to a Task,
+        we need to ensure entity_data contains task information, not day information.
+        """
+        from lykke.domain.entities.audit_log import AuditLogEntity
+
+        # Build meta with event fields
+        meta: dict[str, Any] = {
+            "task_id": str(self.task_id),
+            "old_status": self.old_status,
+            "new_status": self.new_status,
+        }
+
+        # Build entity_data with task information
+        entity_data: dict[str, Any] = {
+            "id": str(self.task_id),
+            "user_id": str(user_id),
+        }
+
+        if self.task_scheduled_date:
+            entity_data["scheduled_date"] = self.task_scheduled_date
+
+        meta["entity_data"] = entity_data
+
+        return AuditLogEntity(
+            user_id=user_id,
+            activity_type=self.__class__.__name__,
+            entity_id=self.task_id,
+            entity_type="task",
+            meta=meta,
+        )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -56,6 +93,40 @@ class TaskCompletedEvent(DomainEvent, AuditedEvent):
 
     task_id: UUID
     completed_at: str  # ISO format datetime string
+    task_scheduled_date: str | None = None  # ISO format date string
+
+    def to_audit_log(self, user_id: UUID) -> AuditLogEntity:
+        """Create audit log with task-specific entity_data.
+
+        Since this event is raised by the Day aggregate but refers to a Task,
+        we need to ensure entity_data contains task information, not day information.
+        """
+        from lykke.domain.entities.audit_log import AuditLogEntity
+
+        # Build meta with event fields
+        meta: dict[str, Any] = {
+            "task_id": str(self.task_id),
+            "completed_at": self.completed_at,
+        }
+
+        # Build entity_data with task information
+        entity_data: dict[str, Any] = {
+            "id": str(self.task_id),
+            "user_id": str(user_id),
+        }
+
+        if self.task_scheduled_date:
+            entity_data["scheduled_date"] = self.task_scheduled_date
+
+        meta["entity_data"] = entity_data
+
+        return AuditLogEntity(
+            user_id=user_id,
+            activity_type=self.__class__.__name__,
+            entity_id=self.task_id,
+            entity_type="task",
+            meta=meta,
+        )
 
 
 @dataclass(frozen=True, kw_only=True)
