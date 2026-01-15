@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to run all frontend and backend checks
+# Script to run all frontend and backend checks in parallel
 # Continue running all checks even if one fails
 
 # Colors for output
@@ -17,51 +17,84 @@ echo "Running all checks for planned.day"
 echo "=========================================="
 echo ""
 
-# Backend checks
-echo -e "${YELLOW}Running backend checks...${NC}"
-echo "----------------------------------------"
+# Function to run backend checks
+run_backend_checks() {
+    local backend_failed=0
+    echo -e "${YELLOW}Running backend checks...${NC}"
+    echo "----------------------------------------"
+    
+    cd backend
+    
+    echo -e "\n${YELLOW}→ Running backend typecheck (mypy)...${NC}"
+    if make typecheck; then
+        echo -e "${GREEN}✓ Backend typecheck passed${NC}"
+    else
+        echo -e "${RED}✗ Backend typecheck failed${NC}"
+        backend_failed=1
+    fi
+    
+    echo -e "\n${YELLOW}→ Running backend tests...${NC}"
+    if make test; then
+        echo -e "${GREEN}✓ Backend tests passed${NC}"
+    else
+        echo -e "${RED}✗ Backend tests failed${NC}"
+        backend_failed=1
+    fi
+    
+    echo -e "\n${YELLOW}→ Running backend mapper checks...${NC}"
+    if make check-mappers; then
+        echo -e "${GREEN}✓ Backend mapper checks passed${NC}"
+    else
+        echo -e "${RED}✗ Backend mapper checks failed${NC}"
+        backend_failed=1
+    fi
+    
+    cd ..
+    return $backend_failed
+}
 
-echo -e "\n${YELLOW}→ Running backend typecheck (mypy)...${NC}"
-cd backend
-if make typecheck; then
-    echo -e "${GREEN}✓ Backend typecheck passed${NC}"
-else
-    echo -e "${RED}✗ Backend typecheck failed${NC}"
+# Function to run frontend checks
+run_frontend_checks() {
+    local frontend_failed=0
+    echo -e "${YELLOW}Running frontend checks...${NC}"
+    echo "----------------------------------------"
+    
+    cd frontend
+    
+    echo -e "\n${YELLOW}→ Running frontend checks (type-check, lint, test)...${NC}"
+    if npm run check; then
+        echo -e "${GREEN}✓ Frontend checks passed${NC}"
+    else
+        echo -e "${RED}✗ Frontend checks failed${NC}"
+        frontend_failed=1
+    fi
+    
+    cd ..
+    return $frontend_failed
+}
+
+# Run backend and frontend checks in parallel
+run_backend_checks &
+BACKEND_PID=$!
+
+run_frontend_checks &
+FRONTEND_PID=$!
+
+# Wait for both processes to complete
+wait $BACKEND_PID
+BACKEND_EXIT=$?
+
+wait $FRONTEND_PID
+FRONTEND_EXIT=$?
+
+# Update FAILED flag based on exit codes
+if [ $BACKEND_EXIT -ne 0 ]; then
     FAILED=1
 fi
 
-echo -e "\n${YELLOW}→ Running backend tests...${NC}"
-if make test; then
-    echo -e "${GREEN}✓ Backend tests passed${NC}"
-else
-    echo -e "${RED}✗ Backend tests failed${NC}"
+if [ $FRONTEND_EXIT -ne 0 ]; then
     FAILED=1
 fi
-
-echo -e "\n${YELLOW}→ Running backend mapper checks...${NC}"
-if make check-mappers; then
-    echo -e "${GREEN}✓ Backend mapper checks passed${NC}"
-else
-    echo -e "${RED}✗ Backend mapper checks failed${NC}"
-    FAILED=1
-fi
-cd ..
-
-# Frontend checks
-echo ""
-echo -e "${YELLOW}Running frontend checks...${NC}"
-echo "----------------------------------------"
-cd frontend
-
-echo -e "\n${YELLOW}→ Running frontend checks (type-check, lint, test)...${NC}"
-if npm run check; then
-    echo -e "${GREEN}✓ Frontend checks passed${NC}"
-else
-    echo -e "${RED}✗ Frontend checks failed${NC}"
-    FAILED=1
-fi
-
-cd ..
 
 # Summary
 echo ""

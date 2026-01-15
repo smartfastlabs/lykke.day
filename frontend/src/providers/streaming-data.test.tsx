@@ -634,11 +634,14 @@ describe("StreamingDataProvider", () => {
       });
 
       await waitFor(() => {
-        expect(getByTestId("task-status").textContent).toBe("incomplete");
+        expect(getByTestId("task-status").textContent).toBe("NOT_STARTED");
       });
 
       // Update task status
-      await context!.setTaskStatus(mockDayContext.tasks![0], "COMPLETE");
+      const statusPromise = context!.setTaskStatus(mockDayContext.tasks![0], "COMPLETE");
+      // Flush timers and microtasks to ensure promise resolves
+      await vi.runAllTimersAsync();
+      await statusPromise;
 
       await waitFor(() => {
         expect(getByTestId("task-status").textContent).toBe("COMPLETE");
@@ -682,15 +685,26 @@ describe("StreamingDataProvider", () => {
       });
 
       await waitFor(() => {
-        expect(getByTestId("task-status").textContent).toBe("incomplete");
+        expect(getByTestId("task-status").textContent).toBe("NOT_STARTED");
       });
 
       // Try to update task status
+      const statusPromise = context!.setTaskStatus(mockDayContext.tasks![0], "COMPLETE");
+      // Set up error handler immediately to prevent unhandled rejection
+      let caughtError: Error | undefined;
+      statusPromise.catch((error) => {
+        caughtError = error as Error;
+      });
+      // Flush timers and microtasks to ensure promise resolves/rejects
+      await vi.runAllTimersAsync();
+      // Wait for the promise to settle
       try {
-        await context!.setTaskStatus(mockDayContext.tasks![0], "COMPLETE");
+        await statusPromise;
       } catch (error) {
-        // Expected error
+        // Error already caught above
       }
+      expect(caughtError).toBeDefined();
+      expect(caughtError?.message).toBe("Update failed");
 
       await waitFor(() => {
         expect(getByTestId("task-status").textContent).toBe("NOT_STARTED");
