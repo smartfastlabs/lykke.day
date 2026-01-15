@@ -51,6 +51,9 @@ class TaskPuntedEvent(DomainEvent, AuditedEvent):
     old_status: str
     new_status: str
     task_scheduled_date: str | None = None  # ISO format date string
+    task_name: str | None = None
+    task_type: str | None = None
+    task_category: str | None = None
 
     def to_audit_log(self, user_id: UUID) -> AuditLogEntity:
         """Create audit log with task-specific entity_data.
@@ -71,10 +74,17 @@ class TaskPuntedEvent(DomainEvent, AuditedEvent):
         entity_data: dict[str, Any] = {
             "id": str(self.task_id),
             "user_id": str(user_id),
+            "status": self.new_status,
         }
 
         if self.task_scheduled_date:
             entity_data["scheduled_date"] = self.task_scheduled_date
+        if self.task_name:
+            entity_data["name"] = self.task_name
+        if self.task_type:
+            entity_data["type"] = self.task_type
+        if self.task_category:
+            entity_data["category"] = self.task_category
 
         meta["entity_data"] = entity_data
 
@@ -94,6 +104,9 @@ class TaskCompletedEvent(DomainEvent, AuditedEvent):
     task_id: UUID
     completed_at: str  # ISO format datetime string
     task_scheduled_date: str | None = None  # ISO format date string
+    task_name: str | None = None
+    task_type: str | None = None
+    task_category: str | None = None
 
     def to_audit_log(self, user_id: UUID) -> AuditLogEntity:
         """Create audit log with task-specific entity_data.
@@ -113,10 +126,17 @@ class TaskCompletedEvent(DomainEvent, AuditedEvent):
         entity_data: dict[str, Any] = {
             "id": str(self.task_id),
             "user_id": str(user_id),
+            "status": "COMPLETE",
         }
 
         if self.task_scheduled_date:
             entity_data["scheduled_date"] = self.task_scheduled_date
+        if self.task_name:
+            entity_data["name"] = self.task_name
+        if self.task_type:
+            entity_data["type"] = self.task_type
+        if self.task_category:
+            entity_data["category"] = self.task_category
 
         meta["entity_data"] = entity_data
 

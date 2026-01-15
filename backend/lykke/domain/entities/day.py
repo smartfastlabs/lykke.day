@@ -213,6 +213,9 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
                     task_id=task.id,
                     completed_at=task.completed_at.isoformat(),
                     task_scheduled_date=task.scheduled_date.isoformat(),
+                    task_name=task.name,
+                    task_type=task.type.value,
+                    task_category=task.category.value,
                 )
             )
 
@@ -234,6 +237,9 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
                         old_status=old_status.value,
                         new_status=task.status.value,
                         task_scheduled_date=task.scheduled_date.isoformat(),
+                        task_name=task.name,
+                        task_type=task.type.value,
+                        task_category=task.category.value,
                     )
                 )
 
