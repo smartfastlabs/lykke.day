@@ -60,6 +60,10 @@ def _get_entity_data(audit_log: AuditLogEntity) -> dict[str, Any] | None:
 
 
 def _parse_date_value(value: Any) -> dt_date | None:
+    # Check datetime first since datetime is a subclass of date
+    # If we check date first, datetime objects would pass and be returned as-is
+    if isinstance(value, dt_datetime):
+        return value.date()
     if isinstance(value, dt_date):
         return value
     if isinstance(value, str):

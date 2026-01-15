@@ -8,6 +8,7 @@ from loguru import logger
 from lykke.application.commands.base import BaseCommandHandler
 from lykke.application.queries.preview_day import PreviewDayHandler
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
+from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 
@@ -44,7 +45,7 @@ class RescheduleDayHandler(BaseCommandHandler):
             A DayContext with the rescheduled day and tasks
         """
         logger.info(f"Rescheduling day for {date}")
-        
+
         async with self.new_uow() as uow:
             # Step 1: Delete all existing tasks for this date
             logger.info(f"Deleting existing tasks for {date}")
@@ -61,7 +62,7 @@ class RescheduleDayHandler(BaseCommandHandler):
             try:
                 day = await uow.day_ro_repo.get(day_id)
                 logger.info(f"Found existing day for {date}")
-            except Exception:
+            except NotFoundError:
                 # Day doesn't exist, create it
                 logger.info(f"Creating new day for {date}")
                 user = await uow.user_ro_repo.get(self.user_id)
@@ -102,7 +103,7 @@ class RescheduleDayHandler(BaseCommandHandler):
                 await uow.create(task)
 
             logger.info(f"Successfully rescheduled day for {date}")
-            
+
             return value_objects.DayContext(
                 day=day,
                 tasks=tasks,

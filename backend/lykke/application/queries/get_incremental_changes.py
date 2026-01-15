@@ -99,14 +99,15 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
 
         # If no changes, get the most recent audit log timestamp anyway
         if not last_timestamp:
-            all_logs = await self.audit_log_ro_repo.search(
-                value_objects.AuditLogQuery()
-            )
-            if all_logs:
-                sorted_logs = sorted(
-                    all_logs, key=lambda x: x.occurred_at, reverse=True
+            # Use limit=1 with descending order to fetch only the most recent record
+            # This avoids loading all audit logs into memory
+            recent_logs = await self.audit_log_ro_repo.search(
+                value_objects.AuditLogQuery(
+                    limit=1, order_by="occurred_at", order_by_desc=True
                 )
-                last_timestamp = sorted_logs[0].occurred_at
+            )
+            if recent_logs:
+                last_timestamp = recent_logs[0].occurred_at
 
         return changes, last_timestamp
 
