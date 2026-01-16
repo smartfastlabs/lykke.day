@@ -512,17 +512,21 @@ describe("StreamingDataProvider", () => {
       });
 
       // Advance timer to trigger debounced sync request
-      await vi.advanceTimersByTimeAsync(500);
+      // Advance slightly more than the debounce delay (500ms) to ensure it fires
+      await vi.advanceTimersByTimeAsync(600);
 
-      await waitFor(() => {
-        const sentMessages = ws._sentData.map((d) => JSON.parse(d));
-        const syncRequest = sentMessages.find(
-          (m) => m.type === "sync_request" && m.since_timestamp !== null
-        );
-        expect(syncRequest).toBeDefined();
-        // The timestamp is updated to the audit log's occurred_at before the debounced sync
-        expect(syncRequest?.since_timestamp).toBe("2026-01-15T12:01:00Z");
-      });
+      await waitFor(
+        () => {
+          const sentMessages = ws._sentData.map((d) => JSON.parse(d));
+          const syncRequest = sentMessages.find(
+            (m) => m.type === "sync_request" && m.since_timestamp !== null
+          );
+          expect(syncRequest).toBeDefined();
+          // The timestamp is updated to the audit log's occurred_at before the debounced sync
+          expect(syncRequest?.since_timestamp).toBe("2026-01-15T12:01:00Z");
+        },
+        { timeout: 1000 }
+      );
     });
 
     it("should detect out-of-sync when receiving older events", async () => {

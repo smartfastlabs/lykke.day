@@ -48,8 +48,27 @@ class RescheduleDayHandler(BaseCommandHandler):
 
         async with self.new_uow() as uow:
             # Step 1: Delete all existing tasks for this date
-            logger.info(f"Deleting existing tasks for {date}")
+            # First, verify how many tasks exist before deletion for logging
+            existing_tasks = await uow.task_ro_repo.search(
+                value_objects.TaskQuery(date=date)
+            )
+            logger.info(f"Found {len(existing_tasks)} existing tasks for {date}, deleting...")
+            
             await uow.bulk_delete_tasks(value_objects.TaskQuery(date=date))
+            
+            # Verify deletion worked
+            remaining_tasks = await uow.task_ro_repo.search(
+                value_objects.TaskQuery(date=date)
+            )
+            if remaining_tasks:
+                logger.warning(
+                    f"Warning: {len(remaining_tasks)} tasks still exist after deletion. "
+                    f"Task IDs: {[t.id for t in remaining_tasks]}"
+                )
+                # Force delete any remaining tasks individually as a safeguard
+                for task in remaining_tasks:
+                    await uow.delete(task)
+                logger.info(f"Force deleted {len(remaining_tasks)} remaining tasks")
 
             # Step 2: Delete all audit logs for this date
             # Note: Audit logs are normally immutable, but reschedule is a special case

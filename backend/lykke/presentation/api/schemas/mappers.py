@@ -5,12 +5,15 @@ from dataclasses import asdict
 from lykke.domain import data_objects, value_objects
 from lykke.domain.entities import (
     AuditLogEntity,
+    AuditableEntity,
+    BotPersonalityEntity,
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
     ConversationEntity,
     DayEntity,
     DayTemplateEntity,
+    FactoidEntity,
     MessageEntity,
     RoutineEntity,
     TaskEntity,
@@ -20,6 +23,8 @@ from lykke.presentation.api.schemas import (
     ActionSchema,
     AlarmSchema,
     AuditLogSchema,
+    AuditableSchema,
+    BotPersonalitySchema,
     CalendarEntrySchema,
     CalendarEntrySeriesSchema,
     CalendarSchema,
@@ -28,6 +33,7 @@ from lykke.presentation.api.schemas import (
     DaySchema,
     DayTemplateSchema,
     DayTemplateTimeBlockSchema,
+    FactoidSchema,
     GoalSchema,
     MessageSchema,
     PushSubscriptionSchema,
@@ -366,4 +372,48 @@ def map_audit_log_to_schema(audit_log: AuditLogEntity) -> AuditLogSchema:
         entity_id=audit_log.entity_id,
         entity_type=audit_log.entity_type,
         meta=audit_log.meta,
+    )
+
+
+def map_auditable_to_schema(auditable: AuditableEntity) -> AuditableSchema:
+    """Convert Auditable marker interface to Auditable schema.
+    
+    Note: AuditableEntity is a marker interface with no fields,
+    so this returns an empty schema instance.
+    """
+    return AuditableSchema()
+
+
+def map_bot_personality_to_schema(
+    bot_personality: BotPersonalityEntity,
+) -> BotPersonalitySchema:
+    """Convert BotPersonality entity to BotPersonality schema."""
+    return BotPersonalitySchema(
+        id=bot_personality.id,
+        user_id=bot_personality.user_id,
+        name=bot_personality.name,
+        base_bot_personality_id=bot_personality.base_bot_personality_id,
+        system_prompt=bot_personality.system_prompt,
+        user_amendments=bot_personality.user_amendments,
+        meta=bot_personality.meta,
+        created_at=bot_personality.created_at,
+    )
+
+
+def map_factoid_to_schema(factoid: FactoidEntity) -> FactoidSchema:
+    """Convert Factoid entity to Factoid schema."""
+    return FactoidSchema(
+        id=factoid.id,
+        user_id=factoid.user_id,
+        conversation_id=factoid.conversation_id,
+        factoid_type=factoid.factoid_type.value,
+        criticality=factoid.criticality.value,
+        content=factoid.content,
+        embedding=factoid.embedding,
+        ai_suggested=factoid.ai_suggested,
+        user_confirmed=factoid.user_confirmed,
+        last_accessed=factoid.last_accessed,
+        access_count=factoid.access_count,
+        meta=factoid.meta,
+        created_at=factoid.created_at,
     )

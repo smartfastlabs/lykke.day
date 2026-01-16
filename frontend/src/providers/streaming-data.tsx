@@ -21,6 +21,7 @@ import {
 } from "@/types/api";
 import { taskAPI, goalAPI } from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
+import { getDateString } from "@/utils/dates";
 
 // LocalStorage keys
 const STORAGE_KEYS = {
@@ -132,17 +133,35 @@ export function StreamingDataProvider(props: ParentProps) {
   );
   const cachedRoutines = getFromStorage<Routine[]>(STORAGE_KEYS.ROUTINES);
 
+  // Check if cached day context is for today - if not, clear it
+  const todayDateString = getDateString();
+  const isValidCachedData =
+    cachedDayContext?.day?.date === todayDateString;
+  
+  // Only use cached data if it's for today
+  const validCachedDayContext = isValidCachedData ? cachedDayContext : null;
+  const validCachedLastTimestamp = isValidCachedData ? cachedLastTimestamp : null;
+
+  // If cached data is stale, clear it from localStorage
+  if (cachedDayContext && !isValidCachedData) {
+    console.log(
+      `StreamingDataProvider: Cached data is for ${cachedDayContext.day?.date}, but today is ${todayDateString}. Clearing cache.`
+    );
+    localStorage.removeItem(STORAGE_KEYS.DAY_CONTEXT);
+    localStorage.removeItem(STORAGE_KEYS.LAST_TIMESTAMP);
+  }
+
   const [dayContextStore, setDayContextStore] = createStore<{
     data: DayContext | undefined;
-  }>({ data: cachedDayContext ?? undefined });
-  // Start with isLoading false if we have cached data, true otherwise
-  const [isLoading, setIsLoading] = createSignal(cachedDayContext === null);
+  }>({ data: validCachedDayContext ?? undefined });
+  // Start with isLoading false if we have valid cached data, true otherwise
+  const [isLoading, setIsLoading] = createSignal(validCachedDayContext === null);
   const [error, setError] = createSignal<Error | undefined>(undefined);
   const [isConnected, setIsConnected] = createSignal(false);
   const [isOutOfSync, setIsOutOfSync] = createSignal(false);
   const [lastProcessedTimestamp, setLastProcessedTimestamp] = createSignal<
     string | null
-  >(cachedLastTimestamp ?? null);
+  >(validCachedLastTimestamp ?? null);
 
   // Routines store - separate from day context since routines aren't date-specific
   const [routinesStore, setRoutinesStore] = createStore<{
@@ -206,18 +225,29 @@ export function StreamingDataProvider(props: ParentProps) {
         setError(undefined);
         console.log("StreamingDataProvider: WebSocket connected");
 
-        // If we have cached data with a timestamp, request partial sync
+        // If we have cached data with a timestamp and it's for today, request partial sync
         // Otherwise request full sync
+        // Recalculate today's date in case the page has been open past midnight
+        const currentTodayDate = getDateString();
         const timestamp = lastProcessedTimestamp();
         const hasCachedData = dayContextStore.data !== undefined;
-        if (timestamp && hasCachedData) {
+        const cachedDate = dayContextStore.data?.day?.date;
+        const isCachedDataForToday = cachedDate === currentTodayDate;
+        
+        if (timestamp && hasCachedData && isCachedDataForToday) {
           console.log(
             "StreamingDataProvider: Requesting partial sync since",
             timestamp
           );
           requestIncrementalSync(timestamp);
         } else {
-          console.log("StreamingDataProvider: Requesting full sync");
+          if (hasCachedData && !isCachedDataForToday) {
+            console.log(
+              `StreamingDataProvider: Cached data is for ${cachedDate}, but today is ${currentTodayDate}. Requesting full sync.`
+            );
+          } else {
+            console.log("StreamingDataProvider: Requesting full sync");
+          }
           requestFullSync();
         }
       };

@@ -2,7 +2,9 @@
 
 from .action import ActionSchema
 from .alarm import AlarmSchema
+from .auditable import AuditableSchema
 from .audit_log import AuditLogSchema
+from .bot_personality import BotPersonalitySchema
 from .calendar import (
     CalendarCreateSchema,
     CalendarSchema,
@@ -17,6 +19,7 @@ from .calendar_entry_series import (
 from .conversation import ConversationSchema
 from .day import DaySchema, DayUpdateSchema
 from .day_context import DayContextSchema
+from .factoid import FactoidSchema
 from .goal import GoalSchema
 from .day_template import (
     DayTemplateCreateSchema,
@@ -119,7 +122,9 @@ WebSocketSyncResponseSchema.model_rebuild()
 __all__ = [
     "ActionSchema",
     "AlarmSchema",
+    "AuditableSchema",
     "AuditLogSchema",
+    "BotPersonalitySchema",
     "CalendarCreateSchema",
     "CalendarEntrySchema",
     "CalendarEntrySeriesSchema",
@@ -129,6 +134,7 @@ __all__ = [
     "ConversationSchema",
     "DayContextSchema",
     "DaySchema",
+    "FactoidSchema",
     "GoalSchema",
     "DayTemplateCreateSchema",
     "DayTemplateRoutineCreateSchema",

@@ -435,6 +435,9 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             stmt = delete(self.table)
             if where_clause is not None:
                 stmt = stmt.where(where_clause)
+            
+            # Explicitly apply user scope to ensure proper filtering
+            stmt = self._apply_user_scope_to_mutate(stmt)
 
             await conn.execute(stmt)
 
