@@ -7,7 +7,12 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
 
   const date = createMemo(() => {
     const dayValue = day();
-    return dayValue ? new Date(dayValue.date) : new Date();
+    if (!dayValue) return new Date();
+
+    // Parse date string as local date to avoid timezone issues
+    // e.g., "2026-01-15" should be Jan 15 in local time, not UTC midnight
+    const [year, month, dayNum] = dayValue.date.split("-").map(Number);
+    return new Date(year, month - 1, dayNum); // month is 0-indexed
   });
 
   const weekday = createMemo(() =>
