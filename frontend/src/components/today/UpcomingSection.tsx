@@ -1,4 +1,4 @@
-import { Component, For, Show, createMemo } from "solid-js";
+import { Component, For, Show, createMemo, createSignal, onMount, onCleanup } from "solid-js";
 import { Icon } from "@/components/shared/Icon";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import type { Event, Task } from "@/types/api";
@@ -59,11 +59,11 @@ const getTaskTime = (task: Task): Date | null => {
 const formatCategory = (category?: Event["category"]): string =>
   (category ?? "OTHER").toLowerCase().replace("_", " ");
 
-const EventItem: Component<{ event: Event }> = (props) => {
+const EventItem: Component<{ event: Event; currentTime: () => Date }> = (props) => {
   const icon = () => getTypeIcon("EVENT");
   const categoryLabel = () => formatCategory(props.event.category);
   const isCurrentlyOccurring = createMemo(() => {
-    const now = new Date();
+    const now = props.currentTime();
     const start = new Date(props.event.starts_at);
     const end = props.event.ends_at ? new Date(props.event.ends_at) : null;
     return start <= now && (!end || end >= now);
@@ -126,6 +126,8 @@ const TaskItem: Component<{ task: Task }> = (props) => {
   const isPastDue = createMemo(() => {
     const time = taskTime();
     if (!time) return false;
+    // Note: This uses the current time at render, which is fine for display purposes
+    // The main filtering happens in the parent component with the reactive now() signal
     return time < new Date();
   });
 
@@ -183,10 +185,23 @@ const isAllDayEvent = (event: Event): boolean => {
 };
 
 export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
-  const now = new Date();
-  const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60 * 1000);
+  const [now, setNow] = createSignal(new Date());
+
+  // Update time every 30 seconds to keep the section reactive
+  onMount(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 30000); // Update every 30 seconds
+
+    onCleanup(() => {
+      clearInterval(interval);
+    });
+  });
 
   const upcomingEvents = createMemo(() => {
+    const currentTime = now();
+    const thirtyMinutesFromNow = new Date(currentTime.getTime() + 30 * 60 * 1000);
+    
     return props.events
       .filter((event) => {
         // Exclude all-day events
@@ -198,12 +213,12 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
         const end = event.ends_at ? new Date(event.ends_at) : null;
         
         // Exclude if currently occurring (those go in Right Now section)
-        if (start <= now && (!end || end >= now)) {
+        if (start <= currentTime && (!end || end >= currentTime)) {
           return false;
         }
         
         // Include if starting within next 30 minutes
-        return start >= now && start <= thirtyMinutesFromNow;
+        return start >= currentTime && start <= thirtyMinutesFromNow;
       })
       .sort((a, b) => {
         const aTime = new Date(a.starts_at).getTime();
@@ -213,6 +228,9 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
   });
 
   const upcomingTasks = createMemo(() => {
+    const currentTime = now();
+    const thirtyMinutesFromNow = new Date(currentTime.getTime() + 30 * 60 * 1000);
+    
     return props.tasks
       .filter((task) => {
         // Skip completed or punted tasks
@@ -224,12 +242,12 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
         if (!taskTime) return false;
 
         // Exclude if past due (those go in Right Now section)
-        if (taskTime < now) {
+        if (taskTime < currentTime) {
           return false;
         }
 
         // Include if due within next 30 minutes
-        return taskTime >= now && taskTime <= thirtyMinutesFromNow;
+        return taskTime >= currentTime && taskTime <= thirtyMinutesFromNow;
       })
       .sort((a, b) => {
         const aTime = getTaskTime(a);
@@ -254,7 +272,7 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
         <Show when={upcomingEvents().length > 0}>
           <div class="space-y-3">
             <For each={upcomingEvents()}>
-              {(event) => <EventItem event={event} />}
+              {(event) => <EventItem event={event} currentTime={now} />}
             </For>
           </div>
         </Show>

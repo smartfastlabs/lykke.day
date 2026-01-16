@@ -1,4 +1,12 @@
-import { Component, For, Show, createMemo } from "solid-js";
+import {
+  Component,
+  For,
+  Show,
+  createMemo,
+  createSignal,
+  onMount,
+  onCleanup,
+} from "solid-js";
 import { Icon } from "@/components/shared/Icon";
 import { faCircle } from "@fortawesome/free-solid-svg-icons";
 import type { Event, Task } from "@/types/api";
@@ -109,6 +117,8 @@ const TaskItem: Component<{ task: Task }> = (props) => {
   const isPastDue = createMemo(() => {
     const time = taskTime();
     if (!time) return false;
+    // Note: This uses the current time at render, which is fine for display purposes
+    // The main filtering happens in the parent component with the reactive now() signal
     return time < new Date();
   });
 
@@ -166,9 +176,21 @@ const isAllDayEvent = (event: Event): boolean => {
 };
 
 export const RightNowSection: Component<RightNowSectionProps> = (props) => {
-  const now = new Date();
+  const [now, setNow] = createSignal(new Date());
+
+  // Update time every 30 seconds to keep the section reactive
+  onMount(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 30000); // Update every 30 seconds
+
+    onCleanup(() => {
+      clearInterval(interval);
+    });
+  });
 
   const ongoingEvents = createMemo(() => {
+    const currentTime = now();
     return props.events
       .filter((event) => {
         // Exclude all-day events
@@ -180,7 +202,7 @@ export const RightNowSection: Component<RightNowSectionProps> = (props) => {
         const end = event.ends_at ? new Date(event.ends_at) : null;
 
         // Only include if currently occurring
-        return start <= now && (!end || end >= now);
+        return start <= currentTime && (!end || end >= currentTime);
       })
       .sort((a, b) => {
         const aTime = new Date(a.starts_at).getTime();
@@ -190,6 +212,7 @@ export const RightNowSection: Component<RightNowSectionProps> = (props) => {
   });
 
   const pastDueTasks = createMemo(() => {
+    const currentTime = now();
     return props.tasks
       .filter((task) => {
         // Skip completed or punted tasks
@@ -201,7 +224,7 @@ export const RightNowSection: Component<RightNowSectionProps> = (props) => {
         if (!taskTime) return false;
 
         // Only include if past due (past start time or end time)
-        return taskTime < now;
+        return taskTime < currentTime;
       })
       .sort((a, b) => {
         const aTime = getTaskTime(a);
