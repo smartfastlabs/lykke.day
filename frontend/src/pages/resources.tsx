@@ -139,18 +139,17 @@ const Resources: Component = () => {
             <div class="bg-gradient-to-br from-stone-800 to-stone-700 rounded-2xl p-7 md:p-8 text-amber-50 shadow-lg shadow-stone-900/15 border border-white/10">
               <div class="space-y-4 text-center max-w-2xl mx-auto">
                 <p class="text-xl md:text-2xl font-semibold leading-snug">
-                  Or... just want an app to "fix" that one thing? 👀
+                  Or... just want an app to "fix" that one thing?
                 </p>
                 <p class="text-amber-50/80 text-sm md:text-base leading-relaxed">
-                  Look, we built this whole guide to help you understand the
-                  journey. But if you're dead-set on finding an app to download
-                  and call it progress... fine. We've got a list.
+                  If you're dead-set on finding an app to download and call it
+                  progress...I get it, I've been there.
                 </p>
                 <A
                   href="/apps"
                   class="group relative inline-flex items-center justify-center px-8 py-3 bg-amber-100 text-stone-900 rounded-xl font-medium tracking-wide hover:bg-amber-200 transition-all duration-300 shadow-md shadow-stone-900/20 hover:-translate-y-0.5"
                 >
-                  <span class="relative z-10">Fine, show me the apps</span>
+                  <span class="relative z-10">Just show me the apps</span>
                   <div class="absolute inset-0 rounded-xl bg-amber-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </A>
               </div>
