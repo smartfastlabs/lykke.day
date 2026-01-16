@@ -12,14 +12,6 @@ export interface RightNowSectionProps {
   tasks: Task[];
 }
 
-const formatDateTime = (dateTimeStr: string): string => {
-  const date = new Date(dateTimeStr);
-  return date
-    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-    .toLowerCase()
-    .replace(" ", "");
-};
-
 const formatTimeString = (timeStr: string): string => {
   const [h, m] = timeStr.split(":");
   const hour = parseInt(h);
@@ -33,26 +25,26 @@ const getTaskTime = (task: Task): Date | null => {
   if (!taskDate || !task.schedule) return null;
 
   const schedule = task.schedule;
-  
+
   // For FIXED_TIME, use start_time
   if (schedule.timing_type === "FIXED_TIME" && schedule.start_time) {
     return getTime(taskDate, schedule.start_time);
   }
-  
+
   // For DEADLINE, use end_time
   if (schedule.timing_type === "DEADLINE" && schedule.end_time) {
     return getTime(taskDate, schedule.end_time);
   }
-  
+
   // For others, use available_time or start_time as fallback
   if (schedule.available_time) {
     return getTime(taskDate, schedule.available_time);
   }
-  
+
   if (schedule.start_time) {
     return getTime(taskDate, schedule.start_time);
   }
-  
+
   return null;
 };
 
@@ -101,7 +93,7 @@ const TaskItem: Component<{ task: Task }> = (props) => {
     if (!time) return null;
     const schedule = props.task.schedule;
     if (!schedule) return null;
-    
+
     if (schedule.start_time) {
       return formatTimeString(schedule.start_time);
     }
@@ -110,11 +102,10 @@ const TaskItem: Component<{ task: Task }> = (props) => {
     }
     return null;
   });
-  
+
   const icon = () =>
-    getCategoryIcon(props.task.category) ||
-    getTypeIcon(props.task.type);
-  
+    getCategoryIcon(props.task.category) || getTypeIcon(props.task.type);
+
   const isPastDue = createMemo(() => {
     const time = taskTime();
     if (!time) return false;
@@ -184,10 +175,10 @@ export const RightNowSection: Component<RightNowSectionProps> = (props) => {
         if (isAllDayEvent(event)) {
           return false;
         }
-        
+
         const start = new Date(event.starts_at);
         const end = event.ends_at ? new Date(event.ends_at) : null;
-        
+
         // Only include if currently occurring
         return start <= now && (!end || end >= now);
       })
@@ -220,8 +211,8 @@ export const RightNowSection: Component<RightNowSectionProps> = (props) => {
       });
   });
 
-  const hasRightNowItems = createMemo(() => 
-    ongoingEvents().length > 0 || pastDueTasks().length > 0
+  const hasRightNowItems = createMemo(
+    () => ongoingEvents().length > 0 || pastDueTasks().length > 0
   );
 
   return (
@@ -229,9 +220,11 @@ export const RightNowSection: Component<RightNowSectionProps> = (props) => {
       <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-5 backdrop-blur-sm space-y-4">
         <div class="flex items-center gap-3">
           <Icon icon={faCircle} class="w-5 h-5 fill-amber-600" />
-          <p class="text-xs uppercase tracking-wide text-amber-700">Right Now</p>
+          <p class="text-xs uppercase tracking-wide text-amber-700">
+            Right Now
+          </p>
         </div>
-        
+
         <Show when={ongoingEvents().length > 0}>
           <div class="space-y-3">
             <For each={ongoingEvents()}>
@@ -239,7 +232,7 @@ export const RightNowSection: Component<RightNowSectionProps> = (props) => {
             </For>
           </div>
         </Show>
-        
+
         <Show when={pastDueTasks().length > 0}>
           <div class="space-y-3">
             <For each={pastDueTasks()}>
