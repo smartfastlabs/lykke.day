@@ -20,9 +20,12 @@ from lykke.application.repositories import (
 from lykke.core.constants import OAUTH_STATE_EXPIRY
 from lykke.domain import data_objects
 from lykke.domain.entities import CalendarEntity, UserEntity
-from lykke.domain.value_objects.query import AuthTokenQuery, CalendarQuery
+from lykke.domain.value_objects.query import CalendarQuery
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
-from lykke.presentation.workers.tasks import sync_single_calendar_task
+from lykke.presentation.workers.tasks import (
+    resubscribe_calendar_task,
+    sync_single_calendar_task,
+)
 
 from .dependencies.repositories import (
     get_auth_token_repo,
@@ -133,7 +136,9 @@ async def google_login_callback(
     if auth_token_id_from_state:
         # If we have a specific auth_token_id from state, use that (re-auth from calendar page)
         try:
-            existing_auth_token = await auth_token_repo.get(UUID(auth_token_id_from_state))
+            existing_auth_token = await auth_token_repo.get(
+                UUID(auth_token_id_from_state)
+            )
             # Verify it belongs to this user
             if existing_auth_token.user_id != user.id:
                 raise HTTPException(
@@ -162,7 +167,8 @@ async def google_login_callback(
                 (
                     cal
                     for cal in existing_calendars
-                    if cal.platform_id in google_platform_ids and cal.platform == "google"
+                    if cal.platform_id in google_platform_ids
+                    and cal.platform == "google"
                 ),
                 None,
             )
@@ -178,7 +184,9 @@ async def google_login_callback(
                         f"via calendar {matching_calendar.id} for user {user.id}"
                     )
                 except Exception as e:
-                    logger.warning(f"Could not find auth token {matching_calendar.auth_token_id}: {e}")
+                    logger.warning(
+                        f"Could not find auth token {matching_calendar.auth_token_id}: {e}"
+                    )
 
     # Create or update the auth token
     auth_token_data = data_objects.AuthToken(
@@ -196,11 +204,34 @@ async def google_login_callback(
     # If an existing token was found, update it in place by setting its id
     if existing_auth_token:
         auth_token_data.id = existing_auth_token.id
-        logger.info(f"Updating existing auth token {existing_auth_token.id} for user {user.id}")
+        logger.info(
+            f"Updating existing auth token {existing_auth_token.id} for user {user.id}"
+        )
     else:
         logger.info(f"Creating new auth token for user {user.id}")
 
     auth_token: data_objects.AuthToken = await auth_token_repo.put(auth_token_data)
+
+    # If we updated an existing auth token, resubscribe all calendars that were using it
+    # Old subscriptions will be left as orphans in Google (we can't unsubscribe with expired tokens)
+    calendars_to_resubscribe: list[UUID] = []
+    if existing_auth_token:
+        logger.info(
+            f"Finding calendars to resubscribe after updating auth token {existing_auth_token.id}"
+        )
+        all_user_calendars = await calendar_repo.search(CalendarQuery())
+        for cal in all_user_calendars:
+            # Resubscribe calendars that were using this auth token and have sync enabled
+            if (
+                cal.auth_token_id == existing_auth_token.id
+                and cal.platform == "google"
+                and cal.sync_subscription is not None
+            ):
+                calendars_to_resubscribe.append(cal.id)
+                logger.info(
+                    f"Will resubscribe calendar {cal.id} "
+                    f"(platform_id: {cal.platform_id}) after auth token update"
+                )
 
     # Process each calendar from Google
     # This will create new calendars or update existing ones based on platform_id
@@ -227,10 +258,14 @@ async def google_login_callback(
             # Preserve sync subscription if it exists
             if existing_calendar.sync_subscription:
                 calendar_data.sync_subscription = existing_calendar.sync_subscription
-                calendar_data.sync_subscription_id = existing_calendar.sync_subscription_id
+                calendar_data.sync_subscription_id = (
+                    existing_calendar.sync_subscription_id
+                )
             # Preserve default_event_category if it exists
             if existing_calendar.default_event_category:
-                calendar_data.default_event_category = existing_calendar.default_event_category
+                calendar_data.default_event_category = (
+                    existing_calendar.default_event_category
+                )
             logger.info(
                 f"Updating existing calendar {existing_calendar.id} "
                 f"(platform_id: {platform_id}) for user {user.id}"
@@ -242,9 +277,22 @@ async def google_login_callback(
 
         await calendar_repo.put(calendar_data)
 
+    # Kick off background tasks to resubscribe calendars with new credentials
+    for calendar_id in calendars_to_resubscribe:
+        try:
+            await resubscribe_calendar_task.kiq(
+                user_id=user.id, calendar_id=calendar_id
+            )
+            logger.info(
+                f"Enqueued resubscribe task for calendar {calendar_id} after re-authentication"
+            )
+        except Exception as e:
+            logger.error(
+                f"Failed to enqueue resubscribe task for calendar {calendar_id}: {e}"
+            )
+
     # Clean up state
-    if state in oauth_states:
-        del oauth_states[state]
+    oauth_states.pop(state, None)
 
     return RedirectResponse(url="/app")
 
@@ -269,49 +317,6 @@ async def google_webhook(
         calendar_id: The calendar ID extracted from the webhook URL.
 
     Headers:
-        X-Goog-Channel-Token: Secret token for webhook verification.
-        X-Goog-Resource-State: The type of change (sync, exists, not_exists).
-
-    Returns:
-        Empty 200 response to acknowledge receipt.
-    """
-    logger.info(
-        f"Received Google webhook for user {user_id}, calendar {calendar_id}, "
-        f"state={x_goog_resource_state}"
-    )
-
-    # Look up the calendar to get the expected token
-    try:
-        calendar = await calendar_repo.get(calendar_id)
-    except Exception:
-        logger.warning(f"Calendar {calendar_id} not found for user {user_id}")
-        return Response(status_code=200)
-
-    if not calendar.sync_subscription:
-        logger.warning(f"Calendar {calendar_id} has no sync subscription")
-        return Response(status_code=200)
-
-    if not x_goog_channel_token:
-        logger.warning(f"Missing token for calendar {calendar_id}")
-        return Response(status_code=200)
-
-    client_state = calendar.sync_subscription.client_state
-    if client_state is None:
-        logger.warning(f"Missing client_state for calendar {calendar_id}")
-        return Response(status_code=200)
-
-    if not hmac.compare_digest(client_state, x_goog_channel_token):
-        logger.warning(f"Invalid token for calendar {calendar_id}")
-        return Response(status_code=200)
-
-    if x_goog_resource_state == "sync":
-        logger.info("Received sync verification from Google, triggering initial sync")
-
-    # Schedule background task to sync the calendar (initial + incremental)
-    await sync_single_calendar_task.kiq(user_id=user_id, calendar_id=calendar_id)
-    logger.info(f"Scheduled sync task for calendar {calendar_id}")
-
-    return Response(status_code=200)
         X-Goog-Channel-Token: Secret token for webhook verification.
         X-Goog-Resource-State: The type of change (sync, exists, not_exists).
 

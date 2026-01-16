@@ -75,6 +75,17 @@ def get_sync_calendar_handler(
     return SyncCalendarHandler(ro_repos, uow_factory, user_id, google_gateway)
 
 
+def get_subscribe_calendar_handler(
+    user_id: UUID,
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
+    google_gateway: GoogleCalendarGatewayProtocol,
+) -> SubscribeCalendarHandler:
+    """Get a SubscribeCalendarHandler instance for a user."""
+    ro_repos = ro_repo_factory.create(user_id)
+    return SubscribeCalendarHandler(ro_repos, uow_factory, user_id, google_gateway)
+
+
 def get_schedule_day_handler(
     user_id: UUID,
     uow_factory: UnitOfWorkFactory,
@@ -139,6 +150,41 @@ async def sync_single_calendar_task(
 
     logger.info(
         f"Single calendar sync completed for user {user_id}, calendar {calendar_id}"
+    )
+
+
+@broker.task  # type: ignore[untyped-decorator]
+async def resubscribe_calendar_task(
+    user_id: UUID,
+    calendar_id: UUID,
+) -> None:
+    """Resubscribe a calendar to push notifications (after re-authentication).
+
+    This task is enqueued after re-authentication to recreate subscriptions
+    with new credentials. The old subscriptions are left as orphans in Google.
+
+    Args:
+        user_id: The user ID that owns the calendar.
+        calendar_id: The calendar ID to resubscribe.
+    """
+    logger.info(
+        f"Starting calendar resubscription for user {user_id}, calendar {calendar_id}"
+    )
+
+    subscribe_handler = get_subscribe_calendar_handler(
+        user_id=user_id,
+        uow_factory=get_unit_of_work_factory(),
+        ro_repo_factory=get_read_only_repository_factory(),
+        google_gateway=get_google_gateway(),
+    )
+
+    ro_repos = get_read_only_repository_factory().create(user_id)
+    calendar = await ro_repos.calendar_ro_repo.get(calendar_id)
+
+    await subscribe_handler.subscribe(calendar)
+
+    logger.info(
+        f"Calendar resubscription completed for user {user_id}, calendar {calendar_id}"
     )
 
 
