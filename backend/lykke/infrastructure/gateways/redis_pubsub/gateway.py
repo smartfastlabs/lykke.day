@@ -135,7 +135,7 @@ class RedisPubSubGateway(PubSubGatewayProtocol):
 
         Returns:
             A subscription context manager that can be used to receive and send messages
-            
+
         Usage:
             async with gateway.subscribe_to_user_channel(user_id, "auditlog") as sub:
                 message = await sub.get_message()

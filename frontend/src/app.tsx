@@ -21,7 +21,6 @@ import Apps from "@/pages/apps";
 import YouTube from "@/pages/youtube";
 import Podcasts from "@/pages/podcasts";
 import Resources from "@/pages/resources";
-import MePage from "@/pages/me/index";
 import HomeLayout from "@/pages/me/today/layout";
 import PreviewView from "@/pages/me/today/preview";
 import TasksView from "@/pages/me/today/tasks";
@@ -136,7 +135,11 @@ export default function App() {
             />
 
             <Route path="/me" component={AuthGuard}>
-              <Route path="/" component={MePage} />
+              <Route path="/" component={HomeLayout}>
+                <Route path="/" component={PreviewView} />
+                <Route path="/tasks" component={TasksView} />
+                <Route path="/events" component={EventsView} />
+              </Route>
               <Route path="/events" component={EventsPage} />
               <Route path="/today" component={HomeLayout}>
                 <Route path="/" component={PreviewView} />
