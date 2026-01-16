@@ -12,7 +12,7 @@ const Page: Component<PageProps> = (props) => {
     <div class="overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <NotificationContainer />
       <div class="min-h-screen w-full flex flex-col justify-center typography-body">
-        <div class="w-full h-full mx-auto md:px-0 max-w-[960px] mt-4 flex-1 flex flex-col">
+        <div class="w-full h-full mx-auto md:px-0 max-w-[960px] mt-1 flex-1 flex flex-col">
           {props.children}
         </div>
       </div>

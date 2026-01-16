@@ -27,7 +27,7 @@ export const TodaysTasksView: Component = () => {
   const statItems = createMemo(() => [
     { label: "Total", value: stats().total },
     {
-      label: "Completed",
+      label: "Done",
       value: stats().completed,
       colorClasses:
         "bg-gradient-to-br from-green-50 to-emerald-50 border-green-100 text-green-700",

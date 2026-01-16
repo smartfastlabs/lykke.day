@@ -262,7 +262,8 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
     def add_goal(self, name: str) -> value_objects.Goal:
         """Add a goal to this day.
 
-        This method enforces the business rule that a day can have at most 3 goals.
+        This method enforces the business rule that a day can have at most 3 active goals.
+        Active goals are those with status INCOMPLETE (completed and punted goals don't count).
 
         Args:
             name: The name of the goal to add
@@ -271,12 +272,16 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
             The created Goal value object
 
         Raises:
-            DomainError: If the day already has 3 goals
+            DomainError: If the day already has 3 active goals
         """
-        if len(self.goals) >= 3:
+        active_goals = [
+            goal for goal in self.goals
+            if goal.status == value_objects.GoalStatus.INCOMPLETE
+        ]
+        if len(active_goals) >= 3:
             raise DomainError(
-                "Cannot add goal: a day can have at most 3 goals. "
-                f"Current goal count: {len(self.goals)}"
+                "Cannot add goal: a day can have at most 3 active goals. "
+                f"Current active goal count: {len(active_goals)}"
             )
 
         goal = value_objects.Goal(

@@ -42,11 +42,11 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
             </div>
           }
         >
-          <div class="relative z-10 max-w-4xl mx-auto px-6 py-12 md:py-16">
+          <div class="relative z-10 max-w-4xl mx-auto px-6 py-6">
             <div class="mb-8 md:mb-12">
               <div class="relative flex items-start justify-between">
                 <div>
-                  <p class="text-sm uppercase tracking-[0.2em] text-amber-600/80 mb-2">
+                  <p class="text-lg uppercase tracking-[0.2em] text-amber-600/80 mb-2">
                     {weekday()} {monthDay()}
                   </p>
                 </div>
