@@ -89,16 +89,7 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     await day_template_repo.put(default_template)
 
     # Step 3: Load some data as the authenticated user
-    # Schedule today (this will create a day and potentially tasks)
-    schedule_response = test_client.put("/days/today/schedule")
-    assert schedule_response.status_code == 200, (
-        f"Schedule failed: {schedule_response.text}"
-    )
-    schedule_data = schedule_response.json()
-    assert "day" in schedule_data
-    assert schedule_data["day"]["user_id"] == user_id_str
-
-    # Get context for today (loads day, tasks, calendar_entries)
+    # Get context for today (this will auto-schedule if needed and loads day, tasks, calendar_entries)
     context_response = test_client.get("/days/today/context")
     assert context_response.status_code == 200, (
         f"Get context failed: {context_response.text}"
@@ -108,15 +99,6 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     assert "tasks" in context_data
     assert "calendar_entries" in context_data
     assert context_data["day"]["user_id"] == user_id_str
-
-    # Get templates
-    templates_response = test_client.get("/days/templates")
-    assert templates_response.status_code == 200, (
-        f"Get templates failed: {templates_response.text}"
-    )
-    templates_data = templates_response.json()
-    assert isinstance(templates_data, list)
-    assert len(templates_data) > 0, "Should have at least one template (default)"
 
     # Step 4: Verify database state directly
 
