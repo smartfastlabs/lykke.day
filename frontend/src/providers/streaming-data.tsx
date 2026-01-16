@@ -1,6 +1,7 @@
 import {
   createContext,
   createMemo,
+  createResource,
   createSignal,
   onCleanup,
   onMount,
@@ -9,8 +10,13 @@ import {
   type ParentProps,
 } from "solid-js";
 import { createStore } from "solid-js/store";
+<<<<<<< Updated upstream
 import { DayContext, Task, Event, Day, TaskStatus, Goal, GoalStatus } from "@/types/api";
 import { taskAPI, goalAPI } from "@/utils/api";
+=======
+import { DayContext, Task, Event, Day, TaskStatus, Routine } from "@/types/api";
+import { taskAPI } from "@/utils/api";
+>>>>>>> Stashed changes
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 
 interface StreamingDataContextValue {
@@ -20,6 +26,7 @@ interface StreamingDataContextValue {
   events: Accessor<Event[]>;
   goals: Accessor<Goal[]>;
   day: Accessor<Day | undefined>;
+  routines: Accessor<Routine[] | undefined>;
   // Loading and error states
   isLoading: Accessor<boolean>;
   error: Accessor<Error | undefined>;
@@ -52,6 +59,7 @@ interface SyncResponseMessage extends WebSocketMessage {
   type: "sync_response";
   day_context?: DayContext;
   changes?: EntityChange[];
+  routines?: Routine[];
   last_audit_log_timestamp?: string | null;
 }
 
@@ -83,7 +91,7 @@ interface EntityChange {
   change_type: "created" | "updated" | "deleted";
   entity_type: string;
   entity_id: string;
-  entity_data: Task | Event | null;
+  entity_data: Task | Event | Routine | null;
 }
 
 export function StreamingDataProvider(props: ParentProps) {
@@ -97,6 +105,14 @@ export function StreamingDataProvider(props: ParentProps) {
   const [lastProcessedTimestamp, setLastProcessedTimestamp] = createSignal<
     string | null
   >(null);
+
+  // Routines store - separate from day context since routines aren't date-specific
+  const [routinesStore, setRoutinesStore] = createStore<{
+    routines: Routine[];
+  }>({ routines: [] });
+
+  // Expose routines from store
+  const routines = createMemo(() => routinesStore.routines);
 
   let ws: WebSocket | null = null;
   let reconnectTimeout: number | null = null;
@@ -250,6 +266,11 @@ export function StreamingDataProvider(props: ParentProps) {
         setLastProcessedTimestamp(message.last_audit_log_timestamp);
       }
       setIsOutOfSync(false);
+      
+      // Update routines from full sync response
+      if (message.routines) {
+        setRoutinesStore({ routines: message.routines });
+      }
     } else if (message.changes) {
       // Incremental changes - apply to existing store
       applyChanges(message.changes);
@@ -412,6 +433,13 @@ export function StreamingDataProvider(props: ParentProps) {
             (e) => e.id !== auditLog.entity_id
           );
           updated.events = updated.calendar_entries;
+        } else if (auditLog.entity_type === "routine") {
+          setRoutinesStore((current) => ({
+            routines: current.routines.filter(
+              (r) => r.id !== auditLog.entity_id
+            ),
+          }));
+          return current;
         }
 
         return { data: updated };
@@ -550,6 +578,7 @@ export function StreamingDataProvider(props: ParentProps) {
     events,
     goals,
     day,
+    routines,
     isLoading,
     error,
     isConnected,

@@ -65,11 +65,15 @@ export const TodayPage: Component = () => {
         <RoutinesSummary tasks={allTasks()} />
       </div>
 
+<<<<<<< Updated upstream
       <div class="mb-6">
         <GoalsSummary goals={allGoals()} />
       </div>
 
       <div class="mb-6">
+=======
+      <div class="space-y-4 md:space-y-6 mb-6">
+>>>>>>> Stashed changes
         <EventsSection events={allEvents()} href="/me/today/events" />
       </div>
 

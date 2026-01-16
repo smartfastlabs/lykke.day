@@ -6,6 +6,7 @@ from uuid import UUID  # noqa: TC003
 
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
+from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.base import BaseConfigObject
 from lykke.domain.events.routine import (
     RoutineTaskAddedEvent,
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(kw_only=True)
-class RoutineEntity(BaseConfigObject):
+class RoutineEntity(BaseConfigObject, AuditableEntity):
     user_id: UUID
     name: str
 

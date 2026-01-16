@@ -1,4 +1,4 @@
-import { Component, createMemo, createResource, createSignal, For, Show } from "solid-js";
+import { Component, createMemo, createSignal, For, Show } from "solid-js";
 import { Icon } from "@/components/shared/Icon";
 import {
   faCircleCheck,
@@ -11,8 +11,8 @@ import {
   faChevronRight,
   faForward,
 } from "@fortawesome/free-solid-svg-icons";
-import type { Task, Routine } from "@/types/api";
-import { routineAPI } from "@/utils/api";
+import type { Task } from "@/types/api";
+import { useStreamingData } from "@/providers/streaming-data";
 
 export interface RoutinesSummaryProps {
   tasks: Task[];
@@ -27,8 +27,8 @@ interface RoutineGroup {
 }
 
 export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
-  // Fetch all routines
-  const [routines] = createResource<Routine[]>(routineAPI.getAll);
+  // Get routines from StreamingDataProvider
+  const { routines } = useStreamingData();
 
   // Create a map of routine ID to routine name
   const routineMap = createMemo(() => {
