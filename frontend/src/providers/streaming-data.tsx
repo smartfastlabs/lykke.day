@@ -132,8 +132,11 @@ export function StreamingDataProvider(props: ParentProps) {
       []
   );
   const goals = createMemo(() => {
-    // Goals are stored in the day_context, not directly on the day
-    return dayContextStore.data?.goals ?? [];
+    // Goals are stored on the day entity within day_context
+    // Note: goals may not be in the generated types yet, but they exist at runtime
+    const day = dayContextStore.data?.day;
+    if (!day) return [];
+    return (day as Day & { goals?: Goal[] }).goals ?? [];
   });
   const day = createMemo(() => dayContextStore.data?.day);
 
