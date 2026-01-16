@@ -5,7 +5,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from lykke.application.commands.task_definition import (
-    BulkCreateTaskDefinitionsHandler,
     CreateTaskDefinitionHandler,
     DeleteTaskDefinitionHandler,
     UpdateTaskDefinitionHandler,
@@ -17,9 +16,6 @@ from lykke.application.queries.task_definition import (
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain import data_objects
-from lykke.infrastructure.data.default_task_definitions import (
-    DEFAULT_TASK_DEFINITIONS,
-)
 from lykke.presentation.api.schemas import (
     PagedResponseSchema,
     QuerySchema,
@@ -30,7 +26,6 @@ from lykke.presentation.api.schemas import (
 from lykke.presentation.api.schemas.mappers import map_task_definition_to_schema
 
 from .dependencies.commands.task_definition import (
-    get_bulk_create_task_definitions_handler,
     get_create_task_definition_handler,
     get_delete_task_definition_handler,
     get_update_task_definition_handler,
@@ -42,16 +37,6 @@ from .dependencies.queries.task_definition import (
 from .dependencies.user import get_current_user
 
 router = APIRouter()
-
-
-@router.get("/available/")
-async def get_available_task_definitions() -> list[dict]:
-    """Get the curated list of available task definitions that users can import.
-
-    Returns:
-        List of task definition dictionaries (without user_id)
-    """
-    return DEFAULT_TASK_DEFINITIONS
 
 
 @router.get("/{uuid}", response_model=TaskDefinitionSchema)
@@ -114,30 +99,6 @@ async def create_task_definition(
     )
     created = await create_task_definition_handler.run(task_definition=task_definition)
     return map_task_definition_to_schema(created)
-
-
-@router.post("/bulk/", response_model=list[TaskDefinitionSchema])
-async def bulk_create_task_definitions(
-    task_definitions_data: list[dict],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-    bulk_create_task_definitions_handler: Annotated[
-        BulkCreateTaskDefinitionsHandler,
-        Depends(get_bulk_create_task_definitions_handler),
-    ],
-) -> list[TaskDefinitionSchema]:
-    """Bulk create task definitions."""
-    # Convert dictionaries to data objects
-    task_definitions = []
-    for data in task_definitions_data:
-        if "user_id" not in data:
-            data["user_id"] = user.id
-        task_definition = data_objects.TaskDefinition(**data)
-        task_definitions.append(task_definition)
-
-    created = await bulk_create_task_definitions_handler.run(
-        task_definitions=tuple(task_definitions)
-    )
-    return [map_task_definition_to_schema(td) for td in created]
 
 
 @router.put("/{uuid}", response_model=TaskDefinitionSchema)

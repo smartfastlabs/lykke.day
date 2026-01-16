@@ -1,10 +1,8 @@
 from fastapi import APIRouter
 
 from . import (
-    calendar_entries,
     calendar_entry_series,
     calendars,
-    chatbot,
     day_templates,
     days,
     early_access,
@@ -17,7 +15,6 @@ from . import (
     task_definitions,
     tasks,
     time_block_definitions,
-    utils,
 )
 
 router = APIRouter()
@@ -49,11 +46,6 @@ router.include_router(
         "auth",
         "user",
     ],
-)
-router.include_router(
-    calendar_entries.router,
-    prefix="/calendar-entries",
-    tags=["calendar-entries"],
 )
 router.include_router(
     calendar_entry_series.router,
@@ -103,16 +95,6 @@ router.include_router(
     calendars.router,
     prefix="/calendars",
     tags=["calendars"],
-)
-router.include_router(
-    utils.router,
-    prefix="/utils",
-    tags=["utils"],
-)
-router.include_router(
-    chatbot.router,
-    prefix="/chatbot",
-    tags=["chatbot", "ai"],
 )
 router.include_router(
     events.router,

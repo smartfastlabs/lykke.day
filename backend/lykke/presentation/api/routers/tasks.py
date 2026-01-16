@@ -5,27 +5,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from lykke.application.commands import RecordTaskActionHandler
-from lykke.application.queries.task import SearchTasksHandler
-from lykke.core.utils.dates import get_current_date
 from lykke.domain import value_objects
 from lykke.presentation.api.schemas import TaskSchema
 from lykke.presentation.api.schemas.mappers import map_task_to_schema
 
-from .dependencies.queries.task import get_list_tasks_handler
 from .dependencies.services import get_record_task_action_handler
 
 router = APIRouter()
-
-
-@router.get("/today/", response_model=list[TaskSchema])
-async def list_todays_tasks(
-    list_tasks_handler: Annotated[SearchTasksHandler, Depends(get_list_tasks_handler)],
-) -> list[TaskSchema]:
-    """Get all tasks for today."""
-    result = await list_tasks_handler.run(
-        search_query=value_objects.TaskQuery(date=get_current_date()),
-    )
-    return [map_task_to_schema(task) for task in result.items]
 
 
 @router.post("/{_id}/actions", response_model=TaskSchema)

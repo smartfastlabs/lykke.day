@@ -2,49 +2,27 @@
 
 import asyncio
 import contextlib
-import datetime
 import json
-from datetime import UTC, date, datetime as dt_datetime
+from datetime import UTC, date
+from datetime import datetime as dt_datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from loguru import logger
-
 from lykke.application.commands import (
     CreateOrGetDayHandler,
     RescheduleDayHandler,
     ScheduleDayHandler,
-    UpdateDayHandler,
-)
-from lykke.application.commands.day import (
-    AddGoalToDayHandler,
-    RemoveGoalHandler,
-    UpdateGoalStatusHandler,
 )
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
-from lykke.application.queries import (
-    GetDayContextHandler,
-    GetIncrementalChangesHandler,
-    PreviewDayHandler,
-)
-from lykke.application.queries.day_template import SearchDayTemplatesHandler
+from lykke.application.queries import GetDayContextHandler, GetIncrementalChangesHandler
 from lykke.core.exceptions import NotFoundError
 from lykke.core.utils.audit_log_filtering import is_audit_log_for_today
 from lykke.core.utils.audit_log_serialization import deserialize_audit_log
-from lykke.core.utils.dates import get_current_date, get_tomorrows_date
-from lykke.domain import value_objects
-from lykke.presentation.api.schemas import (
-    DayContextSchema,
-    DaySchema,
-    DayTemplateSchema,
-    DayUpdateSchema,
-)
-from lykke.presentation.api.schemas.mappers import (
-    map_day_context_to_schema,
-    map_day_template_to_schema,
-    map_day_to_schema,
-)
+from lykke.core.utils.dates import get_current_date
+from lykke.presentation.api.schemas import DayContextSchema
+from lykke.presentation.api.schemas.mappers import map_day_context_to_schema
 from lykke.presentation.api.schemas.websocket_message import (
     EntityChangeSchema,
     WebSocketConnectionAckSchema,
@@ -53,21 +31,14 @@ from lykke.presentation.api.schemas.websocket_message import (
     WebSocketSyncResponseSchema,
 )
 
-from .dependencies.queries.day_template import get_list_day_templates_handler
 from .dependencies.services import (
     day_context_handler,
     day_context_handler_websocket,
-    get_add_goal_to_day_handler,
     get_create_or_get_day_handler_websocket,
     get_pubsub_gateway,
-    get_remove_goal_handler,
     get_reschedule_day_handler,
     get_schedule_day_handler,
-    get_update_day_handler,
-    get_update_goal_status_handler,
-    incremental_changes_handler,
     incremental_changes_handler_websocket,
-    preview_day_handler,
 )
 
 router = APIRouter()
@@ -93,70 +64,6 @@ async def get_context_today(
     return map_day_context_to_schema(context)
 
 
-@router.get("/tomorrow/context", response_model=DayContextSchema)
-async def get_context_tomorrow(
-    handler: Annotated[GetDayContextHandler, Depends(day_context_handler)],
-    schedule_handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
-) -> DayContextSchema:
-    """Get the complete context for tomorrow."""
-    date = get_tomorrows_date()
-    try:
-        context = await handler.get_day_context(date=date)
-    except NotFoundError:
-        context = await schedule_handler.schedule_day(date=date)
-    return map_day_context_to_schema(context)
-
-
-@router.get("/{date}/context", response_model=DayContextSchema)
-async def get_context(
-    date: datetime.date,
-    handler: Annotated[GetDayContextHandler, Depends(day_context_handler)],
-    schedule_handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
-) -> DayContextSchema:
-    """Get the complete context for a specific date."""
-    try:
-        context = await handler.get_day_context(date=date)
-    except NotFoundError:
-        context = await schedule_handler.schedule_day(date=date)
-    return map_day_context_to_schema(context)
-
-
-@router.get("/{date}/preview", response_model=DayContextSchema)
-async def preview_day(
-    date: datetime.date,
-    handler: Annotated[PreviewDayHandler, Depends(preview_day_handler)],
-    template_id: UUID | None = None,
-) -> DayContextSchema:
-    """Preview what a day would look like if scheduled."""
-    context = await handler.preview_day(date=date, template_id=template_id)
-    return map_day_context_to_schema(context)
-
-
-# ============================================================================
-# Day Commands
-# ============================================================================
-
-
-@router.put("/today/schedule", response_model=DayContextSchema)
-async def schedule_today(
-    handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
-) -> DayContextSchema:
-    """Schedule today with tasks from routines."""
-    context = await handler.schedule_day(date=get_current_date())
-    return map_day_context_to_schema(context)
-
-
-@router.put("/{date}/schedule", response_model=DayContextSchema)
-async def schedule_day(
-    date: datetime.date,
-    handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
-    template_id: UUID | None = None,
-) -> DayContextSchema:
-    """Schedule a specific day with tasks from routines."""
-    context = await handler.schedule_day(date=date, template_id=template_id)
-    return map_day_context_to_schema(context)
-
-
 @router.put("/today/reschedule", response_model=DayContextSchema)
 async def reschedule_today(
     handler: Annotated[RescheduleDayHandler, Depends(get_reschedule_day_handler)],
@@ -164,125 +71,6 @@ async def reschedule_today(
     """Reschedule today by cleaning up and recreating all tasks."""
     context = await handler.reschedule_day(date=get_current_date())
     return map_day_context_to_schema(context)
-
-
-@router.put("/{date}/reschedule", response_model=DayContextSchema)
-async def reschedule_day(
-    date: datetime.date,
-    handler: Annotated[RescheduleDayHandler, Depends(get_reschedule_day_handler)],
-    template_id: UUID | None = None,
-) -> DayContextSchema:
-    """Reschedule a specific day by cleaning up and recreating all tasks."""
-    context = await handler.reschedule_day(date=date, template_id=template_id)
-    return map_day_context_to_schema(context)
-
-
-@router.patch("/{date}", response_model=DaySchema)
-async def update_day(
-    date: datetime.date,
-    update_data: DayUpdateSchema,
-    handler: Annotated[UpdateDayHandler, Depends(get_update_day_handler)],
-) -> DaySchema:
-    """Update a day's status or template."""
-    # Convert schema to update object
-    from lykke.domain.value_objects import DayUpdateObject
-    from lykke.domain.value_objects.alarm import Alarm
-
-    alarm = None
-    if update_data.alarm:
-        alarm = Alarm(
-            name=update_data.alarm.name,
-            time=update_data.alarm.time,
-            type=update_data.alarm.type,
-            description=update_data.alarm.description,
-            triggered_at=update_data.alarm.triggered_at,
-        )
-
-    update_object = DayUpdateObject(
-        alarm=alarm,
-        status=update_data.status,
-        scheduled_at=update_data.scheduled_at,
-        tags=update_data.tags,
-        template_id=update_data.template_id,
-    )
-    day = await handler.update_day(
-        date=date,
-        update_data=update_object,
-    )
-    return map_day_to_schema(day)
-
-
-# ============================================================================
-# Goals
-# ============================================================================
-
-
-@router.post("/{date}/goals", response_model=DayContextSchema)
-async def add_goal(
-    date: datetime.date,
-    name: str,
-    handler: Annotated[AddGoalToDayHandler, Depends(get_add_goal_to_day_handler)],
-    day_context_handler: Annotated[
-        GetDayContextHandler, Depends(day_context_handler)
-    ],
-) -> DayContextSchema:
-    """Add a goal to a day."""
-    day = await handler.add_goal(date=date, name=name)
-    # Get the full context to return
-    context = await day_context_handler.get_day_context(date=date)
-    return map_day_context_to_schema(context)
-
-
-@router.patch("/{date}/goals/{goal_id}", response_model=DayContextSchema)
-async def update_goal_status(
-    date: datetime.date,
-    goal_id: UUID,
-    status: value_objects.GoalStatus,
-    handler: Annotated[
-        UpdateGoalStatusHandler, Depends(get_update_goal_status_handler)
-    ],
-    day_context_handler: Annotated[
-        GetDayContextHandler, Depends(day_context_handler)
-    ],
-) -> DayContextSchema:
-    """Update a goal's status on a day."""
-    await handler.update_goal_status(date=date, goal_id=goal_id, status=status)
-    # Get the full context to return
-    context = await day_context_handler.get_day_context(date=date)
-    return map_day_context_to_schema(context)
-
-
-@router.delete("/{date}/goals/{goal_id}", response_model=DayContextSchema)
-async def remove_goal(
-    date: datetime.date,
-    goal_id: UUID,
-    handler: Annotated[RemoveGoalHandler, Depends(get_remove_goal_handler)],
-    day_context_handler: Annotated[
-        GetDayContextHandler, Depends(day_context_handler)
-    ],
-) -> DayContextSchema:
-    """Remove a goal from a day."""
-    await handler.remove_goal(date=date, goal_id=goal_id)
-    # Get the full context to return
-    context = await day_context_handler.get_day_context(date=date)
-    return map_day_context_to_schema(context)
-
-
-# ============================================================================
-# Templates
-# ============================================================================
-
-
-@router.get("/templates/", response_model=list[DayTemplateSchema])
-@router.get("/templates", response_model=list[DayTemplateSchema])
-async def get_templates(
-    list_day_templates_handler: Annotated[
-        SearchDayTemplatesHandler, Depends(get_list_day_templates_handler)
-    ],
-) -> list[DayTemplateSchema]:
-    """Get all available day templates."""
-    result = await list_day_templates_handler.run()
-    return [map_day_template_to_schema(template) for template in result.items]
 
 
 # ============================================================================
