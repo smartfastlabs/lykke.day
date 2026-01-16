@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  touch-action: manipulation;
+}
+
 body {
   font-weight: 400;
   font-size: 16px;
@@ -12,6 +16,7 @@ body {
   font-feature-settings: "liga" 1, "kern" 1, "calt" 1;
   background-color: #fff;
   color: #000;
+  touch-action: manipulation;
 }
 
 @media print {
