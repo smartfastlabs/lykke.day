@@ -10,7 +10,6 @@ import {
   Routine,
   PushSubscription,
   TaskSchedule,
-  Goal,
 } from "@/types/api";
 import type { CurrentUser, UserProfileUpdate } from "@/types/api/user";
 import type {

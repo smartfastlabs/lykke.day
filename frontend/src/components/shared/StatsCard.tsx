@@ -1,4 +1,4 @@
-import { Component, createMemo, type Accessor } from "solid-js";
+import { Component, For, type Accessor } from "solid-js";
 
 interface StatItem {
   label: string;
@@ -40,7 +40,7 @@ export const StatsCard: Component<StatsCardProps> = (props) => {
       {/* Stats grid */}
       <div class="grid grid-cols-4 gap-3">
         <For each={props.stats()}>
-          {(stat) => (
+          {(stat: StatItem) => (
             <div
               class={`text-center p-3 rounded-xl border ${
                 stat.colorClasses ??

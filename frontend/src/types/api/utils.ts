@@ -57,7 +57,14 @@ export type TaskSchedule = components["schemas"]["TaskScheduleSchema"];
 export type RoutineSchedule = components["schemas"]["RoutineScheduleSchema"];
 export type Action = components["schemas"]["ActionSchema"];
 export type Alarm = components["schemas"]["AlarmSchema"];
-export type Goal = components["schemas"]["GoalSchema"];
+
+// Goal types - manually defined as they may not be in generated types yet
+export interface Goal {
+  id: string;
+  name: string;
+  status: GoalStatus;
+  created_at?: string | null;
+}
 
 // Enum types
 export type TaskStatus = components["schemas"]["TaskStatus"];
@@ -69,5 +76,7 @@ export type TimingType = components["schemas"]["TimingType"];
 export type TimeBlockType = components["schemas"]["TimeBlockType"];
 export type TimeBlockCategory = components["schemas"]["TimeBlockCategory"];
 export type ActionType = components["schemas"]["ActionType"];
-export type GoalStatus = components["schemas"]["GoalStatus"];
+
+// GoalStatus enum - manually defined as it may not be in generated types yet
+export type GoalStatus = "INCOMPLETE" | "COMPLETE" | "PUNT";
 

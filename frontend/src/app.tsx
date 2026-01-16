@@ -26,7 +26,7 @@ import PreviewView from "@/pages/me/today/preview";
 import TasksView from "@/pages/me/today/tasks";
 import EventsView from "@/pages/me/today/events";
 import GoalsView from "@/pages/me/today/goals";
-import EventsPage from "@/pages/me/events";
+import AuditLogPage from "@/pages/me/audit-log";
 import NavigationLayout from "@/pages/me/navigation/layout";
 import NavPage from "@/pages/me/navigation/links";
 import CalendarPage from "@/pages/me/navigation/calendar";
@@ -135,20 +135,20 @@ export default function App() {
               component={() => <Navigate href="/me/today" />}
             />
 
-              <Route path="/me" component={AuthGuard}>
-                <Route path="/" component={HomeLayout}>
-                  <Route path="/" component={PreviewView} />
-                  <Route path="/tasks" component={TasksView} />
-                  <Route path="/events" component={EventsView} />
-                  <Route path="/goals" component={GoalsView} />
-                </Route>
-                <Route path="/events" component={EventsPage} />
-                <Route path="/today" component={HomeLayout}>
-                  <Route path="/" component={PreviewView} />
-                  <Route path="/tasks" component={TasksView} />
-                  <Route path="/events" component={EventsView} />
-                  <Route path="/goals" component={GoalsView} />
-                </Route>
+            <Route path="/me" component={AuthGuard}>
+              <Route path="/" component={HomeLayout}>
+                <Route path="/" component={PreviewView} />
+                <Route path="/tasks" component={TasksView} />
+                <Route path="/events" component={EventsView} />
+                <Route path="/goals" component={GoalsView} />
+              </Route>
+              <Route path="/audit-log" component={AuditLogPage} />
+              <Route path="/today" component={HomeLayout}>
+                <Route path="/" component={PreviewView} />
+                <Route path="/tasks" component={TasksView} />
+                <Route path="/events" component={EventsView} />
+                <Route path="/goals" component={GoalsView} />
+              </Route>
               <Route path="/nav" component={NavigationLayout}>
                 <Route path="/" component={NavPage} />
                 <Route path="/calendar" component={CalendarPage} />

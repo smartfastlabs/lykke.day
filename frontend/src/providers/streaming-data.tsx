@@ -1,7 +1,6 @@
 import {
   createContext,
   createMemo,
-  createResource,
   createSignal,
   onCleanup,
   onMount,
@@ -18,6 +17,7 @@ import {
   TaskStatus,
   Goal,
   GoalStatus,
+  Routine,
 } from "@/types/api";
 import { taskAPI, goalAPI } from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
@@ -29,7 +29,6 @@ interface StreamingDataContextValue {
   events: Accessor<Event[]>;
   goals: Accessor<Goal[]>;
   day: Accessor<Day | undefined>;
-  routines: Accessor<Routine[] | undefined>;
   routines: Accessor<Routine[] | undefined>;
   // Loading and error states
   isLoading: Accessor<boolean>;
@@ -63,7 +62,6 @@ interface SyncResponseMessage extends WebSocketMessage {
   type: "sync_response";
   day_context?: DayContext;
   changes?: EntityChange[];
-  routines?: Routine[];
   routines?: Routine[];
   last_audit_log_timestamp?: string | null;
 }
@@ -134,8 +132,8 @@ export function StreamingDataProvider(props: ParentProps) {
       []
   );
   const goals = createMemo(() => {
-    const day = dayContextStore.data?.day;
-    return day?.goals ?? [];
+    // Goals are stored in the day_context, not directly on the day
+    return dayContextStore.data?.goals ?? [];
   });
   const day = createMemo(() => dayContextStore.data?.day);
 
@@ -271,11 +269,6 @@ export function StreamingDataProvider(props: ParentProps) {
         setLastProcessedTimestamp(message.last_audit_log_timestamp);
       }
       setIsOutOfSync(false);
-
-      // Update routines from full sync response
-      if (message.routines) {
-        setRoutinesStore({ routines: message.routines });
-      }
 
       // Update routines from full sync response
       if (message.routines) {
@@ -450,13 +443,6 @@ export function StreamingDataProvider(props: ParentProps) {
             ),
           }));
           return current;
-        } else if (auditLog.entity_type === "routine") {
-          setRoutinesStore((current) => ({
-            routines: current.routines.filter(
-              (r) => r.id !== auditLog.entity_id
-            ),
-          }));
-          return current;
         }
 
         return { data: updated };
@@ -514,12 +500,8 @@ export function StreamingDataProvider(props: ParentProps) {
   };
 
   const addGoal = async (name: string): Promise<void> => {
-    try {
-      const context = await goalAPI.addGoal(name);
-      setDayContextStore({ data: context });
-    } catch (error) {
-      throw error;
-    }
+    const context = await goalAPI.addGoal(name);
+    setDayContextStore({ data: context });
   };
 
   const updateGoalStatus = async (
@@ -528,7 +510,7 @@ export function StreamingDataProvider(props: ParentProps) {
   ): Promise<void> => {
     // Optimistic update
     const previousGoals = goals();
-    const updatedGoals = previousGoals.map((g) =>
+    const updatedGoals = previousGoals.map((g: Goal) =>
       g.id === goal.id ? { ...g, status } : g
     );
     updateGoalsLocally(updatedGoals);
@@ -546,7 +528,7 @@ export function StreamingDataProvider(props: ParentProps) {
   const removeGoal = async (goalId: string): Promise<void> => {
     // Optimistic update
     const previousGoals = goals();
-    const updatedGoals = previousGoals.filter((g) => g.id !== goalId);
+    const updatedGoals = previousGoals.filter((g: Goal) => g.id !== goalId);
     updateGoalsLocally(updatedGoals);
 
     try {
@@ -595,7 +577,6 @@ export function StreamingDataProvider(props: ParentProps) {
     events,
     goals,
     day,
-    routines,
     routines,
     isLoading,
     error,

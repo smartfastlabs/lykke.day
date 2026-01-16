@@ -1,4 +1,4 @@
-import { Component, createSignal, createMemo, Show } from "solid-js";
+import { Component, createSignal, createMemo } from "solid-js";
 import { useStreamingData } from "@/providers/streaming-data";
 import GoalList from "@/components/goals/List";
 import { Goal } from "@/types/api";
@@ -63,7 +63,7 @@ export const TodaysGoalsView: Component = () => {
     }
   };
 
-  const handleKeyPress = (e: KeyboardEvent) => {
+  const handleKeyPress = (e: globalThis.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleAddGoal();

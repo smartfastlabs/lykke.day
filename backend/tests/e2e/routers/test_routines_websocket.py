@@ -7,18 +7,36 @@ from uuid import uuid4
 import pytest
 
 from lykke.core.config import settings
+from lykke.core.utils.audit_log_serialization import serialize_audit_log
 from lykke.domain.entities import AuditLogEntity, RoutineEntity
 from lykke.domain.value_objects.routine import RoutineSchedule
 from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.repositories import AuditLogRepository, RoutineRepository
-from lykke.core.utils.audit_log_serialization import serialize_audit_log
-
 
 API_PREFIX = settings.API_PREFIX.rstrip("/")
 WS_CONTEXT_PATH = (
     f"{API_PREFIX}/days/today/context" if API_PREFIX else "/days/today/context"
 )
+
+
+async def receive_json_with_timeout(websocket, timeout: float = 5.0):
+    """Receive JSON from WebSocket with timeout to prevent hanging tests.
+
+    Args:
+        websocket: The WebSocket connection
+        timeout: Maximum time to wait in seconds (default: 5.0)
+
+    Returns:
+        The received JSON message
+
+    Raises:
+        asyncio.TimeoutError: If no message is received within the timeout
+    """
+    return await asyncio.wait_for(
+        asyncio.to_thread(websocket.receive_json),
+        timeout=timeout,
+    )
 
 
 @pytest.mark.asyncio
@@ -28,13 +46,13 @@ async def test_realtime_routine_creation_notification(authenticated_client, test
 
     with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
-        ack = websocket.receive_json()
+        ack = await receive_json_with_timeout(websocket)
         assert ack["type"] == "connection_ack"
 
         # Request full sync to establish connection
         sync_request = {"type": "sync_request", "since_timestamp": None}
         websocket.send_json(sync_request)
-        sync_response = websocket.receive_json()
+        sync_response = await receive_json_with_timeout(websocket)
         assert sync_response["type"] == "sync_response"
         baseline_timestamp = sync_response["last_audit_log_timestamp"]
 
@@ -93,7 +111,7 @@ async def test_realtime_routine_creation_notification(authenticated_client, test
 
         try:
             # The backend should send a sync_response with routine change
-            event = websocket.receive_json()
+            event = await receive_json_with_timeout(websocket)
             assert event["type"] == "sync_response"
             assert event["changes"] is not None
             assert len(event["changes"]) > 0
@@ -136,13 +154,13 @@ async def test_realtime_routine_update_notification(authenticated_client, test_d
 
     with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
-        ack = websocket.receive_json()
+        ack = await receive_json_with_timeout(websocket)
         assert ack["type"] == "connection_ack"
 
         # Request full sync
         sync_request = {"type": "sync_request", "since_timestamp": None}
         websocket.send_json(sync_request)
-        sync_response = websocket.receive_json()
+        sync_response = await receive_json_with_timeout(websocket)
         assert sync_response["type"] == "sync_response"
         baseline_timestamp = sync_response["last_audit_log_timestamp"]
 
@@ -193,7 +211,7 @@ async def test_realtime_routine_update_notification(authenticated_client, test_d
 
         try:
             # The backend should send a sync_response with routine change
-            event = websocket.receive_json()
+            event = await receive_json_with_timeout(websocket)
             assert event["type"] == "sync_response"
             assert event["changes"] is not None
             assert len(event["changes"]) > 0
@@ -232,13 +250,13 @@ async def test_realtime_routine_deletion_notification(authenticated_client, test
 
     with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
-        ack = websocket.receive_json()
+        ack = await receive_json_with_timeout(websocket)
         assert ack["type"] == "connection_ack"
 
         # Request full sync
         sync_request = {"type": "sync_request", "since_timestamp": None}
         websocket.send_json(sync_request)
-        sync_response = websocket.receive_json()
+        sync_response = await receive_json_with_timeout(websocket)
         assert sync_response["type"] == "sync_response"
         baseline_timestamp = sync_response["last_audit_log_timestamp"]
 
@@ -249,6 +267,8 @@ async def test_realtime_routine_deletion_notification(authenticated_client, test
         await routine_repo.delete(test_routine.id)
 
         # Create audit log for deletion
+        # Note: Must include entity_data in meta for filtering to work,
+        # even though deleted entities don't include entity_data in the response
         baseline_dt = datetime.fromisoformat(baseline_timestamp.replace("Z", "+00:00"))
         audit_log = AuditLogEntity(
             user_id=user.id,
@@ -256,7 +276,19 @@ async def test_realtime_routine_deletion_notification(authenticated_client, test
             entity_id=test_routine.id,
             entity_type="routine",
             occurred_at=baseline_dt + timedelta(seconds=1),
-            meta={},
+            meta={
+                "entity_data": {
+                    "id": str(test_routine.id),
+                    "user_id": str(test_routine.user_id),
+                    "name": test_routine.name,
+                    "category": test_routine.category.value,
+                    "description": test_routine.description,
+                    "routine_schedule": {
+                        "frequency": test_routine.routine_schedule.frequency.value,
+                    },
+                    "tasks": [],
+                }
+            },
         )
         audit_log_repo = AuditLogRepository(user_id=user.id)
         await audit_log_repo.put(audit_log)
@@ -275,7 +307,7 @@ async def test_realtime_routine_deletion_notification(authenticated_client, test
 
         try:
             # The backend should send a sync_response with routine deletion
-            event = websocket.receive_json()
+            event = await receive_json_with_timeout(websocket, timeout=5.0)
             assert event["type"] == "sync_response"
             assert event["changes"] is not None
             assert len(event["changes"]) > 0
@@ -290,8 +322,21 @@ async def test_realtime_routine_deletion_notification(authenticated_client, test
             assert routine_change["entity_type"] == "routine"
             # Deleted entities don't include entity_data
             assert routine_change["entity_data"] is None
+        except asyncio.TimeoutError:
+            pytest.fail(
+                "No real-time event received after routine deletion: "
+                "Timeout waiting for WebSocket message. "
+                "The deletion event may not have been published or processed."
+            )
+        except AssertionError as e:
+            pytest.fail(
+                f"Real-time event received but assertion failed: {e}. "
+                f"Event received: {event if 'event' in locals() else 'None'}"
+            )
         except Exception as e:
-            pytest.fail(f"No real-time event received after routine deletion: {e}")
+            pytest.fail(
+                f"No real-time event received after routine deletion: {type(e).__name__}: {e}"
+            )
 
 
 @pytest.mark.asyncio
@@ -314,13 +359,13 @@ async def test_routine_incremental_sync(authenticated_client, test_date):
 
     with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         # Receive connection ack
-        ack = websocket.receive_json()
+        ack = await receive_json_with_timeout(websocket)
         assert ack["type"] == "connection_ack"
 
         # Request full sync to establish baseline
         full_sync = {"type": "sync_request", "since_timestamp": None}
         websocket.send_json(full_sync)
-        full_response = websocket.receive_json()
+        full_response = await receive_json_with_timeout(websocket)
         assert full_response["type"] == "sync_response"
         baseline_timestamp = full_response["last_audit_log_timestamp"]
 
@@ -372,7 +417,7 @@ async def test_routine_incremental_sync(authenticated_client, test_date):
         websocket.send_json(incremental_sync)
 
         # Receive incremental response
-        incremental_response = websocket.receive_json()
+        incremental_response = await receive_json_with_timeout(websocket)
         assert incremental_response["type"] == "sync_response"
         assert incremental_response["changes"] is not None
 
@@ -384,7 +429,11 @@ async def test_routine_incremental_sync(authenticated_client, test_date):
 
         # Verify the routine change includes entity data
         routine_change = next(
-            (c for c in incremental_response["changes"] if c["entity_id"] == str(new_routine.id)),
+            (
+                c
+                for c in incremental_response["changes"]
+                if c["entity_id"] == str(new_routine.id)
+            ),
             None,
         )
         assert routine_change is not None

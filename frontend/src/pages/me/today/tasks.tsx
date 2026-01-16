@@ -1,7 +1,7 @@
-import { Component, createMemo, Show } from "solid-js";
+import { Component, createMemo } from "solid-js";
 import { useStreamingData } from "@/providers/streaming-data";
 import TaskList from "@/components/tasks/List";
-import { Task, TaskStatus } from "@/types/api";
+import { Task } from "@/types/api";
 import { AnimatedSection } from "@/components/shared/AnimatedSection";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { SectionCard } from "@/components/shared/SectionCard";
@@ -29,17 +29,20 @@ export const TodaysTasksView: Component = () => {
     {
       label: "Completed",
       value: stats().completed,
-      colorClasses: "bg-gradient-to-br from-green-50 to-emerald-50 border-green-100 text-green-700",
+      colorClasses:
+        "bg-gradient-to-br from-green-50 to-emerald-50 border-green-100 text-green-700",
     },
     {
       label: "Pending",
       value: stats().pending,
-      colorClasses: "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-100 text-amber-700",
+      colorClasses:
+        "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-100 text-amber-700",
     },
     {
       label: "Punted",
       value: stats().punted,
-      colorClasses: "bg-gradient-to-br from-rose-50 to-red-50 border-rose-200 text-rose-700",
+      colorClasses:
+        "bg-gradient-to-br from-rose-50 to-red-50 border-rose-200 text-rose-700",
     },
   ]);
 
@@ -48,9 +51,7 @@ export const TodaysTasksView: Component = () => {
       <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 mb-4">
         <span class="text-3xl">✨</span>
       </div>
-      <p class="text-stone-600 text-lg font-medium mb-2">
-        No tasks for today
-      </p>
+      <p class="text-stone-600 text-lg font-medium mb-2">No tasks for today</p>
       <p class="text-stone-500 text-sm">Enjoy your free time!</p>
     </div>
   );
