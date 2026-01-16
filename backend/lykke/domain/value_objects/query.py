@@ -59,6 +59,7 @@ class CalendarQuery(BaseQuery):
 
     subscription_id: str | None = None
     resource_id: str | None = None
+    platform_id: str | None = None
 
 
 @dataclass(kw_only=True)

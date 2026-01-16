@@ -1,9 +1,16 @@
 import { Component } from "solid-js";
 import Footer from "@/components/shared/layout/Footer";
+import SEO from "@/components/shared/SEO";
 
 const Privacy: Component = () => {
   return (
-    <div class="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex flex-col">
+    <>
+      <SEO
+        title="Privacy Policy"
+        description="Your data is yours. We collect only what's needed to run lykke.day and we never sell your information. You can export or delete your data anytime."
+        path="/privacy"
+      />
+      <div class="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex flex-col">
       <div class="max-w-2xl mx-auto px-6 py-16 flex-1">
         <h1 class="text-3xl font-bold text-stone-800 mb-2">Privacy Policy</h1>
         <p class="text-stone-500 text-sm mb-10">Last updated: January 2026</p>
@@ -92,6 +99,7 @@ const Privacy: Component = () => {
       </div>
       <Footer />
     </div>
+    </>
   );
 };
 

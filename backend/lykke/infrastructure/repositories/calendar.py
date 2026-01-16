@@ -64,6 +64,9 @@ class CalendarRepository(UserScopedBaseRepository[CalendarEntity, CalendarQuery]
                 == query.resource_id
             )
 
+        if query.platform_id is not None:
+            stmt = stmt.where(self.table.c.platform_id == query.platform_id)
+
         return stmt
 
     @staticmethod

@@ -182,7 +182,7 @@ export default function App() {
               <AuthProvider>
                 <NavigationHandler />
                 <MetaProvider>
-                  <Title>Todd's Daily Planer</Title>
+                  <Title>lykke.day</Title>
                   <Suspense>{props.children}</Suspense>
                 </MetaProvider>
               </AuthProvider>

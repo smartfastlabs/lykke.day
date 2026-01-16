@@ -1,6 +1,7 @@
 import { Component } from "solid-js";
 import MediaPage from "@/components/shared/MediaPage";
 import { MediaItem } from "@/components/shared/MediaCard";
+import SEO from "@/components/shared/SEO";
 
 const podcasts: MediaItem[] = [
   {
@@ -97,12 +98,19 @@ const podcasts: MediaItem[] = [
 
 const Podcasts: Component = () => {
   return (
-    <MediaPage
+    <>
+      <SEO
+        title="Podcasts We Recommend"
+        description="Conversations on attention, burnout recovery, and building a kinder relationship with productivity. Brilliant companions for in-between moments that explore mindfulness and intentional living."
+        path="/podcasts"
+      />
+      <MediaPage
       title="Lykke.day Podcasts"
       subtitle="lykke.day podcasts"
       description="These podcasts accompanied me through my journey to adapting to life after covid—but they're just a starting point.<br><br>Podcasts are brilliant companions for in-between moments: walking in nature, commuting, doing dishes. Learning about mindfulness while watching trees sway is different than staring at a screen. They're intimate and conversational.<br><br>But remember: you can listen to every episode about living better and still not change a thing. Let these voices inspire you, then step outside and practice what resonates."
       items={podcasts}
     />
+    </>
   );
 };
 

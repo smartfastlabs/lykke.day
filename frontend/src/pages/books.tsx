@@ -1,6 +1,7 @@
 import { Component } from "solid-js";
 import MediaPage from "@/components/shared/MediaPage";
 import { MediaItem } from "@/components/shared/MediaCard";
+import SEO from "@/components/shared/SEO";
 
 const books: MediaItem[] = [
   {
@@ -115,12 +116,19 @@ const books: MediaItem[] = [
 
 const Books: Component = () => {
   return (
-    <MediaPage
+    <>
+      <SEO
+        title="Books We Recommend"
+        description="These books resonated during the journey to adapting to life after covid—books that explore attention, rest, purpose, and kinder ways to rebuild."
+        path="/books"
+      />
+      <MediaPage
       title="Lykke.day Bookshelf"
       subtitle="lykke.day bookshelf"
       description="These books resonated with me during my journey to adapting to life after covid—but they're just a starting point.<br><br>There's something powerful about physically reading (yes, turning actual pages, not just listening at 2x speed while doing dishes). Books let you pause mid-sentence, sit with an idea. That depth is hard to replicate.<br><br>All the knowledge in the world won't change your life—it's what you do with your days. These are simply invitations to think differently about how you want to live yours."
       items={books}
     />
+    </>
   );
 };
 

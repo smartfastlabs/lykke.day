@@ -1,6 +1,7 @@
 import { Component, For } from "solid-js";
 import Footer from "@/components/shared/layout/Footer";
 import MediaCard, { MediaItem } from "@/components/shared/MediaCard";
+import SEO from "@/components/shared/SEO";
 
 interface AppItem extends MediaItem {}
 
@@ -224,9 +225,14 @@ const apps: AppItem[] = [
 ];
 
 const Apps: Component = () => {
-
   return (
-    <div class="min-h-screen relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex flex-col">
+    <>
+      <SEO
+        title="Apps We've Tried"
+        description="From productivity apps and habit trackers to wellness apps, meditation apps, and mental health apps—there are many excellent health and wellness tools available."
+        path="/apps"
+      />
+      <div class="min-h-screen relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex flex-col">
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(251,191,36,0.12)_0%,_transparent_45%)]" />
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(244,114,82,0.12)_0%,_transparent_45%)]" />
       <div class="absolute top-24 right-16 w-56 h-56 bg-gradient-to-br from-amber-200/30 to-orange-200/20 rounded-full blur-3xl" />
@@ -272,6 +278,7 @@ const Apps: Component = () => {
 
       <Footer />
     </div>
+    </>
   );
 };
 

@@ -20,6 +20,7 @@ from lykke.application.repositories import (
 from lykke.core.constants import OAUTH_STATE_EXPIRY
 from lykke.domain import data_objects
 from lykke.domain.entities import CalendarEntity, UserEntity
+from lykke.domain.value_objects.query import AuthTokenQuery, CalendarQuery
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
 from lykke.presentation.workers.tasks import sync_single_calendar_task
 
@@ -37,7 +38,9 @@ router = APIRouter()
 
 
 @router.get("/login")
-async def google_login() -> RedirectResponse:
+async def google_login(
+    auth_token_id: UUID | None = None,
+) -> RedirectResponse:
     state = secrets.token_urlsafe(16)
     authorization_url, state = GoogleCalendarGateway.get_flow(
         "login"
@@ -49,9 +52,11 @@ async def google_login() -> RedirectResponse:
     )
 
     # Store state for validation on callback
+    # If auth_token_id is provided, we're re-authenticating a specific account
     oauth_states[state] = {
         "expiry": datetime.now(UTC) + OAUTH_STATE_EXPIRY,
         "action": "login",
+        "auth_token_id": str(auth_token_id) if auth_token_id else None,
     }
 
     return RedirectResponse(authorization_url)
@@ -60,9 +65,10 @@ async def google_login() -> RedirectResponse:
 def verify_state(
     state: str,
     expected_action: str,
-) -> bool:
+) -> dict:
     """
     Verify the state parameter and check if it matches the expected action.
+    Returns the state data if valid.
     """
 
     if state not in oauth_states:
@@ -85,7 +91,7 @@ def verify_state(
             detail="Invalid action parameter",
         )
 
-    return True
+    return state_data
 
 
 @router.get("/callback/login")
@@ -100,46 +106,145 @@ async def google_login_callback(
         CalendarRepositoryReadWriteProtocol, Depends(get_calendar_repo)
     ],
 ) -> RedirectResponse:
-    if not code or not verify_state(state, "login"):
+    if not code:
         raise HTTPException(
             status_code=400,
             detail="Missing required parameters",
         )
 
+    state_data = verify_state(state, "login")
+    auth_token_id_from_state = state_data.get("auth_token_id")
+
     flow = GoogleCalendarGateway.get_flow("login")
     flow.fetch_token(code=code)
 
-    auth_token: data_objects.AuthToken = await auth_token_repo.put(
-        data_objects.AuthToken(
-            user_id=user.id,
-            client_id=flow.credentials.client_id,
-            client_secret=flow.credentials.client_secret,
-            expires_at=flow.credentials.expiry,
-            platform="google",
-            refresh_token=flow.credentials.refresh_token,
-            scopes=flow.credentials.scopes,
-            token=flow.credentials.token,
-            token_uri=flow.credentials.token_uri,
-        ),
-    )
-
+    # First, get the calendars from Google to understand which account this is
     service = build(
         "calendar",
         "v3",
         credentials=flow.credentials,
     )
     calendar_list = service.calendarList().list().execute()
+    google_platform_ids = {cal["id"] for cal in calendar_list.get("items", [])}
 
-    for calendar in calendar_list.get("items", []):
-        await calendar_repo.put(
-            CalendarEntity(
-                user_id=user.id,
-                name=calendar["summary"],
-                platform="google",
-                platform_id=calendar["id"],
-                auth_token_id=auth_token.id,
-            ),
+    # Determine which auth token to update/create
+    existing_auth_token = None
+
+    if auth_token_id_from_state:
+        # If we have a specific auth_token_id from state, use that (re-auth from calendar page)
+        try:
+            existing_auth_token = await auth_token_repo.get(UUID(auth_token_id_from_state))
+            # Verify it belongs to this user
+            if existing_auth_token.user_id != user.id:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Auth token does not belong to user",
+                )
+            logger.info(
+                f"Re-authenticating specific auth token {existing_auth_token.id} "
+                f"for user {user.id}"
+            )
+        except Exception as e:
+            logger.warning(
+                f"Could not find auth token {auth_token_id_from_state} from state: {e}"
+            )
+            # Fall through to matching logic
+
+    if not existing_auth_token:
+        # Try to match by finding calendars with matching platform_ids
+        # This handles the case where we're re-authenticating but don't have auth_token_id
+        if google_platform_ids:
+            # Find existing calendars that match these platform_ids
+            existing_calendars = await calendar_repo.search(
+                CalendarQuery()  # Will get all user's calendars due to user scoping
+            )
+            matching_calendar = next(
+                (
+                    cal
+                    for cal in existing_calendars
+                    if cal.platform_id in google_platform_ids and cal.platform == "google"
+                ),
+                None,
+            )
+
+            if matching_calendar:
+                # Found a matching calendar, use its auth_token_id
+                try:
+                    existing_auth_token = await auth_token_repo.get(
+                        matching_calendar.auth_token_id
+                    )
+                    logger.info(
+                        f"Matched existing auth token {existing_auth_token.id} "
+                        f"via calendar {matching_calendar.id} for user {user.id}"
+                    )
+                except Exception as e:
+                    logger.warning(f"Could not find auth token {matching_calendar.auth_token_id}: {e}")
+
+    # Create or update the auth token
+    auth_token_data = data_objects.AuthToken(
+        user_id=user.id,
+        client_id=flow.credentials.client_id,
+        client_secret=flow.credentials.client_secret,
+        expires_at=flow.credentials.expiry,
+        platform="google",
+        refresh_token=flow.credentials.refresh_token,
+        scopes=flow.credentials.scopes,
+        token=flow.credentials.token,
+        token_uri=flow.credentials.token_uri,
+    )
+
+    # If an existing token was found, update it in place by setting its id
+    if existing_auth_token:
+        auth_token_data.id = existing_auth_token.id
+        logger.info(f"Updating existing auth token {existing_auth_token.id} for user {user.id}")
+    else:
+        logger.info(f"Creating new auth token for user {user.id}")
+
+    auth_token: data_objects.AuthToken = await auth_token_repo.put(auth_token_data)
+
+    # Process each calendar from Google
+    # This will create new calendars or update existing ones based on platform_id
+    for google_calendar in calendar_list.get("items", []):
+        platform_id = google_calendar["id"]
+
+        # Check if a calendar with this platform_id already exists
+        existing_calendar = await calendar_repo.search_one_or_none(
+            CalendarQuery(platform_id=platform_id)
         )
+
+        calendar_data = CalendarEntity(
+            user_id=user.id,
+            name=google_calendar["summary"],
+            platform="google",
+            platform_id=platform_id,
+            auth_token_id=auth_token.id,
+        )
+
+        # If an existing calendar was found, update it in place by preserving its id
+        # and any sync subscription settings
+        if existing_calendar:
+            calendar_data.id = existing_calendar.id
+            # Preserve sync subscription if it exists
+            if existing_calendar.sync_subscription:
+                calendar_data.sync_subscription = existing_calendar.sync_subscription
+                calendar_data.sync_subscription_id = existing_calendar.sync_subscription_id
+            # Preserve default_event_category if it exists
+            if existing_calendar.default_event_category:
+                calendar_data.default_event_category = existing_calendar.default_event_category
+            logger.info(
+                f"Updating existing calendar {existing_calendar.id} "
+                f"(platform_id: {platform_id}) for user {user.id}"
+            )
+        else:
+            logger.info(
+                f"Creating new calendar (platform_id: {platform_id}) for user {user.id}"
+            )
+
+        await calendar_repo.put(calendar_data)
+
+    # Clean up state
+    if state in oauth_states:
+        del oauth_states[state]
 
     return RedirectResponse(url="/app")
 

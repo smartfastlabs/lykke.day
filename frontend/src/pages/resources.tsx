@@ -1,6 +1,7 @@
 import { Component } from "solid-js";
 import { A } from "@solidjs/router";
 import Footer from "@/components/shared/layout/Footer";
+import SEO from "@/components/shared/SEO";
 import { useAuth } from "@/providers/auth";
 import { usePageAnimation } from "@/utils/navigation";
 
@@ -49,7 +50,13 @@ const Resources: Component = () => {
   ];
 
   return (
-    <div class="min-h-screen relative overflow-hidden">
+    <>
+      <SEO
+        title="Resources"
+        description="Channels, podcasts, and books that explore attention, rest, purpose, and kinder systems—voices that helped rethink productivity and presence."
+        path="/resources"
+      />
+      <div class="min-h-screen relative overflow-hidden">
       <div class="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50" />
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(251,191,36,0.15)_0%,_transparent_50%)]" />
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(244,114,82,0.1)_0%,_transparent_50%)]" />
@@ -162,6 +169,7 @@ const Resources: Component = () => {
         <Footer />
       </div>
     </div>
+    </>
   );
 };
 

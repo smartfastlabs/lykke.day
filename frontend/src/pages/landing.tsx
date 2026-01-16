@@ -11,6 +11,7 @@ import {
   xCircle,
 } from "solid-heroicons/outline";
 import Footer from "@/components/shared/layout/Footer";
+import SEO from "@/components/shared/SEO";
 import { useAuth } from "@/providers/auth";
 import { usePageAnimation } from "@/utils/navigation";
 
@@ -61,7 +62,13 @@ const Landing: Component = () => {
   ];
 
   return (
-    <div class="min-h-screen relative overflow-hidden">
+    <>
+      <SEO
+        title="Lykke — Find happiness in everyday moments"
+        description="Lykke (loo-kah) — the Danish art of finding happiness in everyday moments. A daily companion that helps you get the small stuff done so you're more effective to do the big stuff."
+        path="/"
+      />
+      <div class="min-h-screen relative overflow-hidden">
       <div class="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50" />
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(251,191,36,0.15)_0%,_transparent_50%)]" />
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(244,114,82,0.1)_0%,_transparent_50%)]" />
@@ -398,6 +405,7 @@ const Landing: Component = () => {
         <Footer />
       </div>
     </div>
+    </>
   );
 };
 

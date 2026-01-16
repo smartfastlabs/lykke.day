@@ -3,6 +3,7 @@ import { A } from "@solidjs/router";
 import { Icon } from "solid-heroicons";
 import { chatBubbleLeftRight, heart, sparkles } from "solid-heroicons/outline";
 import Footer from "@/components/shared/layout/Footer";
+import SEO from "@/components/shared/SEO";
 
 interface FAQItem {
   question: string;
@@ -51,7 +52,13 @@ const faqs: FAQItem[] = [
 
 const FAQ: Component = () => {
   return (
-    <div class="min-h-screen relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex flex-col">
+    <>
+      <SEO
+        title="Frequently Asked Questions"
+        description="Learn about lykke.day—a calm, day-at-a-time companion that helps you build gentle routines and find happiness in everyday moments. Quick answers to common questions."
+        path="/faq"
+      />
+      <div class="min-h-screen relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex flex-col">
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(251,191,36,0.12)_0%,_transparent_45%)]" />
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(244,114,82,0.12)_0%,_transparent_45%)]" />
       <div class="absolute top-24 right-16 w-56 h-56 bg-gradient-to-br from-amber-200/30 to-orange-200/20 rounded-full blur-3xl" />
@@ -126,6 +133,7 @@ const FAQ: Component = () => {
 
       <Footer />
     </div>
+    </>
   );
 };
 

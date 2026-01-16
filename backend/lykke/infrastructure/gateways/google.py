@@ -25,7 +25,6 @@ from lykke.domain.entities import (
 CLIENT_SECRET_FILE = ".credentials.json"
 SCOPES = [
     "https://www.googleapis.com/auth/userinfo.profile",
-    "https://www.googleapis.com/auth/calendar",
     "https://www.googleapis.com/auth/calendar.readonly",
     "https://www.googleapis.com/auth/userinfo.email",
     "openid",
@@ -216,7 +215,9 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
             )
 
         entry_category = (
-            series_entity.event_category if series_entity and series_entity.event_category else calendar.default_event_category
+            series_entity.event_category
+            if series_entity and series_entity.event_category
+            else calendar.default_event_category
         )
         entry = CalendarEntryEntity(
             user_id=calendar.user_id,
