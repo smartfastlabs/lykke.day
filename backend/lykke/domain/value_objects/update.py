@@ -8,7 +8,7 @@ from uuid import UUID
 
 from .alarm import Alarm
 from .base import BaseRequestObject
-from .day import DayStatus, DayTag
+from .day import DayStatus, DayTag, Goal
 from .routine import RoutineSchedule, RoutineTask
 from .sync import SyncSubscription
 from .task import EventCategory, TaskCategory, TaskType
@@ -119,6 +119,7 @@ class DayUpdateObject(BaseUpdateObject):
     template_id: UUID | None = None
     time_blocks: list[DayTimeBlock] | None = None
     active_time_block_id: UUID | None = None
+    goals: list[Goal] | None = None
 
 
 @dataclass(kw_only=True)

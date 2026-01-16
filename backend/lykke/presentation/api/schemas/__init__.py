@@ -17,6 +17,7 @@ from .calendar_entry_series import (
 from .conversation import ConversationSchema
 from .day import DaySchema, DayUpdateSchema
 from .day_context import DayContextSchema
+from .goal import GoalSchema
 from .day_template import (
     DayTemplateCreateSchema,
     DayTemplateRoutineCreateSchema,
@@ -86,6 +87,7 @@ DayUpdateSchema.model_rebuild()
 TaskSchema.model_rebuild()
 TaskDefinitionUpdateSchema.model_rebuild()
 DayContextSchema.model_rebuild()
+GoalSchema.model_rebuild()
 RoutineSchema.model_rebuild()
 RoutineTaskCreateSchema.model_rebuild()
 RoutineTaskUpdateSchema.model_rebuild()
@@ -127,6 +129,7 @@ __all__ = [
     "ConversationSchema",
     "DayContextSchema",
     "DaySchema",
+    "GoalSchema",
     "DayTemplateCreateSchema",
     "DayTemplateRoutineCreateSchema",
     "DayTemplateSchema",

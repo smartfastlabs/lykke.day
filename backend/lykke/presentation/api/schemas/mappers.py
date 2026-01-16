@@ -28,6 +28,7 @@ from lykke.presentation.api.schemas import (
     DaySchema,
     DayTemplateSchema,
     DayTemplateTimeBlockSchema,
+    GoalSchema,
     MessageSchema,
     PushSubscriptionSchema,
     RoutineSchema,
@@ -49,6 +50,16 @@ def map_action_to_schema(action: value_objects.Action) -> ActionSchema:
 def map_alarm_to_schema(alarm: value_objects.Alarm) -> AlarmSchema:
     """Convert Alarm value object to Alarm schema."""
     return AlarmSchema(**asdict(alarm))
+
+
+def map_goal_to_schema(goal: value_objects.Goal) -> GoalSchema:
+    """Convert Goal value object to Goal schema."""
+    return GoalSchema(
+        id=goal.id,
+        name=goal.name,
+        status=goal.status,
+        created_at=goal.created_at,
+    )
 
 
 def map_task_definition_to_schema(
@@ -148,6 +159,8 @@ def map_day_to_schema(day: DayEntity) -> DaySchema:
     alarm_schema = map_alarm_to_schema(day.alarm) if day.alarm else None
     template_schema = map_day_template_to_schema(day.template) if day.template else None
 
+    goal_schemas = [map_goal_to_schema(goal) for goal in day.goals]
+
     return DaySchema(
         id=day.id,
         user_id=day.user_id,
@@ -157,6 +170,7 @@ def map_day_to_schema(day: DayEntity) -> DaySchema:
         scheduled_at=day.scheduled_at,
         tags=day.tags,
         template=template_schema,
+        goals=goal_schemas,
     )
 
 

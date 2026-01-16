@@ -14,6 +14,7 @@ from .base import BaseEntitySchema, BaseSchema
 if TYPE_CHECKING:
     from .alarm import AlarmSchema
     from .day_template import DayTemplateSchema
+    from .goal import GoalSchema
 
 
 class DaySchema(BaseEntitySchema):
@@ -26,6 +27,7 @@ class DaySchema(BaseEntitySchema):
     scheduled_at: datetime | None = None
     tags: list[DayTag] = Field(default_factory=list)
     template: Optional["DayTemplateSchema"] = None
+    goals: list["GoalSchema"] = Field(default_factory=list)
 
 
 class DayUpdateSchema(BaseSchema):

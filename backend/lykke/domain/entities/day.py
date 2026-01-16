@@ -4,9 +4,10 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, date as dt_date, datetime
 from typing import TYPE_CHECKING
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from lykke.core.exceptions import DomainError
+from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 
 from .. import value_objects
@@ -14,6 +15,9 @@ from ..events.day_events import (
     DayCompletedEvent,
     DayScheduledEvent,
     DayUnscheduledEvent,
+    GoalAddedEvent,
+    GoalRemovedEvent,
+    GoalStatusChangedEvent,
 )
 from ..events.task_events import (
     TaskActionRecordedEvent,
@@ -30,7 +34,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(kw_only=True)
-class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
+class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableEntity):
     user_id: UUID
     date: dt_date
     alarm: value_objects.Alarm | None = None
@@ -40,6 +44,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
     template: DayTemplateEntity | None = None
     time_blocks: list[value_objects.DayTimeBlock] = field(default_factory=list)
     active_time_block_id: UUID | None = None
+    goals: list[value_objects.Goal] = field(default_factory=list)
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
@@ -253,3 +258,125 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"]):
 
         # Return the updated task (mutated in place by record_action)
         return task
+
+    def add_goal(self, name: str) -> value_objects.Goal:
+        """Add a goal to this day.
+
+        This method enforces the business rule that a day can have at most 3 goals.
+
+        Args:
+            name: The name of the goal to add
+
+        Returns:
+            The created Goal value object
+
+        Raises:
+            DomainError: If the day already has 3 goals
+        """
+        if len(self.goals) >= 3:
+            raise DomainError(
+                "Cannot add goal: a day can have at most 3 goals. "
+                f"Current goal count: {len(self.goals)}"
+            )
+
+        goal = value_objects.Goal(
+            id=uuid4(),
+            name=name,
+            status=value_objects.GoalStatus.INCOMPLETE,
+            created_at=datetime.now(UTC),
+        )
+
+        # Create a new list with the new goal (goals list is immutable)
+        self.goals = list(self.goals) + [goal]
+
+        self._add_event(
+            GoalAddedEvent(
+                day_id=self.id,
+                date=self.date,
+                goal_id=goal.id,
+                goal_name=goal.name,
+            )
+        )
+
+        return goal
+
+    def update_goal_status(
+        self, goal_id: UUID, status: value_objects.GoalStatus
+    ) -> None:
+        """Update the status of a goal.
+
+        Args:
+            goal_id: The ID of the goal to update
+            status: The new status for the goal
+
+        Raises:
+            DomainError: If the goal is not found
+        """
+        goal_index = None
+        old_goal = None
+        for i, goal in enumerate(self.goals):
+            if goal.id == goal_id:
+                goal_index = i
+                old_goal = goal
+                break
+
+        if goal_index is None or old_goal is None:
+            raise DomainError(f"Goal with id {goal_id} not found in this day")
+
+        if old_goal.status == status:
+            # No change needed
+            return
+
+        # Create updated goal with new status
+        updated_goal = value_objects.Goal(
+            id=old_goal.id,
+            name=old_goal.name,
+            status=status,
+            created_at=old_goal.created_at,
+        )
+
+        # Create new list with updated goal
+        new_goals = list(self.goals)
+        new_goals[goal_index] = updated_goal
+        self.goals = new_goals
+
+        self._add_event(
+            GoalStatusChangedEvent(
+                day_id=self.id,
+                date=self.date,
+                goal_id=goal_id,
+                old_status=old_goal.status,
+                new_status=status,
+                goal_name=old_goal.name,
+            )
+        )
+
+    def remove_goal(self, goal_id: UUID) -> None:
+        """Remove a goal from this day.
+
+        Args:
+            goal_id: The ID of the goal to remove
+
+        Raises:
+            DomainError: If the goal is not found
+        """
+        goal_to_remove = None
+        for goal in self.goals:
+            if goal.id == goal_id:
+                goal_to_remove = goal
+                break
+
+        if goal_to_remove is None:
+            raise DomainError(f"Goal with id {goal_id} not found in this day")
+
+        # Create new list without the removed goal
+        self.goals = [goal for goal in self.goals if goal.id != goal_id]
+
+        self._add_event(
+            GoalRemovedEvent(
+                day_id=self.id,
+                date=self.date,
+                goal_id=goal_id,
+                goal_name=goal_to_remove.name,
+            )
+        )

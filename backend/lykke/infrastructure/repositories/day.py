@@ -38,6 +38,9 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
         if day.template:
             row["template"] = dataclass_to_json_dict(day.template)
 
+        if day.goals:
+            row["goals"] = [dataclass_to_json_dict(goal) for goal in day.goals]
+
         return row
 
     @classmethod
@@ -167,6 +170,31 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                         alarm_data["triggered_at"]
                     )
                 data["alarm"] = value_objects.Alarm(**alarm_data)
+
+        # Handle goals - it comes as a list of dicts from JSONB, need to convert to Goal value objects
+        if data.get("goals"):
+            if isinstance(data["goals"], list):
+                from datetime import datetime as dt_datetime
+
+                goals_list = []
+                for goal_dict in data["goals"]:
+                    if isinstance(goal_dict, dict):
+                        goal_data = dict(goal_dict)
+                        # Convert string UUIDs to UUID objects
+                        if "id" in goal_data and isinstance(goal_data["id"], str):
+                            goal_data["id"] = UUID(goal_data["id"])
+                        # Convert status string to enum if needed
+                        if "status" in goal_data and isinstance(goal_data["status"], str):
+                            goal_data["status"] = value_objects.GoalStatus(goal_data["status"])
+                        # Convert created_at string to datetime if needed
+                        if "created_at" in goal_data and goal_data["created_at"] and isinstance(
+                            goal_data["created_at"], str
+                        ):
+                            goal_data["created_at"] = dt_datetime.fromisoformat(
+                                goal_data["created_at"].replace("Z", "+00:00")
+                            )
+                        goals_list.append(value_objects.Goal(**goal_data))
+                data["goals"] = goals_list
 
         from lykke.infrastructure.repositories.base.utils import (
             filter_init_false_fields,
