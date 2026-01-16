@@ -4,6 +4,7 @@ import {
   faCheck,
   faExclamationTriangle,
   faDatabase,
+  faCalendar,
 } from "@fortawesome/free-solid-svg-icons";
 import { useStreamingData } from "@/providers/streaming-data";
 
@@ -15,6 +16,11 @@ const CommandsPage: Component = () => {
   } | null>(null);
   const [isClearing, setIsClearing] = createSignal(false);
   const [clearMessage, setClearMessage] = createSignal<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [isResettingSync, setIsResettingSync] = createSignal(false);
+  const [resetSyncMessage, setResetSyncMessage] = createSignal<{
     type: "success" | "error";
     text: string;
   } | null>(null);
@@ -95,6 +101,43 @@ const CommandsPage: Component = () => {
       });
     } finally {
       setIsClearing(false);
+    }
+  };
+
+  const handleResetCalendarSync = async () => {
+    if (
+      !confirm(
+        "This will unsubscribe all calendars from syncing, delete all future calendar events, then resubscribe and resync. Continue?"
+      )
+    ) {
+      return;
+    }
+
+    setIsResettingSync(true);
+    setResetSyncMessage(null);
+
+    try {
+      const response = await fetch("/api/calendars/reset-sync", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to reset calendar sync");
+      }
+
+      setResetSyncMessage({
+        type: "success",
+        text: "Successfully reset calendar sync! All calendars have been unsubscribed, future events deleted, and resynced.",
+      });
+    } catch (error) {
+      console.error("Error resetting calendar sync:", error);
+      setResetSyncMessage({
+        type: "error",
+        text: "Failed to reset calendar sync. Please try again.",
+      });
+    } finally {
+      setIsResettingSync(false);
     }
   };
 
@@ -278,6 +321,100 @@ const CommandsPage: Component = () => {
                       <path d={faRotate.icon[4] as string} />
                     </svg>
                     Clearing...
+                  </span>
+                </Show>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Reset Calendar Sync Card */}
+        <div class="bg-white/60 backdrop-blur-md border border-white/80 rounded-2xl shadow-xl shadow-amber-900/5 p-6 md:p-8 mb-6">
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+              <svg
+                viewBox={`0 0 ${faCalendar.icon[0]} ${faCalendar.icon[1]}`}
+                class="w-6 h-6 fill-amber-600"
+              >
+                <path d={faCalendar.icon[4] as string} />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-xl font-semibold text-stone-800 mb-2">
+                Reset Calendar Sync
+              </h2>
+              <p class="text-stone-600 mb-4">
+                Reset calendar synchronization for all subscribed calendars.
+                This will:
+              </p>
+              <ul class="text-stone-600 text-sm space-y-1 mb-6 ml-4">
+                <li>
+                  • Unsubscribe all calendars from syncing (that have it
+                  enabled)
+                </li>
+                <li>• Delete all future events for these calendars</li>
+                <li>
+                  • Resubscribe to updates for all calendars that were
+                  previously subscribed
+                </li>
+                <li>• Perform initial sync for each calendar</li>
+              </ul>
+
+              {/* Message Display */}
+              <Show when={resetSyncMessage()}>
+                {(msg) => (
+                  <div
+                    class="mb-4 p-4 rounded-lg flex items-center gap-3"
+                    classList={{
+                      "bg-green-50 border border-green-200":
+                        msg().type === "success",
+                      "bg-red-50 border border-red-200": msg().type === "error",
+                    }}
+                  >
+                    <svg
+                      viewBox={`0 0 ${(msg().type === "success" ? faCheck : faExclamationTriangle).icon[0]} ${(msg().type === "success" ? faCheck : faExclamationTriangle).icon[1]}`}
+                      class="w-5 h-5 flex-shrink-0"
+                      classList={{
+                        "fill-green-600": msg().type === "success",
+                        "fill-red-600": msg().type === "error",
+                      }}
+                    >
+                      <path
+                        d={
+                          (msg().type === "success"
+                            ? faCheck
+                            : faExclamationTriangle
+                          ).icon[4] as string
+                        }
+                      />
+                    </svg>
+                    <p
+                      class="text-sm"
+                      classList={{
+                        "text-green-800": msg().type === "success",
+                        "text-red-800": msg().type === "error",
+                      }}
+                    >
+                      {msg().text}
+                    </p>
+                  </div>
+                )}
+              </Show>
+
+              <button
+                onClick={handleResetCalendarSync}
+                disabled={isResettingSync()}
+                class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Show when={isResettingSync()} fallback="Reset Calendar Sync">
+                  <span class="flex items-center gap-2">
+                    <svg
+                      viewBox={`0 0 ${faRotate.icon[0]} ${faRotate.icon[1]}`}
+                      class="w-4 h-4 fill-white animate-spin"
+                    >
+                      <path d={faRotate.icon[4] as string} />
+                    </svg>
+                    Resetting...
                   </span>
                 </Show>
               </button>

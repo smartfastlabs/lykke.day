@@ -6,6 +6,7 @@ from fastapi import Depends
 from lykke.application.commands.calendar import (
     ResyncCalendarHandler,
     ResetCalendarDataHandler,
+    ResetCalendarSyncHandler,
     SubscribeCalendarHandler,
     UnsubscribeCalendarHandler,
 )
@@ -81,3 +82,18 @@ def get_reset_calendar_data_handler(
     """Get a ResetCalendarDataHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return ResetCalendarDataHandler(ro_repos, uow_factory, user.id, google_gateway)
+
+
+def get_reset_calendar_sync_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    google_gateway: Annotated[
+        GoogleCalendarGatewayProtocol, Depends(get_google_calendar_gateway)
+    ],
+) -> ResetCalendarSyncHandler:
+    """Get a ResetCalendarSyncHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return ResetCalendarSyncHandler(ro_repos, uow_factory, user.id, google_gateway)

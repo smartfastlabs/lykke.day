@@ -9,6 +9,7 @@ from lykke.application.commands.calendar import (
     DeleteCalendarHandler,
     ResyncCalendarHandler,
     ResetCalendarDataHandler,
+    ResetCalendarSyncHandler,
     SubscribeCalendarHandler,
     UnsubscribeCalendarHandler,
     UpdateCalendarHandler,
@@ -32,6 +33,7 @@ from lykke.presentation.workers.tasks import sync_single_calendar_task
 from .dependencies.commands.calendar import (
     get_resync_calendar_handler,
     get_reset_calendar_data_handler,
+    get_reset_calendar_sync_handler,
     get_subscribe_calendar_handler,
     get_unsubscribe_calendar_handler,
 )
@@ -122,6 +124,24 @@ async def reset_calendar_subscriptions(
             calendar_id=calendar.id,
         )
 
+    return [map_calendar_to_schema(calendar) for calendar in updated_calendars]
+
+
+@router.post("/reset-sync", response_model=list[CalendarSchema])
+async def reset_calendar_sync(
+    reset_calendar_sync_handler: Annotated[
+        ResetCalendarSyncHandler, Depends(get_reset_calendar_sync_handler)
+    ],
+) -> list[CalendarSchema]:
+    """Reset calendar sync: unsubscribe, delete future events, resubscribe, and sync.
+    
+    This operation:
+    1. Unsubscribes all calendars that have syncing enabled
+    2. Deletes all future calendar entries for those calendars
+    3. Resubscribes to updates for all calendars that were previously subscribed
+    4. Performs initial sync for each calendar
+    """
+    updated_calendars = await reset_calendar_sync_handler.reset_sync()
     return [map_calendar_to_schema(calendar) for calendar in updated_calendars]
 
 
