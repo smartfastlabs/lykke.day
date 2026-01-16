@@ -10,13 +10,16 @@ import {
   type ParentProps,
 } from "solid-js";
 import { createStore } from "solid-js/store";
-<<<<<<< Updated upstream
-import { DayContext, Task, Event, Day, TaskStatus, Goal, GoalStatus } from "@/types/api";
+import {
+  DayContext,
+  Task,
+  Event,
+  Day,
+  TaskStatus,
+  Goal,
+  GoalStatus,
+} from "@/types/api";
 import { taskAPI, goalAPI } from "@/utils/api";
-=======
-import { DayContext, Task, Event, Day, TaskStatus, Routine } from "@/types/api";
-import { taskAPI } from "@/utils/api";
->>>>>>> Stashed changes
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 
 interface StreamingDataContextValue {
@@ -26,6 +29,7 @@ interface StreamingDataContextValue {
   events: Accessor<Event[]>;
   goals: Accessor<Goal[]>;
   day: Accessor<Day | undefined>;
+  routines: Accessor<Routine[] | undefined>;
   routines: Accessor<Routine[] | undefined>;
   // Loading and error states
   isLoading: Accessor<boolean>;
@@ -60,6 +64,7 @@ interface SyncResponseMessage extends WebSocketMessage {
   day_context?: DayContext;
   changes?: EntityChange[];
   routines?: Routine[];
+  routines?: Routine[];
   last_audit_log_timestamp?: string | null;
 }
 
@@ -91,7 +96,7 @@ interface EntityChange {
   change_type: "created" | "updated" | "deleted";
   entity_type: string;
   entity_id: string;
-  entity_data: Task | Event | Routine | null;
+  entity_data: Task | Event | Routine | Routine | null;
 }
 
 export function StreamingDataProvider(props: ParentProps) {
@@ -266,7 +271,12 @@ export function StreamingDataProvider(props: ParentProps) {
         setLastProcessedTimestamp(message.last_audit_log_timestamp);
       }
       setIsOutOfSync(false);
-      
+
+      // Update routines from full sync response
+      if (message.routines) {
+        setRoutinesStore({ routines: message.routines });
+      }
+
       // Update routines from full sync response
       if (message.routines) {
         setRoutinesStore({ routines: message.routines });
@@ -440,6 +450,13 @@ export function StreamingDataProvider(props: ParentProps) {
             ),
           }));
           return current;
+        } else if (auditLog.entity_type === "routine") {
+          setRoutinesStore((current) => ({
+            routines: current.routines.filter(
+              (r) => r.id !== auditLog.entity_id
+            ),
+          }));
+          return current;
         }
 
         return { data: updated };
@@ -578,6 +595,7 @@ export function StreamingDataProvider(props: ParentProps) {
     events,
     goals,
     day,
+    routines,
     routines,
     isLoading,
     error,
