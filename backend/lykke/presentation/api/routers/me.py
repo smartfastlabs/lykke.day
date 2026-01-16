@@ -1,16 +1,35 @@
 """Endpoints for retrieving the current authenticated user."""
 
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from lykke.application.commands.user import UpdateUserHandler
+from lykke.application.queries import GetDayContextHandler
+from lykke.application.commands.day import (
+    AddGoalToDayHandler,
+    RemoveGoalHandler,
+    UpdateGoalStatusHandler,
+)
+from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.value_objects import UserSetting, UserUpdateObject
-from lykke.presentation.api.schemas import UserSchema, UserUpdateSchema
-from lykke.presentation.api.schemas.mappers import map_user_to_schema
+from lykke.presentation.api.schemas import (
+    UserSchema,
+    UserUpdateSchema,
+    DayContextSchema,
+)
+from lykke.presentation.api.schemas.mappers import map_user_to_schema, map_day_context_to_schema
+from lykke.core.utils.dates import get_current_date
 
 from .dependencies.commands.user import get_update_user_handler
 from .dependencies.user import get_current_user
+from .dependencies.services import (
+    day_context_handler,
+    get_add_goal_to_day_handler,
+    get_remove_goal_handler,
+    get_update_goal_status_handler,
+)
 
 router = APIRouter()
 
@@ -47,3 +66,59 @@ async def update_current_user_profile(
     )
     updated_user = await update_user_handler.run(update_data=update_object)
     return map_user_to_schema(updated_user)
+
+
+# ============================================================================
+# Today's Goals
+# ============================================================================
+
+
+@router.post("/today/goals", response_model=DayContextSchema)
+async def add_goal_to_today(
+    name: str,
+    handler: Annotated[AddGoalToDayHandler, Depends(get_add_goal_to_day_handler)],
+    day_context_handler_instance: Annotated[
+        GetDayContextHandler, Depends(day_context_handler)
+    ],
+) -> DayContextSchema:
+    """Add a goal to today."""
+    date = get_current_date()
+    await handler.add_goal(date=date, name=name)
+    # Get the full context to return
+    context = await day_context_handler_instance.get_day_context(date=date)
+    return map_day_context_to_schema(context)
+
+
+@router.patch("/today/goals/{goal_id}", response_model=DayContextSchema)
+async def update_today_goal_status(
+    goal_id: UUID,
+    status: value_objects.GoalStatus,
+    handler: Annotated[
+        UpdateGoalStatusHandler, Depends(get_update_goal_status_handler)
+    ],
+    day_context_handler_instance: Annotated[
+        GetDayContextHandler, Depends(day_context_handler)
+    ],
+) -> DayContextSchema:
+    """Update a goal's status for today."""
+    date = get_current_date()
+    await handler.update_goal_status(date=date, goal_id=goal_id, status=status)
+    # Get the full context to return
+    context = await day_context_handler_instance.get_day_context(date=date)
+    return map_day_context_to_schema(context)
+
+
+@router.delete("/today/goals/{goal_id}", response_model=DayContextSchema)
+async def remove_goal_from_today(
+    goal_id: UUID,
+    handler: Annotated[RemoveGoalHandler, Depends(get_remove_goal_handler)],
+    day_context_handler_instance: Annotated[
+        GetDayContextHandler, Depends(day_context_handler)
+    ],
+) -> DayContextSchema:
+    """Remove a goal from today."""
+    date = get_current_date()
+    await handler.remove_goal(date=date, goal_id=goal_id)
+    # Get the full context to return
+    context = await day_context_handler_instance.get_day_context(date=date)
+    return map_day_context_to_schema(context)

@@ -21,12 +21,12 @@ import Apps from "@/pages/apps";
 import YouTube from "@/pages/youtube";
 import Podcasts from "@/pages/podcasts";
 import Resources from "@/pages/resources";
-import MePage from "@/pages/me/index";
 import HomeLayout from "@/pages/me/today/layout";
 import PreviewView from "@/pages/me/today/preview";
 import TasksView from "@/pages/me/today/tasks";
 import EventsView from "@/pages/me/today/events";
-import EventsPage from "@/pages/me/events";
+import GoalsView from "@/pages/me/today/goals";
+import AuditLogPage from "@/pages/me/audit-log";
 import NavigationLayout from "@/pages/me/navigation/layout";
 import NavPage from "@/pages/me/navigation/links";
 import CalendarPage from "@/pages/me/navigation/calendar";
@@ -136,12 +136,18 @@ export default function App() {
             />
 
             <Route path="/me" component={AuthGuard}>
-              <Route path="/" component={MePage} />
-              <Route path="/events" component={EventsPage} />
+              <Route path="/" component={HomeLayout}>
+                <Route path="/" component={PreviewView} />
+                <Route path="/tasks" component={TasksView} />
+                <Route path="/events" component={EventsView} />
+                <Route path="/goals" component={GoalsView} />
+              </Route>
+              <Route path="/audit-log" component={AuditLogPage} />
               <Route path="/today" component={HomeLayout}>
                 <Route path="/" component={PreviewView} />
                 <Route path="/tasks" component={TasksView} />
                 <Route path="/events" component={EventsView} />
+                <Route path="/goals" component={GoalsView} />
               </Route>
               <Route path="/nav" component={NavigationLayout}>
                 <Route path="/" component={NavPage} />

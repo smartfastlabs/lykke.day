@@ -18,6 +18,11 @@ from lykke.application.commands import (
     ScheduleDayHandler,
     UpdateDayHandler,
 )
+from lykke.application.commands.day import (
+    AddGoalToDayHandler,
+    RemoveGoalHandler,
+    UpdateGoalStatusHandler,
+)
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import (
     GetDayContextHandler,
@@ -261,3 +266,39 @@ def get_record_task_action_handler(
     """Get a RecordTaskActionHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return RecordTaskActionHandler(ro_repos, uow_factory, user.id)
+
+
+def get_add_goal_to_day_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> AddGoalToDayHandler:
+    """Get an AddGoalToDayHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return AddGoalToDayHandler(ro_repos, uow_factory, user.id)
+
+
+def get_update_goal_status_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> UpdateGoalStatusHandler:
+    """Get an UpdateGoalStatusHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return UpdateGoalStatusHandler(ro_repos, uow_factory, user.id)
+
+
+def get_remove_goal_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> RemoveGoalHandler:
+    """Get a RemoveGoalHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return RemoveGoalHandler(ro_repos, uow_factory, user.id)

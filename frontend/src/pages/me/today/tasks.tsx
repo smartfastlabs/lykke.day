@@ -1,8 +1,11 @@
-import { Component, createSignal, onMount, Show } from "solid-js";
+import { Component, createMemo } from "solid-js";
 import { useStreamingData } from "@/providers/streaming-data";
 import TaskList from "@/components/tasks/List";
 import { Task } from "@/types/api";
-import { isBackForwardNavigation } from "@/utils/navigation";
+import { AnimatedSection } from "@/components/shared/AnimatedSection";
+import { StatsCard } from "@/components/shared/StatsCard";
+import { SectionCard } from "@/components/shared/SectionCard";
+import { MotivationalQuote } from "@/components/shared/MotivationalQuote";
 
 const getTaskStats = (tasks: Task[]) => {
   const total = tasks.length;
@@ -14,151 +17,74 @@ const getTaskStats = (tasks: Task[]) => {
 
 export const TodaysTasksView: Component = () => {
   const { tasks } = useStreamingData();
-  const [mounted, setMounted] = createSignal(false);
 
-  onMount(() => {
-    // Skip animations if navigating via back/forward buttons
-    if (isBackForwardNavigation()) {
-      setMounted(true);
-    } else {
-      setTimeout(() => setMounted(true), 50);
-    }
-  });
-
-  const stats = () => getTaskStats(tasks());
-  const completionPercentage = () => {
+  const stats = createMemo(() => getTaskStats(tasks()));
+  const completionPercentage = createMemo(() => {
     const s = stats();
     return s.total > 0 ? Math.round((s.completed / s.total) * 100) : 0;
-  };
+  });
+
+  const statItems = createMemo(() => [
+    { label: "Total", value: stats().total },
+    {
+      label: "Completed",
+      value: stats().completed,
+      colorClasses:
+        "bg-gradient-to-br from-green-50 to-emerald-50 border-green-100 text-green-700",
+    },
+    {
+      label: "Pending",
+      value: stats().pending,
+      colorClasses:
+        "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-100 text-amber-700",
+    },
+    {
+      label: "Punted",
+      value: stats().punted,
+      colorClasses:
+        "bg-gradient-to-br from-rose-50 to-red-50 border-rose-200 text-rose-700",
+    },
+  ]);
+
+  const emptyState = (
+    <div class="px-6 py-12 text-center">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 mb-4">
+        <span class="text-3xl">✨</span>
+      </div>
+      <p class="text-stone-600 text-lg font-medium mb-2">No tasks for today</p>
+      <p class="text-stone-500 text-sm">Enjoy your free time!</p>
+    </div>
+  );
 
   return (
     <div class="w-full">
-      {/* Stats card */}
-      <div
-        class="mb-8 transition-all duration-1000 delay-200 ease-out"
-        style={{
-          opacity: mounted() ? 1 : 0,
-          transform: mounted() ? "translateY(0)" : "translateY(20px)",
-        }}
-      >
-        <div class="bg-white/60 backdrop-blur-md border border-white/80 rounded-2xl shadow-xl shadow-amber-900/5 p-6 md:p-8">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl md:text-2xl font-semibold text-stone-800">
-              Today's Progress
-            </h2>
-            <div class="flex items-baseline gap-1">
-              <span class="text-3xl font-bold text-amber-600">
-                {completionPercentage()}
-              </span>
-              <span class="text-stone-500 text-lg">%</span>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div class="relative w-full h-3 bg-stone-100 rounded-full overflow-hidden mb-6">
-            <div
-              class="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500 ease-out"
-              style={{
-                width: `${completionPercentage()}%`,
-              }}
-            />
-          </div>
-
-          {/* Stats grid */}
-          <div class="grid grid-cols-4 gap-3">
-            <div class="text-center p-3 bg-white/50 rounded-xl border border-stone-100">
-              <div class="text-2xl font-bold text-stone-800">
-                {stats().total}
-              </div>
-              <div class="text-xs text-stone-500 mt-1">Total</div>
-            </div>
-            <div class="text-center p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100">
-              <div class="text-2xl font-bold text-green-700">
-                {stats().completed}
-              </div>
-              <div class="text-xs text-green-600 mt-1">Completed</div>
-            </div>
-            <div class="text-center p-3 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-100">
-              <div class="text-2xl font-bold text-amber-700">
-                {stats().pending}
-              </div>
-              <div class="text-xs text-amber-600 mt-1">Pending</div>
-            </div>
-            <div class="text-center p-3 bg-gradient-to-br from-rose-50 to-red-50 rounded-xl border border-rose-200">
-              <div class="text-2xl font-bold text-rose-700">
-                {stats().punted}
-              </div>
-              <div class="text-xs text-rose-600 mt-1">Punted</div>
-            </div>
-          </div>
+      <AnimatedSection delay="200ms">
+        <div class="mb-8">
+          <StatsCard
+            title="Today's Progress"
+            completionPercentage={completionPercentage}
+            stats={statItems}
+          />
         </div>
-      </div>
+      </AnimatedSection>
 
-      {/* Tasks section */}
-      <div
-        class="transition-all duration-1000 delay-300 ease-out"
-        style={{
-          opacity: mounted() ? 1 : 0,
-          transform: mounted() ? "translateY(0)" : "translateY(20px)",
-        }}
-      >
-        <div class="bg-white/60 backdrop-blur-md border border-white/80 rounded-2xl shadow-xl shadow-amber-900/5 overflow-hidden">
-          <div class="px-6 py-5 border-b border-stone-100">
-            <h2 class="text-xl md:text-2xl font-semibold text-stone-800">
-              Your Tasks
-            </h2>
-            <p class="text-sm text-stone-500 mt-1">
-              Swipe right to complete, left to punt
-            </p>
-          </div>
+      <AnimatedSection delay="300ms">
+        <SectionCard
+          title="Your Tasks"
+          description="Swipe right to complete, left to punt"
+          hasItems={tasks().length > 0}
+          emptyState={emptyState}
+        >
+          <TaskList tasks={tasks} />
+        </SectionCard>
+      </AnimatedSection>
 
-          <div class="p-4">
-            <Show
-              when={tasks().length > 0}
-              fallback={
-                <div class="px-6 py-12 text-center">
-                  <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 mb-4">
-                    <span class="text-3xl">✨</span>
-                  </div>
-                  <p class="text-stone-600 text-lg font-medium mb-2">
-                    No tasks for today
-                  </p>
-                  <p class="text-stone-500 text-sm">Enjoy your free time!</p>
-                </div>
-              }
-            >
-              <TaskList tasks={tasks} />
-            </Show>
-          </div>
-        </div>
-      </div>
-
-      {/* Motivational quote */}
-      <div
-        class="mt-12 transition-all duration-1000 delay-500 ease-out"
-        style={{
-          opacity: mounted() ? 1 : 0,
-          transform: mounted() ? "translateY(0)" : "translateY(20px)",
-        }}
-      >
-        <div class="max-w-2xl mx-auto">
-          <div class="relative py-8 px-6">
-            <div class="absolute left-0 top-0 w-8 h-8 border-l-2 border-t-2 border-amber-300/50" />
-            <div class="absolute right-0 bottom-0 w-8 h-8 border-r-2 border-b-2 border-amber-300/50" />
-            <p
-              class="text-stone-600 text-base md:text-lg italic leading-relaxed text-center"
-              style={{
-                "font-family": "'Cormorant Garamond', Georgia, serif",
-              }}
-            >
-              "The secret of getting ahead is getting started. The secret of
-              getting started is breaking your complex overwhelming tasks into
-              small manageable tasks."
-            </p>
-            <p class="text-stone-400 text-sm text-center mt-4">— Mark Twain</p>
-          </div>
-        </div>
-      </div>
+      <AnimatedSection delay="500ms">
+        <MotivationalQuote
+          quote="The secret of getting ahead is getting started. The secret of getting started is breaking your complex overwhelming tasks into small manageable tasks."
+          author="Mark Twain"
+        />
+      </AnimatedSection>
     </div>
   );
 };

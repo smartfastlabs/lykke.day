@@ -40,6 +40,7 @@ export type DayContext = Omit<BaseDayContext, 'calendar_entries'> & {
   events?: Event[];
   calendar_entries?: Event[];
   tasks?: Task[];
+  goals?: Goal[];
 };
 
 export type DayTemplate = components["schemas"]["DayTemplateSchema"];
@@ -57,6 +58,14 @@ export type RoutineSchedule = components["schemas"]["RoutineScheduleSchema"];
 export type Action = components["schemas"]["ActionSchema"];
 export type Alarm = components["schemas"]["AlarmSchema"];
 
+// Goal types - manually defined as they may not be in generated types yet
+export interface Goal {
+  id: string;
+  name: string;
+  status: GoalStatus;
+  created_at?: string | null;
+}
+
 // Enum types
 export type TaskStatus = components["schemas"]["TaskStatus"];
 export type TaskType = components["schemas"]["TaskType"];
@@ -67,4 +76,7 @@ export type TimingType = components["schemas"]["TimingType"];
 export type TimeBlockType = components["schemas"]["TimeBlockType"];
 export type TimeBlockCategory = components["schemas"]["TimeBlockCategory"];
 export type ActionType = components["schemas"]["ActionType"];
+
+// GoalStatus enum - manually defined as it may not be in generated types yet
+export type GoalStatus = "INCOMPLETE" | "COMPLETE" | "PUNT";
 

@@ -38,6 +38,12 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
         if day.template:
             row["template"] = dataclass_to_json_dict(day.template)
 
+        # Always include goals, even if empty, so that removing all goals
+        # clears the field in the database
+        row["goals"] = (
+            [dataclass_to_json_dict(goal) for goal in day.goals] if day.goals else []
+        )
+
         return row
 
     @classmethod
@@ -72,18 +78,18 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                     template_data["user_id"], str
                 ):
                     template_data["user_id"] = UUID(template_data["user_id"])
-                
+
                 # Convert routine_ids from strings to UUIDs
                 if template_data.get("routine_ids"):
                     template_data["routine_ids"] = [
                         UUID(routine_id) if isinstance(routine_id, str) else routine_id
                         for routine_id in template_data["routine_ids"]
                     ]
-                
+
                 # Convert time_blocks from dicts to DayTemplateTimeBlock objects
                 if template_data.get("time_blocks"):
                     from datetime import time as dt_time
-                    
+
                     template_data["time_blocks"] = [
                         value_objects.DayTemplateTimeBlock(
                             time_block_definition_id=(
@@ -105,7 +111,7 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                         )
                         for tb in template_data["time_blocks"]
                     ]
-                
+
                 # Convert nested alarm dict to Alarm value object if present
                 if template_data.get("alarm"):
                     if isinstance(template_data["alarm"], dict):
@@ -167,6 +173,37 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                         alarm_data["triggered_at"]
                     )
                 data["alarm"] = value_objects.Alarm(**alarm_data)
+
+        # Handle goals - it comes as a list of dicts from JSONB, need to convert to Goal value objects
+        if data.get("goals"):
+            if isinstance(data["goals"], list):
+                from datetime import datetime as dt_datetime
+
+                goals_list = []
+                for goal_dict in data["goals"]:
+                    if isinstance(goal_dict, dict):
+                        goal_data = dict(goal_dict)
+                        # Convert string UUIDs to UUID objects
+                        if "id" in goal_data and isinstance(goal_data["id"], str):
+                            goal_data["id"] = UUID(goal_data["id"])
+                        # Convert status string to enum if needed
+                        if "status" in goal_data and isinstance(
+                            goal_data["status"], str
+                        ):
+                            goal_data["status"] = value_objects.GoalStatus(
+                                goal_data["status"]
+                            )
+                        # Convert created_at string to datetime if needed
+                        if (
+                            "created_at" in goal_data
+                            and goal_data["created_at"]
+                            and isinstance(goal_data["created_at"], str)
+                        ):
+                            goal_data["created_at"] = dt_datetime.fromisoformat(
+                                goal_data["created_at"].replace("Z", "+00:00")
+                            )
+                        goals_list.append(value_objects.Goal(**goal_data))
+                data["goals"] = goals_list
 
         from lykke.infrastructure.repositories.base.utils import (
             filter_init_false_fields,

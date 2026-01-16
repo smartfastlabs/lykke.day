@@ -10,6 +10,8 @@ from lykke.domain.value_objects.day import (
     DayMode,
     DayStatus,
     DayTag,
+    Goal,
+    GoalStatus,
 )
 
 
@@ -83,4 +85,60 @@ def test_day_context_defaults() -> None:
     context = DayContext(day=day)
     assert context.calendar_entries == []
     assert context.tasks == []
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_value"),
+    [
+        (GoalStatus.INCOMPLETE, "INCOMPLETE"),
+        (GoalStatus.COMPLETE, "COMPLETE"),
+        (GoalStatus.PUNT, "PUNT"),
+    ],
+)
+def test_goal_status_values(status: GoalStatus, expected_value: str) -> None:
+    """Test GoalStatus enum values."""
+    assert status.value == expected_value
+
+
+def test_goal_creation() -> None:
+    """Test Goal can be created with required fields."""
+    from uuid import uuid4
+
+    goal = Goal(
+        id=uuid4(),
+        name="Test Goal",
+        status=GoalStatus.INCOMPLETE,
+    )
+    assert goal.name == "Test Goal"
+    assert goal.status == GoalStatus.INCOMPLETE
+    assert goal.created_at is None
+
+
+def test_goal_creation_with_defaults() -> None:
+    """Test Goal uses default values when not specified."""
+    from uuid import uuid4
+
+    goal = Goal(
+        id=uuid4(),
+        name="Test Goal",
+    )
+    assert goal.name == "Test Goal"
+    assert goal.status == GoalStatus.INCOMPLETE
+    assert goal.created_at is None
+
+
+def test_goal_creation_with_all_fields() -> None:
+    """Test Goal can be created with all fields."""
+    from uuid import uuid4
+
+    created_at = datetime.datetime(2025, 11, 27, 12, 0, 0, tzinfo=UTC)
+    goal = Goal(
+        id=uuid4(),
+        name="Test Goal",
+        status=GoalStatus.COMPLETE,
+        created_at=created_at,
+    )
+    assert goal.name == "Test Goal"
+    assert goal.status == GoalStatus.COMPLETE
+    assert goal.created_at == created_at
 

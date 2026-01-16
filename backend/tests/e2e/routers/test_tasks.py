@@ -148,12 +148,23 @@ async def test_complete_task_broadcasts_audit_log(authenticated_client, test_dat
             assert data["status"] == "COMPLETE"
 
             # Verify the audit log was broadcast via PubSub
-            received = await subscription.get_message(timeout=2.0)
+            # We may receive EntityCreatedEvent from task creation first,
+            # so we need to keep getting messages until we find TaskCompletedEvent
+            received = None
+            max_attempts = 10
+            for _ in range(max_attempts):
+                msg = await subscription.get_message(timeout=2.0)
+                if msg is None:
+                    break
+                # Skip EntityCreatedEvent from task creation
+                if msg.get("activity_type") == "TaskCompletedEvent":
+                    received = msg
+                    break
 
             # This assertion would fail before the fix because
             # get_unit_of_work_factory() wasn't passing pubsub_gateway
             assert received is not None, (
-                "Audit log was not broadcast via PubSub. "
+                "TaskCompletedEvent audit log was not broadcast via PubSub. "
                 "This likely means the UnitOfWorkFactory was not "
                 "initialized with a PubSubGateway."
             )
@@ -209,10 +220,21 @@ async def test_punt_task_broadcasts_audit_log(authenticated_client, test_date):
             assert data["status"] == "PUNT"
 
             # Verify the audit log was broadcast via PubSub
-            received = await subscription.get_message(timeout=2.0)
+            # We may receive EntityCreatedEvent from task creation first,
+            # so we need to keep getting messages until we find TaskPuntedEvent
+            received = None
+            max_attempts = 10
+            for _ in range(max_attempts):
+                msg = await subscription.get_message(timeout=2.0)
+                if msg is None:
+                    break
+                # Skip EntityCreatedEvent from task creation
+                if msg.get("activity_type") == "TaskPuntedEvent":
+                    received = msg
+                    break
 
             assert received is not None, (
-                "Audit log was not broadcast via PubSub for punt action. "
+                "TaskPuntedEvent audit log was not broadcast via PubSub for punt action. "
                 "This likely means the UnitOfWorkFactory was not "
                 "initialized with a PubSubGateway."
             )

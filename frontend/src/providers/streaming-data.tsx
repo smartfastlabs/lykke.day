@@ -9,8 +9,17 @@ import {
   type ParentProps,
 } from "solid-js";
 import { createStore } from "solid-js/store";
-import { DayContext, Task, Event, Day, TaskStatus } from "@/types/api";
-import { taskAPI } from "@/utils/api";
+import {
+  DayContext,
+  Task,
+  Event,
+  Day,
+  TaskStatus,
+  Goal,
+  GoalStatus,
+  Routine,
+} from "@/types/api";
+import { taskAPI, goalAPI } from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 
 interface StreamingDataContextValue {
@@ -18,7 +27,9 @@ interface StreamingDataContextValue {
   dayContext: Accessor<DayContext | undefined>;
   tasks: Accessor<Task[]>;
   events: Accessor<Event[]>;
+  goals: Accessor<Goal[]>;
   day: Accessor<Day | undefined>;
+  routines: Accessor<Routine[] | undefined>;
   // Loading and error states
   isLoading: Accessor<boolean>;
   error: Accessor<Error | undefined>;
@@ -29,6 +40,9 @@ interface StreamingDataContextValue {
   sync: () => void;
   syncIncremental: (sinceTimestamp: string) => void;
   setTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
+  addGoal: (name: string) => Promise<void>;
+  updateGoalStatus: (goal: Goal, status: GoalStatus) => Promise<void>;
+  removeGoal: (goalId: string) => Promise<void>;
 }
 
 const StreamingDataContext = createContext<StreamingDataContextValue>();
@@ -48,6 +62,7 @@ interface SyncResponseMessage extends WebSocketMessage {
   type: "sync_response";
   day_context?: DayContext;
   changes?: EntityChange[];
+  routines?: Routine[];
   last_audit_log_timestamp?: string | null;
 }
 
@@ -79,7 +94,7 @@ interface EntityChange {
   change_type: "created" | "updated" | "deleted";
   entity_type: string;
   entity_id: string;
-  entity_data: Task | Event | null;
+  entity_data: Task | Event | Routine | Routine | null;
 }
 
 export function StreamingDataProvider(props: ParentProps) {
@@ -93,6 +108,14 @@ export function StreamingDataProvider(props: ParentProps) {
   const [lastProcessedTimestamp, setLastProcessedTimestamp] = createSignal<
     string | null
   >(null);
+
+  // Routines store - separate from day context since routines aren't date-specific
+  const [routinesStore, setRoutinesStore] = createStore<{
+    routines: Routine[];
+  }>({ routines: [] });
+
+  // Expose routines from store
+  const routines = createMemo(() => routinesStore.routines);
 
   let ws: WebSocket | null = null;
   let reconnectTimeout: number | null = null;
@@ -108,6 +131,10 @@ export function StreamingDataProvider(props: ParentProps) {
       dayContextStore.data?.events ??
       []
   );
+  const goals = createMemo(() => {
+    // Goals are stored in the day_context, not directly on the day
+    return dayContextStore.data?.goals ?? [];
+  });
   const day = createMemo(() => dayContextStore.data?.day);
 
   // Get auth token from cookie
@@ -242,6 +269,11 @@ export function StreamingDataProvider(props: ParentProps) {
         setLastProcessedTimestamp(message.last_audit_log_timestamp);
       }
       setIsOutOfSync(false);
+
+      // Update routines from full sync response
+      if (message.routines) {
+        setRoutinesStore({ routines: message.routines });
+      }
     } else if (message.changes) {
       // Incremental changes - apply to existing store
       applyChanges(message.changes);
@@ -404,6 +436,13 @@ export function StreamingDataProvider(props: ParentProps) {
             (e) => e.id !== auditLog.entity_id
           );
           updated.events = updated.calendar_entries;
+        } else if (auditLog.entity_type === "routine") {
+          setRoutinesStore((current) => ({
+            routines: current.routines.filter(
+              (r) => r.id !== auditLog.entity_id
+            ),
+          }));
+          return current;
         }
 
         return { data: updated };
@@ -444,6 +483,64 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
+  // Optimistically update goals in local state
+  const updateGoalsLocally = (updatedGoals: Goal[]) => {
+    setDayContextStore((current) => {
+      if (!current.data || !current.data.day) return current;
+      return {
+        data: {
+          ...current.data,
+          day: {
+            ...current.data.day,
+            goals: updatedGoals,
+          },
+        },
+      };
+    });
+  };
+
+  const addGoal = async (name: string): Promise<void> => {
+    const context = await goalAPI.addGoal(name);
+    setDayContextStore({ data: context });
+  };
+
+  const updateGoalStatus = async (
+    goal: Goal,
+    status: GoalStatus
+  ): Promise<void> => {
+    // Optimistic update
+    const previousGoals = goals();
+    const updatedGoals = previousGoals.map((g: Goal) =>
+      g.id === goal.id ? { ...g, status } : g
+    );
+    updateGoalsLocally(updatedGoals);
+
+    try {
+      const context = await goalAPI.updateGoalStatus(goal.id, status);
+      setDayContextStore({ data: context });
+    } catch (error) {
+      // Rollback on error
+      updateGoalsLocally(previousGoals);
+      throw error;
+    }
+  };
+
+  const removeGoal = async (goalId: string): Promise<void> => {
+    // Optimistic update
+    const previousGoals = goals();
+    const updatedGoals = previousGoals.filter((g: Goal) => g.id !== goalId);
+    updateGoalsLocally(updatedGoals);
+
+    try {
+      const context = await goalAPI.removeGoal(goalId);
+      setDayContextStore({ data: context });
+    } catch (error) {
+      // Rollback on error
+      updateGoalsLocally(previousGoals);
+      throw error;
+    }
+  };
+
   const sync = () => {
     requestFullSync();
   };
@@ -478,7 +575,9 @@ export function StreamingDataProvider(props: ParentProps) {
     dayContext,
     tasks,
     events,
+    goals,
     day,
+    routines,
     isLoading,
     error,
     isConnected,
@@ -486,6 +585,9 @@ export function StreamingDataProvider(props: ParentProps) {
     sync,
     syncIncremental,
     setTaskStatus,
+    addGoal,
+    updateGoalStatus,
+    removeGoal,
   };
 
   return (

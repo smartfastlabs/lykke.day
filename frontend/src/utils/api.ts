@@ -169,6 +169,31 @@ export const taskAPI = {
     }),
 };
 
+export const goalAPI = {
+  addGoal: (name: string): Promise<DayContext> => {
+    // The endpoint expects name as a query parameter
+    const params = new URLSearchParams({ name });
+    return fetchData<DayContext>(`/api/me/today/goals?${params.toString()}`, {
+      method: "POST",
+    });
+  },
+
+  updateGoalStatus: (goalId: string, status: string): Promise<DayContext> => {
+    const params = new URLSearchParams({ status });
+    return fetchData<DayContext>(
+      `/api/me/today/goals/${goalId}?${params.toString()}`,
+      {
+        method: "PATCH",
+      }
+    );
+  },
+
+  removeGoal: (goalId: string): Promise<DayContext> =>
+    fetchData<DayContext>(`/api/me/today/goals/${goalId}`, {
+      method: "DELETE",
+    }),
+};
+
 export const authAPI = {
   me: async (): Promise<CurrentUser | null> => {
     try {

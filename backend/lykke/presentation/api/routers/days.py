@@ -17,6 +17,11 @@ from lykke.application.commands import (
     ScheduleDayHandler,
     UpdateDayHandler,
 )
+from lykke.application.commands.day import (
+    AddGoalToDayHandler,
+    RemoveGoalHandler,
+    UpdateGoalStatusHandler,
+)
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import (
     GetDayContextHandler,
@@ -28,6 +33,7 @@ from lykke.core.exceptions import NotFoundError
 from lykke.core.utils.audit_log_filtering import is_audit_log_for_today
 from lykke.core.utils.audit_log_serialization import deserialize_audit_log
 from lykke.core.utils.dates import get_current_date, get_tomorrows_date
+from lykke.domain import value_objects
 from lykke.presentation.api.schemas import (
     DayContextSchema,
     DaySchema,
@@ -51,11 +57,14 @@ from .dependencies.queries.day_template import get_list_day_templates_handler
 from .dependencies.services import (
     day_context_handler,
     day_context_handler_websocket,
+    get_add_goal_to_day_handler,
     get_create_or_get_day_handler_websocket,
     get_pubsub_gateway,
+    get_remove_goal_handler,
     get_reschedule_day_handler,
     get_schedule_day_handler,
     get_update_day_handler,
+    get_update_goal_status_handler,
     incremental_changes_handler,
     incremental_changes_handler_websocket,
     preview_day_handler,
@@ -201,6 +210,62 @@ async def update_day(
         update_data=update_object,
     )
     return map_day_to_schema(day)
+
+
+# ============================================================================
+# Goals
+# ============================================================================
+
+
+@router.post("/{date}/goals", response_model=DayContextSchema)
+async def add_goal(
+    date: datetime.date,
+    name: str,
+    handler: Annotated[AddGoalToDayHandler, Depends(get_add_goal_to_day_handler)],
+    day_context_handler: Annotated[
+        GetDayContextHandler, Depends(day_context_handler)
+    ],
+) -> DayContextSchema:
+    """Add a goal to a day."""
+    day = await handler.add_goal(date=date, name=name)
+    # Get the full context to return
+    context = await day_context_handler.get_day_context(date=date)
+    return map_day_context_to_schema(context)
+
+
+@router.patch("/{date}/goals/{goal_id}", response_model=DayContextSchema)
+async def update_goal_status(
+    date: datetime.date,
+    goal_id: UUID,
+    status: value_objects.GoalStatus,
+    handler: Annotated[
+        UpdateGoalStatusHandler, Depends(get_update_goal_status_handler)
+    ],
+    day_context_handler: Annotated[
+        GetDayContextHandler, Depends(day_context_handler)
+    ],
+) -> DayContextSchema:
+    """Update a goal's status on a day."""
+    await handler.update_goal_status(date=date, goal_id=goal_id, status=status)
+    # Get the full context to return
+    context = await day_context_handler.get_day_context(date=date)
+    return map_day_context_to_schema(context)
+
+
+@router.delete("/{date}/goals/{goal_id}", response_model=DayContextSchema)
+async def remove_goal(
+    date: datetime.date,
+    goal_id: UUID,
+    handler: Annotated[RemoveGoalHandler, Depends(get_remove_goal_handler)],
+    day_context_handler: Annotated[
+        GetDayContextHandler, Depends(day_context_handler)
+    ],
+) -> DayContextSchema:
+    """Remove a goal from a day."""
+    await handler.remove_goal(date=date, goal_id=goal_id)
+    # Get the full context to return
+    context = await day_context_handler.get_day_context(date=date)
+    return map_day_context_to_schema(context)
 
 
 # ============================================================================
@@ -440,9 +505,20 @@ async def _handle_client_messages(
                     if last_audit_timestamp is None:
                         last_audit_timestamp = dt_datetime.now(UTC)
 
+                    # Fetch all routines for the user
+                    from lykke.presentation.api.schemas.mappers import (
+                        map_routine_to_schema,
+                    )
+
+                    routines = await get_day_context_handler.routine_ro_repo.all()
+                    routine_schemas = [
+                        map_routine_to_schema(routine) for routine in routines
+                    ]
+
                     response = WebSocketSyncResponseSchema(
                         day_context=map_day_context_to_schema(context),
                         changes=None,
+                        routines=routine_schemas,
                         last_audit_log_timestamp=last_audit_timestamp.isoformat()
                         if last_audit_timestamp
                         else None,
