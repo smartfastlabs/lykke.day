@@ -9,6 +9,7 @@ interface SwipeableItemProps {
   statusClass?: string;
   threshold?: number;
   children: JSX.Element;
+  compact?: boolean;
 }
 
 export const SwipeableItem: Component<SwipeableItemProps> = (props) => {
@@ -21,7 +22,7 @@ export const SwipeableItem: Component<SwipeableItemProps> = (props) => {
 
   return (
     <div
-      class="relative w-full overflow-hidden select-none mb-3"
+      class="relative w-full overflow-hidden select-none"
       style="touch-action: pan-y"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -42,7 +43,7 @@ export const SwipeableItem: Component<SwipeableItemProps> = (props) => {
         role="button"
       >
         <div
-          class={`group px-5 py-3.5 bg-white/60 backdrop-blur-sm border border-white/80 rounded-xl hover:bg-white/80 hover:shadow-lg hover:shadow-amber-900/5 transition-all duration-300 cursor-pointer ${props.statusClass ?? ""}`}
+          class={`group px-5 ${props.compact ? "py-1" : "py-3.5"} bg-white/60 backdrop-blur-sm border border-white/80 rounded-xl hover:bg-white/80 hover:shadow-lg hover:shadow-amber-900/5 transition-all duration-300 cursor-pointer ${props.statusClass ?? ""}`}
         >
           {props.children}
         </div>

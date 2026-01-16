@@ -36,6 +36,7 @@ const GoalItem: Component<{ goal: Goal }> = (props) => {
       rightLabel="✅ Complete Goal"
       leftLabel={props.goal.status === "COMPLETE" ? "🗑 Remove" : "⏸ Punt"}
       statusClass={getStatusClasses(props.goal.status)}
+      compact={true}
     >
       <div class="flex items-center gap-4">
         {/* Goal icon */}
