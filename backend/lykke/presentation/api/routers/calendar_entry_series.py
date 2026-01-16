@@ -21,13 +21,8 @@ from lykke.presentation.api.schemas import (
 )
 from lykke.presentation.api.schemas.mappers import map_calendar_entry_series_to_schema
 
-from .dependencies.commands.calendar_entry_series import (
-    get_update_calendar_entry_series_handler,
-)
-from .dependencies.queries.calendar_entry_series import (
-    get_get_calendar_entry_series_handler,
-    get_list_calendar_entry_series_handler,
-)
+from .dependencies.factories import get_command_handler, get_query_handler
+from .utils import build_search_query, create_paged_response
 
 router = APIRouter()
 
@@ -36,7 +31,7 @@ router = APIRouter()
 async def get_calendar_entry_series(
     uuid: UUID,
     get_handler: Annotated[
-        GetCalendarEntrySeriesHandler, Depends(get_get_calendar_entry_series_handler)
+        GetCalendarEntrySeriesHandler, Depends(get_query_handler(GetCalendarEntrySeriesHandler))
     ],
 ) -> CalendarEntrySeriesSchema:
     """Get a single calendar entry series by ID."""
@@ -51,33 +46,14 @@ async def get_calendar_entry_series(
 async def search_calendar_entry_series(
     list_handler: Annotated[
         SearchCalendarEntrySeriesHandler,
-        Depends(get_list_calendar_entry_series_handler),
+        Depends(get_query_handler(SearchCalendarEntrySeriesHandler)),
     ],
     query: QuerySchema[value_objects.CalendarEntrySeriesQuery],
 ) -> PagedResponseSchema[CalendarEntrySeriesSchema]:
     """Search calendar entry series with pagination and optional filters."""
-    # Build the search query from the request
-    filters = query.filters or value_objects.CalendarEntrySeriesQuery()
-    search_query = value_objects.CalendarEntrySeriesQuery(
-        limit=query.limit,
-        offset=query.offset,
-        calendar_id=filters.calendar_id,
-        platform_id=filters.platform_id,
-        created_before=filters.created_before,
-        created_after=filters.created_after,
-        order_by=filters.order_by,
-        order_by_desc=filters.order_by_desc,
-    )
+    search_query = build_search_query(query, value_objects.CalendarEntrySeriesQuery)
     result = await list_handler.run(search_query=search_query)
-    items = [map_calendar_entry_series_to_schema(series) for series in result.items]
-    return PagedResponseSchema(
-        items=items,
-        total=result.total,
-        limit=result.limit,
-        offset=result.offset,
-        has_next=result.has_next,
-        has_previous=result.has_previous,
-    )
+    return create_paged_response(result, map_calendar_entry_series_to_schema)
 
 
 @router.put("/{uuid}", response_model=CalendarEntrySeriesSchema)
@@ -86,7 +62,7 @@ async def update_calendar_entry_series(
     update_data: CalendarEntrySeriesUpdateSchema,
     update_handler: Annotated[
         UpdateCalendarEntrySeriesHandler,
-        Depends(get_update_calendar_entry_series_handler),
+        Depends(get_command_handler(UpdateCalendarEntrySeriesHandler)),
     ],
 ) -> CalendarEntrySeriesSchema:
     """Update a calendar entry series."""

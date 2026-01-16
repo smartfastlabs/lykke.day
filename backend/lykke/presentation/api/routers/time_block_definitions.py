@@ -26,16 +26,9 @@ from lykke.presentation.api.schemas import (
 )
 from lykke.presentation.api.schemas.mappers import map_time_block_definition_to_schema
 
-from .dependencies.commands.time_block_definition import (
-    get_create_time_block_definition_handler,
-    get_delete_time_block_definition_handler,
-    get_update_time_block_definition_handler,
-)
-from .dependencies.queries.time_block_definition import (
-    get_get_time_block_definition_handler,
-    get_list_time_block_definitions_handler,
-)
+from .dependencies.factories import get_command_handler, get_query_handler
 from .dependencies.user import get_current_user
+from .utils import build_search_query, create_paged_response
 
 router = APIRouter()
 
@@ -44,7 +37,7 @@ router = APIRouter()
 async def get_time_block_definition(
     uuid: UUID,
     get_time_block_definition_handler: Annotated[
-        GetTimeBlockDefinitionHandler, Depends(get_get_time_block_definition_handler)
+        GetTimeBlockDefinitionHandler, Depends(get_query_handler(GetTimeBlockDefinitionHandler))
     ],
 ) -> TimeBlockDefinitionSchema:
     """Get a single time block definition by ID."""
@@ -60,34 +53,14 @@ async def get_time_block_definition(
 async def search_time_block_definitions(
     list_time_block_definitions_handler: Annotated[
         SearchTimeBlockDefinitionsHandler,
-        Depends(get_list_time_block_definitions_handler),
+        Depends(get_query_handler(SearchTimeBlockDefinitionsHandler)),
     ],
     query: QuerySchema[value_objects.TimeBlockDefinitionQuery],
 ) -> PagedResponseSchema[TimeBlockDefinitionSchema]:
     """Search time block definitions with pagination and optional filters."""
-    # Build the search query from the request
-    filters = query.filters or value_objects.TimeBlockDefinitionQuery()
-    search_query = value_objects.TimeBlockDefinitionQuery(
-        limit=query.limit,
-        offset=query.offset,
-        created_before=filters.created_before,
-        created_after=filters.created_after,
-        order_by=filters.order_by,
-        order_by_desc=filters.order_by_desc,
-    )
+    search_query = build_search_query(query, value_objects.TimeBlockDefinitionQuery)
     result = await list_time_block_definitions_handler.run(search_query=search_query)
-    # Convert data objects to schemas
-    time_block_definition_schemas = [
-        map_time_block_definition_to_schema(tbd) for tbd in result.items
-    ]
-    return PagedResponseSchema(
-        items=time_block_definition_schemas,
-        total=result.total,
-        limit=result.limit,
-        offset=result.offset,
-        has_next=result.has_next,
-        has_previous=result.has_previous,
-    )
+    return create_paged_response(result, map_time_block_definition_to_schema)
 
 
 @router.post(
@@ -100,7 +73,7 @@ async def create_time_block_definition(
     user: Annotated[UserEntity, Depends(get_current_user)],
     create_time_block_definition_handler: Annotated[
         CreateTimeBlockDefinitionHandler,
-        Depends(get_create_time_block_definition_handler),
+        Depends(get_command_handler(CreateTimeBlockDefinitionHandler)),
     ],
 ) -> TimeBlockDefinitionSchema:
     """Create a new time block definition."""
@@ -123,7 +96,7 @@ async def update_time_block_definition(
     update_data: TimeBlockDefinitionUpdateSchema,
     update_time_block_definition_handler: Annotated[
         UpdateTimeBlockDefinitionHandler,
-        Depends(get_update_time_block_definition_handler),
+        Depends(get_command_handler(UpdateTimeBlockDefinitionHandler)),
     ],
 ) -> TimeBlockDefinitionSchema:
     """Update an existing time block definition."""
@@ -145,7 +118,7 @@ async def delete_time_block_definition(
     uuid: UUID,
     delete_time_block_definition_handler: Annotated[
         DeleteTimeBlockDefinitionHandler,
-        Depends(get_delete_time_block_definition_handler),
+        Depends(get_command_handler(DeleteTimeBlockDefinitionHandler)),
     ],
 ) -> None:
     """Delete a time block definition."""

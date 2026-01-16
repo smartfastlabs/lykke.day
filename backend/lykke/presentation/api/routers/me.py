@@ -22,7 +22,7 @@ from lykke.presentation.api.schemas import (
 from lykke.presentation.api.schemas.mappers import map_user_to_schema, map_day_context_to_schema
 from lykke.core.utils.dates import get_current_date
 
-from .dependencies.commands.user import get_update_user_handler
+from .dependencies.factories import get_command_handler
 from .dependencies.user import get_current_user
 from .dependencies.services import (
     day_context_handler,
@@ -46,7 +46,7 @@ async def get_current_user_profile(
 async def update_current_user_profile(
     update_data: UserUpdateSchema,
     update_user_handler: Annotated[
-        UpdateUserHandler, Depends(get_update_user_handler)
+        UpdateUserHandler, Depends(get_command_handler(UpdateUserHandler))
     ],
 ) -> UserSchema:
     """Update the current authenticated user."""

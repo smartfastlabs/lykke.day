@@ -34,21 +34,10 @@ from lykke.presentation.api.schemas import (
 )
 from lykke.presentation.api.schemas.mappers import map_day_template_to_schema
 
-from .dependencies.commands.day_template import (
-    get_add_day_template_routine_handler,
-    get_add_day_template_time_block_handler,
-    get_create_day_template_handler,
-    get_delete_day_template_handler,
-    get_remove_day_template_routine_handler,
-    get_remove_day_template_time_block_handler,
-    get_update_day_template_handler,
-)
-from .dependencies.queries.day_template import (
-    get_get_day_template_handler,
-    get_list_day_templates_handler,
-)
+from .dependencies.factories import get_command_handler, get_query_handler
 from .dependencies.repositories import get_time_block_definition_ro_repo
 from .dependencies.user import get_current_user
+from .utils import build_search_query, create_paged_response
 
 router = APIRouter()
 
@@ -57,7 +46,7 @@ router = APIRouter()
 async def get_day_template(
     uuid: UUID,
     get_day_template_handler: Annotated[
-        GetDayTemplateHandler, Depends(get_get_day_template_handler)
+        GetDayTemplateHandler, Depends(get_query_handler(GetDayTemplateHandler))
     ],
 ) -> DayTemplateSchema:
     """Get a single day template by ID."""
@@ -68,33 +57,14 @@ async def get_day_template(
 @router.post("/", response_model=PagedResponseSchema[DayTemplateSchema])
 async def search_day_templates(
     list_day_templates_handler: Annotated[
-        SearchDayTemplatesHandler, Depends(get_list_day_templates_handler)
+        SearchDayTemplatesHandler, Depends(get_query_handler(SearchDayTemplatesHandler))
     ],
     query: QuerySchema[value_objects.DayTemplateQuery],
 ) -> PagedResponseSchema[DayTemplateSchema]:
     """Search day templates with pagination and optional filters."""
-    # Build the search query from the request
-    filters = query.filters or value_objects.DayTemplateQuery()
-    search_query = value_objects.DayTemplateQuery(
-        limit=query.limit,
-        offset=query.offset,
-        slug=filters.slug,
-        created_before=filters.created_before,
-        created_after=filters.created_after,
-        order_by=filters.order_by,
-        order_by_desc=filters.order_by_desc,
-    )
+    search_query = build_search_query(query, value_objects.DayTemplateQuery)
     result = await list_day_templates_handler.run(search_query=search_query)
-    # Convert entities to schemas
-    template_schemas = [map_day_template_to_schema(dt) for dt in result.items]
-    return PagedResponseSchema(
-        items=template_schemas,
-        total=result.total,
-        limit=result.limit,
-        offset=result.offset,
-        has_next=result.has_next,
-        has_previous=result.has_previous,
-    )
+    return create_paged_response(result, map_day_template_to_schema)
 
 
 @router.post("/create", response_model=DayTemplateSchema)
@@ -102,7 +72,7 @@ async def create_day_template(
     day_template_data: DayTemplateCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
     create_day_template_handler: Annotated[
-        CreateDayTemplateHandler, Depends(get_create_day_template_handler)
+        CreateDayTemplateHandler, Depends(get_command_handler(CreateDayTemplateHandler))
     ],
 ) -> DayTemplateSchema:
     """Create a new day template."""
@@ -147,7 +117,7 @@ async def update_day_template(
     uuid: UUID,
     update_data: DayTemplateUpdateSchema,
     update_day_template_handler: Annotated[
-        UpdateDayTemplateHandler, Depends(get_update_day_template_handler)
+        UpdateDayTemplateHandler, Depends(get_command_handler(UpdateDayTemplateHandler))
     ],
 ) -> DayTemplateSchema:
     """Update a day template."""
@@ -195,7 +165,7 @@ async def update_day_template(
 async def delete_day_template(
     uuid: UUID,
     delete_day_template_handler: Annotated[
-        DeleteDayTemplateHandler, Depends(get_delete_day_template_handler)
+        DeleteDayTemplateHandler, Depends(get_command_handler(DeleteDayTemplateHandler))
     ],
 ) -> None:
     """Delete a day template."""
@@ -212,7 +182,7 @@ async def add_day_template_routine(
     routine_data: DayTemplateRoutineCreateSchema,
     add_day_template_routine_handler: Annotated[
         AddDayTemplateRoutineHandler,
-        Depends(get_add_day_template_routine_handler),
+        Depends(get_command_handler(AddDayTemplateRoutineHandler)),
     ],
 ) -> DayTemplateSchema:
     """Attach a routine to a day template."""
@@ -231,7 +201,7 @@ async def remove_day_template_routine(
     routine_id: UUID,
     remove_day_template_routine_handler: Annotated[
         RemoveDayTemplateRoutineHandler,
-        Depends(get_remove_day_template_routine_handler),
+        Depends(get_command_handler(RemoveDayTemplateRoutineHandler)),
     ],
 ) -> DayTemplateSchema:
     """Detach a routine from a day template."""
@@ -251,7 +221,7 @@ async def add_day_template_time_block(
     time_block_data: DayTemplateTimeBlockCreateSchema,
     add_day_template_time_block_handler: Annotated[
         AddDayTemplateTimeBlockHandler,
-        Depends(get_add_day_template_time_block_handler),
+        Depends(get_command_handler(AddDayTemplateTimeBlockHandler)),
     ],
     time_block_def_repo: Annotated[
         TimeBlockDefinitionRepositoryReadOnlyProtocol,
@@ -286,7 +256,7 @@ async def remove_day_template_time_block(
     start_time: str,
     remove_day_template_time_block_handler: Annotated[
         RemoveDayTemplateTimeBlockHandler,
-        Depends(get_remove_day_template_time_block_handler),
+        Depends(get_command_handler(RemoveDayTemplateTimeBlockHandler)),
     ],
 ) -> DayTemplateSchema:
     """Remove a time block from a day template."""

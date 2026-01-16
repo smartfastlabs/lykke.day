@@ -29,19 +29,9 @@ from lykke.presentation.api.schemas import (
 )
 from lykke.presentation.api.schemas.mappers import map_routine_to_schema
 
-from .dependencies.commands.routine import (
-    get_add_routine_task_handler,
-    get_create_routine_handler,
-    get_delete_routine_handler,
-    get_remove_routine_task_handler,
-    get_update_routine_handler,
-    get_update_routine_task_handler,
-)
-from .dependencies.queries.routine import (
-    get_get_routine_handler,
-    get_list_routines_handler,
-)
+from .dependencies.factories import get_command_handler, get_query_handler
 from .dependencies.user import get_current_user
+from .utils import build_search_query, create_paged_response
 
 router = APIRouter()
 
@@ -49,7 +39,7 @@ router = APIRouter()
 @router.get("/{uuid}", response_model=RoutineSchema)
 async def get_routine(
     uuid: UUID,
-    get_routine_handler: Annotated[GetRoutineHandler, Depends(get_get_routine_handler)],
+    get_routine_handler: Annotated[GetRoutineHandler, Depends(get_query_handler(GetRoutineHandler))],
 ) -> RoutineSchema:
     """Get a single routine by ID."""
     routine = await get_routine_handler.run(routine_id=uuid)
@@ -59,32 +49,14 @@ async def get_routine(
 @router.post("/", response_model=PagedResponseSchema[RoutineSchema])
 async def search_routines(
     list_routines_handler: Annotated[
-        SearchRoutinesHandler, Depends(get_list_routines_handler)
+        SearchRoutinesHandler, Depends(get_query_handler(SearchRoutinesHandler))
     ],
     query: QuerySchema[value_objects.RoutineQuery],
 ) -> PagedResponseSchema[RoutineSchema]:
     """Search routines with pagination and optional filters."""
-    # Build the search query from the request
-    filters = query.filters or value_objects.RoutineQuery()
-    search_query = value_objects.RoutineQuery(
-        limit=query.limit,
-        offset=query.offset,
-        created_before=filters.created_before,
-        created_after=filters.created_after,
-        order_by=filters.order_by,
-        order_by_desc=filters.order_by_desc,
-    )
+    search_query = build_search_query(query, value_objects.RoutineQuery)
     result = await list_routines_handler.run(search_query=search_query)
-    # Convert entities to schemas
-    routine_schemas = [map_routine_to_schema(r) for r in result.items]
-    return PagedResponseSchema(
-        items=routine_schemas,
-        total=result.total,
-        limit=result.limit,
-        offset=result.offset,
-        has_next=result.has_next,
-        has_previous=result.has_previous,
-    )
+    return create_paged_response(result, map_routine_to_schema)
 
 
 @router.post(
@@ -96,7 +68,7 @@ async def create_routine(
     routine_data: RoutineCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
     create_routine_handler: Annotated[
-        CreateRoutineHandler, Depends(get_create_routine_handler)
+        CreateRoutineHandler, Depends(get_command_handler(CreateRoutineHandler))
     ],
 ) -> RoutineSchema:
     """Create a new routine."""
@@ -153,7 +125,7 @@ async def update_routine(
     uuid: UUID,
     update_data: RoutineUpdateSchema,
     update_routine_handler: Annotated[
-        UpdateRoutineHandler, Depends(get_update_routine_handler)
+        UpdateRoutineHandler, Depends(get_command_handler(UpdateRoutineHandler))
     ],
 ) -> RoutineSchema:
     """Update an existing routine."""
@@ -215,7 +187,7 @@ async def update_routine(
 async def delete_routine(
     uuid: UUID,
     delete_routine_handler: Annotated[
-        DeleteRoutineHandler, Depends(get_delete_routine_handler)
+        DeleteRoutineHandler, Depends(get_command_handler(DeleteRoutineHandler))
     ],
 ) -> None:
     """Delete a routine."""
@@ -231,7 +203,7 @@ async def add_routine_task(
     uuid: UUID,
     routine_task: RoutineTaskCreateSchema,
     add_routine_task_handler: Annotated[
-        AddRoutineTaskHandler, Depends(get_add_routine_task_handler)
+        AddRoutineTaskHandler, Depends(get_command_handler(AddRoutineTaskHandler))
     ],
 ) -> RoutineSchema:
     """Attach a task definition to a routine."""
@@ -266,7 +238,7 @@ async def update_routine_task(
     routine_task_id: UUID,
     routine_task_update: RoutineTaskUpdateSchema,
     update_routine_task_handler: Annotated[
-        UpdateRoutineTaskHandler, Depends(get_update_routine_task_handler)
+        UpdateRoutineTaskHandler, Depends(get_command_handler(UpdateRoutineTaskHandler))
     ],
 ) -> RoutineSchema:
     """Update an attached routine task (name/schedule)."""
@@ -303,7 +275,7 @@ async def remove_routine_task(
     uuid: UUID,
     routine_task_id: UUID,
     remove_routine_task_handler: Annotated[
-        RemoveRoutineTaskHandler, Depends(get_remove_routine_task_handler)
+        RemoveRoutineTaskHandler, Depends(get_command_handler(RemoveRoutineTaskHandler))
     ],
 ) -> RoutineSchema:
     """Detach a routine task from a routine by RoutineTask.id."""
