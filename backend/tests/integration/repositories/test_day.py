@@ -246,3 +246,55 @@ async def test_delete(
     # Should not be found
     with pytest.raises(NotFoundError):
         await day_repo.get(day.id)
+
+
+@pytest.mark.asyncio
+async def test_remove_all_goals_clears_field_in_database(
+    day_repo, day_template_repo, test_user, test_date, setup_day_templates
+):
+    """Regression test: Removing all goals clears the goals field in the database.
+
+    This test verifies that when all goals are removed from a day, the goals field
+    is properly cleared in the database (not left with the previous value).
+    """
+    await setup_day_templates
+    templates = await day_template_repo.all()
+    default_template = templates[0] if templates else None
+    if not default_template:
+        pytest.skip("No templates available")
+
+    # Create a day with goals
+    day = DayEntity(
+        user_id=test_user.id,
+        date=test_date,
+        status=value_objects.DayStatus.SCHEDULED,
+        scheduled_at=get_current_datetime(),
+        template=default_template,
+    )
+    day.add_goal("Goal 1")
+    day.add_goal("Goal 2")
+    # Clear events from add_goal
+    day.collect_events()
+
+    # Save day with goals to database
+    await day_repo.put(day)
+
+    # Verify goals were saved
+    retrieved = await day_repo.get(day.id)
+    assert len(retrieved.goals) == 2
+
+    # Remove all goals
+    goal1_id = retrieved.goals[0].id
+    goal2_id = retrieved.goals[1].id
+    retrieved.remove_goal(goal1_id)
+    retrieved.remove_goal(goal2_id)
+    # Clear events from remove_goal
+    retrieved.collect_events()
+
+    # Save day without goals to database
+    await day_repo.put(retrieved)
+
+    # Reload from database and verify goals field is cleared (empty list, not None)
+    final_retrieved = await day_repo.get(day.id)
+    assert final_retrieved.goals == []
+    assert len(final_retrieved.goals) == 0
