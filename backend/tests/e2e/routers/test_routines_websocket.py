@@ -322,7 +322,7 @@ async def test_realtime_routine_deletion_notification(authenticated_client, test
             assert routine_change["entity_type"] == "routine"
             # Deleted entities don't include entity_data
             assert routine_change["entity_data"] is None
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pytest.fail(
                 "No real-time event received after routine deletion: "
                 "Timeout waiting for WebSocket message. "
