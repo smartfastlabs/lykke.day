@@ -1,4 +1,4 @@
-import { Component, JSX, createUniqueId } from "solid-js";
+import { Component, JSX, untrack } from "solid-js";
 import { usePageAnimation } from "@/utils/navigation";
 
 interface AnimatedSectionProps {
@@ -12,7 +12,16 @@ let animatedSectionCounter = 0;
 
 export const AnimatedSection: Component<AnimatedSectionProps> = (props) => {
   // Generate a unique key if not provided, using a counter to ensure uniqueness
-  const uniqueKey = props.animationKey ?? `animated-section-${++animatedSectionCounter}`;
+  // Store the generated key once per component instance
+  let instanceKey: string | undefined;
+  const getUniqueKey = (): string => {
+    if (instanceKey === undefined) {
+      instanceKey = `animated-section-${++animatedSectionCounter}`;
+    }
+    return instanceKey;
+  };
+  // Use untrack since we only need the key once at initialization
+  const uniqueKey = untrack(() => props.animationKey ?? getUniqueKey());
   const mounted = usePageAnimation(uniqueKey);
 
   return (

@@ -1,4 +1,4 @@
-import { Component, createSignal, Show, For, Setter } from "solid-js";
+import { Component, createSignal, Show, For, Setter, untrack } from "solid-js";
 import { RoutineSchedule, TaskFrequency, DayOfWeek } from "@/types/api";
 import { ALL_TASK_FREQUENCIES } from "@/types/api/constants";
 import { Select, Input } from "@/components/forms";
@@ -26,14 +26,15 @@ const DAYS_OF_WEEK = [
 ] as const;
 
 const RoutineScheduleForm: Component<RoutineScheduleFormProps> = (props) => {
+  // Initialize signals from props (signals are initialized once, so we use untrack)
   const [frequency, setFrequency] = createSignal<TaskFrequency>(
-    props.schedule.frequency
+    untrack(() => props.schedule.frequency)
   );
   const [weekdays, setWeekdays] = createSignal<DayOfWeek[]>(
-    props.schedule.weekdays ?? []
+    untrack(() => props.schedule.weekdays ?? [])
   );
   const [dayNumber, setDayNumber] = createSignal<number | null>(
-    props.schedule.day_number ?? null
+    untrack(() => props.schedule.day_number ?? null)
   );
 
   const handleFrequencyChange = (newFrequency: TaskFrequency) => {

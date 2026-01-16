@@ -271,8 +271,10 @@ export function StreamingDataProvider(props: ParentProps) {
         if (reconnectTimeout) {
           clearTimeout(reconnectTimeout);
         }
+        // Capture current state values to avoid reactivity warnings
+        const currentlyConnected = isConnected();
         reconnectTimeout = window.setTimeout(() => {
-          if (!isConnected() && isMounted) {
+          if (!currentlyConnected && isMounted) {
             connectWebSocket();
           }
         }, 3000);
@@ -514,11 +516,11 @@ export function StreamingDataProvider(props: ParentProps) {
       if (syncDebounceTimeout) {
         clearTimeout(syncDebounceTimeout);
       }
+      // Use occurredAt directly since we just updated the timestamp to this value
+      // This avoids reactivity warnings and ensures we use the correct timestamp
+      const timestampToUse = occurredAt;
       syncDebounceTimeout = window.setTimeout(() => {
-        const timestamp = lastProcessedTimestamp();
-        if (timestamp) {
-          requestIncrementalSync(timestamp);
-        }
+        requestIncrementalSync(timestampToUse);
       }, syncDelay);
     } else if (changeType === "deleted") {
       // Apply deletion immediately

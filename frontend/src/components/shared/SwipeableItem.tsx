@@ -1,4 +1,4 @@
-import { Component, JSX } from "solid-js";
+import { Component, JSX, untrack } from "solid-js";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 
 interface SwipeableItemProps {
@@ -13,12 +13,16 @@ interface SwipeableItemProps {
 }
 
 export const SwipeableItem: Component<SwipeableItemProps> = (props) => {
+  // Access props with untrack since the hook stores callbacks at initialization
+  // If props change, the hook won't see changes anyway, so untrack is appropriate
   const { translateX, handleTouchStart, handleTouchMove, handleTouchEnd } =
-    useSwipeGesture({
-      onSwipeRight: props.onSwipeRight,
-      onSwipeLeft: props.onSwipeLeft,
-      threshold: props.threshold,
-    });
+    useSwipeGesture(
+      untrack(() => ({
+        onSwipeRight: props.onSwipeRight,
+        onSwipeLeft: props.onSwipeLeft,
+        threshold: props.threshold,
+      }))
+    );
 
   return (
     <div

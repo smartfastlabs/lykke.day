@@ -54,7 +54,7 @@ class ControllableWebSocket {
     }
   }
 
-  simulateMessage(data: any) {
+  simulateMessage(data: unknown) {
     if (this.onmessage) {
       const event = {
         type: "message",
@@ -596,7 +596,7 @@ describe("StreamingDataProvider", () => {
 
     it("should optimistically update task status", async () => {
       const { taskAPI } = await import("@/utils/api");
-      (taskAPI.setTaskStatus as any).mockResolvedValue({
+      vi.mocked(taskAPI.setTaskStatus).mockResolvedValue({
         ...mockDayContext.tasks![0],
         status: "COMPLETE",
       });
@@ -648,7 +648,7 @@ describe("StreamingDataProvider", () => {
 
     it("should rollback on failed task status update", async () => {
       const { taskAPI } = await import("@/utils/api");
-      (taskAPI.setTaskStatus as any).mockRejectedValue(
+      vi.mocked(taskAPI.setTaskStatus).mockRejectedValue(
         new Error("Update failed")
       );
 

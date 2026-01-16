@@ -64,7 +64,7 @@ def test_add_goal_enforces_max_three_goals(test_day: DayEntity) -> None:
 
     assert len(test_day.goals) == 3
 
-    with pytest.raises(DomainError, match="at most 3 goals"):
+    with pytest.raises(DomainError, match="at most 3 active goals"):
         test_day.add_goal("Goal 4")
 
 
