@@ -80,10 +80,83 @@ function NavigationHandler() {
 export default function App() {
   onMount(() => {
     if ("serviceWorker" in navigator) {
+      let registration: ServiceWorkerRegistration | null = null;
+      let isReloading = false;
+
+      // Handle controller change - reload when new SW takes control
+      const handleControllerChange = (): void => {
+        if (isReloading) return;
+        isReloading = true;
+        window.location.reload();
+      };
+
+      // Check for updates
+      const checkForUpdates = (): void => {
+        if (registration) {
+          registration.update().catch((error) => {
+            console.error("Service worker update check failed:", error);
+          });
+        }
+      };
+
+      // Register service worker
       navigator.serviceWorker
         .register("/sw.js", { type: "classic" })
-        .then((registration) => {
-          console.log("PWA service worker registered:", registration);
+        .then((reg) => {
+          registration = reg;
+          console.log("PWA service worker registered:", reg);
+
+          // Listen for controller change (new SW activated)
+          navigator.serviceWorker.addEventListener(
+            "controllerchange",
+            handleControllerChange
+          );
+
+          // Listen for update found
+          reg.addEventListener("updatefound", () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener("statechange", () => {
+                // When new worker is installed and waiting, it will activate
+                // due to skipWaiting() in sw.ts, triggering controllerchange
+                if (
+                  newWorker.state === "installed" &&
+                  navigator.serviceWorker.controller
+                ) {
+                  // New version is ready, controllerchange will fire soon
+                  console.log("New service worker version installed");
+                }
+              });
+            }
+          });
+
+          // Check for updates on page visibility change (user returns to tab)
+          const handleVisibilityChange = (): void => {
+            if (!document.hidden) {
+              checkForUpdates();
+            }
+          };
+
+          document.addEventListener("visibilitychange", handleVisibilityChange);
+
+          // Check for updates periodically (every hour)
+          const updateInterval = setInterval(checkForUpdates, 60 * 60 * 1000);
+
+          // Initial update check
+          checkForUpdates();
+
+          // Cleanup
+          onCleanup(() => {
+            navigator.serviceWorker.removeEventListener(
+              "controllerchange",
+              handleControllerChange
+            );
+            document.removeEventListener(
+              "visibilitychange",
+              handleVisibilityChange
+            );
+            clearInterval(updateInterval);
+          });
         })
         .catch((error) => {
           console.error("PWA service worker registration failed:", error);

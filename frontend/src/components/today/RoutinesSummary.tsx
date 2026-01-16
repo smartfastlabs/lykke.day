@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import type { Task } from "@/types/api";
 import { useStreamingData } from "@/providers/streaming-data";
+import { SwipeableItem } from "@/components/shared/SwipeableItem";
 
 export interface RoutinesSummaryProps {
   tasks: Task[];
@@ -27,8 +28,29 @@ interface RoutineGroup {
 }
 
 export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
-  // Get routines from StreamingDataProvider
-  const { routines } = useStreamingData();
+  // Get routines and setTaskStatus from StreamingDataProvider
+  const { routines, setTaskStatus } = useStreamingData();
+
+  // Track which routines are expanded (persists across re-renders)
+  const [expandedRoutines, setExpandedRoutines] = createSignal<Set<string>>(
+    new Set()
+  );
+
+  const toggleRoutineExpanded = (routineId: string) => {
+    setExpandedRoutines((prev) => {
+      const next = new Set(prev);
+      if (next.has(routineId)) {
+        next.delete(routineId);
+      } else {
+        next.add(routineId);
+      }
+      return next;
+    });
+  };
+
+  const isRoutineExpanded = (routineId: string) => {
+    return expandedRoutines().has(routineId);
+  };
 
   // Create a map of routine ID to routine name
   const routineMap = createMemo(() => {
@@ -61,8 +83,10 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
     // Convert to array of RoutineGroups
     const map = routineMap();
     return Array.from(groups.entries()).map(([routineId, tasks]) => {
-      const completedCount = tasks.filter((t) => t.status === "COMPLETE").length;
-      
+      const completedCount = tasks.filter(
+        (t) => t.status === "COMPLETE"
+      ).length;
+
       // Get the routine name from the routines map
       const routineName = map.get(routineId) || "Routine";
 
@@ -81,8 +105,10 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
   const getRoutineIcon = (name: string) => {
     const lowerName = name.toLowerCase();
     if (lowerName.includes("morning")) return faSun;
-    if (lowerName.includes("evening") || lowerName.includes("night")) return faMoon;
-    if (lowerName.includes("wellness") || lowerName.includes("health")) return faHeart;
+    if (lowerName.includes("evening") || lowerName.includes("night"))
+      return faMoon;
+    if (lowerName.includes("wellness") || lowerName.includes("health"))
+      return faHeart;
     return faLeaf;
   };
 
@@ -97,13 +123,17 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
         <div class="space-y-4">
           <For each={routineGroups()}>
             {(routine) => {
-              const [isExpanded, setIsExpanded] = createSignal(false);
               const completionPercentage = () =>
                 routine.totalCount > 0
-                  ? Math.round((routine.completedCount / routine.totalCount) * 100)
+                  ? Math.round(
+                      (routine.completedCount / routine.totalCount) * 100
+                    )
                   : 0;
 
-              const isComplete = () => routine.completedCount === routine.totalCount;
+              const isComplete = () =>
+                routine.completedCount === routine.totalCount;
+
+              const isExpanded = () => isRoutineExpanded(routine.routineId);
 
               return (
                 <div
@@ -117,7 +147,7 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                   {/* Routine Header - Clickable */}
                   <button
                     class="w-full flex items-start justify-between mb-3 text-left"
-                    onClick={() => setIsExpanded(!isExpanded())}
+                    onClick={() => toggleRoutineExpanded(routine.routineId)}
                   >
                     <div class="flex items-center gap-2">
                       <Icon
@@ -149,7 +179,10 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                         {routine.completedCount}/{routine.totalCount}
                       </span>
                       <Show when={isComplete()}>
-                        <Icon icon={faCircleCheck} class="w-4 h-4 fill-green-600" />
+                        <Icon
+                          icon={faCircleCheck}
+                          class="w-4 h-4 fill-green-600"
+                        />
                       </Show>
                     </div>
                   </button>
@@ -159,8 +192,10 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                     <div
                       class="absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out"
                       classList={{
-                        "bg-gradient-to-r from-green-400 to-emerald-500": isComplete(),
-                        "bg-gradient-to-r from-amber-400 to-orange-500": !isComplete(),
+                        "bg-gradient-to-r from-green-400 to-emerald-500":
+                          isComplete(),
+                        "bg-gradient-to-r from-amber-400 to-orange-500":
+                          !isComplete(),
                       }}
                       style={{
                         width: `${completionPercentage()}%`,
@@ -173,17 +208,23 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                     <div class="space-y-1.5 mt-3 transition-opacity duration-300 ease-in-out">
                       <For each={routine.tasks}>
                         {(task) => {
-                          const isTaskComplete = () => task.status === "COMPLETE";
+                          const isTaskComplete = () =>
+                            task.status === "COMPLETE";
                           const isTaskPunted = () => task.status === "PUNT";
                           // Extract just the task name after the routine prefix and dash
                           const taskDisplayName = () => {
                             let displayName = task.name;
                             // Remove "Routine: " prefix
-                            displayName = displayName.replace(/^Routine:\s*/i, "");
+                            displayName = displayName.replace(
+                              /^Routine:\s*/i,
+                              ""
+                            );
                             // Remove routine name and dash if present (e.g., "Morning - Task" -> "Task")
                             const dashIndex = displayName.indexOf(" - ");
                             if (dashIndex > 0) {
-                              displayName = displayName.substring(dashIndex + 3);
+                              displayName = displayName.substring(
+                                dashIndex + 3
+                              );
                             }
                             return displayName;
                           };
@@ -194,28 +235,49 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                             return faCircle;
                           };
 
+                          const getStatusClass = () => {
+                            if (isTaskComplete())
+                              return "bg-green-50/60 border-green-100";
+                            if (isTaskPunted())
+                              return "bg-orange-50/60 border-orange-100";
+                            return "";
+                          };
+
                           return (
-                            <div class="flex items-center gap-2 text-xs">
-                              <Icon
-                                icon={getTaskIcon()}
-                                class={`w-3 h-3 flex-shrink-0 ${isTaskComplete() ? "fill-green-600" : isTaskPunted() ? "fill-orange-500" : "fill-stone-300"}`}
-                              />
-                              <span
-                                class="leading-tight"
-                                classList={{
-                                  "text-green-700 line-through": isTaskComplete(),
-                                  "text-orange-600 italic": isTaskPunted(),
-                                  "text-stone-600": !isTaskComplete() && !isTaskPunted(),
-                                }}
-                              >
-                                {taskDisplayName()}
-                                {isTaskPunted() && (
-                                  <span class="ml-1 text-[10px] text-orange-500">
-                                    (punted)
-                                  </span>
-                                )}
-                              </span>
-                            </div>
+                            <SwipeableItem
+                              onSwipeRight={() =>
+                                setTaskStatus(task, "COMPLETE")
+                              }
+                              onSwipeLeft={() => setTaskStatus(task, "PUNT")}
+                              rightLabel="✅ Complete"
+                              leftLabel="🗑 Punt"
+                              statusClass={getStatusClass()}
+                              compact={true}
+                            >
+                              <div class="flex items-center gap-2 text-xs">
+                                <Icon
+                                  icon={getTaskIcon()}
+                                  class={`w-3 h-3 flex-shrink-0 ${isTaskComplete() ? "fill-green-600" : isTaskPunted() ? "fill-orange-500" : "fill-stone-300"}`}
+                                />
+                                <span
+                                  class="leading-tight"
+                                  classList={{
+                                    "text-green-700 line-through":
+                                      isTaskComplete(),
+                                    "text-orange-600 italic": isTaskPunted(),
+                                    "text-stone-600":
+                                      !isTaskComplete() && !isTaskPunted(),
+                                  }}
+                                >
+                                  {taskDisplayName()}
+                                  {isTaskPunted() && (
+                                    <span class="ml-1 text-[10px] text-orange-500">
+                                      (punted)
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            </SwipeableItem>
                           );
                         }}
                       </For>

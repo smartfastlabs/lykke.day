@@ -4,6 +4,8 @@ import { faClock } from "@fortawesome/free-solid-svg-icons";
 import type { Event, Task } from "@/types/api";
 import { getTime } from "@/utils/dates";
 import { getTypeIcon, getCategoryIcon } from "@/utils/icons";
+import { SwipeableItem } from "@/components/shared/SwipeableItem";
+import { useStreamingData } from "@/providers/streaming-data";
 
 export interface UpcomingSectionProps {
   events: Event[];
@@ -89,6 +91,17 @@ const EventItem: Component<{ event: Event }> = (props) => {
   );
 };
 
+const getStatusClasses = (status: Task["status"]): string => {
+  switch (status) {
+    case "COMPLETE":
+      return "bg-stone-50/50";
+    case "PUNT":
+      return "bg-amber-50/30 italic";
+    default:
+      return "";
+  }
+};
+
 const TaskItem: Component<{ task: Task }> = (props) => {
   const taskTime = () => getTaskTime(props.task);
   const timeDisplay = createMemo(() => {
@@ -116,37 +129,48 @@ const TaskItem: Component<{ task: Task }> = (props) => {
     return time < new Date();
   });
 
+  const { setTaskStatus } = useStreamingData();
+
   return (
-    <div class="flex items-start gap-3">
-      <div class="mt-0.5">
-        <Show when={icon()}>
-          <Icon icon={icon()!} class="w-4 h-4" />
-        </Show>
-      </div>
-      <div class="flex-1">
-        <p
-          class="text-sm font-semibold"
-          classList={{
-            "text-red-600": isPastDue(),
-            "text-stone-800": !isPastDue(),
-          }}
-        >
-          {props.task.name}
-        </p>
-        <Show when={timeDisplay()}>
+    <SwipeableItem
+      onSwipeRight={() => setTaskStatus(props.task, "COMPLETE")}
+      onSwipeLeft={() => setTaskStatus(props.task, "PUNT")}
+      rightLabel="✅ Complete Task"
+      leftLabel="⏸ Punt Task"
+      statusClass={getStatusClasses(props.task.status)}
+      compact={true}
+    >
+      <div class="flex items-start gap-3">
+        <div class="mt-0.5">
+          <Show when={icon()}>
+            <Icon icon={icon()!} class="w-4 h-4" />
+          </Show>
+        </div>
+        <div class="flex-1">
           <p
-            class="text-xs"
+            class="text-sm font-semibold"
             classList={{
-              "text-red-500": isPastDue(),
-              "text-stone-500": !isPastDue(),
+              "text-red-600": isPastDue(),
+              "text-stone-800": !isPastDue(),
             }}
           >
-            {timeDisplay()}
-            {isPastDue() && " (past due)"}
+            {props.task.name}
           </p>
-        </Show>
+          <Show when={timeDisplay()}>
+            <p
+              class="text-xs"
+              classList={{
+                "text-red-500": isPastDue(),
+                "text-stone-500": !isPastDue(),
+              }}
+            >
+              {timeDisplay()}
+              {isPastDue() && " (past due)"}
+            </p>
+          </Show>
+        </div>
       </div>
-    </div>
+    </SwipeableItem>
   );
 };
 
