@@ -6,6 +6,7 @@ import {
   RoutinesSummary,
   GoalsSummary,
   UpcomingSection,
+  RightNowSection,
 } from "@/components/today";
 
 export const TodayPage: Component = () => {
@@ -17,6 +18,9 @@ export const TodayPage: Component = () => {
 
   return (
     <>
+      <div class="mb-6">
+        <RightNowSection events={allEvents()} tasks={allTasks()} />
+      </div>
       <div class="mb-6">
         <UpcomingSection events={allEvents()} tasks={allTasks()} />
       </div>

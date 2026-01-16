@@ -1,11 +1,11 @@
 import { Component, For, Show, createMemo } from "solid-js";
 import { Icon } from "@/components/shared/Icon";
-import { faClock } from "@fortawesome/free-solid-svg-icons";
+import { faCircle } from "@fortawesome/free-solid-svg-icons";
 import type { Event, Task } from "@/types/api";
 import { getTime } from "@/utils/dates";
 import { getTypeIcon, getCategoryIcon } from "@/utils/icons";
 
-export interface UpcomingSectionProps {
+export interface RightNowSectionProps {
   events: Event[];
   tasks: Task[];
 }
@@ -60,12 +60,6 @@ const formatCategory = (category?: Event["category"]): string =>
 const EventItem: Component<{ event: Event }> = (props) => {
   const icon = () => getTypeIcon("EVENT");
   const categoryLabel = () => formatCategory(props.event.category);
-  const isCurrentlyOccurring = createMemo(() => {
-    const now = new Date();
-    const start = new Date(props.event.starts_at);
-    const end = props.event.ends_at ? new Date(props.event.ends_at) : null;
-    return start <= now && (!end || end >= now);
-  });
 
   return (
     <div class="flex items-start gap-3">
@@ -77,9 +71,7 @@ const EventItem: Component<{ event: Event }> = (props) => {
       <div class="flex-1">
         <p class="text-sm font-semibold text-stone-800">{props.event.name}</p>
         <div class="flex items-center gap-2 mt-1">
-          <p class="text-xs text-stone-500">
-            {isCurrentlyOccurring() ? "Now" : formatDateTime(props.event.starts_at)}
-          </p>
+          <p class="text-xs text-stone-500">Now</p>
           <span class="text-[10px] font-medium uppercase tracking-wide text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
             {categoryLabel()}
           </span>
@@ -158,11 +150,10 @@ const isAllDayEvent = (event: Event): boolean => {
   return diffHours >= 23;
 };
 
-export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
+export const RightNowSection: Component<RightNowSectionProps> = (props) => {
   const now = new Date();
-  const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60 * 1000);
 
-  const upcomingEvents = createMemo(() => {
+  const ongoingEvents = createMemo(() => {
     return props.events
       .filter((event) => {
         // Exclude all-day events
@@ -173,13 +164,8 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
         const start = new Date(event.starts_at);
         const end = event.ends_at ? new Date(event.ends_at) : null;
         
-        // Exclude if currently occurring (those go in Right Now section)
-        if (start <= now && (!end || end >= now)) {
-          return false;
-        }
-        
-        // Include if starting within next 30 minutes
-        return start >= now && start <= thirtyMinutesFromNow;
+        // Only include if currently occurring
+        return start <= now && (!end || end >= now);
       })
       .sort((a, b) => {
         const aTime = new Date(a.starts_at).getTime();
@@ -188,7 +174,7 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
       });
   });
 
-  const upcomingTasks = createMemo(() => {
+  const pastDueTasks = createMemo(() => {
     return props.tasks
       .filter((task) => {
         // Skip completed or punted tasks
@@ -199,13 +185,8 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
         const taskTime = getTaskTime(task);
         if (!taskTime) return false;
 
-        // Exclude if past due (those go in Right Now section)
-        if (taskTime < now) {
-          return false;
-        }
-
-        // Include if due within next 30 minutes
-        return taskTime >= now && taskTime <= thirtyMinutesFromNow;
+        // Only include if past due (past start time or end time)
+        return taskTime < now;
       })
       .sort((a, b) => {
         const aTime = getTaskTime(a);
@@ -215,29 +196,29 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
       });
   });
 
-  const hasUpcomingItems = createMemo(() => 
-    upcomingEvents().length > 0 || upcomingTasks().length > 0
+  const hasRightNowItems = createMemo(() => 
+    ongoingEvents().length > 0 || pastDueTasks().length > 0
   );
 
   return (
-    <Show when={hasUpcomingItems()}>
+    <Show when={hasRightNowItems()}>
       <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-5 backdrop-blur-sm space-y-4">
         <div class="flex items-center gap-3">
-          <Icon icon={faClock} class="w-5 h-5 fill-amber-600" />
-          <p class="text-xs uppercase tracking-wide text-amber-700">Upcoming</p>
+          <Icon icon={faCircle} class="w-5 h-5 fill-amber-600" />
+          <p class="text-xs uppercase tracking-wide text-amber-700">Right Now</p>
         </div>
         
-        <Show when={upcomingEvents().length > 0}>
+        <Show when={ongoingEvents().length > 0}>
           <div class="space-y-3">
-            <For each={upcomingEvents()}>
+            <For each={ongoingEvents()}>
               {(event) => <EventItem event={event} />}
             </For>
           </div>
         </Show>
         
-        <Show when={upcomingTasks().length > 0}>
+        <Show when={pastDueTasks().length > 0}>
           <div class="space-y-3">
-            <For each={upcomingTasks()}>
+            <For each={pastDueTasks()}>
               {(task) => <TaskItem task={task} />}
             </For>
           </div>
