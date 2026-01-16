@@ -7,6 +7,7 @@ from uuid import UUID
 from loguru import logger
 from lykke.application.commands import ScheduleDayHandler
 from lykke.application.commands.calendar import (
+    SubscribeCalendarHandler,
     SyncAllCalendarsHandler,
     SyncCalendarHandler,
 )

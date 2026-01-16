@@ -312,3 +312,46 @@ async def google_webhook(
     logger.info(f"Scheduled sync task for calendar {calendar_id}")
 
     return Response(status_code=200)
+        X-Goog-Channel-Token: Secret token for webhook verification.
+        X-Goog-Resource-State: The type of change (sync, exists, not_exists).
+
+    Returns:
+        Empty 200 response to acknowledge receipt.
+    """
+    logger.info(
+        f"Received Google webhook for user {user_id}, calendar {calendar_id}, "
+        f"state={x_goog_resource_state}"
+    )
+
+    # Look up the calendar to get the expected token
+    try:
+        calendar = await calendar_repo.get(calendar_id)
+    except Exception:
+        logger.warning(f"Calendar {calendar_id} not found for user {user_id}")
+        return Response(status_code=200)
+
+    if not calendar.sync_subscription:
+        logger.warning(f"Calendar {calendar_id} has no sync subscription")
+        return Response(status_code=200)
+
+    if not x_goog_channel_token:
+        logger.warning(f"Missing token for calendar {calendar_id}")
+        return Response(status_code=200)
+
+    client_state = calendar.sync_subscription.client_state
+    if client_state is None:
+        logger.warning(f"Missing client_state for calendar {calendar_id}")
+        return Response(status_code=200)
+
+    if not hmac.compare_digest(client_state, x_goog_channel_token):
+        logger.warning(f"Invalid token for calendar {calendar_id}")
+        return Response(status_code=200)
+
+    if x_goog_resource_state == "sync":
+        logger.info("Received sync verification from Google, triggering initial sync")
+
+    # Schedule background task to sync the calendar (initial + incremental)
+    await sync_single_calendar_task.kiq(user_id=user_id, calendar_id=calendar_id)
+    logger.info(f"Scheduled sync task for calendar {calendar_id}")
+
+    return Response(status_code=200)
