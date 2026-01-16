@@ -10,6 +10,7 @@ import {
   Routine,
   PushSubscription,
   TaskSchedule,
+  Goal,
 } from "@/types/api";
 import type { CurrentUser, UserProfileUpdate } from "@/types/api/user";
 import type {
@@ -166,6 +167,31 @@ export const taskAPI = {
     fetchData<Task>(`/api/tasks/${task.id}/actions`, {
       method: "POST",
       body: JSON.stringify({ type: status }),
+    }),
+};
+
+export const goalAPI = {
+  addGoal: (name: string): Promise<DayContext> => {
+    // The endpoint expects name as a query parameter
+    const params = new URLSearchParams({ name });
+    return fetchData<DayContext>(`/api/me/today/goals?${params.toString()}`, {
+      method: "POST",
+    });
+  },
+
+  updateGoalStatus: (goalId: string, status: string): Promise<DayContext> => {
+    const params = new URLSearchParams({ status });
+    return fetchData<DayContext>(
+      `/api/me/today/goals/${goalId}?${params.toString()}`,
+      {
+        method: "PATCH",
+      }
+    );
+  },
+
+  removeGoal: (goalId: string): Promise<DayContext> =>
+    fetchData<DayContext>(`/api/me/today/goals/${goalId}`, {
+      method: "DELETE",
     }),
 };
 

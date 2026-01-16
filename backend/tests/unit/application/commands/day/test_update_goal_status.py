@@ -177,6 +177,47 @@ async def test_update_goal_status_raises_error_if_goal_not_found():
 
 
 @pytest.mark.asyncio
+async def test_update_goal_status_no_change_does_not_add_to_uow():
+    """Test update_goal_status doesn't add entity to UoW if status unchanged."""
+    user_id = uuid4()
+    task_date = dt_date(2025, 11, 27)
+
+    template = DayTemplateEntity(
+        user_id=user_id,
+        slug="default",
+        routine_ids=[],
+        time_blocks=[],
+    )
+
+    day = DayEntity.create_for_date(task_date, user_id, template)
+    goal = day.add_goal("Test Goal")
+    # Clear events from add_goal
+    day.collect_events()
+    
+    # Set goal status to COMPLETE
+    day.update_goal_status(goal.id, value_objects.GoalStatus.COMPLETE)
+    # Clear events from update
+    day.collect_events()
+
+    day_repo = _FakeDayReadOnlyRepo(day)
+    ro_repos = _FakeReadOnlyRepos(day_repo)
+    uow_factory = _FakeUoWFactory(day_repo)
+    handler = UpdateGoalStatusHandler(ro_repos, uow_factory, user_id)
+
+    # Act - try to update to same status
+    result = await handler.update_goal_status(
+        date=task_date, goal_id=goal.id, status=value_objects.GoalStatus.COMPLETE
+    )
+
+    # Assert - entity should not be added to UoW because status didn't change
+    assert len(uow_factory.uow.added) == 0
+    assert result.goals[0].status == value_objects.GoalStatus.COMPLETE
+    # No events should be emitted
+    events = result.collect_events()
+    assert len(events) == 0
+
+
+@pytest.mark.asyncio
 async def test_update_goal_status_all_status_transitions():
     """Test update_goal_status works for all status transitions."""
     user_id = uuid4()

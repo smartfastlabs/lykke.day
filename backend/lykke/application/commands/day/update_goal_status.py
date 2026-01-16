@@ -33,9 +33,11 @@ class UpdateGoalStatusHandler(BaseCommandHandler):
             day_id = DayEntity.id_from_date_and_user(date, self.user_id)
             day = await uow.day_ro_repo.get(day_id)
 
-            # Update the goal status (this emits a domain event)
+            # Update the goal status (this emits a domain event if status changed)
             day.update_goal_status(goal_id, status)
 
-            # Add entity to UoW for saving
-            uow.add(day)
+            # Only add entity to UoW if it was actually modified (has events)
+            # If status didn't change, update_goal_status returns early without events
+            if day.has_events():
+                uow.add(day)
             return day

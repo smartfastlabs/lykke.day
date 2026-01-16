@@ -9,8 +9,8 @@ import {
   type ParentProps,
 } from "solid-js";
 import { createStore } from "solid-js/store";
-import { DayContext, Task, Event, Day, TaskStatus } from "@/types/api";
-import { taskAPI } from "@/utils/api";
+import { DayContext, Task, Event, Day, TaskStatus, Goal, GoalStatus } from "@/types/api";
+import { taskAPI, goalAPI } from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 
 interface StreamingDataContextValue {
@@ -18,6 +18,7 @@ interface StreamingDataContextValue {
   dayContext: Accessor<DayContext | undefined>;
   tasks: Accessor<Task[]>;
   events: Accessor<Event[]>;
+  goals: Accessor<Goal[]>;
   day: Accessor<Day | undefined>;
   // Loading and error states
   isLoading: Accessor<boolean>;
@@ -29,6 +30,9 @@ interface StreamingDataContextValue {
   sync: () => void;
   syncIncremental: (sinceTimestamp: string) => void;
   setTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
+  addGoal: (name: string) => Promise<void>;
+  updateGoalStatus: (goal: Goal, status: GoalStatus) => Promise<void>;
+  removeGoal: (goalId: string) => Promise<void>;
 }
 
 const StreamingDataContext = createContext<StreamingDataContextValue>();
@@ -108,6 +112,10 @@ export function StreamingDataProvider(props: ParentProps) {
       dayContextStore.data?.events ??
       []
   );
+  const goals = createMemo(() => {
+    const day = dayContextStore.data?.day;
+    return day?.goals ?? [];
+  });
   const day = createMemo(() => dayContextStore.data?.day);
 
   // Get auth token from cookie
@@ -444,6 +452,68 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
+  // Optimistically update goals in local state
+  const updateGoalsLocally = (updatedGoals: Goal[]) => {
+    setDayContextStore((current) => {
+      if (!current.data || !current.data.day) return current;
+      return {
+        data: {
+          ...current.data,
+          day: {
+            ...current.data.day,
+            goals: updatedGoals,
+          },
+        },
+      };
+    });
+  };
+
+  const addGoal = async (name: string): Promise<void> => {
+    try {
+      const context = await goalAPI.addGoal(name);
+      setDayContextStore({ data: context });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateGoalStatus = async (
+    goal: Goal,
+    status: GoalStatus
+  ): Promise<void> => {
+    // Optimistic update
+    const previousGoals = goals();
+    const updatedGoals = previousGoals.map((g) =>
+      g.id === goal.id ? { ...g, status } : g
+    );
+    updateGoalsLocally(updatedGoals);
+
+    try {
+      const context = await goalAPI.updateGoalStatus(goal.id, status);
+      setDayContextStore({ data: context });
+    } catch (error) {
+      // Rollback on error
+      updateGoalsLocally(previousGoals);
+      throw error;
+    }
+  };
+
+  const removeGoal = async (goalId: string): Promise<void> => {
+    // Optimistic update
+    const previousGoals = goals();
+    const updatedGoals = previousGoals.filter((g) => g.id !== goalId);
+    updateGoalsLocally(updatedGoals);
+
+    try {
+      const context = await goalAPI.removeGoal(goalId);
+      setDayContextStore({ data: context });
+    } catch (error) {
+      // Rollback on error
+      updateGoalsLocally(previousGoals);
+      throw error;
+    }
+  };
+
   const sync = () => {
     requestFullSync();
   };
@@ -478,6 +548,7 @@ export function StreamingDataProvider(props: ParentProps) {
     dayContext,
     tasks,
     events,
+    goals,
     day,
     isLoading,
     error,
@@ -486,6 +557,9 @@ export function StreamingDataProvider(props: ParentProps) {
     sync,
     syncIncremental,
     setTaskStatus,
+    addGoal,
+    updateGoalStatus,
+    removeGoal,
   };
 
   return (

@@ -4,14 +4,16 @@ import {
   TasksSection,
   EventsSection,
   RoutinesSummary,
+  GoalsSummary,
 } from "@/components/today";
 import { Hero } from "@/components/today";
 
 export const TodayPage: Component = () => {
-  const { tasks, events, day } = useStreamingData();
+  const { tasks, events, goals, day } = useStreamingData();
 
   const allTasks = createMemo(() => tasks() ?? []);
   const allEvents = createMemo(() => events() ?? []);
+  const allGoals = createMemo(() => goals() ?? []);
 
   const date = createMemo(() => {
     const dayValue = day();
@@ -63,8 +65,15 @@ export const TodayPage: Component = () => {
         <RoutinesSummary tasks={allTasks()} />
       </div>
 
-      <div class="grid md:grid-cols-2 gap-4 md:gap-6 mb-6">
+      <div class="mb-6">
+        <GoalsSummary goals={allGoals()} />
+      </div>
+
+      <div class="mb-6">
         <EventsSection events={allEvents()} href="/me/today/events" />
+      </div>
+
+      <div class="mb-6">
         <TasksSection tasks={allTasks()} href="/me/today/tasks" />
       </div>
     </>

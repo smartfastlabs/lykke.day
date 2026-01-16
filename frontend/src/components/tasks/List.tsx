@@ -1,9 +1,10 @@
-import { createSignal, Component, For, Show } from "solid-js";
+import { Component, For, Show } from "solid-js";
 import type { Accessor } from "solid-js";
 import { getCategoryIcon, getTypeIcon } from "@/utils/icons";
 import { TaskStatus, Task, TaskSchedule } from "@/types/api";
 import { Icon } from "@/components/shared/Icon";
 import { useStreamingData } from "@/providers/streaming-data";
+import { SwipeableItem } from "@/components/shared/SwipeableItem";
 
 export const formatTimeString = (timeStr: string): string => {
   const [h, m] = timeStr.split(":");
@@ -81,129 +82,60 @@ const TaskItem: Component<{ task: Task }> = (props) => {
 
   const { setTaskStatus } = useStreamingData();
 
-  const [translateX, setTranslateX] = createSignal(0);
-  let startX = 0;
-  let startY = 0;
-  let isSwiping = false;
-
-  const handleTouchStart = (e: TouchEvent) => {
-    const touch = e.touches[0];
-    startX = touch.clientX;
-    startY = touch.clientY;
-    isSwiping = false;
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    const touch = e.touches[0];
-    const dx = touch.clientX - startX;
-    const dy = touch.clientY - startY;
-
-    // Detect if user is swiping horizontally or vertically
-    if (!isSwiping) {
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
-        isSwiping = true;
-      } else if (Math.abs(dy) > 10) {
-        // user is scrolling vertically — bail out
-        return;
-      }
-    }
-
-    if (isSwiping) {
-      e.preventDefault(); // only prevent default when actually swiping horizontally
-      setTranslateX(dx);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    console.log("touch end");
-    if (isSwiping) {
-      const x = translateX();
-      const threshold = 100;
-      if (x > threshold) {
-        setTaskStatus(props.task, "COMPLETE");
-      } else if (x < -threshold) {
-        setTaskStatus(props.task, "PUNT");
-      }
-      setTranslateX(0);
-    }
-    isSwiping = false;
-  };
-
   return (
-    <div
-      class="relative w-full overflow-hidden select-none mb-3"
-      style="touch-action: pan-y"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+    <SwipeableItem
+      onSwipeRight={() => setTaskStatus(props.task, "COMPLETE")}
+      onSwipeLeft={() => setTaskStatus(props.task, "PUNT")}
+      rightLabel="✅ Complete Task"
+      leftLabel="🗑 Punt Task"
+      statusClass={getStatusClasses(props.task.status)}
     >
-      <div class="absolute inset-0 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 flex justify-between items-center px-6 text-sm font-medium pointer-events-none rounded-xl">
-        <span class="text-amber-600">✅ Complete Task</span>
-        <span class="text-rose-500">🗑 Punt Task</span>
-      </div>
-
-      {/* Foreground Card */}
-      <div
-        class="relative transition-transform duration-150 active:scale-[0.97]"
-        style={{
-          transform: `translateX(${translateX()}px)`,
-          transition: translateX() === 0 ? "transform 0.2s ease-out" : "none",
-        }}
-        role="button"
-      >
-        <div
-          class={`group px-5 py-3.5 bg-white/60 backdrop-blur-sm border border-white/80 rounded-xl hover:bg-white/80 hover:shadow-lg hover:shadow-amber-900/5 transition-all duration-300 cursor-pointer ${getStatusClasses(
-            props.task.status
-          )}`}
-        >
-          <div class="flex items-center gap-4">
-            {/* Time column */}
-            <div class="w-14 flex-shrink-0 text-right">
-              <Show
-                when={time()?.primary}
-                fallback={<span class="text-xs text-stone-300">—</span>}
-              >
-                <span
-                  class={`text-xs tabular-nums ${
-                    time()?.primary === "flexible"
-                      ? "text-stone-400 italic"
-                      : "text-stone-500"
-                  }`}
-                >
-                  {time()?.primary}
-                </span>
-              </Show>
-            </div>
-
-            {/* Category/Type icon */}
-            <span class="w-4 flex-shrink-0 flex items-center justify-center text-amber-600">
-              <Show when={icon()}>
-                <Icon icon={icon()!} />
-              </Show>
+      <div class="flex items-center gap-4">
+        {/* Time column */}
+        <div class="w-14 flex-shrink-0 text-right">
+          <Show
+            when={time()?.primary}
+            fallback={<span class="text-xs text-stone-300">—</span>}
+          >
+            <span
+              class={`text-xs tabular-nums ${
+                time()?.primary === "flexible"
+                  ? "text-stone-400 italic"
+                  : "text-stone-500"
+              }`}
+            >
+              {time()?.primary}
             </span>
-
-            {/* Task name */}
-            <div class="flex-1 min-w-0">
-              <span
-                class={`text-sm truncate block ${
-                  props.task.status === "COMPLETE"
-                    ? "line-through text-stone-400"
-                    : "text-stone-800"
-                }`}
-              >
-                {props.task.name.replace("Routine: ", "")}
-              </span>
-            </div>
-
-            <Show when={props.task.status === "COMPLETE"}>
-              <div class="flex-shrink-0 w-4 text-amber-600">
-                <Icon key="checkMark" />
-              </div>
-            </Show>
-          </div>
+          </Show>
         </div>
+
+        {/* Category/Type icon */}
+        <span class="w-4 flex-shrink-0 flex items-center justify-center text-amber-600">
+          <Show when={icon()}>
+            <Icon icon={icon()!} />
+          </Show>
+        </span>
+
+        {/* Task name */}
+        <div class="flex-1 min-w-0">
+          <span
+            class={`text-sm truncate block ${
+              props.task.status === "COMPLETE"
+                ? "line-through text-stone-400"
+                : "text-stone-800"
+            }`}
+          >
+            {props.task.name.replace("Routine: ", "")}
+          </span>
+        </div>
+
+        <Show when={props.task.status === "COMPLETE"}>
+          <div class="flex-shrink-0 w-4 text-amber-600">
+            <Icon key="checkMark" />
+          </div>
+        </Show>
       </div>
-    </div>
+    </SwipeableItem>
   );
 };
 

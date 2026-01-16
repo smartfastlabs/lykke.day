@@ -40,6 +40,7 @@ export type DayContext = Omit<BaseDayContext, 'calendar_entries'> & {
   events?: Event[];
   calendar_entries?: Event[];
   tasks?: Task[];
+  goals?: Goal[];
 };
 
 export type DayTemplate = components["schemas"]["DayTemplateSchema"];
@@ -56,6 +57,7 @@ export type TaskSchedule = components["schemas"]["TaskScheduleSchema"];
 export type RoutineSchedule = components["schemas"]["RoutineScheduleSchema"];
 export type Action = components["schemas"]["ActionSchema"];
 export type Alarm = components["schemas"]["AlarmSchema"];
+export type Goal = components["schemas"]["GoalSchema"];
 
 // Enum types
 export type TaskStatus = components["schemas"]["TaskStatus"];
@@ -67,4 +69,5 @@ export type TimingType = components["schemas"]["TimingType"];
 export type TimeBlockType = components["schemas"]["TimeBlockType"];
 export type TimeBlockCategory = components["schemas"]["TimeBlockCategory"];
 export type ActionType = components["schemas"]["ActionType"];
+export type GoalStatus = components["schemas"]["GoalStatus"];
 
