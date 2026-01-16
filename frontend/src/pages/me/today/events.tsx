@@ -1,16 +1,9 @@
-import {
-  Component,
-  createMemo,
-  For,
-  Show,
-  createSignal,
-  onMount,
-} from "solid-js";
+import { Component, createMemo, For, Show } from "solid-js";
 import { useStreamingData } from "@/providers/streaming-data";
 import type { Event } from "@/types/api";
 import { Icon } from "solid-heroicons";
 import { calendar, clock } from "solid-heroicons/outline";
-import { isBackForwardNavigation } from "@/utils/navigation";
+import { usePageAnimation } from "@/utils/navigation";
 
 const formatTime = (dateTimeStr: string): string => {
   const date = new Date(dateTimeStr);
@@ -111,16 +104,7 @@ const EmptyState: Component = () => (
 
 export const TodaysEventsView: Component = () => {
   const { events } = useStreamingData();
-  const [mounted, setMounted] = createSignal(false);
-
-  onMount(() => {
-    // Skip animations if navigating via back/forward buttons
-    if (isBackForwardNavigation()) {
-      setMounted(true);
-    } else {
-      setTimeout(() => setMounted(true), 50);
-    }
-  });
+  const mounted = usePageAnimation("today-events");
 
   const now = createMemo(() => new Date());
 
@@ -185,7 +169,9 @@ export const TodaysEventsView: Component = () => {
               </h2>
               <div class="space-y-3">
                 <For each={upcomingEvents()}>
-                  {(event, index) => <EventCard event={event} index={index()} />}
+                  {(event, index) => (
+                    <EventCard event={event} index={index()} />
+                  )}
                 </For>
               </div>
             </div>
@@ -208,7 +194,9 @@ export const TodaysEventsView: Component = () => {
               </h2>
               <div class="space-y-3 opacity-60">
                 <For each={pastEvents()}>
-                  {(event, index) => <EventCard event={event} index={index()} />}
+                  {(event, index) => (
+                    <EventCard event={event} index={index()} />
+                  )}
                 </For>
               </div>
             </div>

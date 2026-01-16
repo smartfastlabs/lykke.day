@@ -1,27 +1,44 @@
+import { Accessor, createSignal, onMount } from "solid-js";
+
 /**
- * Detects if the page was loaded via back/forward browser navigation
- * @returns true if navigation was via back/forward buttons, false otherwise
+ * Hook to manage page animations that should only play once per session.
+ * Uses sessionStorage to track whether animations have been shown.
+ * 
+ * @param key - Unique identifier for this page/component's animations
+ * @param delay - Delay in milliseconds before showing animations (default: 50)
+ * @returns A signal that becomes true when animations should be shown
+ * 
+ * @example
+ * ```tsx
+ * const mounted = usePageAnimation("resources-page");
+ * 
+ * return (
+ *   <div style={{ opacity: mounted() ? 1 : 0 }}>
+ *     Content
+ *   </div>
+ * );
+ * ```
  */
-export function isBackForwardNavigation(): boolean {
-  // Check if Performance API is available
-  if (typeof window === "undefined" || !window.performance) {
-    return false;
-  }
+export function usePageAnimation(
+  key: string,
+  delay: number = 50
+): Accessor<boolean> {
+  const [mounted, setMounted] = createSignal(false);
+  const storageKey = `page-animation-${key}`;
 
-  // Use the Navigation Timing API Level 2
-  const navigationEntries = performance.getEntriesByType(
-    "navigation"
-  ) as PerformanceNavigationTiming[];
+  onMount(() => {
+    // Check if we've already shown animations in this session
+    const hasAnimated = sessionStorage.getItem(storageKey) === "true";
 
-  if (navigationEntries.length > 0) {
-    const navEntry = navigationEntries[0];
-    return navEntry.type === "back_forward";
-  }
+    if (hasAnimated) {
+      // Skip animations if we've already shown them
+      setMounted(true);
+    } else {
+      // Mark as animated and play animations after delay
+      sessionStorage.setItem(storageKey, "true");
+      setTimeout(() => setMounted(true), delay);
+    }
+  });
 
-  // Fallback to deprecated API for older browsers
-  if (performance.navigation) {
-    return performance.navigation.type === performance.navigation.TYPE_BACK_FORWARD;
-  }
-
-  return false;
+  return mounted;
 }

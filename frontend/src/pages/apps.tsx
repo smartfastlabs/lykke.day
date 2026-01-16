@@ -1,13 +1,10 @@
-import { Component, For, createSignal } from "solid-js";
+import { Component, For } from "solid-js";
 import Footer from "@/components/shared/layout/Footer";
 import MediaCard, { MediaItem } from "@/components/shared/MediaCard";
 
-interface AppItem extends MediaItem {
-  category: string;
-}
+interface AppItem extends MediaItem {}
 
 const apps: AppItem[] = [
-  // Productivity & Organization
   {
     title: "Notion",
     creator: "Notion Labs",
@@ -16,7 +13,6 @@ const apps: AppItem[] = [
     url: "https://www.notion.so",
     vibe: "flexible & powerful",
     thumbnail: "/images/covers/apps/notion.png",
-    category: "Productivity",
   },
   {
     title: "Todoist",
@@ -26,7 +22,6 @@ const apps: AppItem[] = [
     url: "https://todoist.com",
     vibe: "streamlined focus",
     thumbnail: "/images/covers/apps/todoist.png",
-    category: "Productivity",
   },
   {
     title: "Things 3",
@@ -36,7 +31,6 @@ const apps: AppItem[] = [
     url: "https://culturedcode.com/things/",
     vibe: "elegant simplicity",
     thumbnail: "/images/covers/apps/things.png",
-    category: "Productivity",
   },
   {
     title: "Asana",
@@ -46,7 +40,6 @@ const apps: AppItem[] = [
     url: "https://asana.com",
     vibe: "team clarity",
     thumbnail: "/images/covers/apps/asana.png",
-    category: "Productivity",
   },
   {
     title: "Trello",
@@ -56,7 +49,6 @@ const apps: AppItem[] = [
     url: "https://trello.com",
     vibe: "visual flow",
     thumbnail: "/images/covers/apps/trello.png",
-    category: "Productivity",
   },
   {
     title: "TickTick",
@@ -66,7 +58,6 @@ const apps: AppItem[] = [
     url: "https://ticktick.com",
     vibe: "complete toolkit",
     thumbnail: "/images/covers/apps/ticktick.png",
-    category: "Productivity",
   },
   {
     title: "Any.do",
@@ -76,7 +67,6 @@ const apps: AppItem[] = [
     url: "https://www.any.do",
     vibe: "daily rhythm",
     thumbnail: "/images/covers/apps/anydo.png",
-    category: "Productivity",
   },
   {
     title: "Microsoft To Do",
@@ -86,9 +76,7 @@ const apps: AppItem[] = [
     url: "https://todo.microsoft.com",
     vibe: "daily essentials",
     thumbnail: "/images/covers/apps/microsoft-todo.png",
-    category: "Productivity",
   },
-  // Mindfulness & Mental Health
   {
     title: "Headspace",
     creator: "Headspace Inc.",
@@ -97,7 +85,6 @@ const apps: AppItem[] = [
     url: "https://www.headspace.com",
     vibe: "playful calm",
     thumbnail: "/images/covers/apps/headspace.png",
-    category: "Mindfulness",
   },
   {
     title: "Calm",
@@ -107,7 +94,6 @@ const apps: AppItem[] = [
     url: "https://www.calm.com",
     vibe: "peaceful sanctuary",
     thumbnail: "/images/covers/apps/calm.png",
-    category: "Mindfulness",
   },
   {
     title: "Insight Timer",
@@ -117,7 +103,6 @@ const apps: AppItem[] = [
     url: "https://insighttimer.com",
     vibe: "generous abundance",
     thumbnail: "/images/covers/apps/insight-timer.png",
-    category: "Mindfulness",
   },
   {
     title: "Ten Percent Happier",
@@ -127,7 +112,6 @@ const apps: AppItem[] = [
     url: "https://www.tenpercent.com",
     vibe: "real & grounded",
     thumbnail: "/images/covers/apps/ten-percent.png",
-    category: "Mindfulness",
   },
   {
     title: "Waking Up",
@@ -137,7 +121,6 @@ const apps: AppItem[] = [
     url: "https://www.wakingup.com",
     vibe: "intellectual depth",
     thumbnail: "/images/covers/apps/waking-up.png",
-    category: "Mindfulness",
   },
   {
     title: "Day One",
@@ -147,7 +130,6 @@ const apps: AppItem[] = [
     url: "https://dayoneapp.com",
     vibe: "thoughtful chronicle",
     thumbnail: "/images/covers/apps/day-one.png",
-    category: "Mindfulness",
   },
   {
     title: "Happify",
@@ -157,7 +139,6 @@ const apps: AppItem[] = [
     url: "https://www.happify.com",
     vibe: "joyful science",
     thumbnail: "/images/covers/apps/happify.png",
-    category: "Mindfulness",
   },
   {
     title: "SuperBetter",
@@ -167,9 +148,7 @@ const apps: AppItem[] = [
     url: "https://www.superbetter.com",
     vibe: "heroic growth",
     thumbnail: "/images/covers/apps/superbetter.png",
-    category: "Mindfulness",
   },
-  // Health & Wellness
   {
     title: "MyFitnessPal",
     creator: "MyFitnessPal, Inc.",
@@ -178,7 +157,6 @@ const apps: AppItem[] = [
     url: "https://www.myfitnesspal.com",
     vibe: "data-driven clarity",
     thumbnail: "/images/covers/apps/myfitnesspal.png",
-    category: "Health",
   },
   {
     title: "Noom",
@@ -188,7 +166,6 @@ const apps: AppItem[] = [
     url: "https://www.noom.com",
     vibe: "mindset shift",
     thumbnail: "/images/covers/apps/noom.png",
-    category: "Health",
   },
   {
     title: "Lose It!",
@@ -198,7 +175,6 @@ const apps: AppItem[] = [
     url: "https://www.loseit.com",
     vibe: "simple momentum",
     thumbnail: "/images/covers/apps/loseit.png",
-    category: "Health",
   },
   {
     title: "Habitica",
@@ -208,7 +184,6 @@ const apps: AppItem[] = [
     url: "https://habitica.com",
     vibe: "playful adventure",
     thumbnail: "/images/covers/apps/habitica.png",
-    category: "Health",
   },
   {
     title: "Streaks",
@@ -218,7 +193,6 @@ const apps: AppItem[] = [
     url: "https://streaksapp.com",
     vibe: "simple momentum",
     thumbnail: "/images/covers/apps/streaks.png",
-    category: "Health",
   },
   {
     title: "Strava",
@@ -228,7 +202,6 @@ const apps: AppItem[] = [
     url: "https://www.strava.com",
     vibe: "competitive community",
     thumbnail: "/images/covers/apps/strava.png",
-    category: "Health",
   },
   {
     title: "Fitbit",
@@ -238,7 +211,6 @@ const apps: AppItem[] = [
     url: "https://www.fitbit.com",
     vibe: "holistic tracking",
     thumbnail: "/images/covers/apps/fitbit.png",
-    category: "Health",
   },
   {
     title: "Fabulous",
@@ -248,20 +220,10 @@ const apps: AppItem[] = [
     url: "https://www.thefabulous.co",
     vibe: "holistic growth",
     thumbnail: "/images/covers/apps/fabulous.png",
-    category: "Health",
   },
 ];
 
 const Apps: Component = () => {
-  const [selectedCategory, setSelectedCategory] = createSignal<string>("All");
-
-  const categories = ["All", "Productivity", "Mindfulness", "Health"];
-
-  const filteredApps = () => {
-    const category = selectedCategory();
-    if (category === "All") return apps;
-    return apps.filter((app) => app.category === category);
-  };
 
   return (
     <div class="min-h-screen relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex flex-col">
@@ -281,49 +243,27 @@ const Apps: Component = () => {
             </h1>
             <div class="text-stone-600 text-base md:text-lg leading-relaxed space-y-4">
               <p>
-                I get it—there's an app for everything. I've tried a bunch of
-                them myself. Task managers, habit trackers, meditation apps,
-                fitness trackers... they all promise to be the missing piece.
+                From productivity apps and habit trackers to wellness apps,
+                meditation apps, and mental health apps—there are many excellent
+                health and wellness tools available. I've tried quite a few of
+                them.
               </p>
               <p>
-                And some of them are genuinely excellent at what they do. But
-                here's what I learned:{" "}
-                <span class="font-semibold text-stone-800">
-                  if you don't have the foundation, it doesn't matter
-                </span>
-                .
+                While these wellness apps and productivity tools can be helpful,
+                they work best when you have a clear foundation of what matters
+                to you and why. Health apps and mindfulness apps are most
+                effective when you have intention and clarity about your goals.
               </p>
               <p>
-                No app can fix a day that doesn't start with intention. No
-                tracker can build habits without clarity on what actually
-                matters. Everything starts at the foundation.
-              </p>
-              <p class="text-amber-700 font-medium">
-                That's lykke—the foundation that makes everything else work.
+                That's where lykke comes in—a foundation that helps you
+                establish clarity and intention, making your wellness apps and
+                other tools more effective.
               </p>
             </div>
           </div>
 
-          {/* Category Filter */}
-          <div class="mt-8 flex flex-wrap gap-3">
-            <For each={categories}>
-              {(category) => (
-                <button
-                  onClick={() => setSelectedCategory(category)}
-                  class={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                    selectedCategory() === category
-                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-900/20"
-                      : "bg-white/80 text-stone-600 hover:bg-white hover:text-stone-800 border border-amber-100/60"
-                  }`}
-                >
-                  {category}
-                </button>
-              )}
-            </For>
-          </div>
-
           <div class="mt-8 grid gap-5 sm:grid-cols-2">
-            <For each={filteredApps()}>
+            <For each={apps}>
               {(app) => <MediaCard item={app} />}
             </For>
           </div>

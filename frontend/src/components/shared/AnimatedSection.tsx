@@ -1,22 +1,19 @@
-import { Component, JSX, createSignal, onMount } from "solid-js";
-import { isBackForwardNavigation } from "@/utils/navigation";
+import { Component, JSX, createUniqueId } from "solid-js";
+import { usePageAnimation } from "@/utils/navigation";
 
 interface AnimatedSectionProps {
   delay?: string;
   children: JSX.Element;
+  animationKey?: string;
 }
 
-export const AnimatedSection: Component<AnimatedSectionProps> = (props) => {
-  const [mounted, setMounted] = createSignal(false);
+// Counter to ensure unique keys for AnimatedSection instances
+let animatedSectionCounter = 0;
 
-  onMount(() => {
-    // Skip animations if navigating via back/forward buttons
-    if (isBackForwardNavigation()) {
-      setMounted(true);
-    } else {
-      setTimeout(() => setMounted(true), 50);
-    }
-  });
+export const AnimatedSection: Component<AnimatedSectionProps> = (props) => {
+  // Generate a unique key if not provided, using a counter to ensure uniqueness
+  const uniqueKey = props.animationKey ?? `animated-section-${++animatedSectionCounter}`;
+  const mounted = usePageAnimation(uniqueKey);
 
   return (
     <div

@@ -1,4 +1,4 @@
-import { Component, For, createSignal, onMount } from "solid-js";
+import { Component, For } from "solid-js";
 import { A } from "@solidjs/router";
 import { Icon } from "solid-heroicons";
 import {
@@ -12,7 +12,7 @@ import {
 } from "solid-heroicons/outline";
 import Footer from "@/components/shared/layout/Footer";
 import { useAuth } from "@/providers/auth";
-import { isBackForwardNavigation } from "@/utils/navigation";
+import { usePageAnimation } from "@/utils/navigation";
 
 interface Feature {
   icon: typeof sun;
@@ -22,16 +22,7 @@ interface Feature {
 
 const Landing: Component = () => {
   const { isAuthenticated } = useAuth();
-  const [mounted, setMounted] = createSignal(false);
-
-  onMount(() => {
-    // Skip animations if navigating via back/forward buttons
-    if (isBackForwardNavigation()) {
-      setMounted(true);
-    } else {
-      setTimeout(() => setMounted(true), 50);
-    }
-  });
+  const mounted = usePageAnimation("landing");
 
   const AccountLink: Component = () => (
     <a
