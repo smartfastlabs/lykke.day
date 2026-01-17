@@ -13,17 +13,15 @@ export function useSwipeGesture(callbacks: SwipeCallbacks) {
   let isSwiping = false;
   const threshold = callbacks.threshold ?? 100;
 
-  const handleTouchStart = (e: TouchEvent) => {
-    const touch = e.touches[0];
-    startX = touch.clientX;
-    startY = touch.clientY;
+  const startSwipe = (clientX: number, clientY: number) => {
+    startX = clientX;
+    startY = clientY;
     isSwiping = false;
   };
 
-  const handleTouchMove = (e: TouchEvent) => {
-    const touch = e.touches[0];
-    const dx = touch.clientX - startX;
-    const dy = touch.clientY - startY;
+  const updateSwipe = (clientX: number, clientY: number, preventDefault?: () => void) => {
+    const dx = clientX - startX;
+    const dy = clientY - startY;
 
     // Detect if user is swiping horizontally or vertically
     if (!isSwiping) {
@@ -36,12 +34,14 @@ export function useSwipeGesture(callbacks: SwipeCallbacks) {
     }
 
     if (isSwiping) {
-      e.preventDefault(); // only prevent default when actually swiping horizontally
+      if (preventDefault) {
+        preventDefault(); // only prevent default when actually swiping horizontally
+      }
       setTranslateX(dx);
     }
   };
 
-  const handleTouchEnd = () => {
+  const endSwipe = () => {
     if (isSwiping) {
       const x = translateX();
       if (x > threshold) {
@@ -54,10 +54,42 @@ export function useSwipeGesture(callbacks: SwipeCallbacks) {
     isSwiping = false;
   };
 
+  // Touch event handlers
+  const handleTouchStart = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    startSwipe(touch.clientX, touch.clientY);
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    updateSwipe(touch.clientX, touch.clientY, () => e.preventDefault());
+  };
+
+  const handleTouchEnd = () => {
+    endSwipe();
+  };
+
+  // Mouse event handlers for desktop
+  const handleMouseDown = (e: MouseEvent) => {
+    e.preventDefault();
+    startSwipe(e.clientX, e.clientY);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    updateSwipe(e.clientX, e.clientY);
+  };
+
+  const handleMouseUp = () => {
+    endSwipe();
+  };
+
   return {
     translateX,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
   };
 }
