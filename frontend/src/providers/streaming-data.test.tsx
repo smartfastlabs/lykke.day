@@ -746,6 +746,8 @@ describe("StreamingDataProvider", () => {
 
       unmount();
 
+      await vi.runAllTimersAsync();
+
       await waitFor(() => {
         expect(closeSpy).toHaveBeenCalled();
       });
@@ -766,6 +768,8 @@ describe("StreamingDataProvider", () => {
       ws.simulateOpen();
 
       unmount();
+
+      await vi.runAllTimersAsync();
 
       // Simulate close after unmount
       ws.simulateClose();

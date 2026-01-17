@@ -13,6 +13,7 @@ from redis import asyncio as aioredis  # type: ignore
 
 from lykke.application.commands import (
     CreateOrGetDayHandler,
+    RecordRoutineActionHandler,
     RecordTaskActionHandler,
     RescheduleDayHandler,
     ScheduleDayHandler,
@@ -266,6 +267,18 @@ def get_record_task_action_handler(
     """Get a RecordTaskActionHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return RecordTaskActionHandler(ro_repos, uow_factory, user.id)
+
+
+def get_record_routine_action_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> RecordRoutineActionHandler:
+    """Get a RecordRoutineActionHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return RecordRoutineActionHandler(ro_repos, uow_factory, user.id)
 
 
 def get_add_goal_to_day_handler(

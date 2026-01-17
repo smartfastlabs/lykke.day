@@ -19,36 +19,8 @@ import {
   GoalStatus,
   Routine,
 } from "@/types/api";
-import { taskAPI, goalAPI } from "@/utils/api";
+import { taskAPI, goalAPI, routineAPI } from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
-import { getDateString } from "@/utils/dates";
-
-// LocalStorage keys
-const STORAGE_KEYS = {
-  DAY_CONTEXT: "streaming_data.day_context",
-  LAST_TIMESTAMP: "streaming_data.last_timestamp",
-  ROUTINES: "streaming_data.routines",
-} as const;
-
-// LocalStorage utilities
-function getFromStorage<T>(key: string): T | null {
-  try {
-    const result = localStorage.getItem(key);
-    if (!result) return null;
-    return JSON.parse(result) as T;
-  } catch (error) {
-    console.error(`Error reading from localStorage key ${key}:`, error);
-    return null;
-  }
-}
-
-function saveToStorage<T>(key: string, value: T): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.error(`Error saving to localStorage key ${key}:`, error);
-  }
-}
 
 interface StreamingDataContextValue {
   // The main data - provides loading/error states
@@ -68,6 +40,7 @@ interface StreamingDataContextValue {
   sync: () => void;
   syncIncremental: (sinceTimestamp: string) => void;
   setTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
+  setRoutineAction: (routineId: string, status: TaskStatus) => Promise<void>;
   addGoal: (name: string) => Promise<void>;
   updateGoalStatus: (goal: Goal, status: GoalStatus) => Promise<void>;
   removeGoal: (goalId: string) => Promise<void>;
@@ -126,47 +99,21 @@ interface EntityChange {
 }
 
 export function StreamingDataProvider(props: ParentProps) {
-  // Load cached data from localStorage on initialization
-  const cachedDayContext = getFromStorage<DayContext>(STORAGE_KEYS.DAY_CONTEXT);
-  const cachedLastTimestamp = getFromStorage<string | null>(
-    STORAGE_KEYS.LAST_TIMESTAMP
-  );
-  const cachedRoutines = getFromStorage<Routine[]>(STORAGE_KEYS.ROUTINES);
-
-  // Check if cached day context is for today - if not, clear it
-  const todayDateString = getDateString();
-  const isValidCachedData =
-    cachedDayContext?.day?.date === todayDateString;
-  
-  // Only use cached data if it's for today
-  const validCachedDayContext = isValidCachedData ? cachedDayContext : null;
-  const validCachedLastTimestamp = isValidCachedData ? cachedLastTimestamp : null;
-
-  // If cached data is stale, clear it from localStorage
-  if (cachedDayContext && !isValidCachedData) {
-    console.log(
-      `StreamingDataProvider: Cached data is for ${cachedDayContext.day?.date}, but today is ${todayDateString}. Clearing cache.`
-    );
-    localStorage.removeItem(STORAGE_KEYS.DAY_CONTEXT);
-    localStorage.removeItem(STORAGE_KEYS.LAST_TIMESTAMP);
-  }
-
   const [dayContextStore, setDayContextStore] = createStore<{
     data: DayContext | undefined;
-  }>({ data: validCachedDayContext ?? undefined });
-  // Start with isLoading false if we have valid cached data, true otherwise
-  const [isLoading, setIsLoading] = createSignal(validCachedDayContext === null);
+  }>({ data: undefined });
+  const [isLoading, setIsLoading] = createSignal(true);
   const [error, setError] = createSignal<Error | undefined>(undefined);
   const [isConnected, setIsConnected] = createSignal(false);
   const [isOutOfSync, setIsOutOfSync] = createSignal(false);
   const [lastProcessedTimestamp, setLastProcessedTimestamp] = createSignal<
     string | null
-  >(validCachedLastTimestamp ?? null);
+  >(null);
 
   // Routines store - separate from day context since routines aren't date-specific
   const [routinesStore, setRoutinesStore] = createStore<{
     routines: Routine[];
-  }>({ routines: cachedRoutines ?? [] });
+  }>({ routines: [] });
 
   // Expose routines from store
   const routines = createMemo(() => routinesStore.routines);
@@ -224,32 +171,8 @@ export function StreamingDataProvider(props: ParentProps) {
         setIsConnected(true);
         setError(undefined);
         console.log("StreamingDataProvider: WebSocket connected");
-
-        // If we have cached data with a timestamp and it's for today, request partial sync
-        // Otherwise request full sync
-        // Recalculate today's date in case the page has been open past midnight
-        const currentTodayDate = getDateString();
-        const timestamp = lastProcessedTimestamp();
-        const hasCachedData = dayContextStore.data !== undefined;
-        const cachedDate = dayContextStore.data?.day?.date;
-        const isCachedDataForToday = cachedDate === currentTodayDate;
-        
-        if (timestamp && hasCachedData && isCachedDataForToday) {
-          console.log(
-            "StreamingDataProvider: Requesting partial sync since",
-            timestamp
-          );
-          requestIncrementalSync(timestamp);
-        } else {
-          if (hasCachedData && !isCachedDataForToday) {
-            console.log(
-              `StreamingDataProvider: Cached data is for ${cachedDate}, but today is ${currentTodayDate}. Requesting full sync.`
-            );
-          } else {
-            console.log("StreamingDataProvider: Requesting full sync");
-          }
-          requestFullSync();
-        }
+        console.log("StreamingDataProvider: Requesting full sync");
+        requestFullSync();
       };
 
       ws.onmessage = async (event) => {
@@ -351,33 +274,20 @@ export function StreamingDataProvider(props: ParentProps) {
       // Full context - replace store
       setDayContextStore({ data: message.day_context });
 
-      // Cache to localStorage
-      saveToStorage(STORAGE_KEYS.DAY_CONTEXT, message.day_context);
-
       if (message.last_audit_log_timestamp) {
         setLastProcessedTimestamp(message.last_audit_log_timestamp);
-        saveToStorage(
-          STORAGE_KEYS.LAST_TIMESTAMP,
-          message.last_audit_log_timestamp
-        );
       }
       setIsOutOfSync(false);
 
       // Update routines from full sync response
       if (message.routines) {
         setRoutinesStore({ routines: message.routines });
-        saveToStorage(STORAGE_KEYS.ROUTINES, message.routines);
       }
     } else if (message.changes) {
       // Incremental changes - apply to existing store
-      // applyChanges handles caching internally
       applyChanges(message.changes);
       if (message.last_audit_log_timestamp) {
         setLastProcessedTimestamp(message.last_audit_log_timestamp);
-        saveToStorage(
-          STORAGE_KEYS.LAST_TIMESTAMP,
-          message.last_audit_log_timestamp
-        );
       }
     }
   };
@@ -467,18 +377,12 @@ export function StreamingDataProvider(props: ParentProps) {
       updated.calendar_entries = updatedEvents;
       updated.events = updatedEvents;
 
-      const result = { data: updated };
-
-      // Cache the updated day context
-      saveToStorage(STORAGE_KEYS.DAY_CONTEXT, updated);
-
-      return result;
+      return { data: updated };
     });
 
-    // Update routines store and cache if routines were modified
+    // Update routines store if routines were modified
     if (updatedRoutines !== null) {
       setRoutinesStore({ routines: updatedRoutines });
-      saveToStorage(STORAGE_KEYS.ROUTINES, updatedRoutines);
     }
   };
 
@@ -574,8 +478,6 @@ export function StreamingDataProvider(props: ParentProps) {
                 (r) => r.id !== auditLog.entity_id
               ),
             };
-            // Cache routines
-            saveToStorage(STORAGE_KEYS.ROUTINES, updated.routines);
             return updated;
           });
           return current;
@@ -598,8 +500,6 @@ export function StreamingDataProvider(props: ParentProps) {
           ),
         },
       };
-      // Cache updated context
-      saveToStorage(STORAGE_KEYS.DAY_CONTEXT, updated.data);
       return updated;
     });
   };
@@ -622,6 +522,32 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
+  const setRoutineAction = async (
+    routineId: string,
+    status: TaskStatus
+  ): Promise<void> => {
+    // Optimistic update: update all tasks with this routine_id
+    const previousTasks = tasks();
+    const updatedTasks = previousTasks.map((t: Task) =>
+      t.routine_id === routineId ? { ...t, status } : t
+    );
+    // Update all tasks locally
+    updatedTasks.forEach((task) => updateTaskLocally(task));
+
+    try {
+      const updatedTasksFromAPI = await routineAPI.setRoutineAction(
+        routineId,
+        status
+      );
+      // Update each task with the API response
+      updatedTasksFromAPI.forEach((task) => updateTaskLocally(task));
+    } catch (error) {
+      // Rollback on error
+      previousTasks.forEach((task) => updateTaskLocally(task));
+      throw error;
+    }
+  };
+
   // Optimistically update goals in local state
   const updateGoalsLocally = (updatedGoals: Goal[]) => {
     setDayContextStore((current) => {
@@ -635,8 +561,6 @@ export function StreamingDataProvider(props: ParentProps) {
           },
         },
       };
-      // Cache updated context
-      saveToStorage(STORAGE_KEYS.DAY_CONTEXT, updated.data);
       return updated;
     });
   };
@@ -644,8 +568,6 @@ export function StreamingDataProvider(props: ParentProps) {
   const addGoal = async (name: string): Promise<void> => {
     const context = await goalAPI.addGoal(name);
     setDayContextStore({ data: context });
-    // Cache updated context
-    saveToStorage(STORAGE_KEYS.DAY_CONTEXT, context);
   };
 
   const updateGoalStatus = async (
@@ -662,8 +584,6 @@ export function StreamingDataProvider(props: ParentProps) {
     try {
       const context = await goalAPI.updateGoalStatus(goal.id, status);
       setDayContextStore({ data: context });
-      // Cache updated context
-      saveToStorage(STORAGE_KEYS.DAY_CONTEXT, context);
     } catch (error) {
       // Rollback on error
       updateGoalsLocally(previousGoals);
@@ -680,8 +600,6 @@ export function StreamingDataProvider(props: ParentProps) {
     try {
       const context = await goalAPI.removeGoal(goalId);
       setDayContextStore({ data: context });
-      // Cache updated context
-      saveToStorage(STORAGE_KEYS.DAY_CONTEXT, context);
     } catch (error) {
       // Rollback on error
       updateGoalsLocally(previousGoals);
@@ -733,6 +651,7 @@ export function StreamingDataProvider(props: ParentProps) {
     sync,
     syncIncremental,
     setTaskStatus,
+    setRoutineAction,
     addGoal,
     updateGoalStatus,
     removeGoal,

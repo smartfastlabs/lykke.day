@@ -5,6 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
+from lykke.application.commands import RecordRoutineActionHandler
 from lykke.application.commands.routine import (
     AddRoutineTaskHandler,
     CreateRoutineHandler,
@@ -26,10 +27,12 @@ from lykke.presentation.api.schemas import (
     RoutineTaskCreateSchema,
     RoutineTaskUpdateSchema,
     RoutineUpdateSchema,
+    TaskSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_routine_to_schema
 
 from .dependencies.factories import get_command_handler, get_query_handler
+from .dependencies.services import get_record_routine_action_handler
 from .dependencies.user import get_current_user
 from .utils import build_search_query, create_paged_response
 
@@ -39,7 +42,9 @@ router = APIRouter()
 @router.get("/{uuid}", response_model=RoutineSchema)
 async def get_routine(
     uuid: UUID,
-    get_routine_handler: Annotated[GetRoutineHandler, Depends(get_query_handler(GetRoutineHandler))],
+    get_routine_handler: Annotated[
+        GetRoutineHandler, Depends(get_query_handler(GetRoutineHandler))
+    ],
 ) -> RoutineSchema:
     """Get a single routine by ID."""
     routine = await get_routine_handler.run(routine_id=uuid)
@@ -283,3 +288,18 @@ async def remove_routine_task(
         routine_id=uuid, routine_task_id=routine_task_id
     )
     return map_routine_to_schema(updated)
+
+
+@router.post("/{uuid}/actions")
+async def record_routine_action(
+    uuid: UUID,
+    action: value_objects.Action,
+    handler: Annotated[
+        RecordRoutineActionHandler, Depends(get_record_routine_action_handler)
+    ],
+) -> list[TaskSchema]:
+    """Record an action on all tasks in a routine for today."""
+    from lykke.presentation.api.schemas.mappers import map_task_to_schema
+
+    updated_tasks = await handler.record_routine_action(routine_id=uuid, action=action)
+    return [map_task_to_schema(task) for task in updated_tasks]

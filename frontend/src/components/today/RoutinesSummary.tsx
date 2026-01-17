@@ -24,12 +24,13 @@ interface RoutineGroup {
   routineName: string;
   tasks: Task[];
   completedCount: number;
+  puntedCount: number;
   totalCount: number;
 }
 
 export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
-  // Get routines and setTaskStatus from StreamingDataProvider
-  const { routines, setTaskStatus } = useStreamingData();
+  // Get routines, setTaskStatus, and setRoutineAction from StreamingDataProvider
+  const { routines, setTaskStatus, setRoutineAction } = useStreamingData();
 
   // Track which routines are expanded (persists across re-renders)
   const [expandedRoutines, setExpandedRoutines] = createSignal<Set<string>>(
@@ -86,6 +87,7 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
       const completedCount = tasks.filter(
         (t) => t.status === "COMPLETE"
       ).length;
+      const puntedCount = tasks.filter((t) => t.status === "PUNT").length;
 
       // Get the routine name from the routines map
       const routineName = map.get(routineId) || "Routine";
@@ -95,6 +97,7 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
         routineName,
         tasks,
         completedCount,
+        puntedCount,
         totalCount: tasks.length,
       };
     });
@@ -133,36 +136,52 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
               const isComplete = () =>
                 routine.completedCount === routine.totalCount;
 
+              const isPunted = () =>
+                routine.puntedCount === routine.totalCount &&
+                routine.puntedCount > 0;
+
               const isExpanded = () => isRoutineExpanded(routine.routineId);
 
+              const getStatusClass = () => {
+                if (isComplete())
+                  return "bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100";
+                if (isPunted())
+                  return "bg-gradient-to-br from-red-50 to-rose-50 border border-red-100";
+                return "bg-amber-50/60 border border-amber-100";
+              };
+
               return (
-                <div
-                  class="rounded-xl p-4 transition-all duration-300"
-                  classList={{
-                    "bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100":
-                      isComplete(),
-                    "bg-amber-50/60 border border-amber-100": !isComplete(),
-                  }}
+                <SwipeableItem
+                  onSwipeRight={() => setRoutineAction(routine.routineId, "COMPLETE")}
+                  onSwipeLeft={() => setRoutineAction(routine.routineId, "PUNT")}
+                  rightLabel="✅ Complete All Tasks"
+                  leftLabel="🗑 Punt All Tasks"
+                  statusClass={getStatusClass()}
                 >
-                  {/* Routine Header - Clickable */}
-                  <button
-                    class="w-full flex items-start justify-between mb-3 text-left"
-                    onClick={() => toggleRoutineExpanded(routine.routineId)}
+                  <div
+                    class="rounded-xl p-4 transition-all duration-300"
+                    classList={getStatusClass()}
                   >
+                    {/* Routine Header - Clickable */}
+                    <button
+                      class="w-full flex items-start justify-between mb-3 text-left"
+                      onClick={() => toggleRoutineExpanded(routine.routineId)}
+                    >
                     <div class="flex items-center gap-2">
                       <Icon
                         icon={isExpanded() ? faChevronDown : faChevronRight}
-                        class={`w-3 h-3 transition-transform duration-200 ${isComplete() ? "fill-green-600" : "fill-amber-700"}`}
+                        class={`w-3 h-3 transition-transform duration-200 ${isComplete() ? "fill-green-600" : isPunted() ? "fill-red-600" : "fill-amber-700"}`}
                       />
                       <Icon
                         icon={getRoutineIcon(routine.routineName)}
-                        class={`w-4 h-4 ${isComplete() ? "fill-green-600" : "fill-amber-700"}`}
+                        class={`w-4 h-4 ${isComplete() ? "fill-green-600" : isPunted() ? "fill-red-600" : "fill-amber-700"}`}
                       />
                       <span
                         class="text-sm font-semibold"
                         classList={{
                           "text-green-700": isComplete(),
-                          "text-stone-800": !isComplete(),
+                          "text-red-700": isPunted(),
+                          "text-stone-800": !isComplete() && !isPunted(),
                         }}
                       >
                         {routine.routineName}
@@ -173,7 +192,8 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                         class="text-xs font-semibold"
                         classList={{
                           "text-green-600": isComplete(),
-                          "text-amber-700": !isComplete(),
+                          "text-red-600": isPunted(),
+                          "text-amber-700": !isComplete() && !isPunted(),
                         }}
                       >
                         {routine.completedCount}/{routine.totalCount}
@@ -194,8 +214,10 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                       classList={{
                         "bg-gradient-to-r from-green-400 to-emerald-500":
                           isComplete(),
+                        "bg-gradient-to-r from-red-400 to-rose-500":
+                          isPunted(),
                         "bg-gradient-to-r from-amber-400 to-orange-500":
-                          !isComplete(),
+                          !isComplete() && !isPunted(),
                       }}
                       style={{
                         width: `${completionPercentage()}%`,
@@ -283,7 +305,8 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                       </For>
                     </div>
                   </Show>
-                </div>
+                  </div>
+                </SwipeableItem>
               );
             }}
           </For>

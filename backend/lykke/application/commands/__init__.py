@@ -12,10 +12,11 @@ from .day import (
     UnscheduleDayHandler,
     UpdateDayHandler,
 )
-from .task import RecordTaskActionHandler
+from .task import RecordRoutineActionHandler, RecordTaskActionHandler
 
 __all__ = [
     "CreateOrGetDayHandler",
+    "RecordRoutineActionHandler",
     "RecordTaskActionHandler",
     "RescheduleDayHandler",
     "SaveDayHandler",

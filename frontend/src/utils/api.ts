@@ -385,6 +385,11 @@ export const timeBlockDefinitionAPI = {
 };
 
 export const routineAPI = {
+  setRoutineAction: (routineId: string, action: string): Promise<Task[]> =>
+    fetchData<Task[]>(`/api/routines/${routineId}/actions`, {
+      method: "POST",
+      body: JSON.stringify({ type: action }),
+    }),
   ...createCrudMethods<Routine>("routines"),
   addTask: (
     routineId: string,
