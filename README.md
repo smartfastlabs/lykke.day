@@ -5,7 +5,18 @@
 
 > **Pre-alpha software** — Expect breaking changes and incomplete features.
 
-A daily we application built with Clean Architecture and Domain-Driven Design. Try it at [lykke.day](https://lykke.day).
+A daily wellness companion built with Clean Architecture and Domain-Driven Design. Try it at [lykke.day](https://lykke.day).
+
+## Overview
+
+Lykke helps users build consistent daily habits through structured routines and task management. The core workflow:
+
+1. **Define routines** — Create reusable collections of tasks (morning routine, exercise, work blocks)
+2. **Schedule your day** — Apply a template to generate today's tasks
+3. **Track progress** — Complete or punt tasks throughout the day
+4. **Set daily goals** — Focus on up to 3 meaningful objectives per day
+
+The application syncs with Google Calendar to show external commitments alongside scheduled tasks, giving users a unified view of their day.
 
 ## Architecture
 
