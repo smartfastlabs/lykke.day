@@ -147,7 +147,15 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                   return "bg-gradient-to-br from-green-50 to-emerald-50";
                 if (isPunted())
                   return "bg-gradient-to-br from-red-50 to-rose-50";
-                return "bg-amber-50/60 border border-amber-100";
+                return "bg-amber-50/60 border border-amber-50/60";
+              };
+
+              const getSwipeableStatusClass = () => {
+                if (isComplete())
+                  return "!bg-gradient-to-br !from-green-50 !to-emerald-50";
+                if (isPunted())
+                  return "!bg-gradient-to-br !from-red-50 !to-rose-50";
+                return "!bg-amber-50/60 !border !border-amber-50/60";
               };
 
               return (
@@ -161,7 +169,7 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                       onSwipeLeft={() => setRoutineAction(routine.routineId, "PUNT")}
                       rightLabel="✅ Complete All Tasks"
                       leftLabel="🗑 Punt All Tasks"
-                      statusClass={getStatusClass()}
+                      statusClass={getSwipeableStatusClass()}
                     >
                       <button
                         class="w-full flex items-start justify-between mb-3 text-left"
@@ -210,22 +218,24 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                   </div>
 
                   {/* Progress Bar */}
-                  <div class="relative w-full h-1.5 bg-white/80 rounded-full overflow-hidden mb-3">
-                    <div
-                      class="absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out"
-                      classList={{
-                        "bg-gradient-to-r from-green-400 to-emerald-500":
-                          isComplete(),
-                        "bg-gradient-to-r from-red-400 to-rose-500":
-                          isPunted(),
-                        "bg-gradient-to-r from-amber-400 to-orange-500":
-                          !isComplete() && !isPunted(),
-                      }}
-                      style={{
-                        width: `${completionPercentage()}%`,
-                      }}
-                    />
-                  </div>
+                  <Show when={completionPercentage() > 0}>
+                    <div class="relative w-full h-1.5 bg-white/80 rounded-full overflow-hidden mb-3">
+                      <div
+                        class="absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out"
+                        classList={{
+                          "bg-gradient-to-r from-green-400 to-emerald-500":
+                            isComplete(),
+                          "bg-gradient-to-r from-red-400 to-rose-500":
+                            isPunted(),
+                          "bg-gradient-to-r from-amber-400 to-orange-500":
+                            !isComplete() && !isPunted(),
+                        }}
+                        style={{
+                          width: `${completionPercentage()}%`,
+                        }}
+                      />
+                    </div>
+                  </Show>
 
                   {/* Task List - Collapsible */}
                   <Show when={isExpanded()}>

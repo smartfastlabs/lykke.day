@@ -21,7 +21,7 @@ def get_classes_from_file(file_path: Path, base_class_suffix: str) -> list[str]:
     try:
         with open(file_path) as f:
             tree = ast.parse(f.read())
-        
+
         classes = []
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
@@ -40,15 +40,17 @@ def get_functions_from_file(file_path: Path, prefix: str) -> list[str]:
     try:
         with open(file_path) as f:
             tree = ast.parse(f.read())
-        
+
         functions = []
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
                 if node.name.startswith(prefix) and "_to_schema" in node.name:
                     # Extract the entity name from map_<entity>_to_schema
-                    entity_name = node.name[len(prefix):-len("_to_schema")]
+                    entity_name = node.name[len(prefix) : -len("_to_schema")]
                     # Convert snake_case to PascalCase
-                    pascal_name = "".join(word.capitalize() for word in entity_name.split("_"))
+                    pascal_name = "".join(
+                        word.capitalize() for word in entity_name.split("_")
+                    )
                     functions.append(pascal_name)
         return functions
     except Exception as e:
@@ -61,10 +63,10 @@ def check_repository_methods(file_path: Path) -> tuple[bool, bool]:
     try:
         with open(file_path) as f:
             content = f.read()
-        
+
         has_entity_to_row = "def entity_to_row" in content
         has_row_to_entity = "def row_to_entity" in content
-        
+
         return has_entity_to_row, has_row_to_entity
     except Exception:
         return False, False
@@ -88,37 +90,43 @@ def main() -> int:
     script_dir = Path(__file__).parent.parent
     backend_dir = script_dir
     lykke_dir = backend_dir / "lykke"
-    
+
     # Paths
     entities_dir = lykke_dir / "domain" / "entities"
     schemas_dir = lykke_dir / "presentation" / "api" / "schemas"
     mappers_file = schemas_dir / "mappers.py"
     tables_dir = lykke_dir / "infrastructure" / "database" / "tables"
     repos_dir = lykke_dir / "infrastructure" / "repositories"
-    
+
+    # Entities that are never exposed via API (should be excluded from checks)
+    EXCLUDED_ENTITIES = {"AuthToken"}
+
     if not entities_dir.exists():
         print(f"Error: {entities_dir} not found", file=sys.stderr)
         return 1
-    
+
     # Collect all entities
     entities = set()
     for file_path in entities_dir.glob("*.py"):
         if file_path.name == "__init__.py" or file_path.name == "base.py":
             continue
         entities.update(get_classes_from_file(file_path, "Entity"))
-    
+
+    # Filter out excluded entities
+    entities = entities - EXCLUDED_ENTITIES
+
     # Collect all schemas
     schemas = set()
     for file_path in schemas_dir.glob("*.py"):
         if file_path.name in ["__init__.py", "base.py", "mappers.py"]:
             continue
         schemas.update(get_classes_from_file(file_path, "Schema"))
-    
+
     # Collect all mapper functions
     mappers = set()
     if mappers_file.exists():
         mappers = set(get_functions_from_file(mappers_file, "map_"))
-    
+
     # Collect all tables by reading the actual class names from table files
     tables = set()
     for file_path in tables_dir.glob("*.py"):
@@ -138,15 +146,15 @@ def main() -> int:
                             break
         except Exception:
             pass
-    
+
     # Check for issues
     critical_issues_found = False
-    
+
     print("=" * 80)
     print("MAPPER COMPLETENESS CHECK")
     print("=" * 80)
     print()
-    
+
     # Check for entities without schemas
     entities_without_schemas = entities - schemas
     if entities_without_schemas:
@@ -158,7 +166,7 @@ def main() -> int:
             print(f"     → Create: {schema_file}")
             print(f"     → Add class: {entity}Schema")
         print()
-    
+
     # Check for entities without mappers
     entities_without_mappers = entities - mappers
     if entities_without_mappers:
@@ -169,22 +177,24 @@ def main() -> int:
             print(f"     → Add to: {mappers_file}")
             print(f"     → Function: map_{to_snake_case(entity)}_to_schema()")
         print()
-    
+
     # Check for entities without tables
     entities_without_tables = entities - tables
     # Data objects have been moved to entities, so no filtering needed
-    
+
     if entities_without_tables:
         # This is a warning, not a critical issue (some entities may not need persistence)
         pass
         print("⚠️  ENTITIES WITHOUT DATABASE TABLES:")
-        print("    (Verify these are intentional - some entities may not need persistence)")
+        print(
+            "    (Verify these are intentional - some entities may not need persistence)"
+        )
         for entity in sorted(entities_without_tables):
             table_file = tables_dir / f"{to_snake_case(entity)}.py"
             print(f"   - {entity}Entity")
             print(f"     → Create: {table_file} (if needed)")
         print()
-    
+
     # Check repositories for missing methods
     print("REPOSITORY MAPPING METHODS CHECK:")
     repos_with_issues = []
@@ -193,26 +203,30 @@ def main() -> int:
             continue
         if file_path.is_dir():
             continue
-            
+
         has_entity_to_row, has_row_to_entity = check_repository_methods(file_path)
-        
+
         if not has_entity_to_row or not has_row_to_entity:
-            repos_with_issues.append((file_path.name, has_entity_to_row, has_row_to_entity))
-    
+            repos_with_issues.append(
+                (file_path.name, has_entity_to_row, has_row_to_entity)
+            )
+
     if repos_with_issues:
         print("⚠️  REPOSITORIES WITHOUT CUSTOM MAPPING METHODS:")
         print("    (These use base class defaults - verify if custom logic is needed)")
         for repo_name, has_e2r, has_r2e in repos_with_issues:
             print(f"   - {repo_name}")
             if not has_e2r:
-                print(f"     → Missing: entity_to_row() method")
+                print("     → Missing: entity_to_row() method")
             if not has_r2e:
-                print(f"     → Using default: row_to_entity() (check if custom logic needed)")
+                print(
+                    "     → Using default: row_to_entity() (check if custom logic needed)"
+                )
         print()
     else:
         print("✅ All repositories have custom mapping methods")
         print()
-    
+
     # Summary
     print("=" * 80)
     if not critical_issues_found:
@@ -225,7 +239,7 @@ def main() -> int:
         print()
         print("For guidance, see: .cursor/commands/object-schema-mapper-guide.md")
     print("=" * 80)
-    
+
     return 1 if critical_issues_found else 0
 
 

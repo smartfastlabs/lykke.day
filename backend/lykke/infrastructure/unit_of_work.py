@@ -696,20 +696,15 @@ class SqlAlchemyUnitOfWork:
                             # For EntityUpdatedEvent, include update_object in meta
                             meta: dict[str, Any] = {}
                             if isinstance(event, EntityUpdatedEvent):
-                                # Convert update_object to dict for meta
-                                update_dict = asdict(cast("Any", event.update_object))
-                                # Convert non-JSON-serializable values
-                                json_safe_meta: dict[str, Any] = {}
-                                for key, value in update_dict.items():
-                                    if isinstance(value, (datetime, dt_date)):
-                                        json_safe_meta[key] = value.isoformat()
-                                    elif isinstance(value, UUID):
-                                        json_safe_meta[key] = str(value)
-                                    elif isinstance(value, Enum):
-                                        json_safe_meta[key] = value.value
-                                    else:
-                                        json_safe_meta[key] = value
-                                meta = json_safe_meta
+                                # Convert update_object to JSON-safe dict using utility function
+                                # This handles nested dataclasses, UUIDs, lists, etc. recursively
+                                update_dict = dataclass_to_json_dict(
+                                    event.update_object
+                                )
+                                if isinstance(update_dict, dict):
+                                    meta = update_dict
+                                else:
+                                    meta = {}
 
                             audit_log = AuditLogEntity(
                                 user_id=self.user_id,
@@ -1047,5 +1042,4 @@ class SqlAlchemyReadOnlyRepositoryFactory:
         Returns:
             Read-only repositories scoped to the user.
         """
-        return SqlAlchemyReadOnlyRepositories(user_id=user_id)
         return SqlAlchemyReadOnlyRepositories(user_id=user_id)

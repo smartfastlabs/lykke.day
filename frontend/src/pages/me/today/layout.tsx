@@ -3,6 +3,7 @@ import { Show, Component, ParentProps, createMemo } from "solid-js";
 import Page from "@/components/shared/layout/Page";
 import { Icon } from "@/components/shared/Icon";
 import { useStreamingData } from "@/providers/streaming-data";
+import TimeBlocksSummary from "@/components/today/TimeBlocksSummary";
 
 export const TodayPageLayout: Component<ParentProps> = (props) => {
   const { dayContext, isLoading, day, sync } = useStreamingData();
@@ -33,6 +34,9 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
     return Boolean(dayValue?.tags?.includes("WORKDAY"));
   });
 
+  const timeBlocks = createMemo(() => day()?.template?.time_blocks ?? []);
+  const dayDate = createMemo(() => day()?.date);
+
   return (
     <Page>
       <div class="min-h-screen relative overflow-hidden">
@@ -46,7 +50,7 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
         >
           <div class="relative z-10 max-w-4xl mx-auto px-6 py-6">
             <div class="mb-8 md:mb-12">
-              <div class="relative flex items-start justify-between">
+              <div class="relative flex items-start justify-between mb-4">
                 <div>
                   <p class="text-lg uppercase tracking-[0.2em] text-amber-600/80 mb-2">
                     {weekday()} {monthDay()}
@@ -69,6 +73,7 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
                   </Show>
                 </div>
               </div>
+              <TimeBlocksSummary timeBlocks={timeBlocks()} dayDate={dayDate()} />
             </div>
             {props.children}
           </div>

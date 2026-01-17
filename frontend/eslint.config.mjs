@@ -62,6 +62,7 @@ export default [
         performance: "readonly",
         PerformanceNavigationTiming: "readonly",
         global: "readonly",
+        structuredClone: "readonly",
       },
     },
     rules: {

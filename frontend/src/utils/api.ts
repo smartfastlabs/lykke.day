@@ -116,14 +116,6 @@ async function fetchData<T>(
   return response.data;
 }
 
-// Helper for paginated responses (currently unused but kept for future use)
-function _extractItems<T>(_data: T[] | PaginatedResponse<T>): T[] {
-  if (Array.isArray(_data)) {
-    return _data;
-  }
-  return _data.items;
-}
-
 // --- Generic CRUD Factory ---
 
 interface EntityWithId {
@@ -292,16 +284,6 @@ export const authAPI = {
       body: JSON.stringify(payload),
     });
   },
-};
-
-export const alarmAPI = {
-  stopAll: (): Promise<void> =>
-    fetchData<void>("/api/sheppard/stop-alarm", { method: "PUT" }),
-};
-
-export const dayAPI = {
-  getToday: (): Promise<DayContext> =>
-    fetchData<DayContext>("/api/days/today/context"),
 };
 
 export const pushAPI = {

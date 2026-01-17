@@ -35,7 +35,7 @@ const formatTime = (time: string): string => {
 const formatRange = (block: TimeBlock): string =>
   `${formatTime(block.start_time)} - ${formatTime(block.end_time)}`;
 
-const isSameBlock = (a: TimeBlock | null, b: TimeBlock): boolean =>
+const isSameBlock = (a: TimeBlock | null | undefined, b: TimeBlock): boolean =>
   Boolean(
     a &&
       a.time_block_definition_id === b.time_block_definition_id &&
@@ -91,20 +91,9 @@ const TimeBlocksSummary: Component<TimeBlocksSummaryProps> = (props) => {
 
   return (
     <Show when={blocks().length > 0}>
-      <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-5 backdrop-blur-sm space-y-4">
-        <div class="flex items-center justify-between">
-          <p class="text-xs uppercase tracking-wide text-stone-500">
-            Time Blocks
-          </p>
-          <Show when={currentBlock()}>
-            <span class="text-[11px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-50/80 rounded-full px-2 py-0.5">
-              In progress
-            </span>
-          </Show>
-        </div>
-
-        <div class="space-y-2">
-          <div class="h-3 rounded-full bg-stone-100/80 overflow-hidden flex">
+      <div class="space-y-2">
+        <div class="space-y-1">
+          <div class="h-2 rounded-full bg-amber-600/20 overflow-hidden flex">
             <For each={blocks()}>
               {(block) => {
                 const range = timeRange();
@@ -117,10 +106,9 @@ const TimeBlocksSummary: Component<TimeBlocksSummaryProps> = (props) => {
                   <div
                     class="h-full transition-colors"
                     classList={{
-                      "bg-amber-500/70": isCurrent,
-                      "bg-amber-300/60": isNext,
-                      "bg-stone-200/70": !isCurrent && !isNext,
-                      "ring-1 ring-amber-500/50": isCurrent,
+                      "bg-amber-600/80": isCurrent,
+                      "bg-amber-600/60": isNext,
+                      "bg-amber-600/40": !isCurrent && !isNext,
                     }}
                     style={{ width: `${width}%` }}
                     title={`${block.name} • ${formatRange(block)}`}
@@ -129,51 +117,42 @@ const TimeBlocksSummary: Component<TimeBlocksSummaryProps> = (props) => {
               }}
             </For>
           </div>
-          <div class="flex items-center justify-between text-[11px] text-stone-400">
+          <div class="flex items-center justify-between text-[10px] text-amber-600/80">
             <span>{formatTime(blocks()[0].start_time)}</span>
             <span>{formatTime(blocks()[blocks().length - 1].end_time)}</span>
           </div>
         </div>
 
-        <div class="grid gap-2 sm:grid-cols-2">
-          <div class="rounded-lg border border-stone-100 bg-white/80 px-3 py-2">
-            <p class="text-[11px] uppercase tracking-wide text-stone-400">
-              Current
-            </p>
-            <Show
-              when={currentBlock()}
-              fallback={
-                <p class="text-sm text-stone-500">No active block</p>
-              }
-            >
-              {(block) => (
-                <>
-                  <p class="text-sm font-semibold text-stone-800">
-                    {block().name}
-                  </p>
-                  <p class="text-xs text-stone-500">{formatRange(block())}</p>
-                </>
-              )}
-            </Show>
-          </div>
-          <div class="rounded-lg border border-stone-100 bg-white/80 px-3 py-2">
-            <p class="text-[11px] uppercase tracking-wide text-stone-400">
-              Next
-            </p>
-            <Show
-              when={nextBlock()}
-              fallback={<p class="text-sm text-stone-500">No upcoming block</p>}
-            >
-              {(block) => (
-                <>
-                  <p class="text-sm font-semibold text-stone-800">
-                    {block().name}
-                  </p>
-                  <p class="text-xs text-stone-500">{formatRange(block())}</p>
-                </>
-              )}
-            </Show>
-          </div>
+        <div class="flex items-center gap-3 text-[11px] text-amber-600/80">
+          <Show
+            when={currentBlock()}
+            fallback={
+              <span class="text-amber-600/80">
+                <span class="font-medium">Current:</span> No active block
+              </span>
+            }
+          >
+            {(block) => (
+              <span>
+                <span class="font-medium">Current:</span> {block().name} ({formatRange(block())})
+              </span>
+            )}
+          </Show>
+          <span class="text-amber-600/60">•</span>
+          <Show
+            when={nextBlock()}
+            fallback={
+              <span class="text-amber-600/80">
+                <span class="font-medium">Next:</span> No upcoming block
+              </span>
+            }
+          >
+            {(block) => (
+              <span>
+                <span class="font-medium">Next:</span> {block().name} ({formatRange(block())})
+              </span>
+            )}
+          </Show>
         </div>
       </div>
     </Show>

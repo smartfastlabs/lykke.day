@@ -7,25 +7,19 @@ import {
   GoalsSummary,
   UpcomingSection,
   RightNowSection,
-  TimeBlocksSummary,
 } from "@/components/today";
 
 export const TodayPage: Component = () => {
-  const { tasks, events, goals, day } = useStreamingData();
+  const { tasks, events, goals } = useStreamingData();
 
   const allTasks = createMemo(() => tasks() ?? []);
   const allEvents = createMemo(() => events() ?? []);
   const allGoals = createMemo(() => goals() ?? []);
-  const timeBlocks = createMemo(() => day()?.template?.time_blocks ?? []);
-  const dayDate = createMemo(() => day()?.date);
 
   return (
     <>
       <div class="mb-6">
         <RightNowSection events={allEvents()} tasks={allTasks()} />
-      </div>
-      <div class="mb-6">
-        <TimeBlocksSummary timeBlocks={timeBlocks()} dayDate={dayDate()} />
       </div>
       <div class="mb-6">
         <UpcomingSection events={allEvents()} tasks={allTasks()} />

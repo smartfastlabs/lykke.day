@@ -56,7 +56,6 @@ export type PushSubscription = components["schemas"]["PushSubscriptionSchema"];
 export type TaskSchedule = components["schemas"]["TaskScheduleSchema"];
 export type RoutineSchedule = components["schemas"]["RoutineScheduleSchema"];
 export type Action = components["schemas"]["ActionSchema"];
-export type Alarm = components["schemas"]["AlarmSchema"];
 
 // Goal types - manually defined as they may not be in generated types yet
 export interface Goal {

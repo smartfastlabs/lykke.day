@@ -12,6 +12,8 @@ from lykke.application.queries.preview_day import PreviewDayHandler
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
+from lykke.domain.events.day_events import DayUpdatedEvent
+from lykke.domain.value_objects.update import DayUpdateObject
 
 
 @dataclass(frozen=True)
@@ -64,9 +66,9 @@ class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, value_object
                 value_objects.TaskQuery(date=command.date)
             )
             logger.info(f"Found {len(existing_tasks)} existing tasks for {command.date}, deleting...")
-            
+
             await uow.bulk_delete_tasks(value_objects.TaskQuery(date=command.date))
-            
+
             # Verify deletion worked
             remaining_tasks = await uow.task_ro_repo.search(
                 value_objects.TaskQuery(date=command.date)
@@ -134,10 +136,10 @@ class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, value_object
 
             # Step 6: Update day with template data
             day.update_template(template)
-            
+
             # Update time blocks (replacing any existing ones)
             day.time_blocks = day_time_blocks
-            
+
             # Reset goals (clear all existing goals from rescheduled day)
             # Goals should be re-added if needed after rescheduling
             if day.goals:
@@ -150,7 +152,19 @@ class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, value_object
             # Schedule the day if it's not already scheduled
             if day.status == value_objects.DayStatus.UNSCHEDULED:
                 day.schedule(template)
-            
+
+            # Ensure day has domain events - if no events were emitted (e.g., day was already scheduled
+            # and had no goals to remove), emit DayUpdatedEvent to track the modifications
+            if not day.has_events():
+                day._add_event(
+                    DayUpdatedEvent(
+                        update_object=DayUpdateObject(
+                            template_id=template.id if template else None,
+                            time_blocks=day_time_blocks,
+                        )
+                    )
+                )
+
             # Mark day as modified so changes are saved
             uow.add(day)
 
