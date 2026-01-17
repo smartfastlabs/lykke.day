@@ -70,12 +70,12 @@ export function useSwipeGesture(callbacks: SwipeCallbacks) {
   };
 
   // Mouse event handlers for desktop
-  const handleMouseDown = (e: MouseEvent) => {
+  const handleMouseDown = (e: globalThis.MouseEvent) => {
     e.preventDefault();
     startSwipe(e.clientX, e.clientY);
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = (e: globalThis.MouseEvent) => {
     updateSwipe(e.clientX, e.clientY);
   };
 

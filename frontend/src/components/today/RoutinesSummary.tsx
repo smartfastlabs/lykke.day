@@ -144,68 +144,70 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
 
               const getStatusClass = () => {
                 if (isComplete())
-                  return "bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100";
+                  return "bg-gradient-to-br from-green-50 to-emerald-50";
                 if (isPunted())
-                  return "bg-gradient-to-br from-red-50 to-rose-50 border border-red-100";
+                  return "bg-gradient-to-br from-red-50 to-rose-50";
                 return "bg-amber-50/60 border border-amber-100";
               };
 
               return (
-                <SwipeableItem
-                  onSwipeRight={() => setRoutineAction(routine.routineId, "COMPLETE")}
-                  onSwipeLeft={() => setRoutineAction(routine.routineId, "PUNT")}
-                  rightLabel="✅ Complete All Tasks"
-                  leftLabel="🗑 Punt All Tasks"
-                  statusClass={getStatusClass()}
+                <div
+                  class={`rounded-xl p-4 transition-all duration-300 ${getStatusClass()}`}
                 >
-                  <div
-                    class="rounded-xl p-4 transition-all duration-300"
-                    classList={getStatusClass()}
-                  >
-                    {/* Routine Header - Clickable */}
-                    <button
-                      class="w-full flex items-start justify-between mb-3 text-left"
-                      onClick={() => toggleRoutineExpanded(routine.routineId)}
+                  {/* Routine Header - Swipeable */}
+                  <div class="-mx-4 -mt-4 mb-1">
+                    <SwipeableItem
+                      onSwipeRight={() => setRoutineAction(routine.routineId, "COMPLETE")}
+                      onSwipeLeft={() => setRoutineAction(routine.routineId, "PUNT")}
+                      rightLabel="✅ Complete All Tasks"
+                      leftLabel="🗑 Punt All Tasks"
+                      statusClass={getStatusClass()}
                     >
-                    <div class="flex items-center gap-2">
-                      <Icon
-                        icon={isExpanded() ? faChevronDown : faChevronRight}
-                        class={`w-3 h-3 transition-transform duration-200 ${isComplete() ? "fill-green-600" : isPunted() ? "fill-red-600" : "fill-amber-700"}`}
-                      />
-                      <Icon
-                        icon={getRoutineIcon(routine.routineName)}
-                        class={`w-4 h-4 ${isComplete() ? "fill-green-600" : isPunted() ? "fill-red-600" : "fill-amber-700"}`}
-                      />
-                      <span
-                        class="text-sm font-semibold"
-                        classList={{
-                          "text-green-700": isComplete(),
-                          "text-red-700": isPunted(),
-                          "text-stone-800": !isComplete() && !isPunted(),
-                        }}
+                      <button
+                        class="w-full flex items-start justify-between mb-3 text-left"
+                        onClick={() => toggleRoutineExpanded(routine.routineId)}
                       >
-                        {routine.routineName}
-                      </span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <span
-                        class="text-xs font-semibold"
-                        classList={{
-                          "text-green-600": isComplete(),
-                          "text-red-600": isPunted(),
-                          "text-amber-700": !isComplete() && !isPunted(),
-                        }}
-                      >
-                        {routine.completedCount}/{routine.totalCount}
-                      </span>
-                      <Show when={isComplete()}>
+                      <div class="flex items-center gap-2">
                         <Icon
-                          icon={faCircleCheck}
-                          class="w-4 h-4 fill-green-600"
+                          icon={isExpanded() ? faChevronDown : faChevronRight}
+                          class={`w-3 h-3 transition-transform duration-200 ${isComplete() ? "fill-green-600" : isPunted() ? "fill-red-600" : "fill-amber-700"}`}
                         />
-                      </Show>
-                    </div>
-                  </button>
+                        <Icon
+                          icon={getRoutineIcon(routine.routineName)}
+                          class={`w-4 h-4 ${isComplete() ? "fill-green-600" : isPunted() ? "fill-red-600" : "fill-amber-700"}`}
+                        />
+                        <span
+                          class="text-sm font-semibold"
+                          classList={{
+                            "text-green-700": isComplete(),
+                            "text-red-700": isPunted(),
+                            "text-stone-800": !isComplete() && !isPunted(),
+                          }}
+                        >
+                          {routine.routineName}
+                        </span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span
+                          class="text-xs font-semibold"
+                          classList={{
+                            "text-green-600": isComplete(),
+                            "text-red-600": isPunted(),
+                            "text-amber-700": !isComplete() && !isPunted(),
+                          }}
+                        >
+                          {routine.completedCount}/{routine.totalCount}
+                        </span>
+                        <Show when={isComplete()}>
+                          <Icon
+                            icon={faCircleCheck}
+                            class="w-4 h-4 fill-green-600"
+                          />
+                        </Show>
+                      </div>
+                    </button>
+                  </SwipeableItem>
+                  </div>
 
                   {/* Progress Bar */}
                   <div class="relative w-full h-1.5 bg-white/80 rounded-full overflow-hidden mb-3">
@@ -305,8 +307,7 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                       </For>
                     </div>
                   </Show>
-                  </div>
-                </SwipeableItem>
+                </div>
               );
             }}
           </For>

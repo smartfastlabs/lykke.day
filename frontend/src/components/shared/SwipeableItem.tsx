@@ -32,7 +32,7 @@ export const SwipeableItem: Component<SwipeableItemProps> = (props) => {
   );
 
   // Attach global mouse listeners when dragging starts
-  const handleMouseDownWithListeners = (e: MouseEvent) => {
+  const handleMouseDownWithListeners = (e: globalThis.MouseEvent) => {
     handleMouseDown(e);
     // Attach global listeners for mouse move and up
     window.addEventListener("mousemove", handleMouseMove);
@@ -70,7 +70,7 @@ export const SwipeableItem: Component<SwipeableItemProps> = (props) => {
         role="button"
       >
         <div
-          class={`group px-5 ${props.compact ? "py-1" : "py-3.5"} bg-white/60 backdrop-blur-sm border border-white/80 rounded-xl hover:bg-white/80 hover:shadow-lg hover:shadow-amber-900/5 transition-all duration-300 cursor-pointer ${props.statusClass ?? ""}`}
+          class={`group px-5 ${props.compact ? "py-1" : "py-3.5"} bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 hover:shadow-lg hover:shadow-amber-900/5 transition-all duration-300 cursor-pointer ${props.statusClass ?? ""}`}
         >
           {props.children}
         </div>
