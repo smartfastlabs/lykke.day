@@ -10,7 +10,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 
-from lykke.application.commands.user import UpdateUserHandler
+from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
 from lykke.domain.entities import UserEntity
 from lykke.domain.value_objects import UserSetting, UserStatus, UserUpdateObject
 
@@ -28,6 +28,7 @@ class _FakeReadOnlyRepos:
 
     def __init__(self, user: UserEntity) -> None:
         fake = object()
+        self.audit_log_ro_repo = fake
         self.auth_token_ro_repo = fake
         self.bot_personality_ro_repo = fake
         self.calendar_entry_ro_repo = fake
@@ -88,7 +89,7 @@ async def test_update_user_updates_fields_and_settings():
         settings=UserSetting(template_defaults=["a", "b", "c", "d", "e", "f", "g"]),
     )
 
-    updated = await handler.run(update_data)
+    updated = await handler.handle(UpdateUserCommand(update_data=update_data))
 
     assert updated.phone_number == "123"
     assert updated.status == UserStatus.NEW_LEAD
@@ -113,7 +114,7 @@ async def test_update_user_skips_none_fields():
         settings=None,
     )
 
-    updated = await handler.run(update_data)
+    updated = await handler.handle(UpdateUserCommand(update_data=update_data))
 
     assert updated.phone_number == user.phone_number
     assert updated.status == user.status

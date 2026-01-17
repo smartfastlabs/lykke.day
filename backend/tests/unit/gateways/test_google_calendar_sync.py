@@ -165,6 +165,7 @@ def mock_ro_repos(
 
     class DummyRORepos:
         def __init__(self) -> None:
+            self.audit_log_ro_repo = None
             self.auth_token_ro_repo = mock_auth_token_repo
             self.bot_personality_ro_repo = None
             self.calendar_entry_ro_repo = mock_calendar_entry_repo

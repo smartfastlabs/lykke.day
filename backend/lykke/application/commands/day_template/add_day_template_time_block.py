@@ -1,31 +1,35 @@
 """Command to add a time block to a day template."""
 
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain import value_objects
 from lykke.domain.entities.day_template import DayTemplateEntity
 
 
-class AddDayTemplateTimeBlockHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class AddDayTemplateTimeBlockCommand(Command):
+    """Command to add a time block to a day template."""
+
+    day_template_id: UUID
+    time_block: value_objects.DayTemplateTimeBlock
+
+
+class AddDayTemplateTimeBlockHandler(BaseCommandHandler[AddDayTemplateTimeBlockCommand, DayTemplateEntity]):
     """Add a time block to a day template."""
 
-    async def run(
-        self,
-        day_template_id: UUID,
-        time_block: value_objects.DayTemplateTimeBlock,
-    ) -> DayTemplateEntity:
+    async def handle(self, command: AddDayTemplateTimeBlockCommand) -> DayTemplateEntity:
         """Add a time block to the day template.
 
         Args:
-            day_template_id: ID of the day template to update.
-            time_block: Time block to add.
+            command: The command containing the day template ID and time block to add.
 
         Returns:
             The updated day template entity.
         """
         async with self.new_uow() as uow:
-            day_template = await uow.day_template_ro_repo.get(day_template_id)
-            updated = day_template.add_time_block(time_block)
+            day_template = await uow.day_template_ro_repo.get(command.day_template_id)
+            updated = day_template.add_time_block(command.time_block)
             uow.add(updated)
             return updated

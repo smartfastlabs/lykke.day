@@ -5,18 +5,28 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from lykke.application.commands.calendar import (
+    CreateCalendarCommand,
     CreateCalendarHandler,
+    DeleteCalendarCommand,
     DeleteCalendarHandler,
+    ResyncCalendarCommand,
     ResyncCalendarHandler,
+    ResetCalendarDataCommand,
     ResetCalendarDataHandler,
+    ResetCalendarSyncCommand,
     ResetCalendarSyncHandler,
+    SubscribeCalendarCommand,
     SubscribeCalendarHandler,
+    UnsubscribeCalendarCommand,
     UnsubscribeCalendarHandler,
+    UpdateCalendarCommand,
     UpdateCalendarHandler,
 )
 from lykke.application.queries.calendar import (
     GetCalendarHandler,
+    GetCalendarQuery,
     SearchCalendarsHandler,
+    SearchCalendarsQuery,
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntity, UserEntity
@@ -52,7 +62,7 @@ async def get_calendar(
     ],
 ) -> CalendarSchema:
     """Get a single calendar by ID."""
-    calendar = await get_calendar_handler.run(calendar_id=uuid)
+    calendar = await get_calendar_handler.handle(GetCalendarQuery(calendar_id=uuid))
     return map_calendar_to_schema(calendar)
 
 
@@ -67,8 +77,8 @@ async def subscribe_calendar(
     ],
 ) -> CalendarSchema:
     """Enable push notifications for a calendar."""
-    calendar = await get_calendar_handler.run(calendar_id=uuid)
-    updated = await subscribe_calendar_handler.subscribe(calendar=calendar)
+    calendar = await get_calendar_handler.handle(GetCalendarQuery(calendar_id=uuid))
+    updated = await subscribe_calendar_handler.handle(SubscribeCalendarCommand(calendar=calendar))
     # Trigger initial sync via background task
     await sync_single_calendar_task.kiq(
         user_id=updated.user_id,
@@ -88,8 +98,8 @@ async def unsubscribe_calendar(
     ],
 ) -> CalendarSchema:
     """Disable push notifications for a calendar."""
-    calendar = await get_calendar_handler.run(calendar_id=uuid)
-    updated = await unsubscribe_calendar_handler.unsubscribe(calendar=calendar)
+    calendar = await get_calendar_handler.handle(GetCalendarQuery(calendar_id=uuid))
+    updated = await unsubscribe_calendar_handler.handle(UnsubscribeCalendarCommand(calendar=calendar))
     return map_calendar_to_schema(updated)
 
 
@@ -104,8 +114,8 @@ async def resync_calendar(
     ],
 ) -> CalendarSchema:
     """Resubscribe and fully resync a calendar."""
-    calendar = await get_calendar_handler.run(calendar_id=uuid)
-    updated = await resync_calendar_handler.resync(calendar=calendar)
+    calendar = await get_calendar_handler.handle(GetCalendarQuery(calendar_id=uuid))
+    updated = await resync_calendar_handler.handle(ResyncCalendarCommand(calendar=calendar))
     return map_calendar_to_schema(updated)
 
 
@@ -116,7 +126,7 @@ async def reset_calendar_subscriptions(
     ],
 ) -> list[CalendarSchema]:
     """Delete all calendar data and refresh subscriptions for the user."""
-    updated_calendars = await reset_calendar_data_handler.reset()
+    updated_calendars = await reset_calendar_data_handler.handle(ResetCalendarDataCommand())
 
     for calendar in updated_calendars:
         await sync_single_calendar_task.kiq(
@@ -141,7 +151,7 @@ async def reset_calendar_sync(
     3. Resubscribes to updates for all calendars that were previously subscribed
     4. Performs initial sync for each calendar
     """
-    updated_calendars = await reset_calendar_sync_handler.reset_sync()
+    updated_calendars = await reset_calendar_sync_handler.handle(ResetCalendarSyncCommand())
     return [map_calendar_to_schema(calendar) for calendar in updated_calendars]
 
 
@@ -154,7 +164,7 @@ async def search_calendars(
 ) -> PagedResponseSchema[CalendarSchema]:
     """Search calendars with pagination and optional filters."""
     search_query = build_search_query(query, value_objects.CalendarQuery)
-    result = await list_calendars_handler.run(search_query=search_query)
+    result = await list_calendars_handler.handle(SearchCalendarsQuery(search_query=search_query))
     return create_paged_response(result, map_calendar_to_schema)
 
 
@@ -177,7 +187,7 @@ async def create_calendar(
         last_sync_at=calendar_data.last_sync_at,
         default_event_category=calendar_data.default_event_category,
     )
-    created = await create_calendar_handler.run(calendar=calendar)
+    created = await create_calendar_handler.handle(CreateCalendarCommand(calendar=calendar))
     return map_calendar_to_schema(created)
 
 
@@ -199,8 +209,8 @@ async def update_calendar(
         default_event_category=update_data.default_event_category,
         last_sync_at=update_data.last_sync_at,
     )
-    updated = await update_calendar_handler.run(
-        calendar_id=uuid, update_data=update_object
+    updated = await update_calendar_handler.handle(
+        UpdateCalendarCommand(calendar_id=uuid, update_data=update_object)
     )
     return map_calendar_to_schema(updated)
 
@@ -213,4 +223,4 @@ async def delete_calendar(
     ],
 ) -> None:
     """Delete a calendar."""
-    await delete_calendar_handler.run(calendar_id=uuid)
+    await delete_calendar_handler.handle(DeleteCalendarCommand(calendar_id=uuid))

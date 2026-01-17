@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import secrets
 import uuid
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.unit_of_work import (
     ReadOnlyRepositories,
@@ -24,7 +25,14 @@ from lykke.domain.value_objects.sync import SyncSubscription
 from .sync_calendar import SyncCalendarHandler
 
 
-class ResyncCalendarHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class ResyncCalendarCommand(Command):
+    """Command to fully resync a calendar."""
+
+    calendar: CalendarEntity
+
+
+class ResyncCalendarHandler(BaseCommandHandler[ResyncCalendarCommand, CalendarEntity]):
     """Deletes existing entries, refreshes subscription, and triggers a full sync."""
 
     def __init__(
@@ -37,8 +45,9 @@ class ResyncCalendarHandler(BaseCommandHandler):
         super().__init__(ro_repos, uow_factory, user_id)
         self._google_gateway = google_gateway
 
-    async def resync(self, calendar: CalendarEntity) -> CalendarEntity:
+    async def handle(self, command: ResyncCalendarCommand) -> CalendarEntity:
         """Perform a full resync of the given calendar."""
+        calendar = command.calendar
         uow = self.new_uow()
         async with uow:
             token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)

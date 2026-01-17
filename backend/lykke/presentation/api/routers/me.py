@@ -4,11 +4,14 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from lykke.application.commands.user import UpdateUserHandler
-from lykke.application.queries import GetDayContextHandler
+from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
+from lykke.application.queries import GetDayContextHandler, GetDayContextQuery
 from lykke.application.commands.day import (
+    AddGoalToDayCommand,
     AddGoalToDayHandler,
+    RemoveGoalCommand,
     RemoveGoalHandler,
+    UpdateGoalStatusCommand,
     UpdateGoalStatusHandler,
 )
 from lykke.domain import value_objects
@@ -64,7 +67,7 @@ async def update_current_user_profile(
         is_verified=update_data.is_verified,
         settings=settings,
     )
-    updated_user = await update_user_handler.run(update_data=update_object)
+    updated_user = await update_user_handler.handle(UpdateUserCommand(update_data=update_object))
     return map_user_to_schema(updated_user)
 
 
@@ -83,9 +86,9 @@ async def add_goal_to_today(
 ) -> DayContextSchema:
     """Add a goal to today."""
     date = get_current_date()
-    await handler.add_goal(date=date, name=name)
+    await handler.handle(AddGoalToDayCommand(date=date, goal=name))
     # Get the full context to return
-    context = await day_context_handler_instance.get_day_context(date=date)
+    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
     return map_day_context_to_schema(context)
 
 
@@ -102,9 +105,10 @@ async def update_today_goal_status(
 ) -> DayContextSchema:
     """Update a goal's status for today."""
     date = get_current_date()
-    await handler.update_goal_status(date=date, goal_id=goal_id, status=status)
+    completed = status == value_objects.GoalStatus.COMPLETE
+    await handler.handle(UpdateGoalStatusCommand(date=date, goal_id=goal_id, completed=completed))
     # Get the full context to return
-    context = await day_context_handler_instance.get_day_context(date=date)
+    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
     return map_day_context_to_schema(context)
 
 
@@ -118,7 +122,7 @@ async def remove_goal_from_today(
 ) -> DayContextSchema:
     """Remove a goal from today."""
     date = get_current_date()
-    await handler.remove_goal(date=date, goal_id=goal_id)
+    await handler.handle(RemoveGoalCommand(date=date, goal_id=goal_id))
     # Get the full context to return
-    context = await day_context_handler_instance.get_day_context(date=date)
+    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
     return map_day_context_to_schema(context)

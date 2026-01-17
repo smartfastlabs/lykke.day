@@ -5,6 +5,7 @@ from uuid import uuid4
 import pytest
 
 from lykke.application.commands.calendar.subscribe_calendar import (
+    SubscribeCalendarCommand,
     SubscribeCalendarHandler,
 )
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
@@ -103,7 +104,7 @@ async def test_subscribe_calendar_persists_subscription(
         google_gateway=google_gateway,
     )
 
-    updated_calendar = await handler.subscribe(calendar)
+    updated_calendar = await handler.handle(SubscribeCalendarCommand(calendar=calendar))
 
     persisted = await calendar_repo.get(calendar.id)
 

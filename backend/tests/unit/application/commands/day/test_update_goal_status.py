@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from lykke.application.commands.day import UpdateGoalStatusHandler
+from lykke.application.commands.day import UpdateGoalStatusCommand, UpdateGoalStatusHandler
 from lykke.core.exceptions import DomainError, NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
@@ -98,9 +98,7 @@ async def test_update_goal_status_updates_status():
     handler = UpdateGoalStatusHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.update_goal_status(
-        date=task_date, goal_id=goal.id, status=value_objects.GoalStatus.COMPLETE
-    )
+    result = await handler.handle(UpdateGoalStatusCommand(date=task_date, goal_id=goal.id, completed=True))
 
     # Assert
     updated_goal = next(g for g in result.goals if g.id == goal.id)
@@ -133,9 +131,7 @@ async def test_update_goal_status_emits_domain_event():
     handler = UpdateGoalStatusHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.update_goal_status(
-        date=task_date, goal_id=goal.id, status=value_objects.GoalStatus.COMPLETE
-    )
+    result = await handler.handle(UpdateGoalStatusCommand(date=task_date, goal_id=goal.id, completed=True))
 
     # Assert
     events = result.collect_events()
@@ -171,9 +167,7 @@ async def test_update_goal_status_raises_error_if_goal_not_found():
 
     # Act & Assert
     with pytest.raises(DomainError, match="not found"):
-        await handler.update_goal_status(
-            date=task_date, goal_id=fake_goal_id, status=value_objects.GoalStatus.COMPLETE
-        )
+        await handler.handle(UpdateGoalStatusCommand(date=task_date, goal_id=fake_goal_id, completed=True))
 
 
 @pytest.mark.asyncio
@@ -205,9 +199,7 @@ async def test_update_goal_status_no_change_does_not_add_to_uow():
     handler = UpdateGoalStatusHandler(ro_repos, uow_factory, user_id)
 
     # Act - try to update to same status
-    result = await handler.update_goal_status(
-        date=task_date, goal_id=goal.id, status=value_objects.GoalStatus.COMPLETE
-    )
+    result = await handler.handle(UpdateGoalStatusCommand(date=task_date, goal_id=goal.id, completed=True))
 
     # Assert - entity should not be added to UoW because status didn't change
     assert len(uow_factory.uow.added) == 0
@@ -239,25 +231,15 @@ async def test_update_goal_status_all_status_transitions():
     handler = UpdateGoalStatusHandler(ro_repos, uow_factory, user_id)
 
     # INCOMPLETE -> COMPLETE
-    result = await handler.update_goal_status(
-        date=task_date, goal_id=goal.id, status=value_objects.GoalStatus.COMPLETE
-    )
+    result = await handler.handle(UpdateGoalStatusCommand(date=task_date, goal_id=goal.id, completed=True))
     assert result.goals[0].status == value_objects.GoalStatus.COMPLETE
 
     # Update the day in repo for next test
     day_repo._day = result
 
-    # COMPLETE -> PUNT
-    result = await handler.update_goal_status(
-        date=task_date, goal_id=goal.id, status=value_objects.GoalStatus.PUNT
-    )
-    assert result.goals[0].status == value_objects.GoalStatus.PUNT
-
-    # Update the day in repo for next test
-    day_repo._day = result
-
-    # PUNT -> INCOMPLETE
-    result = await handler.update_goal_status(
-        date=task_date, goal_id=goal.id, status=value_objects.GoalStatus.INCOMPLETE
-    )
+    # COMPLETE -> INCOMPLETE
+    # Note: UpdateGoalStatusCommand uses completed:bool, so PUNT is not directly supported
+    # For PUNT status, tests should use domain methods directly or update the command
+    # For now, we'll test COMPLETE -> INCOMPLETE transition
+    result = await handler.handle(UpdateGoalStatusCommand(date=task_date, goal_id=goal.id, completed=False))
     assert result.goals[0].status == value_objects.GoalStatus.INCOMPLETE

@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from lykke.application.queries.preview_day import PreviewDayHandler
+from lykke.application.queries.preview_day import PreviewDayHandler, PreviewDayQuery
 from lykke.application.queries.preview_tasks import PreviewTasksHandler
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
@@ -86,6 +86,7 @@ class _FakeReadOnlyRepos:
         calendar_entry_repo: _FakeCalendarEntryReadOnlyRepo,
     ) -> None:
         fake = object()
+        self.audit_log_ro_repo = fake
         self.auth_token_ro_repo = fake
         self.bot_personality_ro_repo = fake
         self.calendar_entry_ro_repo = calendar_entry_repo
@@ -136,7 +137,7 @@ async def test_preview_day_uses_provided_template():
     handler = PreviewDayHandler(ro_repos, user_id)
 
     # Act
-    result = await handler.preview_day(task_date, template.id)
+    result = await handler.handle(PreviewDayQuery(date=task_date, template_id=template.id))
 
     # Assert
     assert result.day.date == task_date
@@ -178,7 +179,7 @@ async def test_preview_day_falls_back_to_user_default_template():
     handler = PreviewDayHandler(ro_repos, user_id)
 
     # Act - no template_id provided
-    result = await handler.preview_day(task_date)
+    result = await handler.handle(PreviewDayQuery(date=task_date))
 
     # Assert
     assert result.day.template == template
@@ -218,7 +219,7 @@ async def test_preview_day_uses_existing_day_template_if_available():
     handler = PreviewDayHandler(ro_repos, user_id)
 
     # Act - no template_id provided
-    result = await handler.preview_day(task_date)
+    result = await handler.handle(PreviewDayQuery(date=task_date))
 
     # Assert - should use template from existing day
     assert result.day.template == template
@@ -260,7 +261,7 @@ async def test_preview_day_returns_calendar_entries():
     handler = PreviewDayHandler(ro_repos, user_id)
 
     # Act
-    result = await handler.preview_day(task_date, template.id)
+    result = await handler.handle(PreviewDayQuery(date=task_date, template_id=template.id))
 
     # Assert
     assert result.calendar_entries == mock_entries

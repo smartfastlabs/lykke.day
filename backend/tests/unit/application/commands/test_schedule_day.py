@@ -5,8 +5,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from lykke.application.commands.day import ScheduleDayHandler
-from lykke.application.queries.preview_day import PreviewDayHandler
+from lykke.application.commands.day import ScheduleDayCommand, ScheduleDayHandler
+from lykke.application.queries.preview_day import PreviewDayHandler, PreviewDayQuery
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import TimeBlockDefinitionEntity
@@ -82,6 +82,7 @@ class _FakeReadOnlyRepos:
         time_block_definition_repo: _FakeTimeBlockDefinitionReadOnlyRepo | None = None,
     ) -> None:
         fake = object()
+        self.audit_log_ro_repo = fake
         self.auth_token_ro_repo = fake
         self.bot_personality_ro_repo = fake
         self.calendar_entry_ro_repo = calendar_entry_repo
@@ -233,7 +234,7 @@ async def test_schedule_day_creates_day_and_tasks():
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
     # Act
-    result = await handler.schedule_day(task_date, template.id)
+    result = await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
 
     # Assert
     assert result.day.date == task_date
@@ -292,7 +293,7 @@ async def test_schedule_day_returns_existing_day_without_creating():
 
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
-    result = await handler.schedule_day(task_date, template.id)
+    result = await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
 
     assert result.day == day
     assert result.tasks == tasks
@@ -331,7 +332,7 @@ async def test_schedule_day_deletes_existing_tasks():
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
     # Act
-    await handler.schedule_day(task_date, template.id)
+    await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
 
     # Assert - bulk delete should have been called
     assert len(uow_factory.uow.bulk_deleted_tasks) == 1
@@ -372,7 +373,7 @@ async def test_schedule_day_raises_error_if_no_template():
 
     # Act & Assert
     with pytest.raises(ValueError, match="Day template is required to schedule"):
-        await handler.schedule_day(task_date, template.id)
+        await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
 
 
 @pytest.mark.asyncio
@@ -405,7 +406,7 @@ async def test_schedule_day_uses_template_id_if_provided():
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
     # Act
-    result = await handler.schedule_day(task_date, template.id)
+    result = await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
 
     # Assert
     assert result.day.template == template
@@ -478,7 +479,7 @@ async def test_schedule_day_copies_timeblocks_from_template():
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
     # Act
-    result = await handler.schedule_day(task_date, template.id)
+    result = await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
 
     # Assert - timeblocks should be copied from template to day
     assert len(result.day.time_blocks) == 2, "Day should have 2 timeblocks copied from template"

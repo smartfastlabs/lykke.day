@@ -10,9 +10,19 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from loguru import logger
 
-from lykke.application.commands import RescheduleDayHandler, ScheduleDayHandler
+from lykke.application.commands import (
+    RescheduleDayCommand,
+    RescheduleDayHandler,
+    ScheduleDayCommand,
+    ScheduleDayHandler,
+)
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
-from lykke.application.queries import GetDayContextHandler, GetIncrementalChangesHandler
+from lykke.application.queries import (
+    GetDayContextHandler,
+    GetDayContextQuery,
+    GetIncrementalChangesHandler,
+    GetIncrementalChangesQuery,
+)
 from lykke.core.exceptions import NotFoundError
 from lykke.core.utils.audit_log_filtering import is_audit_log_for_today
 from lykke.core.utils.audit_log_serialization import deserialize_audit_log
@@ -48,7 +58,8 @@ async def reschedule_today(
     handler: Annotated[RescheduleDayHandler, Depends(get_reschedule_day_handler)],
 ) -> DayContextSchema:
     """Reschedule today by cleaning up and recreating all tasks."""
-    context = await handler.reschedule_day(date=get_current_date())
+    today = get_current_date()
+    context = await handler.handle(RescheduleDayCommand(date=today))
     return map_day_context_to_schema(context)
 
 
@@ -214,8 +225,8 @@ async def _handle_client_messages(
                     (
                         changes,
                         last_timestamp,
-                    ) = await get_incremental_changes_handler.get_incremental_changes(
-                        since_dt, today_date
+                    ) = await get_incremental_changes_handler.handle(
+                        GetIncrementalChangesQuery(since=since_dt, date=today_date)
                     )
 
                     response = WebSocketSyncResponseSchema(
@@ -237,13 +248,13 @@ async def _handle_client_messages(
                 # Full sync
                 try:
                     try:
-                        context = await get_day_context_handler.get_day_context(
-                            date=today_date
+                        context = await get_day_context_handler.handle(
+                            GetDayContextQuery(date=today_date)
                         )
                     except NotFoundError:
                         # Day doesn't exist, auto-schedule it (WebSocket is THE place that creates Day if missing)
-                        context = await schedule_day_handler.schedule_day(
-                            date=today_date
+                        context = await schedule_day_handler.handle(
+                            ScheduleDayCommand(date=today_date)
                         )
 
                     # Get most recent audit log timestamp

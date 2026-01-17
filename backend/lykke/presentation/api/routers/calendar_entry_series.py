@@ -6,11 +6,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from lykke.application.commands.calendar_entry_series import (
+    UpdateCalendarEntrySeriesCommand,
     UpdateCalendarEntrySeriesHandler,
 )
 from lykke.application.queries.calendar_entry_series import (
     GetCalendarEntrySeriesHandler,
+    GetCalendarEntrySeriesQuery,
     SearchCalendarEntrySeriesHandler,
+    SearchCalendarEntrySeriesQuery,
 )
 from lykke.domain import value_objects
 from lykke.presentation.api.schemas import (
@@ -35,7 +38,7 @@ async def get_calendar_entry_series(
     ],
 ) -> CalendarEntrySeriesSchema:
     """Get a single calendar entry series by ID."""
-    series = await get_handler.run(series_id=uuid)
+    series = await get_handler.handle(GetCalendarEntrySeriesQuery(calendar_entry_series_id=uuid))
     return map_calendar_entry_series_to_schema(series)
 
 
@@ -52,7 +55,7 @@ async def search_calendar_entry_series(
 ) -> PagedResponseSchema[CalendarEntrySeriesSchema]:
     """Search calendar entry series with pagination and optional filters."""
     search_query = build_search_query(query, value_objects.CalendarEntrySeriesQuery)
-    result = await list_handler.run(search_query=search_query)
+    result = await list_handler.handle(SearchCalendarEntrySeriesQuery(search_query=search_query))
     return create_paged_response(result, map_calendar_entry_series_to_schema)
 
 
@@ -70,5 +73,5 @@ async def update_calendar_entry_series(
         name=update_data.name,
         event_category=update_data.event_category,
     )
-    updated = await update_handler.run(series_id=uuid, update_data=update_object)
+    updated = await update_handler.handle(UpdateCalendarEntrySeriesCommand(calendar_entry_series_id=uuid, update_data=update_object))
     return map_calendar_entry_series_to_schema(updated)

@@ -1,26 +1,34 @@
 """Command to detach a task definition from a routine."""
 
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities import RoutineEntity
 
 
-class RemoveRoutineTaskHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class RemoveRoutineTaskCommand(Command):
+    """Command to remove a routine task."""
+
+    routine_id: UUID
+    routine_task_id: UUID
+
+
+class RemoveRoutineTaskHandler(BaseCommandHandler[RemoveRoutineTaskCommand, RoutineEntity]):
     """Detach a RoutineTask from a routine."""
 
-    async def run(self, routine_id: UUID, routine_task_id: UUID) -> RoutineEntity:
+    async def handle(self, command: RemoveRoutineTaskCommand) -> RoutineEntity:
         """Remove an attached task from the routine.
 
         Args:
-            routine_id: ID of the routine.
-            routine_task_id: RoutineTask.id to remove.
+            command: The command containing the routine ID and task ID to remove.
 
         Returns:
             The updated routine entity.
         """
         async with self.new_uow() as uow:
-            routine = await uow.routine_ro_repo.get(routine_id)
-            updated_routine = routine.remove_task(routine_task_id)
+            routine = await uow.routine_ro_repo.get(command.routine_id)
+            updated_routine = routine.remove_task(command.routine_task_id)
             uow.add(updated_routine)
             return updated_routine

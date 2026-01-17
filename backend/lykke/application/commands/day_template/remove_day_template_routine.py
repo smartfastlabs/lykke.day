@@ -1,29 +1,35 @@
 """Command to detach a routine from a day template."""
 
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities.day_template import DayTemplateEntity
 
 
-class RemoveDayTemplateRoutineHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class RemoveDayTemplateRoutineCommand(Command):
+    """Command to remove a routine from a day template."""
+
+    day_template_id: UUID
+    routine_id: UUID
+
+
+class RemoveDayTemplateRoutineHandler(BaseCommandHandler[RemoveDayTemplateRoutineCommand, DayTemplateEntity]):
     """Detach a routine from a day template."""
 
-    async def run(
-        self, day_template_id: UUID, routine_id: UUID
-    ) -> DayTemplateEntity:
+    async def handle(self, command: RemoveDayTemplateRoutineCommand) -> DayTemplateEntity:
         """Remove an attached routine from the day template.
 
         Args:
-            day_template_id: ID of the day template.
-            routine_id: ID of the routine to detach.
+            command: The command containing the day template ID and routine ID to detach.
 
         Returns:
             The updated day template entity.
         """
         async with self.new_uow() as uow:
-            day_template = await uow.day_template_ro_repo.get(day_template_id)
-            updated_day_template = day_template.remove_routine(routine_id)
+            day_template = await uow.day_template_ro_repo.get(command.day_template_id)
+            updated_day_template = day_template.remove_routine(command.routine_id)
             uow.add(updated_day_template)
             return updated_day_template
 

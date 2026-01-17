@@ -1,25 +1,33 @@
 """Command to create a new push subscription."""
 
+from dataclasses import dataclass
+
 from loguru import logger
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities import PushSubscriptionEntity
 
 
-class CreatePushSubscriptionHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class CreatePushSubscriptionCommand(Command):
+    """Command to create a new push subscription."""
+
+    subscription: PushSubscriptionEntity
+
+
+class CreatePushSubscriptionHandler(BaseCommandHandler[CreatePushSubscriptionCommand, PushSubscriptionEntity]):
     """Creates a new push subscription."""
 
-    async def run(
-        self, subscription: PushSubscriptionEntity
-    ) -> PushSubscriptionEntity:
+    async def handle(self, command: CreatePushSubscriptionCommand) -> PushSubscriptionEntity:
         """Create a new push subscription.
 
         Args:
-            subscription: The push subscription entity to create
+            command: The command containing the push subscription entity to create
 
         Returns:
             The created push subscription entity
         """
+        subscription = command.subscription
         logger.info(
             f"Creating push subscription: {subscription.id} for user {subscription.user_id}"
         )

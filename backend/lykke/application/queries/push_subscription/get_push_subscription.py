@@ -1,30 +1,36 @@
 """Query to get a push subscription by ID."""
 
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.queries.base import BaseQueryHandler
+from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.repositories import PushSubscriptionRepositoryReadOnlyProtocol
 from lykke.domain.entities import PushSubscriptionEntity
 
 
-class GetPushSubscriptionHandler(BaseQueryHandler):
+@dataclass(frozen=True)
+class GetPushSubscriptionQuery(Query):
+    """Query to get a push subscription by ID."""
+
+    push_subscription_id: UUID
+
+
+class GetPushSubscriptionHandler(BaseQueryHandler[GetPushSubscriptionQuery, PushSubscriptionEntity]):
     """Retrieves a single push subscription by ID."""
 
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
 
-    async def run(
-        self, subscription_id: UUID
-    ) -> PushSubscriptionEntity:
+    async def handle(self, query: GetPushSubscriptionQuery) -> PushSubscriptionEntity:
         """Get a single push subscription by ID.
 
         Args:
-            subscription_id: The ID of the push subscription to retrieve
+            query: The query containing the push subscription ID
 
         Returns:
-            The push subscription data object
+            The push subscription entity
 
         Raises:
             NotFoundError: If push subscription not found
         """
-        return await self.push_subscription_ro_repo.get(subscription_id)
+        return await self.push_subscription_ro_repo.get(query.push_subscription_id)
 

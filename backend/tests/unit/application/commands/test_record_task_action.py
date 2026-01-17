@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from lykke.application.commands.task import RecordTaskActionHandler
+from lykke.application.commands.task import RecordTaskActionCommand, RecordTaskActionHandler
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import (
@@ -178,7 +178,7 @@ async def test_record_task_action_adds_task_and_day_to_uow():
     )
 
     # Act
-    result = await handler.record_task_action(task.id, action)
+    result = await handler.handle(RecordTaskActionCommand(task_id=task.id, action=action))
 
     # Assert
     assert result.status == value_objects.TaskStatus.COMPLETE
@@ -242,7 +242,7 @@ async def test_record_task_action_raises_domain_events():
     )
 
     # Act
-    result = await handler.record_task_action(task.id, action)
+    result = await handler.handle(RecordTaskActionCommand(task_id=task.id, action=action))
 
     # Assert - check that task has domain events
     task_events = [e for e in result._domain_events if isinstance(e, TaskStateUpdatedEvent)]
@@ -301,7 +301,7 @@ async def test_record_task_action_raises_if_day_missing():
 
     # Act / Assert
     with pytest.raises(NotFoundError, match="Day"):
-        await handler.record_task_action(task.id, action)
+        await handler.handle(RecordTaskActionCommand(task_id=task.id, action=action))
 
 
 @pytest.mark.asyncio
@@ -350,7 +350,7 @@ async def test_record_task_action_punt_updates_status():
     )
 
     # Act
-    result = await handler.record_task_action(task.id, action)
+    result = await handler.handle(RecordTaskActionCommand(task_id=task.id, action=action))
 
     # Assert
     assert result.status == value_objects.TaskStatus.PUNT

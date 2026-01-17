@@ -1,13 +1,13 @@
 """Command to sync calendar entries from external calendar providers."""
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from googleapiclient.errors import HttpError
 from loguru import logger
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.unit_of_work import (
     ReadOnlyRepositories,
@@ -30,7 +30,15 @@ from lykke.domain.value_objects import CalendarUpdateObject
 MAX_EVENT_LOOKAHEAD = timedelta(days=365)
 
 
-class SyncCalendarHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class SyncCalendarCommand(Command):
+    """Command to sync a calendar."""
+
+    calendar_id: UUID | None = None
+    calendar: CalendarEntity | None = None
+
+
+class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity]):
     """Syncs calendar entries from external provider."""
 
     def __init__(
@@ -50,6 +58,15 @@ class SyncCalendarHandler(BaseCommandHandler):
         """
         super().__init__(ro_repos, uow_factory, user_id)
         self._google_gateway = google_gateway
+
+    async def handle(self, command: SyncCalendarCommand) -> CalendarEntity:
+        """Handle sync calendar command."""
+        if command.calendar:
+            return await self.sync_calendar_entity(command.calendar)
+        elif command.calendar_id:
+            return await self.sync_calendar(command.calendar_id)
+        else:
+            raise ValueError("Either calendar_id or calendar must be provided")
 
     async def sync_calendar(self, calendar_id: UUID) -> CalendarEntity:
         """Sync a calendar by ID using a fresh unit of work."""
@@ -185,7 +202,12 @@ class SyncCalendarHandler(BaseCommandHandler):
         return calendar.apply_update(update_data, CalendarUpdatedEvent)
 
 
-class SyncAllCalendarsHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class SyncAllCalendarsCommand(Command):
+    """Command to sync all calendars (takes no args, uses handler's user_id)."""
+
+
+class SyncAllCalendarsHandler(BaseCommandHandler[SyncAllCalendarsCommand, None]):
     """Syncs all calendars for a user."""
 
     def __init__(
@@ -205,6 +227,10 @@ class SyncAllCalendarsHandler(BaseCommandHandler):
         """
         super().__init__(ro_repos, uow_factory, user_id)
         self._google_gateway = google_gateway
+
+    async def handle(self, command: SyncAllCalendarsCommand) -> None:
+        """Handle sync all calendars command."""
+        await self.sync_all_calendars()
 
     async def sync_all_calendars(self) -> None:
         """Sync all calendars for the user."""

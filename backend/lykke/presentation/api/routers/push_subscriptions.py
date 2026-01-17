@@ -4,14 +4,20 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, Depends
 
 from lykke.application.commands.push_subscription import (
+    CreatePushSubscriptionCommand,
     CreatePushSubscriptionHandler,
+    DeletePushSubscriptionCommand,
     DeletePushSubscriptionHandler,
+    SendPushNotificationCommand,
     SendPushNotificationHandler,
+    UpdatePushSubscriptionCommand,
     UpdatePushSubscriptionHandler,
 )
 from lykke.application.queries.push_subscription import (
     GetPushSubscriptionHandler,
+    GetPushSubscriptionQuery,
     SearchPushSubscriptionsHandler,
+    SearchPushSubscriptionsQuery,
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import PushSubscriptionEntity
@@ -44,7 +50,7 @@ async def search_subscriptions(
 ) -> PagedResponseSchema[PushSubscriptionSchema]:
     """Search push subscriptions with pagination and optional filters."""
     search_query = build_search_query(query, value_objects.PushSubscriptionQuery)
-    result = await list_push_subscriptions_handler.run(search_query=search_query)
+    result = await list_push_subscriptions_handler.handle(SearchPushSubscriptionsQuery(search_query=search_query))
     return create_paged_response(result, map_push_subscription_to_schema)
 
 
@@ -55,7 +61,7 @@ async def get_subscription(
         GetPushSubscriptionHandler, Depends(get_query_handler(GetPushSubscriptionHandler))
     ],
 ) -> PushSubscriptionSchema:
-    result = await push_subscription_handler.run(subscription_id=UUID(subscription_id))
+    result = await push_subscription_handler.handle(GetPushSubscriptionQuery(push_subscription_id=UUID(subscription_id)))
     return map_push_subscription_to_schema(result)
 
 
@@ -70,8 +76,8 @@ async def update_subscription(
     update_object = value_objects.PushSubscriptionUpdateObject(
         device_name=update_data.device_name
     )
-    result = await update_push_subscription_handler.run(
-        subscription_id=UUID(subscription_id), update_data=update_object
+    result = await update_push_subscription_handler.handle(
+        UpdatePushSubscriptionCommand(subscription_id=UUID(subscription_id), update_data=update_object)
     )
     return map_push_subscription_to_schema(result)
 
@@ -83,7 +89,7 @@ async def delete_subscription(
         DeletePushSubscriptionHandler, Depends(get_command_handler(DeletePushSubscriptionHandler))
     ],
 ) -> None:
-    await delete_push_subscription_handler.run(subscription_id=UUID(subscription_id))
+    await delete_push_subscription_handler.handle(DeletePushSubscriptionCommand(subscription_id=UUID(subscription_id)))
 
 
 @router.post("/subscribe/", response_model=PushSubscriptionSchema)
@@ -105,15 +111,17 @@ async def subscribe(
         p256dh=request.keys.p256dh,
         auth=request.keys.auth,
     )
-    result = await create_push_subscription_handler.run(subscription=subscription)
+    result = await create_push_subscription_handler.handle(CreatePushSubscriptionCommand(subscription=subscription))
 
     background_tasks.add_task(
-        send_push_notification_handler.run,
-        subscription=result,
-        content={
-            "title": "Notifications Enabled!",
-            "body": "Look at that a notification ;)",
-        },
+        send_push_notification_handler.handle,
+        SendPushNotificationCommand(
+            subscription=result,
+            content={
+                "title": "Notifications Enabled!",
+                "body": "Look at that a notification ;)",
+            },
+        ),
     )
 
     return map_push_subscription_to_schema(result)

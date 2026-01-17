@@ -5,13 +5,18 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from lykke.application.commands.task_definition import (
+    CreateTaskDefinitionCommand,
     CreateTaskDefinitionHandler,
+    DeleteTaskDefinitionCommand,
     DeleteTaskDefinitionHandler,
+    UpdateTaskDefinitionCommand,
     UpdateTaskDefinitionHandler,
 )
 from lykke.application.queries.task_definition import (
     GetTaskDefinitionHandler,
+    GetTaskDefinitionQuery,
     SearchTaskDefinitionsHandler,
+    SearchTaskDefinitionsQuery,
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
@@ -40,7 +45,7 @@ async def get_task_definition(
     ],
 ) -> TaskDefinitionSchema:
     """Get a single task definition by ID."""
-    task_definition = await get_task_definition_handler.run(task_definition_id=uuid)
+    task_definition = await get_task_definition_handler.handle(GetTaskDefinitionQuery(task_definition_id=uuid))
     return map_task_definition_to_schema(task_definition)
 
 
@@ -53,7 +58,7 @@ async def search_task_definitions(
 ) -> PagedResponseSchema[TaskDefinitionSchema]:
     """Search task definitions with pagination and optional filters."""
     search_query = build_search_query(query, value_objects.TaskDefinitionQuery)
-    result = await list_task_definitions_handler.run(search_query=search_query)
+    result = await list_task_definitions_handler.handle(SearchTaskDefinitionsQuery(search_query=search_query))
     return create_paged_response(result, map_task_definition_to_schema)
 
 
@@ -73,7 +78,7 @@ async def create_task_definition(
         description=task_definition_data.description,
         type=task_definition_data.type,
     )
-    created = await create_task_definition_handler.run(task_definition=task_definition)
+    created = await create_task_definition_handler.handle(CreateTaskDefinitionCommand(task_definition=task_definition))
     return map_task_definition_to_schema(created)
 
 
@@ -94,9 +99,8 @@ async def update_task_definition(
         description=update_data.description,
         type=update_data.type,
     )
-    updated = await update_task_definition_handler.run(
-        task_definition_id=uuid,
-        update_data=update_object,
+    updated = await update_task_definition_handler.handle(
+        UpdateTaskDefinitionCommand(task_definition_id=uuid, update_data=update_object)
     )
     return map_task_definition_to_schema(updated)
 
@@ -109,4 +113,4 @@ async def delete_task_definition(
     ],
 ) -> None:
     """Delete a task definition."""
-    await delete_task_definition_handler.run(task_definition_id=uuid)
+    await delete_task_definition_handler.handle(DeleteTaskDefinitionCommand(task_definition_id=uuid))

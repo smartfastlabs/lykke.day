@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from lykke.application.commands.day import AddGoalToDayHandler
+from lykke.application.commands.day import AddGoalToDayCommand, AddGoalToDayHandler
 from lykke.core.exceptions import DomainError, NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity, UserEntity
@@ -137,7 +137,7 @@ async def test_add_goal_adds_goal_to_existing_day():
     handler = AddGoalToDayHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.add_goal(date=task_date, name="Test Goal")
+    result = await handler.handle(AddGoalToDayCommand(date=task_date, goal="Test Goal"))
 
     # Assert
     assert len(result.goals) == 1
@@ -177,7 +177,7 @@ async def test_add_goal_emits_domain_event():
     handler = AddGoalToDayHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.add_goal(date=task_date, name="Test Goal")
+    result = await handler.handle(AddGoalToDayCommand(date=task_date, goal="Test Goal"))
 
     # Assert
     events = result.collect_events()
@@ -216,7 +216,7 @@ async def test_add_goal_raises_if_day_missing():
 
     # Act / Assert
     with pytest.raises(NotFoundError, match="Day"):
-        await handler.add_goal(date=task_date, name="Test Goal")
+        await handler.handle(AddGoalToDayCommand(date=task_date, goal="Test Goal"))
 
 
 @pytest.mark.asyncio
@@ -253,4 +253,4 @@ async def test_add_goal_enforces_max_three():
 
     # Act & Assert
     with pytest.raises(DomainError, match="at most 3 active goals"):
-        await handler.add_goal(date=task_date, name="Goal 4")
+        await handler.handle(AddGoalToDayCommand(date=task_date, goal="Goal 4"))

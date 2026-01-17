@@ -1,40 +1,44 @@
 """Command to update an existing task definition."""
 
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.events.task_events import TaskDefinitionUpdatedEvent
 from lykke.domain.value_objects import TaskDefinitionUpdateObject
 from lykke.domain.entities import TaskDefinitionEntity
 
 
-class UpdateTaskDefinitionHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class UpdateTaskDefinitionCommand(Command):
+    """Command to update an existing task definition."""
+
+    task_definition_id: UUID
+    update_data: TaskDefinitionUpdateObject
+
+
+class UpdateTaskDefinitionHandler(BaseCommandHandler[UpdateTaskDefinitionCommand, TaskDefinitionEntity]):
     """Updates an existing task definition."""
 
-    async def run(
-        self,
-        task_definition_id: UUID,
-        update_data: TaskDefinitionUpdateObject,
-    ) -> TaskDefinitionEntity:
+    async def handle(self, command: UpdateTaskDefinitionCommand) -> TaskDefinitionEntity:
         """Update an existing task definition.
 
         Args:
-            task_definition_id: The ID of the task definition to update
-            update_data: The update data containing optional fields to update
+            command: The command containing the task definition ID and update data
 
         Returns:
-            The updated task definition data object
+            The updated task definition entity
 
         Raises:
             NotFoundError: If task definition not found
         """
         async with self.new_uow() as uow:
             # Get the existing task definition
-            task_definition = await uow.task_definition_ro_repo.get(task_definition_id)
+            task_definition = await uow.task_definition_ro_repo.get(command.task_definition_id)
 
             # Apply updates using domain method (adds EntityUpdatedEvent)
             task_definition = task_definition.apply_update(
-                update_data, TaskDefinitionUpdatedEvent
+                command.update_data, TaskDefinitionUpdatedEvent
             )
 
             # Add entity to UoW for saving

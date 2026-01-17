@@ -1,23 +1,30 @@
 """Command to create a new day template."""
 
-from lykke.application.commands.base import BaseCommandHandler
+from dataclasses import dataclass
+
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities.day_template import DayTemplateEntity
 
 
-class CreateDayTemplateHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class CreateDayTemplateCommand(Command):
+    """Command to create a new day template."""
+
+    day_template: DayTemplateEntity
+
+
+class CreateDayTemplateHandler(BaseCommandHandler[CreateDayTemplateCommand, DayTemplateEntity]):
     """Creates a new day template."""
 
-    async def run(
-        self, day_template: DayTemplateEntity
-    ) -> DayTemplateEntity:
+    async def handle(self, command: CreateDayTemplateCommand) -> DayTemplateEntity:
         """Create a new day template.
 
         Args:
-            day_template: The day template entity to create
+            command: The command containing the day template entity to create
 
         Returns:
             The created day template entity
         """
         async with self.new_uow() as uow:
-            await uow.create(day_template)
-            return day_template
+            await uow.create(command.day_template)
+            return command.day_template

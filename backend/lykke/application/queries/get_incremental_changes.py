@@ -1,17 +1,26 @@
 """Query handler to get incremental changes since a timestamp."""
 
+from dataclasses import dataclass
 from datetime import date as dt_date, datetime
-from typing import Any, Literal
+from typing import Any, Literal, cast
 from uuid import UUID
 
-from lykke.application.queries.base import BaseQueryHandler
+from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.core.utils.audit_log_filtering import is_audit_log_for_today
 from lykke.domain import value_objects
 from lykke.domain.entities import AuditLogEntity
 from lykke.presentation.api.schemas.websocket_message import EntityChangeSchema
 
 
-class GetIncrementalChangesHandler(BaseQueryHandler):
+@dataclass(frozen=True)
+class GetIncrementalChangesQuery(Query):
+    """Query to get incremental changes."""
+
+    since: datetime
+    date: dt_date
+
+
+class GetIncrementalChangesHandler(BaseQueryHandler[GetIncrementalChangesQuery, tuple[list[EntityChangeSchema], datetime | None]]):
     """Gets incremental changes since a timestamp, filtered to entities for a specific date."""
 
     def __init__(self, ro_repos: Any, user_id: UUID) -> None:
@@ -22,6 +31,10 @@ class GetIncrementalChangesHandler(BaseQueryHandler):
         self.task_ro_repo = ro_repos.task_ro_repo
         self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
         self.routine_ro_repo = ro_repos.routine_ro_repo
+
+    async def handle(self, query: GetIncrementalChangesQuery) -> tuple[list[EntityChangeSchema], datetime | None]:
+        """Handle get incremental changes query."""
+        return await self.get_incremental_changes(query.since, query.date)
 
     async def get_incremental_changes(
         self, since_timestamp: datetime, target_date: dt_date

@@ -6,13 +6,18 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from lykke.application.commands.time_block_definition import (
+    CreateTimeBlockDefinitionCommand,
     CreateTimeBlockDefinitionHandler,
+    DeleteTimeBlockDefinitionCommand,
     DeleteTimeBlockDefinitionHandler,
+    UpdateTimeBlockDefinitionCommand,
     UpdateTimeBlockDefinitionHandler,
 )
 from lykke.application.queries.time_block_definition import (
     GetTimeBlockDefinitionHandler,
+    GetTimeBlockDefinitionQuery,
     SearchTimeBlockDefinitionsHandler,
+    SearchTimeBlockDefinitionsQuery,
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import TimeBlockDefinitionEntity
@@ -41,8 +46,8 @@ async def get_time_block_definition(
     ],
 ) -> TimeBlockDefinitionSchema:
     """Get a single time block definition by ID."""
-    time_block_definition = await get_time_block_definition_handler.run(
-        time_block_definition_id=uuid
+    time_block_definition = await get_time_block_definition_handler.handle(
+        GetTimeBlockDefinitionQuery(time_block_definition_id=uuid)
     )
     return map_time_block_definition_to_schema(time_block_definition)
 
@@ -59,7 +64,7 @@ async def search_time_block_definitions(
 ) -> PagedResponseSchema[TimeBlockDefinitionSchema]:
     """Search time block definitions with pagination and optional filters."""
     search_query = build_search_query(query, value_objects.TimeBlockDefinitionQuery)
-    result = await list_time_block_definitions_handler.run(search_query=search_query)
+    result = await list_time_block_definitions_handler.handle(SearchTimeBlockDefinitionsQuery(search_query=search_query))
     return create_paged_response(result, map_time_block_definition_to_schema)
 
 
@@ -84,8 +89,8 @@ async def create_time_block_definition(
         type=time_block_definition_data.type,
         category=time_block_definition_data.category,
     )
-    created = await create_time_block_definition_handler.run(
-        time_block_definition=time_block_definition
+    created = await create_time_block_definition_handler.handle(
+        CreateTimeBlockDefinitionCommand(time_block_definition=time_block_definition)
     )
     return map_time_block_definition_to_schema(created)
 
@@ -106,9 +111,8 @@ async def update_time_block_definition(
         type=update_data.type,
         category=update_data.category,
     )
-    updated = await update_time_block_definition_handler.run(
-        time_block_definition_id=uuid,
-        update_data=update_object,
+    updated = await update_time_block_definition_handler.handle(
+        UpdateTimeBlockDefinitionCommand(time_block_definition_id=uuid, update_data=update_object)
     )
     return map_time_block_definition_to_schema(updated)
 
@@ -122,5 +126,5 @@ async def delete_time_block_definition(
     ],
 ) -> None:
     """Delete a time block definition."""
-    await delete_time_block_definition_handler.run(time_block_definition_id=uuid)
+    await delete_time_block_definition_handler.handle(DeleteTimeBlockDefinitionCommand(time_block_definition_id=uuid))
 

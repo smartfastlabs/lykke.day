@@ -1,27 +1,31 @@
 """Command to update a day's status or template."""
 
+from dataclasses import dataclass
 from datetime import date
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 from lykke.domain.events.day_events import DayUpdatedEvent
 from lykke.domain.value_objects import DayUpdateObject
 
 
-class UpdateDayHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class UpdateDayCommand(Command):
+    """Command to update a day."""
+
+    date: date
+    update_data: DayUpdateObject
+
+
+class UpdateDayHandler(BaseCommandHandler[UpdateDayCommand, DayEntity]):
     """Updates a day's status or template."""
 
-    async def update_day(
-        self,
-        date: date,
-        update_data: DayUpdateObject,
-    ) -> DayEntity:
+    async def handle(self, command: UpdateDayCommand) -> DayEntity:
         """Update a day's status and/or template.
 
         Args:
-            date: The date of the day to update
-            update_data: The update data containing optional fields to update
+            command: The command containing the date and update data
 
         Returns:
             The updated Day entity
@@ -31,9 +35,10 @@ class UpdateDayHandler(BaseCommandHandler):
         """
         async with self.new_uow() as uow:
             # Get the existing day
-            day_id = DayEntity.id_from_date_and_user(date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
             day = await uow.day_ro_repo.get(day_id)
 
+            update_data = command.update_data
             # Apply status transition if requested
             if update_data.status is not None:
                 self._apply_status_transition(day, update_data.status)

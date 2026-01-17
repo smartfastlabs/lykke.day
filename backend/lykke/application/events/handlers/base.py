@@ -7,6 +7,7 @@ from uuid import UUID
 from loguru import logger
 
 # Import signal here to avoid circular imports
+from lykke.application.base_handler import BaseHandler
 from lykke.application.events.signals import domain_event_signal
 from lykke.application.unit_of_work import (
     ReadOnlyRepositories,
@@ -16,7 +17,7 @@ from lykke.application.unit_of_work import (
 from lykke.domain.events.base import DomainEvent
 
 
-class DomainEventHandler(ABC):
+class DomainEventHandler(ABC, BaseHandler):
     """Base class for domain event handlers with explicit dependency wiring.
 
     Subclasses declare which event types they handle via the `handles`
@@ -69,20 +70,8 @@ class DomainEventHandler(ABC):
         uow_factory: UnitOfWorkFactory | None = None,
     ) -> None:
         """Initialize the event handler with explicit dependencies."""
-        self.user_id = user_id
+        super().__init__(ro_repos, user_id)
         self._uow_factory = uow_factory
-        self._ro_repos = ro_repos
-        # Explicitly expose read-only repositories for convenience
-        self.auth_token_ro_repo = ro_repos.auth_token_ro_repo
-        self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
-        self.calendar_ro_repo = ro_repos.calendar_ro_repo
-        self.day_ro_repo = ro_repos.day_ro_repo
-        self.day_template_ro_repo = ro_repos.day_template_ro_repo
-        self.push_subscription_ro_repo = ro_repos.push_subscription_ro_repo
-        self.routine_ro_repo = ro_repos.routine_ro_repo
-        self.task_definition_ro_repo = ro_repos.task_definition_ro_repo
-        self.task_ro_repo = ro_repos.task_ro_repo
-        self.user_ro_repo = ro_repos.user_ro_repo
 
     @classmethod
     def _extract_user_id(cls, event: DomainEvent) -> UUID | None:

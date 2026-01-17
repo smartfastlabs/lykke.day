@@ -1,10 +1,21 @@
 """Command to send a push notification."""
 
+from dataclasses import dataclass
+
 from loguru import logger
 
+from lykke.application.commands.base import Command
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import PushSubscriptionEntity
+
+
+@dataclass(frozen=True)
+class SendPushNotificationCommand(Command):
+    """Command to send a push notification."""
+
+    subscription: PushSubscriptionEntity
+    content: str | dict | value_objects.NotificationPayload
 
 
 class SendPushNotificationHandler:
@@ -18,20 +29,15 @@ class SendPushNotificationHandler:
         """
         self._web_push_gateway = web_push_gateway
 
-    async def run(
-        self,
-        subscription: PushSubscriptionEntity,
-        content: str | dict | value_objects.NotificationPayload,
-    ) -> None:
+    async def handle(self, command: SendPushNotificationCommand) -> None:
         """Send a push notification.
 
         Args:
-            subscription: The push subscription to send to
-            content: The notification content (string, dict, or NotificationPayload)
+            command: The command containing the subscription and content
         """
-        logger.info(f"Sending push notification to subscription {subscription.id}")
+        logger.info(f"Sending push notification to subscription {command.subscription.id}")
         await self._web_push_gateway.send_notification(
-            subscription=subscription,
-            content=content,
+            subscription=command.subscription,
+            content=command.content,
         )
-        logger.info(f"Successfully sent push notification to subscription {subscription.id}")
+        logger.info(f"Successfully sent push notification to subscription {command.subscription.id}")

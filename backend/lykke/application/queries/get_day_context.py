@@ -1,10 +1,11 @@
 """Query to get the complete context for a day."""
 
 import asyncio
+from dataclasses import dataclass
 from datetime import date as datetime_date
 from typing import cast
 
-from lykke.application.queries.base import BaseQueryHandler
+from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.repositories import (
     CalendarEntryRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
@@ -18,7 +19,14 @@ from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntryEntity, DayEntity, TaskEntity
 
 
-class GetDayContextHandler(BaseQueryHandler):
+@dataclass(frozen=True)
+class GetDayContextQuery(Query):
+    """Query to get day context."""
+
+    date: datetime_date
+
+
+class GetDayContextHandler(BaseQueryHandler[GetDayContextQuery, value_objects.DayContext]):
     """Gets the complete context for a day."""
 
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
@@ -26,6 +34,10 @@ class GetDayContextHandler(BaseQueryHandler):
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
+
+    async def handle(self, query: GetDayContextQuery) -> value_objects.DayContext:
+        """Handle get day context query."""
+        return await self.get_day_context(query.date)
 
     async def get_day_context(self, date: datetime_date) -> value_objects.DayContext:
         """Load complete day context for the given date.

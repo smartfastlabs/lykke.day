@@ -1,23 +1,32 @@
 """Command to create a new routine."""
 
-from lykke.application.commands.base import BaseCommandHandler
+from dataclasses import dataclass
+
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities import RoutineEntity
 
 
-class CreateRoutineHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class CreateRoutineCommand(Command):
+    """Command to create a new routine."""
+
+    routine: RoutineEntity
+
+
+class CreateRoutineHandler(BaseCommandHandler[CreateRoutineCommand, RoutineEntity]):
     """Creates a new routine."""
 
-    async def run(self, routine: RoutineEntity) -> RoutineEntity:
+    async def handle(self, command: CreateRoutineCommand) -> RoutineEntity:
         """Create a new routine.
 
         Args:
-            routine: The routine entity to create.
+            command: The command containing the routine entity to create.
 
         Returns:
             The created routine entity.
         """
         async with self.new_uow() as uow:
-            await uow.create(routine)
-            return routine
+            await uow.create(command.routine)
+            return command.routine
 
 

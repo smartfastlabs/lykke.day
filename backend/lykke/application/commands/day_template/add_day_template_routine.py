@@ -1,27 +1,35 @@
 """Command to attach a routine to a day template."""
 
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities.day_template import DayTemplateEntity
 
 
-class AddDayTemplateRoutineHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class AddDayTemplateRoutineCommand(Command):
+    """Command to add a routine to a day template."""
+
+    day_template_id: UUID
+    routine_id: UUID
+
+
+class AddDayTemplateRoutineHandler(BaseCommandHandler[AddDayTemplateRoutineCommand, DayTemplateEntity]):
     """Attach a routine to a day template."""
 
-    async def run(self, day_template_id: UUID, routine_id: UUID) -> DayTemplateEntity:
+    async def handle(self, command: AddDayTemplateRoutineCommand) -> DayTemplateEntity:
         """Attach a routine to the day template.
 
         Args:
-            day_template_id: ID of the day template to update.
-            routine_id: ID of the routine to attach.
+            command: The command containing the day template ID and routine ID to attach.
 
         Returns:
             The updated day template entity.
         """
         async with self.new_uow() as uow:
-            day_template = await uow.day_template_ro_repo.get(day_template_id)
-            updated = day_template.add_routine(routine_id)
+            day_template = await uow.day_template_ro_repo.get(command.day_template_id)
+            updated = day_template.add_routine(command.routine_id)
             uow.add(updated)
             return updated
 

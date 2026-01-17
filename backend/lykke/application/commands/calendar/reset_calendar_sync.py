@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import secrets
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID
 
 from loguru import logger
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.unit_of_work import (
     ReadOnlyRepositories,
@@ -27,7 +28,12 @@ from lykke.domain.value_objects.sync import SyncSubscription
 from .sync_calendar import SyncCalendarHandler
 
 
-class ResetCalendarSyncHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class ResetCalendarSyncCommand(Command):
+    """Command to reset calendar sync (takes no args, uses handler's user_id)."""
+
+
+class ResetCalendarSyncHandler(BaseCommandHandler[ResetCalendarSyncCommand, list[CalendarEntity]]):
     """Resets calendar sync by unsubscribing, deleting future events, resubscribing, and syncing."""
 
     def __init__(
@@ -40,7 +46,7 @@ class ResetCalendarSyncHandler(BaseCommandHandler):
         super().__init__(ro_repos, uow_factory, user_id)
         self._google_gateway = google_gateway
 
-    async def reset_sync(self) -> list[CalendarEntity]:
+    async def handle(self, command: ResetCalendarSyncCommand) -> list[CalendarEntity]:
         """Reset sync for all calendars with subscriptions enabled.
         
         This operation:

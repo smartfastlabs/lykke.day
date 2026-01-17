@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import secrets
 import uuid
+from dataclasses import dataclass
 from typing import Iterable
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.unit_of_work import (
     ReadOnlyRepositories,
@@ -23,7 +24,12 @@ from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.domain.value_objects.sync import SyncSubscription
 
 
-class ResetCalendarDataHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class ResetCalendarDataCommand(Command):
+    """Command to reset calendar data (takes no args, uses handler's user_id)."""
+
+
+class ResetCalendarDataHandler(BaseCommandHandler[ResetCalendarDataCommand, list[CalendarEntity]]):
     """Delete calendar entries/series and refresh subscriptions for the user."""
 
     def __init__(
@@ -36,7 +42,7 @@ class ResetCalendarDataHandler(BaseCommandHandler):
         super().__init__(ro_repos, uow_factory, user_id)
         self._google_gateway = google_gateway
 
-    async def reset(self) -> list[CalendarEntity]:
+    async def handle(self, command: ResetCalendarDataCommand) -> list[CalendarEntity]:
         """Remove all entries/series then refresh subscriptions for subscribed calendars."""
         updated_calendars: list[CalendarEntity] = []
         uow = self.new_uow()

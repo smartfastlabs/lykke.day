@@ -1,11 +1,12 @@
 """Query to preview what a day would look like if scheduled."""
 
 import asyncio
+from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
-from lykke.application.queries.base import BaseQueryHandler
-from lykke.application.queries.preview_tasks import PreviewTasksHandler
+from lykke.application.queries.base import BaseQueryHandler, Query
+from lykke.application.queries.preview_tasks import PreviewTasksHandler, PreviewTasksQuery
 from lykke.application.repositories import (
     CalendarEntryRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
@@ -19,7 +20,15 @@ from lykke.domain.entities import DayEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 
 
-class PreviewDayHandler(BaseQueryHandler):
+@dataclass(frozen=True)
+class PreviewDayQuery(Query):
+    """Query to preview a day."""
+
+    date: date
+    template_id: UUID | None = None
+
+
+class PreviewDayHandler(BaseQueryHandler[PreviewDayQuery, value_objects.DayContext]):
     """Previews what a day would look like if scheduled."""
 
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
@@ -30,6 +39,10 @@ class PreviewDayHandler(BaseQueryHandler):
     def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
         super().__init__(ro_repos, user_id)
         self._preview_tasks_handler = PreviewTasksHandler(ro_repos, user_id)
+
+    async def handle(self, query: PreviewDayQuery) -> value_objects.DayContext:
+        """Handle preview day query."""
+        return await self.preview_day(query.date, query.template_id)
 
     async def preview_day(
         self, date: date, template_id: UUID | None = None
@@ -55,7 +68,7 @@ class PreviewDayHandler(BaseQueryHandler):
 
         # Load preview tasks and existing data in parallel
         tasks, calendar_entries = await asyncio.gather(
-            self._preview_tasks_handler.preview_tasks(date),
+            self._preview_tasks_handler.handle(PreviewTasksQuery(date=date)),
             self.calendar_entry_ro_repo.search(
                 value_objects.CalendarEntryQuery(date=date)
             ),

@@ -1,22 +1,30 @@
 """Query to get a calendar by ID."""
 
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.queries.base import BaseQueryHandler
+from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.repositories import CalendarRepositoryReadOnlyProtocol
 from lykke.domain.entities import CalendarEntity
 
 
-class GetCalendarHandler(BaseQueryHandler):
+@dataclass(frozen=True)
+class GetCalendarQuery(Query):
+    """Query to get a calendar by ID."""
+
+    calendar_id: UUID
+
+
+class GetCalendarHandler(BaseQueryHandler[GetCalendarQuery, CalendarEntity]):
     """Retrieves a single calendar by ID."""
 
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
 
-    async def run(self, calendar_id: UUID) -> CalendarEntity:
+    async def handle(self, query: GetCalendarQuery) -> CalendarEntity:
         """Get a single calendar by ID.
 
         Args:
-            calendar_id: The ID of the calendar to retrieve
+            query: The query containing the calendar ID
 
         Returns:
             The calendar entity
@@ -24,4 +32,4 @@ class GetCalendarHandler(BaseQueryHandler):
         Raises:
             NotFoundError: If calendar not found
         """
-        return await self.calendar_ro_repo.get(calendar_id)
+        return await self.calendar_ro_repo.get(query.calendar_id)

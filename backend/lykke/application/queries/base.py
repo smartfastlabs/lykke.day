@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Generic, TypeVar
 from uuid import UUID
 
+from lykke.application.base_handler import BaseHandler
 from lykke.application.unit_of_work import ReadOnlyRepositories
 
 if TYPE_CHECKING:
@@ -25,27 +26,6 @@ class Query:
     They should contain all parameters needed to execute the query.
     Queries must not cause any side effects.
     """
-
-
-class BaseQueryHandler:
-    """Base class for query handlers with explicit dependency wiring."""
-
-    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
-        """Initialize the query handler with its dependencies."""
-        self.user_id = user_id
-        # Explicitly expose read-only repositories
-        self.auth_token_ro_repo = ro_repos.auth_token_ro_repo
-        self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
-        self.calendar_entry_series_ro_repo = ro_repos.calendar_entry_series_ro_repo
-        self.calendar_ro_repo = ro_repos.calendar_ro_repo
-        self.day_ro_repo = ro_repos.day_ro_repo
-        self.day_template_ro_repo = ro_repos.day_template_ro_repo
-        self.push_subscription_ro_repo = ro_repos.push_subscription_ro_repo
-        self.routine_ro_repo = ro_repos.routine_ro_repo
-        self.task_definition_ro_repo = ro_repos.task_definition_ro_repo
-        self.task_ro_repo = ro_repos.task_ro_repo
-        self.time_block_definition_ro_repo = ro_repos.time_block_definition_ro_repo
-        self.user_ro_repo = ro_repos.user_ro_repo
 
 
 class QueryHandler(ABC, Generic[QueryT, ResultT]):
@@ -75,3 +55,18 @@ class QueryHandler(ABC, Generic[QueryT, ResultT]):
         Returns:
             The query result
         """
+
+
+class BaseQueryHandler(
+    BaseHandler, QueryHandler[QueryT, ResultT], Generic[QueryT, ResultT]
+):
+    """Base class for query handlers with explicit dependency wiring.
+
+    Subclasses must:
+    - Specify QueryT and ResultT type parameters
+    - Implement async def handle(self, query: QueryT) -> ResultT
+    """
+
+    def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
+        """Initialize the query handler with its dependencies."""
+        super().__init__(ro_repos, user_id)

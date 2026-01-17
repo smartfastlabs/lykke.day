@@ -1,21 +1,30 @@
 """Command to create a new task definition."""
 
-from lykke.application.commands.base import BaseCommandHandler
+from dataclasses import dataclass
+
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities import TaskDefinitionEntity
 
 
-class CreateTaskDefinitionHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class CreateTaskDefinitionCommand(Command):
+    """Command to create a new task definition."""
+
+    task_definition: TaskDefinitionEntity
+
+
+class CreateTaskDefinitionHandler(BaseCommandHandler[CreateTaskDefinitionCommand, TaskDefinitionEntity]):
     """Creates a new task definition."""
 
-    async def run(self, task_definition: TaskDefinitionEntity) -> TaskDefinitionEntity:
+    async def handle(self, command: CreateTaskDefinitionCommand) -> TaskDefinitionEntity:
         """Create a new task definition.
 
         Args:
-            task_definition: The task definition data object to create
+            command: The command containing the task definition entity to create
 
         Returns:
-            The created task definition data object
+            The created task definition entity
         """
         async with self.new_uow() as uow:
-            await uow.create(task_definition)
-            return task_definition
+            await uow.create(command.task_definition)
+            return command.task_definition

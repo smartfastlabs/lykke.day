@@ -1,25 +1,31 @@
 """Command to delete a task definition."""
 
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 
 
-class DeleteTaskDefinitionHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class DeleteTaskDefinitionCommand(Command):
+    """Command to delete a task definition."""
+
+    task_definition_id: UUID
+
+
+class DeleteTaskDefinitionHandler(BaseCommandHandler[DeleteTaskDefinitionCommand, None]):
     """Deletes a task definition."""
 
-    async def run(
-        self, task_definition_id: UUID
-    ) -> None:
+    async def handle(self, command: DeleteTaskDefinitionCommand) -> None:
         """Delete a task definition.
 
         Args:
-            task_definition_id: The ID of the task definition to delete
+            command: The command containing the task definition ID to delete
 
         Raises:
             NotFoundError: If task definition not found
         """
         async with self.new_uow() as uow:
-            task_definition = await uow.task_definition_ro_repo.get(task_definition_id)
+            task_definition = await uow.task_definition_ro_repo.get(command.task_definition_id)
             await uow.delete(task_definition)
 

@@ -1,10 +1,11 @@
 """Command to schedule a day with tasks from routines."""
 
 import asyncio
+from dataclasses import dataclass
 from datetime import date as dt_date
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.queries.preview_day import PreviewDayHandler
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.exceptions import NotFoundError
@@ -12,7 +13,15 @@ from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 
 
-class ScheduleDayHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class ScheduleDayCommand(Command):
+    """Command to schedule a day."""
+
+    date: dt_date
+    template_id: UUID | None = None
+
+
+class ScheduleDayHandler(BaseCommandHandler[ScheduleDayCommand, value_objects.DayContext]):
     """Schedules a day with tasks from routines."""
 
     def __init__(
@@ -25,26 +34,23 @@ class ScheduleDayHandler(BaseCommandHandler):
         super().__init__(ro_repos, uow_factory, user_id)
         self.preview_day_handler = preview_day_handler
 
-    async def schedule_day(
-        self, date: dt_date, template_id: UUID | None = None
-    ) -> value_objects.DayContext:
+    async def handle(self, command: ScheduleDayCommand) -> value_objects.DayContext:
         """Schedule a day with tasks from routines.
 
         Args:
-            date: The date to schedule
-            template_id: Optional template ID to use
+            command: The command containing the date and optional template ID
 
         Returns:
             A DayContext with the scheduled day and tasks
         """
         async with self.new_uow() as uow:
-            day_id = DayEntity.id_from_date_and_user(date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
             try:
                 existing_day = await uow.day_ro_repo.get(day_id)
                 tasks, calendar_entries = await asyncio.gather(
-                    uow.task_ro_repo.search(value_objects.TaskQuery(date=date)),
+                    uow.task_ro_repo.search(value_objects.TaskQuery(date=command.date)),
                     uow.calendar_entry_ro_repo.search(
-                        value_objects.CalendarEntryQuery(date=date)
+                        value_objects.CalendarEntryQuery(date=command.date)
                     ),
                 )
                 return value_objects.DayContext(
@@ -54,11 +60,11 @@ class ScheduleDayHandler(BaseCommandHandler):
                 )
             except NotFoundError:
                 # Delete existing tasks for this date (defensive cleanup)
-                await uow.bulk_delete_tasks(value_objects.TaskQuery(date=date))
+                await uow.bulk_delete_tasks(value_objects.TaskQuery(date=command.date))
 
                 # Get preview of what the day would look like
                 preview_result = await self.preview_day_handler.preview_day(
-                    date, template_id
+                    command.date, command.template_id
                 )
 
                 # Validate template exists
@@ -103,7 +109,7 @@ class ScheduleDayHandler(BaseCommandHandler):
 
                 # Create and schedule the day
                 day = DayEntity.create_for_date(
-                    date,
+                    command.date,
                     user_id=self.user_id,
                     template=template,
                 )

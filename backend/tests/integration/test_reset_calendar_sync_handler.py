@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 
 from lykke.application.commands.calendar.reset_calendar_sync import (
+    ResetCalendarSyncCommand,
     ResetCalendarSyncHandler,
 )
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
@@ -172,7 +173,7 @@ async def test_reset_calendar_sync_unsubscribes_deletes_future_events_and_resubs
     )
 
     # Execute reset_sync
-    updated_calendars = await handler.reset_sync()
+    updated_calendars = await handler.handle(ResetCalendarSyncCommand())
 
     # Verify results
     assert len(updated_calendars) == 1
@@ -317,7 +318,7 @@ async def test_reset_calendar_sync_handles_multiple_calendars(
     )
 
     # Execute reset_sync
-    updated_calendars = await handler.reset_sync()
+    updated_calendars = await handler.handle(ResetCalendarSyncCommand())
 
     # Verify both subscribed calendars were processed
     assert len(updated_calendars) == 2
@@ -402,7 +403,7 @@ async def test_reset_calendar_sync_handles_no_subscribed_calendars(
     )
 
     # Execute reset_sync
-    updated_calendars = await handler.reset_sync()
+    updated_calendars = await handler.handle(ResetCalendarSyncCommand())
 
     # Verify no calendars were processed
     assert len(updated_calendars) == 0

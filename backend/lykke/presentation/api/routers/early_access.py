@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, EmailStr, field_validator
-from lykke.application.commands.user import CreateLeadUserData, CreateLeadUserHandler
+from lykke.application.commands.user import CreateLeadUserCommand, CreateLeadUserHandler
 from lykke.application.unit_of_work import (
     ReadOnlyRepositoryFactory,
     UnitOfWorkFactory,
@@ -54,8 +54,8 @@ async def request_early_access(
     ro_repos = ro_repo_factory.create(synthetic_user_id)
     handler = CreateLeadUserHandler(ro_repos, uow_factory, synthetic_user_id)
 
-    await handler.run(
-        CreateLeadUserData(email=normalized_email)
+    await handler.handle(
+        CreateLeadUserCommand(email=normalized_email)
     )
 
     return StatusResponse()

@@ -1,20 +1,28 @@
 """Command to add a goal to a day."""
 
+from dataclasses import dataclass
 from datetime import date
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities import DayEntity
 
 
-class AddGoalToDayHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class AddGoalToDayCommand(Command):
+    """Command to add a goal to a day."""
+
+    date: date
+    goal: str
+
+
+class AddGoalToDayHandler(BaseCommandHandler[AddGoalToDayCommand, DayEntity]):
     """Adds a goal to a day."""
 
-    async def add_goal(self, date: date, name: str) -> DayEntity:
+    async def handle(self, command: AddGoalToDayCommand) -> DayEntity:
         """Add a goal to a day.
 
         Args:
-            date: The date of the day to add the goal to
-            name: The name of the goal to add
+            command: The command containing the date and goal name
 
         Returns:
             The updated Day entity
@@ -24,11 +32,11 @@ class AddGoalToDayHandler(BaseCommandHandler):
         """
         async with self.new_uow() as uow:
             # Get the existing day
-            day_id = DayEntity.id_from_date_and_user(date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
             day = await uow.day_ro_repo.get(day_id)
 
             # Add the goal (this emits a domain event)
-            day.add_goal(name)
+            day.add_goal(command.goal)
 
             # Add entity to UoW for saving
             uow.add(day)

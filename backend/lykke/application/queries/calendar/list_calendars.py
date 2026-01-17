@@ -1,30 +1,36 @@
 """Query to search calendars with pagination."""
 
-from lykke.application.queries.base import BaseQueryHandler
+from dataclasses import dataclass
+
+from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.repositories import CalendarRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntity
 
 
-class SearchCalendarsHandler(BaseQueryHandler):
+@dataclass(frozen=True)
+class SearchCalendarsQuery(Query):
+    """Query to search calendars."""
+
+    search_query: value_objects.CalendarQuery | None = None
+
+
+class SearchCalendarsHandler(BaseQueryHandler[SearchCalendarsQuery, value_objects.PagedQueryResponse[CalendarEntity]]):
     """Searches calendars with pagination."""
 
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
 
-    async def run(
-        self,
-        search_query: value_objects.CalendarQuery | None = None,
-    ) -> value_objects.PagedQueryResponse[CalendarEntity]:
+    async def handle(self, query: SearchCalendarsQuery) -> value_objects.PagedQueryResponse[CalendarEntity]:
         """Search calendars with pagination.
 
         Args:
-            search_query: Optional search/filter query object with pagination info
+            query: The query containing optional search/filter query object
 
         Returns:
             PagedQueryResponse with calendars
         """
-        if search_query is not None:
-            result = await self.calendar_ro_repo.paged_search(search_query)
+        if query.search_query is not None:
+            result = await self.calendar_ro_repo.paged_search(query.search_query)
             return result
         else:
             items = await self.calendar_ro_repo.all()

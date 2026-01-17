@@ -1,20 +1,28 @@
 """Command to update an existing user."""
 
-from lykke.application.commands.base import BaseCommandHandler
+from dataclasses import dataclass
+
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities import UserEntity
+from lykke.domain.events.user_events import UserUpdatedEvent
 from lykke.domain.value_objects import UserUpdateObject
 
 
-class UpdateUserHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class UpdateUserCommand(Command):
+    """Command to update an existing user."""
+
+    update_data: UserUpdateObject
+
+
+class UpdateUserHandler(BaseCommandHandler[UpdateUserCommand, UserEntity]):
     """Updates an existing user."""
 
-    async def run(
-        self, update_data: UserUpdateObject
-    ) -> UserEntity:
+    async def handle(self, command: UpdateUserCommand) -> UserEntity:
         """Update an existing user.
 
         Args:
-            update_data: The update data containing optional fields to update
+            command: The command containing the update data
 
         Returns:
             The updated user entity
@@ -27,9 +35,7 @@ class UpdateUserHandler(BaseCommandHandler):
             user = await uow.user_ro_repo.get(self.user_id)
 
             # Apply updates using domain method (adds EntityUpdatedEvent)
-            from lykke.domain.events.user_events import UserUpdatedEvent
-
-            user = user.apply_update(update_data, UserUpdatedEvent)
+            user = user.apply_update(command.update_data, UserUpdatedEvent)
 
             # Add entity to UoW for saving
             uow.add(user)

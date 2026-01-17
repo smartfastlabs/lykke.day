@@ -5,17 +5,26 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 from lykke.application.commands.day_template import (
+    AddDayTemplateRoutineCommand,
     AddDayTemplateRoutineHandler,
+    AddDayTemplateTimeBlockCommand,
     AddDayTemplateTimeBlockHandler,
+    CreateDayTemplateCommand,
     CreateDayTemplateHandler,
+    DeleteDayTemplateCommand,
     DeleteDayTemplateHandler,
+    RemoveDayTemplateRoutineCommand,
     RemoveDayTemplateRoutineHandler,
+    RemoveDayTemplateTimeBlockCommand,
     RemoveDayTemplateTimeBlockHandler,
+    UpdateDayTemplateCommand,
     UpdateDayTemplateHandler,
 )
 from lykke.application.queries.day_template import (
     GetDayTemplateHandler,
+    GetDayTemplateQuery,
     SearchDayTemplatesHandler,
+    SearchDayTemplatesQuery,
 )
 from lykke.application.repositories import (
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
@@ -50,7 +59,7 @@ async def get_day_template(
     ],
 ) -> DayTemplateSchema:
     """Get a single day template by ID."""
-    day_template = await get_day_template_handler.run(day_template_id=uuid)
+    day_template = await get_day_template_handler.handle(GetDayTemplateQuery(day_template_id=uuid))
     return map_day_template_to_schema(day_template)
 
 
@@ -63,7 +72,7 @@ async def search_day_templates(
 ) -> PagedResponseSchema[DayTemplateSchema]:
     """Search day templates with pagination and optional filters."""
     search_query = build_search_query(query, value_objects.DayTemplateQuery)
-    result = await list_day_templates_handler.run(search_query=search_query)
+    result = await list_day_templates_handler.handle(SearchDayTemplatesQuery(search_query=search_query))
     return create_paged_response(result, map_day_template_to_schema)
 
 
@@ -94,7 +103,7 @@ async def create_day_template(
         routine_ids=day_template_data.routine_ids,
         time_blocks=time_blocks,
     )
-    created = await create_day_template_handler.run(day_template=day_template)
+    created = await create_day_template_handler.handle(CreateDayTemplateCommand(day_template=day_template))
     return map_day_template_to_schema(created)
 
 
@@ -129,8 +138,8 @@ async def update_day_template(
         routine_ids=update_data.routine_ids,
         time_blocks=time_blocks,
     )
-    updated = await update_day_template_handler.run(
-        day_template_id=uuid, update_data=update_object
+    updated = await update_day_template_handler.handle(
+        UpdateDayTemplateCommand(day_template_id=uuid, update_data=update_object)
     )
     return map_day_template_to_schema(updated)
 
@@ -143,7 +152,7 @@ async def delete_day_template(
     ],
 ) -> None:
     """Delete a day template."""
-    await delete_day_template_handler.run(day_template_id=uuid)
+    await delete_day_template_handler.handle(DeleteDayTemplateCommand(day_template_id=uuid))
 
 
 @router.post(
@@ -160,8 +169,8 @@ async def add_day_template_routine(
     ],
 ) -> DayTemplateSchema:
     """Attach a routine to a day template."""
-    updated = await add_day_template_routine_handler.run(
-        day_template_id=uuid, routine_id=routine_data.routine_id
+    updated = await add_day_template_routine_handler.handle(
+        AddDayTemplateRoutineCommand(day_template_id=uuid, routine_id=routine_data.routine_id)
     )
     return map_day_template_to_schema(updated)
 
@@ -179,8 +188,8 @@ async def remove_day_template_routine(
     ],
 ) -> DayTemplateSchema:
     """Detach a routine from a day template."""
-    updated = await remove_day_template_routine_handler.run(
-        day_template_id=uuid, routine_id=routine_id
+    updated = await remove_day_template_routine_handler.handle(
+        RemoveDayTemplateRoutineCommand(day_template_id=uuid, routine_id=routine_id)
     )
     return map_day_template_to_schema(updated)
 
@@ -214,8 +223,8 @@ async def add_day_template_time_block(
         end_time=time_block_data.end_time,
         name=time_block_def.name,
     )
-    updated = await add_day_template_time_block_handler.run(
-        day_template_id=uuid, time_block=time_block
+    updated = await add_day_template_time_block_handler.handle(
+        AddDayTemplateTimeBlockCommand(day_template_id=uuid, time_block=time_block)
     )
     return map_day_template_to_schema(updated)
 
@@ -239,9 +248,11 @@ async def remove_day_template_time_block(
     # Parse the time string (format: HH:MM:SS or HH:MM)
     time_obj = time_type.fromisoformat(start_time)
 
-    updated = await remove_day_template_time_block_handler.run(
-        day_template_id=uuid,
-        time_block_definition_id=time_block_definition_id,
-        start_time=time_obj,
+    updated = await remove_day_template_time_block_handler.handle(
+        RemoveDayTemplateTimeBlockCommand(
+            day_template_id=uuid,
+            time_block_definition_id=time_block_definition_id,
+            start_time=time_obj,
+        )
     )
     return map_day_template_to_schema(updated)

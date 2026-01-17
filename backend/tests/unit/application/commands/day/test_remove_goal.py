@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from lykke.application.commands.day import RemoveGoalHandler
+from lykke.application.commands.day import RemoveGoalCommand, RemoveGoalHandler
 from lykke.core.exceptions import DomainError, NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
@@ -99,7 +99,7 @@ async def test_remove_goal_removes_goal_from_day():
     handler = RemoveGoalHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.remove_goal(date=task_date, goal_id=goal1.id)
+    result = await handler.handle(RemoveGoalCommand(date=task_date, goal_id=goal1.id))
 
     # Assert
     assert len(result.goals) == 1
@@ -133,7 +133,7 @@ async def test_remove_goal_emits_domain_event():
     handler = RemoveGoalHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.remove_goal(date=task_date, goal_id=goal.id)
+    result = await handler.handle(RemoveGoalCommand(date=task_date, goal_id=goal.id))
 
     # Assert
     events = result.collect_events()
@@ -168,7 +168,7 @@ async def test_remove_goal_raises_error_if_goal_not_found():
 
     # Act & Assert
     with pytest.raises(DomainError, match="not found"):
-        await handler.remove_goal(date=task_date, goal_id=fake_goal_id)
+        await handler.handle(RemoveGoalCommand(date=task_date, goal_id=fake_goal_id))
 
 
 @pytest.mark.asyncio
@@ -195,7 +195,7 @@ async def test_remove_goal_with_multiple_goals():
     handler = RemoveGoalHandler(ro_repos, uow_factory, user_id)
 
     # Remove middle goal
-    result = await handler.remove_goal(date=task_date, goal_id=goal2.id)
+    result = await handler.handle(RemoveGoalCommand(date=task_date, goal_id=goal2.id))
 
     # Assert
     assert len(result.goals) == 2

@@ -1,41 +1,53 @@
 """Query handlers for time block definition operations."""
 
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.queries.base import BaseQueryHandler
+from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.domain import value_objects
 from lykke.domain.entities import TimeBlockDefinitionEntity
 
 
-class GetTimeBlockDefinitionHandler(BaseQueryHandler):
+@dataclass(frozen=True)
+class GetTimeBlockDefinitionQuery(Query):
+    """Query to get a time block definition by ID."""
+
+    time_block_definition_id: UUID
+
+
+@dataclass(frozen=True)
+class SearchTimeBlockDefinitionsQuery(Query):
+    """Query to search time block definitions."""
+
+    search_query: value_objects.TimeBlockDefinitionQuery
+
+
+class GetTimeBlockDefinitionHandler(BaseQueryHandler[GetTimeBlockDefinitionQuery, TimeBlockDefinitionEntity]):
     """Query handler to get a single time block definition by ID."""
 
-    async def run(self, time_block_definition_id: UUID) -> TimeBlockDefinitionEntity:
+    async def handle(self, query: GetTimeBlockDefinitionQuery) -> TimeBlockDefinitionEntity:
         """Get a time block definition by ID.
 
         Args:
-            time_block_definition_id: The ID of the time block definition to retrieve.
+            query: The query containing the time block definition ID.
 
         Returns:
             The time block definition entity.
         """
-        return await self.time_block_definition_ro_repo.get(time_block_definition_id)
+        return await self.time_block_definition_ro_repo.get(query.time_block_definition_id)
 
 
-class SearchTimeBlockDefinitionsHandler(BaseQueryHandler):
+class SearchTimeBlockDefinitionsHandler(BaseQueryHandler[SearchTimeBlockDefinitionsQuery, value_objects.PagedQueryResponse[TimeBlockDefinitionEntity]]):
     """Query handler to search time block definitions with pagination."""
 
-    async def run(
-        self,
-        search_query: value_objects.TimeBlockDefinitionQuery,
-    ) -> value_objects.PagedQueryResponse[TimeBlockDefinitionEntity]:
+    async def handle(self, query: SearchTimeBlockDefinitionsQuery) -> value_objects.PagedQueryResponse[TimeBlockDefinitionEntity]:
         """Search time block definitions with pagination.
 
         Args:
-            search_query: The search query with pagination parameters.
+            query: The query containing search query with pagination parameters.
 
         Returns:
             Paged response containing time block definitions.
         """
-        return await self.time_block_definition_ro_repo.paged_search(search_query)
+        return await self.time_block_definition_ro_repo.paged_search(query.search_query)
 

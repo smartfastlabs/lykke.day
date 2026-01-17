@@ -1,23 +1,29 @@
 """Command to record an action on a task."""
 
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, TaskEntity
 
 
-class RecordTaskActionHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class RecordTaskActionCommand(Command):
+    """Command to record an action on a task."""
+
+    task_id: UUID
+    action: value_objects.Action
+
+
+class RecordTaskActionHandler(BaseCommandHandler[RecordTaskActionCommand, TaskEntity]):
     """Records an action on a task."""
 
-    async def record_task_action(
-        self, task_id: UUID, action: value_objects.Action
-    ) -> TaskEntity:
+    async def handle(self, command: RecordTaskActionCommand) -> TaskEntity:
         """Record an action on a task through the Day aggregate root.
 
         Args:
-            task_id: The task ID
-            action: The action to record
+            command: The command containing the task ID and action to record
 
         Returns:
             The updated Task entity
@@ -27,7 +33,7 @@ class RecordTaskActionHandler(BaseCommandHandler):
         """
         async with self.new_uow() as uow:
             # Get the task to find its scheduled_date
-            task = await uow.task_ro_repo.get(task_id)
+            task = await uow.task_ro_repo.get(command.task_id)
 
             # Get the Day aggregate root using the task's scheduled_date
             day_id = DayEntity.id_from_date_and_user(task.scheduled_date, self.user_id)
@@ -37,7 +43,7 @@ class RecordTaskActionHandler(BaseCommandHandler):
             # This ensures proper aggregate boundaries and domain event handling
             # The method mutates the task in place and returns the updated task
             # Audit logs are automatically created by the UOW for audited events
-            updated_task = day.record_task_action(task, action)
+            updated_task = day.record_task_action(task, command.action)
 
             # Add both Day (for events) and Task (for state changes) to UoW
             uow.add(day)

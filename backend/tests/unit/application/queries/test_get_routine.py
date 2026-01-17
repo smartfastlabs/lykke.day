@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from lykke.application.queries.routine import GetRoutineHandler
+from lykke.application.queries.routine import GetRoutineHandler, GetRoutineQuery
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import RoutineEntity
@@ -27,6 +27,7 @@ class _FakeReadOnlyRepos:
 
     def __init__(self, routine_repo: _FakeRoutineReadOnlyRepo) -> None:
         fake = object()
+        self.audit_log_ro_repo = fake
         self.auth_token_ro_repo = fake
         self.bot_personality_ro_repo = fake
         self.calendar_entry_ro_repo = fake
@@ -68,7 +69,7 @@ async def test_get_routine_returns_routine_by_id():
     handler = GetRoutineHandler(ro_repos, user_id)
 
     # Act
-    result = await handler.run(routine_id)
+    result = await handler.handle(GetRoutineQuery(routine_id=routine_id))
 
     # Assert
     assert result == routine
@@ -100,4 +101,4 @@ async def test_get_routine_raises_not_found_for_invalid_id():
 
     # Act & Assert
     with pytest.raises(NotFoundError):
-        await handler.run(invalid_id)
+        await handler.handle(GetRoutineQuery(routine_id=invalid_id))

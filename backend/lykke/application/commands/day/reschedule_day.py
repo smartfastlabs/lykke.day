@@ -1,19 +1,28 @@
 """Command to reschedule a day - clean up and recreate tasks."""
 
 import asyncio
+from dataclasses import dataclass
 from datetime import date as dt_date
 from uuid import UUID
 
 from loguru import logger
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.queries.preview_day import PreviewDayHandler
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 
 
-class RescheduleDayHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class RescheduleDayCommand(Command):
+    """Command to reschedule a day."""
+
+    date: dt_date
+    template_id: UUID | None = None
+
+
+class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, value_objects.DayContext]):
     """Reschedules a day by cleaning up existing tasks and audit logs, then creating fresh tasks."""
 
     def __init__(
@@ -26,9 +35,7 @@ class RescheduleDayHandler(BaseCommandHandler):
         super().__init__(ro_repos, uow_factory, user_id)
         self.preview_day_handler = preview_day_handler
 
-    async def reschedule_day(
-        self, date: dt_date, template_id: UUID | None = None
-    ) -> value_objects.DayContext:
+    async def handle(self, command: RescheduleDayCommand) -> value_objects.DayContext:
         """Reschedule a day by cleaning up and recreating all tasks.
 
         This operation:
@@ -38,32 +45,31 @@ class RescheduleDayHandler(BaseCommandHandler):
         4. Schedules the day with fresh tasks from routines
 
         Args:
-            date: The date to reschedule
-            template_id: Optional template ID to use
+            command: The command containing the date and optional template ID
 
         Returns:
             A DayContext with the rescheduled day and tasks
         """
-        logger.info(f"Rescheduling day for {date}")
+        logger.info(f"Rescheduling day for {command.date}")
 
         async with self.new_uow() as uow:
             # Step 1: Get the existing Day entity
-            day_id = DayEntity.id_from_date_and_user(date, self.user_id)
+            day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
             day = await uow.day_ro_repo.get(day_id)
-            logger.info(f"Found existing day for {date}")
+            logger.info(f"Found existing day for {command.date}")
 
             # Step 2: Delete all existing tasks for this date
             # First, verify how many tasks exist before deletion for logging
             existing_tasks = await uow.task_ro_repo.search(
-                value_objects.TaskQuery(date=date)
+                value_objects.TaskQuery(date=command.date)
             )
-            logger.info(f"Found {len(existing_tasks)} existing tasks for {date}, deleting...")
+            logger.info(f"Found {len(existing_tasks)} existing tasks for {command.date}, deleting...")
             
-            await uow.bulk_delete_tasks(value_objects.TaskQuery(date=date))
+            await uow.bulk_delete_tasks(value_objects.TaskQuery(date=command.date))
             
             # Verify deletion worked
             remaining_tasks = await uow.task_ro_repo.search(
-                value_objects.TaskQuery(date=date)
+                value_objects.TaskQuery(date=command.date)
             )
             if remaining_tasks:
                 logger.warning(
@@ -78,12 +84,12 @@ class RescheduleDayHandler(BaseCommandHandler):
             # Step 3: Delete all audit logs for this date
             # Note: Audit logs are normally immutable, but reschedule is a special case
             # where we want a clean slate
-            logger.info(f"Deleting audit logs for {date}")
-            await uow.bulk_delete_audit_logs(value_objects.AuditLogQuery(date=date))
+            logger.info(f"Deleting audit logs for {command.date}")
+            await uow.bulk_delete_audit_logs(value_objects.AuditLogQuery(date=command.date))
 
             # Step 4: Get preview of what tasks should be created
             preview_result = await self.preview_day_handler.preview_day(
-                date, template_id
+                command.date, command.template_id
             )
 
             # Validate template exists
@@ -149,12 +155,12 @@ class RescheduleDayHandler(BaseCommandHandler):
             uow.add(day)
 
             # Step 7: Create fresh tasks from preview
-            logger.info(f"Creating {len(preview_result.tasks)} tasks for {date}")
+            logger.info(f"Creating {len(preview_result.tasks)} tasks for {command.date}")
             tasks = preview_result.tasks
             for task in tasks:
                 await uow.create(task)
 
-            logger.info(f"Successfully rescheduled day for {date}")
+            logger.info(f"Successfully rescheduled day for {command.date}")
 
             return value_objects.DayContext(
                 day=day,

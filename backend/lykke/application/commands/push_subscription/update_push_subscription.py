@@ -1,39 +1,43 @@
 """Command to update an existing push subscription."""
 
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities import PushSubscriptionEntity
 from lykke.domain.value_objects import PushSubscriptionUpdateObject
 
 
-class UpdatePushSubscriptionHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class UpdatePushSubscriptionCommand(Command):
+    """Command to update an existing push subscription."""
+
+    subscription_id: UUID
+    update_data: PushSubscriptionUpdateObject
+
+
+class UpdatePushSubscriptionHandler(BaseCommandHandler[UpdatePushSubscriptionCommand, PushSubscriptionEntity]):
     """Updates an existing push subscription."""
 
-    async def run(
-        self,
-        subscription_id: UUID,
-        update_data: PushSubscriptionUpdateObject,
-    ) -> PushSubscriptionEntity:
+    async def handle(self, command: UpdatePushSubscriptionCommand) -> PushSubscriptionEntity:
         """Update an existing push subscription.
 
         Args:
-            subscription_id: The ID of the push subscription to update.
-            update_data: The update data containing optional fields.
+            command: The command containing the push subscription ID and update data.
 
         Returns:
-            The updated push subscription data object.
+            The updated push subscription entity.
         """
         async with self.new_uow() as uow:
             # Get the existing push subscription
-            subscription = await uow.push_subscription_ro_repo.get(subscription_id)
+            subscription = await uow.push_subscription_ro_repo.get(command.subscription_id)
 
             # Update fields if provided
-            if update_data.device_name is not None:
+            if command.update_data.device_name is not None:
                 subscription = PushSubscriptionEntity(
                     id=subscription.id,
                     user_id=subscription.user_id,
-                    device_name=update_data.device_name,
+                    device_name=command.update_data.device_name,
                     endpoint=subscription.endpoint,
                     p256dh=subscription.p256dh,
                     auth=subscription.auth,

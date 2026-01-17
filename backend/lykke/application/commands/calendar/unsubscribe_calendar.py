@@ -1,14 +1,22 @@
 """Command to unsubscribe a calendar from push notifications."""
 
+from dataclasses import dataclass
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.domain.entities import CalendarEntity
 
 
-class UnsubscribeCalendarHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class UnsubscribeCalendarCommand(Command):
+    """Command to unsubscribe a calendar from push notifications."""
+
+    calendar: CalendarEntity
+
+
+class UnsubscribeCalendarHandler(BaseCommandHandler[UnsubscribeCalendarCommand, CalendarEntity]):
     """Removes push subscriptions for a calendar."""
 
     def __init__(
@@ -21,8 +29,9 @@ class UnsubscribeCalendarHandler(BaseCommandHandler):
         super().__init__(ro_repos, uow_factory, user_id)
         self._google_gateway = google_gateway
 
-    async def unsubscribe(self, calendar: CalendarEntity) -> CalendarEntity:
+    async def handle(self, command: UnsubscribeCalendarCommand) -> CalendarEntity:
         """Remove the existing sync subscription for a calendar."""
+        calendar = command.calendar
         async with self.new_uow() as uow:
             if calendar.platform != "google":
                 raise NotImplementedError(

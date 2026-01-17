@@ -1,30 +1,36 @@
 """Query to search routines with pagination."""
 
-from lykke.application.queries.base import BaseQueryHandler
+from dataclasses import dataclass
+
+from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.repositories import RoutineRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import RoutineEntity
 
 
-class SearchRoutinesHandler(BaseQueryHandler):
+@dataclass(frozen=True)
+class SearchRoutinesQuery(Query):
+    """Query to search routines."""
+
+    search_query: value_objects.RoutineQuery | None = None
+
+
+class SearchRoutinesHandler(BaseQueryHandler[SearchRoutinesQuery, value_objects.PagedQueryResponse[RoutineEntity]]):
     """Searches routines with pagination."""
 
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
 
-    async def run(
-        self,
-        search_query: value_objects.RoutineQuery | None = None,
-    ) -> value_objects.PagedQueryResponse[RoutineEntity]:
+    async def handle(self, query: SearchRoutinesQuery) -> value_objects.PagedQueryResponse[RoutineEntity]:
         """Search routines with pagination.
 
         Args:
-            search_query: Optional search/filter query object with pagination info
+            query: The query containing optional search/filter query object
 
         Returns:
             PagedQueryResponse with routines
         """
-        if search_query is not None:
-            result = await self.routine_ro_repo.paged_search(search_query)
+        if query.search_query is not None:
+            result = await self.routine_ro_repo.paged_search(query.search_query)
             return result
         else:
             items = await self.routine_ro_repo.all()

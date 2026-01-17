@@ -1,35 +1,38 @@
 """Command to remove a time block from a day template."""
 
+from dataclasses import dataclass
 from datetime import time
 from uuid import UUID
 
-from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities.day_template import DayTemplateEntity
 
 
-class RemoveDayTemplateTimeBlockHandler(BaseCommandHandler):
+@dataclass(frozen=True)
+class RemoveDayTemplateTimeBlockCommand(Command):
+    """Command to remove a time block from a day template."""
+
+    day_template_id: UUID
+    time_block_definition_id: UUID
+    start_time: time
+
+
+class RemoveDayTemplateTimeBlockHandler(BaseCommandHandler[RemoveDayTemplateTimeBlockCommand, DayTemplateEntity]):
     """Remove a time block from a day template."""
 
-    async def run(
-        self,
-        day_template_id: UUID,
-        time_block_definition_id: UUID,
-        start_time: time,
-    ) -> DayTemplateEntity:
+    async def handle(self, command: RemoveDayTemplateTimeBlockCommand) -> DayTemplateEntity:
         """Remove a time block from the day template.
 
         Args:
-            day_template_id: ID of the day template to update.
-            time_block_definition_id: ID of the time block definition.
-            start_time: Start time of the time block to remove.
+            command: The command containing the day template ID, time block definition ID, and start time.
 
         Returns:
             The updated day template entity.
         """
         async with self.new_uow() as uow:
-            day_template = await uow.day_template_ro_repo.get(day_template_id)
+            day_template = await uow.day_template_ro_repo.get(command.day_template_id)
             updated = day_template.remove_time_block(
-                time_block_definition_id, start_time
+                command.time_block_definition_id, command.start_time
             )
             uow.add(updated)
             return updated

@@ -4,7 +4,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from lykke.application.commands import RecordTaskActionHandler
+from lykke.application.commands import RecordTaskActionCommand, RecordTaskActionHandler
 from lykke.domain import value_objects
 from lykke.presentation.api.schemas import TaskSchema
 from lykke.presentation.api.schemas.mappers import map_task_to_schema
@@ -23,8 +23,5 @@ async def add_task_action(
     ],
 ) -> TaskSchema:
     """Record an action on a task."""
-    task = await handler.record_task_action(
-        task_id=_id,
-        action=action,
-    )
+    task = await handler.handle(RecordTaskActionCommand(task_id=_id, action=action))
     return map_task_to_schema(task)

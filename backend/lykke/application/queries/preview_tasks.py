@@ -1,10 +1,11 @@
 """Query to preview tasks that would be created for a given date."""
 
+from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
 from loguru import logger
-from lykke.application.queries.base import BaseQueryHandler
+from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.repositories import (
     RoutineRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
@@ -14,11 +15,22 @@ from lykke.domain import value_objects
 from lykke.domain.entities import TaskEntity
 
 
-class PreviewTasksHandler(BaseQueryHandler):
+@dataclass(frozen=True)
+class PreviewTasksQuery(Query):
+    """Query to preview tasks for a date."""
+
+    date: date
+
+
+class PreviewTasksHandler(BaseQueryHandler[PreviewTasksQuery, list[TaskEntity]]):
     """Previews tasks that would be created for a given date."""
 
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
+
+    async def handle(self, query: PreviewTasksQuery) -> list[TaskEntity]:
+        """Handle preview tasks query."""
+        return await self.preview_tasks(query.date)
 
     async def preview_tasks(self, date: date) -> list[TaskEntity]:
         """Preview tasks that would be created for a given date.

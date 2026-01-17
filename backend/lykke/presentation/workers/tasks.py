@@ -4,10 +4,13 @@ from typing import Annotated, cast
 from uuid import UUID
 
 from loguru import logger
-from lykke.application.commands import ScheduleDayHandler
+from lykke.application.commands import ScheduleDayCommand, ScheduleDayHandler
 from lykke.application.commands.calendar import (
+    SubscribeCalendarCommand,
     SubscribeCalendarHandler,
+    SyncAllCalendarsCommand,
     SyncAllCalendarsHandler,
+    SyncCalendarCommand,
     SyncCalendarHandler,
 )
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
@@ -117,7 +120,7 @@ async def sync_calendar_task(
         google_gateway=get_google_gateway(),
     )
 
-    await sync_handler.sync_all_calendars()
+    await sync_handler.handle(SyncAllCalendarsCommand())
 
     logger.info(f"Calendar sync completed for user {user_id}")
 
@@ -146,7 +149,7 @@ async def sync_single_calendar_task(
         google_gateway=get_google_gateway(),
     )
 
-    await sync_handler.sync_calendar(calendar_id)
+    await sync_handler.handle(SyncCalendarCommand(calendar_id=calendar_id))
 
     logger.info(
         f"Single calendar sync completed for user {user_id}, calendar {calendar_id}"
@@ -181,7 +184,7 @@ async def resubscribe_calendar_task(
     ro_repos = get_read_only_repository_factory().create(user_id)
     calendar = await ro_repos.calendar_ro_repo.get(calendar_id)
 
-    await subscribe_handler.subscribe(calendar)
+    await subscribe_handler.handle(SubscribeCalendarCommand(calendar=calendar))
 
     logger.info(
         f"Calendar resubscription completed for user {user_id}, calendar {calendar_id}"
@@ -221,7 +224,7 @@ async def schedule_user_day_task(
     # Uses the configured timezone for "today"
     target_date = get_current_date()
     try:
-        await schedule_handler.schedule_day(date=target_date)
+        await schedule_handler.handle(ScheduleDayCommand(date=target_date))
         logger.debug(f"Scheduled {target_date} for user {user_id}")
     except ValueError as e:
         # Day template might be missing - log and continue

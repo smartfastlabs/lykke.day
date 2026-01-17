@@ -5,16 +5,27 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
-from lykke.application.commands import RecordRoutineActionHandler
+from lykke.application.commands import RecordRoutineActionCommand, RecordRoutineActionHandler
 from lykke.application.commands.routine import (
+    AddRoutineTaskCommand,
     AddRoutineTaskHandler,
+    CreateRoutineCommand,
     CreateRoutineHandler,
+    DeleteRoutineCommand,
     DeleteRoutineHandler,
+    RemoveRoutineTaskCommand,
     RemoveRoutineTaskHandler,
+    UpdateRoutineCommand,
     UpdateRoutineHandler,
+    UpdateRoutineTaskCommand,
     UpdateRoutineTaskHandler,
 )
-from lykke.application.queries.routine import GetRoutineHandler, SearchRoutinesHandler
+from lykke.application.queries.routine import (
+    GetRoutineHandler,
+    GetRoutineQuery,
+    SearchRoutinesHandler,
+    SearchRoutinesQuery,
+)
 from lykke.domain import value_objects
 from lykke.domain.entities import RoutineEntity, UserEntity
 from lykke.domain.value_objects import RoutineUpdateObject
@@ -47,7 +58,7 @@ async def get_routine(
     ],
 ) -> RoutineSchema:
     """Get a single routine by ID."""
-    routine = await get_routine_handler.run(routine_id=uuid)
+    routine = await get_routine_handler.handle(GetRoutineQuery(routine_id=uuid))
     return map_routine_to_schema(routine)
 
 
@@ -60,7 +71,7 @@ async def search_routines(
 ) -> PagedResponseSchema[RoutineSchema]:
     """Search routines with pagination and optional filters."""
     search_query = build_search_query(query, value_objects.RoutineQuery)
-    result = await list_routines_handler.run(search_query=search_query)
+    result = await list_routines_handler.handle(SearchRoutinesQuery(search_query=search_query))
     return create_paged_response(result, map_routine_to_schema)
 
 
@@ -121,7 +132,7 @@ async def create_routine(
         description=routine_data.description,
         tasks=tasks,
     )
-    created = await create_routine_handler.run(routine=routine)
+    created = await create_routine_handler.handle(CreateRoutineCommand(routine=routine))
     return map_routine_to_schema(created)
 
 
@@ -181,9 +192,8 @@ async def update_routine(
         description=update_data.description,
         tasks=tasks,
     )
-    updated = await update_routine_handler.run(
-        routine_id=uuid,
-        update_data=update_object,
+    updated = await update_routine_handler.handle(
+        UpdateRoutineCommand(routine_id=uuid, update_data=update_object)
     )
     return map_routine_to_schema(updated)
 
@@ -196,7 +206,7 @@ async def delete_routine(
     ],
 ) -> None:
     """Delete a routine."""
-    await delete_routine_handler.run(routine_id=uuid)
+    await delete_routine_handler.handle(DeleteRoutineCommand(routine_id=uuid))
 
 
 @router.post(
@@ -223,13 +233,15 @@ async def add_routine_task(
             timing_type=routine_task.schedule.timing_type,
         )
 
-    updated = await add_routine_task_handler.run(
-        routine_id=uuid,
-        task=RoutineTask(
-            task_definition_id=routine_task.task_definition_id,
-            name=routine_task.name,
-            schedule=task_schedule,
-        ),
+    updated = await add_routine_task_handler.handle(
+        AddRoutineTaskCommand(
+            routine_id=uuid,
+            routine_task=RoutineTask(
+                task_definition_id=routine_task.task_definition_id,
+                name=routine_task.name,
+                schedule=task_schedule,
+            ),
+        )
     )
     return map_routine_to_schema(updated)
 
@@ -258,16 +270,19 @@ async def update_routine_task(
             timing_type=routine_task_update.schedule.timing_type,
         )
 
-    updated = await update_routine_task_handler.run(
-        routine_id=uuid,
-        task_update=RoutineTask(
-            id=routine_task_id,
-            task_definition_id=UUID(
-                "00000000-0000-0000-0000-000000000000"
-            ),  # Will be preserved from existing task
-            name=routine_task_update.name,
-            schedule=task_schedule,
-        ),
+    updated = await update_routine_task_handler.handle(
+        UpdateRoutineTaskCommand(
+            routine_id=uuid,
+            routine_task_id=routine_task_id,
+            routine_task=RoutineTask(
+                id=routine_task_id,
+                task_definition_id=UUID(
+                    "00000000-0000-0000-0000-000000000000"
+                ),  # Will be preserved from existing task
+                name=routine_task_update.name,
+                schedule=task_schedule,
+            ),
+        )
     )
     return map_routine_to_schema(updated)
 
@@ -284,8 +299,8 @@ async def remove_routine_task(
     ],
 ) -> RoutineSchema:
     """Detach a routine task from a routine by RoutineTask.id."""
-    updated = await remove_routine_task_handler.run(
-        routine_id=uuid, routine_task_id=routine_task_id
+    updated = await remove_routine_task_handler.handle(
+        RemoveRoutineTaskCommand(routine_id=uuid, routine_task_id=routine_task_id)
     )
     return map_routine_to_schema(updated)
 
@@ -299,7 +314,10 @@ async def record_routine_action(
     ],
 ) -> list[TaskSchema]:
     """Record an action on all tasks in a routine for today."""
+    from datetime import date
+    from lykke.core.utils.dates import get_current_date
     from lykke.presentation.api.schemas.mappers import map_task_to_schema
 
-    updated_tasks = await handler.record_routine_action(routine_id=uuid, action=action)
+    today: date = get_current_date()
+    updated_tasks = await handler.handle(RecordRoutineActionCommand(routine_id=uuid, action=action, date=today))
     return [map_task_to_schema(task) for task in updated_tasks]
