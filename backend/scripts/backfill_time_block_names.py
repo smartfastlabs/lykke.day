@@ -82,7 +82,6 @@ async def backfill_time_block_names() -> None:
                         id=template.id,
                         user_id=template.user_id,
                         slug=template.slug,
-                        alarm=template.alarm,
                         icon=template.icon,
                         routine_ids=template.routine_ids,
                         time_blocks=updated_time_blocks,

@@ -76,19 +76,6 @@ async def create_day_template(
     ],
 ) -> DayTemplateSchema:
     """Create a new day template."""
-    # Convert schema to entity
-    from lykke.domain.value_objects.alarm import Alarm
-
-    alarm = None
-    if day_template_data.alarm:
-        alarm = Alarm(
-            name=day_template_data.alarm.name,
-            time=day_template_data.alarm.time,
-            type=day_template_data.alarm.type,
-            description=day_template_data.alarm.description,
-            triggered_at=day_template_data.alarm.triggered_at,
-        )
-
     # Convert time blocks from schema to value objects
     time_blocks = [
         value_objects.DayTemplateTimeBlock(
@@ -103,7 +90,6 @@ async def create_day_template(
     day_template = DayTemplateEntity(
         user_id=user.id,
         slug=day_template_data.slug,
-        alarm=alarm,
         icon=day_template_data.icon,
         routine_ids=day_template_data.routine_ids,
         time_blocks=time_blocks,
@@ -123,17 +109,6 @@ async def update_day_template(
     """Update a day template."""
     # Convert schema to update object
     from lykke.domain.value_objects import DayTemplateUpdateObject
-    from lykke.domain.value_objects.alarm import Alarm
-
-    alarm = None
-    if update_data.alarm:
-        alarm = Alarm(
-            name=update_data.alarm.name,
-            time=update_data.alarm.time,
-            type=update_data.alarm.type,
-            description=update_data.alarm.description,
-            triggered_at=update_data.alarm.triggered_at,
-        )
 
     # Convert time blocks from schema to value objects if provided
     time_blocks = None
@@ -150,7 +125,6 @@ async def update_day_template(
 
     update_object = DayTemplateUpdateObject(
         slug=update_data.slug,
-        alarm=alarm,
         icon=update_data.icon,
         routine_ids=update_data.routine_ids,
         time_blocks=time_blocks,

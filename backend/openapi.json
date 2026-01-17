@@ -317,23 +317,30 @@
         }
       }
     },
-    "/sheppard/prompts/{prompt_name}": {
-      "put": {
+    "/google/login": {
+      "get": {
         "tags": [
-          "routine",
-          "alarms",
-          "planning"
+          "google",
+          "auth"
         ],
-        "summary": "Prompts",
-        "operationId": "prompts_sheppard_prompts__prompt_name__put",
+        "summary": "Google Login",
+        "operationId": "google_login_google_login_get",
         "parameters": [
           {
-            "name": "prompt_name",
-            "in": "path",
-            "required": true,
+            "name": "auth_token_id",
+            "in": "query",
+            "required": false,
             "schema": {
-              "type": "string",
-              "title": "Prompt Name"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Auth Token Id"
             }
           }
         ],
@@ -342,10 +349,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "string",
-                  "title": "Response Prompts Sheppard Prompts  Prompt Name  Put"
-                }
+                "schema": {}
               }
             }
           },
@@ -356,68 +360,6 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/sheppard/stop-alarm": {
-      "put": {
-        "tags": [
-          "routine",
-          "alarms",
-          "planning"
-        ],
-        "summary": "Stop Alarm",
-        "operationId": "stop_alarm_sheppard_stop_alarm_put",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
-    "/sheppard/start-alarm": {
-      "get": {
-        "tags": [
-          "routine",
-          "alarms",
-          "planning"
-        ],
-        "summary": "Start Alarm",
-        "operationId": "start_alarm_sheppard_start_alarm_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
-    "/google/login": {
-      "get": {
-        "tags": [
-          "google",
-          "auth"
-        ],
-        "summary": "Google Login",
-        "operationId": "google_login_google_login_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
               }
             }
           }
@@ -638,64 +580,159 @@
         ]
       }
     },
-    "/calendar-entries/today": {
-      "get": {
+    "/me/today/goals": {
+      "post": {
         "tags": [
-          "calendar-entries"
+          "auth",
+          "user"
         ],
-        "summary": "Today",
-        "operationId": "today_calendar_entries_today_get",
+        "summary": "Add Goal To Today",
+        "description": "Add a goal to today.",
+        "operationId": "add_goal_to_today_me_today_goals_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/CalendarEntrySchema"
-                  },
-                  "type": "array",
-                  "title": "Response Today Calendar Entries Today Get"
+                  "$ref": "#/components/schemas/DayContextSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
           }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
+        }
       }
     },
-    "/calendar-entries/today/": {
-      "get": {
+    "/me/today/goals/{goal_id}": {
+      "patch": {
         "tags": [
-          "calendar-entries"
+          "auth",
+          "user"
         ],
-        "summary": "Today",
-        "operationId": "today_calendar_entries_today__get",
+        "summary": "Update Today Goal Status",
+        "description": "Update a goal's status for today.",
+        "operationId": "update_today_goal_status_me_today_goals__goal_id__patch",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/GoalStatus"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/CalendarEntrySchema"
-                  },
-                  "type": "array",
-                  "title": "Response Today Calendar Entries Today  Get"
+                  "$ref": "#/components/schemas/DayContextSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
           }
-        },
+        }
+      },
+      "delete": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Remove Goal From Today",
+        "description": "Remove a goal from today.",
+        "operationId": "remove_goal_from_today_me_today_goals__goal_id__delete",
         "security": [
           {
             "APIKeyCookie": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayContextSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/calendar-entry-series/{uuid}": {
@@ -1094,37 +1131,6 @@
         ]
       }
     },
-    "/tasks/today/": {
-      "get": {
-        "tags": [
-          "tasks"
-        ],
-        "summary": "List Todays Tasks",
-        "description": "Get all tasks for today.",
-        "operationId": "list_todays_tasks_tasks_today__get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/TaskSchema"
-                  },
-                  "type": "array",
-                  "title": "Response List Todays Tasks Tasks Today  Get"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
     "/tasks/{_id}/actions": {
       "post": {
         "tags": [
@@ -1184,193 +1190,16 @@
         }
       }
     },
-    "/days/today/context": {
-      "get": {
-        "tags": [
-          "day",
-          "scheduling",
-          "planning"
-        ],
-        "summary": "Get Context Today",
-        "description": "Get the complete context for today.",
-        "operationId": "get_context_today_days_today_context_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
-    "/days/tomorrow/context": {
-      "get": {
-        "tags": [
-          "day",
-          "scheduling",
-          "planning"
-        ],
-        "summary": "Get Context Tomorrow",
-        "description": "Get the complete context for tomorrow.",
-        "operationId": "get_context_tomorrow_days_tomorrow_context_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
-    "/days/{date}/context": {
-      "get": {
-        "tags": [
-          "day",
-          "scheduling",
-          "planning"
-        ],
-        "summary": "Get Context",
-        "description": "Get the complete context for a specific date.",
-        "operationId": "get_context_days__date__context_get",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "date",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date",
-              "title": "Date"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/days/{date}/preview": {
-      "get": {
-        "tags": [
-          "day",
-          "scheduling",
-          "planning"
-        ],
-        "summary": "Preview Day",
-        "description": "Preview what a day would look like if scheduled.",
-        "operationId": "preview_day_days__date__preview_get",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "date",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date",
-              "title": "Date"
-            }
-          },
-          {
-            "name": "template_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Template Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/days/today/schedule": {
+    "/days/today/reschedule": {
       "put": {
         "tags": [
           "day",
           "scheduling",
           "planning"
         ],
-        "summary": "Schedule Today",
-        "description": "Schedule today with tasks from routines.",
-        "operationId": "schedule_today_days_today_schedule_put",
+        "summary": "Reschedule Today",
+        "description": "Reschedule today by cleaning up and recreating all tasks.",
+        "operationId": "reschedule_today_days_today_reschedule_put",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1378,201 +1207,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
-    "/days/{date}/schedule": {
-      "put": {
-        "tags": [
-          "day",
-          "scheduling",
-          "planning"
-        ],
-        "summary": "Schedule Day",
-        "description": "Schedule a specific day with tasks from routines.",
-        "operationId": "schedule_day_days__date__schedule_put",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "date",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date",
-              "title": "Date"
-            }
-          },
-          {
-            "name": "template_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Template Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/days/{date}": {
-      "patch": {
-        "tags": [
-          "day",
-          "scheduling",
-          "planning"
-        ],
-        "summary": "Update Day",
-        "description": "Update a day's status or template.",
-        "operationId": "update_day_days__date__patch",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "date",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date",
-              "title": "Date"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DayUpdateSchema"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DaySchema"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/days/templates": {
-      "get": {
-        "tags": [
-          "day",
-          "scheduling",
-          "planning"
-        ],
-        "summary": "Get Templates",
-        "description": "Get all available day templates.",
-        "operationId": "get_templates_days_templates_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/DayTemplateSchema"
-                  },
-                  "type": "array",
-                  "title": "Response Get Templates Days Templates Get"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
-    "/days/templates/": {
-      "get": {
-        "tags": [
-          "day",
-          "scheduling",
-          "planning"
-        ],
-        "summary": "Get Templates",
-        "description": "Get all available day templates.",
-        "operationId": "get_templates_days_templates__get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/DayTemplateSchema"
-                  },
-                  "type": "array",
-                  "title": "Response Get Templates Days Templates  Get"
                 }
               }
             }
@@ -2075,33 +1709,6 @@
         }
       }
     },
-    "/task-definitions/available/": {
-      "get": {
-        "tags": [
-          "task-definitions"
-        ],
-        "summary": "Get Available Task Definitions",
-        "description": "Get the curated list of available task definitions that users can import.\n\nReturns:\n    List of task definition dictionaries (without user_id)",
-        "operationId": "get_available_task_definitions_task_definitions_available__get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "additionalProperties": true,
-                    "type": "object"
-                  },
-                  "type": "array",
-                  "title": "Response Get Available Task Definitions Task Definitions Available  Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/task-definitions/{uuid}": {
       "get": {
         "tags": [
@@ -2320,62 +1927,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TaskDefinitionSchema"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
-    "/task-definitions/bulk/": {
-      "post": {
-        "tags": [
-          "task-definitions"
-        ],
-        "summary": "Bulk Create Task Definitions",
-        "description": "Bulk create task definitions.",
-        "operationId": "bulk_create_task_definitions_task_definitions_bulk__post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "items": {
-                  "additionalProperties": true,
-                  "type": "object"
-                },
-                "type": "array",
-                "title": "Task Definitions Data"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/TaskDefinitionSchema"
-                  },
-                  "type": "array",
-                  "title": "Response Bulk Create Task Definitions Task Definitions Bulk  Post"
                 }
               }
             }
@@ -2806,6 +2357,69 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RoutineSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/routines/{uuid}/actions": {
+      "post": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Record Routine Action",
+        "description": "Record an action on all tasks in a routine for today.",
+        "operationId": "record_routine_action_routines__uuid__actions_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Action"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskSchema"
+                  },
+                  "title": "Response Record Routine Action Routines  Uuid  Actions Post"
                 }
               }
             }
@@ -3390,6 +3004,37 @@
         ]
       }
     },
+    "/calendars/reset-sync": {
+      "post": {
+        "tags": [
+          "calendars"
+        ],
+        "summary": "Reset Calendar Sync",
+        "description": "Reset calendar sync: unsubscribe, delete future events, resubscribe, and sync.\n\nThis operation:\n1. Unsubscribes all calendars that have syncing enabled\n2. Deletes all future calendar entries for those calendars\n3. Resubscribes to updates for all calendars that were previously subscribed\n4. Performs initial sync for each calendar",
+        "operationId": "reset_calendar_sync_calendars_reset_sync_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarSchema"
+                  },
+                  "type": "array",
+                  "title": "Response Reset Calendar Sync Calendars Reset Sync Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
     "/calendars/": {
       "post": {
         "tags": [
@@ -3482,54 +3127,6 @@
             "APIKeyCookie": []
           }
         ]
-      }
-    },
-    "/utils/trigger-example-task": {
-      "get": {
-        "tags": [
-          "utils"
-        ],
-        "summary": "Trigger Example Task",
-        "description": "Trigger an example background task.\n\nThis endpoint enqueues an example task to demonstrate triggering\nTaskIQ jobs from API endpoints.\n\nArgs:\n    message: Optional message to include in the task (query param).\n\nReturns:\n    A confirmation that the task was enqueued.",
-        "operationId": "trigger_example_task_utils_trigger_example_task_get",
-        "parameters": [
-          {
-            "name": "message",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "Hello from API",
-              "title": "Message"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Trigger Example Task Utils Trigger Example Task Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/health": {
@@ -3632,63 +3229,6 @@
           "VIEW"
         ],
         "title": "ActionType"
-      },
-      "AlarmSchema": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "time": {
-            "type": "string",
-            "format": "time",
-            "title": "Time"
-          },
-          "type": {
-            "$ref": "#/components/schemas/AlarmType"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "triggered_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Triggered At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "time",
-          "type"
-        ],
-        "title": "AlarmSchema",
-        "description": "API schema for Alarm value object."
-      },
-      "AlarmType": {
-        "type": "string",
-        "enum": [
-          "GENTLE",
-          "FIRM",
-          "LOUD",
-          "SIREN"
-        ],
-        "title": "AlarmType"
       },
       "Body_auth_cookie_login_auth_login_post": {
         "properties": {
@@ -4264,6 +3804,17 @@
               }
             ],
             "title": "Resource Id"
+          },
+          "platform_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform Id"
           }
         },
         "type": "object",
@@ -4481,16 +4032,6 @@
             "format": "date",
             "title": "Date"
           },
-          "alarm": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AlarmSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "status": {
             "$ref": "#/components/schemas/DayStatus"
           },
@@ -4522,6 +4063,13 @@
                 "type": "null"
               }
             ]
+          },
+          "goals": {
+            "items": {
+              "$ref": "#/components/schemas/GoalSchema"
+            },
+            "type": "array",
+            "title": "Goals"
           }
         },
         "type": "object",
@@ -4557,16 +4105,6 @@
           "slug": {
             "type": "string",
             "title": "Slug"
-          },
-          "alarm": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AlarmSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "icon": {
             "anyOf": [
@@ -4720,16 +4258,6 @@
             "type": "string",
             "title": "Slug"
           },
-          "alarm": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AlarmSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "icon": {
             "anyOf": [
               {
@@ -4842,16 +4370,6 @@
             ],
             "title": "Slug"
           },
-          "alarm": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AlarmSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "icon": {
             "anyOf": [
               {
@@ -4896,71 +4414,6 @@
         "type": "object",
         "title": "DayTemplateUpdateSchema",
         "description": "API schema for DayTemplate update requests."
-      },
-      "DayUpdateSchema": {
-        "properties": {
-          "alarm": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AlarmSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/DayStatus"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "scheduled_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Scheduled At"
-          },
-          "tags": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DayTag"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tags"
-          },
-          "template_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Template Id"
-          }
-        },
-        "type": "object",
-        "title": "DayUpdateSchema",
-        "description": "API schema for Day update requests."
       },
       "EarlyAccessRequest": {
         "properties": {
@@ -5010,6 +4463,58 @@
           "OTHER"
         ],
         "title": "EventCategory"
+      },
+      "GoalSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GoalStatus"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "status"
+        ],
+        "title": "GoalSchema",
+        "description": "API schema for Goal value object."
+      },
+      "GoalStatus": {
+        "type": "string",
+        "enum": [
+          "INCOMPLETE",
+          "COMPLETE",
+          "PUNT"
+        ],
+        "title": "GoalStatus",
+        "description": "Status of a goal."
       },
       "HTTPValidationError": {
         "properties": {
@@ -6187,6 +5692,17 @@
               }
             ],
             "title": "Sync Token"
+          },
+          "webhook_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Webhook Url"
           }
         },
         "type": "object",
@@ -7041,6 +6557,30 @@
           "settings": {
             "$ref": "#/components/schemas/UserSettingsSchema"
           },
+          "default_conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Conversation Id"
+          },
+          "sms_conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sms Conversation Id"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -7187,6 +6727,30 @@
                 "type": "null"
               }
             ]
+          },
+          "default_conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Conversation Id"
+          },
+          "sms_conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sms Conversation Id"
           }
         },
         "type": "object",

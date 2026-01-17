@@ -21,7 +21,6 @@ from lykke.domain.entities import (
 )
 from lykke.presentation.api.schemas import (
     ActionSchema,
-    AlarmSchema,
     AuditLogSchema,
     AuditableSchema,
     BotPersonalitySchema,
@@ -51,11 +50,6 @@ from lykke.presentation.api.schemas import (
 def map_action_to_schema(action: value_objects.Action) -> ActionSchema:
     """Convert Action entity to Action schema."""
     return ActionSchema(**asdict(action))
-
-
-def map_alarm_to_schema(alarm: value_objects.Alarm) -> AlarmSchema:
-    """Convert Alarm value object to Alarm schema."""
-    return AlarmSchema(**asdict(alarm))
 
 
 def map_goal_to_schema(goal: value_objects.Goal) -> GoalSchema:
@@ -138,7 +132,6 @@ def map_day_template_to_schema(
     template: DayTemplateEntity,
 ) -> DayTemplateSchema:
     """Convert DayTemplate data object to DayTemplate schema."""
-    alarm_schema = map_alarm_to_schema(template.alarm) if template.alarm else None
     time_blocks_schema = [
         DayTemplateTimeBlockSchema(
             time_block_definition_id=tb.time_block_definition_id,
@@ -153,7 +146,6 @@ def map_day_template_to_schema(
         id=template.id,
         user_id=template.user_id,
         slug=template.slug,
-        alarm=alarm_schema,
         icon=template.icon,
         routine_ids=template.routine_ids,
         time_blocks=time_blocks_schema,
@@ -162,7 +154,6 @@ def map_day_template_to_schema(
 
 def map_day_to_schema(day: DayEntity) -> DaySchema:
     """Convert Day entity to Day schema."""
-    alarm_schema = map_alarm_to_schema(day.alarm) if day.alarm else None
     template_schema = map_day_template_to_schema(day.template) if day.template else None
 
     goal_schemas = [map_goal_to_schema(goal) for goal in day.goals]
@@ -171,7 +162,6 @@ def map_day_to_schema(day: DayEntity) -> DaySchema:
         id=day.id,
         user_id=day.user_id,
         date=day.date,
-        alarm=alarm_schema,
         status=day.status,
         scheduled_at=day.scheduled_at,
         tags=day.tags,

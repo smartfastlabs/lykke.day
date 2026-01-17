@@ -16,7 +16,6 @@ class Day(Base):
     date = Column(Date, nullable=False)
     template = Column(JSONB)  # DayTemplate | None
     tags = Column(JSONB)  # list[DayTag]
-    alarm = Column(JSONB)  # Alarm | None
     status = Column(String, nullable=False)  # DayStatus enum as string
     scheduled_at = Column(DateTime)
     time_blocks = Column(JSONB)  # list[DayTimeBlock]

@@ -12,7 +12,6 @@ from lykke.domain.value_objects.day import DayStatus, DayTag
 from .base import BaseEntitySchema, BaseSchema
 
 if TYPE_CHECKING:
-    from .alarm import AlarmSchema
     from .day_template import DayTemplateSchema
     from .goal import GoalSchema
 
@@ -22,7 +21,6 @@ class DaySchema(BaseEntitySchema):
 
     user_id: UUID
     date: date
-    alarm: Optional["AlarmSchema"] = None
     status: DayStatus
     scheduled_at: datetime | None = None
     tags: list[DayTag] = Field(default_factory=list)
@@ -33,7 +31,6 @@ class DaySchema(BaseEntitySchema):
 class DayUpdateSchema(BaseSchema):
     """API schema for Day update requests."""
 
-    alarm: Optional["AlarmSchema"] = None
     status: DayStatus | None = None
     scheduled_at: datetime | None = None
     tags: list[DayTag] | None = None

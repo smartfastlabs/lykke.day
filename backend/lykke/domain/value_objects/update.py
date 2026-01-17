@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from .alarm import Alarm
 from .base import BaseRequestObject
 from .day import DayStatus, DayTag, Goal
 from .routine import RoutineSchedule, RoutineTask
@@ -82,7 +81,6 @@ class DayTemplateUpdateObject(BaseUpdateObject):
     """Update object for DayTemplate entity."""
 
     slug: str | None = None
-    alarm: Alarm | None = None
     icon: str | None = None
     routine_ids: list[UUID] | None = None
     time_blocks: list[DayTemplateTimeBlock] | None = None
@@ -112,7 +110,6 @@ class CalendarEntrySeriesUpdateObject(BaseUpdateObject):
 class DayUpdateObject(BaseUpdateObject):
     """Update object for Day entity."""
 
-    alarm: Alarm | None = None
     status: DayStatus | None = None
     scheduled_at: datetime | None = None
     tags: list[DayTag] | None = None

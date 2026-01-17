@@ -8,7 +8,6 @@ import pytest_asyncio
 from lykke.domain.entities import BotPersonalityEntity, ConversationEntity, UserEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.value_objects.ai_chat import ConversationChannel, LLMProvider
-from lykke.domain.value_objects.alarm import Alarm, AlarmType
 from lykke.domain.value_objects.user import UserSetting
 from lykke.infrastructure.repositories import (
     AuditLogRepository,
@@ -77,11 +76,6 @@ async def _setup_day_templates_for_user(user: UserEntity) -> None:
     default_template = DayTemplateEntity(
         user_id=user.id,
         slug="default",
-        alarm=Alarm(
-            name="Default Alarm",
-            time=time(7, 15),
-            type=AlarmType.FIRM,
-        ),
     )
     await repo.put(default_template)
 
@@ -89,11 +83,6 @@ async def _setup_day_templates_for_user(user: UserEntity) -> None:
     weekend_template = DayTemplateEntity(
         user_id=user.id,
         slug="weekend",
-        alarm=Alarm(
-            name="Weekend Alarm",
-            time=time(7, 15),
-            type=AlarmType.GENTLE,
-        ),
     )
     await repo.put(weekend_template)
 

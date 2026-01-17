@@ -14,7 +14,6 @@ import pytest
 from fastapi.testclient import TestClient
 from lykke.domain import value_objects
 from lykke.domain.entities.day_template import DayTemplateEntity
-from lykke.domain.value_objects.alarm import Alarm, AlarmType
 from lykke.domain.value_objects.day import DayStatus
 from lykke.infrastructure.database.utils import reset_engine
 from lykke.infrastructure.repositories import (
@@ -80,11 +79,6 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     default_template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        alarm=Alarm(
-            name="Default Alarm",
-            time=time(7, 15),
-            type=AlarmType.FIRM,
-        ),
     )
     await day_template_repo.put(default_template)
 

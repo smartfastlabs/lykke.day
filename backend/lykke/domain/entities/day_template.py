@@ -17,10 +17,11 @@ if TYPE_CHECKING:
 
 
 @dataclass(kw_only=True)
-class DayTemplateEntity(BaseEntityObject[DayTemplateUpdateObject, "DayTemplateUpdatedEvent"]):
+class DayTemplateEntity(
+    BaseEntityObject[DayTemplateUpdateObject, "DayTemplateUpdatedEvent"]
+):
     user_id: UUID
     slug: str
-    alarm: value_objects.Alarm | None = None
     icon: str | None = None
     routine_ids: list[UUID] = field(default_factory=list)
     time_blocks: list[value_objects.DayTemplateTimeBlock] = field(default_factory=list)
@@ -46,7 +47,6 @@ class DayTemplateEntity(BaseEntityObject[DayTemplateUpdateObject, "DayTemplateUp
             id=self.id,
             user_id=self.user_id,
             slug=self.slug,
-            alarm=self.alarm,
             icon=self.icon,
             routine_ids=routine_ids,
             time_blocks=self.time_blocks,
@@ -58,9 +58,7 @@ class DayTemplateEntity(BaseEntityObject[DayTemplateUpdateObject, "DayTemplateUp
             raise DomainError("Routine already attached to day template")
 
         updated = self._copy_with_routine_ids([*self.routine_ids, routine_id])
-        from lykke.domain.events.day_template_events import (
-            DayTemplateRoutineAddedEvent,
-        )
+        from lykke.domain.events.day_template_events import DayTemplateRoutineAddedEvent
 
         updated._add_event(
             DayTemplateRoutineAddedEvent(
@@ -96,7 +94,6 @@ class DayTemplateEntity(BaseEntityObject[DayTemplateUpdateObject, "DayTemplateUp
             id=self.id,
             user_id=self.user_id,
             slug=self.slug,
-            alarm=self.alarm,
             icon=self.icon,
             routine_ids=self.routine_ids,
             time_blocks=time_blocks,

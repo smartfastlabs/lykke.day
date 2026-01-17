@@ -14,7 +14,6 @@ class DayTemplate(Base):
     id = Column(PGUUID, primary_key=True)
     user_id = Column(PGUUID, nullable=False)
     slug = Column(String, nullable=False)
-    alarm = Column(JSONB)  # Alarm | None
     icon = Column(String)
     routine_ids = Column(JSONB)  # list[UUID]
     time_blocks = Column(JSONB)  # list[DayTemplateTimeBlock]

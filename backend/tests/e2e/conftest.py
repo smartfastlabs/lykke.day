@@ -9,7 +9,6 @@ from fastapi.testclient import TestClient
 from lykke.app import app
 from lykke.domain.entities import UserEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
-from lykke.domain.value_objects.alarm import Alarm, AlarmType
 from lykke.domain.value_objects.user import UserSetting
 from lykke.infrastructure.database.tables import User as UserDB
 from lykke.infrastructure.database.utils import reset_engine
@@ -45,11 +44,6 @@ def setup_test_user_day_template():
         default_template = DayTemplateEntity(
             user_id=test_user_id,
             slug="default",
-            alarm=Alarm(
-                name="Default Alarm",
-                time=time(7, 15),
-                type=AlarmType.FIRM,
-            ),
         )
         await day_template_repo.put(default_template)
         return test_user

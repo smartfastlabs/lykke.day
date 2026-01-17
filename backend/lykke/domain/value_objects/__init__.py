@@ -7,7 +7,6 @@ from .ai_chat import (
     LLMProvider,
     MessageRole,
 )
-from .alarm import Alarm, AlarmType
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .calendar_subscription import CalendarSubscription
 from .day import DayContext, DayMode, DayStatus, DayTag, Goal, GoalStatus
@@ -71,8 +70,6 @@ from .user import UserSetting, UserStatus
 __all__ = [
     "Action",
     "ActionType",
-    "Alarm",
-    "AlarmType",
     "AuditLogQuery",
     "AuthTokenQuery",
     "BaseQuery",

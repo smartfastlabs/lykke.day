@@ -9,8 +9,6 @@ from pydantic import BaseModel, Field
 
 from .base import BaseEntitySchema, BaseSchema
 
-if TYPE_CHECKING:
-    from .alarm import AlarmSchema
 
 
 class DayTemplateTimeBlockSchema(BaseModel):
@@ -26,7 +24,6 @@ class DayTemplateCreateSchema(BaseSchema):
     """API schema for creating a DayTemplate entity."""
 
     slug: str
-    alarm: Optional["AlarmSchema"] = None
     icon: str | None = None
     routine_ids: list[UUID] = Field(default_factory=list)
     time_blocks: list[DayTemplateTimeBlockSchema] = Field(default_factory=list)
@@ -42,7 +39,6 @@ class DayTemplateUpdateSchema(BaseSchema):
     """API schema for DayTemplate update requests."""
 
     slug: str | None = None
-    alarm: Optional["AlarmSchema"] = None
     icon: str | None = None
     routine_ids: list[UUID] | None = None
     time_blocks: list[DayTemplateTimeBlockSchema] | None = None

@@ -44,8 +44,6 @@ class UpdateDayHandler(BaseCommandHandler):
                 day.update_template(template)
 
             # Update other fields if provided
-            if update_data.alarm is not None:
-                day.alarm = update_data.alarm
             if update_data.scheduled_at is not None:
                 day.scheduled_at = update_data.scheduled_at
             if update_data.tags is not None:
@@ -57,7 +55,6 @@ class UpdateDayHandler(BaseCommandHandler):
                 for field in (
                     update_data.status,
                     update_data.template_id,
-                    update_data.alarm,
                     update_data.scheduled_at,
                     update_data.tags,
                 )

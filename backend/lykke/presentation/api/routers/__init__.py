@@ -11,7 +11,6 @@ from . import (
     me,
     push_subscriptions,
     routines,
-    sheppard,
     task_definitions,
     tasks,
     time_block_definitions,
@@ -21,15 +20,6 @@ router = APIRouter()
 router.include_router(
     early_access.router,
     tags=["public"],
-)
-router.include_router(
-    sheppard.router,
-    prefix="/sheppard",
-    tags=[
-        "routine",
-        "alarms",
-        "planning",
-    ],
 )
 router.include_router(
     google.router,

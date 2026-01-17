@@ -127,7 +127,6 @@ class RescheduleDayHandler(BaseCommandHandler):
                     )
 
             # Step 6: Update day with template data
-            # Update template reference and alarm
             day.update_template(template)
             
             # Update time blocks (replacing any existing ones)

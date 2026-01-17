@@ -32,9 +32,6 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
         if day.tags:
             row["tags"] = [tag.value for tag in day.tags]
 
-        if day.alarm:
-            row["alarm"] = dataclass_to_json_dict(day.alarm)
-
         if day.template:
             row["template"] = dataclass_to_json_dict(day.template)
 
@@ -50,7 +47,7 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
     def row_to_entity(cls, row: dict[str, Any]) -> DayEntity:
         """Convert a database row dict to a Day entity.
 
-        Overrides base to handle JSONB fields (template, alarm) and enum conversion.
+        Overrides base to handle JSONB fields (template) and enum conversion.
         """
         from lykke.infrastructure.repositories.base.utils import normalize_list_fields
 
@@ -112,34 +109,6 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                         for tb in template_data["time_blocks"]
                     ]
 
-                # Convert nested alarm dict to Alarm value object if present
-                if template_data.get("alarm"):
-                    if isinstance(template_data["alarm"], dict):
-                        alarm_data = dict(template_data["alarm"])
-                        # Convert time string back to time object if needed
-                        if "time" in alarm_data and isinstance(alarm_data["time"], str):
-                            from datetime import time as dt_time
-
-                            alarm_data["time"] = dt_time.fromisoformat(
-                                alarm_data["time"]
-                            )
-                        # Convert type string to enum if needed
-                        if "type" in alarm_data and isinstance(alarm_data["type"], str):
-                            alarm_data["type"] = value_objects.AlarmType(
-                                alarm_data["type"]
-                            )
-                        # Convert triggered_at string to time object if needed
-                        if (
-                            "triggered_at" in alarm_data
-                            and alarm_data["triggered_at"]
-                            and isinstance(alarm_data["triggered_at"], str)
-                        ):
-                            from datetime import time as dt_time
-
-                            alarm_data["triggered_at"] = dt_time.fromisoformat(
-                                alarm_data["triggered_at"]
-                            )
-                        template_data["alarm"] = value_objects.Alarm(**alarm_data)
                 from lykke.infrastructure.repositories.base.utils import (
                     filter_init_false_fields,
                 )
@@ -149,30 +118,6 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                 )
                 data["template"] = DayTemplateEntity(**template_data)
 
-        # Handle alarm - it comes as a dict from JSONB, need to convert to value object
-        if data.get("alarm"):
-            if isinstance(data["alarm"], dict):
-                alarm_data = dict(data["alarm"])
-                # Convert time string back to time object if needed
-                if "time" in alarm_data and isinstance(alarm_data["time"], str):
-                    from datetime import time as dt_time
-
-                    alarm_data["time"] = dt_time.fromisoformat(alarm_data["time"])
-                # Convert type string to enum if needed
-                if "type" in alarm_data and isinstance(alarm_data["type"], str):
-                    alarm_data["type"] = value_objects.AlarmType(alarm_data["type"])
-                # Convert triggered_at string to time object if needed
-                if (
-                    "triggered_at" in alarm_data
-                    and alarm_data["triggered_at"]
-                    and isinstance(alarm_data["triggered_at"], str)
-                ):
-                    from datetime import time as dt_time
-
-                    alarm_data["triggered_at"] = dt_time.fromisoformat(
-                        alarm_data["triggered_at"]
-                    )
-                data["alarm"] = value_objects.Alarm(**alarm_data)
 
         # Handle goals - it comes as a list of dicts from JSONB, need to convert to Goal value objects
         if data.get("goals"):

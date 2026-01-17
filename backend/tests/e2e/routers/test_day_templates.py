@@ -64,11 +64,6 @@ async def test_create_day_template(authenticated_client):
     template_data = {
         "user_id": str(user.id),
         "slug": "test-template",
-        "alarm": {
-            "name": "Test Alarm",
-            "time": "08:00:00",
-            "type": "GENTLE",
-        },
     }
 
     response = client.post("/day-templates/create", json=template_data)
@@ -77,7 +72,6 @@ async def test_create_day_template(authenticated_client):
     data = response.json()
     assert data["slug"] == "test-template"
     assert data["user_id"] == str(user.id)
-    assert data["alarm"]["name"] == "Test Alarm"
 
 
 @pytest.mark.asyncio

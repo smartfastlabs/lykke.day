@@ -109,57 +109,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sheppard/prompts/{prompt_name}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Prompts */
-        put: operations["prompts_sheppard_prompts__prompt_name__put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sheppard/stop-alarm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Stop Alarm */
-        put: operations["stop_alarm_sheppard_stop_alarm_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sheppard/start-alarm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Start Alarm */
-        get: operations["start_alarm_sheppard_start_alarm_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/google/login": {
         parameters: {
             query?: never;
@@ -252,38 +201,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/calendar-entries/today": {
+    "/me/today/goals": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Today */
-        get: operations["today_calendar_entries_today_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Add Goal To Today
+         * @description Add a goal to today.
+         */
+        post: operations["add_goal_to_today_me_today_goals_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/calendar-entries/today/": {
+    "/me/today/goals/{goal_id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Today */
-        get: operations["today_calendar_entries_today__get"];
+        get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Remove Goal From Today
+         * @description Remove a goal from today.
+         */
+        delete: operations["remove_goal_from_today_me_today_goals__goal_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update Today Goal Status
+         * @description Update a goal's status for today.
+         */
+        patch: operations["update_today_goal_status_me_today_goals__goal_id__patch"];
         trace?: never;
     };
     "/calendar-entry-series/{uuid}": {
@@ -386,26 +345,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/tasks/today/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Todays Tasks
-         * @description Get all tasks for today.
-         */
-        get: operations["list_todays_tasks_tasks_today__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/tasks/{_id}/actions": {
         parameters: {
             query?: never;
@@ -426,87 +365,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/days/today/context": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Context Today
-         * @description Get the complete context for today.
-         */
-        get: operations["get_context_today_days_today_context_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/days/tomorrow/context": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Context Tomorrow
-         * @description Get the complete context for tomorrow.
-         */
-        get: operations["get_context_tomorrow_days_tomorrow_context_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/days/{date}/context": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Context
-         * @description Get the complete context for a specific date.
-         */
-        get: operations["get_context_days__date__context_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/days/{date}/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Preview Day
-         * @description Preview what a day would look like if scheduled.
-         */
-        get: operations["preview_day_days__date__preview_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/days/today/schedule": {
+    "/days/today/reschedule": {
         parameters: {
             query?: never;
             header?: never;
@@ -515,90 +374,10 @@ export interface paths {
         };
         get?: never;
         /**
-         * Schedule Today
-         * @description Schedule today with tasks from routines.
+         * Reschedule Today
+         * @description Reschedule today by cleaning up and recreating all tasks.
          */
-        put: operations["schedule_today_days_today_schedule_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/days/{date}/schedule": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Schedule Day
-         * @description Schedule a specific day with tasks from routines.
-         */
-        put: operations["schedule_day_days__date__schedule_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/days/{date}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Day
-         * @description Update a day's status or template.
-         */
-        patch: operations["update_day_days__date__patch"];
-        trace?: never;
-    };
-    "/days/templates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Templates
-         * @description Get all available day templates.
-         */
-        get: operations["get_templates_days_templates_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/days/templates/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Templates
-         * @description Get all available day templates.
-         */
-        get: operations["get_templates_days_templates__get"];
-        put?: never;
+        put: operations["reschedule_today_days_today_reschedule_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -754,29 +533,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/task-definitions/available/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Available Task Definitions
-         * @description Get the curated list of available task definitions that users can import.
-         *
-         *     Returns:
-         *         List of task definition dictionaries (without user_id)
-         */
-        get: operations["get_available_task_definitions_task_definitions_available__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/task-definitions/{uuid}": {
         parameters: {
             query?: never;
@@ -839,26 +595,6 @@ export interface paths {
          * @description Create a new task definition.
          */
         post: operations["create_task_definition_task_definitions_create_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/task-definitions/bulk/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Bulk Create Task Definitions
-         * @description Bulk create task definitions.
-         */
-        post: operations["bulk_create_task_definitions_task_definitions_bulk__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -972,6 +708,26 @@ export interface paths {
          * @description Detach a routine task from a routine by RoutineTask.id.
          */
         delete: operations["remove_routine_task_routines__uuid__tasks__routine_task_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routines/{uuid}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Routine Action
+         * @description Record an action on all tasks in a routine for today.
+         */
+        post: operations["record_routine_action_routines__uuid__actions_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1137,6 +893,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/calendars/reset-sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Calendar Sync
+         * @description Reset calendar sync: unsubscribe, delete future events, resubscribe, and sync.
+         *
+         *     This operation:
+         *     1. Unsubscribes all calendars that have syncing enabled
+         *     2. Deletes all future calendar entries for those calendars
+         *     3. Resubscribes to updates for all calendars that were previously subscribed
+         *     4. Performs initial sync for each calendar
+         */
+        post: operations["reset_calendar_sync_calendars_reset_sync_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/calendars/": {
         parameters: {
             query?: never;
@@ -1171,35 +953,6 @@ export interface paths {
          * @description Create a new calendar.
          */
         post: operations["create_calendar_calendars_create_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/utils/trigger-example-task": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Trigger Example Task
-         * @description Trigger an example background task.
-         *
-         *     This endpoint enqueues an example task to demonstrate triggering
-         *     TaskIQ jobs from API endpoints.
-         *
-         *     Args:
-         *         message: Optional message to include in the task (query param).
-         *
-         *     Returns:
-         *         A confirmation that the task was enqueued.
-         */
-        get: operations["trigger_example_task_utils_trigger_example_task_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1266,29 +1019,6 @@ export interface components {
          * @enum {string}
          */
         ActionType: "COMPLETE" | "DELETE" | "EDIT" | "NOTIFY" | "PAUSE" | "PUNT" | "RESUME" | "START" | "VIEW";
-        /**
-         * AlarmSchema
-         * @description API schema for Alarm value object.
-         */
-        AlarmSchema: {
-            /** Name */
-            name: string;
-            /**
-             * Time
-             * Format: time
-             */
-            time: string;
-            type: components["schemas"]["AlarmType"];
-            /** Description */
-            description?: string | null;
-            /** Triggered At */
-            triggered_at?: string | null;
-        };
-        /**
-         * AlarmType
-         * @enum {string}
-         */
-        AlarmType: "GENTLE" | "FIRM" | "LOUD" | "SIREN";
         /** Body_auth_cookie_login_auth_login_post */
         Body_auth_cookie_login_auth_login_post: {
             /** Grant Type */
@@ -1488,6 +1218,8 @@ export interface components {
             subscription_id?: string | null;
             /** Resource Id */
             resource_id?: string | null;
+            /** Platform Id */
+            platform_id?: string | null;
         };
         /**
          * CalendarSchema
@@ -1570,13 +1302,14 @@ export interface components {
              * Format: date
              */
             date: string;
-            alarm?: components["schemas"]["AlarmSchema"] | null;
             status: components["schemas"]["DayStatus"];
             /** Scheduled At */
             scheduled_at?: string | null;
             /** Tags */
             tags?: components["schemas"]["DayTag"][];
             template?: components["schemas"]["DayTemplateSchema"] | null;
+            /** Goals */
+            goals?: components["schemas"]["GoalSchema"][];
         };
         /**
          * DayStatus
@@ -1595,7 +1328,6 @@ export interface components {
         DayTemplateCreateSchema: {
             /** Slug */
             slug: string;
-            alarm?: components["schemas"]["AlarmSchema"] | null;
             /** Icon */
             icon?: string | null;
             /** Routine Ids */
@@ -1640,7 +1372,6 @@ export interface components {
             id?: string | null;
             /** Slug */
             slug: string;
-            alarm?: components["schemas"]["AlarmSchema"] | null;
             /** Icon */
             icon?: string | null;
             /** Routine Ids */
@@ -1704,27 +1435,12 @@ export interface components {
         DayTemplateUpdateSchema: {
             /** Slug */
             slug?: string | null;
-            alarm?: components["schemas"]["AlarmSchema"] | null;
             /** Icon */
             icon?: string | null;
             /** Routine Ids */
             routine_ids?: string[] | null;
             /** Time Blocks */
             time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][] | null;
-        };
-        /**
-         * DayUpdateSchema
-         * @description API schema for Day update requests.
-         */
-        DayUpdateSchema: {
-            alarm?: components["schemas"]["AlarmSchema"] | null;
-            status?: components["schemas"]["DayStatus"] | null;
-            /** Scheduled At */
-            scheduled_at?: string | null;
-            /** Tags */
-            tags?: components["schemas"]["DayTag"][] | null;
-            /** Template Id */
-            template_id?: string | null;
         };
         /**
          * EarlyAccessRequest
@@ -1749,6 +1465,25 @@ export interface components {
          * @enum {string}
          */
         EventCategory: "WORK" | "PERSONAL" | "FAMILY" | "SOCIAL" | "OTHER";
+        /**
+         * GoalSchema
+         * @description API schema for Goal value object.
+         */
+        GoalSchema: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+            status: components["schemas"]["GoalStatus"];
+            /** Created At */
+            created_at?: string | null;
+        };
+        /**
+         * GoalStatus
+         * @description Status of a goal.
+         * @enum {string}
+         */
+        GoalStatus: "INCOMPLETE" | "COMPLETE" | "PUNT";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -2194,6 +1929,8 @@ export interface components {
             client_state?: string | null;
             /** Sync Token */
             sync_token?: string | null;
+            /** Webhook Url */
+            webhook_url?: string | null;
         };
         /**
          * TaskCategory
@@ -2479,6 +2216,10 @@ export interface components {
             /** Is Verified */
             is_verified: boolean;
             settings: components["schemas"]["UserSettingsSchema"];
+            /** Default Conversation Id */
+            default_conversation_id?: string | null;
+            /** Sms Conversation Id */
+            sms_conversation_id?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -2524,6 +2265,10 @@ export interface components {
             /** Is Verified */
             is_verified?: boolean | null;
             settings?: components["schemas"]["UserSettingsUpdateSchema"] | null;
+            /** Default Conversation Id */
+            default_conversation_id?: string | null;
+            /** Sms Conversation Id */
+            sms_conversation_id?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -2776,13 +2521,13 @@ export interface operations {
             };
         };
     };
-    prompts_sheppard_prompts__prompt_name__put: {
+    google_login_google_login_get: {
         parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                prompt_name: string;
+            query?: {
+                auth_token_id?: string | null;
             };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -2793,7 +2538,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -2803,66 +2548,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    stop_alarm_sheppard_stop_alarm_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    start_alarm_sheppard_start_alarm_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    google_login_google_login_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
                 };
             };
         };
@@ -2987,9 +2672,11 @@ export interface operations {
             };
         };
     };
-    today_calendar_entries_today_get: {
+    add_goal_to_today_me_today_goals_post: {
         parameters: {
-            query?: never;
+            query: {
+                name: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3002,16 +2689,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CalendarEntrySchema"][];
+                    "application/json": components["schemas"]["DayContextSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
     };
-    today_calendar_entries_today__get: {
+    remove_goal_from_today_me_today_goals__goal_id__delete: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                goal_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -3022,7 +2720,49 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CalendarEntrySchema"][];
+                    "application/json": components["schemas"]["DayContextSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_today_goal_status_me_today_goals__goal_id__patch: {
+        parameters: {
+            query: {
+                status: components["schemas"]["GoalStatus"];
+            };
+            header?: never;
+            path: {
+                goal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayContextSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -3289,26 +3029,6 @@ export interface operations {
             };
         };
     };
-    list_todays_tasks_tasks_today__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskSchema"][];
-                };
-            };
-        };
-    };
     add_task_action_tasks___id__actions_post: {
         parameters: {
             query?: never;
@@ -3344,7 +3064,7 @@ export interface operations {
             };
         };
     };
-    get_context_today_days_today_context_get: {
+    reschedule_today_days_today_reschedule_put: {
         parameters: {
             query?: never;
             header?: never;
@@ -3360,218 +3080,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-        };
-    };
-    get_context_tomorrow_days_tomorrow_context_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-        };
-    };
-    get_context_days__date__context_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                date: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    preview_day_days__date__preview_get: {
-        parameters: {
-            query?: {
-                template_id?: string | null;
-            };
-            header?: never;
-            path: {
-                date: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    schedule_today_days_today_schedule_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-        };
-    };
-    schedule_day_days__date__schedule_put: {
-        parameters: {
-            query?: {
-                template_id?: string | null;
-            };
-            header?: never;
-            path: {
-                date: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_day_days__date__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                date: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DayUpdateSchema"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DaySchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_templates_days_templates_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayTemplateSchema"][];
-                };
-            };
-        };
-    };
-    get_templates_days_templates__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DayTemplateSchema"][];
                 };
             };
         };
@@ -3874,28 +3382,6 @@ export interface operations {
             };
         };
     };
-    get_available_task_definitions_task_definitions_available__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    }[];
-                };
-            };
-        };
-    };
     get_task_definition_task_definitions__uuid__get: {
         parameters: {
             query?: never;
@@ -4044,41 +3530,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskDefinitionSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    bulk_create_task_definitions_task_definitions_bulk__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    [key: string]: unknown;
-                }[];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskDefinitionSchema"][];
                 };
             };
             /** @description Validation Error */
@@ -4343,6 +3794,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RoutineSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_routine_action_routines__uuid__actions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Action"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSchema"][];
                 };
             };
             /** @description Validation Error */
@@ -4727,6 +4213,26 @@ export interface operations {
             };
         };
     };
+    reset_calendar_sync_calendars_reset_sync_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"][];
+                };
+            };
+        };
+    };
     search_calendars_calendars__post: {
         parameters: {
             query?: never;
@@ -4780,39 +4286,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CalendarSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    trigger_example_task_utils_trigger_example_task_get: {
-        parameters: {
-            query?: {
-                message?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
                 };
             };
             /** @description Validation Error */

@@ -7,7 +7,6 @@ import pytest
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities.day_template import DayTemplateEntity
-from lykke.domain.value_objects.alarm import Alarm, AlarmType
 from lykke.infrastructure.repositories import DayTemplateRepository
 
 
@@ -38,17 +37,11 @@ async def test_put(day_template_repo, test_user):
     template = DayTemplateEntity(
         user_id=test_user.id,
         slug="custom",
-        alarm=Alarm(
-            name="Custom Alarm",
-            time=time(8, 0),
-            type=AlarmType.GENTLE,
-        ),
     )
 
     result = await day_template_repo.put(template)
 
     assert result.slug == "custom"
-    assert result.alarm.name == "Custom Alarm"
 
 
 @pytest.mark.asyncio

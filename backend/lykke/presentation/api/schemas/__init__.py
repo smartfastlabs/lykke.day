@@ -1,7 +1,6 @@
 """API response schemas (DTOs) for decoupling domain entities from presentation layer."""
 
 from .action import ActionSchema
-from .alarm import AlarmSchema
 from .auditable import AuditableSchema
 from .audit_log import AuditLogSchema
 from .bot_personality import BotPersonalitySchema
@@ -121,7 +120,6 @@ WebSocketSyncResponseSchema.model_rebuild()
 
 __all__ = [
     "ActionSchema",
-    "AlarmSchema",
     "AuditableSchema",
     "AuditLogSchema",
     "BotPersonalitySchema",

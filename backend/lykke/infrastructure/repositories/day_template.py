@@ -41,10 +41,6 @@ class DayTemplateRepository(
             "icon": template.icon,
         }
 
-        # Handle JSONB fields
-        if template.alarm:
-            row["alarm"] = dataclass_to_json_dict(template.alarm)
-
         # Handle list fields - convert UUIDs to strings for JSON serialization
         if template.routine_ids:
             row["routine_ids"] = [
@@ -110,27 +106,6 @@ class DayTemplateRepository(
                 )
                 for tb in data["time_blocks"]
             ]
-
-        # Handle alarm - it comes as a dict from JSONB, need to convert to value object
-        if data.get("alarm"):
-            if isinstance(data["alarm"], dict):
-                alarm_data = dict(data["alarm"])
-                # Convert time string back to time object if needed
-                if "time" in alarm_data and isinstance(alarm_data["time"], str):
-                    alarm_data["time"] = dt_time.fromisoformat(alarm_data["time"])
-                # Convert type string to enum if needed
-                if "type" in alarm_data and isinstance(alarm_data["type"], str):
-                    alarm_data["type"] = value_objects.AlarmType(alarm_data["type"])
-                # Convert triggered_at string to time object if needed
-                if (
-                    "triggered_at" in alarm_data
-                    and alarm_data["triggered_at"]
-                    and isinstance(alarm_data["triggered_at"], str)
-                ):
-                    alarm_data["triggered_at"] = dt_time.fromisoformat(
-                        alarm_data["triggered_at"]
-                    )
-                data["alarm"] = value_objects.Alarm(**alarm_data)
 
         return DayTemplateEntity(**data)
 

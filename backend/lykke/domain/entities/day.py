@@ -37,7 +37,6 @@ if TYPE_CHECKING:
 class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableEntity):
     user_id: UUID
     date: dt_date
-    alarm: value_objects.Alarm | None = None
     status: value_objects.DayStatus = value_objects.DayStatus.UNSCHEDULED
     scheduled_at: datetime | None = None
     tags: list[value_objects.DayTag] = field(default_factory=list)
@@ -97,7 +96,6 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
             date=date,
             status=value_objects.DayStatus.UNSCHEDULED,
             template=template,
-            alarm=template.alarm,
         )
 
     def schedule(self, template: DayTemplateEntity) -> None:
@@ -119,7 +117,6 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
             )
 
         self.template = template
-        self.alarm = template.alarm
         self.status = value_objects.DayStatus.SCHEDULED
         self.scheduled_at = datetime.now(UTC)
         self._add_event(
@@ -174,9 +171,6 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
             template: The new template to use
         """
         self.template = template
-        # Update alarm if template has one
-        if template.alarm:
-            self.alarm = template.alarm
 
     def record_task_action(
         self, task: TaskEntity, action: value_objects.Action
