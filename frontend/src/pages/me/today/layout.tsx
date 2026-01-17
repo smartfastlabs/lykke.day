@@ -1,9 +1,11 @@
-import Page from "@/components/shared/layout/Page";
+import { faRotate } from "@fortawesome/free-solid-svg-icons";
 import { Show, Component, ParentProps, createMemo } from "solid-js";
+import Page from "@/components/shared/layout/Page";
+import { Icon } from "@/components/shared/Icon";
 import { useStreamingData } from "@/providers/streaming-data";
 
 export const TodayPageLayout: Component<ParentProps> = (props) => {
-  const { dayContext, isLoading, day } = useStreamingData();
+  const { dayContext, isLoading, day, sync } = useStreamingData();
 
   const date = createMemo(() => {
     const dayValue = day();
@@ -50,11 +52,22 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
                     {weekday()} {monthDay()}
                   </p>
                 </div>
-                <Show when={isWorkday()}>
-                  <span class="px-3 py-1.25 md:px-4 md:py-1.5 rounded-full bg-amber-50/95 text-amber-600 text-[11px] md:text-xs font-semibold uppercase tracking-wide border border-amber-100/80 shadow-sm shadow-amber-900/5">
-                    Workday
-                  </span>
-                </Show>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={sync}
+                    aria-label="Refresh"
+                    title="Refresh"
+                    class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
+                  >
+                    <Icon icon={faRotate} class="w-4 h-4 fill-amber-600/70" />
+                  </button>
+                  <Show when={isWorkday()}>
+                    <span class="px-3 py-1.25 md:px-4 md:py-1.5 rounded-full bg-amber-50/95 text-amber-600 text-[11px] md:text-xs font-semibold uppercase tracking-wide border border-amber-100/80 shadow-sm shadow-amber-900/5">
+                      Workday
+                    </span>
+                  </Show>
+                </div>
               </div>
             </div>
             {props.children}
