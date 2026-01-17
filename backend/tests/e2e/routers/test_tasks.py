@@ -29,6 +29,10 @@ async def test_complete_task_action(authenticated_client, test_date):
     """
     client, user = await authenticated_client()
 
+    # Ensure day exists by scheduling it
+    from tests.e2e.conftest import schedule_day_for_user
+    await schedule_day_for_user(user.id, test_date)
+
     # Create a test task
     task_repo = TaskRepository(user_id=user.id)
     test_task = TaskEntity(
@@ -67,6 +71,10 @@ async def test_complete_task_action(authenticated_client, test_date):
 async def test_punt_task_action(authenticated_client, test_date):
     """Test punting a task via the API."""
     client, user = await authenticated_client()
+
+    # Ensure day exists by scheduling it
+    from tests.e2e.conftest import schedule_day_for_user
+    await schedule_day_for_user(user.id, test_date)
 
     # Create a test task
     task_repo = TaskRepository(user_id=user.id)
@@ -110,6 +118,10 @@ async def test_complete_task_broadcasts_audit_log(authenticated_client, test_dat
     to not be broadcast when tasks were completed via the API.
     """
     client, user = await authenticated_client()
+
+    # Ensure day exists by scheduling it
+    from tests.e2e.conftest import schedule_day_for_user
+    await schedule_day_for_user(user.id, test_date)
 
     # Create a test task
     task_repo = TaskRepository(user_id=user.id)
@@ -182,6 +194,10 @@ async def test_complete_task_broadcasts_audit_log(authenticated_client, test_dat
 async def test_punt_task_broadcasts_audit_log(authenticated_client, test_date):
     """Test that punting a task via API broadcasts audit log to PubSub."""
     client, user = await authenticated_client()
+
+    # Ensure day exists by scheduling it
+    from tests.e2e.conftest import schedule_day_for_user
+    await schedule_day_for_user(user.id, test_date)
 
     # Create a test task
     task_repo = TaskRepository(user_id=user.id)

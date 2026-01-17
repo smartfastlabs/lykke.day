@@ -8,7 +8,6 @@ from loguru import logger
 from lykke.application.commands.base import BaseCommandHandler
 from lykke.application.queries.preview_day import PreviewDayHandler
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
-from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 
@@ -47,7 +46,12 @@ class RescheduleDayHandler(BaseCommandHandler):
         logger.info(f"Rescheduling day for {date}")
 
         async with self.new_uow() as uow:
-            # Step 1: Delete all existing tasks for this date
+            # Step 1: Get the existing Day entity
+            day_id = DayEntity.id_from_date_and_user(date, self.user_id)
+            day = await uow.day_ro_repo.get(day_id)
+            logger.info(f"Found existing day for {date}")
+
+            # Step 2: Delete all existing tasks for this date
             # First, verify how many tasks exist before deletion for logging
             existing_tasks = await uow.task_ro_repo.search(
                 value_objects.TaskQuery(date=date)
@@ -70,31 +74,11 @@ class RescheduleDayHandler(BaseCommandHandler):
                     await uow.delete(task)
                 logger.info(f"Force deleted {len(remaining_tasks)} remaining tasks")
 
-            # Step 2: Delete all audit logs for this date
+            # Step 3: Delete all audit logs for this date
             # Note: Audit logs are normally immutable, but reschedule is a special case
             # where we want a clean slate
             logger.info(f"Deleting audit logs for {date}")
             await uow.bulk_delete_audit_logs(value_objects.AuditLogQuery(date=date))
-
-            # Step 3: Get or create the Day entity
-            day_id = DayEntity.id_from_date_and_user(date, self.user_id)
-            try:
-                day = await uow.day_ro_repo.get(day_id)
-                logger.info(f"Found existing day for {date}")
-            except NotFoundError:
-                # Day doesn't exist, create it
-                logger.info(f"Creating new day for {date}")
-                user = await uow.user_ro_repo.get(self.user_id)
-                template_slug = user.settings.template_defaults[date.weekday()]
-                template = await uow.day_template_ro_repo.search_one(
-                    value_objects.DayTemplateQuery(slug=template_slug)
-                )
-                day = DayEntity.create_for_date(
-                    date,
-                    user_id=self.user_id,
-                    template=template,
-                )
-                await uow.create(day)
 
             # Step 4: Get preview of what tasks should be created
             preview_result = await self.preview_day_handler.preview_day(

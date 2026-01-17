@@ -44,7 +44,11 @@ async def test_full_sync_request(authenticated_client, test_date):
     """Test requesting full day context via WebSocket."""
     client, user = await authenticated_client()
 
-    # Create a test task directly (no need for real-time notification in full sync)
+    # Ensure day is scheduled first (this creates the day)
+    from tests.e2e.conftest import schedule_day_for_user
+    await schedule_day_for_user(user.id, test_date)
+
+    # Create a test task after day is scheduled
     task_repo = TaskRepository(user_id=user.id)
     test_task = TaskEntity(
         id=uuid4(),
@@ -182,7 +186,11 @@ async def test_realtime_task_update_notification(authenticated_client, test_date
     """Test that task updates trigger real-time notifications via WebSocket."""
     client, user = await authenticated_client()
 
-    # Create a test task directly (initial setup, no real-time needed)
+    # Ensure day is scheduled first (this creates the day)
+    from tests.e2e.conftest import schedule_day_for_user
+    await schedule_day_for_user(user.id, test_date)
+
+    # Create a test task after day is scheduled
     task_repo = TaskRepository(user_id=user.id)
     test_task = TaskEntity(
         id=uuid4(),
@@ -548,7 +556,11 @@ async def test_filtering_other_days_entities(authenticated_client, test_date):
     """Test that entities from other days are filtered out."""
     client, user = await authenticated_client()
 
-    # Create a task for today directly
+    # Ensure day is scheduled first (this creates the day)
+    from tests.e2e.conftest import schedule_day_for_user
+    await schedule_day_for_user(user.id, test_date)
+
+    # Create a task for today after day is scheduled
     task_repo = TaskRepository(user_id=user.id)
     today_task = TaskEntity(
         id=uuid4(),
@@ -606,7 +618,11 @@ async def test_multiple_websocket_connections(authenticated_client, test_date):
     """Test that multiple WebSocket connections work independently."""
     client, user = await authenticated_client()
 
-    # Create a test task directly
+    # Ensure day is scheduled first (this creates the day)
+    from tests.e2e.conftest import schedule_day_for_user
+    await schedule_day_for_user(user.id, test_date)
+
+    # Create a test task after day is scheduled
     task_repo = TaskRepository(user_id=user.id)
     test_task = TaskEntity(
         id=uuid4(),

@@ -1,7 +1,8 @@
 """Fixtures for e2e tests - full API tests with test client."""
 
+import datetime
 from datetime import time
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -61,6 +62,28 @@ def test_client():
     """FastAPI TestClient for e2e tests."""
     with TestClient(app) as client:
         yield client
+
+
+async def schedule_day_for_user(user_id: UUID, date: datetime.date) -> None:
+    """Helper function to schedule a day for a user in tests.
+    
+    This is used instead of the removed HTTP endpoint to ensure days exist
+    before creating tasks or testing other functionality.
+    """
+    from lykke.application.commands.day import ScheduleDayHandler
+    from lykke.application.queries import PreviewDayHandler
+    from lykke.infrastructure.gateways import StubPubSubGateway
+    from lykke.infrastructure.unit_of_work import (
+        SqlAlchemyReadOnlyRepositoryFactory,
+        SqlAlchemyUnitOfWorkFactory,
+    )
+    
+    ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
+    uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
+    ro_repos = ro_repo_factory.create(user_id)
+    preview_handler = PreviewDayHandler(ro_repos, user_id)
+    schedule_handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
+    await schedule_handler.schedule_day(date=date)
 
 
 @pytest.fixture

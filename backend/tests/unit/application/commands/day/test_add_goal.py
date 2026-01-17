@@ -1,7 +1,6 @@
 """Unit tests for AddGoalToDayHandler."""
 
-import datetime
-from datetime import UTC, date as dt_date
+from datetime import date as dt_date
 from uuid import uuid4
 
 import pytest
@@ -189,8 +188,8 @@ async def test_add_goal_emits_domain_event():
 
 
 @pytest.mark.asyncio
-async def test_add_goal_creates_day_if_not_exists():
-    """Test add_goal creates a day if it doesn't exist."""
+async def test_add_goal_raises_if_day_missing():
+    """Test add_goal raises if the day doesn't exist."""
     user_id = uuid4()
     task_date = dt_date(2025, 11, 27)
 
@@ -215,16 +214,9 @@ async def test_add_goal_creates_day_if_not_exists():
     uow_factory = _FakeUoWFactory(day_repo, day_template_repo, user_repo)
     handler = AddGoalToDayHandler(ro_repos, uow_factory, user_id)
 
-    # Act
-    result = await handler.add_goal(date=task_date, name="Test Goal")
-
-    # Assert
-    assert len(uow_factory.uow.created) == 1
-    created_day = uow_factory.uow.created[0]
-    assert isinstance(created_day, DayEntity)
-    assert created_day.date == task_date
-    assert len(result.goals) == 1
-    assert result.goals[0].name == "Test Goal"
+    # Act / Assert
+    with pytest.raises(NotFoundError, match="Day"):
+        await handler.add_goal(date=task_date, name="Test Goal")
 
 
 @pytest.mark.asyncio

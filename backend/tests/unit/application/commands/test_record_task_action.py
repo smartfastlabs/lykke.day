@@ -1,7 +1,6 @@
 """Unit tests for RecordTaskActionHandler."""
 
-import datetime
-from datetime import UTC, date as dt_date
+from datetime import date as dt_date
 from uuid import uuid4
 
 import pytest
@@ -258,8 +257,8 @@ async def test_record_task_action_raises_domain_events():
 
 
 @pytest.mark.asyncio
-async def test_record_task_action_creates_day_if_not_exists():
-    """Verify day is created if it doesn't exist when recording action."""
+async def test_record_task_action_raises_if_day_missing():
+    """Verify error is raised if day doesn't exist when recording action."""
     user_id = uuid4()
     task_date = dt_date(2025, 11, 27)
 
@@ -300,16 +299,9 @@ async def test_record_task_action_creates_day_if_not_exists():
         type=value_objects.ActionType.COMPLETE,
     )
 
-    # Act
-    result = await handler.record_task_action(task.id, action)
-
-    # Assert - day should have been created
-    # Audit logs are now automatically created by the UOW when processing entities with audited events
-    assert len(uow_factory.uow.created) == 1
-    created_entities = uow_factory.uow.created
-    created_day = next(e for e in created_entities if isinstance(e, DayEntity))
-    assert created_day.date == task_date
-    assert created_day.user_id == user_id
+    # Act / Assert
+    with pytest.raises(NotFoundError, match="Day"):
+        await handler.record_task_action(task.id, action)
 
 
 @pytest.mark.asyncio

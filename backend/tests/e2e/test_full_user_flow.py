@@ -88,17 +88,11 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     )
     await day_template_repo.put(default_template)
 
-    # Step 3: Load some data as the authenticated user
-    # Get context for today (this will auto-schedule if needed and loads day, tasks, calendar_entries)
-    context_response = test_client.get("/days/today/context")
-    assert context_response.status_code == 200, (
-        f"Get context failed: {context_response.text}"
-    )
-    context_data = context_response.json()
-    assert "day" in context_data
-    assert "tasks" in context_data
-    assert "calendar_entries" in context_data
-    assert context_data["day"]["user_id"] == user_id_str
+    # Step 3: Verify day can be scheduled (simulating background job or WebSocket auto-schedule)
+    # Schedule the day directly to verify it works
+    from tests.e2e.conftest import schedule_day_for_user
+    from lykke.core.utils.dates import get_current_date
+    await schedule_day_for_user(user_id, get_current_date())
 
     # Step 4: Verify database state directly
 

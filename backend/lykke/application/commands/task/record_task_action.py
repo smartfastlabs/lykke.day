@@ -3,7 +3,6 @@
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler
-from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, TaskEntity
 
@@ -32,26 +31,7 @@ class RecordTaskActionHandler(BaseCommandHandler):
 
             # Get the Day aggregate root using the task's scheduled_date
             day_id = DayEntity.id_from_date_and_user(task.scheduled_date, self.user_id)
-            day_was_created = False
-            try:
-                day = await uow.day_ro_repo.get(day_id)
-            except NotFoundError:
-                # Day doesn't exist yet - this shouldn't happen if task exists
-                # but we'll create it to maintain consistency
-                user = await uow.user_ro_repo.get(self.user_id)
-                template_slug = user.settings.template_defaults[
-                    task.scheduled_date.weekday()
-                ]
-                template = await uow.day_template_ro_repo.search_one(
-                    value_objects.DayTemplateQuery(slug=template_slug)
-                )
-                day = DayEntity.create_for_date(
-                    task.scheduled_date,
-                    user_id=self.user_id,
-                    template=template,
-                )
-                await uow.create(day)
-                day_was_created = True
+            day = await uow.day_ro_repo.get(day_id)
 
             # Use Day aggregate root method to record action
             # This ensures proper aggregate boundaries and domain event handling
@@ -60,9 +40,7 @@ class RecordTaskActionHandler(BaseCommandHandler):
             updated_task = day.record_task_action(task, action)
 
             # Add both Day (for events) and Task (for state changes) to UoW
-            # Only add day if we didn't create it (create() already adds it)
-            if not day_was_created:
-                uow.add(day)
+            uow.add(day)
             uow.add(updated_task)
 
             return updated_task

@@ -3,18 +3,14 @@
 import asyncio
 import contextlib
 import json
-from datetime import UTC, date
-from datetime import datetime as dt_datetime
+from datetime import UTC, date, datetime as dt_datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from loguru import logger
-from lykke.application.commands import (
-    CreateOrGetDayHandler,
-    RescheduleDayHandler,
-    ScheduleDayHandler,
-)
+
+from lykke.application.commands import RescheduleDayHandler, ScheduleDayHandler
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.queries import GetDayContextHandler, GetIncrementalChangesHandler
 from lykke.core.exceptions import NotFoundError
@@ -32,12 +28,10 @@ from lykke.presentation.api.schemas.websocket_message import (
 )
 
 from .dependencies.services import (
-    day_context_handler,
     day_context_handler_websocket,
-    get_create_or_get_day_handler_websocket,
     get_pubsub_gateway,
     get_reschedule_day_handler,
-    get_schedule_day_handler,
+    get_schedule_day_handler_websocket,
     incremental_changes_handler_websocket,
 )
 
@@ -47,21 +41,6 @@ router = APIRouter()
 # ============================================================================
 # Day Context Queries
 # ============================================================================
-
-
-@router.get("/today/context", response_model=DayContextSchema)
-async def get_context_today(
-    handler: Annotated[GetDayContextHandler, Depends(day_context_handler)],
-    schedule_handler: Annotated[ScheduleDayHandler, Depends(get_schedule_day_handler)],
-) -> DayContextSchema:
-    """Get the complete context for today."""
-    date = get_current_date()
-    try:
-        context = await handler.get_day_context(date=date)
-    except NotFoundError:
-        # If the day does not exist yet, schedule it and return the persisted context
-        context = await schedule_handler.schedule_day(date=date)
-    return map_day_context_to_schema(context)
 
 
 @router.put("/today/reschedule", response_model=DayContextSchema)
@@ -107,12 +86,12 @@ async def days_context_websocket(
     day_context_handler: Annotated[
         GetDayContextHandler, Depends(day_context_handler_websocket)
     ],
-    create_or_get_day_handler: Annotated[
-        CreateOrGetDayHandler, Depends(get_create_or_get_day_handler_websocket)
-    ],
     incremental_changes_handler_ws: Annotated[
         GetIncrementalChangesHandler,
         Depends(incremental_changes_handler_websocket),
+    ],
+    schedule_day_handler: Annotated[
+        ScheduleDayHandler, Depends(get_schedule_day_handler_websocket)
     ],
 ) -> None:
     """WebSocket endpoint for real-time DayContext sync.
@@ -150,8 +129,8 @@ async def days_context_websocket(
                 _handle_client_messages(
                     websocket,
                     day_context_handler,
-                    create_or_get_day_handler,
                     incremental_changes_handler_ws,
+                    schedule_day_handler,
                     today_date,
                 )
             )
@@ -194,8 +173,8 @@ async def days_context_websocket(
 async def _handle_client_messages(
     websocket: WebSocket,
     get_day_context_handler: GetDayContextHandler,
-    create_or_get_day_handler: CreateOrGetDayHandler,
     get_incremental_changes_handler: GetIncrementalChangesHandler,
+    schedule_day_handler: ScheduleDayHandler,
     today_date: date,
 ) -> None:
     """Handle messages from the client (sync requests).
@@ -262,16 +241,8 @@ async def _handle_client_messages(
                             date=today_date
                         )
                     except NotFoundError:
-                        try:
-                            await create_or_get_day_handler.create_or_get_day(
-                                date=today_date
-                            )
-                        except Exception as create_error:
-                            logger.warning(
-                                "Failed to create day in websocket sync: "
-                                f"{create_error}"
-                            )
-                        context = await get_day_context_handler.get_day_context(
+                        # Day doesn't exist, auto-schedule it (WebSocket is THE place that creates Day if missing)
+                        context = await schedule_day_handler.schedule_day(
                             date=today_date
                         )
 

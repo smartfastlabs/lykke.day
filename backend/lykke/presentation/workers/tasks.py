@@ -1,6 +1,5 @@
 """Background task definitions using Taskiq."""
 
-from datetime import UTC, datetime, timedelta
 from typing import Annotated, cast
 from uuid import UUID
 
@@ -15,6 +14,7 @@ from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProt
 from lykke.application.queries import PreviewDayHandler
 from lykke.application.repositories import UserRepositoryReadOnlyProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
+from lykke.core.utils.dates import get_current_date
 from lykke.infrastructure.gateways import GoogleCalendarGateway, StubPubSubGateway
 from lykke.infrastructure.repositories import UserRepository
 from lykke.infrastructure.unit_of_work import (
@@ -188,37 +188,29 @@ async def resubscribe_calendar_task(
     )
 
 
-@broker.task  # type: ignore[untyped-decorator]
-async def schedule_all_users_week_task(
+@broker.task(schedule=[{"cron": "0 3 * * *"}])  # type: ignore[untyped-decorator]
+async def schedule_all_users_day_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
 ) -> None:
-    """Load all users and enqueue scheduling tasks for each user.
-
-    This is the parent task that fans out to per-user scheduling tasks.
-    It is one of the few tasks that is NOT scoped to a specific user.
-    """
-    logger.info("Starting scheduled week task for all users")
+    """Load all users and enqueue daily scheduling tasks for each user."""
+    logger.info("Starting daily schedule task for all users")
 
     users = await user_repo.all()
     logger.info(f"Found {len(users)} users to schedule")
 
     for user in users:
         # Enqueue a sub-task for each user
-        await schedule_user_week_task.kiq(user_id=user.id)
+        await schedule_user_day_task.kiq(user_id=user.id)
 
-    logger.info(f"Enqueued scheduling tasks for {len(users)} users")
+    logger.info(f"Enqueued daily scheduling tasks for {len(users)} users")
 
 
 @broker.task  # type: ignore[untyped-decorator]
-async def schedule_user_week_task(
+async def schedule_user_day_task(
     user_id: UUID,
 ) -> None:
-    """Schedule all days for the next week for a specific user.
-
-    Args:
-        user_id: The user ID to schedule days for.
-    """
-    logger.info(f"Starting week scheduling for user {user_id}")
+    """Schedule today's day for a specific user."""
+    logger.info(f"Starting daily scheduling for user {user_id}")
 
     schedule_handler = get_schedule_day_handler(
         user_id=user_id,
@@ -226,25 +218,19 @@ async def schedule_user_week_task(
         ro_repo_factory=get_read_only_repository_factory(),
     )
 
-    today = datetime.now(UTC).date()
-    days_scheduled = 0
+    # Uses the configured timezone for "today"
+    target_date = get_current_date()
+    try:
+        await schedule_handler.schedule_day(date=target_date)
+        logger.debug(f"Scheduled {target_date} for user {user_id}")
+    except ValueError as e:
+        # Day template might be missing - log and continue
+        logger.warning(f"Could not schedule {target_date} for user {user_id}: {e}")
+    except Exception:  # pylint: disable=broad-except
+        # Catch-all for resilient background job - continue with other users
+        logger.exception(f"Error scheduling {target_date} for user {user_id}")
 
-    for day_offset in range(7):
-        target_date = today + timedelta(days=day_offset)
-        try:
-            await schedule_handler.schedule_day(date=target_date)
-            days_scheduled += 1
-            logger.debug(f"Scheduled {target_date} for user {user_id}")
-        except ValueError as e:
-            # Day template might be missing for some days - log and continue
-            logger.warning(f"Could not schedule {target_date} for user {user_id}: {e}")
-        except Exception:  # pylint: disable=broad-except
-            # Catch-all for resilient background job - continue with other days
-            logger.exception(f"Error scheduling {target_date} for user {user_id}")
-
-    logger.info(
-        f"Week scheduling completed for user {user_id}: {days_scheduled}/7 days scheduled"
-    )
+    logger.info(f"Daily scheduling completed for user {user_id}")
 
 
 # =============================================================================
