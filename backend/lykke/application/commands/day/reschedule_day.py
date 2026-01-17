@@ -1,5 +1,6 @@
 """Command to reschedule a day - clean up and recreate tasks."""
 
+import asyncio
 from datetime import date as dt_date
 from uuid import UUID
 
@@ -94,12 +95,61 @@ class RescheduleDayHandler(BaseCommandHandler):
                 preview_result.day.template.id
             )
 
+            # Step 5: Copy time blocks from template (like schedule_day does)
+            day_time_blocks: list[value_objects.DayTimeBlock] = []
+            if template.time_blocks:
+                # Get unique time block definition IDs
+                unique_def_ids = {
+                    tb.time_block_definition_id for tb in template.time_blocks
+                }
+                # Fetch all time block definitions
+                time_block_defs = await asyncio.gather(
+                    *[
+                        uow.time_block_definition_ro_repo.get(def_id)
+                        for def_id in unique_def_ids
+                    ]
+                )
+                # Create a lookup map
+                def_map = {def_.id: def_ for def_ in time_block_defs}
+
+                # Convert each template timeblock to a day timeblock
+                for template_tb in template.time_blocks:
+                    time_block_def = def_map[template_tb.time_block_definition_id]
+                    day_time_blocks.append(
+                        value_objects.DayTimeBlock(
+                            time_block_definition_id=template_tb.time_block_definition_id,
+                            start_time=template_tb.start_time,
+                            end_time=template_tb.end_time,
+                            name=template_tb.name,
+                            type=time_block_def.type,
+                            category=time_block_def.category,
+                        )
+                    )
+
+            # Step 6: Update day with template data
+            # Update template reference and alarm
+            day.update_template(template)
+            
+            # Update time blocks (replacing any existing ones)
+            day.time_blocks = day_time_blocks
+            
+            # Reset goals (clear all existing goals from rescheduled day)
+            # Goals should be re-added if needed after rescheduling
+            if day.goals:
+                # Remove all goals by iterating backwards to avoid index issues
+                goal_ids_to_remove = [goal.id for goal in day.goals]
+                for goal_id in goal_ids_to_remove:
+                    day.remove_goal(goal_id)
+                logger.info(f"Cleared {len(goal_ids_to_remove)} goals from rescheduled day")
+
             # Schedule the day if it's not already scheduled
             if day.status == value_objects.DayStatus.UNSCHEDULED:
                 day.schedule(template)
-                uow.add(day)
+            
+            # Mark day as modified so changes are saved
+            uow.add(day)
 
-            # Step 5: Create fresh tasks from preview
+            # Step 7: Create fresh tasks from preview
             logger.info(f"Creating {len(preview_result.tasks)} tasks for {date}")
             tasks = preview_result.tasks
             for task in tasks:
