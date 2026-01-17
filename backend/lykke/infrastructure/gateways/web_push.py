@@ -5,7 +5,8 @@ from loguru import logger
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.core.config import settings
 from lykke.core.exceptions import PushNotificationError
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import PushSubscriptionEntity
 from webpush import WebPush, WebPushMessage, WebPushSubscription  # type: ignore
 
 wp = WebPush(
@@ -16,7 +17,7 @@ wp = WebPush(
 
 
 async def send_notification(
-    subscription: data_objects.PushSubscription,
+    subscription: PushSubscriptionEntity,
     content: str | dict | value_objects.NotificationPayload,
 ) -> None:
     from lykke.core.utils.serialization import dataclass_to_json_dict
@@ -57,7 +58,7 @@ class WebPushGateway(WebPushGatewayProtocol):
 
     async def send_notification(
         self,
-        subscription: data_objects.PushSubscription,
+        subscription: PushSubscriptionEntity,
         content: str | dict | value_objects.NotificationPayload,
     ) -> None:
         """Send a push notification to a subscription."""

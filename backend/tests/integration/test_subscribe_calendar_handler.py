@@ -8,7 +8,8 @@ from lykke.application.commands.calendar.subscribe_calendar import (
     SubscribeCalendarHandler,
 )
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 from lykke.infrastructure.gateways import StubPubSubGateway
 from lykke.infrastructure.unit_of_work import (
@@ -25,7 +26,7 @@ class FakeGoogleGateway(GoogleCalendarGatewayProtocol):
     async def subscribe_to_calendar(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         webhook_url: str,
         channel_id: str,
         client_state: str,
@@ -49,7 +50,7 @@ class FakeGoogleGateway(GoogleCalendarGatewayProtocol):
         self,
         calendar: CalendarEntity,
         lookback: datetime,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         sync_token: str | None = None,
     ) -> tuple[list[CalendarEntryEntity], list[CalendarEntryEntity], str | None]:
         return [], [], "next-token"
@@ -57,7 +58,7 @@ class FakeGoogleGateway(GoogleCalendarGatewayProtocol):
     async def unsubscribe_from_calendar(  # pragma: no cover - unused in this test
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         channel_id: str,
         resource_id: str | None,
     ) -> None:
@@ -74,7 +75,7 @@ async def test_subscribe_calendar_persists_subscription(
     calendar_repo,
 ) -> None:
     auth_token = await auth_token_repo.put(
-        data_objects.AuthToken(
+        AuthTokenEntity(
             id=uuid4(),
             user_id=test_user.id,
             platform="google",

@@ -3,23 +3,23 @@
 from typing import Any
 
 from lykke.domain import value_objects
-from lykke.domain.data_objects import TimeBlockDefinition
+from lykke.domain.entities import TimeBlockDefinitionEntity
 from lykke.infrastructure.database.tables import time_block_definitions_tbl
 
 from .base import BaseQuery, UserScopedBaseRepository
 
 
 class TimeBlockDefinitionRepository(
-    UserScopedBaseRepository[TimeBlockDefinition, BaseQuery]
+    UserScopedBaseRepository[TimeBlockDefinitionEntity, BaseQuery]
 ):
-    """Repository for TimeBlockDefinition data objects."""
+    """Repository for TimeBlockDefinition entities."""
 
-    Object = TimeBlockDefinition
+    Object = TimeBlockDefinitionEntity
     table = time_block_definitions_tbl
     QueryClass = BaseQuery
 
     @staticmethod
-    def entity_to_row(time_block_definition: TimeBlockDefinition) -> dict[str, Any]:
+    def entity_to_row(time_block_definition: TimeBlockDefinitionEntity) -> dict[str, Any]:
         """Convert a TimeBlockDefinition entity to a database row dict."""
         row: dict[str, Any] = {
             "id": time_block_definition.id,
@@ -32,7 +32,7 @@ class TimeBlockDefinitionRepository(
         return row
 
     @classmethod
-    def row_to_entity(cls, row: dict[str, Any]) -> TimeBlockDefinition:
+    def row_to_entity(cls, row: dict[str, Any]) -> TimeBlockDefinitionEntity:
         """Convert a database row dict to a TimeBlockDefinition entity.
 
         Overrides base to handle enum conversion for type and category fields.

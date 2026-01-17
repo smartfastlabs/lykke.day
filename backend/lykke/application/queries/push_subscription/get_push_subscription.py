@@ -4,7 +4,7 @@ from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler
 from lykke.application.repositories import PushSubscriptionRepositoryReadOnlyProtocol
-from lykke.domain import data_objects
+from lykke.domain.entities import PushSubscriptionEntity
 
 
 class GetPushSubscriptionHandler(BaseQueryHandler):
@@ -14,7 +14,7 @@ class GetPushSubscriptionHandler(BaseQueryHandler):
 
     async def run(
         self, subscription_id: UUID
-    ) -> data_objects.PushSubscription:
+    ) -> PushSubscriptionEntity:
         """Get a single push subscription by ID.
 
         Args:

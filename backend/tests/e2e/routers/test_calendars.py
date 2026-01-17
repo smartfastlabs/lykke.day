@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 from lykke.domain.entities import CalendarEntity
-from lykke.domain import data_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.infrastructure.repositories import AuthTokenRepository, CalendarRepository
 
 
@@ -15,7 +15,7 @@ async def test_list_calendars(authenticated_client):
 
     # Create an auth token first (calendar depends on it)
     auth_token_repo = AuthTokenRepository()
-    auth_token = data_objects.AuthToken(
+    auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
         platform="google",
@@ -55,7 +55,7 @@ async def test_get_calendar(authenticated_client):
 
     # Create an auth token first
     auth_token_repo = AuthTokenRepository()
-    auth_token = data_objects.AuthToken(
+    auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
         platform="google",
@@ -103,7 +103,7 @@ async def test_create_calendar(authenticated_client):
 
     # Create an auth token first
     auth_token_repo = AuthTokenRepository()
-    auth_token = data_objects.AuthToken(
+    auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
         platform="google",
@@ -137,7 +137,7 @@ async def test_update_calendar(authenticated_client):
 
     # Create an auth token first
     auth_token_repo = AuthTokenRepository()
-    auth_token = data_objects.AuthToken(
+    auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
         platform="google",
@@ -181,7 +181,7 @@ async def test_update_calendar_not_found(authenticated_client):
 
     # Create an auth token first
     auth_token_repo = AuthTokenRepository()
-    auth_token = data_objects.AuthToken(
+    auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
         platform="google",
@@ -210,7 +210,7 @@ async def test_delete_calendar(authenticated_client):
 
     # Create an auth token first
     auth_token_repo = AuthTokenRepository()
-    auth_token = data_objects.AuthToken(
+    auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
         platform="google",
@@ -259,7 +259,7 @@ async def test_list_calendars_pagination(authenticated_client):
 
     # Create an auth token first
     auth_token_repo = AuthTokenRepository()
-    auth_token = data_objects.AuthToken(
+    auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=user.id,
         platform="google",

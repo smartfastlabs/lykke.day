@@ -2,7 +2,7 @@
 
 from dataclasses import asdict
 
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
 from lykke.domain.entities import (
     AuditLogEntity,
     AuditableEntity,
@@ -15,8 +15,11 @@ from lykke.domain.entities import (
     DayTemplateEntity,
     FactoidEntity,
     MessageEntity,
+    PushSubscriptionEntity,
     RoutineEntity,
+    TaskDefinitionEntity,
     TaskEntity,
+    TimeBlockDefinitionEntity,
     UserEntity,
 )
 from lykke.presentation.api.schemas import (
@@ -63,7 +66,7 @@ def map_goal_to_schema(goal: value_objects.Goal) -> GoalSchema:
 
 
 def map_task_definition_to_schema(
-    task_definition: data_objects.TaskDefinition,
+    task_definition: TaskDefinitionEntity,
 ) -> TaskDefinitionSchema:
     """Convert TaskDefinition data object to TaskDefinition schema."""
     return TaskDefinitionSchema(
@@ -76,7 +79,7 @@ def map_task_definition_to_schema(
 
 
 def map_time_block_definition_to_schema(
-    time_block_definition: data_objects.TimeBlockDefinition,
+    time_block_definition: TimeBlockDefinitionEntity,
 ) -> TimeBlockDefinitionSchema:
     """Convert TimeBlockDefinition data object to TimeBlockDefinition schema."""
     return TimeBlockDefinitionSchema(
@@ -234,7 +237,7 @@ def map_calendar_entry_series_to_schema(
 
 
 def map_push_subscription_to_schema(
-    subscription: data_objects.PushSubscription,
+    subscription: PushSubscriptionEntity,
 ) -> PushSubscriptionSchema:
     """Convert PushSubscription entity to PushSubscription schema."""
     return PushSubscriptionSchema(

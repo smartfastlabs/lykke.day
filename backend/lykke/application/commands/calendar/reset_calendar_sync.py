@@ -17,7 +17,8 @@ from lykke.application.unit_of_work import (
     UnitOfWorkProtocol,
 )
 from lykke.core.config import settings
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.domain.entities import CalendarEntity
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
@@ -156,7 +157,7 @@ class ResetCalendarSyncHandler(BaseCommandHandler):
     async def _unsubscribe(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         uow: UnitOfWorkProtocol,
     ) -> CalendarEntity:
         """Unsubscribe from the provider if currently subscribed."""
@@ -185,7 +186,7 @@ class ResetCalendarSyncHandler(BaseCommandHandler):
     async def _subscribe(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         uow: UnitOfWorkProtocol,
     ) -> CalendarEntity:
         """Subscribe to provider updates and persist metadata."""

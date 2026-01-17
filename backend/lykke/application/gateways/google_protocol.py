@@ -3,7 +3,8 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
 
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
@@ -21,7 +22,7 @@ class GoogleCalendarGatewayProtocol(Protocol):
         self,
         calendar: CalendarEntity,
         lookback: datetime,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         sync_token: str | None = None,
     ) -> tuple[
         list[CalendarEntryEntity],
@@ -46,7 +47,7 @@ class GoogleCalendarGatewayProtocol(Protocol):
     async def subscribe_to_calendar(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         webhook_url: str,
         channel_id: str,
         client_state: str,
@@ -71,7 +72,7 @@ class GoogleCalendarGatewayProtocol(Protocol):
     async def unsubscribe_from_calendar(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         channel_id: str,
         resource_id: str | None,
     ) -> None:

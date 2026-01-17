@@ -4,7 +4,7 @@ from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler
 from lykke.application.repositories import TaskDefinitionRepositoryReadOnlyProtocol
-from lykke.domain import data_objects
+from lykke.domain.entities import TaskDefinitionEntity
 
 
 class GetTaskDefinitionHandler(BaseQueryHandler):
@@ -14,7 +14,7 @@ class GetTaskDefinitionHandler(BaseQueryHandler):
 
     async def run(
         self, task_definition_id: UUID
-    ) -> data_objects.TaskDefinition:
+    ) -> TaskDefinitionEntity:
         """Get a single task definition by ID.
 
         Args:

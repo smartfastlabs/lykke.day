@@ -7,7 +7,7 @@ from lykke.domain.entities.base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class AuthToken(BaseEntityObject):
+class AuthTokenEntity(BaseEntityObject):
     user_id: UUID
     platform: str
     token: str
@@ -31,4 +31,3 @@ class AuthToken(BaseEntityObject):
             client_secret=self.client_secret,
             scopes=self.scopes,
         )
-

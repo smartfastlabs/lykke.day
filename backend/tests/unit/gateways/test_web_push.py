@@ -3,13 +3,13 @@
 
 import pytest
 
-from lykke.domain import data_objects
+from lykke.domain.entities import PushSubscriptionEntity
 
 
 @pytest.mark.asyncio
 async def test_send_notification(mock_web_push_gateway, test_user_id):
     """Test sending a push notification."""
-    subscription = data_objects.PushSubscription(
+    subscription = PushSubscriptionEntity(
         user_id=test_user_id,
         device_name="Test Device",
         endpoint="https://example.com",

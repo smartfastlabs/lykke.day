@@ -6,7 +6,8 @@ from uuid import uuid4
 
 import pytest
 from lykke.application.commands.calendar.sync_calendar import SyncCalendarHandler
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 from lykke.domain.value_objects import TaskFrequency
 from lykke.domain.value_objects.sync import SyncSubscription
@@ -51,7 +52,7 @@ def test_calendar(test_user_id, test_calendar_id, test_auth_token_id):
 @pytest.fixture
 def test_auth_token(test_user_id):
     """Test auth token."""
-    return data_objects.AuthToken(
+    return AuthTokenEntity(
         user_id=test_user_id,
         platform="google",
         token="test-token",

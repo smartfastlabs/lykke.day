@@ -6,14 +6,15 @@ from uuid import uuid4
 import pytest
 
 from lykke.core.exceptions import NotFoundError
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import TimeBlockDefinitionEntity
 from lykke.infrastructure.repositories import TimeBlockDefinitionRepository
 
 
 @pytest.mark.asyncio
 async def test_get(time_block_definition_repo: Any, test_user: Any) -> None:
     """Test getting a time block definition by ID."""
-    time_block_def = data_objects.TimeBlockDefinition(
+    time_block_def = TimeBlockDefinitionEntity(
         user_id=test_user.id,
         name="Morning Work Block",
         description="Focused work time in the morning",
@@ -40,7 +41,7 @@ async def test_get_not_found(time_block_definition_repo: Any) -> None:
 @pytest.mark.asyncio
 async def test_put_creates_new(time_block_definition_repo: Any, test_user: Any) -> None:
     """Test creating a new time block definition."""
-    time_block_def = data_objects.TimeBlockDefinition(
+    time_block_def = TimeBlockDefinitionEntity(
         user_id=test_user.id,
         name="Lunch Break",
         description="Midday meal",
@@ -58,7 +59,7 @@ async def test_put_creates_new(time_block_definition_repo: Any, test_user: Any) 
 @pytest.mark.asyncio
 async def test_put_updates_existing(time_block_definition_repo: Any, test_user: Any) -> None:
     """Test updating an existing time block definition."""
-    time_block_def = data_objects.TimeBlockDefinition(
+    time_block_def = TimeBlockDefinitionEntity(
         user_id=test_user.id,
         name="Exercise",
         description="Morning workout",
@@ -94,7 +95,7 @@ async def test_enum_conversion(time_block_definition_repo: Any, test_user: Any) 
     ]
 
     for block_type, category in test_cases:
-        time_block_def = data_objects.TimeBlockDefinition(
+        time_block_def = TimeBlockDefinitionEntity(
             user_id=test_user.id,
             name=f"Test {block_type.value}",
             description=f"Test {category.value}",
@@ -114,14 +115,14 @@ async def test_enum_conversion(time_block_definition_repo: Any, test_user: Any) 
 @pytest.mark.asyncio
 async def test_all(time_block_definition_repo: Any, test_user: Any) -> None:
     """Test getting all time block definitions."""
-    time_block_def1 = data_objects.TimeBlockDefinition(
+    time_block_def1 = TimeBlockDefinitionEntity(
         user_id=test_user.id,
         name="Morning Work",
         description="Morning work session",
         type=value_objects.TimeBlockType.WORK,
         category=value_objects.TimeBlockCategory.WORK,
     )
-    time_block_def2 = data_objects.TimeBlockDefinition(
+    time_block_def2 = TimeBlockDefinitionEntity(
         user_id=test_user.id,
         name="Lunch",
         description="Lunch break",
@@ -148,7 +149,7 @@ async def test_user_isolation(
     time_block_definition_repo: Any, test_user: Any, create_test_user: Any
 ) -> None:
     """Test that different users' time block definitions are properly isolated."""
-    time_block_def = data_objects.TimeBlockDefinition(
+    time_block_def = TimeBlockDefinitionEntity(
         user_id=test_user.id,
         name="User1 Work Block",
         description="User1's work time",
@@ -174,7 +175,7 @@ async def test_user_isolation(
 @pytest.mark.asyncio
 async def test_delete(time_block_definition_repo: Any, test_user: Any) -> None:
     """Test deleting a time block definition."""
-    time_block_def = data_objects.TimeBlockDefinition(
+    time_block_def = TimeBlockDefinitionEntity(
         user_id=test_user.id,
         name="Temporary Block",
         description="This will be deleted",

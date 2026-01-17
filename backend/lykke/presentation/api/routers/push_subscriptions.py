@@ -13,7 +13,8 @@ from lykke.application.queries.push_subscription import (
     GetPushSubscriptionHandler,
     SearchPushSubscriptionsHandler,
 )
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import PushSubscriptionEntity
 from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import (
     PagedResponseSchema,
@@ -97,7 +98,7 @@ async def subscribe(
         SendPushNotificationHandler, Depends(get_send_push_notification_handler)
     ],
 ) -> PushSubscriptionSchema:
-    subscription = data_objects.PushSubscription(
+    subscription = PushSubscriptionEntity(
         user_id=user.id,
         device_name=request.device_name,
         endpoint=request.endpoint,

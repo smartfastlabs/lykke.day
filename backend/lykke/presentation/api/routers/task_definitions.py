@@ -15,7 +15,7 @@ from lykke.application.queries.task_definition import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
-from lykke.domain import data_objects
+from lykke.domain.entities import TaskDefinitionEntity
 from lykke.presentation.api.schemas import (
     PagedResponseSchema,
     QuerySchema,
@@ -67,7 +67,7 @@ async def create_task_definition(
 ) -> TaskDefinitionSchema:
     """Create a new task definition."""
     # Convert schema to data object
-    task_definition = data_objects.TaskDefinition(
+    task_definition = TaskDefinitionEntity(
         user_id=user.id,
         name=task_definition_data.name,
         description=task_definition_data.description,

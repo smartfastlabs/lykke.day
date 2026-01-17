@@ -4,13 +4,13 @@ from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler
 from lykke.domain import value_objects
-from lykke.domain.data_objects import TimeBlockDefinition
+from lykke.domain.entities import TimeBlockDefinitionEntity
 
 
 class GetTimeBlockDefinitionHandler(BaseQueryHandler):
     """Query handler to get a single time block definition by ID."""
 
-    async def run(self, time_block_definition_id: UUID) -> TimeBlockDefinition:
+    async def run(self, time_block_definition_id: UUID) -> TimeBlockDefinitionEntity:
         """Get a time block definition by ID.
 
         Args:
@@ -28,7 +28,7 @@ class SearchTimeBlockDefinitionsHandler(BaseQueryHandler):
     async def run(
         self,
         search_query: value_objects.TimeBlockDefinitionQuery,
-    ) -> value_objects.PagedQueryResponse[TimeBlockDefinition]:
+    ) -> value_objects.PagedQueryResponse[TimeBlockDefinitionEntity]:
         """Search time block definitions with pagination.
 
         Args:

@@ -358,12 +358,13 @@ async def test_add_time_block_to_day_template_persists_to_database(
     day_template = await day_template_repo.put(day_template)
 
     # Create a time block definition
-    from lykke.domain import data_objects
+    from lykke.domain import value_objects
+    from lykke.domain.entities import TimeBlockDefinitionEntity
     from lykke.domain.value_objects.time_block import TimeBlockCategory, TimeBlockType
     from lykke.infrastructure.repositories import TimeBlockDefinitionRepository
 
     time_block_def_repo = TimeBlockDefinitionRepository(user_id=user.id)
-    time_block_def = data_objects.TimeBlockDefinition(
+    time_block_def = TimeBlockDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
         name="Morning Work",
@@ -406,12 +407,13 @@ async def test_remove_time_block_from_day_template_persists_to_database(
     client, user = await authenticated_client()
 
     # Create a time block definition
-    from lykke.domain import data_objects, value_objects
+    from lykke.domain import value_objects
+    from lykke.domain.entities import TimeBlockDefinitionEntity
     from lykke.domain.value_objects.time_block import TimeBlockCategory, TimeBlockType
     from lykke.infrastructure.repositories import TimeBlockDefinitionRepository
 
     time_block_def_repo = TimeBlockDefinitionRepository(user_id=user.id)
-    time_block_def = data_objects.TimeBlockDefinition(
+    time_block_def = TimeBlockDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
         name="Afternoon Work",

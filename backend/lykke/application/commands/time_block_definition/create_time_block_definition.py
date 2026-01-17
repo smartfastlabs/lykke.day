@@ -1,15 +1,15 @@
 """Command to create a new time block definition."""
 
 from lykke.application.commands.base import BaseCommandHandler
-from lykke.domain.data_objects import TimeBlockDefinition
+from lykke.domain.entities import TimeBlockDefinitionEntity
 
 
 class CreateTimeBlockDefinitionHandler(BaseCommandHandler):
     """Creates a new time block definition."""
 
     async def run(
-        self, time_block_definition: TimeBlockDefinition
-    ) -> TimeBlockDefinition:
+        self, time_block_definition: TimeBlockDefinitionEntity
+    ) -> TimeBlockDefinitionEntity:
         """Create a new time block definition.
 
         Args:

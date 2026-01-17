@@ -6,10 +6,9 @@ from lykke.domain.entities.base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class TimeBlockDefinition(BaseEntityObject):
+class TimeBlockDefinitionEntity(BaseEntityObject):
     user_id: UUID
     name: str
     description: str
     type: value_objects.TimeBlockType
     category: value_objects.TimeBlockCategory
-

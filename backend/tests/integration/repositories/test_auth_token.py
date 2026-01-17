@@ -5,14 +5,14 @@ from uuid import uuid4
 import pytest
 
 from lykke.core.exceptions import NotFoundError
-from lykke.domain import data_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.infrastructure.repositories import AuthTokenRepository
 
 
 @pytest.mark.asyncio
 async def test_get(auth_token_repo, test_user):
     """Test getting an auth token by ID."""
-    auth_token = data_objects.AuthToken(
+    auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=test_user.id,
         platform="google",
@@ -38,7 +38,7 @@ async def test_get_not_found(auth_token_repo):
 @pytest.mark.asyncio
 async def test_put(auth_token_repo, test_user):
     """Test creating a new auth token."""
-    auth_token = data_objects.AuthToken(
+    auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=test_user.id,
         platform="google",
@@ -54,13 +54,13 @@ async def test_put(auth_token_repo, test_user):
 @pytest.mark.asyncio
 async def test_all(auth_token_repo, test_user):
     """Test getting all auth tokens."""
-    token1 = data_objects.AuthToken(
+    token1 = AuthTokenEntity(
         id=uuid4(),
         user_id=test_user.id,
         platform="google",
         token="token1",
     )
-    token2 = data_objects.AuthToken(
+    token2 = AuthTokenEntity(
         id=uuid4(),
         user_id=test_user.id,
         platform="notion",
@@ -79,7 +79,7 @@ async def test_all(auth_token_repo, test_user):
 @pytest.mark.asyncio
 async def test_user_isolation(auth_token_repo, test_user, create_test_user):
     """Test that different users' auth tokens are properly isolated."""
-    token = data_objects.AuthToken(
+    token = AuthTokenEntity(
         id=uuid4(),
         user_id=test_user.id,
         platform="google",

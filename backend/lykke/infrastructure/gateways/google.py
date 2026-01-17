@@ -14,7 +14,8 @@ from loguru import logger
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.core.config import settings
 from lykke.core.exceptions import TokenExpiredError
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
@@ -275,7 +276,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         self,
         calendar: CalendarEntity,
         lookback: datetime,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         sync_token: str | None = None,
     ) -> tuple[
         list[CalendarEntryEntity],
@@ -308,7 +309,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
         self,
         calendar: CalendarEntity,
         lookback: datetime,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         sync_token: str | None,
     ) -> tuple[
         list[CalendarEntryEntity],
@@ -376,7 +377,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
     def _subscribe_to_calendar_sync(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         webhook_url: str,
         channel_id: str,
         client_state: str,
@@ -424,7 +425,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
     async def subscribe_to_calendar(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         webhook_url: str,
         channel_id: str,
         client_state: str,
@@ -456,7 +457,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
     def _unsubscribe_from_calendar_sync(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         channel_id: str,
         resource_id: str | None,
     ) -> None:
@@ -480,7 +481,7 @@ class GoogleCalendarGateway(GoogleCalendarGatewayProtocol):
     async def unsubscribe_from_calendar(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         channel_id: str,
         resource_id: str | None,
     ) -> None:

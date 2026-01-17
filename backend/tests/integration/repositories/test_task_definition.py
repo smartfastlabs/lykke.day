@@ -6,14 +6,14 @@ import pytest
 
 from lykke.core.exceptions import NotFoundError
 from lykke.domain.value_objects.task import TaskType
-from lykke.domain import data_objects
+from lykke.domain.entities import TaskDefinitionEntity
 from lykke.infrastructure.repositories import TaskDefinitionRepository
 
 
 @pytest.mark.asyncio
 async def test_get(task_definition_repo, test_user):
     """Test getting a task definition by ID."""
-    task_def = data_objects.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user.id,
         name="Test Task",
         description="Test description",
@@ -37,7 +37,7 @@ async def test_get_not_found(task_definition_repo):
 @pytest.mark.asyncio
 async def test_put(task_definition_repo, test_user):
     """Test creating a new task definition."""
-    task_def = data_objects.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user.id,
         name="New Task",
         description="New description",
@@ -53,13 +53,13 @@ async def test_put(task_definition_repo, test_user):
 @pytest.mark.asyncio
 async def test_all(task_definition_repo, test_user):
     """Test getting all task definitions."""
-    task_def1 = data_objects.TaskDefinition(
+    task_def1 = TaskDefinitionEntity(
         user_id=test_user.id,
         name="Task 1",
         description="Description 1",
         type=TaskType.ACTIVITY,
     )
-    task_def2 = data_objects.TaskDefinition(
+    task_def2 = TaskDefinitionEntity(
         user_id=test_user.id,
         name="Task 2",
         description="Description 2",
@@ -78,7 +78,7 @@ async def test_all(task_definition_repo, test_user):
 @pytest.mark.asyncio
 async def test_user_isolation(task_definition_repo, test_user, create_test_user):
     """Test that different users' task definitions are properly isolated."""
-    task_def = data_objects.TaskDefinition(
+    task_def = TaskDefinitionEntity(
         user_id=test_user.id,
         name="User1 Task",
         description="Description",

@@ -10,7 +10,8 @@ from lykke.application.commands.calendar.reset_calendar_sync import (
     ResetCalendarSyncHandler,
 )
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 from lykke.domain.value_objects.sync import SyncSubscription
 from lykke.infrastructure.gateways import StubPubSubGateway
@@ -32,7 +33,7 @@ class FakeGoogleGateway(GoogleCalendarGatewayProtocol):
     async def subscribe_to_calendar(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         webhook_url: str,
         channel_id: str,
         client_state: str,
@@ -55,7 +56,7 @@ class FakeGoogleGateway(GoogleCalendarGatewayProtocol):
     async def unsubscribe_from_calendar(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         channel_id: str,
         resource_id: str | None,
     ) -> None:
@@ -72,7 +73,7 @@ class FakeGoogleGateway(GoogleCalendarGatewayProtocol):
         self,
         calendar: CalendarEntity,
         lookback: datetime,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         sync_token: str | None = None,
     ) -> tuple[
         list[CalendarEntryEntity],
@@ -103,7 +104,7 @@ async def test_reset_calendar_sync_unsubscribes_deletes_future_events_and_resubs
 ) -> None:
     """Test that reset_sync unsubscribes, deletes future events, and resubscribes."""
     auth_token = await auth_token_repo.put(
-        data_objects.AuthToken(
+        AuthTokenEntity(
             id=uuid4(),
             user_id=test_user.id,
             platform="google",
@@ -217,7 +218,7 @@ async def test_reset_calendar_sync_handles_multiple_calendars(
 ) -> None:
     """Test that reset_sync handles multiple calendars correctly."""
     auth_token = await auth_token_repo.put(
-        data_objects.AuthToken(
+        AuthTokenEntity(
             id=uuid4(),
             user_id=test_user.id,
             platform="google",
@@ -363,7 +364,7 @@ async def test_reset_calendar_sync_handles_no_subscribed_calendars(
 ) -> None:
     """Test that reset_sync handles the case when no calendars have subscriptions."""
     auth_token = await auth_token_repo.put(
-        data_objects.AuthToken(
+        AuthTokenEntity(
             id=uuid4(),
             user_id=test_user.id,
             platform="google",

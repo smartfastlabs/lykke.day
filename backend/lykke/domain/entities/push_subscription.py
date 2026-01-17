@@ -7,7 +7,7 @@ from lykke.domain.entities.base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class PushSubscription(BaseEntityObject):
+class PushSubscriptionEntity(BaseEntityObject):
     user_id: UUID
     device_name: str | None = None
     endpoint: str
@@ -24,4 +24,3 @@ class PushSubscription(BaseEntityObject):
             name = f"{self.endpoint}:{self.user_id}"
             generated_id = uuid.uuid5(namespace, name)
             object.__setattr__(self, "id", generated_id)
-

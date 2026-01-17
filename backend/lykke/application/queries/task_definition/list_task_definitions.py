@@ -3,7 +3,7 @@
 from lykke.application.queries.base import BaseQueryHandler
 from lykke.application.repositories import TaskDefinitionRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
-from lykke.domain import data_objects
+from lykke.domain.entities import TaskDefinitionEntity
 
 
 class SearchTaskDefinitionsHandler(BaseQueryHandler):
@@ -14,7 +14,7 @@ class SearchTaskDefinitionsHandler(BaseQueryHandler):
     async def run(
         self,
         search_query: value_objects.TaskDefinitionQuery | None = None,
-    ) -> value_objects.PagedQueryResponse[data_objects.TaskDefinition]:
+    ) -> value_objects.PagedQueryResponse[TaskDefinitionEntity]:
         """Search task definitions with pagination.
 
         Args:

@@ -5,11 +5,11 @@ from lykke.application.repositories.base import (
     ReadWriteRepositoryProtocol,
 )
 from lykke.domain import value_objects
-from lykke.domain import data_objects
+from lykke.domain.entities import AuthTokenEntity
 
 
 class AuthTokenRepositoryReadOnlyProtocol(
-    ReadOnlyRepositoryProtocol[data_objects.AuthToken]
+    ReadOnlyRepositoryProtocol[AuthTokenEntity]
 ):
     """Read-only protocol defining the interface for auth token repositories."""
 
@@ -17,7 +17,7 @@ class AuthTokenRepositoryReadOnlyProtocol(
 
 
 class AuthTokenRepositoryReadWriteProtocol(
-    ReadWriteRepositoryProtocol[data_objects.AuthToken]
+    ReadWriteRepositoryProtocol[AuthTokenEntity]
 ):
     """Read-write protocol defining the interface for auth token repositories."""
 

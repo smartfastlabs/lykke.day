@@ -18,7 +18,7 @@ from lykke.application.repositories import (
     CalendarRepositoryReadWriteProtocol,
 )
 from lykke.core.constants import OAUTH_STATE_EXPIRY
-from lykke.domain import data_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.domain.entities import CalendarEntity, UserEntity
 from lykke.domain.value_objects.query import CalendarQuery
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
@@ -189,7 +189,7 @@ async def google_login_callback(
                     )
 
     # Create or update the auth token
-    auth_token_data = data_objects.AuthToken(
+    auth_token_data = AuthTokenEntity(
         user_id=user.id,
         client_id=flow.credentials.client_id,
         client_secret=flow.credentials.client_secret,
@@ -210,7 +210,7 @@ async def google_login_callback(
     else:
         logger.info(f"Creating new auth token for user {user.id}")
 
-    auth_token: data_objects.AuthToken = await auth_token_repo.put(auth_token_data)
+    auth_token: AuthTokenEntity = await auth_token_repo.put(auth_token_data)
 
     # If we updated an existing auth token, resubscribe all calendars that were using it
     # Old subscriptions will be left as orphans in Google (we can't unsubscribe with expired tokens)

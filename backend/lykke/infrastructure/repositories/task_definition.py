@@ -1,20 +1,20 @@
 from typing import Any
 
-from lykke.domain import data_objects
+from lykke.domain.entities import TaskDefinitionEntity
 from lykke.infrastructure.database.tables import task_definitions_tbl
 
 from .base import BaseQuery, UserScopedBaseRepository
 
 
 class TaskDefinitionRepository(
-    UserScopedBaseRepository[data_objects.TaskDefinition, BaseQuery]
+    UserScopedBaseRepository[TaskDefinitionEntity, BaseQuery]
 ):
-    Object = data_objects.TaskDefinition
+    Object = TaskDefinitionEntity
     table = task_definitions_tbl
     QueryClass = BaseQuery
 
     @staticmethod
-    def entity_to_row(task_definition: data_objects.TaskDefinition) -> dict[str, Any]:
+    def entity_to_row(task_definition: TaskDefinitionEntity) -> dict[str, Any]:
         """Convert a TaskDefinition entity to a database row dict."""
         row: dict[str, Any] = {
             "id": task_definition.id,

@@ -3,7 +3,7 @@
 from typing import Protocol
 
 from lykke.domain import value_objects
-from lykke.domain import data_objects
+from lykke.domain.entities import PushSubscriptionEntity
 
 
 class WebPushGatewayProtocol(Protocol):
@@ -11,7 +11,7 @@ class WebPushGatewayProtocol(Protocol):
 
     async def send_notification(
         self,
-        subscription: data_objects.PushSubscription,
+        subscription: PushSubscriptionEntity,
         content: str | dict | value_objects.NotificationPayload,
     ) -> None:
         """Send a push notification to a subscription.

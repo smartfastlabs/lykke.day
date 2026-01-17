@@ -3,7 +3,8 @@
 from loguru import logger
 
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import PushSubscriptionEntity
 
 
 class SendPushNotificationHandler:
@@ -19,7 +20,7 @@ class SendPushNotificationHandler:
 
     async def run(
         self,
-        subscription: data_objects.PushSubscription,
+        subscription: PushSubscriptionEntity,
         content: str | dict | value_objects.NotificationPayload,
     ) -> None:
         """Send a push notification.

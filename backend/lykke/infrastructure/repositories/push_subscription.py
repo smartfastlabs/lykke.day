@@ -1,18 +1,18 @@
 from typing import Any
 
-from lykke.domain import data_objects
+from lykke.domain.entities import PushSubscriptionEntity
 
 from .base import BaseQuery, UserScopedBaseRepository
 from lykke.infrastructure.database.tables import push_subscriptions_tbl
 
 
-class PushSubscriptionRepository(UserScopedBaseRepository[data_objects.PushSubscription, BaseQuery]):
-    Object = data_objects.PushSubscription
+class PushSubscriptionRepository(UserScopedBaseRepository[PushSubscriptionEntity, BaseQuery]):
+    Object = PushSubscriptionEntity
     table = push_subscriptions_tbl
     QueryClass = BaseQuery
 
     @staticmethod
-    def entity_to_row(push_subscription: data_objects.PushSubscription) -> dict[str, Any]:
+    def entity_to_row(push_subscription: PushSubscriptionEntity) -> dict[str, Any]:
         """Convert a PushSubscription entity to a database row dict."""
         row: dict[str, Any] = {
             "id": push_subscription.id,

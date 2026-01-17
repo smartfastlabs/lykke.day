@@ -3,7 +3,7 @@
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler
-from lykke.domain.data_objects import TimeBlockDefinition
+from lykke.domain.entities import TimeBlockDefinitionEntity
 from lykke.domain.events.time_block_definition_events import (
     TimeBlockDefinitionUpdatedEvent,
 )
@@ -17,7 +17,7 @@ class UpdateTimeBlockDefinitionHandler(BaseCommandHandler):
         self,
         time_block_definition_id: UUID,
         update_data: TimeBlockDefinitionUpdateObject,
-    ) -> TimeBlockDefinition:
+    ) -> TimeBlockDefinitionEntity:
         """Update an existing time block definition.
 
         Args:

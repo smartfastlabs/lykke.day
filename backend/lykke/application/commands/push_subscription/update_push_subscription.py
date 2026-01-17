@@ -3,7 +3,7 @@
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler
-from lykke.domain import data_objects
+from lykke.domain.entities import PushSubscriptionEntity
 from lykke.domain.value_objects import PushSubscriptionUpdateObject
 
 
@@ -14,7 +14,7 @@ class UpdatePushSubscriptionHandler(BaseCommandHandler):
         self,
         subscription_id: UUID,
         update_data: PushSubscriptionUpdateObject,
-    ) -> data_objects.PushSubscription:
+    ) -> PushSubscriptionEntity:
         """Update an existing push subscription.
 
         Args:
@@ -30,7 +30,7 @@ class UpdatePushSubscriptionHandler(BaseCommandHandler):
 
             # Update fields if provided
             if update_data.device_name is not None:
-                subscription = data_objects.PushSubscription(
+                subscription = PushSubscriptionEntity(
                     id=subscription.id,
                     user_id=subscription.user_id,
                     device_name=update_data.device_name,

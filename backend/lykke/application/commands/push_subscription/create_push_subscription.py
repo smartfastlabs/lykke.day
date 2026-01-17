@@ -3,15 +3,15 @@
 from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler
-from lykke.domain import data_objects
+from lykke.domain.entities import PushSubscriptionEntity
 
 
 class CreatePushSubscriptionHandler(BaseCommandHandler):
     """Creates a new push subscription."""
 
     async def run(
-        self, subscription: data_objects.PushSubscription
-    ) -> data_objects.PushSubscription:
+        self, subscription: PushSubscriptionEntity
+    ) -> PushSubscriptionEntity:
         """Create a new push subscription.
 
         Args:

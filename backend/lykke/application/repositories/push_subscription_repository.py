@@ -5,11 +5,11 @@ from lykke.application.repositories.base import (
     ReadWriteRepositoryProtocol,
 )
 from lykke.domain import value_objects
-from lykke.domain import data_objects
+from lykke.domain.entities import PushSubscriptionEntity
 
 
 class PushSubscriptionRepositoryReadOnlyProtocol(
-    ReadOnlyRepositoryProtocol[data_objects.PushSubscription]
+    ReadOnlyRepositoryProtocol[PushSubscriptionEntity]
 ):
     """Read-only protocol defining the interface for push subscription repositories."""
 
@@ -17,7 +17,7 @@ class PushSubscriptionRepositoryReadOnlyProtocol(
 
 
 class PushSubscriptionRepositoryReadWriteProtocol(
-    ReadWriteRepositoryProtocol[data_objects.PushSubscription]
+    ReadWriteRepositoryProtocol[PushSubscriptionEntity]
 ):
     """Read-write protocol defining the interface for push subscription repositories."""
 

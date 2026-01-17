@@ -172,16 +172,7 @@ def main() -> int:
     
     # Check for entities without tables
     entities_without_tables = entities - tables
-    # Filter out entities that might legitimately not have tables (like DTOs)
-    data_objects_dir = lykke_dir / "domain" / "data_objects"
-    data_objects = set()
-    if data_objects_dir.exists():
-        for file_path in data_objects_dir.glob("*.py"):
-            if file_path.name not in ["__init__.py", "base.py"]:
-                # These are data objects, not full entities needing tables
-                # Convert file name to PascalCase
-                obj_name = "".join(word.capitalize() for word in file_path.stem.split("_"))
-                data_objects.add(obj_name)
+    # Data objects have been moved to entities, so no filtering needed
     
     if entities_without_tables:
         # This is a warning, not a critical issue (some entities may not need persistence)

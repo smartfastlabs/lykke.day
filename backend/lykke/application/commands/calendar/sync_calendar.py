@@ -16,7 +16,8 @@ from lykke.application.unit_of_work import (
 )
 from lykke.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from lykke.core.exceptions import NotFoundError, TokenExpiredError
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
@@ -68,7 +69,7 @@ class SyncCalendarHandler(BaseCommandHandler):
     async def sync_calendar_with_uow(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         uow: UnitOfWorkProtocol,
     ) -> CalendarEntity:
         """Perform the sync using an existing unit of work."""
@@ -136,7 +137,7 @@ class SyncCalendarHandler(BaseCommandHandler):
         calendar: CalendarEntity,
         lookback: datetime,
         sync_token: str | None,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
     ) -> tuple[
         list[CalendarEntryEntity],
         list[CalendarEntryEntity],

@@ -1,16 +1,16 @@
 from typing import Any
 from sqlalchemy.sql import Select
 
-from lykke.domain import data_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.infrastructure.database.tables import auth_tokens_tbl
 
 from .base import AuthTokenQuery, BaseRepository
 
 
-class AuthTokenRepository(BaseRepository[data_objects.AuthToken, AuthTokenQuery]):
+class AuthTokenRepository(BaseRepository[AuthTokenEntity, AuthTokenQuery]):
     """AuthTokenRepository is NOT user-scoped - it can be used for any user's auth tokens."""
 
-    Object = data_objects.AuthToken
+    Object = AuthTokenEntity
     table = auth_tokens_tbl
     QueryClass = AuthTokenQuery
 
@@ -31,7 +31,7 @@ class AuthTokenRepository(BaseRepository[data_objects.AuthToken, AuthTokenQuery]
         return stmt
 
     @staticmethod
-    def entity_to_row(auth_token: data_objects.AuthToken) -> dict[str, Any]:
+    def entity_to_row(auth_token: AuthTokenEntity) -> dict[str, Any]:
         """Convert an AuthToken entity to a database row dict."""
         row: dict[str, Any] = {
             "id": auth_token.id,

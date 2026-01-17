@@ -6,7 +6,7 @@ import pytest
 
 from lykke.core.exceptions import NotFoundError
 from lykke.domain.entities import CalendarEntity
-from lykke.domain import data_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.infrastructure.repositories import CalendarRepository
 
 
@@ -14,7 +14,7 @@ from lykke.infrastructure.repositories import CalendarRepository
 async def test_get(calendar_repo, test_user, auth_token_repo):
     """Test getting a calendar by ID."""
     # Create an auth token first (calendar depends on it)
-    auth_token = data_objects.AuthToken(
+    auth_token = AuthTokenEntity(
         id=uuid4(),
         user_id=test_user.id,
         platform="google",
@@ -49,7 +49,7 @@ async def test_get_not_found(calendar_repo):
 @pytest.mark.asyncio
 async def test_put(calendar_repo, test_user, auth_token_repo):
     """Test creating a new calendar."""
-    auth_token = await auth_token_repo.put(data_objects.AuthToken(
+    auth_token = await auth_token_repo.put(AuthTokenEntity(
         id=uuid4(),
         user_id=test_user.id,
         platform="google",
@@ -73,7 +73,7 @@ async def test_put(calendar_repo, test_user, auth_token_repo):
 @pytest.mark.asyncio
 async def test_all(calendar_repo, test_user, auth_token_repo):
     """Test getting all calendars."""
-    auth_token = await auth_token_repo.put(data_objects.AuthToken(
+    auth_token = await auth_token_repo.put(AuthTokenEntity(
         id=uuid4(),
         user_id=test_user.id,
         platform="google",
@@ -107,7 +107,7 @@ async def test_all(calendar_repo, test_user, auth_token_repo):
 @pytest.mark.asyncio
 async def test_user_isolation(calendar_repo, test_user, create_test_user, auth_token_repo):
     """Test that different users' calendars are properly isolated."""
-    auth_token = await auth_token_repo.put(data_objects.AuthToken(
+    auth_token = await auth_token_repo.put(AuthTokenEntity(
         id=uuid4(),
         user_id=test_user.id,
         platform="google",

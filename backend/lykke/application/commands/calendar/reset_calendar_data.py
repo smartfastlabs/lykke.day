@@ -15,7 +15,8 @@ from lykke.application.unit_of_work import (
     UnitOfWorkProtocol,
 )
 from lykke.core.config import settings
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
+from lykke.domain.entities import AuthTokenEntity
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity, CalendarEntrySeriesEntity
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
@@ -76,7 +77,7 @@ class ResetCalendarDataHandler(BaseCommandHandler):
     async def _refresh_subscription(
         self,
         calendar: CalendarEntity,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
         uow: UnitOfWorkProtocol,
     ) -> CalendarEntity:
         """Unsubscribe and re-subscribe the calendar to provider webhooks."""

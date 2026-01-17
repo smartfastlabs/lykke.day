@@ -1,13 +1,13 @@
 """Command to create a new task definition."""
 
 from lykke.application.commands.base import BaseCommandHandler
-from lykke.domain import data_objects
+from lykke.domain.entities import TaskDefinitionEntity
 
 
 class CreateTaskDefinitionHandler(BaseCommandHandler):
     """Creates a new task definition."""
 
-    async def run(self, task_definition: data_objects.TaskDefinition) -> data_objects.TaskDefinition:
+    async def run(self, task_definition: TaskDefinitionEntity) -> TaskDefinitionEntity:
         """Create a new task definition.
 
         Args:

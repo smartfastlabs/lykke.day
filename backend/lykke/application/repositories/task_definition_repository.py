@@ -5,16 +5,16 @@ from lykke.application.repositories.base import (
     ReadWriteRepositoryProtocol,
 )
 from lykke.domain import value_objects
-from lykke.domain import data_objects
+from lykke.domain.entities import TaskDefinitionEntity
 
 
-class TaskDefinitionRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[data_objects.TaskDefinition]):
+class TaskDefinitionRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[TaskDefinitionEntity]):
     """Read-only protocol defining the interface for task definition repositories."""
 
     Query = value_objects.TaskDefinitionQuery
 
 
-class TaskDefinitionRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[data_objects.TaskDefinition]):
+class TaskDefinitionRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[TaskDefinitionEntity]):
     """Read-write protocol defining the interface for task definition repositories."""
 
     Query = value_objects.TaskDefinitionQuery

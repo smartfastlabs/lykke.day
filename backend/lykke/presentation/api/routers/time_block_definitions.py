@@ -15,7 +15,7 @@ from lykke.application.queries.time_block_definition import (
     SearchTimeBlockDefinitionsHandler,
 )
 from lykke.domain import value_objects
-from lykke.domain.data_objects import TimeBlockDefinition
+from lykke.domain.entities import TimeBlockDefinitionEntity
 from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import (
     PagedResponseSchema,
@@ -77,7 +77,7 @@ async def create_time_block_definition(
     ],
 ) -> TimeBlockDefinitionSchema:
     """Create a new time block definition."""
-    time_block_definition = TimeBlockDefinition(
+    time_block_definition = TimeBlockDefinitionEntity(
         user_id=user.id,
         name=time_block_definition_data.name,
         description=time_block_definition_data.description,

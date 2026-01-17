@@ -57,9 +57,10 @@ from lykke.application.unit_of_work import (
 from lykke.core.config import settings
 from lykke.core.exceptions import BadRequestError, NotFoundError
 from lykke.core.utils.serialization import dataclass_to_json_dict
-from lykke.domain import data_objects, value_objects
+from lykke.domain import value_objects
 from lykke.domain.entities import (
     AuditLogEntity,
+    AuthTokenEntity,
     BotPersonalityEntity,
     CalendarEntity,
     CalendarEntryEntity,
@@ -69,8 +70,11 @@ from lykke.domain.entities import (
     DayTemplateEntity,
     FactoidEntity,
     MessageEntity,
+    PushSubscriptionEntity,
     RoutineEntity,
+    TaskDefinitionEntity,
     TaskEntity,
+    TimeBlockDefinitionEntity,
     UserEntity,
 )
 from lykke.domain.entities.auditable import AuditableEntity
@@ -162,20 +166,20 @@ class SqlAlchemyUnitOfWork:
         MessageEntity: ("message_ro_repo", "_message_rw_repo"),
         TaskEntity: ("task_ro_repo", "_task_rw_repo"),
         RoutineEntity: ("routine_ro_repo", "_routine_rw_repo"),
-        data_objects.TaskDefinition: (
+        TaskDefinitionEntity: (
             "task_definition_ro_repo",
             "_task_definition_rw_repo",
         ),
-        data_objects.TimeBlockDefinition: (
+        TimeBlockDefinitionEntity: (
             "time_block_definition_ro_repo",
             "_time_block_definition_rw_repo",
         ),
         UserEntity: ("user_ro_repo", "_user_rw_repo"),
-        data_objects.PushSubscription: (
+        PushSubscriptionEntity: (
             "push_subscription_ro_repo",
             "_push_subscription_rw_repo",
         ),
-        data_objects.AuthToken: ("auth_token_ro_repo", "_auth_token_rw_repo"),
+        AuthTokenEntity: ("auth_token_ro_repo", "_auth_token_rw_repo"),
     }
 
     def __init__(self, user_id: UUID, pubsub_gateway: PubSubGatewayProtocol) -> None:

@@ -9,7 +9,7 @@ from lykke.application.commands.day import ScheduleDayHandler
 from lykke.application.queries.preview_day import PreviewDayHandler
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.data_objects import TimeBlockDefinition
+from lykke.domain.entities import TimeBlockDefinitionEntity
 from lykke.domain.entities import DayEntity, DayTemplateEntity, TaskEntity
 from lykke.domain.value_objects.time_block import TimeBlockCategory, TimeBlockType
 
@@ -61,10 +61,10 @@ class _FakeCalendarEntryReadOnlyRepo:
 class _FakeTimeBlockDefinitionReadOnlyRepo:
     """Fake time block definition repository for testing."""
 
-    def __init__(self, definitions: dict[UUID, TimeBlockDefinition]) -> None:
+    def __init__(self, definitions: dict[UUID, TimeBlockDefinitionEntity]) -> None:
         self._definitions = definitions
 
-    async def get(self, def_id: UUID) -> TimeBlockDefinition:
+    async def get(self, def_id: UUID) -> TimeBlockDefinitionEntity:
         if def_id in self._definitions:
             return self._definitions[def_id]
         raise NotFoundError(f"TimeBlockDefinition {def_id} not found")
@@ -419,7 +419,7 @@ async def test_schedule_day_copies_timeblocks_from_template():
 
     # Create a time block definition
     time_block_def_id = uuid4()
-    time_block_def = TimeBlockDefinition(
+    time_block_def = TimeBlockDefinitionEntity(
         id=time_block_def_id,
         user_id=user_id,
         name="Work Block",

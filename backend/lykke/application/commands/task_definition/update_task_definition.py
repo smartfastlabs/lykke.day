@@ -5,7 +5,7 @@ from uuid import UUID
 from lykke.application.commands.base import BaseCommandHandler
 from lykke.domain.events.task_events import TaskDefinitionUpdatedEvent
 from lykke.domain.value_objects import TaskDefinitionUpdateObject
-from lykke.domain import data_objects
+from lykke.domain.entities import TaskDefinitionEntity
 
 
 class UpdateTaskDefinitionHandler(BaseCommandHandler):
@@ -15,7 +15,7 @@ class UpdateTaskDefinitionHandler(BaseCommandHandler):
         self,
         task_definition_id: UUID,
         update_data: TaskDefinitionUpdateObject,
-    ) -> data_objects.TaskDefinition:
+    ) -> TaskDefinitionEntity:
         """Update an existing task definition.
 
         Args:
