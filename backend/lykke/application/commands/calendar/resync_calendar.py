@@ -98,7 +98,7 @@ class ResyncCalendarHandler(BaseCommandHandler[ResyncCalendarCommand, CalendarEn
             calendar.sync_subscription_id = None
             # Clear last sync timestamp to force fresh lookback
             calendar.last_sync_at = None
-            uow.add(calendar)
+            calendar = uow.add(calendar)
 
         return calendar
 
@@ -143,6 +143,5 @@ class ResyncCalendarHandler(BaseCommandHandler[ResyncCalendarCommand, CalendarEn
         )
 
         calendar = calendar.apply_update(update_data, CalendarUpdatedEvent)
-        uow.add(calendar)
-        return calendar
+        return uow.add(calendar)
 

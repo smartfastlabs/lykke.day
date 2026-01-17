@@ -26,7 +26,6 @@ class CreateRoutineHandler(BaseCommandHandler[CreateRoutineCommand, RoutineEntit
             The created routine entity.
         """
         async with self.new_uow() as uow:
-            await uow.create(command.routine)
-            return command.routine
+            return await uow.create(command.routine)
 
 

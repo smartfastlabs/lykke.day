@@ -34,5 +34,4 @@ class RemoveDayTemplateTimeBlockHandler(BaseCommandHandler[RemoveDayTemplateTime
             updated = day_template.remove_time_block(
                 command.time_block_definition_id, command.start_time
             )
-            uow.add(updated)
-            return updated
+            return uow.add(updated)

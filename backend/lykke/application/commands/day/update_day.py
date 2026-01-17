@@ -67,8 +67,7 @@ class UpdateDayHandler(BaseCommandHandler[UpdateDayCommand, DayEntity]):
                 day.add_event(DayUpdatedEvent(update_object=update_data))
 
             # Add entity to UoW for saving
-            uow.add(day)
-            return day
+            return uow.add(day)
 
     def _apply_status_transition(
         self, day: DayEntity, new_status: value_objects.DayStatus

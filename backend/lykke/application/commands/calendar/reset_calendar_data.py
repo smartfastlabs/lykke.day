@@ -128,6 +128,5 @@ class ResetCalendarDataHandler(BaseCommandHandler[ResetCalendarDataCommand, list
         )
 
         refreshed_calendar = calendar.apply_update(update_data, CalendarUpdatedEvent)
-        uow.add(refreshed_calendar)
-        return refreshed_calendar
+        return uow.add(refreshed_calendar)
 

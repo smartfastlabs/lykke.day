@@ -62,6 +62,7 @@ class _FakeUoW:
 
     def add(self, entity):
         self.added.append(entity)
+        return entity
 
 
 class _FakeUoWFactory:

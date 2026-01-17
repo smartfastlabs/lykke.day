@@ -26,6 +26,5 @@ class CreateTimeBlockDefinitionHandler(BaseCommandHandler[CreateTimeBlockDefinit
             The created time block definition.
         """
         async with self.new_uow() as uow:
-            await uow.create(command.time_block_definition)
-            return command.time_block_definition
+            return await uow.create(command.time_block_definition)
 

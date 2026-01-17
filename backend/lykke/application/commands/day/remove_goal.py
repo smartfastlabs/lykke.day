@@ -42,5 +42,4 @@ class RemoveGoalHandler(BaseCommandHandler[RemoveGoalCommand, DayEntity]):
             day.remove_goal(command.goal_id)
 
             # Add entity to UoW for saving
-            uow.add(day)
-            return day
+            return uow.add(day)

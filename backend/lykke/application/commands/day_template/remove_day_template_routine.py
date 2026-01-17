@@ -30,6 +30,5 @@ class RemoveDayTemplateRoutineHandler(BaseCommandHandler[RemoveDayTemplateRoutin
         async with self.new_uow() as uow:
             day_template = await uow.day_template_ro_repo.get(command.day_template_id)
             updated_day_template = day_template.remove_routine(command.routine_id)
-            uow.add(updated_day_template)
-            return updated_day_template
+            return uow.add(updated_day_template)
 

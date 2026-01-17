@@ -30,6 +30,5 @@ class AddDayTemplateRoutineHandler(BaseCommandHandler[AddDayTemplateRoutineComma
         async with self.new_uow() as uow:
             day_template = await uow.day_template_ro_repo.get(command.day_template_id)
             updated = day_template.add_routine(command.routine_id)
-            uow.add(updated)
-            return updated
+            return uow.add(updated)
 

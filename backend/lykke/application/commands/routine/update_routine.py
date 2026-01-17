@@ -37,5 +37,4 @@ class UpdateRoutineHandler(BaseCommandHandler[UpdateRoutineCommand, RoutineEntit
             routine = routine.apply_update(command.update_data, RoutineUpdatedEvent)
 
             # Add entity to UoW for saving
-            uow.add(routine)
-            return routine
+            return uow.add(routine)

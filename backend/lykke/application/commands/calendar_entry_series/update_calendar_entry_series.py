@@ -34,7 +34,6 @@ class UpdateCalendarEntrySeriesHandler(BaseCommandHandler[UpdateCalendarEntrySer
             series = series.apply_update(
                 command.update_data, CalendarEntrySeriesUpdatedEvent
             )
-            uow.add(series)
-            return series
+            return uow.add(series)
 
 

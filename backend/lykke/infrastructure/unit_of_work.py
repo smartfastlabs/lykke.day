@@ -6,7 +6,7 @@ from contextvars import Token
 from dataclasses import asdict
 from datetime import UTC, date as dt_date, datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -113,6 +113,9 @@ from lykke.infrastructure.repositories import (
 
 if TYPE_CHECKING:
     from typing import Self
+
+# Type variable for entities
+_T = TypeVar("_T", bound=BaseEntityObject)
 
 
 class SqlAlchemyUnitOfWork:
@@ -434,7 +437,7 @@ class SqlAlchemyUnitOfWork:
                 await self._connection.close()
                 self._connection = None
 
-    def add(self, entity: BaseEntityObject) -> None:
+    def add(self, entity: _T) -> _T:
         """Add an entity to be tracked for persistence.
 
         Only entities added via this method will be saved when commit() is called.
@@ -443,10 +446,14 @@ class SqlAlchemyUnitOfWork:
 
         Args:
             entity: The entity to track for persistence.
+
+        Returns:
+            The entity that was added.
         """
         self._added_entities.append(entity)
+        return entity
 
-    async def create(self, entity: BaseEntityObject) -> None:
+    async def create(self, entity: _T) -> _T:
         """Create a new entity.
 
         This method:
@@ -456,6 +463,9 @@ class SqlAlchemyUnitOfWork:
 
         Args:
             entity: The entity to create
+
+        Returns:
+            The entity that was created.
 
         Raises:
             BadRequestError: If the entity already exists
@@ -471,7 +481,7 @@ class SqlAlchemyUnitOfWork:
 
         # Mark as newly created and add to tracking
         entity.create()
-        self.add(entity)
+        return self.add(entity)
 
     async def delete(self, entity: BaseEntityObject) -> None:
         """Delete an existing entity.
@@ -484,6 +494,9 @@ class SqlAlchemyUnitOfWork:
         Args:
             entity: The entity to delete
 
+        Returns:
+            None
+
         Raises:
             NotFoundError: If the entity does not exist
         """
@@ -494,6 +507,7 @@ class SqlAlchemyUnitOfWork:
         # Mark for deletion and add to tracking
         entity.delete()
         self.add(entity)
+        return None
 
     async def commit(self) -> None:
         """Commit the current transaction.
@@ -1033,4 +1047,5 @@ class SqlAlchemyReadOnlyRepositoryFactory:
         Returns:
             Read-only repositories scoped to the user.
         """
+        return SqlAlchemyReadOnlyRepositories(user_id=user_id)
         return SqlAlchemyReadOnlyRepositories(user_id=user_id)

@@ -30,5 +30,4 @@ class RemoveRoutineTaskHandler(BaseCommandHandler[RemoveRoutineTaskCommand, Rout
         async with self.new_uow() as uow:
             routine = await uow.routine_ro_repo.get(command.routine_id)
             updated_routine = routine.remove_task(command.routine_task_id)
-            uow.add(updated_routine)
-            return updated_routine
+            return uow.add(updated_routine)

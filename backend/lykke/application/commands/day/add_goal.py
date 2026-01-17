@@ -39,5 +39,4 @@ class AddGoalToDayHandler(BaseCommandHandler[AddGoalToDayCommand, DayEntity]):
             day.add_goal(command.goal)
 
             # Add entity to UoW for saving
-            uow.add(day)
-            return day
+            return uow.add(day)

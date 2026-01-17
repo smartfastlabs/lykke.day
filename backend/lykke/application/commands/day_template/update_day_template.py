@@ -42,5 +42,4 @@ class UpdateDayTemplateHandler(BaseCommandHandler[UpdateDayTemplateCommand, DayT
             )
 
             # Add entity to UoW for saving
-            uow.add(day_template)
-            return day_template
+            return uow.add(day_template)

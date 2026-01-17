@@ -8,7 +8,7 @@ The Unit of Work pattern provides a way to:
 5. Track entities that need to be saved (via add() method)
 """
 
-from typing import Protocol, Self
+from typing import Protocol, Self, TypeVar
 from uuid import UUID
 
 from lykke.application.repositories import (
@@ -32,6 +32,9 @@ from lykke.application.repositories import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities.base import BaseEntityObject
+
+# Type variable for entities
+_T = TypeVar("_T", bound=BaseEntityObject)
 
 
 class UnitOfWorkProtocol(Protocol):
@@ -92,7 +95,7 @@ class UnitOfWorkProtocol(Protocol):
         """
         ...
 
-    def add(self, entity: BaseEntityObject) -> None:
+    def add(self, entity: _T) -> _T:
         """Add an entity to be tracked for persistence.
 
         Only entities added via this method will be saved when commit() is called.
@@ -101,10 +104,13 @@ class UnitOfWorkProtocol(Protocol):
 
         Args:
             entity: The entity to track for persistence.
+
+        Returns:
+            The entity that was added.
         """
         ...
 
-    async def create(self, entity: BaseEntityObject) -> None:
+    async def create(self, entity: _T) -> _T:
         """Create a new entity.
 
         This method:
@@ -114,6 +120,9 @@ class UnitOfWorkProtocol(Protocol):
 
         Args:
             entity: The entity to create
+
+        Returns:
+            The entity that was created.
 
         Raises:
             BadRequestError: If the entity already exists

@@ -53,7 +53,5 @@ class UnsubscribeCalendarHandler(BaseCommandHandler[UnsubscribeCalendarCommand, 
             calendar.sync_subscription = None
             calendar.sync_subscription_id = None
 
-            uow.add(calendar)
-
-        return calendar
+            return uow.add(calendar)
 

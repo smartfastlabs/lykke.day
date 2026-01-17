@@ -26,5 +26,4 @@ class CreateTaskDefinitionHandler(BaseCommandHandler[CreateTaskDefinitionCommand
             The created task definition entity
         """
         async with self.new_uow() as uow:
-            await uow.create(command.task_definition)
-            return command.task_definition
+            return await uow.create(command.task_definition)

@@ -184,7 +184,7 @@ class ResetCalendarSyncHandler(BaseCommandHandler[ResetCalendarSyncCommand, list
                 sync_subscription_id=None,
             )
             calendar = calendar.apply_update(update_data, CalendarUpdatedEvent)
-            uow.add(calendar)
+            calendar = uow.add(calendar)
             logger.info(f"Unsubscribed calendar {calendar.id}")
 
         return calendar
@@ -230,6 +230,6 @@ class ResetCalendarSyncHandler(BaseCommandHandler[ResetCalendarSyncCommand, list
         )
 
         calendar = calendar.apply_update(update_data, CalendarUpdatedEvent)
-        uow.add(calendar)
+        calendar = uow.add(calendar)
         logger.info(f"Resubscribed calendar {calendar.id}")
         return calendar

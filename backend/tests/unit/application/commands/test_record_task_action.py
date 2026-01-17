@@ -115,10 +115,12 @@ class _FakeUoW:
 
     def add(self, entity):
         self.added.append(entity)
+        return entity
 
     async def create(self, entity):
         self.created.append(entity)
         entity.create()
+        return entity
 
 
 class _FakeUoWFactory:

@@ -38,6 +38,5 @@ class UpdateUserHandler(BaseCommandHandler[UpdateUserCommand, UserEntity]):
             user = user.apply_update(command.update_data, UserUpdatedEvent)
 
             # Add entity to UoW for saving
-            uow.add(user)
-            return user
+            return uow.add(user)
 

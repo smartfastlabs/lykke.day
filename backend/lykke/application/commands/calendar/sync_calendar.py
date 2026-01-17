@@ -146,8 +146,7 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             )
 
         updated_calendar = self._apply_calendar_update(calendar, next_sync_token)
-        uow.add(updated_calendar)
-        return updated_calendar
+        return uow.add(updated_calendar)
 
     async def _load_calendar_events(
         self,

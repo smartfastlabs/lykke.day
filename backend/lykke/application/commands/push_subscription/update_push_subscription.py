@@ -45,6 +45,5 @@ class UpdatePushSubscriptionHandler(BaseCommandHandler[UpdatePushSubscriptionCom
                 )
 
             # Add to UoW for saving
-            uow.add(subscription)
-            return subscription
+            return uow.add(subscription)
 

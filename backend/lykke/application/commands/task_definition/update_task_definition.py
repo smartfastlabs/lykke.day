@@ -42,5 +42,4 @@ class UpdateTaskDefinitionHandler(BaseCommandHandler[UpdateTaskDefinitionCommand
             )
 
             # Add entity to UoW for saving
-            uow.add(task_definition)
-            return task_definition
+            return uow.add(task_definition)

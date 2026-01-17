@@ -33,6 +33,6 @@ class CreatePushSubscriptionHandler(BaseCommandHandler[CreatePushSubscriptionCom
         )
         async with self.new_uow() as uow:
             logger.info(f"Calling uow.create() for subscription {subscription.id}")
-            await uow.create(subscription)
+            subscription = await uow.create(subscription)
             logger.info(f"Successfully created push subscription {subscription.id}")
             return subscription

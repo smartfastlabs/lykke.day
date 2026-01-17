@@ -9,8 +9,12 @@ from lykke.application.commands.day import ScheduleDayCommand, ScheduleDayHandle
 from lykke.application.queries.preview_day import PreviewDayHandler, PreviewDayQuery
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.entities import TimeBlockDefinitionEntity
-from lykke.domain.entities import DayEntity, DayTemplateEntity, TaskEntity
+from lykke.domain.entities import (
+    DayEntity,
+    DayTemplateEntity,
+    TaskEntity,
+    TimeBlockDefinitionEntity,
+)
 from lykke.domain.value_objects.time_block import TimeBlockCategory, TimeBlockType
 
 
@@ -135,9 +139,11 @@ class _FakeUoW:
     async def create(self, entity):
         self.created_entities.append(entity)
         entity.create()
+        return entity
 
     def add(self, entity):
         self.added.append(entity)
+        return entity
 
     async def bulk_delete_tasks(self, query):
         self.bulk_deleted_tasks.append(query)
@@ -234,7 +240,9 @@ async def test_schedule_day_creates_day_and_tasks():
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
     # Act
-    result = await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
+    result = await handler.handle(
+        ScheduleDayCommand(date=task_date, template_id=template.id)
+    )
 
     # Assert
     assert result.day.date == task_date
@@ -244,11 +252,15 @@ async def test_schedule_day_creates_day_and_tasks():
 
     # Verify day was created
     assert len(uow_factory.uow.created_entities) >= 1
-    created_day = [e for e in uow_factory.uow.created_entities if isinstance(e, DayEntity)][0]
+    created_day = [
+        e for e in uow_factory.uow.created_entities if isinstance(e, DayEntity)
+    ][0]
     assert created_day.date == task_date
 
     # Verify tasks were created
-    created_tasks = [e for e in uow_factory.uow.created_entities if isinstance(e, TaskEntity)]
+    created_tasks = [
+        e for e in uow_factory.uow.created_entities if isinstance(e, TaskEntity)
+    ]
     assert len(created_tasks) == 2
 
 
@@ -293,7 +305,9 @@ async def test_schedule_day_returns_existing_day_without_creating():
 
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
-    result = await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
+    result = await handler.handle(
+        ScheduleDayCommand(date=task_date, template_id=template.id)
+    )
 
     assert result.day == day
     assert result.tasks == tasks
@@ -373,7 +387,9 @@ async def test_schedule_day_raises_error_if_no_template():
 
     # Act & Assert
     with pytest.raises(ValueError, match="Day template is required to schedule"):
-        await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
+        await handler.handle(
+            ScheduleDayCommand(date=task_date, template_id=template.id)
+        )
 
 
 @pytest.mark.asyncio
@@ -406,7 +422,9 @@ async def test_schedule_day_uses_template_id_if_provided():
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
     # Act
-    result = await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
+    result = await handler.handle(
+        ScheduleDayCommand(date=task_date, template_id=template.id)
+    )
 
     # Assert
     assert result.day.template == template
@@ -479,10 +497,14 @@ async def test_schedule_day_copies_timeblocks_from_template():
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
     # Act
-    result = await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
+    result = await handler.handle(
+        ScheduleDayCommand(date=task_date, template_id=template.id)
+    )
 
     # Assert - timeblocks should be copied from template to day
-    assert len(result.day.time_blocks) == 2, "Day should have 2 timeblocks copied from template"
+    assert len(result.day.time_blocks) == 2, (
+        "Day should have 2 timeblocks copied from template"
+    )
 
     # Verify first timeblock matches template
     day_tb1 = result.day.time_blocks[0]
@@ -501,5 +523,7 @@ async def test_schedule_day_copies_timeblocks_from_template():
     assert day_tb2.name == template_tb2.name
 
     # Verify the created day entity also has the timeblocks
-    created_day = [e for e in uow_factory.uow.created_entities if isinstance(e, DayEntity)][0]
+    created_day = [
+        e for e in uow_factory.uow.created_entities if isinstance(e, DayEntity)
+    ][0]
     assert len(created_day.time_blocks) == 2, "Created day should have 2 timeblocks"

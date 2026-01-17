@@ -43,6 +43,5 @@ class UpdateCalendarHandler(BaseCommandHandler[UpdateCalendarCommand, CalendarEn
             calendar = calendar.apply_update(command.update_data, CalendarUpdatedEvent)
 
             # Add entity to UoW for saving
-            uow.add(calendar)
-            return calendar
+            return uow.add(calendar)
 

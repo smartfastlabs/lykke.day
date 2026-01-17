@@ -43,6 +43,5 @@ class UpdateTimeBlockDefinitionHandler(BaseCommandHandler[UpdateTimeBlockDefinit
             )
 
             # Add entity to UoW for saving
-            uow.add(time_block_definition)
-            return time_block_definition
+            return uow.add(time_block_definition)
 

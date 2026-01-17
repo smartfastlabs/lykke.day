@@ -26,5 +26,4 @@ class CreateCalendarHandler(BaseCommandHandler[CreateCalendarCommand, CalendarEn
             The created calendar entity
         """
         async with self.new_uow() as uow:
-            await uow.create(command.calendar)
-            return command.calendar
+            return await uow.create(command.calendar)

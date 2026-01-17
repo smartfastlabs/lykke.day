@@ -26,5 +26,4 @@ class CreateDayTemplateHandler(BaseCommandHandler[CreateDayTemplateCommand, DayT
             The created day template entity
         """
         async with self.new_uow() as uow:
-            await uow.create(command.day_template)
-            return command.day_template
+            return await uow.create(command.day_template)
