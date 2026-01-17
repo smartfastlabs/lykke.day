@@ -1,6 +1,6 @@
 from .auditable import AuditableEntity
 from .audit_log import AuditLogEntity
-from .base import BaseConfigObject, BaseEntityObject, BaseObject
+from .base import BaseEntityObject, BaseObject
 from .bot_personality import BotPersonalityEntity
 from .calendar import CalendarEntity
 from .calendar_entry import CalendarEntryEntity
@@ -17,7 +17,6 @@ from .user import UserEntity
 __all__ = [
     "AuditableEntity",
     "AuditLogEntity",
-    "BaseConfigObject",
     "BaseEntityObject",
     "BaseObject",
     "BotPersonalityEntity",

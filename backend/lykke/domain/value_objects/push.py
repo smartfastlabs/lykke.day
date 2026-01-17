@@ -1,17 +1,17 @@
 from dataclasses import dataclass, field
 
-from ..entities.base import BaseConfigObject
+from ..entities.base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
-class NotificationAction(BaseConfigObject):
+class NotificationAction(BaseEntityObject):
     action: str
     title: str
     icon: str | None = None
 
 
 @dataclass(kw_only=True)
-class NotificationPayload(BaseConfigObject):
+class NotificationPayload(BaseEntityObject):
     title: str
     body: str
     icon: str | None = None

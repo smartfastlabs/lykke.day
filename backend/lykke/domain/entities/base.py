@@ -162,8 +162,3 @@ class BaseEntityObject(BaseObject, Generic[UpdateObjectType, UpdateEventType]):
         event_entity._add_event(event)
 
         return updated_entity
-
-
-@dataclass(kw_only=True)
-class BaseConfigObject(BaseEntityObject):
-    pass
