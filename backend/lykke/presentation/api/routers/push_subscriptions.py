@@ -125,3 +125,35 @@ async def subscribe(
     )
 
     return map_push_subscription_to_schema(result)
+
+
+@router.post("/test-push/")
+async def send_test_push(
+    background_tasks: BackgroundTasks,
+    search_push_subscriptions_handler: Annotated[
+        SearchPushSubscriptionsHandler, Depends(get_query_handler(SearchPushSubscriptionsHandler))
+    ],
+    send_push_notification_handler: Annotated[
+        SendPushNotificationHandler, Depends(get_send_push_notification_handler)
+    ],
+) -> dict[str, int]:
+    """Send a test push notification to all user's subscribed devices.
+
+    Returns:
+        A dict with the count of devices that will receive the notification.
+    """
+    result = await search_push_subscriptions_handler.handle(SearchPushSubscriptionsQuery())
+
+    for subscription in result.items:
+        background_tasks.add_task(
+            send_push_notification_handler.handle,
+            SendPushNotificationCommand(
+                subscription=subscription,
+                content={
+                    "title": "Test Notification",
+                    "body": "This is a test push notification from Planned.day!",
+                },
+            ),
+        )
+
+    return {"device_count": len(result.items)}
