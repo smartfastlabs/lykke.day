@@ -1,6 +1,5 @@
 """Command to reschedule a day - clean up and recreate tasks."""
 
-import asyncio
 from dataclasses import dataclass
 from datetime import date as dt_date
 from uuid import UUID
@@ -8,12 +7,14 @@ from uuid import UUID
 from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.commands.day.schedule_day import (
+    ScheduleDayCommand,
+    ScheduleDayHandler,
+)
 from lykke.application.queries.preview_day import PreviewDayHandler
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
-from lykke.domain.events.day_events import DayUpdatedEvent
-from lykke.domain.value_objects.update import DayUpdateObject
 
 
 @dataclass(frozen=True)
@@ -33,9 +34,13 @@ class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, value_object
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
         preview_day_handler: PreviewDayHandler,
+        schedule_day_handler: ScheduleDayHandler | None = None,
     ) -> None:
         super().__init__(ro_repos, uow_factory, user_id)
-        self.preview_day_handler = preview_day_handler
+        self.schedule_day_handler = (
+            schedule_day_handler
+            or ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_day_handler)
+        )
 
     async def handle(self, command: RescheduleDayCommand) -> value_objects.DayContext:
         """Reschedule a day by cleaning up and recreating all tasks.
@@ -89,58 +94,7 @@ class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, value_object
             logger.info(f"Deleting audit logs for {command.date}")
             await uow.bulk_delete_audit_logs(value_objects.AuditLogQuery(date=command.date))
 
-            # Step 4: Get preview of what tasks should be created
-            preview_result = await self.preview_day_handler.preview_day(
-                command.date, command.template_id
-            )
-
-            # Validate template exists
-            if preview_result.day.template is None:
-                raise ValueError("Day template is required to reschedule")
-
-            # Re-fetch template to ensure it's in the current UoW context
-            template = await uow.day_template_ro_repo.get(
-                preview_result.day.template.id
-            )
-
-            # Step 5: Copy time blocks from template (like schedule_day does)
-            day_time_blocks: list[value_objects.DayTimeBlock] = []
-            if template.time_blocks:
-                # Get unique time block definition IDs
-                unique_def_ids = {
-                    tb.time_block_definition_id for tb in template.time_blocks
-                }
-                # Fetch all time block definitions
-                time_block_defs = await asyncio.gather(
-                    *[
-                        uow.time_block_definition_ro_repo.get(def_id)
-                        for def_id in unique_def_ids
-                    ]
-                )
-                # Create a lookup map
-                def_map = {def_.id: def_ for def_ in time_block_defs}
-
-                # Convert each template timeblock to a day timeblock
-                for template_tb in template.time_blocks:
-                    time_block_def = def_map[template_tb.time_block_definition_id]
-                    day_time_blocks.append(
-                        value_objects.DayTimeBlock(
-                            time_block_definition_id=template_tb.time_block_definition_id,
-                            start_time=template_tb.start_time,
-                            end_time=template_tb.end_time,
-                            name=template_tb.name,
-                            type=time_block_def.type,
-                            category=time_block_def.category,
-                        )
-                    )
-
-            # Step 6: Update day with template data
-            day.update_template(template)
-
-            # Update time blocks (replacing any existing ones)
-            day.time_blocks = day_time_blocks
-
-            # Reset goals (clear all existing goals from rescheduled day)
+            # Step 4: Reset goals (clear all existing goals from rescheduled day)
             # Goals should be re-added if needed after rescheduling
             if day.goals:
                 # Remove all goals by iterating backwards to avoid index issues
@@ -149,35 +103,15 @@ class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, value_object
                     day.remove_goal(goal_id)
                 logger.info(f"Cleared {len(goal_ids_to_remove)} goals from rescheduled day")
 
-            # Schedule the day if it's not already scheduled
-            if day.status == value_objects.DayStatus.UNSCHEDULED:
-                day.schedule(template)
-
-            # Ensure day has domain events - if no events were emitted (e.g., day was already scheduled
-            # and had no goals to remove), emit DayUpdatedEvent to track the modifications
-            if not day.has_events():
-                day._add_event(
-                    DayUpdatedEvent(
-                        update_object=DayUpdateObject(
-                            template_id=template.id if template else None,
-                            time_blocks=day_time_blocks,
-                        )
-                    )
-                )
-
-            # Mark day as modified so changes are saved
-            uow.add(day)
-
-            # Step 7: Create fresh tasks from preview
-            logger.info(f"Creating {len(preview_result.tasks)} tasks for {command.date}")
-            tasks = preview_result.tasks
-            for task in tasks:
-                await uow.create(task)
+            # Step 5: Reuse ScheduleDay logic to rebuild template, time blocks, and tasks
+            day_context = await self.schedule_day_handler.schedule_day_in_uow(
+                uow,
+                ScheduleDayCommand(date=command.date, template_id=command.template_id),
+                existing_day=day,
+                force=True,
+                cleanup_existing_tasks=False,
+            )
 
             logger.info(f"Successfully rescheduled day for {command.date}")
 
-            return value_objects.DayContext(
-                day=day,
-                tasks=tasks,
-                calendar_entries=preview_result.calendar_entries,
-            )
+            return day_context
