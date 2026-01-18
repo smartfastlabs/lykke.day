@@ -18,7 +18,7 @@ from lykke.application.queries import PreviewDayHandler
 from lykke.application.repositories import UserRepositoryReadOnlyProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.core.utils.dates import get_current_date
-from lykke.infrastructure.gateways import GoogleCalendarGateway, StubPubSubGateway
+from lykke.infrastructure.gateways import GoogleCalendarGateway, RedisPubSubGateway
 from lykke.infrastructure.repositories import UserRepository
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
@@ -38,12 +38,17 @@ def get_google_gateway() -> GoogleCalendarGatewayProtocol:
     return GoogleCalendarGateway()
 
 
-def get_unit_of_work_factory() -> UnitOfWorkFactory:
+def get_unit_of_work_factory(
+    pubsub_gateway: RedisPubSubGateway | None = None,
+) -> UnitOfWorkFactory:
     """Get a UnitOfWorkFactory instance.
-    
-    Uses StubPubSubGateway since background workers don't need to broadcast events.
+
+    Args:
+        pubsub_gateway: Optional RedisPubSubGateway instance. If not provided,
+            a new one will be created that connects lazily to Redis.
     """
-    return SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
+    gateway = pubsub_gateway or RedisPubSubGateway()
+    return SqlAlchemyUnitOfWorkFactory(pubsub_gateway=gateway)
 
 
 def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
@@ -113,16 +118,20 @@ async def sync_calendar_task(
     """
     logger.info(f"Starting calendar sync for user {user_id}")
 
-    sync_handler = get_sync_all_calendars_handler(
-        user_id=user_id,
-        uow_factory=get_unit_of_work_factory(),
-        ro_repo_factory=get_read_only_repository_factory(),
-        google_gateway=get_google_gateway(),
-    )
+    pubsub_gateway = RedisPubSubGateway()
+    try:
+        sync_handler = get_sync_all_calendars_handler(
+            user_id=user_id,
+            uow_factory=get_unit_of_work_factory(pubsub_gateway),
+            ro_repo_factory=get_read_only_repository_factory(),
+            google_gateway=get_google_gateway(),
+        )
 
-    await sync_handler.handle(SyncAllCalendarsCommand())
+        await sync_handler.handle(SyncAllCalendarsCommand())
 
-    logger.info(f"Calendar sync completed for user {user_id}")
+        logger.info(f"Calendar sync completed for user {user_id}")
+    finally:
+        await pubsub_gateway.close()
 
 
 @broker.task  # type: ignore[untyped-decorator]
@@ -142,18 +151,22 @@ async def sync_single_calendar_task(
         f"Starting single calendar sync for user {user_id}, calendar {calendar_id}"
     )
 
-    sync_handler = get_sync_calendar_handler(
-        user_id=user_id,
-        uow_factory=get_unit_of_work_factory(),
-        ro_repo_factory=get_read_only_repository_factory(),
-        google_gateway=get_google_gateway(),
-    )
+    pubsub_gateway = RedisPubSubGateway()
+    try:
+        sync_handler = get_sync_calendar_handler(
+            user_id=user_id,
+            uow_factory=get_unit_of_work_factory(pubsub_gateway),
+            ro_repo_factory=get_read_only_repository_factory(),
+            google_gateway=get_google_gateway(),
+        )
 
-    await sync_handler.handle(SyncCalendarCommand(calendar_id=calendar_id))
+        await sync_handler.handle(SyncCalendarCommand(calendar_id=calendar_id))
 
-    logger.info(
-        f"Single calendar sync completed for user {user_id}, calendar {calendar_id}"
-    )
+        logger.info(
+            f"Single calendar sync completed for user {user_id}, calendar {calendar_id}"
+        )
+    finally:
+        await pubsub_gateway.close()
 
 
 @broker.task  # type: ignore[untyped-decorator]
@@ -174,21 +187,25 @@ async def resubscribe_calendar_task(
         f"Starting calendar resubscription for user {user_id}, calendar {calendar_id}"
     )
 
-    subscribe_handler = get_subscribe_calendar_handler(
-        user_id=user_id,
-        uow_factory=get_unit_of_work_factory(),
-        ro_repo_factory=get_read_only_repository_factory(),
-        google_gateway=get_google_gateway(),
-    )
+    pubsub_gateway = RedisPubSubGateway()
+    try:
+        subscribe_handler = get_subscribe_calendar_handler(
+            user_id=user_id,
+            uow_factory=get_unit_of_work_factory(pubsub_gateway),
+            ro_repo_factory=get_read_only_repository_factory(),
+            google_gateway=get_google_gateway(),
+        )
 
-    ro_repos = get_read_only_repository_factory().create(user_id)
-    calendar = await ro_repos.calendar_ro_repo.get(calendar_id)
+        ro_repos = get_read_only_repository_factory().create(user_id)
+        calendar = await ro_repos.calendar_ro_repo.get(calendar_id)
 
-    await subscribe_handler.handle(SubscribeCalendarCommand(calendar=calendar))
+        await subscribe_handler.handle(SubscribeCalendarCommand(calendar=calendar))
 
-    logger.info(
-        f"Calendar resubscription completed for user {user_id}, calendar {calendar_id}"
-    )
+        logger.info(
+            f"Calendar resubscription completed for user {user_id}, calendar {calendar_id}"
+        )
+    finally:
+        await pubsub_gateway.close()
 
 
 @broker.task(schedule=[{"cron": "0 3 * * *"}])  # type: ignore[untyped-decorator]
@@ -215,25 +232,29 @@ async def schedule_user_day_task(
     """Schedule today's day for a specific user."""
     logger.info(f"Starting daily scheduling for user {user_id}")
 
-    schedule_handler = get_schedule_day_handler(
-        user_id=user_id,
-        uow_factory=get_unit_of_work_factory(),
-        ro_repo_factory=get_read_only_repository_factory(),
-    )
-
-    # Uses the configured timezone for "today"
-    target_date = get_current_date()
+    pubsub_gateway = RedisPubSubGateway()
     try:
-        await schedule_handler.handle(ScheduleDayCommand(date=target_date))
-        logger.debug(f"Scheduled {target_date} for user {user_id}")
-    except ValueError as e:
-        # Day template might be missing - log and continue
-        logger.warning(f"Could not schedule {target_date} for user {user_id}: {e}")
-    except Exception:  # pylint: disable=broad-except
-        # Catch-all for resilient background job - continue with other users
-        logger.exception(f"Error scheduling {target_date} for user {user_id}")
+        schedule_handler = get_schedule_day_handler(
+            user_id=user_id,
+            uow_factory=get_unit_of_work_factory(pubsub_gateway),
+            ro_repo_factory=get_read_only_repository_factory(),
+        )
 
-    logger.info(f"Daily scheduling completed for user {user_id}")
+        # Uses the configured timezone for "today"
+        target_date = get_current_date()
+        try:
+            await schedule_handler.handle(ScheduleDayCommand(date=target_date))
+            logger.debug(f"Scheduled {target_date} for user {user_id}")
+        except ValueError as e:
+            # Day template might be missing - log and continue
+            logger.warning(f"Could not schedule {target_date} for user {user_id}: {e}")
+        except Exception:  # pylint: disable=broad-except
+            # Catch-all for resilient background job - continue with other users
+            logger.exception(f"Error scheduling {target_date} for user {user_id}")
+
+        logger.info(f"Daily scheduling completed for user {user_id}")
+    finally:
+        await pubsub_gateway.close()
 
 
 # =============================================================================
