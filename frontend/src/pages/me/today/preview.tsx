@@ -5,18 +5,16 @@ import {
   EventsSection,
   RoutinesSummary,
   GoalsSummary,
-  BrainDumpSummary,
   UpcomingSection,
   RightNowSection,
 } from "@/components/today";
 
 export const TodayPage: Component = () => {
-  const { tasks, events, goals, brainDumpItems } = useStreamingData();
+  const { tasks, events, goals } = useStreamingData();
 
   const allTasks = createMemo(() => tasks() ?? []);
   const allEvents = createMemo(() => events() ?? []);
   const allGoals = createMemo(() => goals() ?? []);
-  const allBrainDumpItems = createMemo(() => brainDumpItems() ?? []);
 
   return (
     <>
@@ -29,10 +27,6 @@ export const TodayPage: Component = () => {
       <div class="mb-6">
         <GoalsSummary goals={allGoals()} />
       </div>
-      <div class="mb-6">
-        <BrainDumpSummary items={allBrainDumpItems()} />
-      </div>
-
       <div class="mb-6">
         <RoutinesSummary tasks={allTasks()} />
       </div>

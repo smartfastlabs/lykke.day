@@ -1,4 +1,5 @@
 import { NotificationContainer } from "@/providers/notifications";
+import BrainDumpButton from "@/components/shared/BrainDumpButton";
 import NavButton from "@/components/shared/NavButton";
 import Footer from "@/components/shared/layout/Footer";
 import { Component, JSX } from "solid-js";
@@ -17,6 +18,7 @@ const Page: Component<PageProps> = (props) => {
         </div>
       </div>
       <Footer />
+      <BrainDumpButton />
       <NavButton />
     </div>
   );
