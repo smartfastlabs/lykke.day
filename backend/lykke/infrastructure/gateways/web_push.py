@@ -47,6 +47,14 @@ async def send_notification(
             data=message.encrypted,
             headers=message.headers,
         )
+        if response.status == 410:
+            # 410 Gone means subscription is no longer valid (user unsubscribed or expired)
+            # TODO: Delete the invalid subscription from the database
+            logger.warning(
+                "Push subscription is no longer valid (410 Gone), "
+                f"endpoint: {subscription.endpoint[:50]}..."
+            )
+            return
         if not response.ok:
             raise PushNotificationError(
                 f"Failed to send push notification: {response.status} {response.reason}",
