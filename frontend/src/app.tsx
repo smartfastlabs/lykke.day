@@ -27,6 +27,7 @@ import TasksView from "@/pages/me/today/tasks";
 import EventsView from "@/pages/me/today/events";
 import AuditLogPage from "@/pages/me/audit-log";
 import BrainDumpPage from "@/pages/me/brain-dump";
+import BrainDumpDumpPage from "@/pages/me/brain-dump-dump";
 import NavigationLayout from "@/pages/me/navigation/layout";
 import NavPage from "@/pages/me/navigation/links";
 import CalendarPage from "@/pages/me/navigation/calendar";
@@ -216,6 +217,7 @@ export default function App() {
               </Route>
               <Route path="/audit-log" component={AuditLogPage} />
               <Route path="/brain-dump" component={BrainDumpPage} />
+              <Route path="/brain-dump/dump" component={BrainDumpDumpPage} />
               <Route path="/today" component={HomeLayout}>
                 <Route path="/" component={PreviewView} />
                 <Route path="/tasks" component={TasksView} />

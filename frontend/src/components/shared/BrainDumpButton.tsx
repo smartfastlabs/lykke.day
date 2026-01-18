@@ -8,12 +8,15 @@ const BrainDumpButton: Component = () => {
   const location = useLocation();
 
   const handleClick = () => {
-    if (location.pathname === "/me/brain-dump") {
+    if (
+      location.pathname === "/me/brain-dump" ||
+      location.pathname === "/me/brain-dump/dump"
+    ) {
       navigate("/me");
       return;
     }
 
-    navigate("/me/brain-dump");
+    navigate("/me/brain-dump/dump");
   };
 
   return (
