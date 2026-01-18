@@ -20,7 +20,7 @@ export const GoalsSummary: Component<GoalsSummaryProps> = (props) => {
   );
 
   const hasActiveGoals = createMemo(() => activeGoals().length > 0);
-  const canAddGoal = createMemo(() => activeGoals().length < 3);
+  const canAddGoal = createMemo(() => activeGoals().length < 5);
 
   const handleAddGoal = async () => {
     const name = newGoalName().trim();

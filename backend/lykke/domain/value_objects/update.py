@@ -7,7 +7,7 @@ from datetime import datetime
 from uuid import UUID
 
 from .base import BaseRequestObject
-from .day import DayStatus, DayTag, Goal
+from .day import BrainDumpItem, DayStatus, DayTag, Goal
 from .routine import RoutineSchedule, RoutineTask
 from .sync import SyncSubscription
 from .task import EventCategory, TaskCategory, TaskType
@@ -117,6 +117,7 @@ class DayUpdateObject(BaseUpdateObject):
     time_blocks: list[DayTimeBlock] | None = None
     active_time_block_id: UUID | None = None
     goals: list[Goal] | None = None
+    brain_dump_items: list[BrainDumpItem] | None = None
 
 
 @dataclass(kw_only=True)

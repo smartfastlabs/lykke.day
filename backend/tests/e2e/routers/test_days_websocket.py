@@ -8,7 +8,7 @@ from fastapi import WebSocket
 from fastapi.testclient import TestClient
 
 from lykke.core.config import settings
-from lykke.domain.entities import CalendarEntryEntity, TaskEntity
+from lykke.domain.entities import CalendarEntryEntity, DayEntity, TaskEntity
 from lykke.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
@@ -291,6 +291,79 @@ async def test_realtime_task_update_notification(authenticated_client, test_date
         except Exception as e:
             # If no event received, the real-time updates aren't working
             pytest.fail(f"No real-time event received after task update: {e}")
+
+
+@pytest.mark.asyncio
+async def test_realtime_brain_dump_update_notification(authenticated_client, test_date):
+    """Test that brain dump updates trigger real-time notifications."""
+    client, user = await authenticated_client()
+
+    from tests.e2e.conftest import schedule_day_for_user
+
+    await schedule_day_for_user(user.id, test_date)
+
+    from lykke.infrastructure.repositories import DayRepository
+
+    day_repo = DayRepository(user_id=user.id)
+    day_id = DayEntity.id_from_date_and_user(test_date, user.id)
+    day = await day_repo.get(day_id)
+    day.add_brain_dump_item("Brain dump test item")
+    await day_repo.put(day)
+
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
+        ack = websocket.receive_json()
+        assert ack["type"] == "connection_ack"
+
+        sync_request = {"type": "sync_request", "since_timestamp": None}
+        websocket.send_json(sync_request)
+        sync_response = websocket.receive_json()
+        assert sync_response["type"] == "sync_response"
+
+        from lykke.core.utils.audit_log_serialization import serialize_audit_log
+        from lykke.domain.entities import AuditLogEntity
+        from lykke.infrastructure.gateways import RedisPubSubGateway
+        from lykke.infrastructure.repositories import AuditLogRepository
+        from lykke.presentation.api.schemas.mappers import map_day_to_schema
+
+        redis_pool = getattr(client.app.state, "redis_pool", None)
+        pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+
+        day_schema = map_day_to_schema(day)
+        audit_log = AuditLogEntity(
+            user_id=user.id,
+            activity_type="BrainDumpItemAddedEvent",
+            entity_id=day.id,
+            entity_type="day",
+            occurred_at=datetime.now(UTC),
+            meta={"entity_data": day_schema.model_dump(mode="json")},
+        )
+        audit_log_repo = AuditLogRepository(user_id=user.id)
+        await audit_log_repo.put(audit_log)
+
+        await pubsub_gateway.publish_to_user_channel(
+            user_id=user.id,
+            channel_type="auditlog",
+            message=serialize_audit_log(audit_log),
+        )
+
+        await asyncio.sleep(0.2)
+
+        try:
+            event = websocket.receive_json()
+            assert event["type"] == "sync_response"
+            assert event["changes"] is not None
+            assert len(event["changes"]) > 0
+
+            day_change = next(
+                (c for c in event["changes"] if c["entity_type"] == "day"),
+                None,
+            )
+            assert day_change is not None
+            assert day_change["change_type"] == "updated"
+            assert day_change["entity_data"] is not None
+            assert "brain_dump_items" in day_change["entity_data"]
+        except Exception as e:
+            pytest.fail(f"No real-time event received after brain dump update: {e}")
 
 
 # NOTE: Real-time pub/sub tests with task creation, deletion, and calendar updates

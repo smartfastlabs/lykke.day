@@ -9,7 +9,16 @@ from .ai_chat import (
 )
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .calendar_subscription import CalendarSubscription
-from .day import DayContext, DayMode, DayStatus, DayTag, Goal, GoalStatus
+from .day import (
+    BrainDumpItem,
+    BrainDumpItemStatus,
+    DayContext,
+    DayMode,
+    DayStatus,
+    DayTag,
+    Goal,
+    GoalStatus,
+)
 from .push import NotificationAction, NotificationPayload
 from .query import (
     AuditLogQuery,
@@ -96,6 +105,8 @@ __all__ = [
     "DayQuery",
     "DayStatus",
     "DayTag",
+    "BrainDumpItem",
+    "BrainDumpItemStatus",
     "Goal",
     "GoalStatus",
     "DayTemplateQuery",

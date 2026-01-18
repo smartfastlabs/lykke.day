@@ -21,6 +21,7 @@ class Day(Base):
     time_blocks = Column(JSONB)  # list[DayTimeBlock]
     active_time_block_id = Column(PGUUID)  # UUID | None
     goals = Column(JSONB)  # list[Goal]
+    brain_dump_items = Column(JSONB)  # list[BrainDumpItem]
 
     __table_args__ = (
         Index("idx_days_date", "date"),

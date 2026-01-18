@@ -102,6 +102,38 @@ async def test_put_update(
 
 
 @pytest.mark.asyncio
+async def test_put_round_trip_brain_dump_items(
+    day_repo, day_template_repo, test_user, test_date, setup_day_templates
+):
+    """Test brain dump items are persisted on Day."""
+    await setup_day_templates
+    templates = await day_template_repo.all()
+    default_template = templates[0] if templates else None
+    if not default_template:
+        pytest.skip("No templates available")
+
+    day = DayEntity(
+        user_id=test_user.id,
+        date=test_date,
+        status=value_objects.DayStatus.UNSCHEDULED,
+        template=default_template,
+    )
+    item = day.add_brain_dump_item("Remember to buy bread")
+    day.update_brain_dump_item_status(
+        item.id, value_objects.BrainDumpItemStatus.PUNT
+    )
+    await day_repo.put(day)
+
+    retrieved = await day_repo.get(day.id)
+    assert len(retrieved.brain_dump_items) == 1
+    assert retrieved.brain_dump_items[0].text == "Remember to buy bread"
+    assert (
+        retrieved.brain_dump_items[0].status
+        == value_objects.BrainDumpItemStatus.PUNT
+    )
+
+
+@pytest.mark.asyncio
 async def test_all(
     day_repo,
     day_template_repo,

@@ -17,9 +17,11 @@ import {
   TaskStatus,
   Goal,
   GoalStatus,
+  BrainDumpItem,
+  BrainDumpItemStatus,
   Routine,
 } from "@/types/api";
-import { taskAPI, goalAPI, routineAPI } from "@/utils/api";
+import { taskAPI, goalAPI, brainDumpAPI, routineAPI } from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 
 interface StreamingDataContextValue {
@@ -28,6 +30,7 @@ interface StreamingDataContextValue {
   tasks: Accessor<Task[]>;
   events: Accessor<Event[]>;
   goals: Accessor<Goal[]>;
+  brainDumpItems: Accessor<BrainDumpItem[]>;
   day: Accessor<Day | undefined>;
   routines: Accessor<Routine[] | undefined>;
   // Loading and error states
@@ -44,6 +47,12 @@ interface StreamingDataContextValue {
   addGoal: (name: string) => Promise<void>;
   updateGoalStatus: (goal: Goal, status: GoalStatus) => Promise<void>;
   removeGoal: (goalId: string) => Promise<void>;
+  addBrainDumpItem: (text: string) => Promise<void>;
+  updateBrainDumpItemStatus: (
+    item: BrainDumpItem,
+    status: BrainDumpItemStatus
+  ) => Promise<void>;
+  removeBrainDumpItem: (itemId: string) => Promise<void>;
 }
 
 const StreamingDataContext = createContext<StreamingDataContextValue>();
@@ -138,6 +147,13 @@ export function StreamingDataProvider(props: ParentProps) {
     const day = dayContextStore.data?.day;
     if (!day) return [];
     return (day as Day & { goals?: Goal[] }).goals ?? [];
+  });
+  const brainDumpItems = createMemo(() => {
+    const day = dayContextStore.data?.day;
+    if (!day) return [];
+    return (
+      day as Day & { brain_dump_items?: BrainDumpItem[] }
+    ).brain_dump_items ?? [];
   });
   const day = createMemo(() => dayContextStore.data?.day);
 
@@ -370,6 +386,11 @@ export function StreamingDataProvider(props: ParentProps) {
               (r) => r.id !== change.entity_id
             );
           }
+        } else if (change.entity_type === "day") {
+          const updatedDay = change.entity_data as Day;
+          if (change.change_type === "updated" || change.change_type === "created") {
+            updated.day = updatedDay;
+          }
         }
       }
 
@@ -432,7 +453,10 @@ export function StreamingDataProvider(props: ParentProps) {
       changeType = "deleted";
     } else if (
       activityType.includes("Updated") ||
-      activityType === "EntityUpdatedEvent"
+      activityType === "EntityUpdatedEvent" ||
+      activityType === "BrainDumpItemAddedEvent" ||
+      activityType === "BrainDumpItemStatusChangedEvent" ||
+      activityType === "BrainDumpItemRemovedEvent"
     ) {
       changeType = "updated";
     }
@@ -565,6 +589,22 @@ export function StreamingDataProvider(props: ParentProps) {
     });
   };
 
+  const updateBrainDumpItemsLocally = (updatedItems: BrainDumpItem[]) => {
+    setDayContextStore((current) => {
+      if (!current.data || !current.data.day) return current;
+      const updated = {
+        data: {
+          ...current.data,
+          day: {
+            ...current.data.day,
+            brain_dump_items: updatedItems,
+          },
+        },
+      };
+      return updated;
+    });
+  };
+
   const addGoal = async (name: string): Promise<void> => {
     const context = await goalAPI.addGoal(name);
     setDayContextStore({ data: context });
@@ -607,6 +647,44 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
+  const addBrainDumpItem = async (text: string): Promise<void> => {
+    const context = await brainDumpAPI.addItem(text);
+    setDayContextStore({ data: context });
+  };
+
+  const updateBrainDumpItemStatus = async (
+    item: BrainDumpItem,
+    status: BrainDumpItemStatus
+  ): Promise<void> => {
+    const previousItems = brainDumpItems();
+    const updatedItems = previousItems.map((i) =>
+      i.id === item.id ? { ...i, status } : i
+    );
+    updateBrainDumpItemsLocally(updatedItems);
+
+    try {
+      const context = await brainDumpAPI.updateItemStatus(item.id, status);
+      setDayContextStore({ data: context });
+    } catch (error) {
+      updateBrainDumpItemsLocally(previousItems);
+      throw error;
+    }
+  };
+
+  const removeBrainDumpItem = async (itemId: string): Promise<void> => {
+    const previousItems = brainDumpItems();
+    const updatedItems = previousItems.filter((i) => i.id !== itemId);
+    updateBrainDumpItemsLocally(updatedItems);
+
+    try {
+      const context = await brainDumpAPI.removeItem(itemId);
+      setDayContextStore({ data: context });
+    } catch (error) {
+      updateBrainDumpItemsLocally(previousItems);
+      throw error;
+    }
+  };
+
   const sync = () => {
     requestFullSync();
   };
@@ -642,6 +720,7 @@ export function StreamingDataProvider(props: ParentProps) {
     tasks,
     events,
     goals,
+    brainDumpItems,
     day,
     routines,
     isLoading,
@@ -655,6 +734,9 @@ export function StreamingDataProvider(props: ParentProps) {
     addGoal,
     updateGoalStatus,
     removeGoal,
+    addBrainDumpItem,
+    updateBrainDumpItemStatus,
+    removeBrainDumpItem,
   };
 
   return (

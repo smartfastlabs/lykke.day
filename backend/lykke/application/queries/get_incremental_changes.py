@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import date as dt_date, datetime
-from typing import Any, Literal, cast
+from typing import Any, Literal
 from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler, Query
@@ -84,6 +84,9 @@ class GetIncrementalChangesHandler(BaseQueryHandler[GetIncrementalChangesQuery, 
                 or audit_log.activity_type == "EntityUpdatedEvent"
                 or audit_log.activity_type == "TaskCompletedEvent"
                 or audit_log.activity_type == "TaskPuntedEvent"
+                or audit_log.activity_type == "BrainDumpItemAddedEvent"
+                or audit_log.activity_type == "BrainDumpItemStatusChangedEvent"
+                or audit_log.activity_type == "BrainDumpItemRemovedEvent"
             ):
                 change_type = "updated"
             else:

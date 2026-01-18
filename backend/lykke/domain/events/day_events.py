@@ -4,24 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date as dt_date
-from typing import TYPE_CHECKING
 from uuid import UUID
 
-from lykke.domain.value_objects.day import GoalStatus
+from lykke.domain.value_objects.day import BrainDumpItemStatus, GoalStatus
 from lykke.domain.value_objects.update import DayUpdateObject
 
-from .base import DomainEvent, EntityUpdatedEvent
-
-__all__ = [
-    "DayCompletedEvent",
-    "DayScheduledEvent",
-    "DayUnscheduledEvent",
-    "DayUpdatedEvent",
-    "GoalAddedEvent",
-    "GoalStatusChangedEvent",
-    "GoalRemovedEvent",
-]
-
+from .base import AuditedEvent, DomainEvent, EntityUpdatedEvent
 
 @dataclass(frozen=True, kw_only=True)
 class DayScheduledEvent(DomainEvent):
@@ -83,3 +71,49 @@ class GoalRemovedEvent(DomainEvent):
     date: dt_date
     goal_id: UUID
     goal_name: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class BrainDumpItemAddedEvent(DomainEvent, AuditedEvent):
+    """Event raised when a brain dump item is added."""
+
+    day_id: UUID
+    date: dt_date
+    item_id: UUID
+    item_text: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class BrainDumpItemStatusChangedEvent(DomainEvent, AuditedEvent):
+    """Event raised when a brain dump item status changes."""
+
+    day_id: UUID
+    date: dt_date
+    item_id: UUID
+    old_status: BrainDumpItemStatus
+    new_status: BrainDumpItemStatus
+    item_text: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class BrainDumpItemRemovedEvent(DomainEvent, AuditedEvent):
+    """Event raised when a brain dump item is removed."""
+
+    day_id: UUID
+    date: dt_date
+    item_id: UUID
+    item_text: str
+
+
+__all__ = [
+    "DayCompletedEvent",
+    "DayScheduledEvent",
+    "DayUnscheduledEvent",
+    "DayUpdatedEvent",
+    "BrainDumpItemAddedEvent",
+    "BrainDumpItemStatusChangedEvent",
+    "BrainDumpItemRemovedEvent",
+    "GoalAddedEvent",
+    "GoalStatusChangedEvent",
+    "GoalRemovedEvent",
+]

@@ -1,20 +1,21 @@
-"""Unit tests for AddGoalToDayHandler."""
+"""Unit tests for UpdateBrainDumpItemStatusHandler."""
 
 from datetime import date as dt_date
 from uuid import uuid4
 
 import pytest
 
-from lykke.application.commands.day import AddGoalToDayCommand, AddGoalToDayHandler
+from lykke.application.commands.day import (
+    UpdateBrainDumpItemStatusCommand,
+    UpdateBrainDumpItemStatusHandler,
+)
 from lykke.core.exceptions import DomainError, NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity, UserEntity
-from lykke.domain.events.day_events import GoalAddedEvent
+from lykke.domain.events.day_events import BrainDumpItemStatusChangedEvent
 
 
 class _FakeDayReadOnlyRepo:
-    """Fake day repository for testing."""
-
     def __init__(self, day: DayEntity | None = None) -> None:
         self._day = day
 
@@ -25,8 +26,6 @@ class _FakeDayReadOnlyRepo:
 
 
 class _FakeDayTemplateReadOnlyRepo:
-    """Fake day template repository for testing."""
-
     def __init__(self, template: DayTemplateEntity) -> None:
         self._template = template
 
@@ -35,8 +34,6 @@ class _FakeDayTemplateReadOnlyRepo:
 
 
 class _FakeUserReadOnlyRepo:
-    """Fake user repository for testing."""
-
     def __init__(self, user: UserEntity) -> None:
         self._user = user
 
@@ -45,8 +42,6 @@ class _FakeUserReadOnlyRepo:
 
 
 class _FakeReadOnlyRepos:
-    """Lightweight container matching ReadOnlyRepositories protocol."""
-
     def __init__(
         self,
         day_repo: _FakeDayReadOnlyRepo,
@@ -74,13 +69,8 @@ class _FakeReadOnlyRepos:
 
 
 class _FakeUoW:
-    """Minimal UnitOfWork that just collects added entities."""
-
-    def __init__(
-        self, day_repo, day_template_repo, user_repo, created_entities=None
-    ) -> None:
+    def __init__(self, day_repo, day_template_repo, user_repo) -> None:
         self.added = []
-        self.created = created_entities or []
         self.day_ro_repo = day_repo
         self.day_template_ro_repo = day_template_repo
         self.user_ro_repo = user_repo
@@ -95,11 +85,6 @@ class _FakeUoW:
         self.added.append(entity)
         return entity
 
-    async def create(self, entity):
-        self.created.append(entity)
-        entity.create()
-        return entity
-
 
 class _FakeUoWFactory:
     def __init__(self, day_repo, day_template_repo, user_repo) -> None:
@@ -110,8 +95,7 @@ class _FakeUoWFactory:
 
 
 @pytest.mark.asyncio
-async def test_add_goal_adds_goal_to_existing_day():
-    """Test add_goal adds a goal to an existing day."""
+async def test_update_brain_dump_item_status_updates():
     user_id = uuid4()
     task_date = dt_date(2025, 11, 27)
 
@@ -123,6 +107,8 @@ async def test_add_goal_adds_goal_to_existing_day():
     )
 
     day = DayEntity.create_for_date(task_date, user_id, template)
+    item = day.add_brain_dump_item("Test brain dump")
+    day.collect_events()
 
     day_repo = _FakeDayReadOnlyRepo(day)
     day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
@@ -136,62 +122,24 @@ async def test_add_goal_adds_goal_to_existing_day():
 
     ro_repos = _FakeReadOnlyRepos(day_repo, day_template_repo, user_repo)
     uow_factory = _FakeUoWFactory(day_repo, day_template_repo, user_repo)
-    handler = AddGoalToDayHandler(ro_repos, uow_factory, user_id)
+    handler = UpdateBrainDumpItemStatusHandler(ro_repos, uow_factory, user_id)
 
-    # Act
-    result = await handler.handle(AddGoalToDayCommand(date=task_date, goal="Test Goal"))
-
-    # Assert
-    assert len(result.goals) == 1
-    assert result.goals[0].name == "Test Goal"
-    assert result.goals[0].status == value_objects.GoalStatus.INCOMPLETE
-    assert len(uow_factory.uow.added) == 1
-    assert uow_factory.uow.added[0] == result
-
-
-@pytest.mark.asyncio
-async def test_add_goal_emits_domain_event():
-    """Test add_goal emits GoalAddedEvent."""
-    user_id = uuid4()
-    task_date = dt_date(2025, 11, 27)
-
-    template = DayTemplateEntity(
-        user_id=user_id,
-        slug="default",
-        routine_ids=[],
-        time_blocks=[],
+    result = await handler.handle(
+        UpdateBrainDumpItemStatusCommand(
+            date=task_date,
+            item_id=item.id,
+            status=value_objects.BrainDumpItemStatus.COMPLETE,
+        )
     )
 
-    day = DayEntity.create_for_date(task_date, user_id, template)
-
-    day_repo = _FakeDayReadOnlyRepo(day)
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    user = UserEntity(
-        id=user_id,
-        email="test@example.com",
-        hashed_password="hash",
-        settings=value_objects.UserSetting(template_defaults=["default"] * 7),
-    )
-    user_repo = _FakeUserReadOnlyRepo(user)
-
-    ro_repos = _FakeReadOnlyRepos(day_repo, day_template_repo, user_repo)
-    uow_factory = _FakeUoWFactory(day_repo, day_template_repo, user_repo)
-    handler = AddGoalToDayHandler(ro_repos, uow_factory, user_id)
-
-    # Act
-    result = await handler.handle(AddGoalToDayCommand(date=task_date, goal="Test Goal"))
-
-    # Assert
+    assert result.brain_dump_items[0].status == value_objects.BrainDumpItemStatus.COMPLETE
     events = result.collect_events()
     assert len(events) == 1
-    assert isinstance(events[0], GoalAddedEvent)
-    assert events[0].goal_name == "Test Goal"
-    assert events[0].day_id == day.id
+    assert isinstance(events[0], BrainDumpItemStatusChangedEvent)
 
 
 @pytest.mark.asyncio
-async def test_add_goal_raises_if_day_missing():
-    """Test add_goal raises if the day doesn't exist."""
+async def test_update_brain_dump_item_status_day_not_found():
     user_id = uuid4()
     task_date = dt_date(2025, 11, 27)
 
@@ -202,7 +150,7 @@ async def test_add_goal_raises_if_day_missing():
         time_blocks=[],
     )
 
-    day_repo = _FakeDayReadOnlyRepo(None)  # Day doesn't exist
+    day_repo = _FakeDayReadOnlyRepo(None)
     day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
     user = UserEntity(
         id=user_id,
@@ -214,16 +162,20 @@ async def test_add_goal_raises_if_day_missing():
 
     ro_repos = _FakeReadOnlyRepos(day_repo, day_template_repo, user_repo)
     uow_factory = _FakeUoWFactory(day_repo, day_template_repo, user_repo)
-    handler = AddGoalToDayHandler(ro_repos, uow_factory, user_id)
+    handler = UpdateBrainDumpItemStatusHandler(ro_repos, uow_factory, user_id)
 
-    # Act / Assert
     with pytest.raises(NotFoundError, match="Day"):
-        await handler.handle(AddGoalToDayCommand(date=task_date, goal="Test Goal"))
+        await handler.handle(
+            UpdateBrainDumpItemStatusCommand(
+                date=task_date,
+                item_id=uuid4(),
+                status=value_objects.BrainDumpItemStatus.PUNT,
+            )
+        )
 
 
 @pytest.mark.asyncio
-async def test_add_goal_enforces_max_five():
-    """Test add_goal enforces maximum of 5 goals."""
+async def test_update_brain_dump_item_status_raises_error():
     user_id = uuid4()
     task_date = dt_date(2025, 11, 27)
 
@@ -235,12 +187,6 @@ async def test_add_goal_enforces_max_five():
     )
 
     day = DayEntity.create_for_date(task_date, user_id, template)
-    day.add_goal("Goal 1")
-    day.add_goal("Goal 2")
-    day.add_goal("Goal 3")
-    day.add_goal("Goal 4")
-    day.add_goal("Goal 5")
-
     day_repo = _FakeDayReadOnlyRepo(day)
     day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
     user = UserEntity(
@@ -253,8 +199,13 @@ async def test_add_goal_enforces_max_five():
 
     ro_repos = _FakeReadOnlyRepos(day_repo, day_template_repo, user_repo)
     uow_factory = _FakeUoWFactory(day_repo, day_template_repo, user_repo)
-    handler = AddGoalToDayHandler(ro_repos, uow_factory, user_id)
+    handler = UpdateBrainDumpItemStatusHandler(ro_repos, uow_factory, user_id)
 
-    # Act & Assert
-    with pytest.raises(DomainError, match="at most 5 active goals"):
-        await handler.handle(AddGoalToDayCommand(date=task_date, goal="Goal 6"))
+    with pytest.raises(DomainError, match="Brain dump item"):
+        await handler.handle(
+            UpdateBrainDumpItemStatusCommand(
+                date=task_date,
+                item_id=uuid4(),
+                status=value_objects.BrainDumpItemStatus.COMPLETE,
+            )
+        )

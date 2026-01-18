@@ -32,11 +32,14 @@ export interface ApiError {
 // Entity types
 export type Task = components["schemas"]["TaskSchema"];
 export type Event = components["schemas"]["CalendarEntrySchema"];
-export type Day = components["schemas"]["DaySchema"];
+export type Day = components["schemas"]["DaySchema"] & {
+  goals?: Goal[];
+  brain_dump_items?: BrainDumpItem[];
+};
 
 // DayContext with events alias
 type BaseDayContext = components["schemas"]["DayContextSchema"];
-export type DayContext = Omit<BaseDayContext, 'calendar_entries'> & {
+export type DayContext = Omit<BaseDayContext, "calendar_entries"> & {
   events?: Event[];
   calendar_entries?: Event[];
   tasks?: Task[];
@@ -65,6 +68,13 @@ export interface Goal {
   created_at?: string | null;
 }
 
+export interface BrainDumpItem {
+  id: string;
+  text: string;
+  status: BrainDumpItemStatus;
+  created_at?: string | null;
+}
+
 // Enum types
 export type TaskStatus = components["schemas"]["TaskStatus"];
 export type TaskType = components["schemas"]["TaskType"];
@@ -78,4 +88,6 @@ export type ActionType = components["schemas"]["ActionType"];
 
 // GoalStatus enum - manually defined as it may not be in generated types yet
 export type GoalStatus = "INCOMPLETE" | "COMPLETE" | "PUNT";
+
+export type BrainDumpItemStatus = "ACTIVE" | "COMPLETE" | "PUNT";
 

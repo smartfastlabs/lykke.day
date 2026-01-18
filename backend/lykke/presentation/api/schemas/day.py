@@ -12,6 +12,7 @@ from lykke.domain.value_objects.day import DayStatus, DayTag
 from .base import BaseEntitySchema, BaseSchema
 
 if TYPE_CHECKING:
+    from .brain_dump import BrainDumpItemSchema
     from .day_template import DayTemplateSchema
     from .goal import GoalSchema
 
@@ -26,6 +27,7 @@ class DaySchema(BaseEntitySchema):
     tags: list[DayTag] = Field(default_factory=list)
     template: Optional["DayTemplateSchema"] = None
     goals: list["GoalSchema"] = Field(default_factory=list)
+    brain_dump_items: list["BrainDumpItemSchema"] = Field(default_factory=list)
 
 
 class DayUpdateSchema(BaseSchema):

@@ -41,6 +41,13 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
             [dataclass_to_json_dict(goal) for goal in day.goals] if day.goals else []
         )
 
+        # Always include brain_dump_items, even if empty, to allow clearing
+        row["brain_dump_items"] = (
+            [dataclass_to_json_dict(item) for item in day.brain_dump_items]
+            if day.brain_dump_items
+            else []
+        )
+
         return row
 
     @classmethod
@@ -149,6 +156,34 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                             )
                         goals_list.append(value_objects.Goal(**goal_data))
                 data["goals"] = goals_list
+
+        # Handle brain dump items - convert list of dicts to BrainDumpItem objects
+        if data.get("brain_dump_items"):
+            if isinstance(data["brain_dump_items"], list):
+                from datetime import datetime as dt_datetime
+
+                items_list = []
+                for item_dict in data["brain_dump_items"]:
+                    if isinstance(item_dict, dict):
+                        item_data = dict(item_dict)
+                        if "id" in item_data and isinstance(item_data["id"], str):
+                            item_data["id"] = UUID(item_data["id"])
+                        if "status" in item_data and isinstance(
+                            item_data["status"], str
+                        ):
+                            item_data["status"] = value_objects.BrainDumpItemStatus(
+                                item_data["status"]
+                            )
+                        if (
+                            "created_at" in item_data
+                            and item_data["created_at"]
+                            and isinstance(item_data["created_at"], str)
+                        ):
+                            item_data["created_at"] = dt_datetime.fromisoformat(
+                                item_data["created_at"].replace("Z", "+00:00")
+                            )
+                        items_list.append(value_objects.BrainDumpItem(**item_data))
+                data["brain_dump_items"] = items_list
 
         from lykke.infrastructure.repositories.base.utils import (
             filter_init_false_fields,

@@ -26,6 +26,7 @@ from lykke.presentation.api.schemas import (
     ActionSchema,
     AuditLogSchema,
     AuditableSchema,
+    BrainDumpItemSchema,
     BotPersonalitySchema,
     CalendarEntrySchema,
     CalendarEntrySeriesSchema,
@@ -62,6 +63,18 @@ def map_goal_to_schema(goal: value_objects.Goal) -> GoalSchema:
         name=goal.name,
         status=goal.status,
         created_at=goal.created_at,
+    )
+
+
+def map_brain_dump_item_to_schema(
+    item: value_objects.BrainDumpItem,
+) -> BrainDumpItemSchema:
+    """Convert BrainDumpItem value object to schema."""
+    return BrainDumpItemSchema(
+        id=item.id,
+        text=item.text,
+        status=item.status,
+        created_at=item.created_at,
     )
 
 
@@ -160,6 +173,9 @@ def map_day_to_schema(day: DayEntity) -> DaySchema:
     template_schema = map_day_template_to_schema(day.template) if day.template else None
 
     goal_schemas = [map_goal_to_schema(goal) for goal in day.goals]
+    brain_dump_item_schemas = [
+        map_brain_dump_item_to_schema(item) for item in day.brain_dump_items
+    ]
 
     return DaySchema(
         id=day.id,
@@ -170,6 +186,7 @@ def map_day_to_schema(day: DayEntity) -> DaySchema:
         tags=day.tags,
         template=template_schema,
         goals=goal_schemas,
+        brain_dump_items=brain_dump_item_schemas,
     )
 
 

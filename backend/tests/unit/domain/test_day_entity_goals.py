@@ -56,16 +56,18 @@ def test_add_goal_emits_domain_event(test_day: DayEntity) -> None:
     assert events[0].date == test_day.date
 
 
-def test_add_goal_enforces_max_three_goals(test_day: DayEntity) -> None:
-    """Test add_goal enforces maximum of 3 goals."""
+def test_add_goal_enforces_max_five_goals(test_day: DayEntity) -> None:
+    """Test add_goal enforces maximum of 5 goals."""
     test_day.add_goal("Goal 1")
     test_day.add_goal("Goal 2")
     test_day.add_goal("Goal 3")
+    test_day.add_goal("Goal 4")
+    test_day.add_goal("Goal 5")
 
-    assert len(test_day.goals) == 3
+    assert len(test_day.goals) == 5
 
-    with pytest.raises(DomainError, match="at most 3 active goals"):
-        test_day.add_goal("Goal 4")
+    with pytest.raises(DomainError, match="at most 5 active goals"):
+        test_day.add_goal("Goal 6")
 
 
 def test_add_goal_sets_created_at(test_day: DayEntity) -> None:

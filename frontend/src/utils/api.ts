@@ -186,6 +186,30 @@ export const goalAPI = {
     }),
 };
 
+export const brainDumpAPI = {
+  addItem: (text: string): Promise<DayContext> => {
+    const params = new URLSearchParams({ text });
+    return fetchData<DayContext>(`/api/me/today/brain-dump?${params.toString()}`, {
+      method: "POST",
+    });
+  },
+
+  updateItemStatus: (itemId: string, status: string): Promise<DayContext> => {
+    const params = new URLSearchParams({ status });
+    return fetchData<DayContext>(
+      `/api/me/today/brain-dump/${itemId}?${params.toString()}`,
+      {
+        method: "PATCH",
+      }
+    );
+  },
+
+  removeItem: (itemId: string): Promise<DayContext> =>
+    fetchData<DayContext>(`/api/me/today/brain-dump/${itemId}`, {
+      method: "DELETE",
+    }),
+};
+
 export const authAPI = {
   me: async (): Promise<CurrentUser | null> => {
     try {

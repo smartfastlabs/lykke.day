@@ -48,6 +48,24 @@ class Goal(BaseValueObject):
     created_at: datetime | None = field(default=None)
 
 
+class BrainDumpItemStatus(str, Enum):
+    """Status of a brain dump item."""
+
+    ACTIVE = "ACTIVE"
+    COMPLETE = "COMPLETE"
+    PUNT = "PUNT"
+
+
+@dataclass(kw_only=True)
+class BrainDumpItem(BaseValueObject):
+    """Brain dump item for quick capture of thoughts and reminders."""
+
+    id: UUID = field(default_factory=uuid4)
+    text: str
+    status: BrainDumpItemStatus = BrainDumpItemStatus.ACTIVE
+    created_at: datetime | None = field(default=None)
+
+
 @dataclass(kw_only=True)
 class DayContext(BaseValueObject):
     day: "DayEntity"

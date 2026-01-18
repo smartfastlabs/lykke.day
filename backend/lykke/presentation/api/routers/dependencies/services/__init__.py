@@ -19,8 +19,11 @@ from lykke.application.commands import (
     UpdateDayHandler,
 )
 from lykke.application.commands.day import (
+    AddBrainDumpItemToDayHandler,
     AddGoalToDayHandler,
+    RemoveBrainDumpItemHandler,
     RemoveGoalHandler,
+    UpdateBrainDumpItemStatusHandler,
     UpdateGoalStatusHandler,
 )
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
@@ -282,3 +285,39 @@ def get_remove_goal_handler(
     """Get a RemoveGoalHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return RemoveGoalHandler(ro_repos, uow_factory, user.id)
+
+
+def get_add_brain_dump_item_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> AddBrainDumpItemToDayHandler:
+    """Get an AddBrainDumpItemToDayHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return AddBrainDumpItemToDayHandler(ro_repos, uow_factory, user.id)
+
+
+def get_update_brain_dump_item_status_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> UpdateBrainDumpItemStatusHandler:
+    """Get an UpdateBrainDumpItemStatusHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return UpdateBrainDumpItemStatusHandler(ro_repos, uow_factory, user.id)
+
+
+def get_remove_brain_dump_item_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> RemoveBrainDumpItemHandler:
+    """Get a RemoveBrainDumpItemHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return RemoveBrainDumpItemHandler(ro_repos, uow_factory, user.id)

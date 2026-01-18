@@ -16,6 +16,7 @@ from .calendar_entry_series import (
     CalendarEntrySeriesUpdateSchema,
 )
 from .conversation import ConversationSchema
+from .brain_dump import BrainDumpItemSchema
 from .day import DaySchema, DayUpdateSchema
 from .day_context import DayContextSchema
 from .factoid import FactoidSchema
@@ -90,6 +91,7 @@ TaskSchema.model_rebuild()
 TaskDefinitionUpdateSchema.model_rebuild()
 DayContextSchema.model_rebuild()
 GoalSchema.model_rebuild()
+BrainDumpItemSchema.model_rebuild()
 RoutineSchema.model_rebuild()
 RoutineTaskCreateSchema.model_rebuild()
 RoutineTaskUpdateSchema.model_rebuild()
@@ -130,6 +132,7 @@ __all__ = [
     "CalendarSchema",
     "CalendarUpdateSchema",
     "ConversationSchema",
+    "BrainDumpItemSchema",
     "DayContextSchema",
     "DaySchema",
     "FactoidSchema",

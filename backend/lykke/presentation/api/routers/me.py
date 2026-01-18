@@ -7,10 +7,16 @@ from fastapi import APIRouter, Depends
 from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
 from lykke.application.queries import GetDayContextHandler, GetDayContextQuery
 from lykke.application.commands.day import (
+    AddBrainDumpItemToDayCommand,
+    AddBrainDumpItemToDayHandler,
     AddGoalToDayCommand,
     AddGoalToDayHandler,
+    RemoveBrainDumpItemCommand,
+    RemoveBrainDumpItemHandler,
     RemoveGoalCommand,
     RemoveGoalHandler,
+    UpdateBrainDumpItemStatusCommand,
+    UpdateBrainDumpItemStatusHandler,
     UpdateGoalStatusCommand,
     UpdateGoalStatusHandler,
 )
@@ -29,8 +35,11 @@ from .dependencies.factories import get_command_handler
 from .dependencies.user import get_current_user
 from .dependencies.services import (
     day_context_handler,
+    get_add_brain_dump_item_handler,
     get_add_goal_to_day_handler,
+    get_remove_brain_dump_item_handler,
     get_remove_goal_handler,
+    get_update_brain_dump_item_status_handler,
     get_update_goal_status_handler,
 )
 
@@ -124,5 +133,65 @@ async def remove_goal_from_today(
     date = get_current_date()
     await handler.handle(RemoveGoalCommand(date=date, goal_id=goal_id))
     # Get the full context to return
+    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
+    return map_day_context_to_schema(context)
+
+
+# ============================================================================
+# Today's Brain Dump
+# ============================================================================
+
+
+@router.post("/today/brain-dump", response_model=DayContextSchema)
+async def add_brain_dump_item_to_today(
+    text: str,
+    handler: Annotated[
+        AddBrainDumpItemToDayHandler, Depends(get_add_brain_dump_item_handler)
+    ],
+    day_context_handler_instance: Annotated[
+        GetDayContextHandler, Depends(day_context_handler)
+    ],
+) -> DayContextSchema:
+    """Add a brain dump item to today."""
+    date = get_current_date()
+    await handler.handle(AddBrainDumpItemToDayCommand(date=date, text=text))
+    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
+    return map_day_context_to_schema(context)
+
+
+@router.patch("/today/brain-dump/{item_id}", response_model=DayContextSchema)
+async def update_brain_dump_item_status(
+    item_id: UUID,
+    status: value_objects.BrainDumpItemStatus,
+    handler: Annotated[
+        UpdateBrainDumpItemStatusHandler,
+        Depends(get_update_brain_dump_item_status_handler),
+    ],
+    day_context_handler_instance: Annotated[
+        GetDayContextHandler, Depends(day_context_handler)
+    ],
+) -> DayContextSchema:
+    """Update a brain dump item's status for today."""
+    date = get_current_date()
+    await handler.handle(
+        UpdateBrainDumpItemStatusCommand(date=date, item_id=item_id, status=status)
+    )
+    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
+    return map_day_context_to_schema(context)
+
+
+@router.delete("/today/brain-dump/{item_id}", response_model=DayContextSchema)
+async def remove_brain_dump_item_from_today(
+    item_id: UUID,
+    handler: Annotated[
+        RemoveBrainDumpItemHandler, Depends(get_remove_brain_dump_item_handler)
+    ],
+    day_context_handler_instance: Annotated[
+        GetDayContextHandler, Depends(day_context_handler)
+    ],
+) -> DayContextSchema:
+    """Remove a brain dump item from today."""
+    date = get_current_date()
+    await handler.handle(RemoveBrainDumpItemCommand(date=date, item_id=item_id))
     context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
     return map_day_context_to_schema(context)

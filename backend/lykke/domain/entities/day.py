@@ -11,10 +11,13 @@ from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 
 from .. import value_objects
-from ..events.day_events import (
+from ..events.day_events import (  # pylint: disable=no-name-in-module
     DayCompletedEvent,
     DayScheduledEvent,
     DayUnscheduledEvent,
+    BrainDumpItemAddedEvent,
+    BrainDumpItemRemovedEvent,
+    BrainDumpItemStatusChangedEvent,
     GoalAddedEvent,
     GoalRemovedEvent,
     GoalStatusChangedEvent,
@@ -44,6 +47,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
     time_blocks: list[value_objects.DayTimeBlock] = field(default_factory=list)
     active_time_block_id: UUID | None = None
     goals: list[value_objects.Goal] = field(default_factory=list)
+    brain_dump_items: list[value_objects.BrainDumpItem] = field(default_factory=list)
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
@@ -256,7 +260,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
     def add_goal(self, name: str) -> value_objects.Goal:
         """Add a goal to this day.
 
-        This method enforces the business rule that a day can have at most 3 active goals.
+        This method enforces the business rule that a day can have at most 5 active goals.
         Active goals are those with status INCOMPLETE (completed and punted goals don't count).
 
         Args:
@@ -266,15 +270,15 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
             The created Goal value object
 
         Raises:
-            DomainError: If the day already has 3 active goals
+            DomainError: If the day already has 5 active goals
         """
         active_goals = [
             goal for goal in self.goals
             if goal.status == value_objects.GoalStatus.INCOMPLETE
         ]
-        if len(active_goals) >= 3:
+        if len(active_goals) >= 5:
             raise DomainError(
-                "Cannot add goal: a day can have at most 3 active goals. "
+                "Cannot add goal: a day can have at most 5 active goals. "
                 f"Current active goal count: {len(active_goals)}"
             )
 
@@ -377,5 +381,93 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
                 date=self.date,
                 goal_id=goal_id,
                 goal_name=goal_to_remove.name,
+            )
+        )
+
+    def add_brain_dump_item(self, text: str) -> value_objects.BrainDumpItem:
+        """Add a brain dump item to this day."""
+        item = value_objects.BrainDumpItem(
+            id=uuid4(),
+            text=text,
+            status=value_objects.BrainDumpItemStatus.ACTIVE,
+            created_at=datetime.now(UTC),
+        )
+
+        self.brain_dump_items = list(self.brain_dump_items) + [item]
+
+        self._add_event(
+            BrainDumpItemAddedEvent(
+                day_id=self.id,
+                date=self.date,
+                item_id=item.id,
+                item_text=item.text,
+            )
+        )
+
+        return item
+
+    def update_brain_dump_item_status(
+        self, item_id: UUID, status: value_objects.BrainDumpItemStatus
+    ) -> None:
+        """Update the status of a brain dump item."""
+        item_index = None
+        old_item = None
+        for i, item in enumerate(self.brain_dump_items):
+            if item.id == item_id:
+                item_index = i
+                old_item = item
+                break
+
+        if item_index is None or old_item is None:
+            raise DomainError(f"Brain dump item with id {item_id} not found in this day")
+
+        if old_item.status == status:
+            return
+
+        updated_item = value_objects.BrainDumpItem(
+            id=old_item.id,
+            text=old_item.text,
+            status=status,
+            created_at=old_item.created_at,
+        )
+
+        new_items = list(self.brain_dump_items)
+        new_items[item_index] = updated_item
+        self.brain_dump_items = new_items
+
+        self._add_event(
+            BrainDumpItemStatusChangedEvent(
+                day_id=self.id,
+                date=self.date,
+                item_id=item_id,
+                old_status=old_item.status,
+                new_status=status,
+                item_text=old_item.text,
+            )
+        )
+
+    def remove_brain_dump_item(self, item_id: UUID) -> None:
+        """Remove a brain dump item from this day."""
+        item_to_remove = None
+        for item in self.brain_dump_items:
+            if item.id == item_id:
+                item_to_remove = item
+                break
+
+        if item_to_remove is None:
+            raise DomainError(
+                f"Brain dump item with id {item_id} not found in this day"
+            )
+
+        self.brain_dump_items = [
+            item for item in self.brain_dump_items if item.id != item_id
+        ]
+
+        self._add_event(
+            BrainDumpItemRemovedEvent(
+                day_id=self.id,
+                date=self.date,
+                item_id=item_id,
+                item_text=item_to_remove.text,
             )
         )
