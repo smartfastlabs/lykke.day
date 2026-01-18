@@ -105,8 +105,19 @@ class RedisSubscription:
             logger.error(
                 f"Runtime error receiving message from Redis channel {self._channel}: {e}"
             )
-            return None
+            # Mark as closed so we don't keep trying on a broken connection
+            self._closed = True
+            raise
         except Exception as e:
+            error_str = str(e).lower()
+            # Check for connection-related errors that indicate the connection is broken
+            if any(keyword in error_str for keyword in ["closed", "connection", "disconnect"]):
+                logger.error(
+                    f"Connection error for Redis channel {self._channel}: {e}"
+                )
+                # Mark as closed so we don't keep trying on a broken connection
+                self._closed = True
+                raise
             logger.error(
                 f"Error receiving message from Redis channel {self._channel}: {e}"
             )

@@ -31,6 +31,7 @@ class GetIncrementalChangesHandler(BaseQueryHandler[GetIncrementalChangesQuery, 
         self.task_ro_repo = ro_repos.task_ro_repo
         self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
         self.routine_ro_repo = ro_repos.routine_ro_repo
+        self.day_ro_repo = ro_repos.day_ro_repo
 
     async def handle(self, query: GetIncrementalChangesQuery) -> tuple[list[EntityChangeSchema], datetime | None]:
         """Handle get incremental changes query."""
@@ -148,7 +149,7 @@ class GetIncrementalChangesHandler(BaseQueryHandler[GetIncrementalChangesQuery, 
                 task_schema = map_task_to_schema(task)
                 return task_schema.model_dump(mode="json")
 
-            elif entity_type == "calendar_entry":
+            elif entity_type == "calendarentry":
                 entry = await self.calendar_entry_ro_repo.get(entity_id)
                 if not entry:
                     return None
@@ -171,6 +172,18 @@ class GetIncrementalChangesHandler(BaseQueryHandler[GetIncrementalChangesQuery, 
 
                 routine_schema = map_routine_to_schema(routine)
                 return routine_schema.model_dump(mode="json")
+
+            elif entity_type == "day":
+                day = await self.day_ro_repo.get(entity_id)
+                if not day:
+                    return None
+                # Convert day to dict using schema mapper
+                from lykke.presentation.api.schemas.mappers import (
+                    map_day_to_schema,
+                )
+
+                day_schema = map_day_to_schema(day)
+                return day_schema.model_dump(mode="json")
 
             return None
         except Exception:

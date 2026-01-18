@@ -33,7 +33,7 @@ async def is_audit_log_for_today(
         scheduled_date = _parse_date_value(entity_data.get("scheduled_date"))
         return scheduled_date == target_date
 
-    if entity_type == "calendar_entry":
+    if entity_type == "calendarentry":
         entry_date = _parse_date_value(entity_data.get("date"))
         if entry_date is not None:
             return entry_date == target_date
@@ -54,6 +54,11 @@ async def is_audit_log_for_today(
         # Routines are always relevant - they're not date-specific
         # but are part of DayContext for today view
         return True
+
+    if entity_type == "day":
+        # Day entities have a date field - check if it matches target date
+        day_date = _parse_date_value(entity_data.get("date"))
+        return day_date == target_date
 
     # For other entity types, we don't filter (they're not part of DayContext)
     # Return False to be safe
