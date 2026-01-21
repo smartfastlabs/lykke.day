@@ -1,0 +1,28 @@
+from lykke.domain import value_objects
+
+from .repository import BaseRepository, UserScopedBaseRepository
+
+# Re-export query types for convenience
+AuthTokenQuery = value_objects.AuthTokenQuery
+BaseQuery = value_objects.BaseQuery
+CalendarEntryQuery = value_objects.CalendarEntryQuery
+CalendarEntrySeriesQuery = value_objects.CalendarEntrySeriesQuery
+DateQuery = value_objects.DateQuery
+DayTemplateQuery = value_objects.DayTemplateQuery
+TaskQuery = value_objects.TaskQuery
+TemplateQuery = value_objects.TemplateQuery
+UserQuery = value_objects.UserQuery
+
+__all__ = [
+    "AuthTokenQuery",
+    "BaseQuery",
+    "CalendarEntryQuery",
+    "CalendarEntrySeriesQuery",
+    "BaseRepository",
+    "DateQuery",
+    "DayTemplateQuery",
+    "TaskQuery",
+    "TemplateQuery",
+    "UserQuery",
+    "UserScopedBaseRepository",
+]

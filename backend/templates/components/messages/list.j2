@@ -1,0 +1,6 @@
+{% if context.messages is defined and context.messages %}
+Messages:
+{% for message in context.messages %}
+{% include "components/messages/item.j2" %}
+{% endfor %}
+{% endif %}

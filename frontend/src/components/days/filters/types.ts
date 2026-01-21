@@ -1,0 +1,49 @@
+import { TaskStatus, TaskType, TaskFrequency } from "@/types/api";
+import { ALL_TASK_TYPES, ALL_TASK_FREQUENCIES } from "@/types/api/constants";
+
+// Filter constants
+export const ALL_STATUSES: TaskStatus[] = [
+  "READY",
+  "COMPLETE",
+  "NOT_READY",
+  "PUNT",
+  "NOT_STARTED",
+  "PENDING",
+];
+
+// Re-export with shorter names for backward compatibility
+export const ALL_TYPES: TaskType[] = ALL_TASK_TYPES;
+export const ALL_FREQUENCIES: TaskFrequency[] = ALL_TASK_FREQUENCIES;
+
+// Frequency display groups for the simplified filter
+export type FrequencyGroup = "ONCE" | "DAILY" | "WEEKLY" | "MONTHLY+";
+
+export const FREQUENCY_GROUPS: FrequencyGroup[] = [
+  "ONCE",
+  "DAILY",
+  "WEEKLY",
+  "MONTHLY+",
+];
+
+// Map frequency groups to actual TaskFrequency values
+export const frequencyGroupMap: Record<FrequencyGroup, TaskFrequency[]> = {
+  ONCE: ["ONCE"],
+  DAILY: ["DAILY", "WORK_DAYS", "WEEKENDS"],
+  WEEKLY: ["WEEKLY", "BI_WEEKLY", "CUSTOM_WEEKLY"],
+  "MONTHLY+": ["MONTHLY", "YEARLY"],
+};
+
+// Filter state interface
+export interface TaskFiltersState {
+  statuses: TaskStatus[];
+  types: TaskType[];
+  frequencyGroups: FrequencyGroup[];
+}
+
+// Helper to format labels
+export const formatLabel = (str: string): string =>
+  str
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+

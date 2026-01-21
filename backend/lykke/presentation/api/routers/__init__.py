@@ -1,0 +1,104 @@
+from fastapi import APIRouter
+
+from . import (
+    calendar_entry_series,
+    calendars,
+    day_templates,
+    days,
+    early_access,
+    events,
+    google,
+    me,
+    push_subscriptions,
+    routines,
+    task_definitions,
+    tasks,
+    templates,
+    time_block_definitions,
+    twilio,
+)
+
+router = APIRouter()
+router.include_router(
+    early_access.router,
+    tags=["public"],
+)
+router.include_router(
+    google.router,
+    prefix="/google",
+    tags=[
+        "google",
+        "auth",
+    ],
+)
+router.include_router(
+    me.router,
+    prefix="/me",
+    tags=[
+        "auth",
+        "user",
+    ],
+)
+router.include_router(
+    calendar_entry_series.router,
+    prefix="/calendar-entry-series",
+    tags=["calendar-entry-series"],
+)
+router.include_router(
+    push_subscriptions.router,
+    prefix="/push",
+    tags=["push", "notifications"],
+)
+router.include_router(
+    tasks.router,
+    prefix="/tasks",
+    tags=["tasks"],
+)
+router.include_router(
+    days.router,
+    prefix="/days",
+    tags=[
+        "day",
+        "scheduling",
+        "planning",
+    ],
+)
+router.include_router(
+    day_templates.router,
+    prefix="/day-templates",
+    tags=["day-templates"],
+)
+router.include_router(
+    task_definitions.router,
+    prefix="/task-definitions",
+    tags=["task-definitions"],
+)
+router.include_router(
+    routines.router,
+    prefix="/routines",
+    tags=["routines"],
+)
+router.include_router(
+    time_block_definitions.router,
+    prefix="/time-block-definitions",
+    tags=["time-block-definitions"],
+)
+router.include_router(
+    calendars.router,
+    prefix="/calendars",
+    tags=["calendars"],
+)
+router.include_router(
+    events.router,
+    prefix="/events",
+    tags=["events", "audit-logs"],
+)
+router.include_router(
+    templates.router,
+    tags=["templates"],
+)
+router.include_router(
+    twilio.router,
+    prefix="/twilio",
+    tags=["twilio", "sms"],
+)

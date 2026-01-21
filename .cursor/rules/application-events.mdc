@@ -1,0 +1,257 @@
+---
+globs: backend/lykke/application/events/**/*.py
+alwaysApply: false
+---
+
+# Application Domain Events Rules
+
+Domain events are handled in `application/events/`. Event handlers process domain events BEFORE transaction commit.
+
+---
+
+## Event Handlers
+
+Event handlers extend `DomainEventHandler`:
+
+```python
+from typing import ClassVar
+from uuid import UUID
+
+from lykke.application.events.handlers.base import DomainEventHandler
+from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
+from lykke.domain.events.base import DomainEvent
+from lykke.domain.events.task_events import TaskCompletedEvent
+
+
+class TaskStatusLogger(DomainEventHandler):
+    """Logs task status changes."""
+    
+    handles: ClassVar[list[type[DomainEvent]]] = [TaskCompletedEvent]
+    
+    def __init__(
+        self,
+        ro_repos: ReadOnlyRepositories,
+        user_id: UUID,
+        uow_factory: UnitOfWorkFactory | None = None,
+    ) -> None:
+        super().__init__(ro_repos, user_id, uow_factory)
+    
+    async def handle(self, event: DomainEvent) -> None:
+        """Handle the domain event."""
+        if isinstance(event, TaskCompletedEvent):
+            logger.info(f"Task {event.task_id} was completed")
+```
+
+---
+
+## Key Rules for Event Handlers
+
+1. **Extend DomainEventHandler** - Use base class for handler registration
+2. **Declare handles** - Set `handles` class variable with event types to handle
+3. **Implement handle()** - Implement async `handle(event: DomainEvent)` method
+4. **Auto-registration** - Handlers are automatically registered at startup
+5. **No direct calls** - Don't call handlers directly; they're invoked via signal
+6. **Handlers run BEFORE commit** - Can make transactional changes
+7. **Access repositories** - Use inherited `self.*_ro_repo` properties from BaseHandler
+8. **User-scoped** - Handlers are instantiated per-user when events are dispatched
+
+---
+
+## Handler Lifecycle
+
+Event handlers are:
+1. **Registered at startup** - via `DomainEventHandler.register_all_handlers()`
+2. **Instantiated per-user** - When an event is dispatched, a new handler instance is created for the user
+3. **Called within transaction** - Handlers run before commit, can access/modify data atomically
+
+```python
+# At application startup
+from lykke.application.events.handlers.base import DomainEventHandler
+
+DomainEventHandler.register_all_handlers(
+    ro_repo_factory=ro_repo_factory,
+    uow_factory=uow_factory,
+)
+```
+
+---
+
+## Handler with UoW Access
+
+Handlers can use Unit of Work to make transactional changes:
+
+```python
+class CalendarEntryPushNotificationHandler(DomainEventHandler):
+    """Schedules push notifications when calendar entries are created."""
+    
+    handles: ClassVar[list[type[DomainEvent]]] = [CalendarEntryCreatedEvent]
+    
+    async def handle(self, event: DomainEvent) -> None:
+        if not isinstance(event, CalendarEntryCreatedEvent):
+            return
+        
+        if self._uow_factory is None:
+            logger.warning("No UoW factory - cannot schedule notification")
+            return
+        
+        # Create UoW to make changes within the same transaction
+        async with self._uow_factory.create(self.user_id) as uow:
+            calendar_entry = await uow.calendar_entry_ro_repo.get(event.entity_id)
+            
+            # Create notification entity
+            notification = PushNotificationEntity(
+                user_id=self.user_id,
+                title=f"Upcoming: {calendar_entry.summary}",
+                scheduled_for=calendar_entry.starts_at - timedelta(minutes=15),
+            )
+            
+            await uow.create(notification)
+            # Commit happens when UoW exits - within the same transaction!
+```
+
+---
+
+## Architecture Rules
+
+### Rule 1: Handlers Run BEFORE Commit
+
+**Why:** Handlers need to coordinate multi-entity changes atomically
+
+**Implications:**
+- Handlers can call `uow.add(entity)` to make transactional changes
+- Handler failures rollback entire transaction
+- Handlers must be fast (they block the commit)
+- Handlers must be idempotent (may be retried)
+- Handlers must not interact with external systems (do that after commit via Redis)
+
+### Rule 2: Handlers Are User-Scoped
+
+**Why:** Each handler instance is created for a specific user
+
+**Implications:**
+- `self.user_id` is always available
+- All repository access is scoped to the user
+- User's data is isolated
+
+### Rule 3: Use Inherited ro_repo Properties
+
+**Why:** BaseHandler provides all repository access
+
+```python
+class MyHandler(DomainEventHandler):
+    handles = [MyEvent]
+    
+    async def handle(self, event: DomainEvent) -> None:
+        # Access repos directly - set up by BaseHandler
+        tasks = await self.task_ro_repo.search(TaskQuery())
+        user = await self.user_ro_repo.get(self.user_id)
+```
+
+---
+
+## Testing Guidance
+
+### Testing Event Handlers
+
+Test event handlers with events:
+
+```python
+@pytest.mark.asyncio
+async def test_task_completed_handler(mock_ro_repos, test_user_id):
+    """Test task completed event handler."""
+    handler = TaskStatusLogger(
+        ro_repos=mock_ro_repos,
+        user_id=test_user_id,
+    )
+    
+    event = TaskCompletedEvent(
+        task_id=uuid4(),
+        user_id=test_user_id,
+    )
+    
+    # Handler should process the event without error
+    await handler.handle(event)
+```
+
+### Testing Handler with UoW
+
+```python
+@pytest.mark.asyncio
+async def test_handler_with_uow(mock_ro_repos, mock_uow_factory, mock_uow, test_user_id):
+    """Test handler that creates entities."""
+    handler = CalendarEntryPushNotificationHandler(
+        ro_repos=mock_ro_repos,
+        user_id=test_user_id,
+        uow_factory=mock_uow_factory,
+    )
+    
+    # Mock UoW
+    allow(mock_uow_factory).create(test_user_id).and_return(mock_uow)
+    allow(mock_uow).__aenter__().and_return(mock_uow)
+    allow(mock_uow).__aexit__(...).and_return(None)
+    
+    # Mock repository calls
+    allow(mock_uow.calendar_entry_ro_repo).get(...).and_return(calendar_entry)
+    expect(mock_uow).create(...)  # Expect notification to be created
+    
+    event = CalendarEntryCreatedEvent(entity_id=uuid4(), user_id=test_user_id)
+    await handler.handle(event)
+```
+
+### Test Location
+
+Event handler tests go in:
+- `tests/unit/application/events/` - Event handler tests
+
+---
+
+## Common Patterns
+
+### Simple Logging Handler
+
+```python
+class MyEventLogger(DomainEventHandler):
+    handles = [MyEvent]
+    
+    async def handle(self, event: DomainEvent) -> None:
+        if isinstance(event, MyEvent):
+            logger.info(f"Event occurred: {event}")
+```
+
+### Handler That Creates Side-Effect Entities
+
+```python
+class NotificationTriggerHandler(DomainEventHandler):
+    handles = [ImportantEvent]
+    
+    async def handle(self, event: DomainEvent) -> None:
+        if not isinstance(event, ImportantEvent) or self._uow_factory is None:
+            return
+        
+        async with self._uow_factory.create(self.user_id) as uow:
+            notification = NotificationEntity(
+                user_id=self.user_id,
+                message=f"Something important happened: {event.entity_id}",
+            )
+            await uow.create(notification)
+```
+
+### Handler That Queries and Decides
+
+```python
+class SmartNotificationHandler(DomainEventHandler):
+    handles = [TaskCompletedEvent]
+    
+    async def handle(self, event: DomainEvent) -> None:
+        if not isinstance(event, TaskCompletedEvent):
+            return
+        
+        # Query to get context
+        user = await self.user_ro_repo.get(self.user_id)
+        task = await self.task_ro_repo.get(event.task_id)
+        
+        # Decide if we should do something
+        if user.settings.notifications_enabled and task.is_important:
+            # Queue notification (actual sending happens elsewhere)
+            logger.info(f"Would notify user {self.user_id} about task completion")
+```

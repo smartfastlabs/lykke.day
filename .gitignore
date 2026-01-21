@@ -1,0 +1,14 @@
+.credentials.json
+/data/
+!/tests/data/
+.DS_Store
+node_modules
+.vinxi
+/models
+*.pyc
+.env
+.env.prod
+.certs
+
+# Local Netlify folder
+.netlify

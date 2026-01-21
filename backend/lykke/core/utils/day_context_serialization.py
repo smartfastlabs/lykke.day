@@ -1,0 +1,179 @@
+"""Utility for serializing DayContext to JSON for LLM consumption."""
+
+import json
+from datetime import UTC, datetime
+from typing import Any
+
+from lykke.domain import value_objects
+
+
+def serialize_day_context(
+    context: value_objects.DayContext,
+    current_time: datetime,
+) -> dict[str, Any]:
+    """Serialize DayContext to a JSON-serializable dict for LLM evaluation.
+
+    Args:
+        context: The day context to serialize
+        current_time: Current datetime for time-based context
+
+    Returns:
+        Dictionary with serialized day context data
+    """
+    day = context.day
+
+    # Serialize tasks
+    tasks = []
+    for task in context.tasks:
+        task_data: dict[str, Any] = {
+            "id": str(task.id),
+            "name": task.name,
+            "status": task.status.value,
+            "type": task.type.value,
+            "category": task.category.value,
+            "scheduled_date": task.scheduled_date.isoformat(),
+        }
+
+        if task.description:
+            task_data["description"] = task.description
+
+        if task.schedule:
+            schedule_data: dict[str, Any] = {}
+            if task.schedule.start_time:
+                schedule_data["start_time"] = task.schedule.start_time.isoformat()
+            if task.schedule.end_time:
+                schedule_data["end_time"] = task.schedule.end_time.isoformat()
+            if task.schedule.available_time:
+                schedule_data["available_time"] = task.schedule.available_time.isoformat()
+            if task.schedule.timing_type:
+                schedule_data["timing_type"] = task.schedule.timing_type.value
+            if schedule_data:
+                task_data["schedule"] = schedule_data
+
+        if task.completed_at:
+            task_data["completed_at"] = task.completed_at.isoformat()
+
+        # Calculate time until task (if scheduled)
+        if task.schedule and task.schedule.start_time:
+            task_datetime = datetime.combine(task.scheduled_date, task.schedule.start_time)
+            if task_datetime.tzinfo is None:
+                task_datetime = task_datetime.replace(tzinfo=current_time.tzinfo or UTC)
+            time_until = (task_datetime - current_time).total_seconds() / 60  # minutes
+            task_data["minutes_until_start"] = int(time_until)
+
+        tasks.append(task_data)
+
+    # Serialize calendar entries
+    calendar_entries = []
+    for entry in context.calendar_entries:
+        entry_data: dict[str, Any] = {
+            "id": str(entry.id),
+            "name": entry.name,
+            "starts_at": entry.starts_at.isoformat(),
+            "status": entry.status,
+        }
+
+        if entry.ends_at:
+            entry_data["ends_at"] = entry.ends_at.isoformat()
+
+        # Calculate time until event
+        time_until = (entry.starts_at - current_time).total_seconds() / 60  # minutes
+        entry_data["minutes_until_start"] = int(time_until)
+
+        calendar_entries.append(entry_data)
+
+    # Serialize reminders
+    reminders = []
+    for reminder in day.reminders:
+        reminder_data: dict[str, Any] = {
+            "id": str(reminder.id),
+            "name": reminder.name,
+            "status": reminder.status.value,
+        }
+        if reminder.created_at:
+            reminder_data["created_at"] = reminder.created_at.isoformat()
+        reminders.append(reminder_data)
+
+    # Serialize brain dump items
+    brain_dump_items = []
+    for item in day.brain_dump_items:
+        item_data: dict[str, Any] = {
+            "id": str(item.id),
+            "text": item.text,
+            "status": item.status.value,
+        }
+        if item.created_at:
+            item_data["created_at"] = item.created_at.isoformat()
+        brain_dump_items.append(item_data)
+
+    # Build final context
+    result: dict[str, Any] = {
+        "current_time": current_time.isoformat(),
+        "day": {
+            "id": str(day.id),
+            "date": day.date.isoformat(),
+            "status": day.status.value,
+            "tags": [tag.value for tag in day.tags],
+        },
+        "tasks": tasks,
+        "calendar_entries": calendar_entries,
+        "reminders": reminders,
+        "brain_dump_items": brain_dump_items,
+    }
+
+    if day.high_level_plan:
+        result["high_level_plan"] = {
+            "title": day.high_level_plan.title,
+            "text": day.high_level_plan.text,
+            "intentions": day.high_level_plan.intentions,
+        }
+
+    if isinstance(context, value_objects.LLMPromptContext):
+        result["messages"] = [
+            {
+                "id": str(message.id),
+                "conversation_id": str(message.conversation_id),
+                "role": message.role.value,
+                "content": message.content,
+                "meta": message.meta,
+                "created_at": message.created_at.isoformat(),
+            }
+            for message in context.messages
+        ]
+
+        push_notifications: list[dict[str, Any]] = []
+        for notification in context.push_notifications:
+            try:
+                content = json.loads(notification.content)
+            except (TypeError, json.JSONDecodeError):
+                content = notification.content
+
+            notification_data: dict[str, Any] = {
+                "id": str(notification.id),
+                "push_subscription_ids": [
+                    str(subscription_id)
+                    for subscription_id in notification.push_subscription_ids
+                ],
+                "content": content,
+                "status": notification.status,
+                "sent_at": notification.sent_at.isoformat(),
+            }
+
+            if notification.error_message:
+                notification_data["error_message"] = notification.error_message
+            if notification.message:
+                notification_data["message"] = notification.message
+            if notification.priority:
+                notification_data["priority"] = notification.priority
+            if notification.reason:
+                notification_data["reason"] = notification.reason
+            if notification.triggered_by:
+                notification_data["triggered_by"] = notification.triggered_by
+            if notification.llm_provider:
+                notification_data["llm_provider"] = notification.llm_provider
+
+            push_notifications.append(notification_data)
+
+        result["push_notifications"] = push_notifications
+
+    return result

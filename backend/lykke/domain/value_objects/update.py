@@ -1,0 +1,174 @@
+"""Update objects for entity updates."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime, time
+from uuid import UUID
+
+from .base import BaseRequestObject
+from .day import BrainDumpItem, DayStatus, DayTag, Reminder
+from .high_level_plan import HighLevelPlan
+from .routine import RecurrenceSchedule, RoutineTask
+from .sync import SyncSubscription
+from .task import EventCategory, TaskCategory, TaskFrequency, TaskType
+from .time_block import (
+    DayTemplateTimeBlock,
+    DayTimeBlock,
+    TimeBlockCategory,
+    TimeBlockType,
+)
+from .user import UserSetting, UserStatus
+
+
+@dataclass(kw_only=True)
+class BaseUpdateObject(BaseRequestObject):
+    """Base class for all update objects.
+
+    Update objects contain optional fields for all updateable fields on an entity.
+    Fields that should not be updated (like id, user_id, created_at, etc.) are
+    excluded from update objects.
+    """
+
+
+@dataclass(kw_only=True)
+class TaskDefinitionUpdateObject(BaseUpdateObject):
+    """Update object for TaskDefinition entity."""
+
+    name: str | None = None
+    description: str | None = None
+    type: TaskType | None = None
+
+
+@dataclass(kw_only=True)
+class TemplateUpdateObject(BaseUpdateObject):
+    """Update object for Template entity."""
+
+    name: str | None = None
+    description: str | None = None
+    content: str | None = None
+
+
+@dataclass(kw_only=True)
+class TimeBlockDefinitionUpdateObject(BaseUpdateObject):
+    """Update object for TimeBlockDefinition entity."""
+
+    name: str | None = None
+    description: str | None = None
+    type: TimeBlockType | None = None
+    category: TimeBlockCategory | None = None
+
+
+@dataclass(kw_only=True)
+class RoutineUpdateObject(BaseUpdateObject):
+    """Update object for Routine entity."""
+
+    name: str | None = None
+    category: TaskCategory | None = None
+    routine_schedule: RecurrenceSchedule | None = None
+    description: str | None = None
+    tasks: list[RoutineTask] | None = None
+
+
+@dataclass(kw_only=True)
+class UserUpdateObject(BaseUpdateObject):
+    """Update object for User entity."""
+
+    email: str | None = None
+    phone_number: str | None = None
+    hashed_password: str | None = None
+    is_active: bool | None = None
+    is_superuser: bool | None = None
+    is_verified: bool | None = None
+    settings: UserSetting | None = None
+    status: UserStatus | None = None
+    default_conversation_id: UUID | None = None
+    sms_conversation_id: UUID | None = None
+
+
+@dataclass(kw_only=True)
+class DayTemplateUpdateObject(BaseUpdateObject):
+    """Update object for DayTemplate entity."""
+
+    slug: str | None = None
+    start_time: time | None = None
+    end_time: time | None = None
+    icon: str | None = None
+    routine_ids: list[UUID] | None = None
+    time_blocks: list[DayTemplateTimeBlock] | None = None
+    high_level_plan: HighLevelPlan | None = None
+
+
+@dataclass(kw_only=True)
+class CalendarUpdateObject(BaseUpdateObject):
+    """Update object for Calendar entity."""
+
+    name: str | None = None
+    auth_token_id: UUID | None = None
+    default_event_category: EventCategory | None = None
+    last_sync_at: datetime | None = None
+    sync_subscription: SyncSubscription | None = None
+    sync_subscription_id: str | None = None
+
+
+@dataclass(kw_only=True)
+class CalendarEntrySeriesUpdateObject(BaseUpdateObject):
+    """Update object for CalendarEntrySeries entity."""
+
+    name: str | None = None
+    event_category: EventCategory | None = None
+
+
+@dataclass(kw_only=True)
+class CalendarEntryUpdateObject(BaseUpdateObject):
+    """Update object for CalendarEntry entity."""
+
+    name: str | None = None
+    status: str | None = None
+    starts_at: datetime | None = None
+    ends_at: datetime | None = None
+    frequency: TaskFrequency | None = None
+    category: EventCategory | None = None
+    calendar_entry_series_id: UUID | None = None
+    updated_at: datetime | None = None
+    # Note: actions is a list, but we typically don't update it directly via update object
+
+
+@dataclass(kw_only=True)
+class DayUpdateObject(BaseUpdateObject):
+    """Update object for Day entity."""
+
+    status: DayStatus | None = None
+    scheduled_at: datetime | None = None
+    starts_at: datetime | None = None
+    ends_at: datetime | None = None
+    tags: list[DayTag] | None = None
+    template_id: UUID | None = None
+    time_blocks: list[DayTimeBlock] | None = None
+    active_time_block_id: UUID | None = None
+    reminders: list[Reminder] | None = None
+    brain_dump_items: list[BrainDumpItem] | None = None
+    high_level_plan: HighLevelPlan | None = None
+
+
+@dataclass(kw_only=True)
+class PushSubscriptionUpdateObject(BaseUpdateObject):
+    """Update object for PushSubscription entity."""
+
+    device_name: str | None = None
+
+
+@dataclass(kw_only=True)
+class BotPersonalityUpdateObject(BaseUpdateObject):
+    """Update object for BotPersonality entity."""
+
+    name: str | None = None
+    user_amendments: str | None = None
+
+
+@dataclass(kw_only=True)
+class ConversationUpdateObject(BaseUpdateObject):
+    """Update object for Conversation entity."""
+
+    status: str | None = None  # ConversationStatus enum as string
+    context: dict | None = None

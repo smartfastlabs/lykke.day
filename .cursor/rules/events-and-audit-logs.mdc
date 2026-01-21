@@ -1,0 +1,534 @@
+---
+globs: backend/lykke/**/*.py
+alwaysApply: true
+---
+
+# Event System & Audit Logs - Comprehensive Guide
+
+This guide explains the three-tier event system in this codebase and when to use each component.
+
+---
+
+## The Three Event Concepts
+
+### 1. DomainEvent (In-Memory, Transactional)
+
+**What:** Python dataclass instances emitted by domain entities
+
+**Purpose:** Enable in-process side effects and cross-aggregate coordination
+
+**Lifetime:** Transaction scope (collected during transaction, dispatched before commit)
+
+**Handled By:** `DomainEventHandler` classes via blinker signals
+
+**Storage:** Never persisted (ephemeral)
+
+**Examples:**
+- `TaskCompletedEvent`
+- `DayScheduledEvent`
+- `ReminderStatusChangedEvent`
+
+**Key Characteristics:**
+- Handlers run BEFORE commit (within same transaction)
+- Handlers can modify data atomically
+- Handler failures rollback entire transaction
+- Never leave the backend process
+- All events are published to Redis after commit
+
+### 2. AuditLogEntity (Persistent Records)
+
+**What:** Database entities that record user-visible activities
+
+**Purpose:** Permanent activity history for users
+
+**Lifetime:** Permanent (stored in postgres `audit_logs` table)
+
+**Created From:** DomainEvents marked with `AuditableDomainEvent` mixin
+
+**Storage:** Postgres database
+
+**Broadcast:** Published to Redis `domain-events:{user_id}` channel after commit
+
+**Examples:**
+- Task completed audit log
+- Brain dump item added audit log
+- Message sent audit log
+
+**Key Characteristics:**
+- Immutable once created (append-only)
+- Includes entity snapshot in `meta.entity_data`
+- Visible to users in activity timeline
+- Broadcast to WebSocket clients in real-time
+
+### 3. WebSocket Messages (Real-Time Client Notifications)
+
+**What:** JSON payloads sent to frontend clients via WebSocket
+
+**Purpose:** Real-time updates for user-facing actions
+
+**Lifetime:** Real-time only (not stored)
+
+**Source:** Domain events from Redis, filtered to `AuditableDomainEvent` only
+
+**Schema:** `WebSocketAuditLogEventSchema` wrapping `AuditLogSchema`
+
+**Examples:**
+- Notification that task was completed
+- Update that brain dump item was added
+- Alert that message was sent
+
+**Key Characteristics:**
+- Only `AuditableDomainEvent` instances forwarded to clients
+- Conservative filtering (user-facing actions only)
+- Wraps the corresponding `AuditLogEntity`
+- Sent after transaction commits successfully
+
+---
+
+## Event Flow Diagram
+
+```mermaid
+flowchart TD
+    subgraph Domain["DOMAIN LAYER"]
+        UserAction[User Action] --> EntityMethod[Entity Method]
+        EntityMethod --> EmitEvent["entity.add_event(DomainEvent)"]
+    end
+    
+    subgraph Transaction["WITHIN TRANSACTION"]
+        EmitEvent --> UOWAdd["uow.add(entity)"]
+        UOWAdd --> ProcessEntities["uow.commit() - Process Entities"]
+        ProcessEntities --> CheckAuditable{Is AuditableDomainEvent?}
+        
+        CheckAuditable -->|Yes| CreateAudit[Create AuditLogEntity]
+        CheckAuditable -->|No| CollectEvents[Collect Events]
+        CreateAudit --> StoreDB[(Store in Postgres)]
+        StoreDB --> CollectEvents
+        
+        CollectEvents --> DispatchHandlers["Dispatch to DomainEventHandlers<br/>(BEFORE COMMIT)"]
+        DispatchHandlers --> HandlersRun[Handlers Execute<br/>Can modify data atomically]
+        HandlersRun --> Commit[Commit Transaction]
+    end
+    
+    subgraph PostCommit["AFTER COMMIT"]
+        Commit --> PublishRedis[Publish ALL DomainEvents to Redis]
+        PublishRedis --> RedisChannel["domain-events:{user_id}"]
+    end
+    
+    subgraph Frontend["FRONTEND (WEBSOCKET)"]
+        RedisChannel --> WSSubscribe[WebSocket Subscribes]
+        WSSubscribe --> FilterAuditable{Is AuditableDomainEvent?}
+        FilterAuditable -->|Yes| LookupAudit[Lookup AuditLogEntity]
+        FilterAuditable -->|No| Drop[Drop Event]
+        LookupAudit --> WrapSchema[Wrap in WebSocketAuditLogEventSchema]
+        WrapSchema --> SendClient[Send to Client]
+    end
+    
+    style Domain fill:#e1f5ff
+    style Transaction fill:#fff4e1
+    style PostCommit fill:#ffe1f5
+    style Frontend fill:#e1ffe1
+```
+
+---
+
+## When to Use AuditableDomainEvent
+
+### Decision Tree
+
+```
+Is this a DomainEvent?
+├─ Yes
+│  └─ Would the user want to see this action in their activity timeline?
+│     ├─ Yes
+│     │  └─ Does it represent a deliberate user choice or significant milestone?
+│     │     ├─ Yes → USE AuditableDomainEvent ✅
+│     │     └─ No → Regular DomainEvent only
+│     └─ No → Regular DomainEvent only
+└─ No
+   └─ Should be in domain entity, not an event
+```
+
+### ✅ USE AuditableDomainEvent When:
+
+1. **User-Facing Actions**
+   - User explicitly triggered this action
+   - User would want to review this action later
+   - Examples: completing task, adding brain dump, sending message
+
+2. **Significant Milestones**
+   - Represents achievement or progress
+   - Marks important state transitions
+   - Examples: completing a day, punting a task, reaching a reminder
+
+3. **Deliberate User Choices**
+   - User made a conscious decision
+   - Action reflects user intent
+   - Examples: changing reminder status, removing item, prioritizing task
+
+4. **Activity Worth Tracking**
+   - Losing this history would frustrate the user
+   - Needed for analytics or insights
+   - Examples: task completion patterns, brain dump usage
+
+### ❌ DON'T Use AuditableDomainEvent For:
+
+1. **Internal State Tracking**
+   - System-internal state changes
+   - Not visible to user
+   - Examples: `TaskStateUpdatedEvent`, cache invalidation
+
+2. **System-Triggered Updates**
+   - Automatic recalculations
+   - Background processes
+   - Examples: auto-scheduling, data sync from external systems
+
+3. **Low-Level CRUD Operations**
+   - Already covered by `AuditableEntity` marker
+   - Would create duplicate audit logs
+   - Examples: generic `EntityUpdatedEvent` on auditable entities
+
+4. **Configuration Changes**
+   - Settings and preferences
+   - Templates and definitions
+   - Examples: updating day template, modifying routine
+
+5. **High-Frequency Events**
+   - Events that fire many times per second
+   - Would overwhelm audit log and Redis
+   - Examples: cursor movement, typing indicators
+
+---
+
+## Code Examples
+
+### Example 1: Auditable Event (User Completed Task)
+
+```python
+from dataclasses import dataclass
+from uuid import UUID
+
+from lykke.domain.events.base import DomainEvent, AuditableDomainEvent
+
+
+@dataclass(frozen=True, kw_only=True)
+class TaskCompletedEvent(DomainEvent, AuditableDomainEvent):
+    """Event raised when a task is completed.
+    
+    Uses AuditableDomainEvent: User completed a task - this is a major milestone
+    and accomplishment that users want to see in their activity timeline.
+    Core to the user experience.
+    """
+    
+    task_id: UUID
+    completed_at: str
+    task_name: str | None = None
+    task_type: str | None = None
+
+# This event will:
+# 1. Be handled by DomainEventHandlers BEFORE commit
+# 2. Create an AuditLogEntity in the database
+# 3. Be published to Redis domain-events channel AFTER commit
+# 4. Be filtered and forwarded to WebSocket clients
+# 5. Appear in user's activity timeline
+```
+
+### Example 2: Non-Auditable Event (Internal State Tracking)
+
+```python
+from dataclasses import dataclass
+from uuid import UUID
+
+from lykke.domain.events.base import DomainEvent
+
+
+@dataclass(frozen=True, kw_only=True)
+class TaskStateUpdatedEvent(DomainEvent):
+    """Event raised whenever a task's state mutates.
+    
+    NOT auditable: This is internal state tracking to ensure the task aggregate
+    always emits an event when updated. Users don't need to see this in their
+    activity timeline - they see specific events like TaskCompletedEvent instead.
+    """
+    
+    task_id: UUID
+    action_type: str
+    old_status: str
+    new_status: str
+
+# This event will:
+# 1. Be handled by DomainEventHandlers BEFORE commit
+# 2. NOT create an AuditLogEntity
+# 3. Be published to Redis domain-events channel AFTER commit
+# 4. Be filtered OUT by WebSocket (not forwarded to clients)
+# 5. NOT appear in activity timeline
+```
+
+### Example 3: Using AuditableEntity Marker
+
+```python
+from dataclasses import dataclass
+
+from lykke.domain.entities.base import BaseEntityObject
+from lykke.domain.entities.auditable import AuditableEntity
+
+
+@dataclass(kw_only=True)
+class TaskEntity(BaseEntityObject, AuditableEntity):
+    """Task entity with automatic audit logging.
+    
+    AuditableEntity marker means ALL CRUD operations create audit logs:
+    - EntityCreatedEvent → creates audit log
+    - EntityUpdatedEvent → creates audit log
+    - EntityDeletedEvent → creates audit log
+    
+    Use this when you want to track ALL changes to an entity, not just
+    specific user-facing actions.
+    """
+    pass
+
+# When this entity is created/updated/deleted:
+# 1. Generic EntityCreatedEvent/EntityUpdatedEvent/EntityDeletedEvent emitted
+# 2. AuditLogEntity automatically created (even though event isn't AuditableDomainEvent)
+# 3. Published to Redis and forwarded to clients
+# 4. Appears in activity timeline
+```
+
+---
+
+## Architecture Rules
+
+### Rule 1: DomainEventHandlers Run BEFORE Commit
+
+**Why:** Handlers need to coordinate multi-entity changes atomically
+
+**Implications:**
+- Handlers can call `uow.add(entity)` to make transactional changes
+- Handler failures rollback entire transaction
+- Handlers must be fast (they block the commit)
+- Handlers must be idempotent (may be retried)
+- Handlers must not interact with external systems
+
+**Example:**
+```python
+class TaskCompletedHandler(DomainEventHandler):
+    """Handler that updates day progress when task completes."""
+    
+    handles = [TaskCompletedEvent]
+    
+    async def handle(self, event: DomainEvent) -> None:
+        if isinstance(event, TaskCompletedEvent):
+            # This runs WITHIN the transaction
+            # Can fetch and modify day entity atomically
+            day = await self.day_ro_repo.get(event.date)
+            updated_day = day.recalculate_progress()
+            self.uow.add(updated_day)  # Still in transaction!
+```
+
+### Rule 2: Redis Publishing Happens AFTER Commit
+
+**Why:** External systems must only see successfully committed data
+
+**Implications:**
+- WebSocket clients never see events from failed transactions
+- Redis broadcast failures don't rollback the transaction (logged but ignored)
+- Events are published even if no WebSocket clients are connected
+
+**Example:**
+```python
+# In UnitOfWork.commit():
+await self._dispatch_domain_events(events)  # BEFORE commit
+await self._connection.commit()             # Commit
+await self._broadcast_domain_events_to_redis(events)  # AFTER commit
+```
+
+### Rule 3: WebSocket Filters Conservatively
+
+**Why:** Users should only see relevant, user-facing actions
+
+**Implications:**
+- Only `AuditableDomainEvent` instances forwarded by default
+- Can be made configurable per client in the future
+- Filtering happens in presentation layer, not domain layer
+
+**Example:**
+```python
+# In WebSocket handler:
+domain_event = deserialize_domain_event(redis_message)
+
+if not isinstance(domain_event, AuditableDomainEvent):
+    # Filter out - don't send to client
+    continue
+
+# Forward to client
+await send_to_client(domain_event)
+```
+
+---
+
+## Common Pitfalls
+
+### Pitfall 1: Making Too Many Events Auditable
+
+**Problem:** Creating audit logs for every minor state change
+
+**Why It's Bad:**
+- Overwhelms the audit log table
+- Clutters user's activity timeline
+- Increases Redis traffic unnecessarily
+
+**Solution:** Only mark truly user-facing actions as auditable
+
+**Example:**
+```python
+# ❌ BAD - Too granular
+class TaskNameChangedEvent(DomainEvent, AuditableDomainEvent):
+    task_id: UUID
+    old_name: str
+    new_name: str
+
+# ✅ GOOD - Use EntityUpdatedEvent with AuditableEntity instead
+# This creates one audit log per update, not one per field change
+```
+
+### Pitfall 2: Using Audit Logs for Business Logic
+
+**Problem:** Querying audit logs to determine business logic
+
+**Why It's Bad:**
+- Audit logs are for history/activity, not source of truth
+- Breaks domain model encapsulation
+- Makes business logic depend on auditing implementation
+
+**Solution:** Store necessary state in domain entities, not just audit logs
+
+**Example:**
+```python
+# ❌ BAD - Querying audit logs for business logic
+task_completions = await audit_log_repo.search(
+    AuditLogQuery(activity_type="TaskCompletedEvent", entity_id=task_id)
+)
+if len(task_completions) > 0:
+    # Task was completed...
+
+# ✅ GOOD - Check domain entity state
+task = await task_repo.get(task_id)
+if task.status == TaskStatus.COMPLETE:
+    # Task was completed...
+```
+
+### Pitfall 3: Handler Calling External APIs
+
+**Problem:** Domain event handler makes HTTP calls or sends emails
+
+**Why It's Bad:**
+- Handlers run before commit, blocking the transaction
+- External API failures rollback the transaction
+- Violates transaction boundary
+
+**Solution:** Queue external work, process after commit
+
+**Example:**
+```python
+# ❌ BAD - External call in handler
+class TaskCompletedEmailHandler(DomainEventHandler):
+    async def handle(self, event: TaskCompletedEvent):
+        await send_email(...)  # Blocks commit! Can fail transaction!
+
+# ✅ GOOD - Queue for later processing
+class TaskCompletedEmailHandler(DomainEventHandler):
+    async def handle(self, event: TaskCompletedEvent):
+        # Just record that email should be sent
+        await email_queue.enqueue(...)  # Fast, in-process
+        # Actual sending happens in background worker
+```
+
+---
+
+## Testing Guidelines
+
+### Testing DomainEvents
+
+```python
+@pytest.mark.asyncio
+async def test_task_completed_event_creates_audit_log():
+    """Test that AuditableDomainEvent creates audit log."""
+    # Arrange
+    task = TaskEntity(...)
+    
+    # Act
+    task.complete()
+    await uow.add(task)
+    await uow.commit()
+    
+    # Assert
+    events = task.collect_events()
+    assert any(isinstance(e, TaskCompletedEvent) for e in events)
+    
+    # Check audit log created
+    audit_logs = await audit_log_repo.search(
+        AuditLogQuery(activity_type="TaskCompletedEvent")
+    )
+    assert len(audit_logs) == 1
+```
+
+### Testing Event Handlers
+
+```python
+@pytest.mark.asyncio
+async def test_task_completed_handler_updates_day():
+    """Test that handler runs within transaction."""
+    # Arrange
+    task = TaskEntity(...)
+    day = DayEntity(...)
+    
+    # Act
+    task.complete()
+    await uow.add(task)
+    await uow.commit()  # Handler runs here
+    
+    # Assert - day was updated atomically
+    updated_day = await day_repo.get(day.id)
+    assert updated_day.progress_updated
+```
+
+### Testing WebSocket Filtering
+
+```python
+@pytest.mark.asyncio
+async def test_websocket_only_forwards_auditable_events():
+    """Test that non-auditable events are filtered out."""
+    # Publish both auditable and non-auditable events
+    await publish_event(TaskCompletedEvent(...))  # Auditable
+    await publish_event(TaskStateUpdatedEvent(...))  # Not auditable
+    
+    # WebSocket should only receive the auditable one
+    received_messages = await websocket.receive_all()
+    assert len(received_messages) == 1
+    assert "TaskCompletedEvent" in received_messages[0]
+```
+
+---
+
+## Quick Reference
+
+| Aspect | DomainEvent | AuditableDomainEvent | AuditableEntity |
+|--------|-------------|---------------------|----------------|
+| **When to use** | All domain events | User-facing actions only | Entities needing full audit trail |
+| **Creates audit log?** | No | Yes | Yes (for all CRUD) |
+| **Published to Redis?** | Yes (all events) | Yes | N/A (marker, not event) |
+| **Forwarded to clients?** | No | Yes | N/A |
+| **Handler timing** | Before commit | Before commit | N/A |
+| **Example** | `TaskStateUpdatedEvent` | `TaskCompletedEvent` | `TaskEntity` |
+
+---
+
+## For LLMs: Quick Decision Guide
+
+When creating a new event, ask yourself:
+
+1. **Is this a domain event?** → Extend `DomainEvent`
+2. **Would users want to see this in their activity timeline?** → Add `AuditableDomainEvent` mixin
+3. **Does this event need to coordinate changes across entities?** → Implement `DomainEventHandler`
+4. **Does the entity need full audit trail of all changes?** → Add `AuditableEntity` marker to entity class
+
+**Default:** Most events should be `DomainEvent` only. Only add `AuditableDomainEvent` when you're certain users need to see it in their activity history.

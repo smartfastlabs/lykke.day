@@ -1,0 +1,127 @@
+---
+globs: backend/lykke/domain/services/**/*.py
+alwaysApply: false
+---
+
+# Domain Services Rules
+
+Domain services contain pure business logic that doesn't naturally belong to a single entity. They have no I/O operations.
+
+---
+
+## Key Rules
+
+1. **No I/O operations** - No database, HTTP, file system access
+2. **Pure functions** - Deterministic, side-effect-free
+3. **Business logic only** - Calculations, validations, transformations
+4. **Use value objects and entities** - Operate on domain objects
+
+---
+
+## Example
+
+```python
+from datetime import datetime
+
+from lykke.domain.entities import TaskEntity
+from lykke.domain.value_objects import TaskStatus
+
+
+class NotificationService:
+    """Domain service for notification logic."""
+    
+    @staticmethod
+    def should_send_notification(task: TaskEntity, current_time: datetime) -> bool:
+        """Determine if a notification should be sent for a task.
+        
+        Business rules:
+        - Don't notify for completed tasks
+        - Only notify tasks with scheduled times
+        - Notify when current time >= scheduled start time
+        """
+        if task.status == TaskStatus.COMPLETE:
+            return False
+        if not task.schedule or not task.schedule.start_time:
+            return False
+        return current_time.time() >= task.schedule.start_time
+    
+    @staticmethod
+    def calculate_priority_score(task: TaskEntity) -> int:
+        """Calculate a priority score for task ordering.
+        
+        Higher scores = higher priority
+        """
+        score = 0
+        
+        # Urgent tasks get highest priority
+        if task.is_urgent:
+            score += 100
+        
+        # Time-blocked tasks get priority
+        if task.schedule and task.schedule.start_time:
+            score += 50
+        
+        # Category-based priority
+        category_scores = {
+            TaskCategory.WORK: 30,
+            TaskCategory.HEALTH: 25,
+            TaskCategory.HOUSE: 20,
+            TaskCategory.LIFE: 15,
+            TaskCategory.OTHER: 10,
+        }
+        score += category_scores.get(task.category, 10)
+        
+        return score
+```
+
+---
+
+## Testing Guidance
+
+### Testing Domain Services
+
+Test domain services as pure functions:
+
+```python
+def test_should_send_notification_completed_task():
+    """Test that completed tasks don't trigger notifications."""
+    task = TaskEntity(
+        status=TaskStatus.COMPLETE,
+        schedule=TaskSchedule(start_time=time(10, 0)),
+        ...
+    )
+    current_time = datetime(2025, 1, 1, 10, 0)
+    
+    result = NotificationService.should_send_notification(task, current_time)
+    
+    assert result is False
+
+def test_should_send_notification_at_scheduled_time():
+    """Test notification at scheduled time."""
+    task = TaskEntity(
+        status=TaskStatus.PENDING,
+        schedule=TaskSchedule(start_time=time(10, 0)),
+        ...
+    )
+    current_time = datetime(2025, 1, 1, 10, 0)
+    
+    result = NotificationService.should_send_notification(task, current_time)
+    
+    assert result is True
+
+def test_calculate_priority_score():
+    """Test priority score calculation."""
+    urgent_task = TaskEntity(is_urgent=True, category=TaskCategory.WORK, ...)
+    normal_task = TaskEntity(is_urgent=False, category=TaskCategory.OTHER, ...)
+    
+    urgent_score = NotificationService.calculate_priority_score(urgent_task)
+    normal_score = NotificationService.calculate_priority_score(normal_task)
+    
+    assert urgent_score > normal_score
+```
+
+### Test Location
+
+Domain service tests go in:
+- `tests/unit/domain/test_*.py` - Service tests
+- No mocking needed (pure business logic)

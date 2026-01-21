@@ -1,0 +1,70 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[dev]
+  targetPort = 5173
+
+# Proxy API requests to your backend (update the URL when you deploy your backend)
+[[redirects]]
+  from = "/api/*"
+  to = "http://localhost:8080/:splat"
+  # to = "https://api.lykke.day/:splat"
+  status = 200
+  force = true
+
+# Prerendered marketing pages - serve directly (don't redirect to index.html)
+[[redirects]]
+  from = "/resources"
+  to = "/resources/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/apps"
+  to = "/apps/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/books"
+  to = "/books/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/youtube"
+  to = "/youtube/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/podcasts"
+  to = "/podcasts/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/faq"
+  to = "/faq/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/privacy"
+  to = "/privacy/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/terms"
+  to = "/terms/index.html"
+  status = 200
+  force = false
+
+# SPA routing - redirect all other paths to index.html for client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+

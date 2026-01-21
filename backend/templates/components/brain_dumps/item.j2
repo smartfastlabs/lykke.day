@@ -1,0 +1,3 @@
+- text: {{ item.text }}
+  status: {{ item.status.value }}
+  {{- kv_line("  ", "created_at", item.created_at and fmt_datetime(item.created_at)) -}}

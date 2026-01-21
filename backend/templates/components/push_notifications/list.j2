@@ -1,0 +1,6 @@
+{% if context.push_notifications is defined and context.push_notifications %}
+Recent push notifications:
+{% for notification in context.push_notifications %}
+{% include "components/push_notifications/item.j2" %}
+{% endfor %}
+{% endif %}

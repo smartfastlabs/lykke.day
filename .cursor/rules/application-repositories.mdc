@@ -1,0 +1,139 @@
+---
+globs: backend/lykke/application/repositories/**/*.py
+alwaysApply: false
+---
+
+# Application Repository Protocols Rules
+
+Repository protocols define the interface for data access. They are defined in `application/repositories/`.
+
+---
+
+## Protocol Definition
+
+Repository protocols extend base protocols:
+
+```python
+from typing import Protocol
+
+from lykke.application.repositories.base import (
+    ReadOnlyRepositoryProtocol,
+    ReadWriteRepositoryProtocol,
+)
+from lykke.domain.entities import TaskEntity
+from lykke.domain import value_objects
+
+
+class TaskRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[TaskEntity]):
+    """Read-only protocol for task repositories."""
+    
+    Query = value_objects.TaskQuery  # Optional: specify query type
+
+
+class TaskRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[TaskEntity]):
+    """Read-write protocol for task repositories."""
+    
+    Query = value_objects.TaskQuery  # Optional: specify query type
+```
+
+---
+
+## Base Protocols
+
+Base protocols define standard operations:
+
+**ReadOnlyRepositoryProtocol:**
+- `get(key: UUID) -> T` - Get entity by ID (raises NotFoundError if not found)
+- `all() -> list[T]` - Get all entities
+- `search(query: QueryType) -> list[T]` - Search entities with query object
+- `search_one(query: QueryType) -> T` - Get single entity (raises NotFoundError if not found)
+- `search_one_or_none(query: QueryType) -> T | None` - Get single entity or None
+- `paged_search(query: QueryType) -> PagedQueryResponse[T]` - Search with pagination metadata
+
+**ReadWriteRepositoryProtocol:**
+- All read operations from `ReadOnlyRepositoryProtocol`
+- `put(obj: T) -> T` - Save or update entity
+- `delete(key: UUID | T) -> None` - Delete entity
+- `insert_many(*objs: T) -> list[T]` - Insert multiple entities
+- `delete_many(query: QueryType) -> None` - Delete entities matching query
+- `bulk_delete(query: QueryType) -> None` - Delete all entities matching query
+- `apply_updates(key: UUID, **updates: Any) -> T` - Apply partial updates
+
+---
+
+## Key Rules for Protocols
+
+1. **Use Protocol type** - Use Python `Protocol` for interface definitions
+2. **Type parameter** - Protocols are generic with entity type parameter
+3. **Optional Query type** - Can specify `Query` class variable for query type hints
+4. **Separate read/write** - Separate read-only and read-write protocols
+5. **No implementation** - Protocols define interface only, no implementation
+
+---
+
+## Gotchas
+
+### 1. Protocols vs Implementations
+
+**Issue:** Always use protocols, never concrete implementations in handlers.
+
+```python
+# Wrong
+def __init__(self, task_repo: TaskRepository) -> None:  # Concrete implementation
+
+# Right
+def __init__(self, task_repo: TaskRepositoryReadOnlyProtocol) -> None:  # Protocol
+```
+
+### 2. Read-Only vs Read-Write
+
+**Issue:** Use read-only protocols for queries, read-write only when needed.
+
+```python
+# For queries - use read-only
+class MyQueryHandler:
+    def __init__(self, ro_repos: ReadOnlyRepositories) -> None:
+        # ro_repos provides read-only protocols
+
+# For commands via UoW - UoW provides internal read-write access
+async with self.new_uow() as uow:
+    # uow.*_ro_repo are read-only, writes happen via uow.create/add/delete
+```
+
+---
+
+## Common Patterns
+
+### Repository Protocol Pattern
+
+```python
+class MyEntityRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[MyEntity]):
+    """Read-only protocol for MyEntity repositories."""
+    
+    Query = MyEntityQuery
+
+
+class MyEntityRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[MyEntity]):
+    """Read-write protocol for MyEntity repositories."""
+    
+    Query = MyEntityQuery
+```
+
+### Custom Query Methods
+
+If you need custom query methods beyond the base protocol, extend the protocol:
+
+```python
+class CalendarEntryRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[CalendarEntryEntity]):
+    """Read-only protocol for calendar entry repositories."""
+    
+    Query = value_objects.CalendarEntryQuery
+    
+    async def search_by_date_range(
+        self,
+        start_date: date,
+        end_date: date,
+    ) -> list[CalendarEntryEntity]:
+        """Search calendar entries within a date range."""
+        ...
+```

@@ -1,0 +1,6 @@
+{% if context.tasks %}
+Tasks:
+{% for task in context.tasks %}
+{% include "components/tasks/item.j2" %}
+{% endfor %}
+{% endif %}

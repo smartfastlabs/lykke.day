@@ -1,0 +1,298 @@
+---
+globs: backend/lykke/domain/entities/**/*.py
+alwaysApply: false
+---
+
+# Domain Entities Rules
+
+Entities represent business objects with identity and lifecycle. All entities are aggregate roots in this codebase.
+
+---
+
+## Base Classes
+
+All entities extend `BaseEntityObject` from `domain/entities/base.py`:
+
+```python
+from dataclasses import dataclass, field
+from uuid import UUID, uuid4
+
+from lykke.domain.entities.base import BaseEntityObject
+from lykke.domain.value_objects.update import BaseUpdateObject
+from lykke.domain.events.task_events import TaskUpdatedEvent
+
+
+@dataclass(kw_only=True)
+class TaskEntity(BaseEntityObject[TaskUpdateObject, TaskUpdatedEvent]):
+    id: UUID = field(default_factory=uuid4)
+    user_id: UUID
+    name: str
+    status: TaskStatus
+    # ... other fields
+```
+
+---
+
+## Key Rules
+
+1. **All entities are aggregate roots** - They own business invariants and emit domain events
+2. **Use `@dataclass(kw_only=True)`** - All fields must be keyword-only
+3. **IDs use `default_factory=uuid4`** - Auto-generate UUIDs if not provided
+4. **Business logic in methods** - State changes happen through entity methods
+5. **Raise `DomainError`** for invalid operations (from `lykke.core.exceptions`)
+6. **Use `add_event()`** to emit custom domain events
+7. **Use `create()`, `apply_update()`, `delete()`** to mark entity lifecycle changes
+
+---
+
+## Entity Methods
+
+Entities expose business methods that enforce invariants:
+
+```python
+def complete(self) -> TaskStatus:
+    """Mark task as complete.
+
+    Enforces business rules:
+    - Cannot complete an already-completed task
+    - Records completion timestamp
+    - Emits TaskCompletedEvent
+
+    Returns:
+        The old status before the change
+    """
+    if self.status == TaskStatus.COMPLETE:
+        raise DomainError("Task is already complete")
+    
+    old_status = self.status
+    self.status = TaskStatus.COMPLETE
+    self.completed_at = datetime.now(UTC)
+    
+    # Add domain event
+    self.add_event(TaskCompletedEvent(
+        task_id=self.id,
+        old_status=old_status.value,
+        new_status=self.status.value,
+    ))
+    
+    return old_status
+```
+
+---
+
+## Domain Events
+
+Entities emit domain events through methods on `BaseEntityObject`:
+
+- `create()` - Marks entity as newly created, adds `EntityCreatedEvent`
+- `apply_update(update_object, event_class)` - Applies updates and adds update event
+- `delete()` - Marks entity as deleted, adds `EntityDeletedEvent`
+- `add_event(event)` - Add custom domain event
+
+**Important:** Events are collected by the Unit of Work and dispatched before transaction commit. Entities do not dispatch events directly.
+
+---
+
+## Examples
+
+**Creating an Entity:**
+
+```python
+task = TaskEntity(
+    user_id=user_id,
+    scheduled_date=date(2025, 1, 1),
+    name="Complete project",
+    status=TaskStatus.NOT_STARTED,
+    task_definition=task_def,
+    category=TaskCategory.WORK,
+    frequency=TaskFrequency.ONCE,
+)
+task.create()  # Mark as newly created, adds EntityCreatedEvent
+```
+
+**Updating an Entity with apply_update:**
+
+```python
+update_obj = TaskUpdateObject(name="Updated name", status=TaskStatus.READY)
+updated_task = task.apply_update(update_obj, TaskUpdatedEvent)  # Returns new instance
+```
+
+**Manual Update with Custom Event:**
+
+```python
+def mark_pending(self) -> TaskStatus:
+    """Mark task as pending when scheduled time arrives."""
+    old_status = self.status
+    if self.status == TaskStatus.NOT_STARTED:
+        self.status = TaskStatus.PENDING
+        self.add_event(TaskStatusChangedEvent(
+            task_id=self.id,
+            old_status=old_status.value,
+            new_status=self.status.value,
+        ))
+    return old_status
+```
+
+---
+
+## Gotchas
+
+### 1. Entity ID Generation
+
+**Issue:** Entities use `default_factory=uuid4`, but you can also provide an ID explicitly.
+
+```python
+# Auto-generate ID
+task = TaskEntity(user_id=..., name=..., ...)
+
+# Explicit ID (useful for testing or when ID comes from external source)
+task = TaskEntity(id=existing_id, user_id=..., name=..., ...)
+```
+
+### 2. Domain Events Are Collected, Not Dispatched
+
+**Issue:** Calling `add_event()` or `create()`/`delete()` doesn't immediately dispatch events. Events are collected and dispatched by the Unit of Work during commit.
+
+```python
+task.create()  # Adds EntityCreatedEvent to _domain_events list
+# Event is NOT dispatched here
+# Event will be dispatched during uow.commit()
+```
+
+### 3. apply_update Returns New Instance
+
+**Issue:** `apply_update()` returns a new entity instance with updates applied. The original is unchanged.
+
+```python
+update_obj = TaskUpdateObject(name="New Name")
+updated_task = task.apply_update(update_obj, TaskUpdatedEvent)
+
+assert task.name != "New Name"  # Original unchanged
+assert updated_task.name == "New Name"  # New instance has update
+```
+
+### 4. Clone for Immutable Updates
+
+**Issue:** Use `clone()` for creating modified copies without events.
+
+```python
+# Create a copy with modifications (no event)
+modified = task.clone(name="Modified Name")
+```
+
+---
+
+## Testing Guidance
+
+### Unit Testing Entities
+
+Test entity business methods in isolation:
+
+```python
+def test_complete_task(test_task: TaskEntity):
+    """Test that completing a task updates status and adds event."""
+    old_status = test_task.complete()
+
+    assert test_task.status == TaskStatus.COMPLETE
+    assert test_task.completed_at is not None
+    assert old_status == TaskStatus.NOT_STARTED
+    
+    events = test_task.collect_events()
+    assert len(events) == 1
+    assert isinstance(events[0], TaskCompletedEvent)
+```
+
+### Testing Domain Events
+
+Test that entities emit correct events:
+
+```python
+def test_create_adds_created_event(test_task: TaskEntity):
+    """Test that create() adds EntityCreatedEvent."""
+    test_task.create()
+
+    events = test_task.collect_events()
+    assert len(events) == 1
+    assert isinstance(events[0], EntityCreatedEvent)
+```
+
+### Test Location
+
+Entity tests go in:
+
+- `tests/unit/domain/test_*.py` - Entity tests
+- Use fixtures from `tests/conftest.py` or `tests/unit/conftest.py`
+- No mocking needed (pure business logic)
+
+### Test Patterns
+
+1. **Test business rules** - Verify invariants are enforced
+2. **Test state transitions** - Verify methods change state correctly
+3. **Test domain events** - Verify correct events are emitted
+4. **Test error cases** - Verify `DomainError` is raised for invalid operations
+5. **Use parametrize** - Test multiple scenarios with `@pytest.mark.parametrize`
+
+---
+
+## Common Patterns
+
+### Factory Methods
+
+Entities often have factory methods for common creation patterns:
+
+```python
+@classmethod
+def create_for_date(
+    cls,
+    date: dt_date,
+    user_id: UUID,
+    template: DayTemplateEntity,
+) -> "DayEntity":
+    """Create a Day entity for a specific date."""
+    day_id = cls.id_from_date_and_user(date, user_id)
+    return cls(
+        id=day_id,
+        user_id=user_id,
+        date=date,
+        template=template,
+        ...
+    )
+```
+
+### ID Generation Helpers
+
+Static methods for generating IDs:
+
+```python
+@staticmethod
+def id_from_date_and_user(date: dt_date, user_id: UUID) -> UUID:
+    """Generate a deterministic ID from date and user."""
+    return uuid5(user_id, str(date))
+```
+
+### Status Transitions
+
+Methods that handle state transitions:
+
+```python
+def transition_to(self, new_status: TaskStatus) -> TaskStatus:
+    """Transition to a new status with validation."""
+    if not self.can_transition_to(new_status):
+        raise DomainError(f"Cannot transition from {self.status} to {new_status}")
+    old_status = self.status
+    self.status = new_status
+    return old_status
+```
+
+### AuditableEntity Marker
+
+Use `AuditableEntity` marker for entities that need full audit trails:
+
+```python
+from lykke.domain.entities.auditable import AuditableEntity
+
+@dataclass(kw_only=True)
+class TaskEntity(BaseEntityObject[TaskUpdateObject, TaskUpdatedEvent], AuditableEntity):
+    """Task entity with automatic audit logging for all CRUD operations."""
+    ...
+```

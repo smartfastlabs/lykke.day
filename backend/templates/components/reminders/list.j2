@@ -1,0 +1,6 @@
+{% if context.day.reminders %}
+Reminders:
+{% for reminder in context.day.reminders %}
+{% include "components/reminders/item.j2" %}
+{% endfor %}
+{% endif %}

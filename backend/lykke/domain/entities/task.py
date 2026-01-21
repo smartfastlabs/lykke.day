@@ -1,0 +1,161 @@
+from dataclasses import dataclass, field
+from datetime import UTC, date as dt_date, datetime, time, timedelta
+from uuid import UUID
+
+from lykke.core.exceptions import DomainError
+from lykke.domain import value_objects
+from lykke.domain.events.task_events import TaskStateUpdatedEvent
+
+from .auditable import AuditableEntity
+from .base import BaseEntityObject
+
+
+@dataclass(kw_only=True)
+class TaskEntity(BaseEntityObject, AuditableEntity):
+    user_id: UUID
+    scheduled_date: dt_date
+    name: str
+    status: value_objects.TaskStatus
+    type: value_objects.TaskType
+    description: str | None = None
+    category: value_objects.TaskCategory
+    frequency: value_objects.TaskFrequency
+    completed_at: datetime | None = None
+    schedule: value_objects.TaskSchedule | None = None
+    routine_id: UUID | None = None
+    tags: list[value_objects.TaskTag] = field(default_factory=list)
+    actions: list[value_objects.Action] = field(default_factory=list)
+
+    def record_action(self, action: value_objects.Action) -> value_objects.TaskStatus:
+        """Record an action on this task.
+
+        This method handles action recording and status transitions based on
+        the action type. It enforces business rules about which actions are
+        valid in which states.
+
+        Note: This method should be called through the Day aggregate root,
+        which will raise domain events on behalf of the aggregate.
+
+        Args:
+            action: The action to record
+
+        Returns:
+            The old status before the change (for event raising by aggregate root)
+
+        Raises:
+            DomainError: If the action is invalid for the current state
+        """
+        # Add the action
+        self.actions.append(action)
+
+        # Handle status transitions based on action type
+        old_status = self.status
+        if action.type == value_objects.ActionType.COMPLETE:
+            if self.status == value_objects.TaskStatus.COMPLETE:
+                raise DomainError("Task is already complete")
+            self.status = value_objects.TaskStatus.COMPLETE
+            self.completed_at = datetime.now(UTC)
+        elif action.type == value_objects.ActionType.PUNT:
+            if self.status == value_objects.TaskStatus.PUNT:
+                raise DomainError("Task is already punted")
+            self.status = value_objects.TaskStatus.PUNT
+        elif action.type == value_objects.ActionType.NOTIFY:
+            # Notification doesn't change status, just records the action
+            pass
+        else:
+            # Other action types don't change status
+            pass
+
+        # Record a task-level event so persistence is tied to a domain event
+        self._add_event(
+            TaskStateUpdatedEvent(
+                task_id=self.id,
+                action_type=action.type.value,
+                old_status=old_status.value,
+                new_status=self.status.value,
+                completed_at=self.completed_at,
+                entity_id=self.id,
+                entity_type="task",
+                entity_date=self.scheduled_date,
+            )
+        )
+
+        # Return the old status so the aggregate root can raise events if needed
+        return old_status
+
+    def mark_pending(self) -> value_objects.TaskStatus:
+        """Mark the task as pending (ready to be worked on).
+
+        This is typically called when a task's scheduled time arrives.
+
+        Returns:
+            The old status before the change
+        """
+        if self.status == value_objects.TaskStatus.PENDING:
+            return self.status  # Already pending
+
+        old_status = self.status
+        self.status = value_objects.TaskStatus.PENDING
+        return old_status
+
+    def mark_ready(self) -> value_objects.TaskStatus:
+        """Mark the task as ready (available to be worked on).
+
+        This is typically called when a task becomes available based on
+        its schedule or dependencies.
+
+        Returns:
+            The old status before the change
+        """
+        if self.status == value_objects.TaskStatus.READY:
+            return self.status  # Already ready
+
+        old_status = self.status
+        self.status = value_objects.TaskStatus.READY
+        return old_status
+
+    def is_eligible_for_upcoming(
+        self,
+        now: time,
+        cutoff_time: time,
+    ) -> bool:
+        """Check if this task is eligible to be included in upcoming tasks.
+
+        Args:
+            now: Current time
+            cutoff_time: The cutoff time for the look-ahead window
+
+        Returns:
+            True if the task should be included, False otherwise
+        """
+        # Exclude tasks that are not in eligible statuses
+        if self.status not in (
+            value_objects.TaskStatus.PENDING,
+            value_objects.TaskStatus.NOT_STARTED,
+            value_objects.TaskStatus.READY,
+        ):
+            return False
+
+        # Exclude tasks that are already completed
+        if self.completed_at:
+            return False
+
+        # Exclude tasks without a schedule
+        if not self.schedule:
+            return False
+
+        # Check available_time - task must be available
+        if self.schedule.available_time:
+            if self.schedule.available_time > now:
+                return False
+
+        # Check start_time - task must start before cutoff
+        elif self.schedule.start_time:
+            if cutoff_time < self.schedule.start_time:
+                return False
+
+        # Check end_time - task must not have ended
+        if self.schedule.end_time and now > self.schedule.end_time:
+            return False
+
+        return True

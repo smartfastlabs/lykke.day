@@ -1,0 +1,14 @@
+- name: {{ task.name }}
+  status: {{ task.status.value }}
+  type: {{ task.type.value }}
+  category: {{ task.category.value }}
+  scheduled_date: {{ task.scheduled_date.isoformat() }}
+  {{- kv_line("  ", "description", task.description) -}}
+  frequency: {{ task.frequency.value }}
+  {% if task.tags %}tags: {{ task.tags | map(attribute='value') | list }}{% endif %}
+  {{- kv_line("  ", "completed_at", task.completed_at and fmt_datetime(task.completed_at)) -}}
+  schedule:
+    {{- kv_line("    ", "timing_type", task.schedule and task.schedule.timing_type.value) -}}
+    {{- kv_line("    ", "available_time", task.schedule and task.schedule.available_time and fmt_time(task.schedule.available_time)) -}}
+    {{- kv_line("    ", "start_time", task.schedule and task.schedule.start_time and fmt_time(task.schedule.start_time)) -}}
+    {{- kv_line("    ", "end_time", task.schedule and task.schedule.end_time and fmt_time(task.schedule.end_time)) -}}

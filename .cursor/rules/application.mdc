@@ -1,0 +1,201 @@
+---
+globs: backend/lykke/application/**/*.py
+alwaysApply: false
+---
+
+# Application Layer Overview
+
+The Application layer orchestrates business operations using the **CQRS (Command Query Responsibility Segregation)** pattern. It defines protocols (interfaces) and implements command and query handlers.
+
+---
+
+## Layer Structure
+
+```
+application/
+├── commands/          # Write operations (mutations)
+├── queries/           # Read operations
+├── repositories/      # Repository protocol definitions
+├── gateways/          # External service protocol definitions
+├── unit_of_work.py    # UnitOfWorkProtocol, UnitOfWorkFactory, ReadOnlyRepositories
+├── events/            # Domain event handling
+├── llm_usecases/      # LLM-based use cases
+├── base_handler.py    # Base handler class
+└── utils/             # Application utilities
+```
+
+---
+
+## Import Rules
+
+**Allowed Imports:**
+- Standard library
+- Type checking imports (`TYPE_CHECKING`, `Protocol`, etc.)
+- `lykke.domain.*` - Domain layer (entities, value objects, events)
+- `lykke.core.*` - Core layer (config, constants, exceptions, utils)
+- Other application layer modules
+
+**Forbidden Imports:**
+- `lykke.infrastructure.*` - Infrastructure layer (except in TYPE_CHECKING blocks)
+- `lykke.presentation.*` - Presentation layer
+- Concrete implementations (always use protocols)
+
+**Exception:** You can import infrastructure types in `TYPE_CHECKING` blocks for type hints only, but never at runtime.
+
+---
+
+## Subdirectories
+
+### Commands (`application/commands/`)
+
+**Purpose:** Write operations (mutations) that change system state using Unit of Work.
+
+**Location:** `backend/lykke/application/commands/`
+
+**What It Does:**
+- Handles write operations that modify system state
+- Uses Unit of Work for transaction management
+- Tracks entities via `uow.add()` for persistence
+- Commits transactions and dispatches domain events
+
+**For Details:** See `.cursor/rules/application-commands.mdc`
+
+---
+
+### Queries (`application/queries/`)
+
+**Purpose:** Read operations that don't change system state using read-only repositories.
+
+**Location:** `backend/lykke/application/queries/`
+
+**What It Does:**
+- Handles read operations that don't modify state
+- Uses read-only repositories for data access
+- Returns domain entities and value objects
+- Must be side-effect free
+
+**For Details:** See `.cursor/rules/application-queries.mdc`
+
+---
+
+### Repositories (`application/repositories/`)
+
+**Purpose:** Repository protocol definitions (interfaces) for data access.
+
+**Location:** `backend/lykke/application/repositories/`
+
+**What It Does:**
+- Defines repository protocols using Python `Protocol`
+- Separates read-only and read-write protocols
+- Defines interfaces, not implementations
+- Used by commands and queries
+
+**For Details:** See `.cursor/rules/application-repositories.mdc`
+
+---
+
+### Gateways (`application/gateways/`)
+
+**Purpose:** External service protocol definitions (interfaces) for external APIs.
+
+**Location:** `backend/lykke/application/gateways/`
+
+**What It Does:**
+- Defines gateway protocols using Python `Protocol`
+- Defines interfaces for external services
+- Methods return domain entities or value objects
+- No implementation, only interface definitions
+
+**For Details:** See `.cursor/rules/application-gateways.mdc`
+
+---
+
+### Events (`application/events/`)
+
+**Purpose:** Domain event handling and signal registration.
+
+**Location:** `backend/lykke/application/events/`
+
+**Key Components:**
+- `signals.py` - Domain event signal and dispatch
+- `handlers/` - Domain event handlers
+
+**What It Does:**
+- Dispatches domain events before transaction commit
+- Registers event handlers automatically at startup
+- Handlers process domain events synchronously within transaction
+- Uses blinker signals for event dispatching
+
+**For Details:** See `.cursor/rules/application-events.mdc`
+
+---
+
+### Unit of Work (`application/unit_of_work.py`)
+
+**Purpose:** Protocols for transaction management and repository coordination.
+
+**Location:** `backend/lykke/application/unit_of_work.py`
+
+**Key Protocols:**
+- `UnitOfWorkProtocol` - Protocol for transaction management
+- `UnitOfWorkFactory` - Factory for creating UoW instances
+- `ReadOnlyRepositories` - Protocol for read-only repositories
+- `ReadOnlyRepositoryFactory` - Factory for creating read-only repositories
+
+**What It Does:**
+- Provides transaction management for commands
+- Coordinates repositories to share the same connection
+- Tracks entities for persistence
+- Collects and dispatches domain events after commit
+
+---
+
+## Adding a New Feature
+
+When adding a new feature in the application layer:
+
+1. **Define protocols first** - Add repository or gateway protocols if needed
+2. **Create command handler** - Add command handler in `commands/` for write operations
+3. **Create query handler** - Add query handler in `queries/` for read operations
+4. **Use Unit of Work** - Commands use `UnitOfWorkFactory`, queries use `ReadOnlyRepositoryFactory`
+5. **Handle events** - Add event handlers in `events/handlers/` if needed
+
+**Where to look:**
+- Command patterns: `lykke/application/commands/base.py`
+- Query patterns: `lykke/application/queries/base.py`
+- Repository protocols: `lykke/application/repositories/base.py`
+- Gateway protocols: `lykke/application/gateways/`
+- Unit of Work: `lykke/application/unit_of_work.py`
+- Event handling: `lykke/application/events/`
+
+---
+
+## Common Patterns
+
+### CQRS Pattern
+- **Commands** handle write operations using Unit of Work
+- **Queries** handle read operations using read-only repositories
+- Commands and queries are separate handlers, not methods on a service class
+
+### Unit of Work Pattern
+- Commands use `UnitOfWorkFactory` to create transaction-scoped units of work
+- Queries use `ReadOnlyRepositoryFactory` to create read-only repositories
+- Unit of Work tracks entities via `add()` and commits/rollbacks transactions
+- Domain events are collected and dispatched after commit
+
+### Protocol Pattern
+- Protocols defined in `application/repositories/` and `application/gateways/`
+- Implementations in `infrastructure/repositories/` and `infrastructure/gateways/`
+- Application layer always uses protocols, never concrete implementations
+
+---
+
+## Testing
+
+Application layer tests go in `tests/unit/application/`:
+- Test commands with mocked Unit of Work using `dobles`
+- Test queries with mocked read-only repositories
+- Test event handlers with domain events
+- Mock all dependencies (UoW, repositories, gateways)
+
+**For detailed testing guidance:** See subdirectory-specific rules.

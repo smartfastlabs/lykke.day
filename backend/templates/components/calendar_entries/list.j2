@@ -1,0 +1,6 @@
+{% if context.calendar_entries %}
+Calendar entries:
+{% for entry in context.calendar_entries %}
+{% include "components/calendar_entries/item.j2" %}
+{% endfor %}
+{% endif %}

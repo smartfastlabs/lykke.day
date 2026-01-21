@@ -1,0 +1,193 @@
+---
+globs: backend/lykke/domain/events/**/*.py
+alwaysApply: false
+---
+
+# Domain Events Rules
+
+Domain events represent something important that happened in the domain. They are immutable and contain all information needed to understand what happened.
+
+**📚 For complete guide on events and audit logs, see:** `.cursor/rules/events-and-audit-logs.mdc`
+
+---
+
+## Base Classes
+
+All events extend `DomainEvent`:
+
+```python
+from dataclasses import dataclass
+from uuid import UUID
+
+from lykke.domain.events.base import DomainEvent
+
+
+@dataclass(frozen=True, kw_only=True)
+class TaskCompletedEvent(DomainEvent):
+    """Event raised when a task is completed."""
+    
+    task_id: UUID
+    old_status: str
+    new_status: str
+```
+
+### AuditableDomainEvent Mixin
+
+For user-facing actions that should create persistent audit logs:
+
+```python
+from lykke.domain.events.base import DomainEvent, AuditableDomainEvent
+
+
+@dataclass(frozen=True, kw_only=True)
+class TaskCompletedEvent(DomainEvent, AuditableDomainEvent):
+    """Event raised when a task is completed.
+    
+    Uses AuditableDomainEvent: User completed a task - major milestone
+    that users want to see in their activity timeline.
+    """
+    
+    task_id: UUID
+    old_status: str
+    new_status: str
+```
+
+**When to use `AuditableDomainEvent`:**
+- User would want to see this in activity timeline
+- Action represents deliberate user choice or milestone
+- You need persistent history of this action
+
+**When NOT to use:**
+- Internal state tracking
+- System-triggered updates
+- Low-level CRUD (use `AuditableEntity` marker instead)
+- Configuration changes
+
+**See comprehensive decision tree in:** `.cursor/rules/events-and-audit-logs.mdc`
+
+---
+
+## Key Rules
+
+1. **Immutable (`frozen=True`)** - Events cannot be modified after creation
+2. **Contains context** - Include all data needed by handlers
+3. **Use specific event types** - Don't use generic events with type fields
+4. **Timestamp auto-set** - `occurred_at` is automatically set to current time
+5. **Include entity info** - Include `entity_id`, `entity_type`, `entity_date` when applicable
+
+---
+
+## Event Types
+
+The base classes provide standard event types:
+
+- `EntityCreatedEvent` - Automatically added when `create()` is called
+- `EntityUpdatedEvent` - Automatically added when `apply_update()` is called
+- `EntityDeletedEvent` - Automatically added when `delete()` is called
+- Custom events - Extend `DomainEvent` for domain-specific events
+
+---
+
+## Event Structure
+
+Events should include identifying information for handlers:
+
+```python
+@dataclass(frozen=True, kw_only=True)
+class TaskCompletedEvent(DomainEvent, AuditableDomainEvent):
+    """Event raised when a task is completed."""
+    
+    # Entity identification
+    task_id: UUID
+    
+    # Context for handlers
+    old_status: str
+    new_status: str
+    
+    # Optional: denormalized data for audit log display
+    task_name: str | None = None
+    task_type: str | None = None
+    
+    # Entity metadata (optional but useful for filtering)
+    @property
+    def entity_id(self) -> UUID:
+        return self.task_id
+    
+    @property
+    def entity_type(self) -> str:
+        return "Task"
+```
+
+---
+
+## Testing Guidance
+
+### Test Location
+
+Domain event tests go in:
+- `tests/unit/domain/test_*.py` - Event tests
+- No mocking needed (pure data structures)
+
+### Testing Events
+
+```python
+def test_task_completed_event_is_immutable():
+    """Test that TaskCompletedEvent is immutable."""
+    event = TaskCompletedEvent(
+        task_id=uuid4(),
+        old_status="not_started",
+        new_status="complete",
+    )
+    
+    # Should raise FrozenInstanceError
+    with pytest.raises(FrozenInstanceError):
+        event.task_id = uuid4()
+
+def test_task_completed_event_has_timestamp():
+    """Test that events have occurred_at timestamp."""
+    event = TaskCompletedEvent(
+        task_id=uuid4(),
+        old_status="not_started",
+        new_status="complete",
+    )
+    
+    assert event.occurred_at is not None
+```
+
+---
+
+## Common Patterns
+
+### Status Change Event
+
+```python
+@dataclass(frozen=True, kw_only=True)
+class TaskStatusChangedEvent(DomainEvent):
+    """Event raised when task status changes."""
+    
+    task_id: UUID
+    old_status: str
+    new_status: str
+```
+
+### Entity-Specific Event
+
+```python
+@dataclass(frozen=True, kw_only=True)
+class DayScheduledEvent(DomainEvent, AuditableDomainEvent):
+    """Event raised when a day is scheduled."""
+    
+    day_id: UUID
+    date: date
+    template_id: UUID
+```
+
+### Update Event (for apply_update pattern)
+
+```python
+@dataclass(frozen=True, kw_only=True)
+class DayUpdatedEvent(DomainEvent):
+    """Event raised when a day is updated via apply_update."""
+    
+    update_object: DayUpdateObject
+```

@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+/* Fix for iOS PWA - ensure full screen coverage including notch area */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+html {
+  touch-action: manipulation;
+  height: 100%;
+  /* Background extends behind notch - matches app gradient */
+  background: linear-gradient(to bottom right, #fef3c7, #fed7aa, #ffe4e6);
+}
+
+body {
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "liga" 1, "kern" 1, "calt" 1;
+  background-color: transparent;
+  color: #000;
+  touch-action: manipulation;
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  height: 100%;
+}
+
+/* Ensure the root div fills screen and content uses safe areas */
+#root {
+  min-height: 100%;
+  height: 100%;
+}
+
+@media print {
+  html,
+  body {
+    size: 3.5in 5.5in;
+    margin: 0;
+    padding: 0;
+  }
+
+  body > div {
+    margin: 0;
+    padding: 0;
+  }
+
+  .print-page {
+    background: white !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  .print-wrapper {
+    min-height: 0 !important;
+    display: block !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+  }
+
+  .print-card {
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box;
+  }
+}

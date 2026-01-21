@@ -1,0 +1,7165 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Lykke.day",
+    "description": "API for managing calendar events",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Auth:Cookie.Login",
+        "operationId": "auth_cookie_login_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_auth_cookie_login_auth_login_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                },
+                "examples": {
+                  "LOGIN_BAD_CREDENTIALS": {
+                    "summary": "Bad credentials or the user is inactive.",
+                    "value": {
+                      "detail": "LOGIN_BAD_CREDENTIALS"
+                    }
+                  },
+                  "LOGIN_USER_NOT_VERIFIED": {
+                    "summary": "The user is not verified.",
+                    "value": {
+                      "detail": "LOGIN_USER_NOT_VERIFIED"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Auth:Cookie.Logout",
+        "operationId": "auth_cookie_logout_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Missing token or inactive user."
+          },
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register:Register",
+        "operationId": "register_register_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                },
+                "examples": {
+                  "REGISTER_USER_ALREADY_EXISTS": {
+                    "summary": "A user with this email already exists.",
+                    "value": {
+                      "detail": "REGISTER_USER_ALREADY_EXISTS"
+                    }
+                  },
+                  "REGISTER_INVALID_PASSWORD": {
+                    "summary": "Password validation failed.",
+                    "value": {
+                      "detail": {
+                        "code": "REGISTER_INVALID_PASSWORD",
+                        "reason": "Password should beat least 3 characters"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Reset:Forgot Password",
+        "operationId": "reset_forgot_password_auth_forgot_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_reset_forgot_password_auth_forgot_password_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Reset:Reset Password",
+        "operationId": "reset_reset_password_auth_reset_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_reset_reset_password_auth_reset_password_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                },
+                "examples": {
+                  "RESET_PASSWORD_BAD_TOKEN": {
+                    "summary": "Bad or expired token.",
+                    "value": {
+                      "detail": "RESET_PASSWORD_BAD_TOKEN"
+                    }
+                  },
+                  "RESET_PASSWORD_INVALID_PASSWORD": {
+                    "summary": "Password validation failed.",
+                    "value": {
+                      "detail": {
+                        "code": "RESET_PASSWORD_INVALID_PASSWORD",
+                        "reason": "Password should be at least 3 characters"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/early-access": {
+      "post": {
+        "tags": [
+          "public"
+        ],
+        "summary": "Request Early Access",
+        "description": "Capture lead contact as a user with status NEW_LEAD.",
+        "operationId": "request_early_access_early_access_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EarlyAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/google/login": {
+      "get": {
+        "tags": [
+          "google",
+          "auth"
+        ],
+        "summary": "Google Login",
+        "operationId": "google_login_google_login_get",
+        "parameters": [
+          {
+            "name": "auth_token_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Auth Token Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/google/callback/login": {
+      "get": {
+        "tags": [
+          "google",
+          "auth"
+        ],
+        "summary": "Google Login Callback",
+        "operationId": "google_login_callback_google_callback_login_get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "State"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/google/webhook/{user_id}/{calendar_id}": {
+      "post": {
+        "tags": [
+          "google",
+          "auth"
+        ],
+        "summary": "Google Webhook",
+        "description": "Webhook endpoint for Google Calendar push notifications.\n\nGoogle sends notifications to this endpoint when calendar events change.\nThe actual sync is performed asynchronously via a background task.\n\nArgs:\n    user_id: The user ID extracted from the webhook URL.\n    calendar_id: The calendar ID extracted from the webhook URL.\n\nHeaders:\n    X-Goog-Channel-Token: Secret token for webhook verification.\n    X-Goog-Resource-State: The type of change (sync, exists, not_exists).\n\nReturns:\n    Empty 200 response to acknowledge receipt.",
+        "operationId": "google_webhook_google_webhook__user_id___calendar_id__post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "calendar_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Calendar Id"
+            }
+          },
+          {
+            "name": "x-goog-channel-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Goog-Channel-Token"
+            }
+          },
+          {
+            "name": "x-goog-resource-state",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Goog-Resource-State"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Get Current User Profile",
+        "description": "Return the currently authenticated user.",
+        "operationId": "get_current_user_profile_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSchema"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Update Current User Profile",
+        "description": "Update the current authenticated user.",
+        "operationId": "update_current_user_profile_me_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/me/today/goals": {
+      "post": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Add Goal To Today",
+        "description": "Add a goal to today.",
+        "operationId": "add_goal_to_today_me_today_goals_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayContextSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/today/goals/{goal_id}": {
+      "patch": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Update Today Goal Status",
+        "description": "Update a goal's status for today.",
+        "operationId": "update_today_goal_status_me_today_goals__goal_id__patch",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/GoalStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayContextSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Remove Goal From Today",
+        "description": "Remove a goal from today.",
+        "operationId": "remove_goal_from_today_me_today_goals__goal_id__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayContextSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/today/brain-dump": {
+      "post": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Add Brain Dump Item To Today",
+        "description": "Add a brain dump item to today.",
+        "operationId": "add_brain_dump_item_to_today_me_today_brain_dump_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "text",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Text"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayContextSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/today/brain-dump/{item_id}": {
+      "patch": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Update Brain Dump Item Status",
+        "description": "Update a brain dump item's status for today.",
+        "operationId": "update_brain_dump_item_status_me_today_brain_dump__item_id__patch",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/BrainDumpItemStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayContextSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Remove Brain Dump Item From Today",
+        "description": "Remove a brain dump item from today.",
+        "operationId": "remove_brain_dump_item_from_today_me_today_brain_dump__item_id__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayContextSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/today/high-level-plan": {
+      "patch": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Update Today High Level Plan",
+        "description": "Update the high level plan for today.",
+        "operationId": "update_today_high_level_plan_me_today_high_level_plan_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HighLevelPlanSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayContextSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/calendar-entry-series/{uuid}": {
+      "get": {
+        "tags": [
+          "calendar-entry-series"
+        ],
+        "summary": "Get Calendar Entry Series",
+        "description": "Get a single calendar entry series by ID.",
+        "operationId": "get_calendar_entry_series_calendar_entry_series__uuid__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarEntrySeriesSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "calendar-entry-series"
+        ],
+        "summary": "Update Calendar Entry Series",
+        "description": "Update a calendar entry series.",
+        "operationId": "update_calendar_entry_series_calendar_entry_series__uuid__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarEntrySeriesUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarEntrySeriesSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendar-entry-series/": {
+      "post": {
+        "tags": [
+          "calendar-entry-series"
+        ],
+        "summary": "Search Calendar Entry Series",
+        "description": "Search calendar entry series with pagination and optional filters.",
+        "operationId": "search_calendar_entry_series_calendar_entry_series__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_CalendarEntrySeriesQuery_"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseSchema_CalendarEntrySeriesSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/push/subscriptions/": {
+      "post": {
+        "tags": [
+          "push",
+          "notifications"
+        ],
+        "summary": "Search Subscriptions",
+        "description": "Search push subscriptions with pagination and optional filters.",
+        "operationId": "search_subscriptions_push_subscriptions__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_PushSubscriptionQuery_"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseSchema_PushSubscriptionSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/push/subscriptions/{subscription_id}": {
+      "get": {
+        "tags": [
+          "push",
+          "notifications"
+        ],
+        "summary": "Get Subscription",
+        "operationId": "get_subscription_push_subscriptions__subscription_id__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscription Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushSubscriptionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "push",
+          "notifications"
+        ],
+        "summary": "Update Subscription",
+        "operationId": "update_subscription_push_subscriptions__subscription_id__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscription Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushSubscriptionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "push",
+          "notifications"
+        ],
+        "summary": "Delete Subscription",
+        "operationId": "delete_subscription_push_subscriptions__subscription_id__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subscription Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/push/subscribe/": {
+      "post": {
+        "tags": [
+          "push",
+          "notifications"
+        ],
+        "summary": "Subscribe",
+        "operationId": "subscribe_push_subscribe__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionCreateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushSubscriptionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/push/test-push/": {
+      "post": {
+        "tags": [
+          "push",
+          "notifications"
+        ],
+        "summary": "Send Test Push",
+        "description": "Send a test push notification to all user's subscribed devices.\n\nReturns:\n    A dict with the count of devices that will receive the notification.",
+        "operationId": "send_test_push_push_test_push__post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object",
+                  "title": "Response Send Test Push Push Test Push  Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/tasks/{_id}/actions": {
+      "post": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Add Task Action",
+        "description": "Record an action on a task.",
+        "operationId": "add_task_action_tasks___id__actions_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": " Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Action"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/days/today/reschedule": {
+      "put": {
+        "tags": [
+          "day",
+          "scheduling",
+          "planning"
+        ],
+        "summary": "Reschedule Today",
+        "description": "Reschedule today by cleaning up and recreating all tasks.",
+        "operationId": "reschedule_today_days_today_reschedule_put",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayContextSchema"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/day-templates/{uuid}": {
+      "get": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Get Day Template",
+        "description": "Get a single day template by ID.",
+        "operationId": "get_day_template_day_templates__uuid__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayTemplateSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Update Day Template",
+        "description": "Update a day template.",
+        "operationId": "update_day_template_day_templates__uuid__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayTemplateUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayTemplateSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Delete Day Template",
+        "description": "Delete a day template.",
+        "operationId": "delete_day_template_day_templates__uuid__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/day-templates/": {
+      "post": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Search Day Templates",
+        "description": "Search day templates with pagination and optional filters.",
+        "operationId": "search_day_templates_day_templates__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_DayTemplateQuery_"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseSchema_DayTemplateSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/day-templates/create": {
+      "post": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Create Day Template",
+        "description": "Create a new day template.",
+        "operationId": "create_day_template_day_templates_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayTemplateCreateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayTemplateSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/day-templates/{uuid}/routines": {
+      "post": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Add Day Template Routine",
+        "description": "Attach a routine to a day template.",
+        "operationId": "add_day_template_routine_day_templates__uuid__routines_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayTemplateRoutineCreateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayTemplateSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/day-templates/{uuid}/routines/{routine_id}": {
+      "delete": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Remove Day Template Routine",
+        "description": "Detach a routine from a day template.",
+        "operationId": "remove_day_template_routine_day_templates__uuid__routines__routine_id__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          },
+          {
+            "name": "routine_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Routine Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayTemplateSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/day-templates/{uuid}/time-blocks": {
+      "post": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Add Day Template Time Block",
+        "description": "Add a time block to a day template.",
+        "operationId": "add_day_template_time_block_day_templates__uuid__time_blocks_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayTemplateTimeBlockCreateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayTemplateSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/day-templates/{uuid}/time-blocks/{time_block_definition_id}/{start_time}": {
+      "delete": {
+        "tags": [
+          "day-templates"
+        ],
+        "summary": "Remove Day Template Time Block",
+        "description": "Remove a time block from a day template.",
+        "operationId": "remove_day_template_time_block_day_templates__uuid__time_blocks__time_block_definition_id___start_time__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          },
+          {
+            "name": "time_block_definition_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Time Block Definition Id"
+            }
+          },
+          {
+            "name": "start_time",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Start Time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayTemplateSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/task-definitions/{uuid}": {
+      "get": {
+        "tags": [
+          "task-definitions"
+        ],
+        "summary": "Get Task Definition",
+        "description": "Get a single task definition by ID.",
+        "operationId": "get_task_definition_task_definitions__uuid__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDefinitionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "task-definitions"
+        ],
+        "summary": "Update Task Definition",
+        "description": "Update a task definition.",
+        "operationId": "update_task_definition_task_definitions__uuid__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskDefinitionUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDefinitionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "task-definitions"
+        ],
+        "summary": "Delete Task Definition",
+        "description": "Delete a task definition.",
+        "operationId": "delete_task_definition_task_definitions__uuid__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/task-definitions/": {
+      "post": {
+        "tags": [
+          "task-definitions"
+        ],
+        "summary": "Search Task Definitions",
+        "description": "Search task definitions with pagination and optional filters.",
+        "operationId": "search_task_definitions_task_definitions__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_TaskDefinitionQuery_"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseSchema_TaskDefinitionSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/task-definitions/create": {
+      "post": {
+        "tags": [
+          "task-definitions"
+        ],
+        "summary": "Create Task Definition",
+        "description": "Create a new task definition.",
+        "operationId": "create_task_definition_task_definitions_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskDefinitionCreateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskDefinitionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/routines/{uuid}": {
+      "get": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Get Routine",
+        "description": "Get a single routine by ID.",
+        "operationId": "get_routine_routines__uuid__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Update Routine",
+        "description": "Update an existing routine.",
+        "operationId": "update_routine_routines__uuid__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutineUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Delete Routine",
+        "description": "Delete a routine.",
+        "operationId": "delete_routine_routines__uuid__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/routines/": {
+      "post": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Search Routines",
+        "description": "Search routines with pagination and optional filters.",
+        "operationId": "search_routines_routines__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_RoutineQuery_"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseSchema_RoutineSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/routines/create": {
+      "post": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Create Routine",
+        "description": "Create a new routine.",
+        "operationId": "create_routine_routines_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutineCreateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/routines/{uuid}/tasks": {
+      "post": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Add Routine Task",
+        "description": "Attach a task definition to a routine.",
+        "operationId": "add_routine_task_routines__uuid__tasks_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutineTaskCreateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/routines/{uuid}/tasks/{routine_task_id}": {
+      "put": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Update Routine Task",
+        "description": "Update an attached routine task (name/schedule).",
+        "operationId": "update_routine_task_routines__uuid__tasks__routine_task_id__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          },
+          {
+            "name": "routine_task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Routine Task Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutineTaskUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Remove Routine Task",
+        "description": "Detach a routine task from a routine by RoutineTask.id.",
+        "operationId": "remove_routine_task_routines__uuid__tasks__routine_task_id__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          },
+          {
+            "name": "routine_task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Routine Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/routines/{uuid}/actions": {
+      "post": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Record Routine Action",
+        "description": "Record an action on all tasks in a routine for today.",
+        "operationId": "record_routine_action_routines__uuid__actions_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Action"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskSchema"
+                  },
+                  "title": "Response Record Routine Action Routines  Uuid  Actions Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/time-block-definitions/{uuid}": {
+      "get": {
+        "tags": [
+          "time-block-definitions"
+        ],
+        "summary": "Get Time Block Definition",
+        "description": "Get a single time block definition by ID.",
+        "operationId": "get_time_block_definition_time_block_definitions__uuid__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeBlockDefinitionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "time-block-definitions"
+        ],
+        "summary": "Update Time Block Definition",
+        "description": "Update an existing time block definition.",
+        "operationId": "update_time_block_definition_time_block_definitions__uuid__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeBlockDefinitionUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeBlockDefinitionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "time-block-definitions"
+        ],
+        "summary": "Delete Time Block Definition",
+        "description": "Delete a time block definition.",
+        "operationId": "delete_time_block_definition_time_block_definitions__uuid__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/time-block-definitions/": {
+      "post": {
+        "tags": [
+          "time-block-definitions"
+        ],
+        "summary": "Search Time Block Definitions",
+        "description": "Search time block definitions with pagination and optional filters.",
+        "operationId": "search_time_block_definitions_time_block_definitions__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_TimeBlockDefinitionQuery_"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseSchema_TimeBlockDefinitionSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/time-block-definitions/create": {
+      "post": {
+        "tags": [
+          "time-block-definitions"
+        ],
+        "summary": "Create Time Block Definition",
+        "description": "Create a new time block definition.",
+        "operationId": "create_time_block_definition_time_block_definitions_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeBlockDefinitionCreateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeBlockDefinitionSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/calendars/{uuid}": {
+      "get": {
+        "tags": [
+          "calendars"
+        ],
+        "summary": "Get Calendar",
+        "description": "Get a single calendar by ID.",
+        "operationId": "get_calendar_calendars__uuid__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "calendars"
+        ],
+        "summary": "Update Calendar",
+        "description": "Update a calendar.",
+        "operationId": "update_calendar_calendars__uuid__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "calendars"
+        ],
+        "summary": "Delete Calendar",
+        "description": "Delete a calendar.",
+        "operationId": "delete_calendar_calendars__uuid__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendars/{uuid}/subscribe": {
+      "post": {
+        "tags": [
+          "calendars"
+        ],
+        "summary": "Subscribe Calendar",
+        "description": "Enable push notifications for a calendar.",
+        "operationId": "subscribe_calendar_calendars__uuid__subscribe_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "calendars"
+        ],
+        "summary": "Unsubscribe Calendar",
+        "description": "Disable push notifications for a calendar.",
+        "operationId": "unsubscribe_calendar_calendars__uuid__subscribe_delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendars/{uuid}/resync": {
+      "post": {
+        "tags": [
+          "calendars"
+        ],
+        "summary": "Resync Calendar",
+        "description": "Resubscribe and fully resync a calendar.",
+        "operationId": "resync_calendar_calendars__uuid__resync_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendars/reset-subscriptions": {
+      "post": {
+        "tags": [
+          "calendars"
+        ],
+        "summary": "Reset Calendar Subscriptions",
+        "description": "Delete all calendar data and refresh subscriptions for the user.",
+        "operationId": "reset_calendar_subscriptions_calendars_reset_subscriptions_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarSchema"
+                  },
+                  "type": "array",
+                  "title": "Response Reset Calendar Subscriptions Calendars Reset Subscriptions Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/calendars/reset-sync": {
+      "post": {
+        "tags": [
+          "calendars"
+        ],
+        "summary": "Reset Calendar Sync",
+        "description": "Reset calendar sync: unsubscribe, delete future events, resubscribe, and sync.\n\nThis operation:\n1. Unsubscribes all calendars that have syncing enabled\n2. Deletes all future calendar entries for those calendars\n3. Resubscribes to updates for all calendars that were previously subscribed\n4. Performs initial sync for each calendar",
+        "operationId": "reset_calendar_sync_calendars_reset_sync_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarSchema"
+                  },
+                  "type": "array",
+                  "title": "Response Reset Calendar Sync Calendars Reset Sync Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/calendars/": {
+      "post": {
+        "tags": [
+          "calendars"
+        ],
+        "summary": "Search Calendars",
+        "description": "Search calendars with pagination and optional filters.",
+        "operationId": "search_calendars_calendars__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_CalendarQuery_"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseSchema_CalendarSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/calendars/create": {
+      "post": {
+        "tags": [
+          "calendars"
+        ],
+        "summary": "Create Calendar",
+        "description": "Create a new calendar.",
+        "operationId": "create_calendar_calendars_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarCreateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Health check endpoint.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Check Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Action": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/ActionType"
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "title": "Action"
+      },
+      "ActionSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ActionType"
+          },
+          "data": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Data"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "created_at"
+        ],
+        "title": "ActionSchema",
+        "description": "API schema for Action value object."
+      },
+      "ActionType": {
+        "type": "string",
+        "enum": [
+          "COMPLETE",
+          "DELETE",
+          "EDIT",
+          "NOTIFY",
+          "PAUSE",
+          "PUNT",
+          "RESUME",
+          "START",
+          "VIEW"
+        ],
+        "title": "ActionType"
+      },
+      "Body_auth_cookie_login_auth_login_post": {
+        "properties": {
+          "grant_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^password$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grant Type"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "title": "Password"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": ""
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "client_secret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "format": "password",
+            "title": "Client Secret"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Body_auth_cookie_login_auth_login_post"
+      },
+      "Body_reset_forgot_password_auth_forgot_password_post": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "Body_reset_forgot_password_auth_forgot_password_post"
+      },
+      "Body_reset_reset_password_auth_reset_password_post": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "password"
+        ],
+        "title": "Body_reset_reset_password_auth_reset_password_post"
+      },
+      "BrainDumpItemSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BrainDumpItemStatus"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "status"
+        ],
+        "title": "BrainDumpItemSchema",
+        "description": "API schema for BrainDumpItem value object."
+      },
+      "BrainDumpItemStatus": {
+        "type": "string",
+        "enum": [
+          "ACTIVE",
+          "COMPLETE",
+          "PUNT"
+        ],
+        "title": "BrainDumpItemStatus",
+        "description": "Status of a brain dump item."
+      },
+      "CalendarCreateSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "auth_token_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Auth Token Id"
+          },
+          "platform_id": {
+            "type": "string",
+            "title": "Platform Id"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "last_sync_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync At"
+          },
+          "default_event_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "auth_token_id",
+          "platform_id",
+          "platform"
+        ],
+        "title": "CalendarCreateSchema",
+        "description": "API schema for creating a Calendar entity."
+      },
+      "CalendarEntrySchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "calendar_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Calendar Id"
+          },
+          "platform_id": {
+            "type": "string",
+            "title": "Platform Id"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/TaskFrequency"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/ActionSchema"
+            },
+            "type": "array",
+            "title": "Actions"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "name",
+          "calendar_id",
+          "platform_id",
+          "platform",
+          "status",
+          "starts_at",
+          "frequency",
+          "created_at",
+          "updated_at",
+          "date"
+        ],
+        "title": "CalendarEntrySchema",
+        "description": "API schema for CalendarEntry entity."
+      },
+      "CalendarEntrySeriesQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          },
+          "calendar_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calendar Id"
+          },
+          "platform_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform Id"
+          }
+        },
+        "type": "object",
+        "title": "CalendarEntrySeriesQuery"
+      },
+      "CalendarEntrySeriesSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "calendar_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Calendar Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "platform_id": {
+            "type": "string",
+            "title": "Platform Id"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/TaskFrequency"
+          },
+          "event_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recurrence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recurrence"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "calendar_id",
+          "name",
+          "platform_id",
+          "platform",
+          "frequency",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CalendarEntrySeriesSchema",
+        "description": "API schema for CalendarEntrySeries entity."
+      },
+      "CalendarEntrySeriesUpdateSchema": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "event_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "CalendarEntrySeriesUpdateSchema",
+        "description": "API schema for updating a CalendarEntrySeries."
+      },
+      "CalendarQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          },
+          "subscription_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Id"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Id"
+          },
+          "platform_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform Id"
+          }
+        },
+        "type": "object",
+        "title": "CalendarQuery"
+      },
+      "CalendarSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "auth_token_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Auth Token Id"
+          },
+          "platform_id": {
+            "type": "string",
+            "title": "Platform Id"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "last_sync_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync At"
+          },
+          "default_event_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "sync_subscription": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyncSubscriptionSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sync_subscription_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sync Subscription Id"
+          },
+          "sync_enabled": {
+            "type": "boolean",
+            "title": "Sync Enabled",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "auth_token_id",
+          "platform_id",
+          "platform",
+          "user_id"
+        ],
+        "title": "CalendarSchema",
+        "description": "API schema for Calendar entity."
+      },
+      "CalendarUpdateSchema": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "auth_token_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auth Token Id"
+          },
+          "default_event_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_sync_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Sync At"
+          }
+        },
+        "type": "object",
+        "title": "CalendarUpdateSchema",
+        "description": "API schema for Calendar update requests."
+      },
+      "DayContextSchema": {
+        "properties": {
+          "day": {
+            "$ref": "#/components/schemas/DaySchema"
+          },
+          "calendar_entries": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarEntrySchema"
+            },
+            "type": "array",
+            "title": "Calendar Entries"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/TaskSchema"
+            },
+            "type": "array",
+            "title": "Tasks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day"
+        ],
+        "title": "DayContextSchema",
+        "description": "API schema for DayContext value object."
+      },
+      "DayOfWeek": {
+        "type": "integer",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "title": "DayOfWeek"
+      },
+      "DaySchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DayStatus"
+          },
+          "scheduled_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled At"
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/DayTag"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DayTemplateSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "goals": {
+            "items": {
+              "$ref": "#/components/schemas/GoalSchema"
+            },
+            "type": "array",
+            "title": "Goals"
+          },
+          "brain_dump_items": {
+            "items": {
+              "$ref": "#/components/schemas/BrainDumpItemSchema"
+            },
+            "type": "array",
+            "title": "Brain Dump Items"
+          },
+          "high_level_plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HighLevelPlanSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "date",
+          "status"
+        ],
+        "title": "DaySchema",
+        "description": "API schema for Day entity."
+      },
+      "DayStatus": {
+        "type": "string",
+        "enum": [
+          "UNSCHEDULED",
+          "SCHEDULED",
+          "STARTED",
+          "COMPLETE"
+        ],
+        "title": "DayStatus"
+      },
+      "DayTag": {
+        "type": "string",
+        "enum": [
+          "WEEKEND",
+          "VACATION",
+          "WORKDAY"
+        ],
+        "title": "DayTag"
+      },
+      "DayTemplateCreateSchema": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "routine_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Routine Ids"
+          },
+          "time_blocks": {
+            "items": {
+              "$ref": "#/components/schemas/DayTemplateTimeBlockSchema"
+            },
+            "type": "array",
+            "title": "Time Blocks"
+          },
+          "high_level_plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HighLevelPlanSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug"
+        ],
+        "title": "DayTemplateCreateSchema",
+        "description": "API schema for creating a DayTemplate entity."
+      },
+      "DayTemplateQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          }
+        },
+        "type": "object",
+        "title": "DayTemplateQuery"
+      },
+      "DayTemplateRoutineCreateSchema": {
+        "properties": {
+          "routine_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Routine Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "routine_id"
+        ],
+        "title": "DayTemplateRoutineCreateSchema",
+        "description": "API schema for attaching a routine to a day template."
+      },
+      "DayTemplateSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "routine_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Routine Ids"
+          },
+          "time_blocks": {
+            "items": {
+              "$ref": "#/components/schemas/DayTemplateTimeBlockSchema"
+            },
+            "type": "array",
+            "title": "Time Blocks"
+          },
+          "high_level_plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HighLevelPlanSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "user_id"
+        ],
+        "title": "DayTemplateSchema",
+        "description": "API schema for DayTemplate entity."
+      },
+      "DayTemplateTimeBlockCreateSchema": {
+        "properties": {
+          "time_block_definition_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Time Block Definition Id"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "time",
+            "title": "End Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time_block_definition_id",
+          "start_time",
+          "end_time"
+        ],
+        "title": "DayTemplateTimeBlockCreateSchema",
+        "description": "API schema for adding a time block to a day template."
+      },
+      "DayTemplateTimeBlockSchema": {
+        "properties": {
+          "time_block_definition_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Time Block Definition Id"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "time",
+            "title": "End Time"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time_block_definition_id",
+          "start_time",
+          "end_time",
+          "name"
+        ],
+        "title": "DayTemplateTimeBlockSchema",
+        "description": "API schema for a time block in a day template."
+      },
+      "DayTemplateUpdateSchema": {
+        "properties": {
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "routine_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routine Ids"
+          },
+          "time_blocks": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DayTemplateTimeBlockSchema"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Blocks"
+          },
+          "high_level_plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HighLevelPlanSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "DayTemplateUpdateSchema",
+        "description": "API schema for DayTemplate update requests."
+      },
+      "EarlyAccessRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "EarlyAccessRequest",
+        "description": "Request body for early access opt-in."
+      },
+      "ErrorModel": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorModel"
+      },
+      "EventCategory": {
+        "type": "string",
+        "enum": [
+          "WORK",
+          "PERSONAL",
+          "FAMILY",
+          "SOCIAL",
+          "OTHER"
+        ],
+        "title": "EventCategory"
+      },
+      "GoalSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GoalStatus"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "status"
+        ],
+        "title": "GoalSchema",
+        "description": "API schema for Goal value object."
+      },
+      "GoalStatus": {
+        "type": "string",
+        "enum": [
+          "INCOMPLETE",
+          "COMPLETE",
+          "PUNT"
+        ],
+        "title": "GoalStatus",
+        "description": "Status of a goal."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HighLevelPlanSchema": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "title": "HighLevelPlanSchema",
+        "description": "API schema for high level plan value object."
+      },
+      "PagedResponseSchema_CalendarEntrySeriesSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarEntrySeriesSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedResponseSchema[CalendarEntrySeriesSchema]"
+      },
+      "PagedResponseSchema_CalendarSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedResponseSchema[CalendarSchema]"
+      },
+      "PagedResponseSchema_DayTemplateSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DayTemplateSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedResponseSchema[DayTemplateSchema]"
+      },
+      "PagedResponseSchema_PushSubscriptionSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PushSubscriptionSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedResponseSchema[PushSubscriptionSchema]"
+      },
+      "PagedResponseSchema_RoutineSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedResponseSchema[RoutineSchema]"
+      },
+      "PagedResponseSchema_TaskDefinitionSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TaskDefinitionSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedResponseSchema[TaskDefinitionSchema]"
+      },
+      "PagedResponseSchema_TimeBlockDefinitionSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TimeBlockDefinitionSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedResponseSchema[TimeBlockDefinitionSchema]"
+      },
+      "PushSubscriptionCreateSchema": {
+        "properties": {
+          "device_name": {
+            "type": "string",
+            "title": "Device Name"
+          },
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/PushSubscriptionKeysSchema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_name",
+          "endpoint",
+          "keys"
+        ],
+        "title": "PushSubscriptionCreateSchema",
+        "description": "API schema for PushSubscription create requests."
+      },
+      "PushSubscriptionKeysSchema": {
+        "properties": {
+          "p256dh": {
+            "type": "string",
+            "title": "P256Dh"
+          },
+          "auth": {
+            "type": "string",
+            "title": "Auth"
+          }
+        },
+        "type": "object",
+        "required": [
+          "p256dh",
+          "auth"
+        ],
+        "title": "PushSubscriptionKeysSchema",
+        "description": "API schema for push subscription keys."
+      },
+      "PushSubscriptionQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          }
+        },
+        "type": "object",
+        "title": "PushSubscriptionQuery"
+      },
+      "PushSubscriptionSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "device_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Name"
+          },
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint"
+          },
+          "p256dh": {
+            "type": "string",
+            "title": "P256Dh"
+          },
+          "auth": {
+            "type": "string",
+            "title": "Auth"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "endpoint",
+          "p256dh",
+          "auth",
+          "created_at"
+        ],
+        "title": "PushSubscriptionSchema",
+        "description": "API schema for PushSubscription entity."
+      },
+      "PushSubscriptionUpdateSchema": {
+        "properties": {
+          "device_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Name"
+          }
+        },
+        "type": "object",
+        "title": "PushSubscriptionUpdateSchema",
+        "description": "API schema for PushSubscription update requests."
+      },
+      "QuerySchema_CalendarEntrySeriesQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalendarEntrySeriesQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[CalendarEntrySeriesQuery]"
+      },
+      "QuerySchema_CalendarQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalendarQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[CalendarQuery]"
+      },
+      "QuerySchema_DayTemplateQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DayTemplateQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[DayTemplateQuery]"
+      },
+      "QuerySchema_PushSubscriptionQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PushSubscriptionQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[PushSubscriptionQuery]"
+      },
+      "QuerySchema_RoutineQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoutineQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[RoutineQuery]"
+      },
+      "QuerySchema_TaskDefinitionQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskDefinitionQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[TaskDefinitionQuery]"
+      },
+      "QuerySchema_TimeBlockDefinitionQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeBlockDefinitionQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[TimeBlockDefinitionQuery]"
+      },
+      "RoutineCreateSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category": {
+            "$ref": "#/components/schemas/TaskCategory"
+          },
+          "routine_schedule": {
+            "$ref": "#/components/schemas/RoutineScheduleSchema"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineTaskSchema-Input"
+            },
+            "type": "array",
+            "title": "Tasks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "category",
+          "routine_schedule"
+        ],
+        "title": "RoutineCreateSchema",
+        "description": "API schema for creating a Routine entity."
+      },
+      "RoutineQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          }
+        },
+        "type": "object",
+        "title": "RoutineQuery"
+      },
+      "RoutineScheduleSchema": {
+        "properties": {
+          "frequency": {
+            "$ref": "#/components/schemas/TaskFrequency"
+          },
+          "weekdays": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DayOfWeek"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekdays"
+          },
+          "day_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "frequency"
+        ],
+        "title": "RoutineScheduleSchema",
+        "description": "API schema for RoutineSchedule value object."
+      },
+      "RoutineSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category": {
+            "$ref": "#/components/schemas/TaskCategory"
+          },
+          "routine_schedule": {
+            "$ref": "#/components/schemas/RoutineScheduleSchema"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineTaskSchema-Output"
+            },
+            "type": "array",
+            "title": "Tasks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "name",
+          "category",
+          "routine_schedule"
+        ],
+        "title": "RoutineSchema",
+        "description": "API schema for Routine entity."
+      },
+      "RoutineTaskCreateSchema": {
+        "properties": {
+          "task_definition_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Definition Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_definition_id"
+        ],
+        "title": "RoutineTaskCreateSchema",
+        "description": "API schema for attaching a RoutineTask."
+      },
+      "RoutineTaskSchema-Input": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "task_definition_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Definition Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_definition_id"
+        ],
+        "title": "RoutineTaskSchema",
+        "description": "API schema for RoutineTask value object."
+      },
+      "RoutineTaskSchema-Output": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "task_definition_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Definition Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_definition_id"
+        ],
+        "title": "RoutineTaskSchema",
+        "description": "API schema for RoutineTask value object."
+      },
+      "RoutineTaskUpdateSchema": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "RoutineTaskUpdateSchema",
+        "description": "API schema for updating an attached RoutineTask."
+      },
+      "RoutineUpdateSchema": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "routine_schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoutineScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "tasks": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/RoutineTaskSchema-Input"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tasks"
+          }
+        },
+        "type": "object",
+        "title": "RoutineUpdateSchema",
+        "description": "API schema for Routine update requests."
+      },
+      "StatusResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "StatusResponse",
+        "description": "Simple OK response."
+      },
+      "SyncSubscriptionSchema": {
+        "properties": {
+          "subscription_id": {
+            "type": "string",
+            "title": "Subscription Id"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Id"
+          },
+          "expiration": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expiration"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "client_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client State"
+          },
+          "sync_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sync Token"
+          },
+          "webhook_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Webhook Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subscription_id",
+          "expiration",
+          "provider"
+        ],
+        "title": "SyncSubscriptionSchema",
+        "description": "Schema describing a calendar sync subscription."
+      },
+      "TaskCategory": {
+        "type": "string",
+        "enum": [
+          "HYGIENE",
+          "GROOMING",
+          "SLEEP",
+          "HEALTH",
+          "FITNESS",
+          "MEDICAL",
+          "NUTRITION",
+          "COOKING",
+          "HOUSE",
+          "CLEANING",
+          "MAINTENANCE",
+          "ORGANIZATION",
+          "WORK",
+          "MEETING",
+          "PROFESSIONAL",
+          "FAMILY",
+          "SOCIAL",
+          "RELATIONSHIP",
+          "SHOPPING",
+          "ERRAND",
+          "COMMUTE",
+          "TRAVEL",
+          "ENTERTAINMENT",
+          "HOBBY",
+          "RECREATION",
+          "EDUCATION",
+          "LEARNING",
+          "FINANCE",
+          "BILLS",
+          "TECHNOLOGY",
+          "DIGITAL",
+          "PET",
+          "PLANNING",
+          "ADMIN"
+        ],
+        "title": "TaskCategory"
+      },
+      "TaskDefinitionCreateSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TaskType"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "type"
+        ],
+        "title": "TaskDefinitionCreateSchema",
+        "description": "API schema for creating a TaskDefinition entity."
+      },
+      "TaskDefinitionQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          }
+        },
+        "type": "object",
+        "title": "TaskDefinitionQuery"
+      },
+      "TaskDefinitionSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TaskType"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "type",
+          "user_id"
+        ],
+        "title": "TaskDefinitionSchema",
+        "description": "API schema for TaskDefinition entity."
+      },
+      "TaskDefinitionUpdateSchema": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "TaskDefinitionUpdateSchema",
+        "description": "API schema for TaskDefinition update requests."
+      },
+      "TaskFrequency": {
+        "type": "string",
+        "enum": [
+          "DAILY",
+          "CUSTOM_WEEKLY",
+          "WEEKLY",
+          "ONCE",
+          "YEARLY",
+          "MONTHLY",
+          "BI_WEEKLY",
+          "WORK_DAYS",
+          "WEEKENDS"
+        ],
+        "title": "TaskFrequency"
+      },
+      "TaskScheduleSchema": {
+        "properties": {
+          "available_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Time"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "timing_type": {
+            "$ref": "#/components/schemas/TimingType"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timing_type"
+        ],
+        "title": "TaskScheduleSchema",
+        "description": "API schema for TaskSchedule value object."
+      },
+      "TaskSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "scheduled_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Scheduled Date"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TaskType"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "category": {
+            "$ref": "#/components/schemas/TaskCategory"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/TaskFrequency"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "routine_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Routine Id"
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/TaskTag"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/ActionSchema"
+            },
+            "type": "array",
+            "title": "Actions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "scheduled_date",
+          "name",
+          "status",
+          "type",
+          "category",
+          "frequency"
+        ],
+        "title": "TaskSchema",
+        "description": "API schema for Task entity."
+      },
+      "TaskStatus": {
+        "type": "string",
+        "enum": [
+          "COMPLETE",
+          "NOT_READY",
+          "READY",
+          "PUNT",
+          "NOT_STARTED",
+          "PENDING"
+        ],
+        "title": "TaskStatus"
+      },
+      "TaskTag": {
+        "type": "string",
+        "enum": [
+          "AVOIDANT",
+          "FORGETTABLE",
+          "IMPORTANT",
+          "URGENT",
+          "FUN"
+        ],
+        "title": "TaskTag"
+      },
+      "TaskType": {
+        "type": "string",
+        "enum": [
+          "MEAL",
+          "WORK",
+          "MEETING",
+          "EXERCISE",
+          "EVENT",
+          "SOCIAL",
+          "CHORE",
+          "ERRAND",
+          "SHOPPING",
+          "PERSONAL_CARE",
+          "ACTIVITY",
+          "ENTERTAINMENT",
+          "LEARNING",
+          "COMMUTE",
+          "TRAVEL",
+          "APPOINTMENT",
+          "COMMUNICATION",
+          "FINANCIAL",
+          "MAINTENANCE",
+          "PLANNING",
+          "TECHNOLOGY"
+        ],
+        "title": "TaskType"
+      },
+      "TimeBlockCategory": {
+        "type": "string",
+        "enum": [
+          "WORK",
+          "PROFESSIONAL",
+          "MEETING",
+          "PERSONAL_CARE",
+          "HEALTH",
+          "FITNESS",
+          "NUTRITION",
+          "SLEEP",
+          "HOUSEHOLD",
+          "CHORES",
+          "MAINTENANCE",
+          "FAMILY",
+          "SOCIAL",
+          "RELATIONSHIP",
+          "ENTERTAINMENT",
+          "HOBBY",
+          "RECREATION",
+          "EDUCATION",
+          "LEARNING",
+          "COMMUTE",
+          "TRAVEL",
+          "PLANNING",
+          "ADMIN",
+          "OTHER"
+        ],
+        "title": "TimeBlockCategory"
+      },
+      "TimeBlockDefinitionCreateSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TimeBlockType"
+          },
+          "category": {
+            "$ref": "#/components/schemas/TimeBlockCategory"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "type",
+          "category"
+        ],
+        "title": "TimeBlockDefinitionCreateSchema",
+        "description": "API schema for creating a TimeBlockDefinition."
+      },
+      "TimeBlockDefinitionQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          }
+        },
+        "type": "object",
+        "title": "TimeBlockDefinitionQuery"
+      },
+      "TimeBlockDefinitionSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TimeBlockType"
+          },
+          "category": {
+            "$ref": "#/components/schemas/TimeBlockCategory"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "name",
+          "description",
+          "type",
+          "category"
+        ],
+        "title": "TimeBlockDefinitionSchema",
+        "description": "API schema for TimeBlockDefinition entity."
+      },
+      "TimeBlockDefinitionUpdateSchema": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeBlockType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeBlockCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "TimeBlockDefinitionUpdateSchema",
+        "description": "API schema for TimeBlockDefinition update requests."
+      },
+      "TimeBlockType": {
+        "type": "string",
+        "enum": [
+          "WORK",
+          "BREAK",
+          "MEAL",
+          "EXERCISE",
+          "COMMUTE",
+          "MEETING",
+          "FOCUS",
+          "ADMIN",
+          "CREATIVE",
+          "LEARNING",
+          "SOCIAL",
+          "PERSONAL",
+          "ROUTINE",
+          "SLEEP",
+          "OTHER"
+        ],
+        "title": "TimeBlockType"
+      },
+      "TimingType": {
+        "type": "string",
+        "enum": [
+          "DEADLINE",
+          "FIXED_TIME",
+          "TIME_WINDOW",
+          "FLEXIBLE"
+        ],
+        "title": "TimingType"
+      },
+      "UserCreate": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "default": true
+          },
+          "is_superuser": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Superuser",
+            "default": false
+          },
+          "is_verified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Verified",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "UserCreate",
+        "description": "Schema for creating a new user."
+      },
+      "UserRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "is_superuser": {
+            "type": "boolean",
+            "title": "Is Superuser",
+            "default": false
+          },
+          "is_verified": {
+            "type": "boolean",
+            "title": "Is Verified",
+            "default": false
+          },
+          "phone_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email"
+        ],
+        "title": "UserRead",
+        "description": "Schema for reading user data."
+      },
+      "UserSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "phone_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
+          },
+          "status": {
+            "$ref": "#/components/schemas/UserStatus"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "is_superuser": {
+            "type": "boolean",
+            "title": "Is Superuser"
+          },
+          "is_verified": {
+            "type": "boolean",
+            "title": "Is Verified"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/UserSettingsSchema"
+          },
+          "default_conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Conversation Id"
+          },
+          "sms_conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sms Conversation Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "status",
+          "is_active",
+          "is_superuser",
+          "is_verified",
+          "settings",
+          "created_at"
+        ],
+        "title": "UserSchema",
+        "description": "Schema for the current authenticated user."
+      },
+      "UserSettingsSchema": {
+        "properties": {
+          "template_defaults": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Template Defaults"
+          }
+        },
+        "type": "object",
+        "required": [
+          "template_defaults"
+        ],
+        "title": "UserSettingsSchema",
+        "description": "Schema for user settings."
+      },
+      "UserSettingsUpdateSchema": {
+        "properties": {
+          "template_defaults": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "maxItems": 7,
+                "minItems": 7
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Defaults"
+          }
+        },
+        "type": "object",
+        "title": "UserSettingsUpdateSchema",
+        "description": "Schema for updating user settings."
+      },
+      "UserStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "new-lead"
+        ],
+        "title": "UserStatus",
+        "description": "Lifecycle status for a user/account record."
+      },
+      "UserUpdateSchema": {
+        "properties": {
+          "phone_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "is_superuser": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Superuser"
+          },
+          "is_verified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Verified"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserSettingsUpdateSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "default_conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Conversation Id"
+          },
+          "sms_conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sms Conversation Id"
+          }
+        },
+        "type": "object",
+        "title": "UserUpdateSchema",
+        "description": "Schema for updating a user profile."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "lykke_auth"
+      }
+    }
+  }
+}

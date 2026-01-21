@@ -1,0 +1,5 @@
+- name: {{ entry.name }}
+  status: {{ entry.status }}
+  {{- kv_line("  ", "category", entry.category and entry.category.value) -}}
+  starts_at: {{ fmt_datetime(entry.starts_at) }}
+  {{- kv_line("  ", "ends_at", entry.ends_at and fmt_datetime(entry.ends_at)) -}}
