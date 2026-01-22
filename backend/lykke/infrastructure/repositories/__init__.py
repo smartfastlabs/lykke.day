@@ -16,6 +16,7 @@ from .task import TaskRepository
 from .task_definition import TaskDefinitionRepository
 from .template import TemplateRepository
 from .time_block_definition import TimeBlockDefinitionRepository
+from .usecase_config import UseCaseConfigRepository
 from .user import UserRepository
 
 __all__ = [
@@ -37,5 +38,6 @@ __all__ = [
     "TaskRepository",
     "TemplateRepository",
     "TimeBlockDefinitionRepository",
+    "UseCaseConfigRepository",
     "UserRepository",
 ]

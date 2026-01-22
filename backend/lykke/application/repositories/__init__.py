@@ -73,6 +73,10 @@ from .time_block_definition_repository import (
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
     TimeBlockDefinitionRepositoryReadWriteProtocol,
 )
+from .usecase_config_repository import (
+    UseCaseConfigRepositoryReadOnlyProtocol,
+    UseCaseConfigRepositoryReadWriteProtocol,
+)
 from .user_repository import (
     UserRepositoryReadOnlyProtocol,
     UserRepositoryReadWriteProtocol,
@@ -115,6 +119,8 @@ __all__ = [
     "TemplateRepositoryReadWriteProtocol",
     "TimeBlockDefinitionRepositoryReadOnlyProtocol",
     "TimeBlockDefinitionRepositoryReadWriteProtocol",
+    "UseCaseConfigRepositoryReadOnlyProtocol",
+    "UseCaseConfigRepositoryReadWriteProtocol",
     "UserRepositoryReadOnlyProtocol",
     "UserRepositoryReadWriteProtocol",
 ]

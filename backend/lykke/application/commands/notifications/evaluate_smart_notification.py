@@ -119,6 +119,7 @@ class SmartNotificationHandler(BaseCommandHandler[SmartNotificationCommand, None
             current_time,
             template_repo=self.template_ro_repo,
             user_id=command.user_id,
+            usecase_config_repo=self.usecase_config_ro_repo,
         )
 
         # Get LLM gateway

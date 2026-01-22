@@ -130,6 +130,13 @@ class TemplateQuery(BaseQuery):
 
 
 @dataclass(kw_only=True)
+class UseCaseConfigQuery(BaseQuery):
+    """Query class for UseCaseConfig entities."""
+
+    usecase: str | None = None
+
+
+@dataclass(kw_only=True)
 class TimeBlockDefinitionQuery(BaseQuery):
     """Query class for TimeBlockDefinition entities."""
 

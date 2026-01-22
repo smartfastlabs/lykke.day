@@ -69,6 +69,22 @@ from lykke.application.repositories import TaskRepositoryReadOnlyProtocol
 - Use `freezegun` for time-dependent tests
 - Test fixtures go in `tests/conftest.py` or layer-specific conftest
 
+### CRITICAL: When Adding New Repositories
+
+**If you add a new repository to `ReadOnlyRepositories` protocol, you MUST:**
+
+1. **Add it to `UnitOfWorkProtocol`** in `application/unit_of_work.py`
+2. **Add it to `ReadOnlyRepositories` protocol** in `application/unit_of_work.py`
+3. **Add it to `BaseHandler`** in `application/base_handler.py`
+4. **Add it to `SqlAlchemyUnitOfWork`** in `infrastructure/unit_of_work.py`
+5. **Add it to `SqlAlchemyReadOnlyRepositories`** in `infrastructure/unit_of_work.py`
+6. **Update ALL test fixtures** that mock `ReadOnlyRepositories`:
+   - Search for `class.*FakeReadOnlyRepos` and `class.*DummyRORepos` in `tests/`
+   - Add `self.{repo_name}_ro_repo = fake` (or `None`) to ALL of them
+   - Common locations: `tests/unit/application/**/*.py`, `tests/unit/gateways/**/*.py`
+
+**Failure to do step 6 will cause ALL tests to fail with AttributeError.**
+
 ## Type Checking
 
 The project uses strict mypy settings. Key rules:

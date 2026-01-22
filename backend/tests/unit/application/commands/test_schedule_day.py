@@ -107,6 +107,7 @@ class _FakeReadOnlyRepos:
         self.time_block_definition_ro_repo = (
             time_block_definition_repo if time_block_definition_repo else fake
         )
+        self.usecase_config_ro_repo = fake
         self.user_ro_repo = fake
 
 

@@ -63,6 +63,11 @@ from .template import (
     TemplateSchema,
     TemplateUpdateSchema,
 )
+from .usecase_config import (
+    NotificationUseCaseConfigSchema,
+    UseCaseConfigCreateSchema,
+    UseCaseConfigSchema,
+)
 from .time_block_definition import (
     TimeBlockDefinitionCreateSchema,
     TimeBlockDefinitionSchema,
@@ -195,6 +200,9 @@ __all__ = [
     "TemplateUpdateSchema",
     "TaskScheduleSchema",
     "TaskSchema",
+    "NotificationUseCaseConfigSchema",
+    "UseCaseConfigCreateSchema",
+    "UseCaseConfigSchema",
     "TimeBlockDefinitionCreateSchema",
     "TimeBlockDefinitionSchema",
     "TimeBlockDefinitionUpdateSchema",

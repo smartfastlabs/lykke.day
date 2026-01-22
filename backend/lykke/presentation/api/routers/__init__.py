@@ -16,6 +16,7 @@ from . import (
     templates,
     time_block_definitions,
     twilio,
+    usecase_config,
 )
 
 router = APIRouter()
@@ -96,6 +97,10 @@ router.include_router(
 router.include_router(
     templates.router,
     tags=["templates"],
+)
+router.include_router(
+    usecase_config.router,
+    tags=["usecase-configs"],
 )
 router.include_router(
     twilio.router,

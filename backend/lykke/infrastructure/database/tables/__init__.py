@@ -19,6 +19,7 @@ from .task_definitions import TaskDefinition
 from .templates import Template
 from .tasks import Task
 from .time_block_definitions import TimeBlockDefinition
+from .usecase_config import UseCaseConfig
 from .users import User
 
 # Export table objects for Core-style queries
@@ -40,6 +41,7 @@ task_definitions_tbl = TaskDefinition.__table__
 templates_tbl = Template.__table__
 tasks_tbl = Task.__table__
 time_block_definitions_tbl = TimeBlockDefinition.__table__
+usecase_configs_tbl = UseCaseConfig.__table__
 users_tbl = User.__table__
 
 __all__ = [
@@ -65,6 +67,7 @@ __all__ = [
     "TaskDefinition",
     "Template",
     "TimeBlockDefinition",
+    "UseCaseConfig",
     "User",
     # Table objects (for Core-style queries)
     "audit_logs_tbl",
@@ -85,5 +88,6 @@ __all__ = [
     "templates_tbl",
     "tasks_tbl",
     "time_block_definitions_tbl",
+    "usecase_configs_tbl",
     "users_tbl",
 ]

@@ -184,6 +184,7 @@ def mock_ro_repos(
             self.task_ro_repo = None
             self.template_ro_repo = None
             self.time_block_definition_ro_repo = None
+            self.usecase_config_ro_repo = None
             self.user_ro_repo = None
 
     return DummyRORepos()

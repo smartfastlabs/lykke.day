@@ -30,6 +30,7 @@ from lykke.application.repositories import (
     TaskRepositoryReadOnlyProtocol,
     TemplateRepositoryReadOnlyProtocol,
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
+    UseCaseConfigRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
 )
 from lykke.domain import value_objects
@@ -77,6 +78,7 @@ class UnitOfWorkProtocol(Protocol):
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     template_ro_repo: TemplateRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
+    usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
     async def __aenter__(self) -> Self:
@@ -225,6 +227,7 @@ class ReadOnlyRepositories(Protocol):
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     template_ro_repo: TemplateRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
+    usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
 

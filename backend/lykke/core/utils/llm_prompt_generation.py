@@ -1,11 +1,15 @@
 """Utility for generating LLM prompts for use cases."""
 from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from lykke.application.llm_usecases.base import BaseUseCase
 from lykke.application.repositories import TemplateRepositoryReadOnlyProtocol
 from lykke.core.utils.templates import render_for_user
 from lykke.domain import value_objects
+
+if TYPE_CHECKING:
+    from lykke.application.repositories import UseCaseConfigRepositoryReadOnlyProtocol
 
 
 async def generate_usecase_prompts(
@@ -14,6 +18,7 @@ async def generate_usecase_prompts(
     current_time: datetime,
     template_repo: TemplateRepositoryReadOnlyProtocol,
     user_id: UUID,
+    usecase_config_repo: "UseCaseConfigRepositoryReadOnlyProtocol | None" = None,
 ) -> tuple[str, str, str]:
     """Generate system, context, and ask prompts for an LLM use case.
 
@@ -23,6 +28,7 @@ async def generate_usecase_prompts(
         current_time: The current datetime
         template_repo: Template repository for user overrides
         user_id: The user ID for template scoping
+        usecase_config_repo: Optional usecase config repository for user amendments
 
     Returns:
         A tuple of (system_prompt, context_prompt, ask_prompt)
@@ -34,6 +40,23 @@ async def generate_usecase_prompts(
         template_repo=template_repo,
         user_id=user_id,
     )
+
+    # Append user amendments if available
+    if usecase_config_repo:
+        configs = await usecase_config_repo.search(
+            value_objects.UseCaseConfigQuery(usecase=usecase.template_usecase)
+        )
+        if configs:
+            config = configs[0].config
+            # For notification usecase, extract user_amendments
+            if usecase.template_usecase == "notification":
+                user_amendments = config.get("user_amendments", [])
+                if isinstance(user_amendments, list) and user_amendments:
+                    system_prompt += "\n\n# User Customizations\n"
+                    system_prompt += "**These are supplied by the user and should override your default behaviour**\n\n"
+                    for amendment in user_amendments:
+                        system_prompt += f"- {amendment}\n"
+
     context_prompt = await render_for_user(
         usecase.template_usecase,
         "context",

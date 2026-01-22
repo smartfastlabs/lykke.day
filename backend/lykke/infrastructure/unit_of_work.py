@@ -48,6 +48,8 @@ from lykke.application.repositories import (
     TemplateRepositoryReadOnlyProtocol,
     TemplateRepositoryReadWriteProtocol,
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
+    UseCaseConfigRepositoryReadOnlyProtocol,
+    UseCaseConfigRepositoryReadWriteProtocol,
     TimeBlockDefinitionRepositoryReadWriteProtocol,
     UserRepositoryReadOnlyProtocol,
     UserRepositoryReadWriteProtocol,
@@ -114,6 +116,7 @@ from lykke.infrastructure.repositories import (
     TaskRepository,
     TemplateRepository,
     TimeBlockDefinitionRepository,
+    UseCaseConfigRepository,
     UserRepository,
 )
 
@@ -386,6 +389,15 @@ class SqlAlchemyUnitOfWork:
             "TimeBlockDefinitionRepositoryReadOnlyProtocol", time_block_definition_repo
         )
         self._time_block_definition_rw_repo = time_block_definition_repo
+
+        usecase_config_repo = cast(
+            "UseCaseConfigRepositoryReadWriteProtocol",
+            UseCaseConfigRepository(user_id=self.user_id),
+        )
+        self.usecase_config_ro_repo = cast(
+            "UseCaseConfigRepositoryReadOnlyProtocol", usecase_config_repo
+        )
+        self._usecase_config_rw_repo = usecase_config_repo
 
         # Chatbot-related repositories
         bot_personality_repo = cast(
@@ -1101,6 +1113,12 @@ class SqlAlchemyReadOnlyRepositories:
             TimeBlockDefinitionRepository(user_id=self.user_id),
         )
         self.time_block_definition_ro_repo = time_block_definition_repo
+
+        usecase_config_repo = cast(
+            "UseCaseConfigRepositoryReadOnlyProtocol",
+            UseCaseConfigRepository(user_id=self.user_id),
+        )
+        self.usecase_config_ro_repo = usecase_config_repo
 
         # Chatbot-related repositories
         bot_personality_repo = cast(

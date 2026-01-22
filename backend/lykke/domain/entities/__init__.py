@@ -18,6 +18,7 @@ from .task import TaskEntity
 from .task_definition import TaskDefinitionEntity
 from .template import TemplateEntity
 from .time_block_definition import TimeBlockDefinitionEntity
+from .usecase_config import UseCaseConfigEntity
 from .user import UserEntity
 
 __all__ = [
@@ -42,5 +43,6 @@ __all__ = [
     "TaskDefinitionEntity",
     "TemplateEntity",
     "TimeBlockDefinitionEntity",
+    "UseCaseConfigEntity",
     "UserEntity",
 ]

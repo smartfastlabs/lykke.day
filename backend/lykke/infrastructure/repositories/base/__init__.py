@@ -11,6 +11,7 @@ DateQuery = value_objects.DateQuery
 DayTemplateQuery = value_objects.DayTemplateQuery
 TaskQuery = value_objects.TaskQuery
 TemplateQuery = value_objects.TemplateQuery
+UseCaseConfigQuery = value_objects.UseCaseConfigQuery
 UserQuery = value_objects.UserQuery
 
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     "DayTemplateQuery",
     "TaskQuery",
     "TemplateQuery",
+    "UseCaseConfigQuery",
     "UserQuery",
     "UserScopedBaseRepository",
 ]

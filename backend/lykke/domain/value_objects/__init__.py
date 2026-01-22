@@ -45,6 +45,7 @@ from .query import (
     TaskQuery,
     TemplateQuery,
     TimeBlockDefinitionQuery,
+    UseCaseConfigQuery,
     UserQuery,
 )
 from .routine import DayOfWeek, RecurrenceSchedule, RoutineTask
@@ -81,6 +82,7 @@ from .update import (
     TimeBlockDefinitionUpdateObject,
     UserUpdateObject,
 )
+from .usecase_config import NotificationUseCaseConfig
 from .user import UserSetting, UserStatus
 
 __all__ = [
@@ -148,6 +150,7 @@ __all__ = [
     "TemplateQuery",
     "TaskDefinitionUpdateObject",
     "TemplateUpdateObject",
+    "UseCaseConfigQuery",
     "TaskFrequency",
     "TaskQuery",
     "TaskSchedule",
@@ -163,4 +166,5 @@ __all__ = [
     "UserSetting",
     "UserStatus",
     "UserUpdateObject",
+    "NotificationUseCaseConfig",
 ]
