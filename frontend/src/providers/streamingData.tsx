@@ -44,6 +44,7 @@ interface StreamingDataContextValue {
   syncIncremental: (sinceTimestamp: string) => void;
   setTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
   setRoutineAction: (routineId: string, status: TaskStatus) => Promise<void>;
+  addRoutineToToday: (routineId: string) => Promise<void>;
   addReminder: (name: string) => Promise<void>;
   updateReminderStatus: (reminder: Reminder, status: ReminderStatus) => Promise<void>;
   removeReminder: (reminderId: string) => Promise<void>;
@@ -610,6 +611,11 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
+  const addRoutineToToday = async (routineId: string): Promise<void> => {
+    const context = await routineAPI.addToToday(routineId);
+    setDayContextStore({ data: context });
+  };
+
   // Optimistically update reminders in local state
   const updateRemindersLocally = (updatedReminders: Reminder[]) => {
     setDayContextStore((current) => {
@@ -769,6 +775,7 @@ export function StreamingDataProvider(props: ParentProps) {
     syncIncremental,
     setTaskStatus,
     setRoutineAction,
+    addRoutineToToday,
     addReminder,
     updateReminderStatus,
     removeReminder,

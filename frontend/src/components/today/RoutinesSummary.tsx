@@ -8,11 +8,13 @@ import {
   faHeart,
   faChevronDown,
   faChevronRight,
+  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
-import type { Task } from "@/types/api";
+import type { Routine, Task } from "@/types/api";
 import { useStreamingData } from "@/providers/streamingData";
 import { SwipeableItem } from "@/components/shared/SwipeableItem";
 import TaskList from "@/components/tasks/List";
+import { routineAPI } from "@/utils/api";
 
 export interface RoutinesSummaryProps {
   tasks: Task[];
@@ -30,12 +32,16 @@ interface RoutineGroup {
 
 export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
   // Get routines, setTaskStatus, and setRoutineAction from StreamingDataProvider
-  const { routines, setRoutineAction } = useStreamingData();
+  const { routines, setRoutineAction, addRoutineToToday } = useStreamingData();
 
   // Track which routines are expanded (persists across re-renders)
   const [expandedRoutines, setExpandedRoutines] = createSignal<Set<string>>(
     new Set()
   );
+  const [showAddRoutine, setShowAddRoutine] = createSignal(false);
+  const [isAddingRoutine, setIsAddingRoutine] = createSignal(false);
+  const [fetchedRoutines, setFetchedRoutines] = createSignal<Routine[]>([]);
+  const [isLoadingRoutines, setIsLoadingRoutines] = createSignal(false);
 
   const toggleRoutineExpanded = (routineId: string) => {
     setExpandedRoutines((prev) => {
@@ -53,17 +59,23 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
     return expandedRoutines().has(routineId);
   };
 
+  const routineSource = createMemo(() => {
+    const routineList = routines() ?? [];
+    if (routineList.length > 0) {
+      return routineList;
+    }
+    return fetchedRoutines();
+  });
+
   // Create a map of routine ID to routine name
   const routineMap = createMemo(() => {
     const map = new Map<string, string>();
-    const routineList = routines();
-    if (routineList) {
-      routineList.forEach((routine) => {
-        if (routine.id) {
-          map.set(routine.id, routine.name);
-        }
-      });
-    }
+    const routineList = routineSource();
+    routineList.forEach((routine) => {
+      if (routine.id) {
+        map.set(routine.id, routine.name);
+      }
+    });
     return map;
   });
 
@@ -113,6 +125,20 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
   });
 
   const hasRoutines = createMemo(() => routineGroups().length > 0);
+  const routineIdsInTasks = createMemo(() => {
+    const ids = new Set<string>();
+    props.tasks.forEach((task) => {
+      if (task.routine_id) {
+        ids.add(task.routine_id);
+      }
+    });
+    return ids;
+  });
+  const availableRoutines = createMemo(() => {
+    const routineList = routineSource();
+    const usedIds = routineIdsInTasks();
+    return routineList.filter((routine) => routine.id && !usedIds.has(routine.id));
+  });
 
   const getRoutineIcon = (name: string) => {
     const lowerName = name.toLowerCase();
@@ -124,15 +150,56 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
     return faLeaf;
   };
 
+  const handleAddRoutine = async (routineId: string) => {
+    if (isAddingRoutine()) return;
+    setIsAddingRoutine(true);
+    try {
+      await addRoutineToToday(routineId);
+      setShowAddRoutine(false);
+    } finally {
+      setIsAddingRoutine(false);
+    }
+  };
+
+  const handleOpenAddRoutine = async () => {
+    setShowAddRoutine(true);
+    if (isLoadingRoutines()) return;
+    if ((routines() ?? []).length > 0 || fetchedRoutines().length > 0) return;
+
+    setIsLoadingRoutines(true);
+    try {
+      const fetched = await routineAPI.getAll();
+      setFetchedRoutines(fetched);
+    } finally {
+      setIsLoadingRoutines(false);
+    }
+  };
+
   return (
-    <Show when={hasRoutines()}>
+    <>
       <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-6 backdrop-blur-sm">
-        <div class="flex items-center gap-3 mb-5">
-          <Icon icon={faLeaf} class="w-5 h-5 fill-amber-600" />
-          <h3 class="text-lg font-semibold text-stone-800">Routines</h3>
+        <div class="flex items-center justify-between gap-3 mb-5">
+          <div class="flex items-center gap-3">
+            <Icon icon={faLeaf} class="w-5 h-5 fill-amber-600" />
+            <h3 class="text-lg font-semibold text-stone-800">Routines</h3>
+          </div>
+          <button
+            type="button"
+            onClick={handleOpenAddRoutine}
+            class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/80 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Add routine"
+            title="Add routine"
+          >
+            <Icon icon={faPlus} class="w-4 h-4 fill-amber-600/80" />
+          </button>
         </div>
 
         <div class="space-y-4">
+          <Show when={!hasRoutines()}>
+            <div class="text-sm text-stone-500">
+              No routines for today yet. Add one to get started.
+            </div>
+          </Show>
           <For each={routineGroups()}>
             {(routine) => {
               const completionPercentage = () =>
@@ -277,6 +344,60 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
           </For>
         </div>
       </div>
-    </Show>
+      <Show when={showAddRoutine()}>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 px-4">
+          <div class="w-full max-w-md rounded-2xl bg-white shadow-xl shadow-amber-900/10 border border-white/70">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-stone-100">
+              <h4 class="text-base font-semibold text-stone-800">Add a routine</h4>
+              <button
+                type="button"
+                onClick={() => setShowAddRoutine(false)}
+                class="text-stone-400 hover:text-stone-600 transition"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div class="p-4 space-y-2 max-h-80 overflow-y-auto">
+              <Show
+                when={isLoadingRoutines()}
+                fallback={
+                  <Show
+                    when={availableRoutines().length > 0}
+                    fallback={
+                      <div class="text-sm text-stone-500">
+                        {routineSource().length === 0
+                          ? "No routines created yet."
+                          : "All routines are already on today's list."}
+                      </div>
+                    }
+                  >
+                    <For each={availableRoutines()}>
+                      {(routine) => (
+                        <button
+                          type="button"
+                          onClick={() => handleAddRoutine(routine.id)}
+                          disabled={isAddingRoutine()}
+                          class="w-full text-left px-4 py-3 rounded-xl border border-amber-100/70 bg-amber-50/40 text-stone-700 hover:bg-amber-50/70 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          <div class="font-medium">{routine.name}</div>
+                          <Show when={routine.description}>
+                            <div class="text-xs text-stone-500 mt-1">
+                              {routine.description}
+                            </div>
+                          </Show>
+                        </button>
+                      )}
+                    </For>
+                  </Show>
+                }
+              >
+                <div class="text-sm text-stone-500">Loading routines...</div>
+              </Show>
+            </div>
+          </div>
+        </div>
+      </Show>
+    </>
   );
 };

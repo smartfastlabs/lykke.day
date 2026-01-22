@@ -455,6 +455,12 @@ export const routineAPI = {
       method: "POST",
       body: JSON.stringify({ type: action }),
     }),
+  addToToday: (routineId: string): Promise<DayContext> => {
+    const params = new URLSearchParams({ routine_id: routineId });
+    return fetchData<DayContext>(`/api/me/today/routines?${params.toString()}`, {
+      method: "POST",
+    });
+  },
   ...createCrudMethods<Routine>("routines"),
   addTask: (
     routineId: string,

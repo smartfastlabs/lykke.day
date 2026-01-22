@@ -5,6 +5,7 @@ from .add_brain_dump_item import (
     AddBrainDumpItemToDayHandler,
 )
 from .add_reminder import AddReminderToDayCommand, AddReminderToDayHandler
+from .add_routine import AddRoutineToDayCommand, AddRoutineToDayHandler
 from .remove_brain_dump_item import (
     RemoveBrainDumpItemCommand,
     RemoveBrainDumpItemHandler,
@@ -22,6 +23,8 @@ from .update_brain_dump_item_status import (
 __all__ = [
     "AddReminderToDayCommand",
     "AddReminderToDayHandler",
+    "AddRoutineToDayCommand",
+    "AddRoutineToDayHandler",
     "AddBrainDumpItemToDayCommand",
     "AddBrainDumpItemToDayHandler",
     "RemoveReminderCommand",

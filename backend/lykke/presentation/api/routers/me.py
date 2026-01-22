@@ -11,6 +11,8 @@ from lykke.application.commands.day import (
     AddBrainDumpItemToDayHandler,
     AddReminderToDayCommand,
     AddReminderToDayHandler,
+    AddRoutineToDayCommand,
+    AddRoutineToDayHandler,
     RemoveBrainDumpItemCommand,
     RemoveBrainDumpItemHandler,
     RemoveReminderCommand,
@@ -40,6 +42,7 @@ from .dependencies.services import (
     day_context_handler,
     get_add_brain_dump_item_handler,
     get_add_reminder_to_day_handler,
+    get_add_routine_to_day_handler,
     get_remove_brain_dump_item_handler,
     get_remove_reminder_handler,
     get_update_brain_dump_item_status_handler,
@@ -222,6 +225,29 @@ async def remove_brain_dump_item_from_today(
     """Remove a brain dump item from today."""
     date = get_current_date(user.settings.timezone)
     await handler.handle(RemoveBrainDumpItemCommand(date=date, item_id=item_id))
+    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
+    return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
+
+
+# ============================================================================
+# Today's Routines
+# ============================================================================
+
+
+@router.post("/today/routines", response_model=DayContextSchema)
+async def add_routine_to_today(
+    routine_id: UUID,
+    handler: Annotated[
+        AddRoutineToDayHandler, Depends(get_add_routine_to_day_handler)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    day_context_handler_instance: Annotated[
+        GetDayContextHandler, Depends(day_context_handler)
+    ],
+) -> DayContextSchema:
+    """Add a routine's tasks to today."""
+    date = get_current_date(user.settings.timezone)
+    await handler.handle(AddRoutineToDayCommand(date=date, routine_id=routine_id))
     context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
     return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
 

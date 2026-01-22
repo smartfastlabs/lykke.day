@@ -21,6 +21,7 @@ from lykke.application.commands import (
 from lykke.application.commands.day import (
     AddBrainDumpItemToDayHandler,
     AddReminderToDayHandler,
+    AddRoutineToDayHandler,
     RemoveBrainDumpItemHandler,
     RemoveReminderHandler,
     UpdateBrainDumpItemStatusHandler,
@@ -261,6 +262,18 @@ def get_add_reminder_to_day_handler(
     """Get an AddReminderToDayHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
     return AddReminderToDayHandler(ro_repos, uow_factory, user.id)
+
+
+def get_add_routine_to_day_handler(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> AddRoutineToDayHandler:
+    """Get an AddRoutineToDayHandler instance."""
+    ro_repos = ro_repo_factory.create(user.id)
+    return AddRoutineToDayHandler(ro_repos, uow_factory, user.id)
 
 
 def get_update_reminder_status_handler(

@@ -6,6 +6,7 @@ import "@/index.css";
 import { NotificationProvider } from "@/providers/notifications";
 import { AuthProvider } from "@/providers/auth";
 import { AuthGuard } from "@/providers/authGuard";
+import CookieDisclaimer from "@/components/shared/CookieDisclaimer";
 
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -21,6 +22,7 @@ import Apps from "@/pages/Apps";
 import YouTube from "@/pages/YouTube";
 import Podcasts from "@/pages/Podcasts";
 import Resources from "@/pages/Resources";
+import Install from "@/pages/Install";
 import HomeLayout from "@/pages/me/today/Layout";
 import PreviewView from "@/pages/me/today/Preview";
 import TasksView from "@/pages/me/today/Tasks";
@@ -200,6 +202,7 @@ export default function App() {
                 <MetaProvider>
                   <Title>lykke.day</Title>
                   <Suspense>{props.children}</Suspense>
+                  <CookieDisclaimer />
                 </MetaProvider>
               </AuthProvider>
             )}
@@ -213,6 +216,7 @@ export default function App() {
             <Route path="/youtube" component={YouTube} />
             <Route path="/podcasts" component={Podcasts} />
             <Route path="/resources" component={Resources} />
+            <Route path="/install" component={Install} />
             <Route path="/login" component={Login} />
             <Route path="/register" component={Register} />
             <Route path="/forgot-password" component={ForgotPassword} />
