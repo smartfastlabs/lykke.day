@@ -99,6 +99,8 @@ async def test_usecase_config_can_be_updated_through_uow(test_user):
     
     # Update the config
     from datetime import UTC, datetime
+    from lykke.domain.events.base import EntityUpdatedEvent
+    from lykke.domain.value_objects.update import BaseUpdateObject
     
     updated_config = UseCaseConfigEntity(
         id=config_id,
@@ -108,6 +110,8 @@ async def test_usecase_config_can_be_updated_through_uow(test_user):
         created_at=created.created_at,
         updated_at=datetime.now(UTC),
     )
+    # Add EntityUpdatedEvent so UoW knows to update, not insert
+    updated_config.add_event(EntityUpdatedEvent(update_object=BaseUpdateObject()))
     
     async with uow_factory.create(user_id) as uow:
         # This should work if entity is registered

@@ -48,7 +48,12 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
             k: v for k, v in update_object.__dict__.items() if v is not None
         }
         
-        # No need to reconstruct settings since __dict__ preserves the dataclass instance
+        # Merge settings if provided - don't replace entire settings object
+        # The /me endpoint already merges settings correctly, so we just need to ensure
+        # the settings object is properly passed through
+        if "settings" in update_dict and isinstance(update_dict["settings"], value_objects.UserSetting):
+            # Settings are already merged in the /me endpoint, so we can use them directly
+            pass
 
         updated_entity: UserEntity = self.clone(**update_dict)
         updated_entity = updated_entity.clone(updated_at=datetime.now(UTC))

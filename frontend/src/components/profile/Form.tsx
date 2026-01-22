@@ -1,12 +1,6 @@
-import {
-  Component,
-  For,
-  createMemo,
-  createResource,
-  createSignal,
-} from "solid-js";
+import { Component, For, createMemo, createResource, createSignal } from "solid-js";
 import { FormError, Input, Select, SubmitButton } from "@/components/forms";
-import { basePersonalityAPI, dayTemplateAPI } from "@/utils/api";
+import { dayTemplateAPI } from "@/utils/api";
 import type { DayTemplate } from "@/types/api";
 import type {
   CurrentUser,
@@ -33,7 +27,6 @@ interface ProfileFormProps {
 
 const ProfileForm: Component<ProfileFormProps> = (props) => {
   const [dayTemplates] = createResource<DayTemplate[]>(dayTemplateAPI.getAll);
-  const [basePersonalities] = createResource(basePersonalityAPI.list);
   const [phoneNumber, setPhoneNumber] = createSignal(props.initialData.phone_number ?? "");
   const [status, setStatus] = createSignal<UserStatus>(props.initialData.status);
   const [isActive, setIsActive] = createSignal(props.initialData.is_active);
@@ -48,9 +41,6 @@ const ProfileForm: Component<ProfileFormProps> = (props) => {
       (_, idx) => props.initialData.settings.template_defaults[idx] ?? "default"
     )
   );
-  const [basePersonalitySlug, setBasePersonalitySlug] = createSignal(
-    props.initialData.settings.base_personality_slug ?? "default"
-  );
 
   const templateOptions = createMemo<string[]>(() => {
     const baseOptions = ["default"];
@@ -61,20 +51,6 @@ const ProfileForm: Component<ProfileFormProps> = (props) => {
     const existingValues = templateDefaults().filter(Boolean);
 
     return Array.from(new Set([...baseOptions, ...templateSlugs, ...existingValues]));
-  });
-
-  const basePersonalityOptions = createMemo(() => {
-    const options =
-      basePersonalities()?.map((option) => ({
-        value: option.slug,
-        label: option.label,
-      })) ?? [];
-
-    if (!options.some((option) => option.value === "default")) {
-      options.unshift({ value: "default", label: "Default" });
-    }
-
-    return options;
   });
 
   const updateTemplateDefault = (index: number, value: string) => {
@@ -97,7 +73,6 @@ const ProfileForm: Component<ProfileFormProps> = (props) => {
       settings: {
         template_defaults: templateDefaults().map((value) => value.trim() || "default"),
         timezone: timezone().trim() || null,
-        base_personality_slug: basePersonalitySlug().trim() || "default",
       },
     };
 
@@ -136,20 +111,6 @@ const ProfileForm: Component<ProfileFormProps> = (props) => {
             value={timezone}
             onChange={setTimezone}
           />
-
-          <div>
-            <label class="text-sm font-medium text-neutral-500">Base personality</label>
-            <Select<string>
-              id="base-personality"
-              placeholder="Select a base personality"
-              value={basePersonalitySlug}
-              onChange={setBasePersonalitySlug}
-              options={basePersonalityOptions()}
-            />
-            <p class="mt-2 text-xs text-neutral-500">
-              This sets the default tone for system prompts across usecases.
-            </p>
-          </div>
 
           <Select<UserStatus>
             id="status"

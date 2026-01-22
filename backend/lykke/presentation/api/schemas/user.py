@@ -17,6 +17,8 @@ class UserSettingsSchema(BaseSchema):
     llm_provider: LLMProvider | None = None
     timezone: str | None = None
     base_personality_slug: str = "default"
+    llm_personality_amendments: list[str] = Field(default_factory=list)
+    morning_overview_time: str | None = None  # HH:MM format in user's local timezone
 
 
 class UserSchema(BaseSchema):
@@ -45,6 +47,8 @@ class UserSettingsUpdateSchema(BaseSchema):
     llm_provider: LLMProvider | None = None
     timezone: str | None = None
     base_personality_slug: str | None = None
+    llm_personality_amendments: list[str] | None = None
+    morning_overview_time: str | None = None  # HH:MM format in user's local timezone
 
 
 class UserUpdateSchema(BaseSchema):

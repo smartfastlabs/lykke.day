@@ -2393,6 +2393,18 @@ export interface components {
             template_defaults: string[];
             /** Llm Provider */
             llm_provider?: components["schemas"]["LLMProvider"] | null;
+            /** Timezone */
+            timezone?: string | null;
+            /**
+             * Base Personality Slug
+             * @default "default"
+             */
+            base_personality_slug?: string;
+            /**
+             * Llm Personality Amendments
+             * @default []
+             */
+            llm_personality_amendments?: string[];
         };
         /**
          * UserSettingsUpdateSchema
@@ -2403,6 +2415,12 @@ export interface components {
             template_defaults?: string[] | null;
             /** Llm Provider */
             llm_provider?: components["schemas"]["LLMProvider"] | null;
+            /** Timezone */
+            timezone?: string | null;
+            /** Base Personality Slug */
+            base_personality_slug?: string | null;
+            /** Llm Personality Amendments */
+            llm_personality_amendments?: string[] | null;
         };
         /**
          * LLMProvider

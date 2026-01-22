@@ -6,6 +6,8 @@ export interface UserSettings {
   llm_provider?: LLMProvider | null;
   timezone?: string | null;
   base_personality_slug?: string;
+  llm_personality_amendments: string[];
+  morning_overview_time?: string | null; // HH:MM format in user's local timezone
 }
 
 export interface UserSettingsUpdate {
@@ -13,6 +15,8 @@ export interface UserSettingsUpdate {
   llm_provider?: LLMProvider | null;
   timezone?: string | null;
   base_personality_slug?: string | null;
+  llm_personality_amendments?: string[] | null;
+  morning_overview_time?: string | null; // HH:MM format in user's local timezone
 }
 
 export interface CurrentUser {

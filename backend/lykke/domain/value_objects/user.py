@@ -11,6 +11,8 @@ class UserSetting(BaseValueObject):
     llm_provider: LLMProvider | None = None  # LLM provider for smart notifications
     timezone: str | None = None
     base_personality_slug: str = "default"
+    llm_personality_amendments: list[str] = field(default_factory=list)
+    morning_overview_time: str | None = None  # HH:MM format in user's local timezone
 
     def __post_init__(self) -> None:
         if isinstance(self.llm_provider, str):

@@ -45,8 +45,9 @@ class CreateUseCaseConfigHandler(
                     updated_at=datetime.now(UTC),
                 )
                 # Add EntityUpdatedEvent so UoW knows to update, not insert
-                # Use empty dict as update_object since UseCaseConfig doesn't have an update object type
-                updated_config.add_event(EntityUpdatedEvent(update_object={}))
+                # Use BaseUpdateObject since UseCaseConfig doesn't have a specific update object type
+                from lykke.domain.value_objects.update import BaseUpdateObject
+                updated_config.add_event(EntityUpdatedEvent(update_object=BaseUpdateObject()))
                 # Ensure the entity is added to UoW for tracking
                 uow.add(updated_config)
                 return updated_config

@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
+
 from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.core.utils.templates import render_for_user
 from lykke.domain import value_objects
@@ -16,6 +18,7 @@ class GenerateUseCasePromptQuery(Query):
     current_time: datetime | None = None
     include_context: bool = True
     include_ask: bool = True
+    extra_template_vars: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -37,11 +40,13 @@ class GenerateUseCasePromptHandler(
         user = await self.user_ro_repo.get(self.user_id)
         user_amendments = await self._get_user_amendments(query.usecase)
         base_personality_slug = user.settings.base_personality_slug
+        llm_personality_amendments = user.settings.llm_personality_amendments
         system_prompt = render_for_user(
             query.usecase,
             "system",
             user_amendments=user_amendments,
             base_personality_slug=base_personality_slug,
+            llm_personality_amendments=llm_personality_amendments,
         )
 
         context_prompt: str | None = None
@@ -50,11 +55,16 @@ class GenerateUseCasePromptHandler(
                 raise ValueError(
                     "prompt_context and current_time are required when include_context is True"
                 )
+            template_vars: dict[str, Any] = {
+                "context": query.prompt_context,
+                "current_time": query.current_time,
+            }
+            if query.extra_template_vars:
+                template_vars.update(query.extra_template_vars)
             context_prompt = render_for_user(
                 query.usecase,
                 "context",
-                context=query.prompt_context,
-                current_time=query.current_time,
+                **template_vars,
             )
 
         ask_prompt: str | None = None

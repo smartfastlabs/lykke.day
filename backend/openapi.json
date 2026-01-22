@@ -6984,6 +6984,41 @@
             },
             "type": "array",
             "title": "Template Defaults"
+          },
+          "llm_provider": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LLMProvider"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Provider"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "base_personality_slug": {
+            "type": "string",
+            "title": "Base Personality Slug",
+            "default": "default"
+          },
+          "llm_personality_amendments": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Llm Personality Amendments",
+            "default": []
           }
         },
         "type": "object",
@@ -7010,6 +7045,53 @@
               }
             ],
             "title": "Template Defaults"
+          },
+          "llm_provider": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LLMProvider"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Provider"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "base_personality_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Personality Slug"
+          },
+          "llm_personality_amendments": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Personality Amendments"
           }
         },
         "type": "object",

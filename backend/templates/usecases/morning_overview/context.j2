@@ -1,0 +1,30 @@
+Morning overview context for {{ context.day.date.isoformat() }}.
+Current time: {{ fmt_datetime(current_time) }}
+
+Day:
+- date: {{ context.day.date.isoformat() }}
+  status: {{ context.day.status.value }}
+  {% if context.day.tags %}tags: {{ context.day.tags | map(attribute='value') | list }}{% endif %}
+  {% if context.day.high_level_plan %}
+  high_level_plan:
+    title: {{ context.day.high_level_plan.title }}
+    {{- kv_line("    ", "text", context.day.high_level_plan.text) -}}
+    {{- kv_line("    ", "intentions", context.day.high_level_plan.intentions) -}}
+  {% endif %}
+
+{% if high_risk_tasks %}
+High Risk Tasks (tasks with low completion rates or problematic tags):
+{% for task in high_risk_tasks %}
+- name: {{ task.name }}
+  status: {{ task.status.value }}
+  frequency: {{ task.frequency.value }}
+  {% if task.tags %}tags: {{ task.tags | map(attribute='value') | list }}{% endif %}
+  completion_rate: {{ task.completion_rate }}%
+  risk_reason: {{ task.risk_reason }}
+{% endfor %}
+
+{% endif %}
+{% include "components/tasks/list.j2" %}
+{% include "components/calendar_entries/list.j2" %}
+{% include "components/reminders/list.j2" %}
+{% include "components/brain_dumps/list.j2" %}

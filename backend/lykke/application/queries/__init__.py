@@ -3,6 +3,12 @@
 Query handlers execute read operations and return data without side effects.
 """
 
+from .compute_task_risk import (
+    ComputeTaskRiskHandler,
+    ComputeTaskRiskQuery,
+    TaskRiskResult,
+    TaskRiskScore,
+)
 from .generate_usecase_prompt import (
     GenerateUseCasePromptHandler,
     GenerateUseCasePromptQuery,
@@ -20,6 +26,10 @@ from .preview_tasks import PreviewTasksHandler, PreviewTasksQuery
 from .usecase_config import GetUseCaseConfigHandler, GetUseCaseConfigQuery
 
 __all__ = [
+    "ComputeTaskRiskHandler",
+    "ComputeTaskRiskQuery",
+    "TaskRiskResult",
+    "TaskRiskScore",
     "GetDayContextHandler",
     "GetDayContextQuery",
     "GenerateUseCasePromptHandler",

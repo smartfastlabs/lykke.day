@@ -14,6 +14,8 @@ from lykke.application.commands.calendar import (
     SyncCalendarHandler,
 )
 from lykke.application.commands.notifications import (
+    MorningOverviewCommand,
+    MorningOverviewHandler,
     SmartNotificationCommand,
     SmartNotificationHandler,
 )
@@ -24,9 +26,16 @@ from lykke.application.queries import (
     GetLLMPromptContextHandler,
     PreviewDayHandler,
 )
+from lykke.application.repositories import PushNotificationRepositoryReadOnlyProtocol
 from lykke.application.repositories import UserRepositoryReadOnlyProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
-from lykke.core.utils.dates import get_current_date
+from lykke.core.utils.dates import (
+    get_current_date,
+    get_current_datetime_in_timezone,
+    get_current_time,
+    resolve_timezone,
+)
+from lykke.domain import value_objects
 from lykke.infrastructure.gateways import GoogleCalendarGateway, RedisPubSubGateway
 from lykke.infrastructure.repositories import UserRepository
 from lykke.infrastructure.unit_of_work import (
@@ -138,6 +147,22 @@ def get_smart_notification_handler(
         ro_repos, user_id, get_day_context_handler
     )
     return SmartNotificationHandler(
+        ro_repos, uow_factory, user_id, get_prompt_context_handler
+    )
+
+
+def get_morning_overview_handler(
+    user_id: UUID,
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
+) -> MorningOverviewHandler:
+    """Get a MorningOverviewHandler instance for a user."""
+    ro_repos = ro_repo_factory.create(user_id)
+    get_day_context_handler = GetDayContextHandler(ro_repos, user_id)
+    get_prompt_context_handler = GetLLMPromptContextHandler(
+        ro_repos, user_id, get_day_context_handler
+    )
+    return MorningOverviewHandler(
         ro_repos, uow_factory, user_id, get_prompt_context_handler
     )
 
@@ -383,6 +408,132 @@ async def heartbeat_task() -> None:
     Useful for verifying that the worker is running and processing tasks.
     """
     logger.info("💓 Heartbeat: Worker is alive and processing tasks")
+
+
+@broker.task(schedule=[{"cron": "*/15 * * * *"}])  # type: ignore[untyped-decorator]
+async def evaluate_morning_overviews_for_all_users_task(
+    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+) -> None:
+    """Evaluate morning overviews for all users with configured overview time.
+
+    Runs every 15 minutes to check which users should receive their morning overview.
+    Only sends once per day per user.
+    """
+    logger.info("Starting morning overview evaluation for all users")
+
+    users = await user_repo.all()
+    # Filter to users with LLM provider and morning overview time configured
+    eligible_users = [
+        user
+        for user in users
+        if user.settings
+        and user.settings.llm_provider
+        and user.settings.morning_overview_time
+    ]
+    logger.info(f"Found {len(eligible_users)} users eligible for morning overview")
+
+    ro_repo_factory = get_read_only_repository_factory()
+
+    for user in eligible_users:
+        try:
+            # Parse the morning overview time (HH:MM format)
+            overview_time_str = user.settings.morning_overview_time
+            if not overview_time_str:
+                continue
+
+            try:
+                hour_str, minute_str = overview_time_str.split(":")
+                overview_hour = int(hour_str)
+                overview_minute = int(minute_str)
+            except (ValueError, AttributeError):
+                logger.warning(
+                    f"Invalid morning_overview_time format for user {user.id}: {overview_time_str}"
+                )
+                continue
+
+            # Get current time in user's timezone
+            current_time = get_current_time(user.settings.timezone)
+            current_hour = current_time.hour
+            current_minute = current_time.minute
+
+            # Check if current time matches overview time (within 15 minute window)
+            # We check if we're within 0-14 minutes past the target time
+            time_matches = (
+                current_hour == overview_hour
+                and current_minute >= overview_minute
+                and current_minute < overview_minute + 15
+            )
+
+            if not time_matches:
+                continue
+
+            # Check if we've already sent today
+            ro_repos = ro_repo_factory.create(user.id)
+            push_notification_repo: PushNotificationRepositoryReadOnlyProtocol = (
+                ro_repos.push_notification_ro_repo
+            )
+
+            today = get_current_date(user.settings.timezone)
+            today_start = get_current_datetime_in_timezone(user.settings.timezone)
+            today_start = today_start.replace(hour=0, minute=0, second=0, microsecond=0)
+
+            # Check for morning overview notifications sent today
+            existing_notifications = await push_notification_repo.search(
+                value_objects.PushNotificationQuery(
+                    sent_after=today_start,
+                    status="sent",
+                )
+            )
+
+            # Filter to morning overview notifications
+            morning_overview_sent_today = any(
+                n.triggered_by == "morning_overview" for n in existing_notifications
+            )
+
+            if morning_overview_sent_today:
+                logger.debug(
+                    f"Morning overview already sent today for user {user.id}, skipping"
+                )
+                continue
+
+            # Enqueue the morning overview task
+            await evaluate_morning_overview_task.kiq(user_id=user.id)
+            logger.info(f"Enqueued morning overview for user {user.id}")
+
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(f"Error checking morning overview for user {user.id}")
+
+    logger.info("Completed morning overview evaluation for all users")
+
+
+@broker.task  # type: ignore[untyped-decorator]
+async def evaluate_morning_overview_task(
+    user_id: UUID,
+) -> None:
+    """Evaluate and send morning overview for a specific user.
+
+    Args:
+        user_id: The user ID to send morning overview for
+    """
+    logger.info(f"Starting morning overview evaluation for user {user_id}")
+
+    pubsub_gateway = RedisPubSubGateway()
+    try:
+        handler = get_morning_overview_handler(
+            user_id=user_id,
+            uow_factory=get_unit_of_work_factory(pubsub_gateway),
+            ro_repo_factory=get_read_only_repository_factory(),
+        )
+
+        try:
+            await handler.handle(MorningOverviewCommand(user_id=user_id))
+            logger.debug(f"Morning overview evaluation completed for user {user_id}")
+        except Exception:  # pylint: disable=broad-except
+            # Catch-all for resilient background job
+            logger.exception(f"Error evaluating morning overview for user {user_id}")
+
+    finally:
+        await pubsub_gateway.close()
 
 
 @broker.task  # type: ignore[untyped-decorator]

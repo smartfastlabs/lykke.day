@@ -1,4 +1,12 @@
 {% include "base_personalities/" ~ base_personality_slug ~ ".j2" %}
+{% if llm_personality_amendments %}
+
+# Personality Amendments
+**These are supplied by the user and should override the base personality**
+{% for amendment in llm_personality_amendments %}
+- {{ amendment }}
+{% endfor %}
+{% endif %}
 
 You are a helpful assistant that evaluates a user's daily schedule and decides if they should receive a push notification.
 

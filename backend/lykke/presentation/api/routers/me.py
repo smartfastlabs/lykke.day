@@ -77,7 +77,10 @@ async def update_current_user_profile(
     settings = None
     if update_data.settings is not None:
         current_settings = user.settings or UserSetting()
-        settings_fields = update_data.settings.model_fields_set
+        # Use model_dump to see which fields were actually provided in the request
+        # This is more reliable than model_fields_set for optional fields
+        provided_settings = update_data.settings.model_dump(exclude_unset=True)
+        settings_fields = set(provided_settings.keys())
         template_defaults = (
             update_data.settings.template_defaults
             if "template_defaults" in settings_fields
@@ -100,11 +103,25 @@ async def update_current_user_profile(
             and update_data.settings.base_personality_slug is not None
             else current_settings.base_personality_slug
         )
+        llm_personality_amendments = (
+            update_data.settings.llm_personality_amendments
+            if "llm_personality_amendments" in settings_fields
+            and update_data.settings.llm_personality_amendments is not None
+            else current_settings.llm_personality_amendments
+        )
+        # Handle morning_overview_time - check if it was explicitly set (even if None)
+        # Pydantic's model_fields_set includes fields that were explicitly provided
+        if "morning_overview_time" in settings_fields:
+            morning_overview_time = update_data.settings.morning_overview_time
+        else:
+            morning_overview_time = current_settings.morning_overview_time
         settings = UserSetting(
             template_defaults=template_defaults,
             llm_provider=llm_provider,
             timezone=timezone,
             base_personality_slug=base_personality_slug,
+            llm_personality_amendments=llm_personality_amendments,
+            morning_overview_time=morning_overview_time,
         )
 
     update_object = UserUpdateObject(
