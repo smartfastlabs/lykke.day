@@ -31,7 +31,7 @@ const PushSubscriptionDetailPage: Component = () => {
         ...partialSubscription,
         id: current.id,
       });
-      navigate("/me/settings/push-subscriptions");
+      navigate("/me/settings/notifications/push");
     } catch (err: unknown) {
       const message =
         err instanceof Error
@@ -51,7 +51,7 @@ const PushSubscriptionDetailPage: Component = () => {
     setIsLoading(true);
     try {
       await pushAPI.deleteSubscription(current.id);
-      navigate("/me/settings/push-subscriptions");
+      navigate("/me/settings/notifications/push");
     } catch (err: unknown) {
       const message =
         err instanceof Error
@@ -73,7 +73,7 @@ const PushSubscriptionDetailPage: Component = () => {
           heading="Push Subscription"
           bottomLink={{
             label: "Back to Push Subscriptions",
-            url: "/me/settings/push-subscriptions",
+            url: "/me/settings/notifications/push",
           }}
           preview={<PushSubscriptionPreview subscription={current()} />}
           edit={

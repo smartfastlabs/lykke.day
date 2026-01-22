@@ -75,50 +75,6 @@ export interface BrainDumpItem {
   created_at?: string | null;
 }
 
-export interface SystemTemplate {
-  usecase: string;
-  name: string;
-  parts: SystemTemplatePart[];
-  has_user_override: boolean;
-}
-
-export type TemplatePart = "system" | "context" | "ask";
-
-export interface SystemTemplatePart {
-  part: TemplatePart;
-  content: string;
-  has_user_override: boolean;
-}
-
-export interface TemplateOverride {
-  id: string;
-  user_id: string;
-  usecase: string;
-  key: string;
-  name: string;
-  description: string | null;
-  content: string;
-}
-
-export interface TemplatePartDetail {
-  part: TemplatePart;
-  system_content: string;
-  override: TemplateOverride | null;
-}
-
-export interface TemplateDetail {
-  usecase: string;
-  name: string;
-  parts: TemplatePartDetail[];
-}
-
-export interface TemplatePreview {
-  system_prompt: string;
-  context_prompt: string;
-  ask_prompt: string;
-  context_data: Record<string, unknown>;
-}
-
 // Enum types
 export type TaskStatus = components["schemas"]["TaskStatus"];
 export type TaskType = components["schemas"]["TaskType"];
@@ -134,4 +90,19 @@ export type ActionType = components["schemas"]["ActionType"];
 export type ReminderStatus = "INCOMPLETE" | "COMPLETE" | "PUNT";
 
 export type BrainDumpItemStatus = "ACTIVE" | "COMPLETE" | "PUNT";
+
+// UseCase Config types
+export interface UseCaseConfig {
+  id: string;
+  user_id: string;
+  usecase: string;
+  config: Record<string, unknown>;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface NotificationUseCaseConfig {
+  user_amendments: string[];
+  rendered_prompt?: string;
+}
 

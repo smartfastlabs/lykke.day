@@ -23,7 +23,7 @@ const settingsItems: LinkItem[] = [
   },
   { label: "Routines", icon: faRepeat, url: "/me/settings/routines" },
   { label: "Time Blocks", icon: faClock, url: "/me/settings/time-blocks" },
-  { label: "Prompts", icon: faRobot, url: "/me/settings/prompts" },
+  { label: "Notifications", icon: faBell, url: "/me/settings/notifications" },
   { label: "LLM", icon: faBrain, url: "/me/settings/llm" },
   { label: "Profile", icon: faUser, url: "/me/settings/profile" },
   { label: "Calendars", icon: faCalendar, url: "/me/settings/calendars" },
@@ -31,11 +31,6 @@ const settingsItems: LinkItem[] = [
     label: "Recurring Events",
     icon: faCalendarDays,
     url: "/me/settings/recurring-events",
-  },
-  {
-    label: "Push Subscriptions",
-    icon: faBell,
-    url: "/me/settings/push-subscriptions",
   },
 ];
 

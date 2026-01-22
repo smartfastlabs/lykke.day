@@ -36,12 +36,11 @@ import CommandsPage from "@/pages/me/navigation/Commands";
 import SettingsLayout from "@/pages/me/settings/Layout";
 import SettingsIndexPage from "@/pages/me/settings/Index";
 import ProfileSettingsPage from "@/pages/me/settings/Profile";
-import PromptsSettingsPage from "@/pages/me/settings/prompts/Index";
-import PromptTemplateDetailPage from "@/pages/me/settings/prompts/Detail";
 import LLMSettingsPage from "@/pages/me/settings/llm/Index";
 import DayTemplatesPage from "@/pages/me/settings/day-templates/Index";
 import NewDayTemplatePage from "@/pages/me/settings/day-templates/New";
 import DayTemplateDetailPage from "@/pages/me/settings/day-templates/Detail";
+import NotificationConfigPage from "@/pages/me/settings/notifications/Index";
 import TaskDefinitionsPage from "@/pages/me/settings/task-definitions/Index";
 import NewTaskDefinitionPage from "@/pages/me/settings/task-definitions/New";
 import TaskDefinitionDetailPage from "@/pages/me/settings/task-definitions/Detail";
@@ -248,12 +247,10 @@ export default function App() {
               <Route path="/settings" component={SettingsLayout}>
                 <Route path="/" component={SettingsIndexPage} />
                 <Route path="/profile" component={ProfileSettingsPage} />
-                <Route path="/prompts" component={PromptsSettingsPage} />
                 <Route path="/llm" component={LLMSettingsPage} />
-                <Route
-                  path="/prompts/detail"
-                  component={PromptTemplateDetailPage}
-                />
+                <Route path="/notifications" component={NotificationConfigPage} />
+                <Route path="/notifications/push" component={PushSubscriptionsPage} />
+                <Route path="/notifications/push/:id" component={PushSubscriptionDetailPage} />
                 <Route path="/day-templates" component={DayTemplatesPage} />
                 <Route
                   path="/day-templates/new"
@@ -297,14 +294,6 @@ export default function App() {
                 <Route
                   path="/recurring-events/:id"
                   component={RecurringEventSeriesDetailPage}
-                />
-                <Route
-                  path="/push-subscriptions"
-                  component={PushSubscriptionsPage}
-                />
-                <Route
-                  path="/push-subscriptions/:id"
-                  component={PushSubscriptionDetailPage}
                 />
               </Route>
             </Route>

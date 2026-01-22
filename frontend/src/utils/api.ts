@@ -12,10 +12,8 @@ import {
   PushSubscription,
   TaskSchedule,
   RecurrenceSchedule,
-  SystemTemplate,
-  TemplateDetail,
-  TemplateOverride,
-  TemplatePreview,
+  UseCaseConfig,
+  NotificationUseCaseConfig,
 } from "@/types/api";
 import type { CurrentUser, UserProfileUpdate } from "@/types/api/user";
 import type {
@@ -407,46 +405,6 @@ export const dayTemplateAPI = {
     ),
 };
 
-export const templateAPI = {
-  getSystemTemplates: (): Promise<SystemTemplate[]> =>
-    fetchData<SystemTemplate[]>("/api/templates/system"),
-  getOverrides: (): Promise<TemplateOverride[]> =>
-    fetchData<TemplateOverride[]>("/api/templates/overrides"),
-  getDetail: (usecase: string): Promise<TemplateDetail> =>
-    fetchData<TemplateDetail>(`/api/templates/${encodeURIComponent(usecase)}`),
-  create: (payload: {
-    usecase: string;
-    key: string;
-    name?: string | null;
-    description?: string | null;
-    content: string;
-  }): Promise<TemplateOverride> =>
-    fetchData<TemplateOverride>("/api/templates/create", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
-  update: (payload: {
-    id: string;
-    name?: string | null;
-    description?: string | null;
-    content?: string | null;
-  }): Promise<TemplateOverride> =>
-    fetchData<TemplateOverride>(`/api/templates/${payload.id}`, {
-      method: "PUT",
-      body: JSON.stringify({
-        name: payload.name ?? undefined,
-        description: payload.description ?? undefined,
-        content: payload.content ?? undefined,
-      }),
-    }),
-  delete: (id: string): Promise<void> =>
-    fetchData<void>(`/api/templates/${id}`, { method: "DELETE" }),
-  preview: (usecase: string): Promise<TemplatePreview> =>
-    fetchData<TemplatePreview>("/api/templates/preview", {
-      method: "POST",
-      body: JSON.stringify({ usecase }),
-    }),
-};
 
 export const taskDefinitionAPI = {
   ...createCrudMethods<TaskDefinition>("task-definitions"),
@@ -454,6 +412,41 @@ export const taskDefinitionAPI = {
 
 export const timeBlockDefinitionAPI = {
   ...createCrudMethods<TimeBlockDefinition>("time-block-definitions"),
+};
+
+export const usecaseConfigAPI = {
+  get: (usecase: string): Promise<UseCaseConfig | null> =>
+    fetchData<UseCaseConfig | null>(`/api/usecase-configs/${encodeURIComponent(usecase)}`),
+  
+  createOrUpdate: (payload: {
+    usecase: string;
+    config: Record<string, unknown>;
+  }): Promise<UseCaseConfig> =>
+    fetchData<UseCaseConfig>("/api/usecase-configs", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  
+  delete: (id: string): Promise<void> =>
+    fetchData<void>(`/api/usecase-configs/${id}`, { method: "DELETE" }),
+  
+  // Typed methods for notification usecase
+  getNotificationConfig: (): Promise<NotificationUseCaseConfig> =>
+    fetchData<NotificationUseCaseConfig>("/api/usecase-configs/notification", {
+      suppressError: true, // 404 is expected when no config exists
+    }).catch((err) => {
+      // If 404, return empty config instead of throwing
+      if (err instanceof ApiRequestError && err.status === 404) {
+        return { user_amendments: [] } as NotificationUseCaseConfig;
+      }
+      throw err;
+    }),
+  
+  updateNotificationConfig: (config: NotificationUseCaseConfig): Promise<NotificationUseCaseConfig> =>
+    fetchData<NotificationUseCaseConfig>("/api/usecase-configs/notification", {
+      method: "PUT",
+      body: JSON.stringify(config),
+    }),
 };
 
 export const routineAPI = {

@@ -21,7 +21,7 @@ const PushSubscriptionsPage: Component = () => {
 
   const handleNavigate = (id?: string | null) => {
     if (!id) return;
-    navigate(`/me/settings/push-subscriptions/${id}`);
+    navigate(`/me/settings/notifications/push/${id}`);
   };
 
   const handleSubscribe = async (e: Event) => {
@@ -108,7 +108,11 @@ const PushSubscriptionsPage: Component = () => {
 
   return (
     <>
-      <SettingsPage heading="Push Subscriptions" actionButtons={actionButtons}>
+      <SettingsPage 
+        heading="Push Subscriptions" 
+        actionButtons={actionButtons}
+        bottomLink={{ label: "Back to Notification Settings", url: "/me/settings/notifications" }}
+      >
         <Show
           when={subscriptions()}
           fallback={
