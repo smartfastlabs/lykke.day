@@ -13,7 +13,6 @@ from . import (
     routines,
     task_definitions,
     tasks,
-    templates,
     time_block_definitions,
     twilio,
     usecase_config,
@@ -93,10 +92,6 @@ router.include_router(
     events.router,
     prefix="/events",
     tags=["events", "audit-logs"],
-)
-router.include_router(
-    templates.router,
-    tags=["templates"],
 )
 router.include_router(
     usecase_config.router,

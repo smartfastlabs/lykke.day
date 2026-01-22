@@ -28,7 +28,6 @@ from lykke.application.repositories import (
     RoutineRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
-    TemplateRepositoryReadOnlyProtocol,
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
@@ -76,7 +75,6 @@ class UnitOfWorkProtocol(Protocol):
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
-    template_ro_repo: TemplateRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
@@ -225,7 +223,6 @@ class ReadOnlyRepositories(Protocol):
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
-    template_ro_repo: TemplateRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol

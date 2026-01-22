@@ -14,7 +14,6 @@ from .push_subscription import PushSubscriptionRepository
 from .routine import RoutineRepository
 from .task import TaskRepository
 from .task_definition import TaskDefinitionRepository
-from .template import TemplateRepository
 from .time_block_definition import TimeBlockDefinitionRepository
 from .usecase_config import UseCaseConfigRepository
 from .user import UserRepository
@@ -36,7 +35,6 @@ __all__ = [
     "RoutineRepository",
     "TaskDefinitionRepository",
     "TaskRepository",
-    "TemplateRepository",
     "TimeBlockDefinitionRepository",
     "UseCaseConfigRepository",
     "UserRepository",

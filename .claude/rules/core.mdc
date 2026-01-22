@@ -1,0 +1,330 @@
+---
+globs: backend/lykke/core/**/*.py
+alwaysApply: false
+---
+
+# Core Layer Rules
+
+The Core layer provides shared utilities, configuration, and cross-cutting concerns used by all layers. It contains no business logic and no layer-specific code.
+
+---
+
+## Layer Structure
+
+```
+core/
+├── config.py         # Application settings and configuration
+├── constants.py      # Application-wide constants
+├── exceptions.py     # Base exception classes
+├── observability.py  # Logging and monitoring utilities
+└── utils/            # Stateless utility functions
+    ├── dates.py      # Date/time utilities
+    ├── serialization.py # Serialization utilities
+    ├── strings.py    # String utilities
+    ├── templates.py  # Template rendering utilities
+    ├── audit_log_filtering.py # Audit log filtering utilities
+    ├── audit_log_serialization.py # Audit log serialization
+    ├── day_context_serialization.py # Day context serialization
+    ├── domain_event_serialization.py # Domain event serialization
+    ├── llm_prompt_generation.py # LLM prompt generation
+    ├── printing.py   # Printing utilities
+    └── youtube.py    # YouTube player utilities
+```
+
+---
+
+## Import Rules
+
+**Allowed Imports:**
+- Standard library
+- Third-party libraries (Pydantic, Jinja2, etc.)
+- Other core layer modules
+
+**Forbidden Imports:**
+- `lykke.domain.*` - Domain layer
+- `lykke.application.*` - Application layer
+- `lykke.infrastructure.*` - Infrastructure layer
+- `lykke.presentation.*` - Presentation layer
+
+**Exception:** Core utilities may be used by all layers, but core itself should not depend on other layers.
+
+---
+
+## Configuration
+
+Configuration is managed using Pydantic Settings in `core/config.py`.
+
+### Settings Class
+
+```python
+from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+
+
+class Settings(BaseSettings):
+    """Application settings."""
+    
+    API_PREFIX: str = ""
+    TIMEZONE: str = "America/Chicago"
+    DEBUG: bool = False
+    DATABASE_URL: str = "postgresql+psycopg://localhost/lykke"
+    REDIS_URL: str = "redis://localhost:6379"
+    VAPID_SECRET_KEY: str = ""
+    VAPID_PUBLIC_KEY: str = ""
+    ENVIRONMENT: str = "development"
+    # ... other settings
+    
+    model_config = SettingsConfigDict(
+        env_file=os.getenv("ENV_FILE", ".env"),
+        case_sensitive=True,
+    )
+
+settings = Settings()
+```
+
+### Key Rules for Configuration
+
+1. **Use Pydantic Settings** - Use `BaseSettings` for configuration management
+2. **Environment variables** - Settings load from environment variables via `.env` file
+3. **Type hints** - All settings should have type hints
+4. **Default values** - Provide sensible default values
+5. **Single instance** - Export a single `settings` instance
+6. **No business logic** - Configuration contains no business logic
+
+### Accessing Settings
+
+```python
+from lykke.core.config import settings
+
+database_url = settings.DATABASE_URL
+api_prefix = settings.API_PREFIX
+```
+
+---
+
+## Exceptions
+
+Exceptions are base exception classes defined in `core/exceptions.py`.
+
+### Exception Hierarchy
+
+```python
+class BaseError(Exception):
+    """Base exception for all application errors."""
+    status_code: int = 400
+    _message: str = "An error occurred"
+    
+    def __init__(self, message: str | None = None) -> None:
+        self.message = message or self._message
+        super().__init__(self.message)
+
+
+class NotFoundError(BaseError):
+    """Error raised when a resource is not found."""
+    status_code = 404
+    _message = "Resource not found"
+
+
+class DomainError(BaseError):
+    """Error raised when a domain invariant is violated."""
+    status_code = 400
+    _message = "Domain rule violation"
+
+
+class BadRequestError(BaseError):
+    """Error raised when a request is invalid."""
+    status_code = 400
+    _message = "Invalid request"
+
+
+class AuthenticationError(BaseError):
+    """Error raised when authentication fails."""
+    status_code = 401
+    _message = "Authentication failed"
+
+
+class AuthorizationError(BaseError):
+    """Error raised when authorization fails."""
+    status_code = 403
+    _message = "Access denied"
+```
+
+### Key Rules for Exceptions
+
+1. **Extend BaseError** - All exceptions should extend `BaseError`
+2. **Status codes** - Exceptions should have `status_code` attribute
+3. **Default messages** - Exceptions should have `_message` class variable
+4. **Custom messages** - Exceptions accept custom messages via `__init__`
+
+### Using Exceptions
+
+```python
+from lykke.core.exceptions import NotFoundError, DomainError
+
+# Raising exceptions
+if entity is None:
+    raise NotFoundError("Entity not found")
+
+if invalid_state:
+    raise DomainError("Invalid state for this operation")
+```
+
+---
+
+## Utilities
+
+Utilities are stateless helper functions defined in `core/utils/`.
+
+### Date/Time Utilities
+
+```python
+from datetime import UTC, date, datetime, timedelta
+
+
+def get_current_date(timezone: str | None = None) -> date:
+    """Get the current date, optionally in a specific timezone."""
+    if timezone:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo(timezone)).date()
+    return datetime.now(UTC).date()
+
+
+def get_current_datetime() -> datetime:
+    """Get the current datetime in UTC."""
+    return datetime.now(UTC)
+```
+
+### Serialization Utilities
+
+```python
+from dataclasses import asdict, is_dataclass
+from datetime import date, datetime, time
+from typing import Any
+from uuid import UUID
+from enum import Enum
+
+
+def dataclass_to_json_dict(obj: Any) -> dict[str, Any] | Any:
+    """Convert a dataclass to a JSON-serializable dictionary.
+    
+    Handles nested dataclasses, enums, dates, times, UUIDs, etc.
+    """
+    if is_dataclass(obj) and not isinstance(obj, type):
+        return {k: dataclass_to_json_dict(v) for k, v in asdict(obj).items()}
+    elif isinstance(obj, (date, datetime, time)):
+        return obj.isoformat()
+    elif isinstance(obj, UUID):
+        return str(obj)
+    elif isinstance(obj, Enum):
+        return obj.value
+    elif isinstance(obj, list):
+        return [dataclass_to_json_dict(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {k: dataclass_to_json_dict(v) for k, v in obj.items()}
+    return obj
+```
+
+### Key Rules for Utilities
+
+1. **Stateless** - Utility functions should be stateless (no side effects)
+2. **Pure functions** - Prefer pure functions (deterministic, no side effects)
+3. **Type hints** - All functions should have type hints
+4. **Documentation** - Add docstrings explaining what functions do
+5. **Group by domain** - Group related utilities in the same module
+6. **No business logic** - Utilities contain no business logic
+7. **Reusable** - Utilities should be reusable across layers
+
+---
+
+## Gotchas
+
+### 1. Settings Are Global
+
+**Issue:** Settings are a global singleton. Changes affect all code using settings.
+
+```python
+# Settings are loaded once at import time
+from lykke.core.config import settings
+
+# Don't modify settings at runtime
+# settings.DEBUG = True  # Don't do this
+```
+
+**Solution:** Use environment variables to change configuration.
+
+### 2. Exception Status Codes
+
+**Issue:** Exception status codes are class variables. All instances of the same exception type have the same status code.
+
+```python
+class NotFoundError(BaseError):
+    status_code = 404
+
+error = NotFoundError("Not found")
+assert error.status_code == 404  # Always 404
+```
+
+### 3. Utility Functions Should Be Stateless
+
+**Issue:** Utility functions should not have side effects or maintain state.
+
+```python
+# Wrong - has state
+_cache = {}
+
+def get_cached_value(key):
+    if key not in _cache:
+        _cache[key] = compute_value(key)
+    return _cache[key]
+
+# Right - stateless
+def compute_value(input_data):
+    return process(input_data)
+```
+
+---
+
+## Testing Guidance
+
+### Testing Utilities
+
+Test utility functions:
+
+```python
+from freezegun import freeze_time
+from lykke.core.utils.dates import get_current_date
+from lykke.core.utils.serialization import dataclass_to_json_dict
+
+
+@freeze_time("2025-01-01 12:00:00")
+def test_get_current_date():
+    """Test get_current_date utility."""
+    current_date = get_current_date()
+    assert current_date == date(2025, 1, 1)
+
+
+def test_dataclass_to_json_dict():
+    """Test dataclass serialization."""
+    @dataclass
+    class Sample:
+        id: UUID
+        created_at: datetime
+    
+    sample = Sample(id=UUID("12345678-1234-1234-1234-123456789012"), created_at=datetime(2025, 1, 1))
+    result = dataclass_to_json_dict(sample)
+    
+    assert result["id"] == "12345678-1234-1234-1234-123456789012"
+    assert result["created_at"] == "2025-01-01T00:00:00"
+```
+
+### Test Location
+
+Core layer tests go in:
+- `tests/unit/utils/` - Utility function tests
+
+### Test Patterns
+
+1. **Test pure functions** - Test utilities as pure functions
+2. **Test edge cases** - Test edge cases (empty strings, None values, etc.)
+3. **Test type conversions** - Test serialization utilities with various types
+4. **Use freezegun** - Use `freezegun` for time-dependent tests

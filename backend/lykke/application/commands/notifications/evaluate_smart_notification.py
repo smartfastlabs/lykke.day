@@ -19,10 +19,13 @@ from lykke.application.llm_usecases import NotificationUseCase
 from lykke.application.notifications import (
     build_notification_payload_for_smart_notification,
 )
-from lykke.application.queries import GetLLMPromptContextHandler
+from lykke.application.queries import (
+    GenerateUseCasePromptHandler,
+    GenerateUseCasePromptQuery,
+    GetLLMPromptContextHandler,
+)
 from lykke.application.repositories import (
     PushSubscriptionRepositoryReadOnlyProtocol,
-    TemplateRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
 )
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
@@ -30,7 +33,6 @@ from lykke.core.config import settings
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 from lykke.core.utils.day_context_serialization import serialize_day_context
-from lykke.core.utils.llm_prompt_generation import generate_usecase_prompts
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import PushNotificationEntity
@@ -49,7 +51,6 @@ class SmartNotificationHandler(BaseCommandHandler[SmartNotificationCommand, None
     """Evaluates day context using LLM and sends notification if warranted."""
 
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
-    template_ro_repo: TemplateRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
     def __init__(
@@ -113,14 +114,22 @@ class SmartNotificationHandler(BaseCommandHandler[SmartNotificationCommand, None
         current_time = get_current_datetime_in_timezone(user.settings.timezone)
 
         # Generate prompts for LLM
-        system_prompt, context_prompt, ask_prompt = await generate_usecase_prompts(
-            usecase,
-            prompt_context,
-            current_time,
-            template_repo=self.template_ro_repo,
-            user_id=command.user_id,
-            usecase_config_repo=self.usecase_config_ro_repo,
+        prompt_handler = GenerateUseCasePromptHandler(self._ro_repos, self.user_id)
+        prompt_result = await prompt_handler.handle(
+            GenerateUseCasePromptQuery(
+                usecase=usecase.template_usecase,
+                prompt_context=prompt_context,
+                current_time=current_time,
+                include_context=True,
+                include_ask=True,
+            )
         )
+        if prompt_result.context_prompt is None or prompt_result.ask_prompt is None:
+            raise RuntimeError("Prompt generation did not include all prompt parts")
+
+        system_prompt = prompt_result.system_prompt
+        context_prompt = prompt_result.context_prompt
+        ask_prompt = prompt_result.ask_prompt
 
         # Get LLM gateway
         try:

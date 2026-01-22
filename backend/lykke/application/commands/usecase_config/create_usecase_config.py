@@ -6,6 +6,7 @@ from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities.usecase_config import UseCaseConfigEntity
+from lykke.domain.events.base import EntityUpdatedEvent
 from lykke.domain.value_objects import UseCaseConfigQuery
 
 
@@ -33,18 +34,22 @@ class CreateUseCaseConfigHandler(
                 UseCaseConfigQuery(usecase=command.usecase)
             )
             if existing:
-                # Update existing config
+                # Update existing config - get the existing entity and modify it
                 existing_config = existing[0]
                 from datetime import UTC, datetime
-                updated_config = UseCaseConfigEntity(
-                    id=existing_config.id,
-                    user_id=command.user_id,
-                    usecase=command.usecase,
+                
+                # Clone the existing entity with updated values
+                # Note: clone() creates a new instance, so _domain_events will be a new empty list
+                updated_config = existing_config.clone(
                     config=command.config,
-                    created_at=existing_config.created_at,
                     updated_at=datetime.now(UTC),
                 )
-                return uow.add(updated_config)
+                # Add EntityUpdatedEvent so UoW knows to update, not insert
+                # Use empty dict as update_object since UseCaseConfig doesn't have an update object type
+                updated_config.add_event(EntityUpdatedEvent(update_object={}))
+                # Ensure the entity is added to UoW for tracking
+                uow.add(updated_config)
+                return updated_config
             else:
                 # Create new config
                 new_config = UseCaseConfigEntity(

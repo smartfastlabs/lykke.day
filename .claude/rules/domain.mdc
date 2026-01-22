@@ -1,0 +1,189 @@
+---
+globs: backend/lykke/domain/**/*.py
+alwaysApply: false
+---
+
+# Domain Layer Overview
+
+The Domain layer contains pure business logic with **zero external dependencies**. It defines the core business model, entities, value objects, and domain events.
+
+---
+
+## Layer Structure
+
+```
+domain/
+├── entities/          # Business objects (aggregate roots)
+├── value_objects/     # Immutable value types
+├── events/            # Domain events
+└── services/          # Pure domain services (no I/O)
+```
+
+---
+
+## Import Rules
+
+**Allowed Imports:**
+
+- Standard library (e.g., `datetime`, `uuid`, `enum`)
+- Type checking imports (`TYPE_CHECKING`, `Protocol`, etc.)
+- `lykke.core.exceptions` - Base exception classes
+- Other domain layer modules
+
+**Forbidden Imports:**
+
+- `lykke.application.*` - Application layer
+- `lykke.infrastructure.*` - Infrastructure layer
+- `lykke.presentation.*` - Presentation layer
+- Database/framework libraries (SQLAlchemy, FastAPI, etc.)
+- HTTP/external API libraries
+
+**Exception:** `core.exceptions` is allowed because it contains only base exception classes with no business logic or dependencies.
+
+---
+
+## Subdirectories
+
+### Entities (`domain/entities/`)
+
+**Purpose:** Business objects with identity and lifecycle. All entities are aggregate roots.
+
+**Location:** `backend/lykke/domain/entities/`
+
+**Key Components:**
+
+- `base.py` - BaseEntityObject, BaseObject
+- `auditable.py` - AuditableEntity marker
+- Entity classes (TaskEntity, DayEntity, UserEntity, etc.)
+
+**What It Does:**
+
+- Represents business objects with identity
+- Enforces business rules and invariants
+- Emits domain events for important changes
+- Contains business logic methods
+
+**For Details:** See `.cursor/rules/domain-entities.mdc`
+
+---
+
+### Value Objects (`domain/value_objects/`)
+
+**Purpose:** Immutable value types with no identity. Represent concepts in the domain.
+
+**Location:** `backend/lykke/domain/value_objects/`
+
+**Key Components:**
+
+- `base.py` - BaseValueObject, BaseRequestObject, BaseResponseObject
+- `query.py` - Query objects (TaskQuery, DateQuery, etc.)
+- `update.py` - Update objects (DayUpdateObject, TaskUpdateObject, etc.)
+- Value object classes (TaskStatus, TaskCategory, DayContext, etc.)
+
+**What It Does:**
+
+- Represents immutable values
+- Provides type safety for domain concepts
+- Used for filtering, searching, and updates
+- No business logic, just data structures
+
+**For Details:** See `.cursor/rules/domain-value-objects.mdc`
+
+---
+
+### Events (`domain/events/`)
+
+**Purpose:** Domain events that represent something important that happened in the domain.
+
+**Location:** `backend/lykke/domain/events/`
+
+**Key Components:**
+
+- `base.py` - DomainEvent, AuditableDomainEvent, EntityCreatedEvent, EntityUpdatedEvent, EntityDeletedEvent
+- Event classes (TaskCompletedEvent, DayScheduledEvent, etc.)
+
+**What It Does:**
+
+- Represents important domain occurrences
+- Carries context about what happened
+- Immutable and timestamped
+- Collected and dispatched after transaction commit
+
+**For Details:** See `.cursor/rules/domain-events.mdc`
+
+---
+
+### Services (`domain/services/`)
+
+**Purpose:** Pure domain services with no I/O operations. Business logic that doesn't belong to a single entity.
+
+**Location:** `backend/lykke/domain/services/`
+
+**What It Does:**
+
+- Contains pure business logic
+- Operates on domain entities and value objects
+- No database, HTTP, or file system access
+- Deterministic and side-effect free
+
+**For Details:** See `.cursor/rules/domain-services.mdc`
+
+---
+
+## Adding a New Feature
+
+When adding a new feature in the domain layer:
+
+1. **Add entities** - Add or update entities in `entities/` with business methods
+2. **Add value objects** - Add or update value objects in `value_objects/` if needed
+3. **Add domain events** - Add domain events in `events/` if needed
+4. **Add domain services** - Add domain services in `services/` if logic doesn't belong to an entity
+
+**Where to look:**
+
+- Entity patterns: `lykke/domain/entities/base.py`
+- Value object patterns: `lykke/domain/value_objects/base.py`
+- Event patterns: `lykke/domain/events/base.py`
+- Existing entities: `lykke/domain/entities/`
+- Existing value objects: `lykke/domain/value_objects/`
+
+---
+
+## Common Patterns
+
+### Entity Pattern
+
+- All entities are aggregate roots
+- Entities extend `BaseEntityObject`
+- Business logic in entity methods
+- Entities emit domain events via `create()`, `apply_update()`, `delete()`
+- Use `add_event()` for custom domain events
+
+### Value Object Pattern
+
+- Value objects are immutable (`frozen=True`)
+- Use enums for fixed sets (TaskStatus, TaskCategory, etc.)
+- Query objects extend `BaseQuery`
+- Update objects extend `BaseUpdateObject`
+
+### Domain Event Pattern
+
+- Events are immutable and timestamped
+- Events extend `DomainEvent`
+- Standard events: `EntityCreatedEvent`, `EntityUpdatedEvent`, `EntityDeletedEvent`
+- Custom events extend `DomainEvent` for domain-specific events
+- Use `AuditableDomainEvent` mixin for user-facing actions
+
+---
+
+## Testing
+
+Domain layer tests go in `tests/unit/domain/`:
+
+- Test entities in isolation (no mocking needed)
+- Test value objects behavior
+- Test domain services as pure functions
+- Test business rules and invariants
+- Use `pytest.mark.parametrize` for multiple scenarios
+
+**For detailed testing guidance:** See subdirectory-specific rules.

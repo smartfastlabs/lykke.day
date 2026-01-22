@@ -45,8 +45,6 @@ from lykke.application.repositories import (
     TaskDefinitionRepositoryReadWriteProtocol,
     TaskRepositoryReadOnlyProtocol,
     TaskRepositoryReadWriteProtocol,
-    TemplateRepositoryReadOnlyProtocol,
-    TemplateRepositoryReadWriteProtocol,
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadWriteProtocol,
@@ -79,8 +77,8 @@ from lykke.domain.entities import (
     RoutineEntity,
     TaskDefinitionEntity,
     TaskEntity,
-    TemplateEntity,
     TimeBlockDefinitionEntity,
+    UseCaseConfigEntity,
     UserEntity,
 )
 from lykke.domain.entities.auditable import AuditableEntity
@@ -114,7 +112,6 @@ from lykke.infrastructure.repositories import (
     RoutineRepository,
     TaskDefinitionRepository,
     TaskRepository,
-    TemplateRepository,
     TimeBlockDefinitionRepository,
     UseCaseConfigRepository,
     UserRepository,
@@ -158,7 +155,6 @@ class SqlAlchemyUnitOfWork:
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
-    template_ro_repo: TemplateRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
@@ -191,7 +187,6 @@ class SqlAlchemyUnitOfWork:
             "task_definition_ro_repo",
             "_task_definition_rw_repo",
         ),
-        TemplateEntity: ("template_ro_repo", "_template_rw_repo"),
         TimeBlockDefinitionEntity: (
             "time_block_definition_ro_repo",
             "_time_block_definition_rw_repo",
@@ -202,6 +197,7 @@ class SqlAlchemyUnitOfWork:
             "_push_subscription_rw_repo",
         ),
         AuthTokenEntity: ("auth_token_ro_repo", "_auth_token_rw_repo"),
+        UseCaseConfigEntity: ("usecase_config_ro_repo", "_usecase_config_rw_repo"),
     }
 
     def __init__(self, user_id: UUID, pubsub_gateway: PubSubGatewayProtocol) -> None:
@@ -251,7 +247,6 @@ class SqlAlchemyUnitOfWork:
             TaskDefinitionRepositoryReadWriteProtocol | None
         ) = None
         self._task_rw_repo: TaskRepositoryReadWriteProtocol | None = None
-        self._template_rw_repo: TemplateRepositoryReadWriteProtocol | None = None
         self._time_block_definition_rw_repo: (
             TimeBlockDefinitionRepositoryReadWriteProtocol | None
         ) = None
@@ -371,15 +366,6 @@ class SqlAlchemyUnitOfWork:
         )
         self.task_ro_repo = cast("TaskRepositoryReadOnlyProtocol", task_repo)
         self._task_rw_repo = task_repo
-
-        template_repo = cast(
-            "TemplateRepositoryReadWriteProtocol",
-            TemplateRepository(user_id=self.user_id),
-        )
-        self.template_ro_repo = cast(
-            "TemplateRepositoryReadOnlyProtocol", template_repo
-        )
-        self._template_rw_repo = template_repo
 
         time_block_definition_repo = cast(
             "TimeBlockDefinitionRepositoryReadWriteProtocol",
@@ -1102,11 +1088,6 @@ class SqlAlchemyReadOnlyRepositories:
             "TaskRepositoryReadOnlyProtocol", TaskRepository(user_id=self.user_id)
         )
         self.task_ro_repo = task_repo
-
-        template_repo = cast(
-            "TemplateRepositoryReadOnlyProtocol", TemplateRepository(user_id=self.user_id)
-        )
-        self.template_ro_repo = template_repo
 
         time_block_definition_repo = cast(
             "TimeBlockDefinitionRepositoryReadOnlyProtocol",

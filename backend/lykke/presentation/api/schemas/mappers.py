@@ -20,7 +20,6 @@ from lykke.domain.entities import (
     RoutineEntity,
     TaskDefinitionEntity,
     TaskEntity,
-    TemplateEntity,
     TimeBlockDefinitionEntity,
     UserEntity,
 )
@@ -48,7 +47,6 @@ from lykke.presentation.api.schemas import (
     TaskDefinitionSchema,
     TaskScheduleSchema,
     TaskSchema,
-    TemplateSchema,
     TimeBlockDefinitionSchema,
     UserSchema,
     UserSettingsSchema,
@@ -92,19 +90,6 @@ def map_task_definition_to_schema(
         name=task_definition.name,
         description=task_definition.description,
         type=task_definition.type,
-    )
-
-
-def map_template_to_schema(template: TemplateEntity) -> TemplateSchema:
-    """Convert Template entity to Template schema."""
-    return TemplateSchema(
-        id=template.id,
-        user_id=template.user_id,
-        usecase=template.usecase,
-        key=template.key,
-        name=template.name,
-        description=template.description,
-        content=template.content,
     )
 
 

@@ -20,3 +20,11 @@ Tool arguments:
 - reason: Brief explanation for why this notification is warranted
 
 If should_notify is false, you can omit message, priority, and reason.
+{% if user_amendments %}
+
+# User Customizations
+**These are supplied by the user and should override your default behaviour**
+{% for amendment in user_amendments %}
+- {{ amendment }}
+{% endfor %}
+{% endif %}

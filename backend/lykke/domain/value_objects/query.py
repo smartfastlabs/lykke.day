@@ -122,14 +122,6 @@ class TaskDefinitionQuery(BaseQuery):
 
 
 @dataclass(kw_only=True)
-class TemplateQuery(BaseQuery):
-    """Query class for Template entities."""
-
-    usecase: str | None = None
-    key: str | None = None
-
-
-@dataclass(kw_only=True)
 class UseCaseConfigQuery(BaseQuery):
     """Query class for UseCaseConfig entities."""
 

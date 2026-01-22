@@ -28,3 +28,4 @@ class NotificationUseCaseConfigSchema(BaseSchema):
     """Schema for notification usecase config (typed)."""
 
     user_amendments: list[str] = []
+    rendered_prompt: str | None = None

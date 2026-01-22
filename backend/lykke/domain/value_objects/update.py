@@ -41,15 +41,6 @@ class TaskDefinitionUpdateObject(BaseUpdateObject):
 
 
 @dataclass(kw_only=True)
-class TemplateUpdateObject(BaseUpdateObject):
-    """Update object for Template entity."""
-
-    name: str | None = None
-    description: str | None = None
-    content: str | None = None
-
-
-@dataclass(kw_only=True)
 class TimeBlockDefinitionUpdateObject(BaseUpdateObject):
     """Update object for TimeBlockDefinition entity."""
 

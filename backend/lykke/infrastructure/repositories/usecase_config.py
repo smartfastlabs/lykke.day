@@ -30,11 +30,13 @@ class UseCaseConfigRepository(
     @staticmethod
     def entity_to_row(config: UseCaseConfigEntity) -> dict[str, Any]:
         """Convert a UseCaseConfig entity to a database row dict."""
+        # Ensure config is a dict (JSONB fields need to be JSON-serializable)
+        config_dict = config.config if isinstance(config.config, dict) else {}
         return {
             "id": config.id,
             "user_id": config.user_id,
             "usecase": config.usecase,
-            "config": config.config,
+            "config": config_dict,
             "created_at": config.created_at,
             "updated_at": config.updated_at,
         }

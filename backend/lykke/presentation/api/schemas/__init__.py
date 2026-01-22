@@ -52,17 +52,6 @@ from .task_definition import (
     TaskDefinitionSchema,
     TaskDefinitionUpdateSchema,
 )
-from .template import (
-    SystemTemplatePartSchema,
-    SystemTemplateSchema,
-    TemplateCreateSchema,
-    TemplateDetailSchema,
-    TemplatePartDetailSchema,
-    TemplatePreviewRequestSchema,
-    TemplatePreviewSchema,
-    TemplateSchema,
-    TemplateUpdateSchema,
-)
 from .usecase_config import (
     NotificationUseCaseConfigSchema,
     UseCaseConfigCreateSchema,
@@ -107,14 +96,6 @@ DayUpdateSchema.model_rebuild()
 HighLevelPlanSchema.model_rebuild()
 TaskSchema.model_rebuild()
 TaskDefinitionUpdateSchema.model_rebuild()
-TemplateCreateSchema.model_rebuild()
-TemplateDetailSchema.model_rebuild()
-TemplatePartDetailSchema.model_rebuild()
-TemplatePreviewRequestSchema.model_rebuild()
-TemplatePreviewSchema.model_rebuild()
-TemplateSchema.model_rebuild()
-TemplateUpdateSchema.model_rebuild()
-SystemTemplatePartSchema.model_rebuild()
 DayContextSchema.model_rebuild()
 ReminderSchema.model_rebuild()
 BrainDumpItemSchema.model_rebuild()
@@ -189,15 +170,6 @@ __all__ = [
     "TaskDefinitionCreateSchema",
     "TaskDefinitionSchema",
     "TaskDefinitionUpdateSchema",
-    "SystemTemplateSchema",
-    "SystemTemplatePartSchema",
-    "TemplateCreateSchema",
-    "TemplateDetailSchema",
-    "TemplatePartDetailSchema",
-    "TemplatePreviewRequestSchema",
-    "TemplatePreviewSchema",
-    "TemplateSchema",
-    "TemplateUpdateSchema",
     "TaskScheduleSchema",
     "TaskSchema",
     "NotificationUseCaseConfigSchema",

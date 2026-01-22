@@ -1,0 +1,208 @@
+---
+globs: backend/lykke/domain/value_objects/**/*.py
+alwaysApply: false
+---
+
+# Domain Value Objects Rules
+
+Value objects are immutable types with no identity. They represent concepts in the domain.
+
+---
+
+## Base Classes
+
+Value objects extend `BaseValueObject`:
+
+```python
+from dataclasses import dataclass
+
+from lykke.domain.value_objects.base import BaseValueObject
+
+
+@dataclass(frozen=True, kw_only=True)
+class TaskSchedule(BaseValueObject):
+    """Schedule information for a task."""
+    
+    start_time: time | None = None
+    end_time: time | None = None
+    duration_minutes: int | None = None
+```
+
+---
+
+## Key Rules
+
+1. **Use `@dataclass(frozen=True, kw_only=True)`** - Value objects are immutable
+2. **Prefer Enums for fixed sets** - Use Python enums for status types, categories, etc.
+3. **Query objects extend `BaseQuery`** - Used for filtering/searching
+4. **Update objects extend `BaseUpdateObject`** - Used for partial updates
+5. **No identity** - Value objects are compared by value, not by ID
+
+---
+
+## Common Patterns
+
+### Enum-based Value Objects
+
+```python
+from enum import Enum
+
+
+class TaskStatus(str, Enum):
+    NOT_STARTED = "not_started"
+    PENDING = "pending"
+    READY = "ready"
+    COMPLETE = "complete"
+    PUNT = "punt"
+
+
+class TaskCategory(str, Enum):
+    WORK = "work"
+    HEALTH = "health"
+    HOUSE = "house"
+    LIFE = "life"
+    OTHER = "other"
+```
+
+### Query Objects
+
+```python
+from dataclasses import dataclass
+from datetime import date as dt_date
+
+from lykke.domain.value_objects.query import BaseQuery
+
+
+@dataclass(frozen=True, kw_only=True)
+class TaskQuery(BaseQuery):
+    """Query object for searching tasks."""
+    
+    date: dt_date | None = None
+    status: TaskStatus | None = None
+    category: TaskCategory | None = None
+    routine_id: UUID | None = None
+```
+
+### Update Objects
+
+```python
+from dataclasses import dataclass
+
+from lykke.domain.value_objects.update import BaseUpdateObject
+
+
+@dataclass(frozen=True, kw_only=True)
+class TaskUpdateObject(BaseUpdateObject):
+    """Update object for partial task updates."""
+    
+    name: str | None = None
+    status: TaskStatus | None = None
+    schedule: TaskSchedule | None = None
+    tags: list[str] | None = None
+```
+
+### Composite Value Objects
+
+```python
+@dataclass(frozen=True, kw_only=True)
+class DayContext:
+    """Complete context for a day, combining multiple entities."""
+    
+    day: DayEntity
+    tasks: list[TaskEntity] = field(default_factory=list)
+    calendar_entries: list[CalendarEntryEntity] = field(default_factory=list)
+```
+
+### Paged Response
+
+```python
+@dataclass(frozen=True, kw_only=True)
+class PagedQueryResponse(Generic[T]):
+    """Response with pagination metadata."""
+    
+    items: list[T]
+    total: int
+    limit: int
+    offset: int
+    has_next: bool
+    has_previous: bool
+```
+
+---
+
+## Gotchas
+
+### 1. Frozen Value Objects
+
+**Issue:** Value objects are frozen (`frozen=True`), so you cannot modify them. Create new instances instead.
+
+```python
+# Wrong
+status.value = "new_value"  # Raises FrozenInstanceError
+
+# Right
+new_status = TaskStatus.COMPLETE  # Use enum value
+```
+
+### 2. Query Object Defaults
+
+**Issue:** Query objects should have sensible defaults for pagination.
+
+```python
+@dataclass(frozen=True, kw_only=True)
+class BaseQuery:
+    """Base class for query objects."""
+    
+    limit: int | None = None
+    offset: int | None = None
+    order_by: str | None = None
+    order_by_desc: bool = False
+    created_before: datetime | None = None
+    created_after: datetime | None = None
+```
+
+### 3. Update Objects with None
+
+**Issue:** Update objects use `None` to indicate "don't update this field".
+
+```python
+# Only update name, leave other fields unchanged
+update = TaskUpdateObject(name="New Name")  # status=None means don't change
+
+# Explicitly set to None (if the field supports it)
+# You'd need a sentinel value like UNSET for this
+```
+
+---
+
+## Testing Guidance
+
+### Testing Value Objects
+
+Test value object behavior:
+
+```python
+def test_task_status_enum():
+    """Test TaskStatus enum values."""
+    assert TaskStatus.COMPLETE.value == "complete"
+    assert TaskStatus.NOT_STARTED.value == "not_started"
+
+def test_task_query_defaults():
+    """Test TaskQuery has sensible defaults."""
+    query = TaskQuery()
+    assert query.limit is None
+    assert query.offset is None
+    assert query.date is None
+
+def test_task_schedule_immutable():
+    """Test TaskSchedule is immutable."""
+    schedule = TaskSchedule(start_time=time(9, 0))
+    with pytest.raises(FrozenInstanceError):
+        schedule.start_time = time(10, 0)
+```
+
+### Test Location
+
+Value object tests go in:
+- `tests/unit/domain/test_*.py` - Value object tests
+- No mocking needed (pure data structures)

@@ -16,7 +16,6 @@ from .push_notifications import PushNotification
 from .push_subscriptions import PushSubscription
 from .routines import Routine
 from .task_definitions import TaskDefinition
-from .templates import Template
 from .tasks import Task
 from .time_block_definitions import TimeBlockDefinition
 from .usecase_config import UseCaseConfig
@@ -38,7 +37,6 @@ push_notifications_tbl = PushNotification.__table__
 push_subscriptions_tbl = PushSubscription.__table__
 routines_tbl = Routine.__table__
 task_definitions_tbl = TaskDefinition.__table__
-templates_tbl = Template.__table__
 tasks_tbl = Task.__table__
 time_block_definitions_tbl = TimeBlockDefinition.__table__
 usecase_configs_tbl = UseCaseConfig.__table__
@@ -65,7 +63,6 @@ __all__ = [
     "Routine",
     "Task",
     "TaskDefinition",
-    "Template",
     "TimeBlockDefinition",
     "UseCaseConfig",
     "User",
@@ -85,7 +82,6 @@ __all__ = [
     "push_subscriptions_tbl",
     "routines_tbl",
     "task_definitions_tbl",
-    "templates_tbl",
     "tasks_tbl",
     "time_block_definitions_tbl",
     "usecase_configs_tbl",

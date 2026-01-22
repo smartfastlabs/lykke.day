@@ -1,16 +1,9 @@
 import textwrap
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-from uuid import UUID
+from typing import Any
 
-from jinja2 import ChoiceLoader, DictLoader, Environment, FileSystemLoader, pass_context
-from lykke.core.config import settings
-from lykke.domain import value_objects
+from jinja2 import Environment, FileSystemLoader, pass_context
 
-if TYPE_CHECKING:
-    from lykke.application.repositories import TemplateRepositoryReadOnlyProtocol
-
-USER_TEMPLATE_PATH: Path = (Path(settings.DATA_PATH) / "config" / "templates").resolve()
 TEMPLATE_PATH: Path = Path(__file__).resolve().parents[3] / "templates"
 
 
@@ -39,14 +32,7 @@ def _register_template_helpers(environment: Environment) -> None:
     environment.globals["kv_line"] = kv_line
 
 
-env = Environment(
-    loader=ChoiceLoader(
-        [
-            FileSystemLoader(USER_TEMPLATE_PATH),
-            FileSystemLoader(TEMPLATE_PATH),
-        ]
-    )
-)
+env = Environment(loader=FileSystemLoader(TEMPLATE_PATH))
 _register_template_helpers(env)
 
 
@@ -101,40 +87,20 @@ def template_display_name(value: str) -> str:
     return cleaned.title() if cleaned else value
 
 
-async def create_template_environment(
-    template_repo: "TemplateRepositoryReadOnlyProtocol",
-    _user_id: UUID,
-) -> Environment:
-    """Create a Jinja2 environment with user overrides + system templates."""
-    user_templates = await template_repo.search(value_objects.TemplateQuery())
-    user_dict = {
-        to_template_name(
-            build_template_key(template.usecase, template.key)
-        ): template.content
-        for template in user_templates
-    }
-
-    environment = Environment(
-        loader=ChoiceLoader(
-            [
-                DictLoader(user_dict),
-                FileSystemLoader(TEMPLATE_PATH),
-            ]
-        )
-    )
+def create_template_environment() -> Environment:
+    """Create a Jinja2 environment for system templates."""
+    environment = Environment(loader=FileSystemLoader(TEMPLATE_PATH))
     _register_template_helpers(environment)
     return environment
 
 
-async def render_for_user(
+def render_for_user(
     usecase: str,
     part: str,
-    template_repo: "TemplateRepositoryReadOnlyProtocol",
-    user_id: UUID,
     **kwargs: Any,
 ) -> str:
-    """Render a template for a user, applying DB overrides if present."""
-    environment = await create_template_environment(template_repo, user_id)
+    """Render a system template."""
+    environment = create_template_environment()
     template_key = build_template_key(usecase, part)
     template = environment.get_template(to_template_name(template_key))
     return textwrap.dedent(template.render(**kwargs)).strip()

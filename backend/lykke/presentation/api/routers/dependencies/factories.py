@@ -119,3 +119,5 @@ def get_command_handler(
         return create_command_handler(handler_class, user, uow_factory, ro_repo_factory)
 
     return _get_handler
+
+

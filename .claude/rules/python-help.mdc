@@ -1,0 +1,95 @@
+---
+globs: *.py
+alwaysApply: true
+---
+
+# Python Development Guide
+
+## Running Commands
+
+**Always check for a Makefile command before writing your own commands**
+
+**Always use Poetry to run Python commands:**
+
+```bash
+# Correct
+poetry run pytest tests/unit
+poetry run alembic upgrade head
+poetry run mypy lykke
+poetry run uvicorn lykke.app:app --reload
+
+# Incorrect - will use wrong environment
+pytest tests/unit
+python -m alembic upgrade head
+```
+
+## Quick Commands
+
+```bash
+# Testing
+make test                           # Run all tests
+make test-target TARGET=test_name   # Run tests matching name
+make typecheck                      # Run mypy
+make check-mappers                  # Check for missing mappers/schemas
+make check                          # Run typecheck + tests
+
+# Development
+make serve                          # Start dev server
+make migrate-dev                    # Apply migrations
+make migrate-create MSG='message'   # Create migration
+```
+
+## Code Style
+
+- Use type hints everywhere (mypy strict mode is enabled)
+- Use `async/await` for all I/O operations
+- Prefer Pydantic models for data classes
+- Use `UUID` for entity IDs (auto-generated via `default_factory=uuid4`)
+
+## Imports
+
+```python
+# Standard library first
+from datetime import UTC, datetime
+from uuid import UUID
+
+# Third-party second
+from pydantic import Field
+from sqlalchemy import select
+
+# Local imports last, using absolute paths
+from lykke.domain.entities import TaskEntity
+from lykke.application.repositories import TaskRepositoryReadOnlyProtocol
+```
+
+## Testing
+
+- Mark async tests with `@pytest.mark.asyncio`
+- Use `dobles` for mocking (not unittest.mock for protocols)
+- Use `freezegun` for time-dependent tests
+- Test fixtures go in `tests/conftest.py` or layer-specific conftest
+
+### CRITICAL: When Adding New Repositories
+
+**If you add a new repository to `ReadOnlyRepositories` protocol, you MUST:**
+
+1. **Add it to `UnitOfWorkProtocol`** in `application/unit_of_work.py`
+2. **Add it to `ReadOnlyRepositories` protocol** in `application/unit_of_work.py`
+3. **Add it to `BaseHandler`** in `application/base_handler.py`
+4. **Add it to `SqlAlchemyUnitOfWork`** in `infrastructure/unit_of_work.py`
+5. **Add it to `SqlAlchemyReadOnlyRepositories`** in `infrastructure/unit_of_work.py`
+6. **Update ALL test fixtures** that mock `ReadOnlyRepositories`:
+   - Search for `class.*FakeReadOnlyRepos` and `class.*DummyRORepos` in `tests/`
+   - Add `self.{repo_name}_ro_repo = fake` (or `None`) to ALL of them
+   - Common locations: `tests/unit/application/**/*.py`, `tests/unit/gateways/**/*.py`
+
+**Failure to do step 6 will cause ALL tests to fail with AttributeError.**
+
+## Type Checking
+
+The project uses strict mypy settings. Key rules:
+
+- All function parameters must have type hints
+- All return types must be specified
+- No implicit `Any` types
+- Use `cast()` when protocol compatibility requires it
