@@ -5,12 +5,14 @@ export interface UserSettings {
   template_defaults: string[];
   llm_provider?: LLMProvider | null;
   timezone?: string | null;
+  base_personality_slug?: string;
 }
 
 export interface UserSettingsUpdate {
   template_defaults?: string[];
   llm_provider?: LLMProvider | null;
   timezone?: string | null;
+  base_personality_slug?: string | null;
 }
 
 export interface CurrentUser {
@@ -33,5 +35,10 @@ export interface UserProfileUpdate {
   is_superuser?: boolean;
   is_verified?: boolean;
   settings?: UserSettingsUpdate;
+}
+
+export interface BasePersonalityOption {
+  slug: string;
+  label: string;
 }
 

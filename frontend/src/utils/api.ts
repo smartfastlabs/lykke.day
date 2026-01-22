@@ -15,7 +15,11 @@ import {
   UseCaseConfig,
   NotificationUseCaseConfig,
 } from "@/types/api";
-import type { CurrentUser, UserProfileUpdate } from "@/types/api/user";
+import type {
+  BasePersonalityOption,
+  CurrentUser,
+  UserProfileUpdate,
+} from "@/types/api/user";
 import type {
   ApiResponse,
   ApiError,
@@ -331,6 +335,11 @@ export const authAPI = {
       body: JSON.stringify(payload),
     });
   },
+};
+
+export const basePersonalityAPI = {
+  list: (): Promise<BasePersonalityOption[]> =>
+    fetchData<BasePersonalityOption[]>("/api/me/base-personalities"),
 };
 
 export const pushAPI = {

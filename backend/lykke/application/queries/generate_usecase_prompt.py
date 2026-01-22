@@ -2,10 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from uuid import UUID
-
 from lykke.application.queries.base import BaseQueryHandler, Query
-from lykke.application.unit_of_work import ReadOnlyRepositories
 from lykke.core.utils.templates import render_for_user
 from lykke.domain import value_objects
 
@@ -37,11 +34,14 @@ class GenerateUseCasePromptHandler(
 
     async def handle(self, query: GenerateUseCasePromptQuery) -> UseCasePromptResult:
         """Handle the prompt generation query."""
+        user = await self.user_ro_repo.get(self.user_id)
         user_amendments = await self._get_user_amendments(query.usecase)
+        base_personality_slug = user.settings.base_personality_slug
         system_prompt = render_for_user(
             query.usecase,
             "system",
             user_amendments=user_amendments,
+            base_personality_slug=base_personality_slug,
         )
 
         context_prompt: str | None = None

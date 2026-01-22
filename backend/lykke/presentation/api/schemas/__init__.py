@@ -3,6 +3,7 @@
 from .action import ActionSchema
 from .auditable import AuditableSchema
 from .audit_log import AuditLogSchema
+from .base_personality import BasePersonalitySchema
 from .bot_personality import BotPersonalitySchema
 from .calendar import (
     CalendarCreateSchema,
@@ -118,6 +119,7 @@ ConversationSchema.model_rebuild()
 MessageSchema.model_rebuild()
 SendMessageRequestSchema.model_rebuild()
 SendMessageResponseSchema.model_rebuild()
+BasePersonalitySchema.model_rebuild()
 WebSocketUserMessageSchema.model_rebuild()
 WebSocketMessageEventSchema.model_rebuild()
 WebSocketAuditLogEventSchema.model_rebuild()
@@ -131,6 +133,7 @@ __all__ = [
     "ActionSchema",
     "AuditableSchema",
     "AuditLogSchema",
+    "BasePersonalitySchema",
     "BotPersonalitySchema",
     "CalendarCreateSchema",
     "CalendarEntrySchema",

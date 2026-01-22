@@ -16,6 +16,7 @@ class UserSettingsSchema(BaseSchema):
     template_defaults: list[str]
     llm_provider: LLMProvider | None = None
     timezone: str | None = None
+    base_personality_slug: str = "default"
 
 
 class UserSchema(BaseSchema):
@@ -43,6 +44,7 @@ class UserSettingsUpdateSchema(BaseSchema):
     )
     llm_provider: LLMProvider | None = None
     timezone: str | None = None
+    base_personality_slug: str | None = None
 
 
 class UserUpdateSchema(BaseSchema):

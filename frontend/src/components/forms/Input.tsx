@@ -61,11 +61,13 @@ export const TextArea: Component<TextAreaProps> = (props) => (
   </div>
 );
 
+type SelectOption<T extends string> = T | { value: T; label: string };
+
 interface SelectProps<T extends string> {
   id: string;
   value: Accessor<T>;
   onChange: (value: T) => void;
-  options: T[];
+  options: SelectOption<T>[];
   required?: boolean;
   placeholder?: string;
 }
@@ -86,9 +88,16 @@ export function Select<T extends string>(props: SelectProps<T>) {
         {props.placeholder && (
           <option value="">{props.placeholder}</option>
         )}
-        {props.options.map((option) => (
-          <option value={option}>{option}</option>
-        ))}
+        {props.options.map((option) => {
+          if (typeof option === "string") {
+            return (
+              <option value={option}>{option}</option>
+            );
+          }
+          return (
+            <option value={option.value}>{option.label}</option>
+          );
+        })}
       </select>
     </div>
   );

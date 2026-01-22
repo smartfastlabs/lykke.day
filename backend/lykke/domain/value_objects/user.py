@@ -10,6 +10,7 @@ class UserSetting(BaseValueObject):
     template_defaults: list[str] = field(default_factory=lambda: ["default"] * 7)
     llm_provider: LLMProvider | None = None  # LLM provider for smart notifications
     timezone: str | None = None
+    base_personality_slug: str = "default"
 
     def __post_init__(self) -> None:
         if isinstance(self.llm_provider, str):

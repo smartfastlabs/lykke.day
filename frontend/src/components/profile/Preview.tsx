@@ -67,6 +67,12 @@ const ProfilePreview: Component<ProfilePreviewProps> = (props) => {
                 </Show>
               </div>
             </div>
+            <div>
+              <div class="text-sm font-medium text-neutral-500">Base personality</div>
+              <div class="mt-1 text-base text-neutral-900">
+                {props.user.settings.base_personality_slug ?? "default"}
+              </div>
+            </div>
           </div>
         </div>
 

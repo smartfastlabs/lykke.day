@@ -10,6 +10,11 @@ from .generate_usecase_prompt import (
 from .get_day_context import GetDayContextHandler, GetDayContextQuery
 from .get_incremental_changes import GetIncrementalChangesHandler, GetIncrementalChangesQuery
 from .get_llm_prompt_context import GetLLMPromptContextHandler, GetLLMPromptContextQuery
+from .list_base_personalities import (
+    BasePersonalityInfo,
+    ListBasePersonalitiesHandler,
+    ListBasePersonalitiesQuery,
+)
 from .preview_day import PreviewDayHandler, PreviewDayQuery
 from .preview_tasks import PreviewTasksHandler, PreviewTasksQuery
 from .usecase_config import GetUseCaseConfigHandler, GetUseCaseConfigQuery
@@ -23,6 +28,9 @@ __all__ = [
     "GetIncrementalChangesQuery",
     "GetLLMPromptContextHandler",
     "GetLLMPromptContextQuery",
+    "BasePersonalityInfo",
+    "ListBasePersonalitiesHandler",
+    "ListBasePersonalitiesQuery",
     "PreviewDayHandler",
     "PreviewDayQuery",
     "PreviewTasksHandler",

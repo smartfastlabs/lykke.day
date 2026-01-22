@@ -6,6 +6,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
 from lykke.application.queries import GetDayContextHandler, GetDayContextQuery
+from lykke.application.queries.list_base_personalities import (
+    ListBasePersonalitiesHandler,
+    ListBasePersonalitiesQuery,
+)
 from lykke.application.commands.day import (
     AddBrainDumpItemToDayCommand,
     AddBrainDumpItemToDayHandler,
@@ -29,6 +33,7 @@ from lykke.domain.value_objects import (
     UserUpdateObject,
 )
 from lykke.presentation.api.schemas import (
+    BasePersonalitySchema,
     UserSchema,
     UserUpdateSchema,
     DayContextSchema,
@@ -36,7 +41,7 @@ from lykke.presentation.api.schemas import (
 from lykke.presentation.api.schemas.mappers import map_user_to_schema, map_day_context_to_schema
 from lykke.core.utils.dates import get_current_date
 
-from .dependencies.factories import get_command_handler
+from .dependencies.factories import get_command_handler, get_query_handler
 from .dependencies.user import get_current_user
 from .dependencies.services import (
     day_context_handler,
@@ -89,10 +94,17 @@ async def update_current_user_profile(
             if "timezone" in settings_fields
             else current_settings.timezone
         )
+        base_personality_slug = (
+            update_data.settings.base_personality_slug
+            if "base_personality_slug" in settings_fields
+            and update_data.settings.base_personality_slug is not None
+            else current_settings.base_personality_slug
+        )
         settings = UserSetting(
             template_defaults=template_defaults,
             llm_provider=llm_provider,
             timezone=timezone,
+            base_personality_slug=base_personality_slug,
         )
 
     update_object = UserUpdateObject(
@@ -105,6 +117,18 @@ async def update_current_user_profile(
     )
     updated_user = await update_user_handler.handle(UpdateUserCommand(update_data=update_object))
     return map_user_to_schema(updated_user)
+
+
+@router.get("/base-personalities", response_model=list[BasePersonalitySchema])
+async def list_base_personalities(
+    handler: Annotated[
+        ListBasePersonalitiesHandler,
+        Depends(get_query_handler(ListBasePersonalitiesHandler)),
+    ],
+) -> list[BasePersonalitySchema]:
+    """List available base personalities."""
+    personalities = await handler.handle(ListBasePersonalitiesQuery())
+    return [BasePersonalitySchema.model_validate(personality) for personality in personalities]
 
 
 # ============================================================================

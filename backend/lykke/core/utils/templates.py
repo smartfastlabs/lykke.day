@@ -5,6 +5,8 @@ from typing import Any
 from jinja2 import Environment, FileSystemLoader, pass_context
 
 TEMPLATE_PATH: Path = Path(__file__).resolve().parents[3] / "templates"
+BASE_PERSONALITY_DIR = "base_personalities"
+DEFAULT_BASE_PERSONALITY_SLUG = "default"
 
 
 @pass_context
@@ -81,6 +83,37 @@ def list_system_templates() -> list[dict[str, str]]:
     return templates
 
 
+def list_base_personalities() -> list[dict[str, str]]:
+    """List available base personality templates."""
+    base_root = TEMPLATE_PATH / BASE_PERSONALITY_DIR
+    if not base_root.exists():
+        return [{"slug": DEFAULT_BASE_PERSONALITY_SLUG, "label": "Default"}]
+
+    personalities = []
+    for path in sorted(base_root.glob("*.j2")):
+        slug = path.stem
+        personalities.append(
+            {"slug": slug, "label": template_display_name(slug)}
+        )
+
+    if not any(item["slug"] == DEFAULT_BASE_PERSONALITY_SLUG for item in personalities):
+        personalities.insert(0, {"slug": DEFAULT_BASE_PERSONALITY_SLUG, "label": "Default"})
+
+    return personalities
+
+
+def resolve_base_personality_slug(slug: str | None) -> str:
+    """Validate base personality slug with fallback to default."""
+    if not slug:
+        return DEFAULT_BASE_PERSONALITY_SLUG
+
+    base_root = TEMPLATE_PATH / BASE_PERSONALITY_DIR
+    candidate = base_root / f"{slug}.j2"
+    if candidate.exists():
+        return slug
+    return DEFAULT_BASE_PERSONALITY_SLUG
+
+
 def template_display_name(value: str) -> str:
     """Generate a display name from a template value."""
     cleaned = value.replace("_", " ").replace("-", " ").strip()
@@ -97,10 +130,13 @@ def create_template_environment() -> Environment:
 def render_for_user(
     usecase: str,
     part: str,
+    base_personality_slug: str | None = None,
     **kwargs: Any,
 ) -> str:
     """Render a system template."""
     environment = create_template_environment()
     template_key = build_template_key(usecase, part)
     template = environment.get_template(to_template_name(template_key))
+    resolved_slug = resolve_base_personality_slug(base_personality_slug)
+    kwargs.setdefault("base_personality_slug", resolved_slug)
     return textwrap.dedent(template.render(**kwargs)).strip()
