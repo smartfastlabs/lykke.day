@@ -29,6 +29,7 @@ import TasksView from "@/pages/me/today/Tasks";
 import EventsView from "@/pages/me/today/Events";
 import TodayEditPage from "@/pages/me/today/Edit";
 import AddAdhocTaskPage from "@/pages/me/today/AddAdhocTask";
+import AddReminderPage from "@/pages/me/today/AddReminder";
 import AuditLogPage from "@/pages/me/AuditLog";
 import BrainDumpPage from "@/pages/me/BrainDump";
 import BrainDumpDumpPage from "@/pages/me/BrainDumpDump";
@@ -239,6 +240,7 @@ export default function App() {
               <Route path="/brain-dump" component={BrainDumpPage} />
               <Route path="/brain-dump/dump" component={BrainDumpDumpPage} />
               <Route path="/adhoc-task" component={AddAdhocTaskPage} />
+              <Route path="/add-reminder" component={AddReminderPage} />
               <Route path="/today" component={HomeLayout}>
                 <Route path="/" component={PreviewView} />
                 <Route path="/tasks" component={TasksView} />
