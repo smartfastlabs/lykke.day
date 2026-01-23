@@ -1,4 +1,4 @@
-import { Component, createMemo } from "solid-js";
+import { Component, Show, createMemo } from "solid-js";
 import { useStreamingData } from "@/providers/streamingData";
 import {
   TasksSection,
@@ -15,6 +15,9 @@ export const TodayPage: Component = () => {
   const allTasks = createMemo(() => tasks() ?? []);
   const allEvents = createMemo(() => events() ?? []);
   const allReminders = createMemo(() => reminders() ?? []);
+  const hasUpcomingEvents = createMemo(() =>
+    allEvents().some((event) => new Date(event.starts_at) >= new Date())
+  );
 
   return (
     <>
@@ -29,10 +32,12 @@ export const TodayPage: Component = () => {
       </div>
 
       <div class="mb-6 flex flex-col md:flex-row gap-4">
-        <div class="w-full md:w-1/2">
-          <EventsSection events={allEvents()} href="/me/today/events" />
-        </div>
-        <div class="w-full md:w-1/2">
+        <Show when={hasUpcomingEvents()}>
+          <div class="w-full md:w-1/2">
+            <EventsSection events={allEvents()} href="/me/today/events" />
+          </div>
+        </Show>
+        <div class={hasUpcomingEvents() ? "w-full md:w-1/2" : "w-full"}>
           <TasksSection tasks={allTasks()} href="/me/today/tasks" />
         </div>
       </div>

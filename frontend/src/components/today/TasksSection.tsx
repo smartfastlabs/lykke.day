@@ -13,12 +13,18 @@ export interface TasksSectionProps {
 
 export const TasksSection: Component<TasksSectionProps> = (props) => {
   const navigate = useNavigate();
+  const activeTasks = createMemo(() =>
+    props.tasks.filter((t) => t.status !== "COMPLETE" && t.status !== "PUNT")
+  );
+
   const importantTasks = createMemo(() =>
-    props.tasks.filter((t) => t.tags?.includes("IMPORTANT"))
+    activeTasks().filter((t) => t.tags?.includes("IMPORTANT"))
   );
 
   const adhocTasks = createMemo(() =>
-    props.tasks.filter((t) => t.type === "ADHOC" && !t.tags?.includes("IMPORTANT"))
+    activeTasks().filter(
+      (t) => t.type === "ADHOC" && !t.tags?.includes("IMPORTANT")
+    )
   );
 
   const displayedTasks = createMemo(() => [
@@ -27,7 +33,7 @@ export const TasksSection: Component<TasksSectionProps> = (props) => {
   ]);
 
   const otherCount = createMemo(() =>
-    props.tasks.filter(
+    activeTasks().filter(
       (t) => !t.tags?.includes("IMPORTANT") && t.type !== "ADHOC"
     ).length
   );
@@ -35,10 +41,15 @@ export const TasksSection: Component<TasksSectionProps> = (props) => {
   return (
     <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-5 backdrop-blur-sm space-y-4">
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => navigate(props.href)}
+          class="flex items-center gap-3 text-left"
+          aria-label="See all tasks"
+        >
           <Icon icon={faListCheck} class="w-5 h-5 fill-amber-600" />
           <p class="text-xs uppercase tracking-wide text-amber-700">Tasks</p>
-        </div>
+        </button>
         <div class="flex items-center gap-3">
           <button
             onClick={() => navigate("/me/adhoc-task")}
@@ -47,12 +58,6 @@ export const TasksSection: Component<TasksSectionProps> = (props) => {
           >
             <Icon icon={faPlus} class="w-3 h-3" />
           </button>
-          <a
-            class="text-xs font-semibold text-amber-700 hover:text-amber-800"
-            href={props.href}
-          >
-            See all tasks
-          </a>
         </div>
       </div>
       <Show when={displayedTasks().length > 0}>
