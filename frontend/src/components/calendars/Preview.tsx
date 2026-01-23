@@ -255,6 +255,12 @@ const CalendarPreview: Component<CalendarPreviewProps> = (props) => {
                 </p>
                 <a
                   href={`/api/google/login?auth_token_id=${props.calendar.auth_token_id}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    window.location.assign(
+                      `/api/google/login?auth_token_id=${props.calendar.auth_token_id}`
+                    );
+                  }}
                   class="inline-flex items-center justify-center rounded-lg border border-amber-300 bg-white px-4 py-2.5 text-sm font-medium text-amber-700 shadow-sm hover:bg-amber-50 hover:border-amber-400 transition-all"
                 >
                   Re-authenticate Google Calendar
