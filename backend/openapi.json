@@ -580,15 +580,47 @@
         ]
       }
     },
-    "/me/today/goals": {
+    "/me/base-personalities": {
+      "get": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "List Base Personalities",
+        "description": "List available base personalities.",
+        "operationId": "list_base_personalities_me_base_personalities_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BasePersonalitySchema"
+                  },
+                  "type": "array",
+                  "title": "Response List Base Personalities Me Base Personalities Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/me/today/reminders": {
       "post": {
         "tags": [
           "auth",
           "user"
         ],
-        "summary": "Add Goal To Today",
-        "description": "Add a goal to today.",
-        "operationId": "add_goal_to_today_me_today_goals_post",
+        "summary": "Add Reminder To Today",
+        "description": "Add a reminder to today.",
+        "operationId": "add_reminder_to_today_me_today_reminders_post",
         "security": [
           {
             "APIKeyCookie": []
@@ -629,15 +661,15 @@
         }
       }
     },
-    "/me/today/goals/{goal_id}": {
+    "/me/today/reminders/{reminder_id}": {
       "patch": {
         "tags": [
           "auth",
           "user"
         ],
-        "summary": "Update Today Goal Status",
-        "description": "Update a goal's status for today.",
-        "operationId": "update_today_goal_status_me_today_goals__goal_id__patch",
+        "summary": "Update Today Reminder Status",
+        "description": "Update a reminder's status for today.",
+        "operationId": "update_today_reminder_status_me_today_reminders__reminder_id__patch",
         "security": [
           {
             "APIKeyCookie": []
@@ -645,13 +677,13 @@
         ],
         "parameters": [
           {
-            "name": "goal_id",
+            "name": "reminder_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Goal Id"
+              "title": "Reminder Id"
             }
           },
           {
@@ -659,7 +691,7 @@
             "in": "query",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/GoalStatus"
+              "$ref": "#/components/schemas/ReminderStatus"
             }
           }
         ],
@@ -691,9 +723,9 @@
           "auth",
           "user"
         ],
-        "summary": "Remove Goal From Today",
-        "description": "Remove a goal from today.",
-        "operationId": "remove_goal_from_today_me_today_goals__goal_id__delete",
+        "summary": "Remove Reminder From Today",
+        "description": "Remove a reminder from today.",
+        "operationId": "remove_reminder_from_today_me_today_reminders__reminder_id__delete",
         "security": [
           {
             "APIKeyCookie": []
@@ -701,13 +733,13 @@
         ],
         "parameters": [
           {
-            "name": "goal_id",
+            "name": "reminder_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Goal Id"
+              "title": "Reminder Id"
             }
           }
         ],
@@ -890,25 +922,32 @@
         }
       }
     },
-    "/me/today/high-level-plan": {
-      "patch": {
+    "/me/today/routines": {
+      "post": {
         "tags": [
           "auth",
           "user"
         ],
-        "summary": "Update Today High Level Plan",
-        "description": "Update the high level plan for today.",
-        "operationId": "update_today_high_level_plan_me_today_high_level_plan_patch",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/HighLevelPlanSchema"
-              }
+        "summary": "Add Routine To Today",
+        "description": "Add a routine's tasks to today.",
+        "operationId": "add_routine_to_today_me_today_routines_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "routine_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Routine Id"
             }
-          },
-          "required": true
-        },
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -930,12 +969,7 @@
               }
             }
           }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
+        }
       }
     },
     "/calendar-entry-series/{uuid}": {
@@ -1425,6 +1459,53 @@
         }
       }
     },
+    "/tasks/adhoc": {
+      "post": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Create Adhoc Task",
+        "description": "Create an adhoc task.",
+        "operationId": "create_adhoc_task_tasks_adhoc_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdhocTaskCreateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
     "/days/today/reschedule": {
       "put": {
         "tags": [
@@ -1452,6 +1533,67 @@
             "APIKeyCookie": []
           }
         ]
+      }
+    },
+    "/days/{day_id}": {
+      "patch": {
+        "tags": [
+          "day",
+          "scheduling",
+          "planning"
+        ],
+        "summary": "Update Day",
+        "description": "Update a day.",
+        "operationId": "update_day_days__day_id__patch",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "day_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Day Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DaySchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/day-templates/{uuid}": {
@@ -3364,6 +3506,178 @@
         ]
       }
     },
+    "/usecase-configs/{usecase}": {
+      "get": {
+        "tags": [
+          "usecase-configs"
+        ],
+        "summary": "Get Usecase Config",
+        "description": "Get usecase config by usecase key.",
+        "operationId": "get_usecase_config_usecase_configs__usecase__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "usecase",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Usecase"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationUseCaseConfigSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "usecase-configs"
+        ],
+        "summary": "Update Usecase Config",
+        "description": "Create or update usecase config.",
+        "operationId": "update_usecase_config_usecase_configs__usecase__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "usecase",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Usecase"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationUseCaseConfigSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationUseCaseConfigSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usecase-configs/{usecase_config_id}": {
+      "delete": {
+        "tags": [
+          "usecase-configs"
+        ],
+        "summary": "Delete Usecase Config",
+        "description": "Delete a usecase config.",
+        "operationId": "delete_usecase_config_usecase_configs__usecase_config_id__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "usecase_config_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Usecase Config Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/twilio/webhook/sms": {
+      "post": {
+        "tags": [
+          "twilio",
+          "sms"
+        ],
+        "summary": "Twilio Sms Webhook",
+        "description": "Webhook endpoint for inbound Twilio SMS messages.",
+        "operationId": "twilio_sms_webhook_twilio_webhook_sms_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health Check",
@@ -3464,6 +3778,77 @@
           "VIEW"
         ],
         "title": "ActionType"
+      },
+      "AdhocTaskCreateSchema": {
+        "properties": {
+          "scheduled_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Scheduled Date"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "category": {
+            "$ref": "#/components/schemas/TaskCategory"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/TaskTag"
+            },
+            "type": "array",
+            "title": "Tags"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scheduled_date",
+          "name",
+          "category"
+        ],
+        "title": "AdhocTaskCreateSchema",
+        "description": "API schema for creating adhoc tasks."
+      },
+      "BasePersonalitySchema": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "label"
+        ],
+        "title": "BasePersonalitySchema",
+        "description": "Schema for base personality metadata."
       },
       "Body_auth_cookie_login_auth_login_post": {
         "properties": {
@@ -4334,6 +4719,30 @@
             ],
             "title": "Scheduled At"
           },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
           "tags": {
             "items": {
               "$ref": "#/components/schemas/DayTag"
@@ -4351,12 +4760,12 @@
               }
             ]
           },
-          "goals": {
+          "reminders": {
             "items": {
-              "$ref": "#/components/schemas/GoalSchema"
+              "$ref": "#/components/schemas/ReminderSchema"
             },
             "type": "array",
-            "title": "Goals"
+            "title": "Reminders"
           },
           "brain_dump_items": {
             "items": {
@@ -4409,6 +4818,30 @@
           "slug": {
             "type": "string",
             "title": "Slug"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
           },
           "icon": {
             "anyOf": [
@@ -4572,6 +5005,30 @@
             "type": "string",
             "title": "Slug"
           },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
           "icon": {
             "anyOf": [
               {
@@ -4694,6 +5151,30 @@
             ],
             "title": "Slug"
           },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
           "icon": {
             "anyOf": [
               {
@@ -4749,6 +5230,71 @@
         "title": "DayTemplateUpdateSchema",
         "description": "API schema for DayTemplate update requests."
       },
+      "DayUpdateSchema": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DayStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scheduled_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled At"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DayTag"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "high_level_plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HighLevelPlanSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "DayUpdateSchema",
+        "description": "API schema for Day update requests."
+      },
       "EarlyAccessRequest": {
         "properties": {
           "email": {
@@ -4798,58 +5344,6 @@
         ],
         "title": "EventCategory"
       },
-      "GoalSchema": {
-        "properties": {
-          "id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "status": {
-            "$ref": "#/components/schemas/GoalStatus"
-          },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "status"
-        ],
-        "title": "GoalSchema",
-        "description": "API schema for Goal value object."
-      },
-      "GoalStatus": {
-        "type": "string",
-        "enum": [
-          "INCOMPLETE",
-          "COMPLETE",
-          "PUNT"
-        ],
-        "title": "GoalStatus",
-        "description": "Status of a goal."
-      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -4886,11 +5380,53 @@
               }
             ],
             "title": "Text"
+          },
+          "intentions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Intentions"
           }
         },
         "type": "object",
         "title": "HighLevelPlanSchema",
         "description": "API schema for high level plan value object."
+      },
+      "LLMProvider": {
+        "type": "string",
+        "enum": [
+          "anthropic",
+          "openai"
+        ],
+        "title": "LLMProvider",
+        "description": "LLM provider for generating responses."
+      },
+      "NotificationUseCaseConfigSchema": {
+        "properties": {
+          "user_amendments": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "User Amendments",
+            "default": []
+          },
+          "rendered_prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rendered Prompt"
+          }
+        },
+        "type": "object",
+        "title": "NotificationUseCaseConfigSchema",
+        "description": "Schema for notification usecase config (typed)."
       },
       "PagedResponseSchema_CalendarEntrySeriesSchema_": {
         "properties": {
@@ -5575,6 +6111,96 @@
         "type": "object",
         "title": "QuerySchema[TimeBlockDefinitionQuery]"
       },
+      "RecurrenceScheduleSchema": {
+        "properties": {
+          "frequency": {
+            "$ref": "#/components/schemas/TaskFrequency"
+          },
+          "weekdays": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DayOfWeek"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekdays"
+          },
+          "day_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "frequency"
+        ],
+        "title": "RecurrenceScheduleSchema",
+        "description": "API schema for RecurrenceSchedule value object."
+      },
+      "ReminderSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReminderStatus"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "status"
+        ],
+        "title": "ReminderSchema",
+        "description": "API schema for Reminder value object."
+      },
+      "ReminderStatus": {
+        "type": "string",
+        "enum": [
+          "INCOMPLETE",
+          "COMPLETE",
+          "PUNT"
+        ],
+        "title": "ReminderStatus",
+        "description": "Status of a reminder."
+      },
       "RoutineCreateSchema": {
         "properties": {
           "name": {
@@ -5585,7 +6211,7 @@
             "$ref": "#/components/schemas/TaskCategory"
           },
           "routine_schedule": {
-            "$ref": "#/components/schemas/RoutineScheduleSchema"
+            "$ref": "#/components/schemas/RecurrenceScheduleSchema"
           },
           "description": {
             "type": "string",
@@ -5683,44 +6309,6 @@
         "type": "object",
         "title": "RoutineQuery"
       },
-      "RoutineScheduleSchema": {
-        "properties": {
-          "frequency": {
-            "$ref": "#/components/schemas/TaskFrequency"
-          },
-          "weekdays": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DayOfWeek"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Weekdays"
-          },
-          "day_number": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Day Number"
-          }
-        },
-        "type": "object",
-        "required": [
-          "frequency"
-        ],
-        "title": "RoutineScheduleSchema",
-        "description": "API schema for RoutineSchedule value object."
-      },
       "RoutineSchema": {
         "properties": {
           "id": {
@@ -5748,7 +6336,7 @@
             "$ref": "#/components/schemas/TaskCategory"
           },
           "routine_schedule": {
-            "$ref": "#/components/schemas/RoutineScheduleSchema"
+            "$ref": "#/components/schemas/RecurrenceScheduleSchema"
           },
           "description": {
             "type": "string",
@@ -5795,6 +6383,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/TaskScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task_schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecurrenceScheduleSchema"
               },
               {
                 "type": "null"
@@ -5848,6 +6446,16 @@
                 "type": "null"
               }
             ]
+          },
+          "task_schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecurrenceScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -5896,6 +6504,16 @@
                 "type": "null"
               }
             ]
+          },
+          "task_schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecurrenceScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -5922,6 +6540,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/TaskScheduleSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task_schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecurrenceScheduleSchema"
               },
               {
                 "type": "null"
@@ -5959,7 +6587,7 @@
           "routine_schedule": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/RoutineScheduleSchema"
+                "$ref": "#/components/schemas/RecurrenceScheduleSchema"
               },
               {
                 "type": "null"
@@ -6497,6 +7125,7 @@
       "TaskType": {
         "type": "string",
         "enum": [
+          "ADHOC",
           "MEAL",
           "WORK",
           "MEETING",
@@ -6993,8 +7622,7 @@
               {
                 "type": "null"
               }
-            ],
-            "title": "Llm Provider"
+            ]
           },
           "timezone": {
             "anyOf": [
@@ -7017,8 +7645,18 @@
               "type": "string"
             },
             "type": "array",
-            "title": "Llm Personality Amendments",
-            "default": []
+            "title": "Llm Personality Amendments"
+          },
+          "morning_overview_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Morning Overview Time"
           }
         },
         "type": "object",
@@ -7054,8 +7692,7 @@
               {
                 "type": "null"
               }
-            ],
-            "title": "Llm Provider"
+            ]
           },
           "timezone": {
             "anyOf": [
@@ -7092,6 +7729,17 @@
               }
             ],
             "title": "Llm Personality Amendments"
+          },
+          "morning_overview_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Morning Overview Time"
           }
         },
         "type": "object",

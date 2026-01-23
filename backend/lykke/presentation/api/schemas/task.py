@@ -48,3 +48,14 @@ class TaskSchema(BaseEntitySchema):
     tags: list[TaskTag] = Field(default_factory=list)
     actions: list["ActionSchema"] = Field(default_factory=list)
 
+
+class AdhocTaskCreateSchema(BaseSchema):
+    """API schema for creating adhoc tasks."""
+
+    scheduled_date: date
+    name: str
+    description: str | None = None
+    category: TaskCategory
+    schedule: Optional[TaskScheduleSchema] = None
+    tags: list[TaskTag] = Field(default_factory=list)
+

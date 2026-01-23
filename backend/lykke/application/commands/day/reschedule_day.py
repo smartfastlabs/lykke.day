@@ -68,15 +68,17 @@ class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, value_object
             # Step 2: Delete all existing tasks for this date
             # First, verify how many tasks exist before deletion for logging
             existing_tasks = await uow.task_ro_repo.search(
-                value_objects.TaskQuery(date=command.date)
+                value_objects.TaskQuery(date=command.date, is_adhoc=False)
             )
             logger.info(f"Found {len(existing_tasks)} existing tasks for {command.date}, deleting...")
 
-            await uow.bulk_delete_tasks(value_objects.TaskQuery(date=command.date))
+            await uow.bulk_delete_tasks(
+                value_objects.TaskQuery(date=command.date, is_adhoc=False)
+            )
 
             # Verify deletion worked
             remaining_tasks = await uow.task_ro_repo.search(
-                value_objects.TaskQuery(date=command.date)
+                value_objects.TaskQuery(date=command.date, is_adhoc=False)
             )
             if remaining_tasks:
                 logger.warning(

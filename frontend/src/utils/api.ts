@@ -167,6 +167,18 @@ export const taskAPI = {
       method: "POST",
       body: JSON.stringify({ type: status }),
     }),
+  createAdhocTask: (payload: {
+    scheduled_date: string;
+    name: string;
+    category: Task["category"];
+    description?: string | null;
+    schedule?: TaskSchedule | null;
+    tags?: Task["tags"];
+  }): Promise<Task> =>
+    fetchData<Task>("/api/tasks/adhoc", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 };
 
 export const reminderAPI = {

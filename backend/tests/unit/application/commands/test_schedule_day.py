@@ -355,6 +355,7 @@ async def test_schedule_day_deletes_existing_tasks():
     assert len(uow_factory.uow.bulk_deleted_tasks) == 1
     delete_query = uow_factory.uow.bulk_deleted_tasks[0]
     assert delete_query.date == task_date
+    assert delete_query.is_adhoc is False
 
 
 @pytest.mark.asyncio

@@ -27,9 +27,6 @@ export const TodayPage: Component = () => {
       <div class="mb-6">
         <RemindersSummary reminders={allReminders()} />
       </div>
-      <div class="mb-6">
-        <RoutinesSummary tasks={allTasks()} />
-      </div>
 
       <div class="mb-6 flex flex-col md:flex-row gap-4">
         <div class="w-full md:w-1/2">
@@ -38,6 +35,10 @@ export const TodayPage: Component = () => {
         <div class="w-full md:w-1/2">
           <TasksSection tasks={allTasks()} href="/me/today/tasks" />
         </div>
+      </div>
+
+      <div class="mb-6">
+        <RoutinesSummary tasks={allTasks()} />
       </div>
     </>
   );

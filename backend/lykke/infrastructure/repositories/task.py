@@ -32,6 +32,11 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
         if query.routine_ids:
             stmt = stmt.where(self.table.c.routine_id.in_(query.routine_ids))
 
+        if query.is_adhoc is True:
+            stmt = stmt.where(self.table.c.routine_id.is_(None))
+        elif query.is_adhoc is False:
+            stmt = stmt.where(self.table.c.routine_id.is_not(None))
+
         return stmt
 
     @staticmethod

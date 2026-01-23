@@ -47,7 +47,7 @@ from .routine import (
     RoutineTaskUpdateSchema,
     RoutineUpdateSchema,
 )
-from .task import TaskScheduleSchema, TaskSchema
+from .task import AdhocTaskCreateSchema, TaskScheduleSchema, TaskSchema
 from .task_definition import (
     TaskDefinitionCreateSchema,
     TaskDefinitionSchema,
@@ -96,6 +96,7 @@ DayTemplateUpdateSchema.model_rebuild()
 DayUpdateSchema.model_rebuild()
 HighLevelPlanSchema.model_rebuild()
 TaskSchema.model_rebuild()
+AdhocTaskCreateSchema.model_rebuild()
 TaskDefinitionUpdateSchema.model_rebuild()
 DayContextSchema.model_rebuild()
 ReminderSchema.model_rebuild()
@@ -175,6 +176,7 @@ __all__ = [
     "TaskDefinitionUpdateSchema",
     "TaskScheduleSchema",
     "TaskSchema",
+    "AdhocTaskCreateSchema",
     "NotificationUseCaseConfigSchema",
     "UseCaseConfigCreateSchema",
     "UseCaseConfigSchema",

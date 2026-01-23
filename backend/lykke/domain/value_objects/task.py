@@ -85,6 +85,7 @@ class EventCategory(str, Enum):
 
 
 class TaskType(str, Enum):
+    ADHOC = "ADHOC"
     MEAL = "MEAL"
     WORK = "WORK"
     MEETING = "MEETING"

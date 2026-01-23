@@ -22,6 +22,7 @@ type TaskFrequency = components["schemas"]["TaskFrequency"];
  * Source: components["schemas"]["TaskType"] in api.generated.ts
  */
 export const ALL_TASK_TYPES: TaskType[] = [
+  "ADHOC",
   "MEAL",
   "WORK",
   "MEETING",

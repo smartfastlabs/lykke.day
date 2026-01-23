@@ -228,7 +228,9 @@ class ScheduleDayHandler(BaseCommandHandler[ScheduleDayCommand, value_objects.Da
 
         if cleanup_existing_tasks:
             # Delete existing tasks for this date (defensive cleanup)
-            await uow.bulk_delete_tasks(value_objects.TaskQuery(date=command.date))
+            await uow.bulk_delete_tasks(
+                value_objects.TaskQuery(date=command.date, is_adhoc=False)
+            )
 
         # Get preview of what the day would look like
         preview_result = await self.preview_day_handler.preview_day(

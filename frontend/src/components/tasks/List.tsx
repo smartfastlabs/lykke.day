@@ -92,13 +92,10 @@ const TaskItem: Component<{ task: Task }> = (props) => {
       statusClass={getStatusClasses(props.task.status)}
       compact={true}
     >
-      <div class="flex items-center gap-2">
-        {/* Time column */}
-        <div class="w-16 flex-shrink-0 text-right">
-          <Show
-            when={time()?.primary}
-            fallback={<span class="text-[10px] text-stone-300">—</span>}
-          >
+      <div class="flex items-center justify-start gap-2">
+        {/* Time column - only show if there's a time */}
+        <Show when={time()?.primary}>
+          <div class="flex-shrink-0 text-right">
             <span
               class={`text-[10px] tabular-nums whitespace-nowrap ${
                 time()?.primary === "flexible"
@@ -108,20 +105,20 @@ const TaskItem: Component<{ task: Task }> = (props) => {
             >
               {time()?.primary}
             </span>
-          </Show>
-        </div>
+          </div>
+        </Show>
 
         {/* Category/Type icon */}
-        <span class="w-4 flex-shrink-0 flex items-center justify-center text-amber-600">
+        <span class="flex-shrink-0 flex items-center justify-center text-amber-600">
           <Show when={icon()}>
             <Icon icon={icon()!} class="w-3 h-3" />
           </Show>
         </span>
 
         {/* Task name */}
-        <div class="flex-1 min-w-0">
+        <div class="flex-1 min-w-0 text-left">
           <span
-            class="text-xs truncate block"
+            class="text-xs truncate block text-left"
             classList={{
               "line-through text-stone-400": props.task.status === "COMPLETE",
               "text-stone-800": props.task.status !== "COMPLETE",

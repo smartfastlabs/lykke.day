@@ -26,6 +26,8 @@ from .message import (
     ReceiveSmsMessageHandler,
 )
 from .task import (
+    CreateAdhocTaskCommand,
+    CreateAdhocTaskHandler,
     RecordRoutineActionCommand,
     RecordRoutineActionHandler,
     RecordTaskActionCommand,
@@ -37,6 +39,8 @@ __all__ = [
     "RecordRoutineActionHandler",
     "RecordTaskActionCommand",
     "RecordTaskActionHandler",
+    "CreateAdhocTaskCommand",
+    "CreateAdhocTaskHandler",
     "RescheduleDayCommand",
     "RescheduleDayHandler",
     "ScheduleDayCommand",

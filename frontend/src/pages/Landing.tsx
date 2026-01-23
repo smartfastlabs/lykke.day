@@ -65,7 +65,7 @@ const Landing: Component = () => {
     <>
       <SEO
         title="Lykke — Find happiness in everyday moments"
-        description="Lykke (loo-kah) — the Danish art of finding happiness in everyday moments. A daily companion that helps you get the small stuff done so you're more effective to do the big stuff."
+        description="Lykke (loo-kah) — the Danish art of finding happiness in everyday moments. A daily companion for people who struggle with the basics and want calmer, more consistent days."
         path="/"
       />
       <div class="min-h-screen relative overflow-hidden">
@@ -144,9 +144,10 @@ const Landing: Component = () => {
               transform: mounted() ? "translateY(0)" : "translateY(20px)",
             }}
           >
-            A daily companion — not an app. Just small intentions, gentle
-            check-ins, and space to breathe. Lykke is there when you need it,
-            and not when you don't.
+            A daily companion for adulting — not a productivity app. Lykke is
+            for anyone who struggles with the basics. Small intentions, gentle
+            check-ins, and just-enough
+            structure.
           </p>
 
           <div class="grid sm:grid-cols-2 gap-4 md:gap-6 mb-16">
@@ -193,8 +194,10 @@ const Landing: Component = () => {
                 What is lykke.day?
               </h2>
               <p class="text-stone-600 text-base md:text-lg leading-relaxed mb-10">
-                A daily companion that helps you get the small stuff done so
-                you're more effective to do the big stuff.
+                A calm, daily system for adulting — built for people who
+                struggle with executive function and need the basics to feel
+                doable. It was created from lived experience of missing the
+                simplest personal tasks.
               </p>
             </div>
 
@@ -316,11 +319,11 @@ const Landing: Component = () => {
                     </div>
                     <div class="flex-1">
                       <h3 class="text-stone-900 font-semibold text-lg mb-3">
-                        A Magic Bullet
+                        For People With Everything Together
                       </h3>
                       <p class="text-stone-600 text-sm leading-relaxed">
-                        We're not about quick fixes. We're about building
-                        lasting routines and patterns.
+                        If your ducks are already in a row, this probably isn't
+                        for you. 
                       </p>
                     </div>
                   </div>
@@ -340,10 +343,10 @@ const Landing: Component = () => {
               Is Lykke For You?
             </h2>
             <p class="text-stone-600 text-base md:text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
-              Missing commitments? Stuck in a rut? Feeling like life is passing
-              you by? Whether you're navigating specific challenges or just know
-              something needs to change, it all starts with the same thing: a
-              solid foundation.
+              If you keep missing the basics, forget the small stuff, or feel
+              stuck in a loop you can't break, this is for you. Lykke is for
+              anyone who struggles with executive function in daily life —
+              high achiever or not.
             </p>
 
             <div class="grid sm:grid-cols-3 gap-4 md:gap-5 mb-6 max-w-3xl mx-auto">
@@ -382,9 +385,9 @@ const Landing: Component = () => {
             </div>
 
             <p class="text-stone-500 text-sm max-w-2xl mx-auto leading-relaxed italic">
-              No matter your journey, lasting change comes from consistent,
-              manageable habits. Lykke helps you build that foundation — your
-              way, at your pace.
+            This isn't about having your life perfectly together. It's about
+            building gentle, consistent habits so the basics feel possible —
+            your way, at your pace.
             </p>
           </div>
 

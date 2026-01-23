@@ -1,11 +1,13 @@
-import { Component, createMemo } from "solid-js";
+import { Component, createMemo, createSignal } from "solid-js";
 import { useStreamingData } from "@/providers/streamingData";
 import TaskList from "@/components/tasks/List";
-import { Task } from "@/types/api";
+import { Task, TaskCategory } from "@/types/api";
 import { AnimatedSection } from "@/components/shared/AnimatedSection";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { SectionCard } from "@/components/shared/SectionCard";
 import { MotivationalQuote } from "@/components/shared/MotivationalQuote";
+import { FormError, Input, Select, SubmitButton } from "@/components/forms";
+import { ALL_TASK_CATEGORIES } from "@/types/api/constants";
 
 const getTaskStats = (tasks: Task[]) => {
   const total = tasks.length;
@@ -16,7 +18,11 @@ const getTaskStats = (tasks: Task[]) => {
 };
 
 export const TodaysTasksView: Component = () => {
-  const { tasks } = useStreamingData();
+  const { tasks, addAdhocTask, day } = useStreamingData();
+  const [taskName, setTaskName] = createSignal("");
+  const [taskCategory, setTaskCategory] = createSignal<TaskCategory>("WORK");
+  const [isSaving, setIsSaving] = createSignal(false);
+  const [formError, setFormError] = createSignal("");
 
   const stats = createMemo(() => getTaskStats(tasks()));
   const completionPercentage = createMemo(() => {
@@ -56,6 +62,29 @@ export const TodaysTasksView: Component = () => {
     </div>
   );
 
+  const handleAddTask = async (event: Event) => {
+    event.preventDefault();
+    setFormError("");
+    const name = taskName().trim();
+    if (!name) {
+      setFormError("Task name is required.");
+      return;
+    }
+    if (!day()?.date) {
+      setFormError("Day context not loaded yet.");
+      return;
+    }
+    try {
+      setIsSaving(true);
+      await addAdhocTask(name, taskCategory());
+      setTaskName("");
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Failed to add task.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div class="w-full">
       <AnimatedSection delay="200ms">
@@ -75,6 +104,33 @@ export const TodaysTasksView: Component = () => {
           hasItems={tasks().length > 0}
           emptyState={emptyState}
         >
+          <form class="mb-6 space-y-3" onSubmit={handleAddTask}>
+            <div class="grid gap-3 md:grid-cols-[2fr_1fr_auto] md:items-center">
+              <Input
+                id="adhoc-task-name"
+                placeholder="Add a task"
+                value={taskName}
+                onChange={setTaskName}
+                required
+              />
+              <Select
+                id="adhoc-task-category"
+                placeholder="Category"
+                value={taskCategory}
+                onChange={(value) => setTaskCategory(value)}
+                options={ALL_TASK_CATEGORIES}
+                required
+              />
+              <div class="md:min-w-[140px]">
+                <SubmitButton
+                  isLoading={isSaving()}
+                  loadingText="Adding..."
+                  text="Add task"
+                />
+              </div>
+            </div>
+            <FormError error={formError()} />
+          </form>
           <TaskList tasks={tasks} />
         </SectionCard>
       </AnimatedSection>

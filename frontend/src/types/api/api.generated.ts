@@ -201,7 +201,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/me/today/goals": {
+    "/me/base-personalities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Base Personalities
+         * @description List available base personalities.
+         */
+        get: operations["list_base_personalities_me_base_personalities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/today/reminders": {
         parameters: {
             query?: never;
             header?: never;
@@ -211,17 +231,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Add Goal To Today
-         * @description Add a goal to today.
+         * Add Reminder To Today
+         * @description Add a reminder to today.
          */
-        post: operations["add_goal_to_today_me_today_goals_post"];
+        post: operations["add_reminder_to_today_me_today_reminders_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/me/today/goals/{goal_id}": {
+    "/me/today/reminders/{reminder_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -232,17 +252,17 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Remove Goal From Today
-         * @description Remove a goal from today.
+         * Remove Reminder From Today
+         * @description Remove a reminder from today.
          */
-        delete: operations["remove_goal_from_today_me_today_goals__goal_id__delete"];
+        delete: operations["remove_reminder_from_today_me_today_reminders__reminder_id__delete"];
         options?: never;
         head?: never;
         /**
-         * Update Today Goal Status
-         * @description Update a goal's status for today.
+         * Update Today Reminder Status
+         * @description Update a reminder's status for today.
          */
-        patch: operations["update_today_goal_status_me_today_goals__goal_id__patch"];
+        patch: operations["update_today_reminder_status_me_today_reminders__reminder_id__patch"];
         trace?: never;
     };
     "/me/today/brain-dump": {
@@ -289,7 +309,7 @@ export interface paths {
         patch: operations["update_brain_dump_item_status_me_today_brain_dump__item_id__patch"];
         trace?: never;
     };
-    "/me/today/high-level-plan": {
+    "/me/today/routines": {
         parameters: {
             query?: never;
             header?: never;
@@ -298,15 +318,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Add Routine To Today
+         * @description Add a routine's tasks to today.
+         */
+        post: operations["add_routine_to_today_me_today_routines_post"];
         delete?: never;
         options?: never;
         head?: never;
-        /**
-         * Update Today High Level Plan
-         * @description Update the high level plan for today.
-         */
-        patch: operations["update_today_high_level_plan_me_today_high_level_plan_patch"];
+        patch?: never;
         trace?: never;
     };
     "/calendar-entry-series/{uuid}": {
@@ -452,6 +472,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tasks/adhoc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Adhoc Task
+         * @description Create an adhoc task.
+         */
+        post: operations["create_adhoc_task_tasks_adhoc_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/days/today/reschedule": {
         parameters: {
             query?: never;
@@ -470,6 +510,26 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/days/{day_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Day
+         * @description Update a day.
+         */
+        patch: operations["update_day_days__day_id__patch"];
         trace?: never;
     };
     "/day-templates/{uuid}": {
@@ -1046,6 +1106,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/usecase-configs/{usecase}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Usecase Config
+         * @description Get usecase config by usecase key.
+         */
+        get: operations["get_usecase_config_usecase_configs__usecase__get"];
+        /**
+         * Update Usecase Config
+         * @description Create or update usecase config.
+         */
+        put: operations["update_usecase_config_usecase_configs__usecase__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/usecase-configs/{usecase_config_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Usecase Config
+         * @description Delete a usecase config.
+         */
+        delete: operations["delete_usecase_config_usecase_configs__usecase_config_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/twilio/webhook/sms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Twilio Sms Webhook
+         * @description Webhook endpoint for inbound Twilio SMS messages.
+         */
+        post: operations["twilio_sms_webhook_twilio_webhook_sms_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -1106,6 +1230,35 @@ export interface components {
          * @enum {string}
          */
         ActionType: "COMPLETE" | "DELETE" | "EDIT" | "NOTIFY" | "PAUSE" | "PUNT" | "RESUME" | "START" | "VIEW";
+        /**
+         * AdhocTaskCreateSchema
+         * @description API schema for creating adhoc tasks.
+         */
+        AdhocTaskCreateSchema: {
+            /**
+             * Scheduled Date
+             * Format: date
+             */
+            scheduled_date: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            category: components["schemas"]["TaskCategory"];
+            schedule?: components["schemas"]["TaskScheduleSchema"] | null;
+            /** Tags */
+            tags?: components["schemas"]["TaskTag"][];
+        };
+        /**
+         * BasePersonalitySchema
+         * @description Schema for base personality metadata.
+         */
+        BasePersonalitySchema: {
+            /** Slug */
+            slug: string;
+            /** Label */
+            label: string;
+        };
         /** Body_auth_cookie_login_auth_login_post */
         Body_auth_cookie_login_auth_login_post: {
             /** Grant Type */
@@ -1418,8 +1571,8 @@ export interface components {
             /** Tags */
             tags?: components["schemas"]["DayTag"][];
             template?: components["schemas"]["DayTemplateSchema"] | null;
-            /** Goals */
-            goals?: components["schemas"]["GoalSchema"][];
+            /** Reminders */
+            reminders?: components["schemas"]["ReminderSchema"][];
             /** Brain Dump Items */
             brain_dump_items?: components["schemas"]["BrainDumpItemSchema"][];
             high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
@@ -1441,15 +1594,9 @@ export interface components {
         DayTemplateCreateSchema: {
             /** Slug */
             slug: string;
-            /**
-             * Start Time
-             * Format: time
-             */
+            /** Start Time */
             start_time?: string | null;
-            /**
-             * End Time
-             * Format: time
-             */
+            /** End Time */
             end_time?: string | null;
             /** Icon */
             icon?: string | null;
@@ -1496,15 +1643,9 @@ export interface components {
             id?: string | null;
             /** Slug */
             slug: string;
-            /**
-             * Start Time
-             * Format: time
-             */
+            /** Start Time */
             start_time?: string | null;
-            /**
-             * End Time
-             * Format: time
-             */
+            /** End Time */
             end_time?: string | null;
             /** Icon */
             icon?: string | null;
@@ -1570,15 +1711,9 @@ export interface components {
         DayTemplateUpdateSchema: {
             /** Slug */
             slug?: string | null;
-            /**
-             * Start Time
-             * Format: time
-             */
+            /** Start Time */
             start_time?: string | null;
-            /**
-             * End Time
-             * Format: time
-             */
+            /** End Time */
             end_time?: string | null;
             /** Icon */
             icon?: string | null;
@@ -1586,6 +1721,20 @@ export interface components {
             routine_ids?: string[] | null;
             /** Time Blocks */
             time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][] | null;
+            high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
+        };
+        /**
+         * DayUpdateSchema
+         * @description API schema for Day update requests.
+         */
+        DayUpdateSchema: {
+            status?: components["schemas"]["DayStatus"] | null;
+            /** Scheduled At */
+            scheduled_at?: string | null;
+            /** Tags */
+            tags?: components["schemas"]["DayTag"][] | null;
+            /** Template Id */
+            template_id?: string | null;
             high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
         };
         /**
@@ -1611,25 +1760,6 @@ export interface components {
          * @enum {string}
          */
         EventCategory: "WORK" | "PERSONAL" | "FAMILY" | "SOCIAL" | "OTHER";
-        /**
-         * GoalSchema
-         * @description API schema for Goal value object.
-         */
-        GoalSchema: {
-            /** Id */
-            id?: string | null;
-            /** Name */
-            name: string;
-            status: components["schemas"]["GoalStatus"];
-            /** Created At */
-            created_at?: string | null;
-        };
-        /**
-         * GoalStatus
-         * @description Status of a goal.
-         * @enum {string}
-         */
-        GoalStatus: "INCOMPLETE" | "COMPLETE" | "PUNT";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1644,6 +1774,27 @@ export interface components {
             title?: string | null;
             /** Text */
             text?: string | null;
+            /** Intentions */
+            intentions?: string[];
+        };
+        /**
+         * LLMProvider
+         * @description LLM provider for generating responses.
+         * @enum {string}
+         */
+        LLMProvider: "anthropic" | "openai";
+        /**
+         * NotificationUseCaseConfigSchema
+         * @description Schema for notification usecase config (typed).
+         */
+        NotificationUseCaseConfigSchema: {
+            /**
+             * User Amendments
+             * @default []
+             */
+            user_amendments: string[];
+            /** Rendered Prompt */
+            rendered_prompt?: string | null;
         };
         /** PagedResponseSchema[CalendarEntrySeriesSchema] */
         PagedResponseSchema_CalendarEntrySeriesSchema_: {
@@ -1919,6 +2070,36 @@ export interface components {
             filters?: components["schemas"]["TimeBlockDefinitionQuery"] | null;
         };
         /**
+         * RecurrenceScheduleSchema
+         * @description API schema for RecurrenceSchedule value object.
+         */
+        RecurrenceScheduleSchema: {
+            frequency: components["schemas"]["TaskFrequency"];
+            /** Weekdays */
+            weekdays?: components["schemas"]["DayOfWeek"][] | null;
+            /** Day Number */
+            day_number?: number | null;
+        };
+        /**
+         * ReminderSchema
+         * @description API schema for Reminder value object.
+         */
+        ReminderSchema: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+            status: components["schemas"]["ReminderStatus"];
+            /** Created At */
+            created_at?: string | null;
+        };
+        /**
+         * ReminderStatus
+         * @description Status of a reminder.
+         * @enum {string}
+         */
+        ReminderStatus: "INCOMPLETE" | "COMPLETE" | "PUNT";
+        /**
          * RoutineCreateSchema
          * @description API schema for creating a Routine entity.
          */
@@ -1926,7 +2107,7 @@ export interface components {
             /** Name */
             name: string;
             category: components["schemas"]["TaskCategory"];
-            routine_schedule: components["schemas"]["RoutineScheduleSchema"];
+            routine_schedule: components["schemas"]["RecurrenceScheduleSchema"];
             /**
              * Description
              * @default
@@ -1951,17 +2132,6 @@ export interface components {
             created_after?: string | null;
         };
         /**
-         * RoutineScheduleSchema
-         * @description API schema for RoutineSchedule value object.
-         */
-        RoutineScheduleSchema: {
-            frequency: components["schemas"]["TaskFrequency"];
-            /** Weekdays */
-            weekdays?: components["schemas"]["DayOfWeek"][] | null;
-            /** Day Number */
-            day_number?: number | null;
-        };
-        /**
          * RoutineSchema
          * @description API schema for Routine entity.
          */
@@ -1976,7 +2146,7 @@ export interface components {
             /** Name */
             name: string;
             category: components["schemas"]["TaskCategory"];
-            routine_schedule: components["schemas"]["RoutineScheduleSchema"];
+            routine_schedule: components["schemas"]["RecurrenceScheduleSchema"];
             /**
              * Description
              * @default
@@ -1998,6 +2168,7 @@ export interface components {
             /** Name */
             name?: string | null;
             schedule?: components["schemas"]["TaskScheduleSchema"] | null;
+            task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
         };
         /**
          * RoutineTaskSchema
@@ -2014,6 +2185,7 @@ export interface components {
             /** Name */
             name?: string | null;
             schedule?: components["schemas"]["TaskScheduleSchema"] | null;
+            task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
         };
         /**
          * RoutineTaskSchema
@@ -2030,6 +2202,7 @@ export interface components {
             /** Name */
             name?: string | null;
             schedule?: components["schemas"]["TaskScheduleSchema"] | null;
+            task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
         };
         /**
          * RoutineTaskUpdateSchema
@@ -2039,6 +2212,7 @@ export interface components {
             /** Name */
             name?: string | null;
             schedule?: components["schemas"]["TaskScheduleSchema"] | null;
+            task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
         };
         /**
          * RoutineUpdateSchema
@@ -2048,7 +2222,7 @@ export interface components {
             /** Name */
             name?: string | null;
             category?: components["schemas"]["TaskCategory"] | null;
-            routine_schedule?: components["schemas"]["RoutineScheduleSchema"] | null;
+            routine_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
             /** Description */
             description?: string | null;
             /** Tasks */
@@ -2215,7 +2389,7 @@ export interface components {
          * TaskType
          * @enum {string}
          */
-        TaskType: "MEAL" | "WORK" | "MEETING" | "EXERCISE" | "EVENT" | "SOCIAL" | "CHORE" | "ERRAND" | "SHOPPING" | "PERSONAL_CARE" | "ACTIVITY" | "ENTERTAINMENT" | "LEARNING" | "COMMUTE" | "TRAVEL" | "APPOINTMENT" | "COMMUNICATION" | "FINANCIAL" | "MAINTENANCE" | "PLANNING" | "TECHNOLOGY";
+        TaskType: "ADHOC" | "MEAL" | "WORK" | "MEETING" | "EXERCISE" | "EVENT" | "SOCIAL" | "CHORE" | "ERRAND" | "SHOPPING" | "PERSONAL_CARE" | "ACTIVITY" | "ENTERTAINMENT" | "LEARNING" | "COMMUTE" | "TRAVEL" | "APPOINTMENT" | "COMMUNICATION" | "FINANCIAL" | "MAINTENANCE" | "PLANNING" | "TECHNOLOGY";
         /**
          * TimeBlockCategory
          * @enum {string}
@@ -2391,20 +2565,18 @@ export interface components {
         UserSettingsSchema: {
             /** Template Defaults */
             template_defaults: string[];
-            /** Llm Provider */
             llm_provider?: components["schemas"]["LLMProvider"] | null;
             /** Timezone */
             timezone?: string | null;
             /**
              * Base Personality Slug
-             * @default "default"
+             * @default default
              */
-            base_personality_slug?: string;
-            /**
-             * Llm Personality Amendments
-             * @default []
-             */
+            base_personality_slug: string;
+            /** Llm Personality Amendments */
             llm_personality_amendments?: string[];
+            /** Morning Overview Time */
+            morning_overview_time?: string | null;
         };
         /**
          * UserSettingsUpdateSchema
@@ -2413,7 +2585,6 @@ export interface components {
         UserSettingsUpdateSchema: {
             /** Template Defaults */
             template_defaults?: string[] | null;
-            /** Llm Provider */
             llm_provider?: components["schemas"]["LLMProvider"] | null;
             /** Timezone */
             timezone?: string | null;
@@ -2421,12 +2592,9 @@ export interface components {
             base_personality_slug?: string | null;
             /** Llm Personality Amendments */
             llm_personality_amendments?: string[] | null;
+            /** Morning Overview Time */
+            morning_overview_time?: string | null;
         };
-        /**
-         * LLMProvider
-         * @enum {string}
-         */
-        LLMProvider: "anthropic" | "openai";
         /**
          * UserStatus
          * @description Lifecycle status for a user/account record.
@@ -2855,7 +3023,27 @@ export interface operations {
             };
         };
     };
-    add_goal_to_today_me_today_goals_post: {
+    list_base_personalities_me_base_personalities_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasePersonalitySchema"][];
+                };
+            };
+        };
+    };
+    add_reminder_to_today_me_today_reminders_post: {
         parameters: {
             query: {
                 name: string;
@@ -2886,12 +3074,12 @@ export interface operations {
             };
         };
     };
-    remove_goal_from_today_me_today_goals__goal_id__delete: {
+    remove_reminder_from_today_me_today_reminders__reminder_id__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                goal_id: string;
+                reminder_id: string;
             };
             cookie?: never;
         };
@@ -2917,14 +3105,14 @@ export interface operations {
             };
         };
     };
-    update_today_goal_status_me_today_goals__goal_id__patch: {
+    update_today_reminder_status_me_today_reminders__reminder_id__patch: {
         parameters: {
             query: {
-                status: components["schemas"]["GoalStatus"];
+                status: components["schemas"]["ReminderStatus"];
             };
             header?: never;
             path: {
-                goal_id: string;
+                reminder_id: string;
             };
             cookie?: never;
         };
@@ -3045,18 +3233,16 @@ export interface operations {
             };
         };
     };
-    update_today_high_level_plan_me_today_high_level_plan_patch: {
+    add_routine_to_today_me_today_routines_post: {
         parameters: {
-            query?: never;
+            query: {
+                routine_id: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["HighLevelPlanSchema"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -3397,6 +3583,39 @@ export interface operations {
             };
         };
     };
+    create_adhoc_task_tasks_adhoc_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdhocTaskCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     reschedule_today_days_today_reschedule_put: {
         parameters: {
             query?: never;
@@ -3413,6 +3632,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DayContextSchema"];
+                };
+            };
+        };
+    };
+    update_day_days__day_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                day_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DayUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DaySchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -4628,6 +4882,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_usecase_config_usecase_configs__usecase__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usecase: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationUseCaseConfigSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_usecase_config_usecase_configs__usecase__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usecase: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationUseCaseConfigSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationUseCaseConfigSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_usecase_config_usecase_configs__usecase_config_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usecase_config_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    twilio_sms_webhook_twilio_webhook_sms_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };

@@ -114,6 +114,7 @@ class TaskQuery(DateQuery):
 
     ids: list[UUID] | None = None
     routine_ids: list[UUID] | None = None
+    is_adhoc: bool | None = None
 
 
 @dataclass(kw_only=True)

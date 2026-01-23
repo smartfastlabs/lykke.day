@@ -12,6 +12,7 @@ import { createStore } from "solid-js/store";
 import {
   DayContext,
   Task,
+  TaskCategory,
   Event,
   Day,
   TaskStatus,
@@ -45,6 +46,7 @@ interface StreamingDataContextValue {
   setTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
   setRoutineAction: (routineId: string, status: TaskStatus) => Promise<void>;
   addRoutineToToday: (routineId: string) => Promise<void>;
+  addAdhocTask: (name: string, category: TaskCategory) => Promise<void>;
   addReminder: (name: string) => Promise<void>;
   updateReminderStatus: (reminder: Reminder, status: ReminderStatus) => Promise<void>;
   removeReminder: (reminderId: string) => Promise<void>;
@@ -567,6 +569,19 @@ export function StreamingDataProvider(props: ParentProps) {
     });
   };
 
+  const addTaskLocally = (task: Task) => {
+    setDayContextStore((current) => {
+      if (!current.data) return current;
+      const updated = {
+        data: {
+          ...current.data,
+          tasks: [...(current.data.tasks ?? []), task],
+        },
+      };
+      return updated;
+    });
+  };
+
   const setTaskStatus = async (
     task: Task,
     status: TaskStatus
@@ -614,6 +629,22 @@ export function StreamingDataProvider(props: ParentProps) {
   const addRoutineToToday = async (routineId: string): Promise<void> => {
     const context = await routineAPI.addToToday(routineId);
     setDayContextStore({ data: context });
+  };
+
+  const addAdhocTask = async (
+    name: string,
+    category: TaskCategory
+  ): Promise<void> => {
+    const currentDay = day();
+    if (!currentDay) {
+      throw new Error("Day context not loaded");
+    }
+    const created = await taskAPI.createAdhocTask({
+      scheduled_date: currentDay.date,
+      name,
+      category,
+    });
+    addTaskLocally(created);
   };
 
   // Optimistically update reminders in local state
@@ -776,6 +807,7 @@ export function StreamingDataProvider(props: ParentProps) {
     setTaskStatus,
     setRoutineAction,
     addRoutineToToday,
+    addAdhocTask,
     addReminder,
     updateReminderStatus,
     removeReminder,

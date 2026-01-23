@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     TWILIO_FROM_NUMBER: str = ""
     TWILIO_MESSAGING_SERVICE_SID: str = ""
     SENDGRID_API_KEY: str = ""
-    SENDGRID_FROM_EMAIL: str = ""
+    SENDGRID_FROM_EMAIL: str = "noreply@lykke.day"
     GOOGLE_CREDENTIALS_JSON: str = ""
     ENVIRONMENT: str = "development"
     DATA_PATH: str = "../data"
@@ -51,8 +51,6 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = "gpt-4o-mini"  # Default to cheaper model
     SMART_NOTIFICATIONS_ENABLED: bool = True  # Feature flag
     SMART_NOTIFICATION_RATE_LIMIT_MINUTES: int = 10  # Prevent spam
-    PRINTER_NAME: str = "HP_OfficeJet_Pro_9010_series"
-    PVPORCUPINE_ACCESS_KEY: str = ""
     SENTRY_DSN: str = ""
 
     @field_validator("DATABASE_URL", mode="before")
