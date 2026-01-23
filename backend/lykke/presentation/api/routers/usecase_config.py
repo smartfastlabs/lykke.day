@@ -21,11 +21,11 @@ from lykke.application.queries.usecase_config import (
 from lykke.domain.entities import UseCaseConfigEntity, UserEntity
 from lykke.presentation.api.schemas import (
     NotificationUseCaseConfigSchema,
-    UseCaseConfigCreateSchema,
     UseCaseConfigSchema,
 )
+from lykke.presentation.handler_factory import CommandHandlerFactory, QueryHandlerFactory
 
-from .dependencies.factories import get_command_handler, get_query_handler
+from .dependencies.factories import command_handler_factory, query_handler_factory
 from .dependencies.user import get_current_user
 
 router = APIRouter()
@@ -49,16 +49,12 @@ def map_usecase_config_to_schema(config: UseCaseConfigEntity) -> UseCaseConfigSc
 )
 async def get_usecase_config(
     usecase: str,
-    user: Annotated[UserEntity, Depends(get_current_user)],
-    query_handler: Annotated[
-        GetUseCaseConfigHandler, Depends(get_query_handler(GetUseCaseConfigHandler))
-    ],
-    prompt_handler: Annotated[
-        GenerateUseCasePromptHandler,
-        Depends(get_query_handler(GenerateUseCasePromptHandler)),
-    ],
+    _user: Annotated[UserEntity, Depends(get_current_user)],
+    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
 ) -> NotificationUseCaseConfigSchema:
     """Get usecase config by usecase key."""
+    query_handler = query_factory.create(GetUseCaseConfigHandler)
+    prompt_handler = query_factory.create(GenerateUseCasePromptHandler)
     config = await query_handler.handle(GetUseCaseConfigQuery(usecase=usecase))
     if config:
         user_amendments = config.config.get("user_amendments", [])
@@ -92,19 +88,15 @@ async def update_usecase_config(
     usecase: str,
     config_data: NotificationUseCaseConfigSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    create_handler: Annotated[
-        CreateUseCaseConfigHandler,
-        Depends(get_command_handler(CreateUseCaseConfigHandler)),
+    command_factory: Annotated[
+        CommandHandlerFactory, Depends(command_handler_factory)
     ],
-    query_handler: Annotated[
-        GetUseCaseConfigHandler, Depends(get_query_handler(GetUseCaseConfigHandler))
-    ],
-    prompt_handler: Annotated[
-        GenerateUseCasePromptHandler,
-        Depends(get_query_handler(GenerateUseCasePromptHandler)),
-    ],
+    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
 ) -> NotificationUseCaseConfigSchema:
     """Create or update usecase config."""
+    create_handler = command_factory.create(CreateUseCaseConfigHandler)
+    query_handler = query_factory.create(GetUseCaseConfigHandler)
+    prompt_handler = query_factory.create(GenerateUseCasePromptHandler)
     config_dict = {"user_amendments": config_data.user_amendments or []}
 
     await create_handler.handle(
@@ -142,12 +134,12 @@ async def update_usecase_config(
 @router.delete("/usecase-configs/{usecase_config_id}", status_code=200)
 async def delete_usecase_config(
     usecase_config_id: UUID,
-    delete_handler: Annotated[
-        DeleteUseCaseConfigHandler,
-        Depends(get_command_handler(DeleteUseCaseConfigHandler)),
+    command_factory: Annotated[
+        CommandHandlerFactory, Depends(command_handler_factory)
     ],
 ) -> None:
     """Delete a usecase config."""
+    delete_handler = command_factory.create(DeleteUseCaseConfigHandler)
     await delete_handler.handle(
         DeleteUseCaseConfigCommand(usecase_config_id=usecase_config_id)
     )

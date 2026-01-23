@@ -6,34 +6,13 @@ with FastAPI's Depends() in route handlers.
 """
 
 from collections.abc import AsyncIterator
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import Depends, Request, WebSocket
-from redis import asyncio as aioredis  # type: ignore
 
-from lykke.application.commands import (
-    CreateAdhocTaskHandler,
-    RecordRoutineActionHandler,
-    RecordTaskActionHandler,
-    RescheduleDayHandler,
-    ScheduleDayHandler,
-    UpdateDayHandler,
-)
-from lykke.application.commands.day import (
-    AddBrainDumpItemToDayHandler,
-    AddReminderToDayHandler,
-    AddRoutineToDayHandler,
-    RemoveBrainDumpItemHandler,
-    RemoveReminderHandler,
-    UpdateBrainDumpItemStatusHandler,
-    UpdateReminderStatusHandler,
-)
+from lykke.application.commands import ScheduleDayHandler
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
-from lykke.application.queries import (
-    GetDayContextHandler,
-    GetIncrementalChangesHandler,
-    PreviewDayHandler,
-)
+from lykke.application.queries import GetDayContextHandler, GetIncrementalChangesHandler
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import RedisPubSubGateway
@@ -42,10 +21,7 @@ from lykke.infrastructure.unit_of_work import (
     SqlAlchemyUnitOfWorkFactory,
 )
 from lykke.presentation.handler_factory import CommandHandlerFactory, QueryHandlerFactory
-from lykke.presentation.api.routers.dependencies.user import (
-    get_current_user,
-    get_current_user_from_token,
-)
+from lykke.presentation.api.routers.dependencies.user import get_current_user_from_token
 
 
 async def get_pubsub_gateway(
@@ -121,19 +97,6 @@ def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
     return SqlAlchemyReadOnlyRepositoryFactory()
 
 
-# Query Handler Dependencies
-# For HTTP routes - use get_current_user
-def day_context_handler(
-    user: Annotated[UserEntity, Depends(get_current_user)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-) -> GetDayContextHandler:
-    """Get a GetDayContextHandler instance for HTTP handlers."""
-    factory = QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
-    return factory.create(GetDayContextHandler)
-
-
 # For WebSocket routes - use get_current_user_from_token
 async def day_context_handler_websocket(
     user: Annotated[UserEntity, Depends(get_current_user_from_token)],
@@ -144,39 +107,6 @@ async def day_context_handler_websocket(
     """Get a GetDayContextHandler instance for WebSocket handlers."""
     factory = QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
     return factory.create(GetDayContextHandler)
-
-
-def preview_day_handler(
-    user: Annotated[UserEntity, Depends(get_current_user)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-) -> PreviewDayHandler:
-    """Get a PreviewDayHandler instance for HTTP handlers."""
-    factory = QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
-    return factory.create(PreviewDayHandler)
-
-
-async def preview_day_handler_websocket(
-    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-) -> PreviewDayHandler:
-    """Get a PreviewDayHandler instance for WebSocket handlers."""
-    factory = QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
-    return factory.create(PreviewDayHandler)
-
-
-def incremental_changes_handler(
-    user: Annotated[UserEntity, Depends(get_current_user)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-) -> GetIncrementalChangesHandler:
-    """Get a GetIncrementalChangesHandler instance for HTTP handlers."""
-    factory = QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
-    return factory.create(GetIncrementalChangesHandler)
 
 
 async def incremental_changes_handler_websocket(
@@ -206,197 +136,3 @@ async def get_schedule_day_handler_websocket(
         uow_factory=uow_factory,
     )
     return factory.create(ScheduleDayHandler)
-
-
-# Command Handler Dependencies
-# For HTTP routes - use get_current_user
-def get_reschedule_day_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> RescheduleDayHandler:
-    """Get a RescheduleDayHandler instance for HTTP handlers."""
-    factory = CommandHandlerFactory(
-        user_id=user.id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(RescheduleDayHandler)
-
-
-def get_update_day_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> UpdateDayHandler:
-    """Get an UpdateDayHandler instance."""
-    factory = CommandHandlerFactory(
-        user_id=user.id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(UpdateDayHandler)
-
-
-def get_record_task_action_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> RecordTaskActionHandler:
-    """Get a RecordTaskActionHandler instance."""
-    factory = CommandHandlerFactory(
-        user_id=user.id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(RecordTaskActionHandler)
-
-
-def get_create_adhoc_task_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> CreateAdhocTaskHandler:
-    """Get a CreateAdhocTaskHandler instance."""
-    factory = CommandHandlerFactory(
-        user_id=user.id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(CreateAdhocTaskHandler)
-
-
-def get_record_routine_action_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> RecordRoutineActionHandler:
-    """Get a RecordRoutineActionHandler instance."""
-    factory = CommandHandlerFactory(
-        user_id=user.id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(RecordRoutineActionHandler)
-
-
-def get_add_reminder_to_day_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> AddReminderToDayHandler:
-    """Get an AddReminderToDayHandler instance."""
-    factory = CommandHandlerFactory(
-        user_id=user.id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(AddReminderToDayHandler)
-
-
-def get_add_routine_to_day_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> AddRoutineToDayHandler:
-    """Get an AddRoutineToDayHandler instance."""
-    factory = CommandHandlerFactory(
-        user_id=user.id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(AddRoutineToDayHandler)
-
-
-def get_update_reminder_status_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> UpdateReminderStatusHandler:
-    """Get an UpdateReminderStatusHandler instance."""
-    factory = CommandHandlerFactory(
-        user_id=user.id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(UpdateReminderStatusHandler)
-
-
-def get_remove_reminder_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> RemoveReminderHandler:
-    """Get a RemoveReminderHandler instance."""
-    factory = CommandHandlerFactory(
-        user_id=user.id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(RemoveReminderHandler)
-
-
-def get_add_brain_dump_item_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> AddBrainDumpItemToDayHandler:
-    """Get an AddBrainDumpItemToDayHandler instance."""
-    factory = CommandHandlerFactory(
-        user_id=user.id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(AddBrainDumpItemToDayHandler)
-
-
-def get_update_brain_dump_item_status_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> UpdateBrainDumpItemStatusHandler:
-    """Get an UpdateBrainDumpItemStatusHandler instance."""
-    factory = CommandHandlerFactory(
-        user_id=user.id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(UpdateBrainDumpItemStatusHandler)
-
-
-def get_remove_brain_dump_item_handler(
-    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-    ro_repo_factory: Annotated[
-        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-    ],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> RemoveBrainDumpItemHandler:
-    """Get a RemoveBrainDumpItemHandler instance."""
-    factory = CommandHandlerFactory(
-        user_id=user.id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(RemoveBrainDumpItemHandler)

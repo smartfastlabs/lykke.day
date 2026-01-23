@@ -15,7 +15,6 @@ from lykke.application.unit_of_work import (  # noqa: TC001
 )
 from lykke.presentation.handler_factory import CommandHandlerFactory
 
-from .dependencies.factories import load_command_handler
 from .dependencies.services import (
     get_read_only_repository_factory,
     get_unit_of_work_factory,
@@ -67,19 +66,14 @@ def get_early_access_command_handler_factory(
 @router.post("/early-access", response_model=StatusResponse, status_code=200)
 async def request_early_access(
     data: EarlyAccessRequest,
-    handler: Annotated[
-        CreateLeadUserHandler,
-        Depends(
-            load_command_handler(
-                CreateLeadUserHandler,
-                factory_dependency=get_early_access_command_handler_factory,
-            )
-        ),
+    command_handler_factory: Annotated[
+        CommandHandlerFactory, Depends(get_early_access_command_handler_factory)
     ],
 ) -> StatusResponse:
     """Capture lead contact as a user with status NEW_LEAD."""
     normalized_email = data.email.strip().lower()
 
+    handler = command_handler_factory.create(CreateLeadUserHandler)
     await handler.handle(CreateLeadUserCommand(email=normalized_email))
 
     return StatusResponse()

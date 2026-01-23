@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TypeVar, cast
+from typing import TypeVar, overload
 from uuid import UUID
 
 from lykke.application.commands.calendar import (
@@ -91,11 +91,19 @@ class QueryHandlerFactory:
     def ro_repos(self) -> ReadOnlyRepositories:
         return self._ro_repos
 
-    def create(self, handler_class: type[QueryHandlerT]) -> QueryHandlerT:
+    @overload
+    def create(
+        self, handler_class: type[GetLLMPromptContextHandler]
+    ) -> GetLLMPromptContextHandler: ...
+
+    @overload
+    def create(self, handler_class: type[QueryHandlerT]) -> QueryHandlerT: ...
+
+    def create(self, handler_class: type[BaseQueryHandler]) -> BaseQueryHandler:
         provider = self._registry.get(handler_class)
         if provider is None:
             return handler_class(self._ro_repos, self.user_id)
-        return cast(QueryHandlerT, provider(self))
+        return provider(self)
 
 
 def _build_schedule_day_handler(
@@ -303,8 +311,49 @@ class CommandHandlerFactory:
             self._web_push_gateway = self._web_push_gateway_provider()
         return self._web_push_gateway
 
-    def create(self, handler_class: type[CommandHandlerT]) -> CommandHandlerT:
+    @overload
+    def create(self, handler_class: type[ScheduleDayHandler]) -> ScheduleDayHandler: ...
+
+    @overload
+    def create(self, handler_class: type[RescheduleDayHandler]) -> RescheduleDayHandler: ...
+
+    @overload
+    def create(self, handler_class: type[SyncCalendarHandler]) -> SyncCalendarHandler: ...
+
+    @overload
+    def create(self, handler_class: type[SyncAllCalendarsHandler]) -> SyncAllCalendarsHandler: ...
+
+    @overload
+    def create(self, handler_class: type[SubscribeCalendarHandler]) -> SubscribeCalendarHandler: ...
+
+    @overload
+    def create(self, handler_class: type[UnsubscribeCalendarHandler]) -> UnsubscribeCalendarHandler: ...
+
+    @overload
+    def create(self, handler_class: type[ResyncCalendarHandler]) -> ResyncCalendarHandler: ...
+
+    @overload
+    def create(self, handler_class: type[ResetCalendarDataHandler]) -> ResetCalendarDataHandler: ...
+
+    @overload
+    def create(self, handler_class: type[ResetCalendarSyncHandler]) -> ResetCalendarSyncHandler: ...
+
+    @overload
+    def create(
+        self, handler_class: type[SendPushNotificationHandler]
+    ) -> SendPushNotificationHandler: ...
+
+    @overload
+    def create(self, handler_class: type[SmartNotificationHandler]) -> SmartNotificationHandler: ...
+
+    @overload
+    def create(self, handler_class: type[MorningOverviewHandler]) -> MorningOverviewHandler: ...
+
+    @overload
+    def create(self, handler_class: type[CommandHandlerT]) -> CommandHandlerT: ...
+
+    def create(self, handler_class: type[BaseCommandHandler]) -> BaseCommandHandler:
         provider = self._registry.get(handler_class)
         if provider is None:
             return handler_class(self._ro_repos, self.uow_factory, self.user_id)
-        return cast(CommandHandlerT, provider(self))
+        return provider(self)

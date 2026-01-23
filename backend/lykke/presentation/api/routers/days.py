@@ -43,16 +43,16 @@ from lykke.presentation.api.schemas.websocket_message import (
     WebSocketSyncRequestSchema,
     WebSocketSyncResponseSchema,
 )
+from lykke.presentation.handler_factory import CommandHandlerFactory
 
 from .dependencies.services import (
     day_context_handler_websocket,
     get_pubsub_gateway,
     get_read_only_repository_factory,
-    get_reschedule_day_handler,
     get_schedule_day_handler_websocket,
-    get_update_day_handler,
     incremental_changes_handler_websocket,
 )
+from .dependencies.factories import command_handler_factory
 from .dependencies.user import get_current_user
 
 router = APIRouter()
@@ -65,11 +65,14 @@ router = APIRouter()
 
 @router.put("/today/reschedule", response_model=DayContextSchema)
 async def reschedule_today(
-    handler: Annotated[RescheduleDayHandler, Depends(get_reschedule_day_handler)],
+    command_factory: Annotated[
+        CommandHandlerFactory, Depends(command_handler_factory)
+    ],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> DayContextSchema:
     """Reschedule today by cleaning up and recreating all tasks."""
     today = get_current_date(user.settings.timezone)
+    handler = command_factory.create(RescheduleDayHandler)
     context = await handler.handle(RescheduleDayCommand(date=today))
     return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
 
@@ -78,13 +81,16 @@ async def reschedule_today(
 async def update_day(
     day_id: UUID,
     update_data: DayUpdateSchema,
-    update_day_handler: Annotated[UpdateDayHandler, Depends(get_update_day_handler)],
+    command_factory: Annotated[
+        CommandHandlerFactory, Depends(command_handler_factory)
+    ],
     user: Annotated[UserEntity, Depends(get_current_user)],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
 ) -> DaySchema:
     """Update a day."""
+    update_day_handler = command_factory.create(UpdateDayHandler)
     ro_repos = ro_repo_factory.create(user.id)
     day = await ro_repos.day_ro_repo.get(day_id)
 

@@ -29,8 +29,9 @@ from lykke.presentation.api.schemas import (
     TaskDefinitionUpdateSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_task_definition_to_schema
+from lykke.presentation.handler_factory import CommandHandlerFactory, QueryHandlerFactory
 
-from .dependencies.factories import get_command_handler, get_query_handler
+from .dependencies.factories import command_handler_factory, query_handler_factory
 from .dependencies.user import get_current_user
 from .utils import build_search_query, create_paged_response
 
@@ -40,23 +41,25 @@ router = APIRouter()
 @router.get("/{uuid}", response_model=TaskDefinitionSchema)
 async def get_task_definition(
     uuid: UUID,
-    get_task_definition_handler: Annotated[
-        GetTaskDefinitionHandler, Depends(get_query_handler(GetTaskDefinitionHandler))
-    ],
+    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
 ) -> TaskDefinitionSchema:
     """Get a single task definition by ID."""
-    task_definition = await get_task_definition_handler.handle(GetTaskDefinitionQuery(task_definition_id=uuid))
+    get_task_definition_handler = query_factory.create(GetTaskDefinitionHandler)
+    task_definition = await get_task_definition_handler.handle(
+        GetTaskDefinitionQuery(task_definition_id=uuid)
+    )
     return map_task_definition_to_schema(task_definition)
 
 
 @router.post("/", response_model=PagedResponseSchema[TaskDefinitionSchema])
 async def search_task_definitions(
-    list_task_definitions_handler: Annotated[
-        SearchTaskDefinitionsHandler, Depends(get_query_handler(SearchTaskDefinitionsHandler))
-    ],
+    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
     query: QuerySchema[value_objects.TaskDefinitionQuery],
 ) -> PagedResponseSchema[TaskDefinitionSchema]:
     """Search task definitions with pagination and optional filters."""
+    list_task_definitions_handler = query_factory.create(
+        SearchTaskDefinitionsHandler
+    )
     search_query = build_search_query(query, value_objects.TaskDefinitionQuery)
     result = await list_task_definitions_handler.handle(SearchTaskDefinitionsQuery(search_query=search_query))
     return create_paged_response(result, map_task_definition_to_schema)
@@ -66,11 +69,14 @@ async def search_task_definitions(
 async def create_task_definition(
     task_definition_data: TaskDefinitionCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    create_task_definition_handler: Annotated[
-        CreateTaskDefinitionHandler, Depends(get_command_handler(CreateTaskDefinitionHandler))
+    command_factory: Annotated[
+        CommandHandlerFactory, Depends(command_handler_factory)
     ],
 ) -> TaskDefinitionSchema:
     """Create a new task definition."""
+    create_task_definition_handler = command_factory.create(
+        CreateTaskDefinitionHandler
+    )
     # Convert schema to data object
     task_definition = TaskDefinitionEntity(
         user_id=user.id,
@@ -86,11 +92,14 @@ async def create_task_definition(
 async def update_task_definition(
     uuid: UUID,
     update_data: TaskDefinitionUpdateSchema,
-    update_task_definition_handler: Annotated[
-        UpdateTaskDefinitionHandler, Depends(get_command_handler(UpdateTaskDefinitionHandler))
+    command_factory: Annotated[
+        CommandHandlerFactory, Depends(command_handler_factory)
     ],
 ) -> TaskDefinitionSchema:
     """Update a task definition."""
+    update_task_definition_handler = command_factory.create(
+        UpdateTaskDefinitionHandler
+    )
     # Convert schema to update object
     from lykke.domain.value_objects import TaskDefinitionUpdateObject
 
@@ -108,9 +117,12 @@ async def update_task_definition(
 @router.delete("/{uuid}", status_code=204)
 async def delete_task_definition(
     uuid: UUID,
-    delete_task_definition_handler: Annotated[
-        DeleteTaskDefinitionHandler, Depends(get_command_handler(DeleteTaskDefinitionHandler))
+    command_factory: Annotated[
+        CommandHandlerFactory, Depends(command_handler_factory)
     ],
 ) -> None:
     """Delete a task definition."""
+    delete_task_definition_handler = command_factory.create(
+        DeleteTaskDefinitionHandler
+    )
     await delete_task_definition_handler.handle(DeleteTaskDefinitionCommand(task_definition_id=uuid))

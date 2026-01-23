@@ -4,17 +4,18 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+
 from lykke.application.commands.calendar import (
     CreateCalendarCommand,
     CreateCalendarHandler,
     DeleteCalendarCommand,
     DeleteCalendarHandler,
-    ResyncCalendarCommand,
-    ResyncCalendarHandler,
     ResetCalendarDataCommand,
     ResetCalendarDataHandler,
     ResetCalendarSyncCommand,
     ResetCalendarSyncHandler,
+    ResyncCalendarCommand,
+    ResyncCalendarHandler,
     SubscribeCalendarCommand,
     SubscribeCalendarHandler,
     UnsubscribeCalendarCommand,
@@ -38,16 +39,13 @@ from lykke.presentation.api.schemas import (
     QuerySchema,
 )
 from lykke.presentation.api.schemas.mappers import map_calendar_to_schema
+from lykke.presentation.handler_factory import (
+    CommandHandlerFactory,
+    QueryHandlerFactory,
+)
 from lykke.presentation.workers.tasks import sync_single_calendar_task
 
-from .dependencies.commands.calendar import (
-    get_resync_calendar_handler,
-    get_reset_calendar_data_handler,
-    get_reset_calendar_sync_handler,
-    get_subscribe_calendar_handler,
-    get_unsubscribe_calendar_handler,
-)
-from .dependencies.factories import get_command_handler, get_query_handler
+from .dependencies.factories import command_handler_factory, query_handler_factory
 from .dependencies.user import get_current_user
 from .utils import build_search_query, create_paged_response
 
@@ -57,28 +55,27 @@ router = APIRouter()
 @router.get("/{uuid}", response_model=CalendarSchema)
 async def get_calendar(
     uuid: UUID,
-    get_calendar_handler: Annotated[
-        GetCalendarHandler, Depends(get_query_handler(GetCalendarHandler))
-    ],
+    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
 ) -> CalendarSchema:
     """Get a single calendar by ID."""
-    calendar = await get_calendar_handler.handle(GetCalendarQuery(calendar_id=uuid))
+    handler = query_factory.create(GetCalendarHandler)
+    calendar = await handler.handle(GetCalendarQuery(calendar_id=uuid))
     return map_calendar_to_schema(calendar)
 
 
 @router.post("/{uuid}/subscribe", response_model=CalendarSchema)
 async def subscribe_calendar(
     uuid: UUID,
-    get_calendar_handler: Annotated[
-        GetCalendarHandler, Depends(get_query_handler(GetCalendarHandler))
-    ],
-    subscribe_calendar_handler: Annotated[
-        SubscribeCalendarHandler, Depends(get_subscribe_calendar_handler)
-    ],
+    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> CalendarSchema:
     """Enable push notifications for a calendar."""
+    get_calendar_handler = query_factory.create(GetCalendarHandler)
+    subscribe_calendar_handler = command_factory.create(SubscribeCalendarHandler)
     calendar = await get_calendar_handler.handle(GetCalendarQuery(calendar_id=uuid))
-    updated = await subscribe_calendar_handler.handle(SubscribeCalendarCommand(calendar=calendar))
+    updated = await subscribe_calendar_handler.handle(
+        SubscribeCalendarCommand(calendar=calendar)
+    )
     # Trigger initial sync via background task
     await sync_single_calendar_task.kiq(
         user_id=updated.user_id,
@@ -90,43 +87,44 @@ async def subscribe_calendar(
 @router.delete("/{uuid}/subscribe", response_model=CalendarSchema)
 async def unsubscribe_calendar(
     uuid: UUID,
-    get_calendar_handler: Annotated[
-        GetCalendarHandler, Depends(get_query_handler(GetCalendarHandler))
-    ],
-    unsubscribe_calendar_handler: Annotated[
-        UnsubscribeCalendarHandler, Depends(get_unsubscribe_calendar_handler)
-    ],
+    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> CalendarSchema:
     """Disable push notifications for a calendar."""
+    get_calendar_handler = query_factory.create(GetCalendarHandler)
+    unsubscribe_calendar_handler = command_factory.create(UnsubscribeCalendarHandler)
     calendar = await get_calendar_handler.handle(GetCalendarQuery(calendar_id=uuid))
-    updated = await unsubscribe_calendar_handler.handle(UnsubscribeCalendarCommand(calendar=calendar))
+    updated = await unsubscribe_calendar_handler.handle(
+        UnsubscribeCalendarCommand(calendar=calendar)
+    )
     return map_calendar_to_schema(updated)
 
 
 @router.post("/{uuid}/resync", response_model=CalendarSchema)
 async def resync_calendar(
     uuid: UUID,
-    get_calendar_handler: Annotated[
-        GetCalendarHandler, Depends(get_query_handler(GetCalendarHandler))
-    ],
-    resync_calendar_handler: Annotated[
-        ResyncCalendarHandler, Depends(get_resync_calendar_handler)
-    ],
+    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> CalendarSchema:
     """Resubscribe and fully resync a calendar."""
+    get_calendar_handler = query_factory.create(GetCalendarHandler)
+    resync_calendar_handler = command_factory.create(ResyncCalendarHandler)
     calendar = await get_calendar_handler.handle(GetCalendarQuery(calendar_id=uuid))
-    updated = await resync_calendar_handler.handle(ResyncCalendarCommand(calendar=calendar))
+    updated = await resync_calendar_handler.handle(
+        ResyncCalendarCommand(calendar=calendar)
+    )
     return map_calendar_to_schema(updated)
 
 
 @router.post("/reset-subscriptions", response_model=list[CalendarSchema])
 async def reset_calendar_subscriptions(
-    reset_calendar_data_handler: Annotated[
-        ResetCalendarDataHandler, Depends(get_reset_calendar_data_handler)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> list[CalendarSchema]:
     """Delete all calendar data and refresh subscriptions for the user."""
-    updated_calendars = await reset_calendar_data_handler.handle(ResetCalendarDataCommand())
+    reset_calendar_data_handler = command_factory.create(ResetCalendarDataHandler)
+    updated_calendars = await reset_calendar_data_handler.handle(
+        ResetCalendarDataCommand()
+    )
 
     for calendar in updated_calendars:
         await sync_single_calendar_task.kiq(
@@ -139,32 +137,34 @@ async def reset_calendar_subscriptions(
 
 @router.post("/reset-sync", response_model=list[CalendarSchema])
 async def reset_calendar_sync(
-    reset_calendar_sync_handler: Annotated[
-        ResetCalendarSyncHandler, Depends(get_reset_calendar_sync_handler)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> list[CalendarSchema]:
     """Reset calendar sync: unsubscribe, delete future events, resubscribe, and sync.
-    
+
     This operation:
     1. Unsubscribes all calendars that have syncing enabled
     2. Deletes all future calendar entries for those calendars
     3. Resubscribes to updates for all calendars that were previously subscribed
     4. Performs initial sync for each calendar
     """
-    updated_calendars = await reset_calendar_sync_handler.handle(ResetCalendarSyncCommand())
+    reset_calendar_sync_handler = command_factory.create(ResetCalendarSyncHandler)
+    updated_calendars = await reset_calendar_sync_handler.handle(
+        ResetCalendarSyncCommand()
+    )
     return [map_calendar_to_schema(calendar) for calendar in updated_calendars]
 
 
 @router.post("/", response_model=PagedResponseSchema[CalendarSchema])
 async def search_calendars(
-    list_calendars_handler: Annotated[
-        SearchCalendarsHandler, Depends(get_query_handler(SearchCalendarsHandler))
-    ],
+    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
     query: QuerySchema[value_objects.CalendarQuery],
 ) -> PagedResponseSchema[CalendarSchema]:
     """Search calendars with pagination and optional filters."""
+    list_calendars_handler = query_factory.create(SearchCalendarsHandler)
     search_query = build_search_query(query, value_objects.CalendarQuery)
-    result = await list_calendars_handler.handle(SearchCalendarsQuery(search_query=search_query))
+    result = await list_calendars_handler.handle(
+        SearchCalendarsQuery(search_query=search_query)
+    )
     return create_paged_response(result, map_calendar_to_schema)
 
 
@@ -172,11 +172,10 @@ async def search_calendars(
 async def create_calendar(
     calendar_data: CalendarCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    create_calendar_handler: Annotated[
-        CreateCalendarHandler, Depends(get_command_handler(CreateCalendarHandler))
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> CalendarSchema:
     """Create a new calendar."""
+    create_calendar_handler = command_factory.create(CreateCalendarHandler)
     # Convert schema to entity (id is optional for create, entity will generate it if None)
     calendar = CalendarEntity(
         user_id=user.id,
@@ -187,7 +186,9 @@ async def create_calendar(
         last_sync_at=calendar_data.last_sync_at,
         default_event_category=calendar_data.default_event_category,
     )
-    created = await create_calendar_handler.handle(CreateCalendarCommand(calendar=calendar))
+    created = await create_calendar_handler.handle(
+        CreateCalendarCommand(calendar=calendar)
+    )
     return map_calendar_to_schema(created)
 
 
@@ -195,11 +196,10 @@ async def create_calendar(
 async def update_calendar(
     uuid: UUID,
     update_data: CalendarUpdateSchema,
-    update_calendar_handler: Annotated[
-        UpdateCalendarHandler, Depends(get_command_handler(UpdateCalendarHandler))
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> CalendarSchema:
     """Update a calendar."""
+    update_calendar_handler = command_factory.create(UpdateCalendarHandler)
     # Convert schema to update object
     from lykke.domain.value_objects import CalendarUpdateObject
 
@@ -218,9 +218,8 @@ async def update_calendar(
 @router.delete("/{uuid}", status_code=200)
 async def delete_calendar(
     uuid: UUID,
-    delete_calendar_handler: Annotated[
-        DeleteCalendarHandler, Depends(get_command_handler(DeleteCalendarHandler))
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> None:
     """Delete a calendar."""
+    delete_calendar_handler = command_factory.create(DeleteCalendarHandler)
     await delete_calendar_handler.handle(DeleteCalendarCommand(calendar_id=uuid))

@@ -13,11 +13,9 @@ from lykke.application.commands import (
 from lykke.domain import value_objects
 from lykke.presentation.api.schemas import AdhocTaskCreateSchema, TaskSchema
 from lykke.presentation.api.schemas.mappers import map_task_to_schema
+from lykke.presentation.handler_factory import CommandHandlerFactory
 
-from .dependencies.services import (
-    get_create_adhoc_task_handler,
-    get_record_task_action_handler,
-)
+from .dependencies.factories import command_handler_factory
 
 router = APIRouter()
 
@@ -26,11 +24,12 @@ router = APIRouter()
 async def add_task_action(
     _id: uuid.UUID,
     action: value_objects.Action,
-    handler: Annotated[
-        RecordTaskActionHandler, Depends(get_record_task_action_handler)
+    command_factory: Annotated[
+        CommandHandlerFactory, Depends(command_handler_factory)
     ],
 ) -> TaskSchema:
     """Record an action on a task."""
+    handler = command_factory.create(RecordTaskActionHandler)
     task = await handler.handle(RecordTaskActionCommand(task_id=_id, action=action))
     return map_task_to_schema(task)
 
@@ -38,11 +37,12 @@ async def add_task_action(
 @router.post("/adhoc", response_model=TaskSchema, status_code=201)
 async def create_adhoc_task(
     task_data: AdhocTaskCreateSchema,
-    handler: Annotated[
-        CreateAdhocTaskHandler, Depends(get_create_adhoc_task_handler)
+    command_factory: Annotated[
+        CommandHandlerFactory, Depends(command_handler_factory)
     ],
 ) -> TaskSchema:
     """Create an adhoc task."""
+    handler = command_factory.create(CreateAdhocTaskHandler)
     schedule = (
         value_objects.TaskSchedule(**task_data.schedule.model_dump())
         if task_data.schedule
