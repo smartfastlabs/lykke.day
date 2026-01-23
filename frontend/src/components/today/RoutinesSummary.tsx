@@ -119,8 +119,8 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
         };
       })
       .filter((routine) => {
-        // Hide routines where all tasks are punted
-        return !(routine.puntedCount === routine.totalCount && routine.totalCount > 0);
+        // Hide routines where every task is complete or punted
+        return routine.pendingCount > 0;
       });
   });
 
