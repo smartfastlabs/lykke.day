@@ -18,8 +18,7 @@ from lykke.application.repositories import (
     CalendarRepositoryReadWriteProtocol,
 )
 from lykke.core.constants import OAUTH_STATE_EXPIRY
-from lykke.domain.entities import AuthTokenEntity
-from lykke.domain.entities import CalendarEntity, UserEntity
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity, UserEntity
 from lykke.domain.value_objects.query import CalendarQuery
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
 from lykke.presentation.workers.tasks import (
@@ -293,7 +292,7 @@ async def google_login_callback(
     # Clean up state
     oauth_states.pop(state, None)
 
-    return RedirectResponse(url="/app")
+    return RedirectResponse(url="/me")
 
 
 @router.post("/webhook/{user_id}/{calendar_id}")
