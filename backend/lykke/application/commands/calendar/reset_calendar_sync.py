@@ -42,9 +42,11 @@ class ResetCalendarSyncHandler(BaseCommandHandler[ResetCalendarSyncCommand, list
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
         google_gateway: GoogleCalendarGatewayProtocol,
+        sync_calendar_handler: SyncCalendarHandler,
     ) -> None:
         super().__init__(ro_repos, uow_factory, user_id)
         self._google_gateway = google_gateway
+        self._sync_calendar_handler = sync_calendar_handler
 
     async def handle(self, command: ResetCalendarSyncCommand) -> list[CalendarEntity]:
         """Reset sync for all calendars with subscriptions enabled.
@@ -108,17 +110,10 @@ class ResetCalendarSyncHandler(BaseCommandHandler[ResetCalendarSyncCommand, list
                     # Continue with other calendars even if one fails
         
         # Step 5: Perform initial sync for each calendar (using new UoW contexts)
-        sync_handler = SyncCalendarHandler(
-            ro_repos=self._ro_repos,
-            uow_factory=self._uow_factory,
-            user_id=self.user_id,
-            google_gateway=self._google_gateway,
-        )
-        
         synced_calendars = []
         for calendar in updated_calendars:
             try:
-                synced = await sync_handler.sync_calendar(calendar.id)
+                synced = await self._sync_calendar_handler.sync_calendar(calendar.id)
                 synced_calendars.append(synced)
                 logger.info(f"Successfully synced calendar {calendar.id}")
             except Exception as e:

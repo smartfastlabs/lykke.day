@@ -10,6 +10,7 @@ from lykke.application.commands.calendar.reset_calendar_sync import (
     ResetCalendarSyncCommand,
     ResetCalendarSyncHandler,
 )
+from lykke.application.commands.calendar.sync_calendar import SyncCalendarHandler
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import AuthTokenEntity
@@ -167,12 +168,21 @@ async def test_reset_calendar_sync_unsubscribes_deletes_future_events_and_resubs
 
     expiration = datetime.now(UTC) + timedelta(days=1)
     google_gateway = FakeGoogleGateway(expiration=expiration)
-
-    handler = ResetCalendarSyncHandler(
-        ro_repos=SqlAlchemyReadOnlyRepositories(user_id=test_user.id),
-        uow_factory=SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway()),
+    ro_repos = SqlAlchemyReadOnlyRepositories(user_id=test_user.id)
+    uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
+    sync_calendar_handler = SyncCalendarHandler(
+        ro_repos=ro_repos,
+        uow_factory=uow_factory,
         user_id=test_user.id,
         google_gateway=google_gateway,
+    )
+
+    handler = ResetCalendarSyncHandler(
+        ro_repos=ro_repos,
+        uow_factory=uow_factory,
+        user_id=test_user.id,
+        google_gateway=google_gateway,
+        sync_calendar_handler=sync_calendar_handler,
     )
 
     # Execute reset_sync
@@ -312,12 +322,21 @@ async def test_reset_calendar_sync_handles_multiple_calendars(
 
     expiration = datetime.now(UTC) + timedelta(days=1)
     google_gateway = FakeGoogleGateway(expiration=expiration)
-
-    handler = ResetCalendarSyncHandler(
-        ro_repos=SqlAlchemyReadOnlyRepositories(user_id=test_user.id),
-        uow_factory=SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway()),
+    ro_repos = SqlAlchemyReadOnlyRepositories(user_id=test_user.id)
+    uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
+    sync_calendar_handler = SyncCalendarHandler(
+        ro_repos=ro_repos,
+        uow_factory=uow_factory,
         user_id=test_user.id,
         google_gateway=google_gateway,
+    )
+
+    handler = ResetCalendarSyncHandler(
+        ro_repos=ro_repos,
+        uow_factory=uow_factory,
+        user_id=test_user.id,
+        google_gateway=google_gateway,
+        sync_calendar_handler=sync_calendar_handler,
     )
 
     # Execute reset_sync
@@ -397,12 +416,21 @@ async def test_reset_calendar_sync_handles_no_subscribed_calendars(
 
     expiration = datetime.now(UTC) + timedelta(days=1)
     google_gateway = FakeGoogleGateway(expiration=expiration)
-
-    handler = ResetCalendarSyncHandler(
-        ro_repos=SqlAlchemyReadOnlyRepositories(user_id=test_user.id),
-        uow_factory=SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway()),
+    ro_repos = SqlAlchemyReadOnlyRepositories(user_id=test_user.id)
+    uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
+    sync_calendar_handler = SyncCalendarHandler(
+        ro_repos=ro_repos,
+        uow_factory=uow_factory,
         user_id=test_user.id,
         google_gateway=google_gateway,
+    )
+
+    handler = ResetCalendarSyncHandler(
+        ro_repos=ro_repos,
+        uow_factory=uow_factory,
+        user_id=test_user.id,
+        google_gateway=google_gateway,
+        sync_calendar_handler=sync_calendar_handler,
     )
 
     # Execute reset_sync

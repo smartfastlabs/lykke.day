@@ -209,12 +209,15 @@ def get_reschedule_day_handler(
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
     ],
-    preview_handler: Annotated[PreviewDayHandler, Depends(preview_day_handler)],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> RescheduleDayHandler:
     """Get a RescheduleDayHandler instance for HTTP handlers."""
     ro_repos = ro_repo_factory.create(user.id)
-    return RescheduleDayHandler(ro_repos, uow_factory, user.id, preview_handler)
+    preview_handler = PreviewDayHandler(ro_repos, user.id)
+    schedule_day_handler = ScheduleDayHandler(
+        ro_repos, uow_factory, user.id, preview_handler
+    )
+    return RescheduleDayHandler(ro_repos, uow_factory, user.id, schedule_day_handler)
 
 
 def get_update_day_handler(

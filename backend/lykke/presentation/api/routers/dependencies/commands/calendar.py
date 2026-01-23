@@ -8,6 +8,7 @@ from lykke.application.commands.calendar import (
     ResetCalendarDataHandler,
     ResetCalendarSyncHandler,
     SubscribeCalendarHandler,
+    SyncCalendarHandler,
     UnsubscribeCalendarHandler,
 )
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
@@ -66,7 +67,12 @@ def get_resync_calendar_handler(
 ) -> ResyncCalendarHandler:
     """Get a ResyncCalendarHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ResyncCalendarHandler(ro_repos, uow_factory, user.id, google_gateway)
+    sync_calendar_handler = SyncCalendarHandler(
+        ro_repos, uow_factory, user.id, google_gateway
+    )
+    return ResyncCalendarHandler(
+        ro_repos, uow_factory, user.id, google_gateway, sync_calendar_handler
+    )
 
 
 def get_reset_calendar_data_handler(
@@ -96,4 +102,9 @@ def get_reset_calendar_sync_handler(
 ) -> ResetCalendarSyncHandler:
     """Get a ResetCalendarSyncHandler instance."""
     ro_repos = ro_repo_factory.create(user.id)
-    return ResetCalendarSyncHandler(ro_repos, uow_factory, user.id, google_gateway)
+    sync_calendar_handler = SyncCalendarHandler(
+        ro_repos, uow_factory, user.id, google_gateway
+    )
+    return ResetCalendarSyncHandler(
+        ro_repos, uow_factory, user.id, google_gateway, sync_calendar_handler
+    )

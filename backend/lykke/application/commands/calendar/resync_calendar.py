@@ -41,9 +41,11 @@ class ResyncCalendarHandler(BaseCommandHandler[ResyncCalendarCommand, CalendarEn
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
         google_gateway: GoogleCalendarGatewayProtocol,
+        sync_calendar_handler: SyncCalendarHandler,
     ) -> None:
         super().__init__(ro_repos, uow_factory, user_id)
         self._google_gateway = google_gateway
+        self._sync_calendar_handler = sync_calendar_handler
 
     async def handle(self, command: ResyncCalendarCommand) -> CalendarEntity:
         """Perform a full resync of the given calendar."""
@@ -57,13 +59,7 @@ class ResyncCalendarHandler(BaseCommandHandler[ResyncCalendarCommand, CalendarEn
             calendar = await self._subscribe(calendar, token, uow)
 
         # Run a fresh sync after subscription refresh using a new UoW context
-        sync_handler = SyncCalendarHandler(
-            ro_repos=self._ro_repos,
-            uow_factory=self._uow_factory,
-            user_id=self.user_id,
-            google_gateway=self._google_gateway,
-        )
-        return await sync_handler.sync_calendar(calendar.id)
+        return await self._sync_calendar_handler.sync_calendar(calendar.id)
 
     async def _delete_calendar_entries(
         self, calendar_id: UUID, uow: UnitOfWorkProtocol

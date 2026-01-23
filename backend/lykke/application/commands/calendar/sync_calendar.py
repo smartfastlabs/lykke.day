@@ -269,7 +269,7 @@ class SyncAllCalendarsHandler(BaseCommandHandler[SyncAllCalendarsCommand, None])
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
-        google_gateway: GoogleCalendarGatewayProtocol,
+        sync_calendar_handler: SyncCalendarHandler,
     ) -> None:
         """Initialize SyncAllCalendarsHandler.
 
@@ -277,10 +277,10 @@ class SyncAllCalendarsHandler(BaseCommandHandler[SyncAllCalendarsCommand, None])
             ro_repos: Read-only repositories (from BaseCommandHandler)
             uow_factory: UnitOfWork factory (from BaseCommandHandler)
             user_id: User ID (from BaseCommandHandler)
-            google_gateway: Google Calendar gateway
+            sync_calendar_handler: Handler for syncing a single calendar
         """
         super().__init__(ro_repos, uow_factory, user_id)
-        self._google_gateway = google_gateway
+        self._sync_calendar_handler = sync_calendar_handler
 
     async def handle(self, command: SyncAllCalendarsCommand) -> None:
         """Handle sync all calendars command."""
@@ -291,17 +291,12 @@ class SyncAllCalendarsHandler(BaseCommandHandler[SyncAllCalendarsCommand, None])
         uow = self.new_uow()
         async with uow:
             calendars = await uow.calendar_ro_repo.all()
-            sync_handler = SyncCalendarHandler(
-                ro_repos=self._ro_repos,
-                uow_factory=self._uow_factory,
-                user_id=self.user_id,
-                google_gateway=self._google_gateway,
-            )
-
             for calendar in calendars:
                 try:
                     token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
-                    await sync_handler.sync_calendar_with_uow(calendar, token, uow)
+                    await self._sync_calendar_handler.sync_calendar_with_uow(
+                        calendar, token, uow
+                    )
                 except TokenExpiredError:
                     logger.info(f"Token expired for calendar {calendar.name}")
                 except Exception as e:  # pylint: disable=broad-except

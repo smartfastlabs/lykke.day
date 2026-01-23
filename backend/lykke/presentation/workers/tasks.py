@@ -4,6 +4,10 @@ from typing import Annotated, cast
 from uuid import UUID
 
 from loguru import logger
+from taskiq import TaskiqScheduler
+from taskiq.schedule_sources import LabelScheduleSource
+from taskiq_dependencies import Depends
+
 from lykke.application.commands import ScheduleDayCommand, ScheduleDayHandler
 from lykke.application.commands.calendar import (
     SubscribeCalendarCommand,
@@ -19,15 +23,20 @@ from lykke.application.commands.notifications import (
     SmartNotificationCommand,
     SmartNotificationHandler,
 )
+from lykke.application.commands.push_subscription import SendPushNotificationHandler
 from lykke.application.events import register_all_handlers
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.queries import (
+    ComputeTaskRiskHandler,
+    GenerateUseCasePromptHandler,
     GetDayContextHandler,
     GetLLMPromptContextHandler,
     PreviewDayHandler,
 )
-from lykke.application.repositories import PushNotificationRepositoryReadOnlyProtocol
-from lykke.application.repositories import UserRepositoryReadOnlyProtocol
+from lykke.application.repositories import (
+    PushNotificationRepositoryReadOnlyProtocol,
+    UserRepositoryReadOnlyProtocol,
+)
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.core.utils.dates import (
     get_current_date,
@@ -36,16 +45,17 @@ from lykke.core.utils.dates import (
     resolve_timezone,
 )
 from lykke.domain import value_objects
-from lykke.infrastructure.gateways import GoogleCalendarGateway, RedisPubSubGateway
+from lykke.infrastructure.gateways import (
+    GoogleCalendarGateway,
+    RedisPubSubGateway,
+    WebPushGateway,
+)
 from lykke.infrastructure.repositories import UserRepository
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
 )
 from lykke.infrastructure.workers.config import broker
-from taskiq import TaskiqScheduler
-from taskiq.schedule_sources import LabelScheduleSource
-from taskiq_dependencies import Depends
 
 # Create a scheduler for periodic tasks
 scheduler = TaskiqScheduler(broker=broker, sources=[LabelScheduleSource(broker)])
@@ -99,7 +109,12 @@ def get_sync_all_calendars_handler(
 ) -> SyncAllCalendarsHandler:
     """Get a SyncAllCalendarsHandler instance for a user."""
     ro_repos = ro_repo_factory.create(user_id)
-    return SyncAllCalendarsHandler(ro_repos, uow_factory, user_id, google_gateway)
+    sync_calendar_handler = SyncCalendarHandler(
+        ro_repos, uow_factory, user_id, google_gateway
+    )
+    return SyncAllCalendarsHandler(
+        ro_repos, uow_factory, user_id, sync_calendar_handler
+    )
 
 
 def get_sync_calendar_handler(
@@ -146,8 +161,21 @@ def get_smart_notification_handler(
     get_prompt_context_handler = GetLLMPromptContextHandler(
         ro_repos, user_id, get_day_context_handler
     )
+    prompt_handler = GenerateUseCasePromptHandler(ro_repos, user_id)
+    web_push_gateway = WebPushGateway()
+    send_push_notification_handler = SendPushNotificationHandler(
+        ro_repos=ro_repos,
+        uow_factory=uow_factory,
+        user_id=user_id,
+        web_push_gateway=web_push_gateway,
+    )
     return SmartNotificationHandler(
-        ro_repos, uow_factory, user_id, get_prompt_context_handler
+        ro_repos,
+        uow_factory,
+        user_id,
+        get_prompt_context_handler,
+        prompt_handler,
+        send_push_notification_handler,
     )
 
 
@@ -162,8 +190,23 @@ def get_morning_overview_handler(
     get_prompt_context_handler = GetLLMPromptContextHandler(
         ro_repos, user_id, get_day_context_handler
     )
+    compute_task_risk_handler = ComputeTaskRiskHandler(ro_repos, user_id)
+    prompt_handler = GenerateUseCasePromptHandler(ro_repos, user_id)
+    web_push_gateway = WebPushGateway()
+    send_push_notification_handler = SendPushNotificationHandler(
+        ro_repos=ro_repos,
+        uow_factory=uow_factory,
+        user_id=user_id,
+        web_push_gateway=web_push_gateway,
+    )
     return MorningOverviewHandler(
-        ro_repos, uow_factory, user_id, get_prompt_context_handler
+        ro_repos,
+        uow_factory,
+        user_id,
+        get_prompt_context_handler,
+        compute_task_risk_handler,
+        prompt_handler,
+        send_push_notification_handler,
     )
 
 

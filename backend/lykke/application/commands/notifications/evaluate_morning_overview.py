@@ -14,7 +14,6 @@ from lykke.application.commands.push_subscription import (
     SendPushNotificationHandler,
 )
 from lykke.application.gateways.llm_gateway_factory import LLMGatewayFactory
-from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.application.llm_usecases import MorningOverviewUseCase
 from lykke.application.notifications import (
     build_notification_payload_for_smart_notification,
@@ -38,7 +37,6 @@ from lykke.core.utils.day_context_serialization import serialize_day_context
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import PushNotificationEntity
-from lykke.infrastructure.gateways import WebPushGateway
 
 
 @dataclass(frozen=True)
@@ -60,6 +58,9 @@ class MorningOverviewHandler(BaseCommandHandler[MorningOverviewCommand, None]):
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
+        compute_task_risk_handler: ComputeTaskRiskHandler,
+        generate_usecase_prompt_handler: GenerateUseCasePromptHandler,
+        send_push_notification_handler: SendPushNotificationHandler,
     ) -> None:
         """Initialize MorningOverviewHandler.
 
@@ -68,9 +69,15 @@ class MorningOverviewHandler(BaseCommandHandler[MorningOverviewCommand, None]):
             uow_factory: Unit of work factory for creating write transactions
             user_id: User ID for scoping
             get_llm_prompt_context_handler: Handler for loading LLM prompt context
+            compute_task_risk_handler: Handler for computing task risk
+            generate_usecase_prompt_handler: Handler for generating use case prompts
+            send_push_notification_handler: Handler for sending push notifications
         """
         super().__init__(ro_repos, uow_factory, user_id)
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
+        self._compute_task_risk_handler = compute_task_risk_handler
+        self._generate_usecase_prompt_handler = generate_usecase_prompt_handler
+        self._send_push_notification_handler = send_push_notification_handler
 
     async def handle(self, command: MorningOverviewCommand) -> None:
         """Evaluate day context and send morning overview if warranted.
@@ -119,8 +126,7 @@ class MorningOverviewHandler(BaseCommandHandler[MorningOverviewCommand, None]):
             return
 
         # Compute risk scores for tasks
-        risk_handler = ComputeTaskRiskHandler(self._ro_repos, self.user_id)
-        risk_result = await risk_handler.handle(
+        risk_result = await self._compute_task_risk_handler.handle(
             ComputeTaskRiskQuery(tasks=prompt_context.tasks)
         )
 
@@ -148,8 +154,7 @@ class MorningOverviewHandler(BaseCommandHandler[MorningOverviewCommand, None]):
         current_time = get_current_datetime_in_timezone(user.settings.timezone)
 
         # Generate prompts for LLM
-        prompt_handler = GenerateUseCasePromptHandler(self._ro_repos, self.user_id)
-        prompt_result = await prompt_handler.handle(
+        prompt_result = await self._generate_usecase_prompt_handler.handle(
             GenerateUseCasePromptQuery(
                 usecase=usecase.template_usecase,
                 prompt_context=prompt_context,
@@ -243,15 +248,7 @@ class MorningOverviewHandler(BaseCommandHandler[MorningOverviewCommand, None]):
                 return
 
             # Send to all subscriptions
-            web_push_gateway: WebPushGatewayProtocol = WebPushGateway()
-            send_handler = SendPushNotificationHandler(
-                ro_repos=self._ro_repos,
-                uow_factory=self._uow_factory,
-                user_id=command.user_id,
-                web_push_gateway=web_push_gateway,
-            )
-
-            await send_handler.handle(
+            await self._send_push_notification_handler.handle(
                 SendPushNotificationCommand(
                     subscriptions=subscriptions,
                     content=payload,
