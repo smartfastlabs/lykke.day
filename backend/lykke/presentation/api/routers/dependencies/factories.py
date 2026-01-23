@@ -1,63 +1,112 @@
 """Generic factory functions for creating query and command handlers."""
 
-from typing import Annotated, Callable, TypeVar, Type
+from collections.abc import Callable
+from typing import Annotated, TypeVar
 
 from fastapi import Depends
-from lykke.application.queries.base import BaseQueryHandler
+
 from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.queries.base import BaseQueryHandler
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
+from lykke.presentation.handler_factory import CommandHandlerFactory, QueryHandlerFactory
 
-from .services import get_read_only_repository_factory, get_unit_of_work_factory
-from .user import get_current_user
+from .services import (
+    get_read_only_repository_factory,
+    get_unit_of_work_factory,
+    get_unit_of_work_factory_websocket,
+)
+from .user import get_current_user, get_current_user_from_token
 
 # Type variables for handler types
 QueryHandlerT = TypeVar("QueryHandlerT", bound=BaseQueryHandler)
 CommandHandlerT = TypeVar("CommandHandlerT", bound=BaseCommandHandler)
 
 
-def create_query_handler(
-    handler_class: Type[QueryHandlerT],
-    user: UserEntity,
-    ro_repo_factory: ReadOnlyRepositoryFactory,
-) -> QueryHandlerT:
-    """Create a query handler instance with injected dependencies.
-
-    Args:
-        handler_class: The query handler class to instantiate
-        user: The current user entity
-        ro_repo_factory: Read-only repository factory
-
-    Returns:
-        An instance of the query handler class
-    """
-    ro_repos = ro_repo_factory.create(user.id)
-    return handler_class(ro_repos, user.id)
+def get_query_handler_factory(
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> QueryHandlerFactory:
+    """Create a QueryHandlerFactory for HTTP routes."""
+    return QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
 
 
-def create_command_handler(
-    handler_class: Type[CommandHandlerT],
-    user: UserEntity,
-    uow_factory: UnitOfWorkFactory,
-    ro_repo_factory: ReadOnlyRepositoryFactory,
-) -> CommandHandlerT:
-    """Create a command handler instance with injected dependencies.
+def get_query_handler_factory_websocket(
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> QueryHandlerFactory:
+    """Create a QueryHandlerFactory for WebSocket routes."""
+    return QueryHandlerFactory(user_id=user.id, ro_repo_factory=ro_repo_factory)
 
-    Args:
-        handler_class: The command handler class to instantiate
-        user: The current user entity
-        uow_factory: Unit of work factory
-        ro_repo_factory: Read-only repository factory
 
-    Returns:
-        An instance of the command handler class
-    """
-    ro_repos = ro_repo_factory.create(user.id)
-    return handler_class(ro_repos, uow_factory, user.id)
+def get_command_handler_factory(
+    uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> CommandHandlerFactory:
+    """Create a CommandHandlerFactory for HTTP routes."""
+    return CommandHandlerFactory(
+        user_id=user.id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+    )
+
+
+def get_command_handler_factory_websocket(
+    uow_factory: Annotated[
+        UnitOfWorkFactory, Depends(get_unit_of_work_factory_websocket)
+    ],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+) -> CommandHandlerFactory:
+    """Create a CommandHandlerFactory for WebSocket routes."""
+    return CommandHandlerFactory(
+        user_id=user.id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+    )
+
+
+def load_query_handler(
+    handler_class: type[QueryHandlerT],
+    *,
+    factory_dependency: Callable[..., QueryHandlerFactory] = get_query_handler_factory,
+) -> Callable[..., QueryHandlerT]:
+    """Create a dependency function for a query handler using a factory."""
+
+    def _get_handler(
+        factory: Annotated[QueryHandlerFactory, Depends(factory_dependency)],
+    ) -> QueryHandlerT:
+        return factory.create(handler_class)
+
+    return _get_handler
+
+
+def load_command_handler(
+    handler_class: type[CommandHandlerT],
+    *,
+    factory_dependency: Callable[..., CommandHandlerFactory] = get_command_handler_factory,
+) -> Callable[..., CommandHandlerT]:
+    """Create a dependency function for a command handler using a factory."""
+
+    def _get_handler(
+        factory: Annotated[CommandHandlerFactory, Depends(factory_dependency)],
+    ) -> CommandHandlerT:
+        return factory.create(handler_class)
+
+    return _get_handler
 
 
 def get_query_handler(
-    handler_class: Type[QueryHandlerT],
+    handler_class: type[QueryHandlerT],
 ) -> Callable[..., QueryHandlerT]:
     """Create a FastAPI dependency function for a query handler.
 
@@ -77,19 +126,12 @@ def get_query_handler(
     Returns:
         A dependency function that can be used with FastAPI's Depends()
     """
-    def _get_handler(
-        user: Annotated[UserEntity, Depends(get_current_user)],
-        ro_repo_factory: Annotated[
-            ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-        ],
-    ) -> QueryHandlerT:
-        return create_query_handler(handler_class, user, ro_repo_factory)
 
-    return _get_handler
+    return load_query_handler(handler_class)
 
 
 def get_command_handler(
-    handler_class: Type[CommandHandlerT],
+    handler_class: type[CommandHandlerT],
 ) -> Callable[..., CommandHandlerT]:
     """Create a FastAPI dependency function for a command handler.
 
@@ -109,15 +151,5 @@ def get_command_handler(
     Returns:
         A dependency function that can be used with FastAPI's Depends()
     """
-    def _get_handler(
-        uow_factory: Annotated[UnitOfWorkFactory, Depends(get_unit_of_work_factory)],
-        ro_repo_factory: Annotated[
-            ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
-        ],
-        user: Annotated[UserEntity, Depends(get_current_user)],
-    ) -> CommandHandlerT:
-        return create_command_handler(handler_class, user, uow_factory, ro_repo_factory)
 
-    return _get_handler
-
-
+    return load_command_handler(handler_class)

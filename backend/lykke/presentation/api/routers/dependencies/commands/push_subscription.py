@@ -7,6 +7,7 @@ from lykke.application.commands.push_subscription import SendPushNotificationHan
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.infrastructure.gateways import WebPushGateway
+from lykke.presentation.handler_factory import CommandHandlerFactory
 from ..services import get_read_only_repository_factory, get_unit_of_work_factory
 from ..user import get_current_user
 from lykke.domain.entities import UserEntity
@@ -30,11 +31,11 @@ def get_send_push_notification_handler(
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> SendPushNotificationHandler:
     """Get a SendPushNotificationHandler instance."""
-    ro_repos = ro_repo_factory.create(user.id)
-    return SendPushNotificationHandler(
-        ro_repos=ro_repos,
-        uow_factory=uow_factory,
+    factory = CommandHandlerFactory(
         user_id=user.id,
-        web_push_gateway=web_push_gateway,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+        web_push_gateway_provider=lambda: web_push_gateway,
     )
+    return factory.create(SendPushNotificationHandler)
 

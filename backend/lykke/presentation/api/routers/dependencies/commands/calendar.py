@@ -8,13 +8,13 @@ from lykke.application.commands.calendar import (
     ResetCalendarDataHandler,
     ResetCalendarSyncHandler,
     SubscribeCalendarHandler,
-    SyncCalendarHandler,
     UnsubscribeCalendarHandler,
 )
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
+from lykke.presentation.handler_factory import CommandHandlerFactory
 
 from ..services import get_read_only_repository_factory, get_unit_of_work_factory
 from ..user import get_current_user
@@ -36,8 +36,13 @@ def get_subscribe_calendar_handler(
     ],
 ) -> SubscribeCalendarHandler:
     """Get a SubscribeCalendarHandler instance."""
-    ro_repos = ro_repo_factory.create(user.id)
-    return SubscribeCalendarHandler(ro_repos, uow_factory, user.id, google_gateway)
+    factory = CommandHandlerFactory(
+        user_id=user.id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+        google_gateway_provider=lambda: google_gateway,
+    )
+    return factory.create(SubscribeCalendarHandler)
 
 
 def get_unsubscribe_calendar_handler(
@@ -51,8 +56,13 @@ def get_unsubscribe_calendar_handler(
     ],
 ) -> UnsubscribeCalendarHandler:
     """Get an UnsubscribeCalendarHandler instance."""
-    ro_repos = ro_repo_factory.create(user.id)
-    return UnsubscribeCalendarHandler(ro_repos, uow_factory, user.id, google_gateway)
+    factory = CommandHandlerFactory(
+        user_id=user.id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+        google_gateway_provider=lambda: google_gateway,
+    )
+    return factory.create(UnsubscribeCalendarHandler)
 
 
 def get_resync_calendar_handler(
@@ -66,13 +76,13 @@ def get_resync_calendar_handler(
     ],
 ) -> ResyncCalendarHandler:
     """Get a ResyncCalendarHandler instance."""
-    ro_repos = ro_repo_factory.create(user.id)
-    sync_calendar_handler = SyncCalendarHandler(
-        ro_repos, uow_factory, user.id, google_gateway
+    factory = CommandHandlerFactory(
+        user_id=user.id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+        google_gateway_provider=lambda: google_gateway,
     )
-    return ResyncCalendarHandler(
-        ro_repos, uow_factory, user.id, google_gateway, sync_calendar_handler
-    )
+    return factory.create(ResyncCalendarHandler)
 
 
 def get_reset_calendar_data_handler(
@@ -86,8 +96,13 @@ def get_reset_calendar_data_handler(
     ],
 ) -> ResetCalendarDataHandler:
     """Get a ResetCalendarDataHandler instance."""
-    ro_repos = ro_repo_factory.create(user.id)
-    return ResetCalendarDataHandler(ro_repos, uow_factory, user.id, google_gateway)
+    factory = CommandHandlerFactory(
+        user_id=user.id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+        google_gateway_provider=lambda: google_gateway,
+    )
+    return factory.create(ResetCalendarDataHandler)
 
 
 def get_reset_calendar_sync_handler(
@@ -101,10 +116,10 @@ def get_reset_calendar_sync_handler(
     ],
 ) -> ResetCalendarSyncHandler:
     """Get a ResetCalendarSyncHandler instance."""
-    ro_repos = ro_repo_factory.create(user.id)
-    sync_calendar_handler = SyncCalendarHandler(
-        ro_repos, uow_factory, user.id, google_gateway
+    factory = CommandHandlerFactory(
+        user_id=user.id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+        google_gateway_provider=lambda: google_gateway,
     )
-    return ResetCalendarSyncHandler(
-        ro_repos, uow_factory, user.id, google_gateway, sync_calendar_handler
-    )
+    return factory.create(ResetCalendarSyncHandler)

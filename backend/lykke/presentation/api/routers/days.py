@@ -32,7 +32,10 @@ from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.value_objects import DayUpdateObject
 from lykke.presentation.api.schemas import DayContextSchema, DaySchema, DayUpdateSchema
-from lykke.presentation.api.schemas.mappers import map_day_context_to_schema, map_day_to_schema
+from lykke.presentation.api.schemas.mappers import (
+    map_day_context_to_schema,
+    map_day_to_schema,
+)
 from lykke.presentation.api.schemas.websocket_message import (
     EntityChangeSchema,
     WebSocketConnectionAckSchema,
@@ -43,8 +46,8 @@ from lykke.presentation.api.schemas.websocket_message import (
 
 from .dependencies.services import (
     day_context_handler_websocket,
-    get_read_only_repository_factory,
     get_pubsub_gateway,
+    get_read_only_repository_factory,
     get_reschedule_day_handler,
     get_schedule_day_handler_websocket,
     get_update_day_handler,
@@ -390,7 +393,6 @@ async def _handle_realtime_events(
         today_date: Today's date for filtering
         incremental_changes_handler: Handler to access repositories and load entity data
     """
-    from typing import Literal
 
     from lykke.core.utils.domain_event_serialization import deserialize_domain_event
 
@@ -402,12 +404,14 @@ async def _handle_realtime_events(
             )
 
             if domain_event_message:
-                logger.debug(f"Received message from Redis subscription")
+                logger.debug("Received message from Redis subscription")
                 try:
                     # Deserialize domain event
-                    logger.debug(f"Received domain event message from Redis")
+                    logger.debug("Received domain event message from Redis")
                     domain_event = deserialize_domain_event(domain_event_message)
-                    logger.debug(f"Deserialized domain event: {domain_event.__class__.__name__}")
+                    logger.debug(
+                        f"Deserialized domain event: {domain_event.__class__.__name__}"
+                    )
 
                     # Only process events that identify an entity
                     if not domain_event.entity_id or not domain_event.entity_type:
@@ -437,9 +441,15 @@ async def _handle_realtime_events(
                     # Determine change type from activity_type
                     activity_type = domain_event.__class__.__name__
                     change_type: Literal["created", "updated", "deleted"] | None = None
-                    if "Created" in activity_type or activity_type == "EntityCreatedEvent":
+                    if (
+                        "Created" in activity_type
+                        or activity_type == "EntityCreatedEvent"
+                    ):
                         change_type = "created"
-                    elif "Deleted" in activity_type or activity_type == "EntityDeletedEvent":
+                    elif (
+                        "Deleted" in activity_type
+                        or activity_type == "EntityDeletedEvent"
+                    ):
                         change_type = "deleted"
                     elif (
                         "Updated" in activity_type
@@ -469,10 +479,12 @@ async def _handle_realtime_events(
                         try:
                             entity_id = domain_event.entity_id
                             if entity_id is not None:
-                                entity_data = await incremental_changes_handler._load_entity_data(
-                                    domain_event.entity_type,
-                                    entity_id,
-                                    user_timezone=user_timezone,
+                                entity_data = (
+                                    await incremental_changes_handler._load_entity_data(
+                                        domain_event.entity_type,
+                                        entity_id,
+                                        user_timezone=user_timezone,
+                                    )
                                 )
                         except Exception as e:
                             logger.error(

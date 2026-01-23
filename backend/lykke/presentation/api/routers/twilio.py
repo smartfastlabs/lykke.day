@@ -10,6 +10,7 @@ from lykke.application.commands.message import (
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain import value_objects
 from lykke.infrastructure.repositories import UserRepository
+from lykke.presentation.handler_factory import CommandHandlerFactory
 
 from .dependencies.services import (
     get_read_only_repository_factory,
@@ -59,11 +60,12 @@ async def twilio_sms_webhook(
         logger.warning("User {} has no SMS conversation configured", user.id)
         return Response(status_code=200)
 
-    handler = ReceiveSmsMessageHandler(
-        ro_repo_factory.create(user.id),
-        uow_factory,
-        user.id,
+    factory = CommandHandlerFactory(
+        user_id=user.id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
     )
+    handler = factory.create(ReceiveSmsMessageHandler)
     await handler.handle(
         ReceiveSmsMessageCommand(
             conversation_id=conversation_id,

@@ -23,16 +23,8 @@ from lykke.application.commands.notifications import (
     SmartNotificationCommand,
     SmartNotificationHandler,
 )
-from lykke.application.commands.push_subscription import SendPushNotificationHandler
 from lykke.application.events import register_all_handlers
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.queries import (
-    ComputeTaskRiskHandler,
-    GenerateUseCasePromptHandler,
-    GetDayContextHandler,
-    GetLLMPromptContextHandler,
-    PreviewDayHandler,
-)
 from lykke.application.repositories import (
     PushNotificationRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
@@ -48,7 +40,6 @@ from lykke.domain import value_objects
 from lykke.infrastructure.gateways import (
     GoogleCalendarGateway,
     RedisPubSubGateway,
-    WebPushGateway,
 )
 from lykke.infrastructure.repositories import UserRepository
 from lykke.infrastructure.unit_of_work import (
@@ -56,6 +47,7 @@ from lykke.infrastructure.unit_of_work import (
     SqlAlchemyUnitOfWorkFactory,
 )
 from lykke.infrastructure.workers.config import broker
+from lykke.presentation.handler_factory import CommandHandlerFactory
 
 # Create a scheduler for periodic tasks
 scheduler = TaskiqScheduler(broker=broker, sources=[LabelScheduleSource(broker)])
@@ -108,13 +100,13 @@ def get_sync_all_calendars_handler(
     google_gateway: GoogleCalendarGatewayProtocol,
 ) -> SyncAllCalendarsHandler:
     """Get a SyncAllCalendarsHandler instance for a user."""
-    ro_repos = ro_repo_factory.create(user_id)
-    sync_calendar_handler = SyncCalendarHandler(
-        ro_repos, uow_factory, user_id, google_gateway
+    factory = CommandHandlerFactory(
+        user_id=user_id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+        google_gateway_provider=lambda: google_gateway,
     )
-    return SyncAllCalendarsHandler(
-        ro_repos, uow_factory, user_id, sync_calendar_handler
-    )
+    return factory.create(SyncAllCalendarsHandler)
 
 
 def get_sync_calendar_handler(
@@ -124,8 +116,13 @@ def get_sync_calendar_handler(
     google_gateway: GoogleCalendarGatewayProtocol,
 ) -> SyncCalendarHandler:
     """Get a SyncCalendarHandler instance for a user."""
-    ro_repos = ro_repo_factory.create(user_id)
-    return SyncCalendarHandler(ro_repos, uow_factory, user_id, google_gateway)
+    factory = CommandHandlerFactory(
+        user_id=user_id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+        google_gateway_provider=lambda: google_gateway,
+    )
+    return factory.create(SyncCalendarHandler)
 
 
 def get_subscribe_calendar_handler(
@@ -135,8 +132,13 @@ def get_subscribe_calendar_handler(
     google_gateway: GoogleCalendarGatewayProtocol,
 ) -> SubscribeCalendarHandler:
     """Get a SubscribeCalendarHandler instance for a user."""
-    ro_repos = ro_repo_factory.create(user_id)
-    return SubscribeCalendarHandler(ro_repos, uow_factory, user_id, google_gateway)
+    factory = CommandHandlerFactory(
+        user_id=user_id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+        google_gateway_provider=lambda: google_gateway,
+    )
+    return factory.create(SubscribeCalendarHandler)
 
 
 def get_schedule_day_handler(
@@ -145,9 +147,12 @@ def get_schedule_day_handler(
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> ScheduleDayHandler:
     """Get a ScheduleDayHandler instance for a user."""
-    ro_repos = ro_repo_factory.create(user_id)
-    preview_day_handler = PreviewDayHandler(ro_repos, user_id)
-    return ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_day_handler)
+    factory = CommandHandlerFactory(
+        user_id=user_id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+    )
+    return factory.create(ScheduleDayHandler)
 
 
 def get_smart_notification_handler(
@@ -156,27 +161,12 @@ def get_smart_notification_handler(
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> SmartNotificationHandler:
     """Get a SmartNotificationHandler instance for a user."""
-    ro_repos = ro_repo_factory.create(user_id)
-    get_day_context_handler = GetDayContextHandler(ro_repos, user_id)
-    get_prompt_context_handler = GetLLMPromptContextHandler(
-        ro_repos, user_id, get_day_context_handler
-    )
-    prompt_handler = GenerateUseCasePromptHandler(ro_repos, user_id)
-    web_push_gateway = WebPushGateway()
-    send_push_notification_handler = SendPushNotificationHandler(
-        ro_repos=ro_repos,
-        uow_factory=uow_factory,
+    factory = CommandHandlerFactory(
         user_id=user_id,
-        web_push_gateway=web_push_gateway,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
     )
-    return SmartNotificationHandler(
-        ro_repos,
-        uow_factory,
-        user_id,
-        get_prompt_context_handler,
-        prompt_handler,
-        send_push_notification_handler,
-    )
+    return factory.create(SmartNotificationHandler)
 
 
 def get_morning_overview_handler(
@@ -185,29 +175,12 @@ def get_morning_overview_handler(
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> MorningOverviewHandler:
     """Get a MorningOverviewHandler instance for a user."""
-    ro_repos = ro_repo_factory.create(user_id)
-    get_day_context_handler = GetDayContextHandler(ro_repos, user_id)
-    get_prompt_context_handler = GetLLMPromptContextHandler(
-        ro_repos, user_id, get_day_context_handler
-    )
-    compute_task_risk_handler = ComputeTaskRiskHandler(ro_repos, user_id)
-    prompt_handler = GenerateUseCasePromptHandler(ro_repos, user_id)
-    web_push_gateway = WebPushGateway()
-    send_push_notification_handler = SendPushNotificationHandler(
-        ro_repos=ro_repos,
-        uow_factory=uow_factory,
+    factory = CommandHandlerFactory(
         user_id=user_id,
-        web_push_gateway=web_push_gateway,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
     )
-    return MorningOverviewHandler(
-        ro_repos,
-        uow_factory,
-        user_id,
-        get_prompt_context_handler,
-        compute_task_risk_handler,
-        prompt_handler,
-        send_push_notification_handler,
-    )
+    return factory.create(MorningOverviewHandler)
 
 
 @broker.task  # type: ignore[untyped-decorator]

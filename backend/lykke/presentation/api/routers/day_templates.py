@@ -4,6 +4,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
+
 from lykke.application.commands.day_template import (
     AddDayTemplateRoutineCommand,
     AddDayTemplateRoutineHandler,
@@ -26,9 +27,7 @@ from lykke.application.queries.day_template import (
     SearchDayTemplatesHandler,
     SearchDayTemplatesQuery,
 )
-from lykke.application.repositories import (
-    TimeBlockDefinitionRepositoryReadOnlyProtocol,
-)
+from lykke.application.repositories import TimeBlockDefinitionRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
@@ -59,7 +58,9 @@ async def get_day_template(
     ],
 ) -> DayTemplateSchema:
     """Get a single day template by ID."""
-    day_template = await get_day_template_handler.handle(GetDayTemplateQuery(day_template_id=uuid))
+    day_template = await get_day_template_handler.handle(
+        GetDayTemplateQuery(day_template_id=uuid)
+    )
     return map_day_template_to_schema(day_template)
 
 
@@ -72,7 +73,9 @@ async def search_day_templates(
 ) -> PagedResponseSchema[DayTemplateSchema]:
     """Search day templates with pagination and optional filters."""
     search_query = build_search_query(query, value_objects.DayTemplateQuery)
-    result = await list_day_templates_handler.handle(SearchDayTemplatesQuery(search_query=search_query))
+    result = await list_day_templates_handler.handle(
+        SearchDayTemplatesQuery(search_query=search_query)
+    )
     return create_paged_response(result, map_day_template_to_schema)
 
 
@@ -114,7 +117,9 @@ async def create_day_template(
             else None
         ),
     )
-    created = await create_day_template_handler.handle(CreateDayTemplateCommand(day_template=day_template))
+    created = await create_day_template_handler.handle(
+        CreateDayTemplateCommand(day_template=day_template)
+    )
     return map_day_template_to_schema(created)
 
 
@@ -174,7 +179,9 @@ async def delete_day_template(
     ],
 ) -> None:
     """Delete a day template."""
-    await delete_day_template_handler.handle(DeleteDayTemplateCommand(day_template_id=uuid))
+    await delete_day_template_handler.handle(
+        DeleteDayTemplateCommand(day_template_id=uuid)
+    )
 
 
 @router.post(
@@ -192,7 +199,9 @@ async def add_day_template_routine(
 ) -> DayTemplateSchema:
     """Attach a routine to a day template."""
     updated = await add_day_template_routine_handler.handle(
-        AddDayTemplateRoutineCommand(day_template_id=uuid, routine_id=routine_data.routine_id)
+        AddDayTemplateRoutineCommand(
+            day_template_id=uuid, routine_id=routine_data.routine_id
+        )
     )
     return map_day_template_to_schema(updated)
 
