@@ -52,11 +52,13 @@ export const TasksSection: Component<TasksSectionProps> = (props) => {
         </button>
         <div class="flex items-center gap-3">
           <button
+            type="button"
             onClick={() => navigate("/me/adhoc-task")}
-            class="w-6 h-6 flex items-center justify-center rounded-full bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+            class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/80 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Add adhoc task"
+            title="Add adhoc task"
           >
-            <Icon icon={faPlus} class="w-3 h-3" />
+            <Icon icon={faPlus} class="w-4 h-4 fill-amber-600/80" />
           </button>
         </div>
       </div>

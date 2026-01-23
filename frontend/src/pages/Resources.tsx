@@ -2,6 +2,7 @@ import { Component } from "solid-js";
 import { A } from "@solidjs/router";
 import Footer from "@/components/shared/layout/Footer";
 import SEO from "@/components/shared/SEO";
+import { Quote } from "@/components/shared/Quote";
 import { useAuth } from "@/providers/auth";
 import { usePageAnimation } from "@/utils/navigation";
 
@@ -84,25 +85,15 @@ const Resources: Component = () => {
           </div>
 
           <div
-            class="max-w-xl mx-auto mb-16 transition-all duration-1000 delay-300 ease-out"
+            class="transition-all duration-1000 delay-300 ease-out"
             style={{
               opacity: mounted() ? 1 : 0,
               transform: mounted() ? "translateY(0)" : "translateY(20px)",
             }}
           >
-            <div class="relative py-8">
-              <div class="absolute left-0 top-0 w-8 h-8 border-l-2 border-t-2 border-amber-300/50" />
-              <div class="absolute right-0 bottom-0 w-8 h-8 border-r-2 border-b-2 border-amber-300/50" />
-              <p
-                class="text-stone-600 text-lg md:text-xl italic leading-relaxed px-6"
-                style={{
-                  "font-family": "'Cormorant Garamond', Georgia, serif",
-                }}
-              >
-                "True wisdom isn't found in the destination—it's gathered in the
-                quiet practice of showing up, day after day."
-              </p>
-            </div>
+            <Quote
+              quote="True wisdom isn't found in the destination—it's gathered in the quiet practice of showing up, day after day."
+            />
           </div>
 
           <div class="grid sm:grid-cols-3 gap-6 mt-16">
