@@ -1,6 +1,6 @@
 import { Component, For, Show, createMemo } from "solid-js";
 import { Icon } from "@/components/shared/Icon";
-import { faCalendarDay } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faCalendarDay } from "@fortawesome/free-solid-svg-icons";
 import type { Event } from "@/types/api";
 import { EventItem } from "@/components/events/EventItem";
 
@@ -21,17 +21,6 @@ export const EventsSection: Component<EventsSectionProps> = (props) => {
       .slice(0, 3);
   });
 
-  const otherCount = createMemo(() => {
-    const now = new Date();
-    const importantIds = new Set(importantEvents().map((e) => e.id));
-    return props.events.filter(
-      (e) =>
-        new Date(e.starts_at) >= now &&
-        !importantIds.has(e.id) &&
-        e.category !== "WORK"
-    ).length;
-  });
-
   return (
     <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-5 backdrop-blur-sm space-y-4">
       <div class="flex items-center justify-between">
@@ -40,24 +29,18 @@ export const EventsSection: Component<EventsSectionProps> = (props) => {
           <p class="text-xs uppercase tracking-wide text-amber-700">Events</p>
         </div>
         <a
-          class="text-xs font-semibold text-amber-700 hover:text-amber-800"
+          class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/80 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
           href={props.href}
+          aria-label="See all events"
+          title="See all events"
         >
-          See all events
+          <Icon icon={faBars} class="w-4 h-4 fill-amber-600/80" />
         </a>
       </div>
       <Show when={importantEvents().length > 0}>
         <For each={importantEvents()}>
           {(event) => <EventItem event={event} />}
         </For>
-      </Show>
-      <Show when={otherCount() > 0}>
-        <p class="text-xs text-stone-500">
-          {otherCount()} other event{otherCount() !== 1 ? "s" : ""}
-        </p>
-      </Show>
-      <Show when={importantEvents().length === 0 && otherCount() === 0}>
-        <p class="text-xs text-stone-500">No events</p>
       </Show>
     </div>
   );

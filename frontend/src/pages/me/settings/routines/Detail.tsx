@@ -21,7 +21,7 @@ const RoutineDetailPage: Component = () => {
     }
   );
 
-  const [taskDefinitions, { mutate: mutateTaskDefinitions, refetch: refetchTaskDefinitions }] = createResource<TaskDefinition[]>(taskDefinitionAPI.getAll);
+  const [taskDefinitions, { refetch: refetchTaskDefinitions }] = createResource<TaskDefinition[]>(taskDefinitionAPI.getAll);
 
   const [selectedTaskDefinitionId, setSelectedTaskDefinitionId] = createSignal<string | null>(
     null
@@ -161,11 +161,17 @@ const RoutineDetailPage: Component = () => {
   const handleCreateTaskDefinition = async (taskDef: TaskDefinition) => {
     setActionError("");
     try {
+      const current = routine();
+      if (!current?.user_id) {
+        setActionError("Unable to determine user for task definition");
+        return;
+      }
       // Create the task definition
       const created = await taskDefinitionAPI.create({
         name: taskDef.name,
         description: taskDef.description,
         type: taskDef.type,
+        user_id: current.user_id,
       });
       
       // Refresh the task definitions list

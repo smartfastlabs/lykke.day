@@ -65,10 +65,11 @@ const LLMSettingsPage: Component = () => {
     if (isSaving()) return;
     setError("");
     setIsSaving(true);
+    const selectedProvider = provider();
     try {
       await authAPI.updateProfile({
         settings: {
-          llm_provider: provider() ? provider() : null,
+          llm_provider: selectedProvider === "" ? null : selectedProvider,
           base_personality_slug: basePersonalitySlug().trim() || "default",
           llm_personality_amendments: llmPersonalityAmendments()
             .map((value) => value.trim())

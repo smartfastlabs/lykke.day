@@ -32,12 +32,6 @@ export const TasksSection: Component<TasksSectionProps> = (props) => {
     ...adhocTasks(),
   ]);
 
-  const otherCount = createMemo(() =>
-    activeTasks().filter(
-      (t) => !t.tags?.includes("IMPORTANT") && t.type !== "ADHOC"
-    ).length
-  );
-
   return (
     <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-5 backdrop-blur-sm space-y-4">
       <div class="flex items-center justify-between">
@@ -66,16 +60,6 @@ export const TasksSection: Component<TasksSectionProps> = (props) => {
         <div class="space-y-1">
           <TaskList tasks={displayedTasks} />
         </div>
-      </Show>
-      <Show when={otherCount() > 0}>
-        <p class="text-xs text-stone-500">
-          {otherCount()} other task{otherCount() !== 1 ? "s" : ""}
-        </p>
-      </Show>
-      <Show
-        when={displayedTasks().length === 0 && otherCount() === 0}
-      >
-        <p class="text-xs text-stone-500">No tasks</p>
       </Show>
     </div>
   );

@@ -16,6 +16,8 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 };
 
+type NavigatorWithStandalone = typeof navigator & { standalone?: boolean };
+
 const highlights = [
   {
     icon: sparkles,
@@ -51,7 +53,7 @@ const Install: Component = () => {
 
   const detectInstalled = (): void => {
     const displayModeStandalone = window.matchMedia("(display-mode: standalone)").matches;
-    const iosStandalone = Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
+    const iosStandalone = Boolean((navigator as NavigatorWithStandalone).standalone);
     setIsInstalled(displayModeStandalone || iosStandalone);
   };
 

@@ -52,15 +52,7 @@ export const TodaysTasksView: Component = () => {
     },
   ]);
 
-  const emptyState = (
-    <div class="px-6 py-12 text-center">
-      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 mb-4">
-        <span class="text-3xl">✨</span>
-      </div>
-      <p class="text-stone-600 text-lg font-medium mb-2">No tasks for today</p>
-      <p class="text-stone-500 text-sm">Enjoy your free time!</p>
-    </div>
-  );
+  const emptyState = <></>;
 
   const handleAddTask = async (event: Event) => {
     event.preventDefault();

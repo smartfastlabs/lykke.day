@@ -1,4 +1,4 @@
-import { Component, Show, For, createMemo, Setter, Accessor, createSignal, onMount } from "solid-js";
+import { Component, Show, For, createMemo, Setter, Accessor, createSignal, createEffect } from "solid-js";
 import { Routine, RoutineTask, TaskDefinition, TaskSchedule, RecurrenceSchedule, TaskType } from "@/types/api";
 import { ALL_TASK_TYPES } from "@/types/api/constants";
 import { Icon } from "@/components/shared/Icon";
@@ -33,11 +33,9 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
   const availableDefinitions = createMemo(() => props.taskDefinitions ?? []);
   
   // Track schedule state for the form
-  const [currentSchedule, setCurrentSchedule] = createSignal<TaskSchedule | null>(
-    props.scheduleInitial?.() ?? null
-  );
+  const [currentSchedule, setCurrentSchedule] = createSignal<TaskSchedule | null>(null);
   const [currentTaskSchedule, setCurrentTaskSchedule] = createSignal<RecurrenceSchedule | null>(
-    props.taskScheduleInitial?.() ?? null
+    null
   );
   
   // State for creating new task definition
@@ -48,7 +46,7 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
   const [isCreatingTaskDef, setIsCreatingTaskDef] = createSignal(false);
   
   // Update schedule state when form opens
-  createMemo(() => {
+  createEffect(() => {
     if (props.selectedAction?.()) {
       const initialSchedule = props.scheduleInitial?.();
       if (initialSchedule) {
@@ -65,6 +63,39 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
       setCurrentTaskSchedule(props.taskScheduleInitial?.() ?? null);
     }
   });
+
+  const handleCreateTaskDefinition = async () => {
+    if (!props.onCreateTaskDefinition) return;
+    setIsCreatingTaskDef(true);
+    try {
+      const newTaskDef: TaskDefinition = {
+        name: newTaskDefName().trim(),
+        description: newTaskDefDescription().trim(),
+        type: newTaskDefType(),
+      } as TaskDefinition;
+      await props.onCreateTaskDefinition(newTaskDef);
+      // Reset form
+      setShowCreateTaskDef(false);
+      setNewTaskDefName("");
+      setNewTaskDefDescription("");
+      setNewTaskDefType("CHORE");
+    } catch (err) {
+      console.error("Failed to create task definition:", err);
+    } finally {
+      setIsCreatingTaskDef(false);
+    }
+  };
+
+  const handleTaskSubmit = () => {
+    const schedule = currentSchedule() ?? {
+      timing_type: "FLEXIBLE" as const,
+      available_time: null,
+      start_time: null,
+      end_time: null,
+    };
+    const taskSchedule = currentTaskSchedule();
+    void props.onTaskSubmit?.(schedule, taskSchedule);
+  };
 
   const getTaskDefinitionName = (taskDefinitionId: string) =>
     props.taskDefinitions?.find((def) => def.id === taskDefinitionId)?.name ?? taskDefinitionId;
@@ -241,27 +272,7 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                     <Button
                       type="button"
                       disabled={isCreatingTaskDef() || !newTaskDefName().trim() || !newTaskDefDescription().trim()}
-                      onClick={async () => {
-                        if (!props.onCreateTaskDefinition) return;
-                        setIsCreatingTaskDef(true);
-                        try {
-                          const newTaskDef: TaskDefinition = {
-                            name: newTaskDefName().trim(),
-                            description: newTaskDefDescription().trim(),
-                            type: newTaskDefType(),
-                          } as TaskDefinition;
-                          await props.onCreateTaskDefinition(newTaskDef);
-                          // Reset form
-                          setShowCreateTaskDef(false);
-                          setNewTaskDefName("");
-                          setNewTaskDefDescription("");
-                          setNewTaskDefType("CHORE");
-                        } catch (err) {
-                          console.error("Failed to create task definition:", err);
-                        } finally {
-                          setIsCreatingTaskDef(false);
-                        }
-                      }}
+                      onClick={() => void handleCreateTaskDefinition()}
                     >
                       {isCreatingTaskDef() ? "Creating..." : "Create & Add"}
                     </Button>
@@ -341,9 +352,7 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                       onChange={(schedule: TaskSchedule) => {
                         setCurrentSchedule(schedule);
                       }}
-                      onSubmit={async () => {
-                        // Handled by parent form
-                      }}
+                      onSubmit={() => Promise.resolve()}
                       onCancel={() => {}}
                       isLoading={false}
                       submitText=""
@@ -368,16 +377,7 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                     <Button
                       type="button"
                       disabled={props.isLoading}
-                      onClick={async () => {
-                        const schedule = currentSchedule() ?? {
-                          timing_type: "FLEXIBLE" as const,
-                          available_time: null,
-                          start_time: null,
-                          end_time: null,
-                        };
-                        const taskSchedule = currentTaskSchedule();
-                        await props.onTaskSubmit!(schedule, taskSchedule);
-                      }}
+                      onClick={handleTaskSubmit}
                     >
                       {props.isLoading ? "Saving..." : (props.selectedAction?.() === "add" ? "Attach Task" : "Save")}
                     </Button>

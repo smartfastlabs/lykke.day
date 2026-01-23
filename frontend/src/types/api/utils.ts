@@ -57,7 +57,7 @@ export type PushSubscription = components["schemas"]["PushSubscriptionSchema"];
 
 // Value object types
 export type TaskSchedule = components["schemas"]["TaskScheduleSchema"];
-export type RoutineSchedule = components["schemas"]["RoutineScheduleSchema"];
+export type RecurrenceSchedule = components["schemas"]["RecurrenceScheduleSchema"];
 export type Action = components["schemas"]["ActionSchema"];
 
 // Reminder types - manually defined as they may not be in generated types yet

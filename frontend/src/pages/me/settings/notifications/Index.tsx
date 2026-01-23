@@ -11,7 +11,7 @@ import { globalNotifications } from "@/providers/notifications";
 const NotificationConfigPage: Component = () => {
   const navigate = useNavigate();
   const { user, refetch: refetchUser } = useAuth();
-  const [config, { refetch, mutate }] = createResource<NotificationUseCaseConfig>(
+  const [config, { mutate }] = createResource<NotificationUseCaseConfig>(
     usecaseConfigAPI.getNotificationConfig
   );
   const [amendments, setAmendments] = createSignal<string[]>([]);

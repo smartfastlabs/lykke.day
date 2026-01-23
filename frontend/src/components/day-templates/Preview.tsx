@@ -86,11 +86,7 @@ const DayTemplatePreview: Component<DayTemplatePreviewProps> = (props) => {
                 {plan().text}
               </p>
             </Show>
-            <Show
-              when={
-                plan().intentions && plan().intentions.length > 0
-              }
-            >
+            <Show when={(plan().intentions?.length ?? 0) > 0}>
               <div class="space-y-2">
                 <div class="text-xs font-medium text-neutral-700">Intentions</div>
                 <ul class="space-y-1">

@@ -1,20 +1,9 @@
 import { Component, createMemo, For, Show } from "solid-js";
 import { useStreamingData } from "@/providers/streamingData";
-import type { Event } from "@/types/api";
-import { Icon } from "solid-heroicons";
-import { calendar } from "solid-heroicons/outline";
 import { usePageAnimation } from "@/utils/navigation";
 import { EventItem } from "@/components/events/EventItem";
 
-const EmptyState: Component = () => (
-  <div class="text-center py-16">
-    <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-      <Icon path={calendar} class="w-10 h-10 text-amber-700" />
-    </div>
-    <h3 class="text-xl font-semibold text-stone-800 mb-2">No events today</h3>
-    <p class="text-stone-600">Enjoy your free time!</p>
-  </div>
-);
+const EmptyState: Component = () => null;
 
 export const TodaysEventsView: Component = () => {
   const { events } = useStreamingData();
@@ -56,11 +45,11 @@ export const TodaysEventsView: Component = () => {
           transform: mounted() ? "translateY(0)" : "translateY(-20px)",
         }}
       >
-        <p class="text-stone-600 text-lg">
-          <Show when={totalEvents() > 0} fallback="No events scheduled">
+        <Show when={totalEvents() > 0}>
+          <p class="text-stone-600 text-lg">
             {totalEvents()} {totalEvents() === 1 ? "event" : "events"} today
-          </Show>
-        </p>
+          </p>
+        </Show>
       </div>
 
       {/* Events list */}

@@ -18,9 +18,6 @@ export const RemindersSummary: Component<RemindersSummaryProps> = (props) => {
     props.reminders.filter((r) => r.status === "INCOMPLETE")
   );
 
-  const otherCount = createMemo(
-    () => props.reminders.filter((r) => r.status !== "INCOMPLETE").length
-  );
   const hasLink = createMemo(() => Boolean(props.href));
 
   return (
@@ -61,14 +58,6 @@ export const RemindersSummary: Component<RemindersSummaryProps> = (props) => {
         <div class="space-y-1">
           <ReminderList reminders={activeReminders} />
         </div>
-      </Show>
-      <Show when={otherCount() > 0}>
-        <p class="text-xs text-stone-500">
-          {otherCount()} other reminder{otherCount() !== 1 ? "s" : ""}
-        </p>
-      </Show>
-      <Show when={activeReminders().length === 0 && otherCount() === 0}>
-        <p class="text-xs text-stone-500">No reminders</p>
       </Show>
     </div>
   );

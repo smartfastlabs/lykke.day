@@ -1,4 +1,12 @@
-import { Component, Show, createMemo, createEffect } from "solid-js";
+import {
+  Component,
+  Show,
+  createMemo,
+  createEffect,
+  createSignal,
+  onMount,
+  onCleanup,
+} from "solid-js";
 import { useNavigate, useLocation } from "@solidjs/router";
 import { useStreamingData } from "@/providers/streamingData";
 import {
@@ -10,11 +18,61 @@ import {
   RightNowSection,
 } from "@/components/today";
 import { getShowTodayCookie } from "@/utils/cookies";
+import { getTime } from "@/utils/dates";
+import type { Event, Task } from "@/types/api";
+
+const getTaskTime = (task: Task): Date | null => {
+  const taskDate = task.scheduled_date;
+  if (!taskDate || !task.schedule) return null;
+
+  const schedule = task.schedule;
+
+  // For FIXED_TIME, use start_time
+  if (schedule.timing_type === "FIXED_TIME" && schedule.start_time) {
+    return getTime(taskDate, schedule.start_time);
+  }
+
+  // For DEADLINE, use end_time
+  if (schedule.timing_type === "DEADLINE" && schedule.end_time) {
+    return getTime(taskDate, schedule.end_time);
+  }
+
+  // For others, use available_time or start_time as fallback
+  if (schedule.available_time) {
+    return getTime(taskDate, schedule.available_time);
+  }
+
+  if (schedule.start_time) {
+    return getTime(taskDate, schedule.start_time);
+  }
+
+  return null;
+};
+
+const isAllDayEvent = (event: Event): boolean => {
+  const start = new Date(event.starts_at);
+  const end = event.ends_at ? new Date(event.ends_at) : null;
+  if (!end) return false;
+  const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+  return diffHours >= 23;
+};
 
 export const TodayPage: Component = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { tasks, events, reminders } = useStreamingData();
+  const [now, setNow] = createSignal(new Date());
+
+  // Update time every 30 seconds to keep sections aligned
+  onMount(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 30000);
+
+    onCleanup(() => {
+      clearInterval(interval);
+    });
+  });
 
   const allTasks = createMemo(() => tasks() ?? []);
   const allEvents = createMemo(() => events() ?? []);
@@ -69,6 +127,98 @@ export const TodayPage: Component = () => {
     allEvents().some((event) => new Date(event.starts_at) >= new Date())
   );
 
+  const rightNowEventIds = createMemo(() => {
+    const currentTime = now();
+    return new Set(
+      allEvents()
+        .filter((event) => {
+          if (isAllDayEvent(event)) return false;
+          const start = new Date(event.starts_at);
+          const end = event.ends_at ? new Date(event.ends_at) : null;
+          return start <= currentTime && (!end || end >= currentTime);
+        })
+        .map((event) => event.id)
+        .filter((id): id is string => Boolean(id))
+    );
+  });
+
+  const upcomingEventIds = createMemo(() => {
+    const currentTime = now();
+    const windowEnd = new Date(currentTime.getTime() + 1000 * 30 * 60);
+    return new Set(
+      allEvents()
+        .filter((event) => {
+          if (isAllDayEvent(event)) return false;
+          const start = new Date(event.starts_at);
+          const end = event.ends_at ? new Date(event.ends_at) : null;
+          if (start <= currentTime && (!end || end >= currentTime)) {
+            return false;
+          }
+          return start >= currentTime && start <= windowEnd;
+        })
+        .map((event) => event.id)
+        .filter((id): id is string => Boolean(id))
+    );
+  });
+
+  const rightNowTaskIds = createMemo(() => {
+    const currentTime = now();
+    return new Set(
+      allTasks()
+        .filter((task) => {
+          if (task.status === "COMPLETE" || task.status === "PUNT") {
+            return false;
+          }
+          const taskTime = getTaskTime(task);
+          if (!taskTime) return false;
+          return taskTime < currentTime;
+        })
+        .map((task) => task.id)
+        .filter((id): id is string => Boolean(id))
+    );
+  });
+
+  const upcomingTaskIds = createMemo(() => {
+    const currentTime = now();
+    const windowEnd = new Date(currentTime.getTime() + 1000 * 30 * 60);
+    return new Set(
+      allTasks()
+        .filter((task) => {
+          if (task.status === "COMPLETE" || task.status === "PUNT") {
+            return false;
+          }
+          const taskTime = getTaskTime(task);
+          if (!taskTime) return false;
+          if (taskTime < currentTime) return false;
+          return taskTime <= windowEnd;
+        })
+        .map((task) => task.id)
+        .filter((id): id is string => Boolean(id))
+    );
+  });
+
+  const eventsForSections = createMemo(() => {
+    const ids = new Set<string>();
+    rightNowEventIds().forEach((id) => ids.add(id));
+    upcomingEventIds().forEach((id) => ids.add(id));
+    return allEvents().filter((event) => {
+      const eventId = event.id;
+      if (!eventId) return true;
+      return !ids.has(eventId);
+    });
+  });
+
+  const tasksForSections = createMemo(() => {
+    const ids = new Set<string>();
+    rightNowTaskIds().forEach((id) => ids.add(id));
+    upcomingTaskIds().forEach((id) => ids.add(id));
+    return allTasks().filter((task) => {
+      const taskId = task.id;
+      if (!taskId) return true;
+      return !ids.has(taskId);
+    });
+  });
+
   return (
     <>
       <div class="mb-3">
@@ -84,11 +234,11 @@ export const TodayPage: Component = () => {
       <div class="mb-6 flex flex-col md:flex-row gap-4">
         <Show when={hasUpcomingEvents()}>
           <div class="w-full md:w-1/2">
-            <EventsSection events={allEvents()} href="/me/today/events" />
+            <EventsSection events={eventsForSections()} href="/me/today/events" />
           </div>
         </Show>
         <div class={hasUpcomingEvents() ? "w-full md:w-1/2" : "w-full"}>
-          <TasksSection tasks={allTasks()} href="/me/today/tasks" />
+          <TasksSection tasks={tasksForSections()} href="/me/today/tasks" />
         </div>
       </div>
 

@@ -376,8 +376,8 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                       {(routine) => (
                         <button
                           type="button"
-                          onClick={() => handleAddRoutine(routine.id)}
-                          disabled={isAddingRoutine()}
+                          onClick={() => routine.id && handleAddRoutine(routine.id)}
+                          disabled={isAddingRoutine() || !routine.id}
                           class="w-full text-left px-4 py-3 rounded-xl border border-amber-100/70 bg-amber-50/40 text-stone-700 hover:bg-amber-50/70 transition disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           <div class="font-medium">{routine.name}</div>

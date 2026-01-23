@@ -1,4 +1,4 @@
-import { Component, createSignal, Show, For, Setter, untrack, createMemo } from "solid-js";
+import { Component, createSignal, Show, For, Setter, untrack, createEffect } from "solid-js";
 import { RecurrenceSchedule, TaskFrequency, DayOfWeek } from "@/types/api";
 import { ALL_TASK_FREQUENCIES } from "@/types/api/constants";
 import { Select, Input } from "@/components/forms";
@@ -43,7 +43,7 @@ const RoutineScheduleForm: Component<RoutineScheduleFormProps> = (props) => {
   );
   
   // Update when props.schedule changes (for when form is opened with existing schedule)
-  createMemo(() => {
+  createEffect(() => {
     const schedule = props.schedule;
     if (schedule !== null) {
       setHasSchedule(true);
