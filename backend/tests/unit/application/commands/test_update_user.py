@@ -13,67 +13,7 @@ if str(ROOT) not in sys.path:
 from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
 from lykke.domain.entities import UserEntity
 from lykke.domain.value_objects import UserSetting, UserStatus, UserUpdateObject
-
-
-class _FakeUserReadOnlyRepo:
-    def __init__(self, user: UserEntity) -> None:
-        self._user = user
-
-    async def get(self, _user_id):
-        return self._user
-
-
-class _FakeReadOnlyRepos:
-    """Lightweight container matching ReadOnlyRepositories protocol."""
-
-    def __init__(self, user: UserEntity) -> None:
-        fake = object()
-        self.audit_log_ro_repo = fake
-        self.auth_token_ro_repo = fake
-        self.bot_personality_ro_repo = fake
-        self.calendar_entry_ro_repo = fake
-        self.calendar_entry_series_ro_repo = fake
-        self.calendar_ro_repo = fake
-        self.conversation_ro_repo = fake
-        self.day_ro_repo = fake
-        self.day_template_ro_repo = fake
-        self.factoid_ro_repo = fake
-        self.message_ro_repo = fake
-        self.notification_ro_repo = fake
-        self.push_notification_ro_repo = fake
-        self.push_subscription_ro_repo = fake
-        self.routine_ro_repo = fake
-        self.task_definition_ro_repo = fake
-        self.task_ro_repo = fake
-        self.time_block_definition_ro_repo = fake
-        self.usecase_config_ro_repo = fake
-        self.user_ro_repo = _FakeUserReadOnlyRepo(user)
-
-
-class _FakeUoW:
-    """Minimal UnitOfWork that just collects added entities."""
-
-    def __init__(self, user_ro_repo) -> None:
-        self.added = []
-        self.user_ro_repo = user_ro_repo
-
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb):
-        return None
-
-    def add(self, entity):
-        self.added.append(entity)
-        return entity
-
-
-class _FakeUoWFactory:
-    def __init__(self, user_ro_repo) -> None:
-        self.uow = _FakeUoW(user_ro_repo)
-
-    def create(self, _user_id):
-        return self.uow
+from tests.unit.fakes import _FakeReadOnlyRepos, _FakeUoW, _FakeUoWFactory, _FakeUserReadOnlyRepo
 
 
 @pytest.mark.asyncio
@@ -83,8 +23,10 @@ async def test_update_user_updates_fields_and_settings():
         hashed_password="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
     )
-    ro_repos = _FakeReadOnlyRepos(user)
-    uow_factory = _FakeUoWFactory(ro_repos.user_ro_repo)
+    user_repo = _FakeUserReadOnlyRepo(user)
+    ro_repos = _FakeReadOnlyRepos(user_repo=user_repo)
+    uow = _FakeUoW(user_repo=user_repo)
+    uow_factory = _FakeUoWFactory(uow)
     handler = UpdateUserHandler(ro_repos, uow_factory, user.id)
 
     update_data = UserUpdateObject(
@@ -108,8 +50,10 @@ async def test_update_user_skips_none_fields():
         hashed_password="hash",
         settings=UserSetting(template_defaults=["default"] * 7),
     )
-    ro_repos = _FakeReadOnlyRepos(user)
-    uow_factory = _FakeUoWFactory(ro_repos.user_ro_repo)
+    user_repo = _FakeUserReadOnlyRepo(user)
+    ro_repos = _FakeReadOnlyRepos(user_repo=user_repo)
+    uow = _FakeUoW(user_repo=user_repo)
+    uow_factory = _FakeUoWFactory(uow)
     handler = UpdateUserHandler(ro_repos, uow_factory, user.id)
 
     update_data = UserUpdateObject(

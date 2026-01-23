@@ -15,123 +15,15 @@ from lykke.domain.entities import (
     UserEntity,
 )
 from lykke.domain.events.task_events import TaskActionRecordedEvent, TaskStateUpdatedEvent
-
-
-class _FakeTaskReadOnlyRepo:
-    """Fake task repository for testing."""
-
-    def __init__(self, task: TaskEntity) -> None:
-        self._task = task
-
-    async def get(self, task_id):
-        if task_id == self._task.id:
-            return self._task
-        raise NotFoundError(f"Task {task_id} not found")
-
-
-class _FakeDayReadOnlyRepo:
-    """Fake day repository for testing."""
-
-    def __init__(self, day: DayEntity | None = None) -> None:
-        self._day = day
-
-    async def get(self, day_id):
-        if self._day and day_id == self._day.id:
-            return self._day
-        raise NotFoundError(f"Day {day_id} not found")
-
-
-class _FakeDayTemplateReadOnlyRepo:
-    """Fake day template repository for testing."""
-
-    def __init__(self, template: DayTemplateEntity) -> None:
-        self._template = template
-
-    async def get(self, _template_id):
-        return self._template
-
-    async def search_one(self, query):
-        return self._template
-
-
-class _FakeUserReadOnlyRepo:
-    """Fake user repository for testing."""
-
-    def __init__(self, user: UserEntity) -> None:
-        self._user = user
-
-    async def get(self, _user_id):
-        return self._user
-
-
-class _FakeReadOnlyRepos:
-    """Lightweight container matching ReadOnlyRepositories protocol."""
-
-    def __init__(
-        self,
-        task_repo: _FakeTaskReadOnlyRepo,
-        day_repo: _FakeDayReadOnlyRepo,
-        day_template_repo: _FakeDayTemplateReadOnlyRepo,
-        user_repo: _FakeUserReadOnlyRepo,
-    ) -> None:
-        fake = object()
-        self.audit_log_ro_repo = fake
-        self.auth_token_ro_repo = fake
-        self.bot_personality_ro_repo = fake
-        self.calendar_entry_ro_repo = fake
-        self.calendar_entry_series_ro_repo = fake
-        self.calendar_ro_repo = fake
-        self.conversation_ro_repo = fake
-        self.day_ro_repo = day_repo
-        self.day_template_ro_repo = day_template_repo
-        self.factoid_ro_repo = fake
-        self.message_ro_repo = fake
-        self.notification_ro_repo = fake
-        self.push_notification_ro_repo = fake
-        self.push_subscription_ro_repo = fake
-        self.routine_ro_repo = fake
-        self.task_definition_ro_repo = fake
-        self.task_ro_repo = task_repo
-        self.time_block_definition_ro_repo = fake
-        self.usecase_config_ro_repo = fake
-        self.user_ro_repo = user_repo
-
-
-class _FakeUoW:
-    """Minimal UnitOfWork that just collects added entities."""
-
-    def __init__(
-        self, task_repo, day_repo, day_template_repo, user_repo, created_entities=None
-    ) -> None:
-        self.added = []
-        self.created = created_entities or []
-        self.task_ro_repo = task_repo
-        self.day_ro_repo = day_repo
-        self.day_template_ro_repo = day_template_repo
-        self.user_ro_repo = user_repo
-
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb):
-        return None
-
-    def add(self, entity):
-        self.added.append(entity)
-        return entity
-
-    async def create(self, entity):
-        self.created.append(entity)
-        entity.create()
-        return entity
-
-
-class _FakeUoWFactory:
-    def __init__(self, task_repo, day_repo, day_template_repo, user_repo) -> None:
-        self.uow = _FakeUoW(task_repo, day_repo, day_template_repo, user_repo)
-
-    def create(self, _user_id):
-        return self.uow
+from tests.unit.fakes import (
+    _FakeDayReadOnlyRepo,
+    _FakeDayTemplateReadOnlyRepo,
+    _FakeReadOnlyRepos,
+    _FakeTaskReadOnlyRepo,
+    _FakeUoW,
+    _FakeUoWFactory,
+    _FakeUserReadOnlyRepo,
+)
 
 
 @pytest.mark.asyncio
@@ -173,8 +65,19 @@ async def test_record_task_action_adds_task_and_day_to_uow():
     )
     user_repo = _FakeUserReadOnlyRepo(user)
 
-    ro_repos = _FakeReadOnlyRepos(task_repo, day_repo, day_template_repo, user_repo)
-    uow_factory = _FakeUoWFactory(task_repo, day_repo, day_template_repo, user_repo)
+    ro_repos = _FakeReadOnlyRepos(
+        task_repo=task_repo,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        user_repo=user_repo,
+    )
+    uow = _FakeUoW(
+        task_repo=task_repo,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        user_repo=user_repo,
+    )
+    uow_factory = _FakeUoWFactory(uow)
     handler = RecordTaskActionHandler(ro_repos, uow_factory, user_id)
 
     # Create action
@@ -238,8 +141,19 @@ async def test_record_task_action_raises_domain_events():
     )
     user_repo = _FakeUserReadOnlyRepo(user)
 
-    ro_repos = _FakeReadOnlyRepos(task_repo, day_repo, day_template_repo, user_repo)
-    uow_factory = _FakeUoWFactory(task_repo, day_repo, day_template_repo, user_repo)
+    ro_repos = _FakeReadOnlyRepos(
+        task_repo=task_repo,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        user_repo=user_repo,
+    )
+    uow = _FakeUoW(
+        task_repo=task_repo,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        user_repo=user_repo,
+    )
+    uow_factory = _FakeUoWFactory(uow)
     handler = RecordTaskActionHandler(ro_repos, uow_factory, user_id)
 
     action = value_objects.Action(
@@ -296,8 +210,19 @@ async def test_record_task_action_raises_if_day_missing():
     )
     user_repo = _FakeUserReadOnlyRepo(user)
 
-    ro_repos = _FakeReadOnlyRepos(task_repo, day_repo, day_template_repo, user_repo)
-    uow_factory = _FakeUoWFactory(task_repo, day_repo, day_template_repo, user_repo)
+    ro_repos = _FakeReadOnlyRepos(
+        task_repo=task_repo,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        user_repo=user_repo,
+    )
+    uow = _FakeUoW(
+        task_repo=task_repo,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        user_repo=user_repo,
+    )
+    uow_factory = _FakeUoWFactory(uow)
     handler = RecordTaskActionHandler(ro_repos, uow_factory, user_id)
 
     action = value_objects.Action(
@@ -346,8 +271,19 @@ async def test_record_task_action_punt_updates_status():
     )
     user_repo = _FakeUserReadOnlyRepo(user)
 
-    ro_repos = _FakeReadOnlyRepos(task_repo, day_repo, day_template_repo, user_repo)
-    uow_factory = _FakeUoWFactory(task_repo, day_repo, day_template_repo, user_repo)
+    ro_repos = _FakeReadOnlyRepos(
+        task_repo=task_repo,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        user_repo=user_repo,
+    )
+    uow = _FakeUoW(
+        task_repo=task_repo,
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        user_repo=user_repo,
+    )
+    uow_factory = _FakeUoWFactory(uow)
     handler = RecordTaskActionHandler(ro_repos, uow_factory, user_id)
 
     action = value_objects.Action(

@@ -10,102 +10,15 @@ from lykke.application.queries.preview_tasks import PreviewTasksHandler
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity, UserEntity
-
-
-class _FakeDayReadOnlyRepo:
-    """Fake day repository for testing."""
-
-    def __init__(self, day: DayEntity | None = None) -> None:
-        self._day = day
-
-    async def get(self, day_id):
-        if self._day and day_id == self._day.id:
-            return self._day
-        raise NotFoundError(f"Day {day_id} not found")
-
-
-class _FakeDayTemplateReadOnlyRepo:
-    """Fake day template repository for testing."""
-
-    def __init__(self, template: DayTemplateEntity) -> None:
-        self._template = template
-
-    async def get(self, template_id):
-        if template_id == self._template.id:
-            return self._template
-        raise NotFoundError(f"Template {template_id} not found")
-
-    async def search_one(self, query):
-        return self._template
-
-
-class _FakeUserReadOnlyRepo:
-    """Fake user repository for testing."""
-
-    def __init__(self, user: UserEntity) -> None:
-        self._user = user
-
-    async def get(self, user_id):
-        if user_id == self._user.id:
-            return self._user
-        raise NotFoundError(f"User {user_id} not found")
-
-
-class _FakeCalendarEntryReadOnlyRepo:
-    """Fake calendar entry repository for testing."""
-
-    def __init__(self, entries=None) -> None:
-        self._entries = entries or []
-
-    async def search(self, query):
-        return self._entries
-
-
-class _FakeRoutineReadOnlyRepo:
-    """Fake routine repository for testing."""
-
-    async def all(self):
-        return []
-
-
-class _FakeTaskDefinitionReadOnlyRepo:
-    """Fake task definition repository for testing."""
-
-    async def search(self, query):
-        return []
-
-
-class _FakeReadOnlyRepos:
-    """Lightweight container matching ReadOnlyRepositories protocol."""
-
-    def __init__(
-        self,
-        day_repo: _FakeDayReadOnlyRepo,
-        day_template_repo: _FakeDayTemplateReadOnlyRepo,
-        user_repo: _FakeUserReadOnlyRepo,
-        calendar_entry_repo: _FakeCalendarEntryReadOnlyRepo,
-    ) -> None:
-        fake = object()
-        self.audit_log_ro_repo = fake
-        self.auth_token_ro_repo = fake
-        self.bot_personality_ro_repo = fake
-        self.calendar_entry_ro_repo = calendar_entry_repo
-        self.calendar_entry_series_ro_repo = fake
-        self.calendar_ro_repo = fake
-        self.conversation_ro_repo = fake
-        self.day_ro_repo = day_repo
-        self.day_template_ro_repo = day_template_repo
-        self.factoid_ro_repo = fake
-        self.message_ro_repo = fake
-        self.notification_ro_repo = fake
-        self.push_notification_ro_repo = fake
-        self.push_subscription_ro_repo = fake
-        self.routine_ro_repo = _FakeRoutineReadOnlyRepo()
-        self.task_definition_ro_repo = _FakeTaskDefinitionReadOnlyRepo()
-        self.task_ro_repo = fake
-        self.time_block_definition_ro_repo = fake
-        self.usecase_config_ro_repo = fake
-        self.user_ro_repo = user_repo
+from tests.unit.fakes import (
+    _FakeCalendarEntryReadOnlyRepo,
+    _FakeDayReadOnlyRepo,
+    _FakeDayTemplateReadOnlyRepo,
+    _FakeReadOnlyRepos,
+    _FakeRoutineReadOnlyRepo,
+    _FakeTaskDefinitionReadOnlyRepo,
+    _FakeUserReadOnlyRepo,
+)
 
 
 @pytest.mark.asyncio
@@ -135,7 +48,12 @@ async def test_preview_day_uses_provided_template():
     calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
 
     ro_repos = _FakeReadOnlyRepos(
-        day_repo, day_template_repo, user_repo, calendar_entry_repo
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        user_repo=user_repo,
+        calendar_entry_repo=calendar_entry_repo,
+        routine_repo=_FakeRoutineReadOnlyRepo(),
+        task_definition_repo=_FakeTaskDefinitionReadOnlyRepo(),
     )
     handler = PreviewDayHandler(ro_repos, user_id)
 
@@ -177,7 +95,12 @@ async def test_preview_day_falls_back_to_user_default_template():
     calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
 
     ro_repos = _FakeReadOnlyRepos(
-        day_repo, day_template_repo, user_repo, calendar_entry_repo
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        user_repo=user_repo,
+        calendar_entry_repo=calendar_entry_repo,
+        routine_repo=_FakeRoutineReadOnlyRepo(),
+        task_definition_repo=_FakeTaskDefinitionReadOnlyRepo(),
     )
     handler = PreviewDayHandler(ro_repos, user_id)
 
@@ -217,7 +140,12 @@ async def test_preview_day_uses_existing_day_template_if_available():
     calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
 
     ro_repos = _FakeReadOnlyRepos(
-        day_repo, day_template_repo, user_repo, calendar_entry_repo
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        user_repo=user_repo,
+        calendar_entry_repo=calendar_entry_repo,
+        routine_repo=_FakeRoutineReadOnlyRepo(),
+        task_definition_repo=_FakeTaskDefinitionReadOnlyRepo(),
     )
     handler = PreviewDayHandler(ro_repos, user_id)
 
@@ -259,7 +187,12 @@ async def test_preview_day_returns_calendar_entries():
     calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo(mock_entries)
 
     ro_repos = _FakeReadOnlyRepos(
-        day_repo, day_template_repo, user_repo, calendar_entry_repo
+        day_repo=day_repo,
+        day_template_repo=day_template_repo,
+        user_repo=user_repo,
+        calendar_entry_repo=calendar_entry_repo,
+        routine_repo=_FakeRoutineReadOnlyRepo(),
+        task_definition_repo=_FakeTaskDefinitionReadOnlyRepo(),
     )
     handler = PreviewDayHandler(ro_repos, user_id)
 

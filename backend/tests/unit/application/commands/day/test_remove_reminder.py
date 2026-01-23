@@ -11,71 +11,12 @@ from lykke.core.exceptions import DomainError, NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
 from lykke.domain.events.day_events import ReminderRemovedEvent
-
-
-class _FakeDayReadOnlyRepo:
-    """Fake day repository for testing."""
-
-    def __init__(self, day: DayEntity) -> None:
-        self._day = day
-
-    async def get(self, day_id):
-        if day_id == self._day.id:
-            return self._day
-        raise NotFoundError(f"Day {day_id} not found")
-
-
-class _FakeReadOnlyRepos:
-    """Lightweight container matching ReadOnlyRepositories protocol."""
-
-    def __init__(self, day_repo: _FakeDayReadOnlyRepo) -> None:
-        fake = object()
-        self.audit_log_ro_repo = fake
-        self.auth_token_ro_repo = fake
-        self.bot_personality_ro_repo = fake
-        self.calendar_entry_ro_repo = fake
-        self.calendar_entry_series_ro_repo = fake
-        self.calendar_ro_repo = fake
-        self.conversation_ro_repo = fake
-        self.day_ro_repo = day_repo
-        self.day_template_ro_repo = fake
-        self.factoid_ro_repo = fake
-        self.message_ro_repo = fake
-        self.notification_ro_repo = fake
-        self.push_notification_ro_repo = fake
-        self.push_subscription_ro_repo = fake
-        self.routine_ro_repo = fake
-        self.task_definition_ro_repo = fake
-        self.task_ro_repo = fake
-        self.time_block_definition_ro_repo = fake
-        self.usecase_config_ro_repo = fake
-        self.user_ro_repo = fake
-
-
-class _FakeUoW:
-    """Minimal UnitOfWork that just collects added entities."""
-
-    def __init__(self, day_repo) -> None:
-        self.added = []
-        self.day_ro_repo = day_repo
-
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb):
-        return None
-
-    def add(self, entity):
-        self.added.append(entity)
-        return entity
-
-
-class _FakeUoWFactory:
-    def __init__(self, day_repo) -> None:
-        self.uow = _FakeUoW(day_repo)
-
-    def create(self, _user_id):
-        return self.uow
+from tests.unit.fakes import (
+    _FakeDayReadOnlyRepo,
+    _FakeReadOnlyRepos,
+    _FakeUoW,
+    _FakeUoWFactory,
+)
 
 
 @pytest.mark.asyncio
@@ -98,8 +39,9 @@ async def test_remove_reminder_removes_reminder_from_day():
     day.collect_events()
 
     day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo)
-    uow_factory = _FakeUoWFactory(day_repo)
+    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
+    uow = _FakeUoW(day_repo=day_repo)
+    uow_factory = _FakeUoWFactory(uow)
     handler = RemoveReminderHandler(ro_repos, uow_factory, user_id)
 
     # Act
@@ -132,8 +74,9 @@ async def test_remove_reminder_emits_domain_event():
     day.collect_events()
 
     day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo)
-    uow_factory = _FakeUoWFactory(day_repo)
+    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
+    uow = _FakeUoW(day_repo=day_repo)
+    uow_factory = _FakeUoWFactory(uow)
     handler = RemoveReminderHandler(ro_repos, uow_factory, user_id)
 
     # Act
@@ -166,8 +109,9 @@ async def test_remove_reminder_raises_error_if_reminder_not_found():
     fake_reminder_id = uuid4()
 
     day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo)
-    uow_factory = _FakeUoWFactory(day_repo)
+    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
+    uow = _FakeUoW(day_repo=day_repo)
+    uow_factory = _FakeUoWFactory(uow)
     handler = RemoveReminderHandler(ro_repos, uow_factory, user_id)
 
     # Act & Assert
@@ -194,8 +138,9 @@ async def test_remove_reminder_with_multiple_reminders():
     reminder3 = day.add_reminder("Reminder 3")
 
     day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo)
-    uow_factory = _FakeUoWFactory(day_repo)
+    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
+    uow = _FakeUoW(day_repo=day_repo)
+    uow_factory = _FakeUoWFactory(uow)
     handler = RemoveReminderHandler(ro_repos, uow_factory, user_id)
 
     # Remove middle reminder

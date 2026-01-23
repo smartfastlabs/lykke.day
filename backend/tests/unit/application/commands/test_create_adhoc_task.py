@@ -8,12 +8,13 @@ import pytest
 from lykke.application.commands.task import CreateAdhocTaskCommand, CreateAdhocTaskHandler
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
-from tests.unit.application.commands.test_schedule_day import (
+from tests.unit.fakes import (
     _FakeCalendarEntryReadOnlyRepo,
     _FakeDayReadOnlyRepo,
     _FakeDayTemplateReadOnlyRepo,
     _FakeReadOnlyRepos,
     _FakeTaskReadOnlyRepo,
+    _FakeUoW,
     _FakeUoWFactory,
 )
 
@@ -36,11 +37,18 @@ async def test_create_adhoc_task_sets_adhoc_fields():
     task_repo = _FakeTaskReadOnlyRepo([])
     calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
     ro_repos = _FakeReadOnlyRepos(
-        day_template_repo, day_repo, task_repo, calendar_entry_repo
+        day_template_repo=day_template_repo,
+        day_repo=day_repo,
+        task_repo=task_repo,
+        calendar_entry_repo=calendar_entry_repo,
     )
-    uow_factory = _FakeUoWFactory(
-        day_template_repo, day_repo, task_repo, calendar_entry_repo
+    uow = _FakeUoW(
+        day_template_repo=day_template_repo,
+        day_repo=day_repo,
+        task_repo=task_repo,
+        calendar_entry_repo=calendar_entry_repo,
     )
+    uow_factory = _FakeUoWFactory(uow)
     handler = CreateAdhocTaskHandler(ro_repos, uow_factory, user_id)
 
     schedule = value_objects.TaskSchedule(

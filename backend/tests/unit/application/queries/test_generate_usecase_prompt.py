@@ -10,49 +10,11 @@ from lykke.application.queries.generate_usecase_prompt import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
-
-
-class _FakeUseCaseConfigReadOnlyRepo:
-    async def search(self, _query):
-        return []
-
-
-class _FakeUserReadOnlyRepo:
-    def __init__(self, user: UserEntity) -> None:
-        self._user = user
-
-    async def get(self, _user_id):
-        return self._user
-
-
-class _FakeReadOnlyRepos:
-    """Minimal read-only repos container for BaseQueryHandler."""
-
-    def __init__(
-        self,
-        usecase_config_repo: _FakeUseCaseConfigReadOnlyRepo,
-        user_repo: _FakeUserReadOnlyRepo,
-    ) -> None:
-        fake = object()
-        self.audit_log_ro_repo = fake
-        self.auth_token_ro_repo = fake
-        self.bot_personality_ro_repo = fake
-        self.calendar_entry_ro_repo = fake
-        self.calendar_entry_series_ro_repo = fake
-        self.calendar_ro_repo = fake
-        self.conversation_ro_repo = fake
-        self.day_ro_repo = fake
-        self.day_template_ro_repo = fake
-        self.factoid_ro_repo = fake
-        self.message_ro_repo = fake
-        self.push_notification_ro_repo = fake
-        self.push_subscription_ro_repo = fake
-        self.routine_ro_repo = fake
-        self.task_definition_ro_repo = fake
-        self.task_ro_repo = fake
-        self.time_block_definition_ro_repo = fake
-        self.usecase_config_ro_repo = usecase_config_repo
-        self.user_ro_repo = user_repo
+from tests.unit.fakes import (
+    _FakeReadOnlyRepos,
+    _FakeUseCaseConfigReadOnlyRepo,
+    _FakeUserReadOnlyRepo,
+)
 
 
 @pytest.mark.asyncio
@@ -70,8 +32,8 @@ async def test_generate_usecase_prompt_uses_base_personality_slug() -> None:
     )
 
     ro_repos = _FakeReadOnlyRepos(
-        _FakeUseCaseConfigReadOnlyRepo(),
-        _FakeUserReadOnlyRepo(user),
+        usecase_config_repo=_FakeUseCaseConfigReadOnlyRepo(),
+        user_repo=_FakeUserReadOnlyRepo(user),
     )
     handler = GenerateUseCasePromptHandler(ro_repos, user_id)
 
