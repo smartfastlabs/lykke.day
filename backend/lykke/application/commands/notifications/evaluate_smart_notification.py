@@ -8,6 +8,7 @@ from typing import Literal
 from uuid import UUID
 
 from loguru import logger
+
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.commands.push_subscription import (
     SendPushNotificationCommand,
@@ -172,6 +173,16 @@ class SmartNotificationHandler(BaseCommandHandler[SmartNotificationCommand, None
                 f"LLM decided not to send notification for user {command.user_id}"
             )
             return
+        elif decision.priority == "low":
+            logger.debug(
+                f"LLM decided to send low priority notification for user {command.user_id}"
+            )
+            return
+        elif decision.priority == "medium":
+            logger.debug(
+                f"LLM decided to send medium priority notification for user {command.user_id}"
+            )
+            return
 
         day_context_snapshot = serialize_day_context(prompt_context, current_time)
         message_hash = hashlib.sha256(decision.message.encode("utf-8")).hexdigest()
@@ -187,24 +198,6 @@ class SmartNotificationHandler(BaseCommandHandler[SmartNotificationCommand, None
 
             if not subscriptions:
                 logger.debug(f"No push subscriptions found for user {command.user_id}")
-                async with self.new_uow(command.user_id) as uow:
-                    notification = PushNotificationEntity(
-                        user_id=command.user_id,
-                        push_subscription_ids=[],
-                        content=content_str,
-                        status="skipped",
-                        error_message="no_subscriptions",
-                        message=decision.message,
-                        priority=decision.priority,
-                        reason=decision.reason,
-                        day_context_snapshot=day_context_snapshot,
-                        message_hash=message_hash,
-                        triggered_by=command.triggered_by,
-                        llm_provider=llm_provider.value,
-                    )
-                    notification.create()
-                    await uow.create(notification)
-                    await uow.commit()
                 return
 
             # Send to all subscriptions

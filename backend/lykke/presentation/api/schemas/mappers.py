@@ -5,8 +5,8 @@ from dataclasses import asdict
 from lykke.core.utils.dates import resolve_timezone
 from lykke.domain import value_objects
 from lykke.domain.entities import (
-    AuditLogEntity,
     AuditableEntity,
+    AuditLogEntity,
     BotPersonalityEntity,
     CalendarEntity,
     CalendarEntryEntity,
@@ -16,19 +16,21 @@ from lykke.domain.entities import (
     DayTemplateEntity,
     FactoidEntity,
     MessageEntity,
+    PushNotificationEntity,
     PushSubscriptionEntity,
     RoutineEntity,
     TaskDefinitionEntity,
     TaskEntity,
     TimeBlockDefinitionEntity,
+    UseCaseConfigEntity,
     UserEntity,
 )
 from lykke.presentation.api.schemas import (
     ActionSchema,
-    AuditLogSchema,
     AuditableSchema,
-    BrainDumpItemSchema,
+    AuditLogSchema,
     BotPersonalitySchema,
+    BrainDumpItemSchema,
     CalendarEntrySchema,
     CalendarEntrySeriesSchema,
     CalendarSchema,
@@ -37,20 +39,22 @@ from lykke.presentation.api.schemas import (
     DaySchema,
     DayTemplateSchema,
     DayTemplateTimeBlockSchema,
-    HighLevelPlanSchema,
     FactoidSchema,
-    ReminderSchema,
+    HighLevelPlanSchema,
     MessageSchema,
     PushSubscriptionSchema,
+    ReminderSchema,
     RoutineSchema,
     SyncSubscriptionSchema,
     TaskDefinitionSchema,
     TaskScheduleSchema,
     TaskSchema,
     TimeBlockDefinitionSchema,
+    UseCaseConfigSchema,
     UserSchema,
     UserSettingsSchema,
 )
+from lykke.presentation.api.schemas.push_notification import PushNotificationSchema
 
 
 def map_action_to_schema(action: value_objects.Action) -> ActionSchema:
@@ -298,24 +302,46 @@ def map_push_subscription_to_schema(
     )
 
 
+def map_push_notification_to_schema(
+    notification: PushNotificationEntity,
+) -> PushNotificationSchema:
+    """Convert PushNotification entity to PushNotification schema."""
+    return PushNotificationSchema(
+        id=notification.id,
+        user_id=notification.user_id,
+        push_subscription_ids=notification.push_subscription_ids,
+        content=notification.content,
+        status=notification.status,
+        error_message=notification.error_message,
+        sent_at=notification.sent_at,
+        message=notification.message,
+        priority=notification.priority,
+        reason=notification.reason,
+        day_context_snapshot=notification.day_context_snapshot,
+        message_hash=notification.message_hash,
+        triggered_by=notification.triggered_by,
+        llm_provider=notification.llm_provider,
+    )
+
+
 def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
     """Convert Routine entity to Routine schema."""
     from .routine import RecurrenceScheduleSchema, RoutineTaskSchema
-    
+
     # Convert routine schedule
     routine_schedule_schema = RecurrenceScheduleSchema(
         frequency=routine.routine_schedule.frequency,
         weekdays=routine.routine_schedule.weekdays,
         day_number=routine.routine_schedule.day_number,
     )
-    
+
     # Convert tasks
     task_schemas = []
     for task in routine.tasks:
         schedule_schema = None
         if task.schedule:
             schedule_schema = map_task_schedule_to_schema(task.schedule)
-        
+
         task_schedule_schema = None
         if task.task_schedule:
             task_schedule_schema = RecurrenceScheduleSchema(
@@ -323,7 +349,7 @@ def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
                 weekdays=task.task_schedule.weekdays,
                 day_number=task.task_schedule.day_number,
             )
-        
+
         task_schema = RoutineTaskSchema(
             id=task.id,
             task_definition_id=task.task_definition_id,
@@ -332,7 +358,7 @@ def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
             task_schedule=task_schedule_schema,
         )
         task_schemas.append(task_schema)
-    
+
     return RoutineSchema(
         id=routine.id,
         user_id=routine.user_id,
@@ -349,7 +375,7 @@ def map_calendar_to_schema(calendar: CalendarEntity) -> CalendarSchema:
     sync_subscription = None
     if calendar.sync_subscription:
         sync_subscription = SyncSubscriptionSchema(**asdict(calendar.sync_subscription))
-    
+
     return CalendarSchema(
         id=calendar.id,
         user_id=calendar.user_id,
@@ -381,6 +407,20 @@ def map_user_to_schema(user: UserEntity) -> UserSchema:
         settings=settings_schema,
         created_at=user.created_at,
         updated_at=user.updated_at,
+    )
+
+
+def map_use_case_config_to_schema(
+    config: UseCaseConfigEntity,
+) -> UseCaseConfigSchema:
+    """Convert UseCaseConfig entity to UseCaseConfig schema."""
+    return UseCaseConfigSchema(
+        id=config.id,
+        user_id=config.user_id,
+        usecase=config.usecase,
+        config=config.config,
+        created_at=config.created_at,
+        updated_at=config.updated_at,
     )
 
 
@@ -426,7 +466,7 @@ def map_audit_log_to_schema(audit_log: AuditLogEntity) -> AuditLogSchema:
 
 def map_auditable_to_schema(_auditable: AuditableEntity) -> AuditableSchema:
     """Convert Auditable marker interface to Auditable schema.
-    
+
     Note: AuditableEntity is a marker interface with no fields,
     so this returns an empty schema instance.
     """

@@ -1,10 +1,11 @@
 """API response schemas (DTOs) for decoupling domain entities from presentation layer."""
 
 from .action import ActionSchema
-from .auditable import AuditableSchema
 from .audit_log import AuditLogSchema
+from .auditable import AuditableSchema
 from .base_personality import BasePersonalitySchema
 from .bot_personality import BotPersonalitySchema
+from .brain_dump import BrainDumpItemSchema
 from .calendar import (
     CalendarCreateSchema,
     CalendarSchema,
@@ -17,12 +18,8 @@ from .calendar_entry_series import (
     CalendarEntrySeriesUpdateSchema,
 )
 from .conversation import ConversationSchema
-from .brain_dump import BrainDumpItemSchema
 from .day import DaySchema, DayUpdateSchema
 from .day_context import DayContextSchema
-from .high_level_plan import HighLevelPlanSchema
-from .factoid import FactoidSchema
-from .reminder import ReminderSchema
 from .day_template import (
     DayTemplateCreateSchema,
     DayTemplateRoutineCreateSchema,
@@ -31,8 +28,11 @@ from .day_template import (
     DayTemplateTimeBlockSchema,
     DayTemplateUpdateSchema,
 )
+from .factoid import FactoidSchema
+from .high_level_plan import HighLevelPlanSchema
 from .message import MessageSchema, SendMessageRequestSchema, SendMessageResponseSchema
 from .pagination import PagedResponseSchema
+from .push_notification import PushNotificationSchema
 from .push_subscription import (
     PushSubscriptionCreateSchema,
     PushSubscriptionKeysSchema,
@@ -40,6 +40,7 @@ from .push_subscription import (
     PushSubscriptionUpdateSchema,
 )
 from .query import QuerySchema
+from .reminder import ReminderSchema
 from .routine import (
     RoutineCreateSchema,
     RoutineSchema,
@@ -53,15 +54,15 @@ from .task_definition import (
     TaskDefinitionSchema,
     TaskDefinitionUpdateSchema,
 )
-from .usecase_config import (
-    NotificationUseCaseConfigSchema,
-    UseCaseConfigCreateSchema,
-    UseCaseConfigSchema,
-)
 from .time_block_definition import (
     TimeBlockDefinitionCreateSchema,
     TimeBlockDefinitionSchema,
     TimeBlockDefinitionUpdateSchema,
+)
+from .usecase_config import (
+    NotificationUseCaseConfigSchema,
+    UseCaseConfigCreateSchema,
+    UseCaseConfigSchema,
 )
 from .user import (
     UserSchema,
@@ -113,6 +114,7 @@ PushSubscriptionCreateSchema.model_rebuild()
 PushSubscriptionKeysSchema.model_rebuild()
 PushSubscriptionSchema.model_rebuild()
 PushSubscriptionUpdateSchema.model_rebuild()
+PushNotificationSchema.model_rebuild()
 TimeBlockDefinitionCreateSchema.model_rebuild()
 TimeBlockDefinitionSchema.model_rebuild()
 TimeBlockDefinitionUpdateSchema.model_rebuild()
@@ -132,10 +134,12 @@ WebSocketSyncResponseSchema.model_rebuild()
 
 __all__ = [
     "ActionSchema",
-    "AuditableSchema",
+    "AdhocTaskCreateSchema",
     "AuditLogSchema",
+    "AuditableSchema",
     "BasePersonalitySchema",
     "BotPersonalitySchema",
+    "BrainDumpItemSchema",
     "CalendarCreateSchema",
     "CalendarEntrySchema",
     "CalendarEntrySeriesSchema",
@@ -143,12 +147,8 @@ __all__ = [
     "CalendarSchema",
     "CalendarUpdateSchema",
     "ConversationSchema",
-    "BrainDumpItemSchema",
     "DayContextSchema",
     "DaySchema",
-    "FactoidSchema",
-    "HighLevelPlanSchema",
-    "ReminderSchema",
     "DayTemplateCreateSchema",
     "DayTemplateRoutineCreateSchema",
     "DayTemplateSchema",
@@ -156,13 +156,19 @@ __all__ = [
     "DayTemplateTimeBlockSchema",
     "DayTemplateUpdateSchema",
     "DayUpdateSchema",
+    "EntityChangeSchema",
+    "FactoidSchema",
+    "HighLevelPlanSchema",
     "MessageSchema",
+    "NotificationUseCaseConfigSchema",
     "PagedResponseSchema",
     "PushSubscriptionCreateSchema",
     "PushSubscriptionKeysSchema",
     "PushSubscriptionSchema",
     "PushSubscriptionUpdateSchema",
+    "PushNotificationSchema",
     "QuerySchema",
+    "ReminderSchema",
     "RoutineCreateSchema",
     "RoutineSchema",
     "RoutineTaskCreateSchema",
@@ -176,18 +182,15 @@ __all__ = [
     "TaskDefinitionUpdateSchema",
     "TaskScheduleSchema",
     "TaskSchema",
-    "AdhocTaskCreateSchema",
-    "NotificationUseCaseConfigSchema",
-    "UseCaseConfigCreateSchema",
-    "UseCaseConfigSchema",
     "TimeBlockDefinitionCreateSchema",
     "TimeBlockDefinitionSchema",
     "TimeBlockDefinitionUpdateSchema",
+    "UseCaseConfigCreateSchema",
+    "UseCaseConfigSchema",
     "UserSchema",
     "UserSettingsSchema",
     "UserSettingsUpdateSchema",
     "UserUpdateSchema",
-    "EntityChangeSchema",
     "WebSocketAuditLogEventSchema",
     "WebSocketConnectionAckSchema",
     "WebSocketErrorSchema",
