@@ -7,7 +7,7 @@
     "start": "vite",
     "dev": "vite",
     "dev:local": "node scripts/netlify-dev-local.mjs",
-    "build": "vite build && node scripts/prerender.mjs",
+    "build": "node scripts/generate-sitemap.mjs && vite build && node scripts/prerender.mjs",
     "serve": "vite preview",
     "dev-https": "vite --port 443 --host master-bedroom.local",
     "serve-https": "vite build && vite preview --port 443 --host master-bedroom.local",
@@ -19,7 +19,8 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "check": "npm run type-check && npm run lint-import-casing && npm run lint && npm run test"
+    "check": "npm run type-check && npm run lint-import-casing && npm run lint && npm run test",
+    "generate-sitemap": "node scripts/generate-sitemap.mjs"
   },
   "license": "MIT",
   "devDependencies": {
