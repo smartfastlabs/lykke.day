@@ -49,7 +49,6 @@ async def google_login(
         "login"
     ).authorization_url(
         access_type="offline",
-        include_granted_scopes="true",
         state=state,
         prompt="consent",
     )
