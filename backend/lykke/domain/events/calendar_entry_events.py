@@ -24,7 +24,6 @@ class CalendarEntryCreatedEvent(DomainEvent):
     """Event raised when a calendar entry is created."""
 
     calendar_entry_id: UUID
-    user_id: UUID
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -32,7 +31,6 @@ class CalendarEntryUpdatedEvent(EntityUpdatedEvent[CalendarEntryUpdateObject]):
     """Event raised when a calendar entry is updated."""
 
     calendar_entry_id: UUID
-    user_id: UUID
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -40,6 +38,5 @@ class CalendarEntryDeletedEvent(DomainEvent):
     """Event raised when a calendar entry is deleted."""
 
     calendar_entry_id: UUID
-    user_id: UUID
     # Include snapshot of entry data for notification payloads
     entry_snapshot: dict[str, Any]

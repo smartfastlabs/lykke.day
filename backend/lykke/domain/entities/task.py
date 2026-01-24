@@ -69,6 +69,7 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
         # Record a task-level event so persistence is tied to a domain event
         self._add_event(
             TaskStateUpdatedEvent(
+                user_id=self.user_id,
                 task_id=self.id,
                 action_type=action.type.value,
                 old_status=old_status.value,

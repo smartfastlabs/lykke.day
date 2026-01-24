@@ -112,7 +112,9 @@ async def test_usecase_config_can_be_updated_through_uow(test_user):
         updated_at=datetime.now(UTC),
     )
     # Add EntityUpdatedEvent so UoW knows to update, not insert
-    updated_config.add_event(EntityUpdatedEvent(update_object=BaseUpdateObject()))
+    updated_config.add_event(
+        EntityUpdatedEvent(update_object=BaseUpdateObject(), user_id=user_id)
+    )
 
     async with uow_factory.create(user_id) as uow:
         # This should work if entity is registered

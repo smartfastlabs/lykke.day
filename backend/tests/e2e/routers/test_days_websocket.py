@@ -247,6 +247,7 @@ async def test_realtime_task_update_notification(
         from lykke.infrastructure.repositories import AuditLogRepository
 
         domain_event = TaskCompletedEvent(
+            user_id=user.id,
             task_id=test_task.id,
             completed_at=datetime.now(UTC),
             task_scheduled_date=test_date,
@@ -554,6 +555,7 @@ async def test_multiple_websocket_connections(
 
         # Create domain event
         domain_event = TaskCompletedEvent(
+            user_id=user.id,
             task_id=test_task.id,
             completed_at=datetime.now(UTC),
             task_scheduled_date=test_date,
@@ -658,6 +660,7 @@ async def test_sync_detection_out_of_sync(authenticated_client, test_date, monke
 
         # Create domain event
         domain_event = TaskCompletedEvent(
+            user_id=user.id,
             task_id=test_task.id,
             completed_at=datetime.now(UTC),
             task_scheduled_date=test_date,

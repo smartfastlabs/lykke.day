@@ -70,7 +70,9 @@ class DayTemplateEntity(
 
         updated._add_event(
             DayTemplateRoutineAddedEvent(
-                day_template_id=updated.id, routine_id=routine_id
+                user_id=self.user_id,
+                day_template_id=updated.id,
+                routine_id=routine_id,
             )
         )
         return updated
@@ -89,7 +91,9 @@ class DayTemplateEntity(
 
         updated._add_event(
             DayTemplateRoutineRemovedEvent(
-                day_template_id=updated.id, routine_id=routine_id
+                user_id=self.user_id,
+                day_template_id=updated.id,
+                routine_id=routine_id,
             )
         )
         return updated
@@ -129,6 +133,7 @@ class DayTemplateEntity(
 
         updated._add_event(
             DayTemplateTimeBlockAddedEvent(
+                user_id=self.user_id,
                 day_template_id=updated.id,
                 time_block_definition_id=time_block.time_block_definition_id,
                 start_time=time_block.start_time,
@@ -163,6 +168,7 @@ class DayTemplateEntity(
 
         updated._add_event(
             DayTemplateTimeBlockRemovedEvent(
+                user_id=self.user_id,
                 day_template_id=updated.id,
                 time_block_definition_id=time_block_definition_id,
                 start_time=start_time,

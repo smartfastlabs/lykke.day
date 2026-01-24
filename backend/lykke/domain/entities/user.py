@@ -39,6 +39,11 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
         if isinstance(self.settings, dict):
             self.settings = value_objects.UserSetting(**self.settings)
 
+    @property
+    def user_id(self) -> UUID:
+        """Alias user_id to id for domain event consistency."""
+        return self.id
+
     def apply_update(
         self,
         update_object: UserUpdateObject,
@@ -62,6 +67,20 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
         updated_entity: UserEntity = self.clone(**update_dict)
         updated_entity = updated_entity.clone(updated_at=datetime.now(UTC))
 
-        event = update_event_class(update_object=update_object)
+        event = update_event_class(update_object=update_object, user_id=self.id)
         updated_entity._add_event(event)
         return updated_entity
+
+    def create(self) -> UserEntity:
+        """Mark this user as newly created with a user-scoped event."""
+        from lykke.domain.events.base import EntityCreatedEvent
+
+        self._add_event(EntityCreatedEvent(user_id=self.id))
+        return self
+
+    def delete(self) -> UserEntity:
+        """Mark this user for deletion with a user-scoped event."""
+        from lykke.domain.events.base import EntityDeletedEvent
+
+        self._add_event(EntityDeletedEvent(user_id=self.id))
+        return self

@@ -11,10 +11,12 @@ from lykke.domain.events.task_events import TaskCompletedEvent
 
 
 def test_serialize_domain_event_task_completed() -> None:
+    user_id = uuid4()
     task_id = uuid4()
     completed_at = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
     scheduled_date = date(2025, 1, 1)
     event = TaskCompletedEvent(
+        user_id=user_id,
         task_id=task_id,
         completed_at=completed_at,
         task_scheduled_date=scheduled_date,
@@ -26,6 +28,7 @@ def test_serialize_domain_event_task_completed() -> None:
     serialized = serialize_domain_event(event)
 
     assert serialized["event_type"].endswith("TaskCompletedEvent")
+    assert serialized["event_data"]["user_id"] == str(user_id)
     assert serialized["event_data"]["task_id"] == str(task_id)
     assert serialized["event_data"]["completed_at"] == completed_at.isoformat()
     assert serialized["event_data"]["task_scheduled_date"] == scheduled_date.isoformat()
@@ -33,10 +36,12 @@ def test_serialize_domain_event_task_completed() -> None:
 
 
 def test_deserialize_domain_event_round_trip() -> None:
+    user_id = uuid4()
     task_id = uuid4()
     completed_at = datetime(2025, 1, 2, 9, 15, tzinfo=UTC)
     scheduled_date = date(2025, 1, 2)
     event = TaskCompletedEvent(
+        user_id=user_id,
         task_id=task_id,
         completed_at=completed_at,
         task_scheduled_date=scheduled_date,

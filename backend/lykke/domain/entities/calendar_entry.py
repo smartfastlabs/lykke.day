@@ -200,7 +200,9 @@ class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
         # Add both the base EntityUpdatedEvent (for UoW) and our specific event
         from lykke.domain.events.base import EntityUpdatedEvent
 
-        updated_entity._add_event(EntityUpdatedEvent(update_object=update_object))
+        updated_entity._add_event(
+            EntityUpdatedEvent(update_object=update_object, user_id=self.user_id)
+        )
         updated_entity._add_event(update_event)
 
         return updated_entity

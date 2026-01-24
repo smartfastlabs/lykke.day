@@ -129,6 +129,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
         self.scheduled_at = datetime.now(UTC)
         self._add_event(
             DayScheduledEvent(
+                user_id=self.user_id,
                 day_id=self.id,
                 date=self.date,
                 template_id=template.id if template else None,
@@ -152,7 +153,9 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
 
         self.status = value_objects.DayStatus.UNSCHEDULED
         self.scheduled_at = None
-        self._add_event(DayUnscheduledEvent(day_id=self.id, date=self.date))
+        self._add_event(
+            DayUnscheduledEvent(user_id=self.user_id, day_id=self.id, date=self.date)
+        )
 
     def complete(self) -> None:
         """Mark the day as complete.
@@ -170,7 +173,9 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
             )
 
         self.status = value_objects.DayStatus.COMPLETE
-        self._add_event(DayCompletedEvent(day_id=self.id, date=self.date))
+        self._add_event(
+            DayCompletedEvent(user_id=self.user_id, day_id=self.id, date=self.date)
+        )
 
     def update_template(self, template: DayTemplateEntity) -> None:
         """Update the day's template.
@@ -217,6 +222,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
         if action.type == value_objects.ActionType.COMPLETE and task.completed_at:
             self._add_event(
                 TaskCompletedEvent(
+                    user_id=self.user_id,
                     task_id=task.id,
                     completed_at=task.completed_at,
                     task_scheduled_date=task.scheduled_date,
@@ -233,6 +239,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
         if old_status != task.status:
             self._add_event(
                 TaskStatusChangedEvent(
+                    user_id=self.user_id,
                     task_id=task.id,
                     old_status=old_status.value,
                     new_status=task.status.value,
@@ -243,6 +250,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
             if task.status == value_objects.TaskStatus.PUNT:
                 self._add_event(
                     TaskPuntedEvent(
+                        user_id=self.user_id,
                         task_id=task.id,
                         old_status=old_status.value,
                         new_status=task.status.value,
@@ -259,6 +267,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
         # Record action event
         self._add_event(
             TaskActionRecordedEvent(
+                user_id=self.user_id,
                 task_id=task.id,
                 action_type=action.type.value,
             )
@@ -305,6 +314,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
 
         self._add_event(
             ReminderAddedEvent(
+                user_id=self.user_id,
                 day_id=self.id,
                 date=self.date,
                 reminder_id=reminder.id,
@@ -359,6 +369,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
 
         self._add_event(
             ReminderStatusChangedEvent(
+                user_id=self.user_id,
                 day_id=self.id,
                 date=self.date,
                 reminder_id=reminder_id,
@@ -396,6 +407,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
 
         self._add_event(
             ReminderRemovedEvent(
+                user_id=self.user_id,
                 day_id=self.id,
                 date=self.date,
                 reminder_id=reminder_id,
@@ -465,6 +477,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
 
         self._add_event(
             BrainDumpItemStatusChangedEvent(
+                user_id=self.user_id,
                 day_id=self.id,
                 date=self.date,
                 item_id=item_id,
@@ -496,6 +509,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
 
         self._add_event(
             BrainDumpItemRemovedEvent(
+                user_id=self.user_id,
                 day_id=self.id,
                 date=self.date,
                 item_id=item_id,

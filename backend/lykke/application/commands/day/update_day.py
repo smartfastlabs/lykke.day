@@ -73,7 +73,9 @@ class UpdateDayHandler(BaseCommandHandler[UpdateDayCommand, DayEntity]):
                 )
             )
             if has_updates and not day.has_events():
-                day.add_event(DayUpdatedEvent(update_object=update_data))
+                day.add_event(
+                    DayUpdatedEvent(update_object=update_data, user_id=day.user_id)
+                )
 
             if has_updates:
                 return uow.add(day)

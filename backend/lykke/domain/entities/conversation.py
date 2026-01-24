@@ -36,7 +36,9 @@ class ConversationEntity(
         # Add update event with empty update object since last_message_at
         # is an internal timestamp field not exposed in the update object
         updated._add_event(
-            ConversationUpdatedEvent(update_object=ConversationUpdateObject())
+            ConversationUpdatedEvent(
+                update_object=ConversationUpdateObject(), user_id=self.user_id
+            )
         )
         return updated
 
@@ -47,7 +49,8 @@ class ConversationEntity(
             ConversationUpdatedEvent(
                 update_object=ConversationUpdateObject(
                     status=value_objects.ConversationStatus.ARCHIVED.value
-                )
+                ),
+                user_id=self.user_id,
             )
         )
         return updated
@@ -59,7 +62,8 @@ class ConversationEntity(
             ConversationUpdatedEvent(
                 update_object=ConversationUpdateObject(
                     status=value_objects.ConversationStatus.PAUSED.value
-                )
+                ),
+                user_id=self.user_id,
             )
         )
         return updated
@@ -71,7 +75,8 @@ class ConversationEntity(
             ConversationUpdatedEvent(
                 update_object=ConversationUpdateObject(
                     status=value_objects.ConversationStatus.ACTIVE.value
-                )
+                ),
+                user_id=self.user_id,
             )
         )
         return updated

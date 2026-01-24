@@ -47,7 +47,11 @@ class RoutineEntity(BaseEntityObject, AuditableEntity):
     def add_task(self, task: value_objects.RoutineTask) -> RoutineEntity:
         """Attach a task to the routine."""
         updated = self._copy_with_tasks([*self.tasks, task])
-        updated.record_event(RoutineTaskAddedEvent(routine_id=updated.id, task=task))
+        updated.record_event(
+            RoutineTaskAddedEvent(
+                user_id=self.user_id, routine_id=updated.id, task=task
+            )
+        )
         return updated
 
     def update_task(self, task_update: value_objects.RoutineTask) -> RoutineEntity:
@@ -85,7 +89,9 @@ class RoutineEntity(BaseEntityObject, AuditableEntity):
 
         updated = self._copy_with_tasks(updated_tasks)
         updated.record_event(
-            RoutineTaskUpdatedEvent(routine_id=updated.id, task=task_update)
+            RoutineTaskUpdatedEvent(
+                user_id=self.user_id, routine_id=updated.id, task=task_update
+            )
         )
         return updated
 
@@ -104,6 +110,7 @@ class RoutineEntity(BaseEntityObject, AuditableEntity):
         updated = self._copy_with_tasks(filtered_tasks)
         updated.record_event(
             RoutineTaskRemovedEvent(
+                user_id=self.user_id,
                 routine_id=updated.id,
                 routine_task_id=routine_task_id,
                 task_definition_id=removed_task.task_definition_id,

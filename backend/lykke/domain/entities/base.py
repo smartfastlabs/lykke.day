@@ -2,7 +2,7 @@ from __future__ import annotations
 
 # pylint: disable=protected-access,no-member
 from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Protocol, Self, TypeVar, cast
 from uuid import UUID, uuid4
 
 from lykke.domain.events.base import DomainEvent, EntityCreatedEvent, EntityDeletedEvent
@@ -10,6 +10,9 @@ from lykke.domain.events.base import DomainEvent, EntityCreatedEvent, EntityDele
 if TYPE_CHECKING:
     from lykke.domain.events.base import EntityUpdatedEvent
     from lykke.domain.value_objects.update import BaseUpdateObject
+
+    class _HasUserId(Protocol):
+        user_id: UUID | None
 
     _BaseUpdateObject = BaseUpdateObject
     _EntityUpdatedEvent = EntityUpdatedEvent
@@ -99,7 +102,12 @@ class BaseEntityObject(BaseObject, Generic[UpdateObjectType, UpdateEventType]):
         Returns:
             Self for method chaining.
         """
-        self._add_event(EntityCreatedEvent())
+        user_id = cast("_HasUserId", self).user_id
+        if user_id is None:
+            raise ValueError(
+                f"{type(self).__name__} must define user_id to raise DomainEvents."
+            )
+        self._add_event(EntityCreatedEvent(user_id=user_id))
         return self
 
     def delete(self) -> Self:
@@ -110,7 +118,12 @@ class BaseEntityObject(BaseObject, Generic[UpdateObjectType, UpdateEventType]):
         Returns:
             Self for method chaining.
         """
-        self._add_event(EntityDeletedEvent())
+        user_id = cast("_HasUserId", self).user_id
+        if user_id is None:
+            raise ValueError(
+                f"{type(self).__name__} must define user_id to raise DomainEvents."
+            )
+        self._add_event(EntityDeletedEvent(user_id=user_id))
         return self
 
     def apply_update(
@@ -150,12 +163,16 @@ class BaseEntityObject(BaseObject, Generic[UpdateObjectType, UpdateEventType]):
 
         # Record domain event with update object
         # The event class should accept update_object as a parameter
+        user_id = cast("_HasUserId", self).user_id
+        if user_id is None:
+            raise ValueError(
+                f"{type(self).__name__} must define user_id to raise DomainEvents."
+            )
         event = update_event_class(
             update_object=update_object,
+            user_id=user_id,
         )
         # Type checker limitation: clone() returns Self from BaseObject, but we know it's BaseEntityObject
-        from typing import cast
-
         event_entity = cast(
             "BaseEntityObject[UpdateObjectType, UpdateEventType]", updated_entity
         )

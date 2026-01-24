@@ -3,14 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
-
 from lykke.domain.value_objects.update import UserUpdateObject
 
 from .base import DomainEvent, EntityUpdatedEvent
-
-if TYPE_CHECKING:
-    from uuid import UUID
 
 __all__ = ["UserForgotPasswordEvent", "UserUpdatedEvent"]
 
@@ -24,7 +19,6 @@ class UserUpdatedEvent(EntityUpdatedEvent[UserUpdateObject]):
 class UserForgotPasswordEvent(DomainEvent):
     """Event raised when a user requests a password reset."""
 
-    user_id: UUID
     email: str
     reset_token: str
     request_origin: str | None = None

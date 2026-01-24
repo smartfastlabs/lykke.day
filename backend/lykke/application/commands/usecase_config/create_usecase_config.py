@@ -47,7 +47,10 @@ class CreateUseCaseConfigHandler(
                 from lykke.domain.value_objects.update import BaseUpdateObject
 
                 updated_config.add_event(
-                    EntityUpdatedEvent(update_object=BaseUpdateObject())
+                    EntityUpdatedEvent(
+                        update_object=BaseUpdateObject(),
+                        user_id=existing_config.user_id,
+                    )
                 )
                 # Ensure the entity is added to UoW for tracking
                 uow.add(updated_config)

@@ -74,6 +74,7 @@ class FactoidEntity(BaseEntityObject):
         # Add domain event
         updated_entity._add_event(
             FactoidCriticalityUpdatedEvent(
+                user_id=self.user_id,
                 factoid_id=self.id,
                 old_criticality=old_criticality.value,
                 new_criticality=new_criticality.value,

@@ -14,6 +14,7 @@ from .base import BaseEntityObject
 class MessageEntity(BaseEntityObject):
     """Message entity representing a single message in a conversation."""
 
+    user_id: UUID | None = None
     conversation_id: UUID
     role: value_objects.MessageRole
     content: str

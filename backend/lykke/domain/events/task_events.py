@@ -31,7 +31,6 @@ class TaskCreatedEvent(DomainEvent):
     """Event raised when a task is created."""
 
     task_id: UUID
-    user_id: UUID
     name: str
 
 

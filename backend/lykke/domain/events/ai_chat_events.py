@@ -31,7 +31,6 @@ class ConversationCreatedEvent(DomainEvent):
     """Event raised when a new conversation is created."""
 
     conversation_id: UUID
-    user_id: UUID
     bot_personality_id: UUID
     channel: str  # ConversationChannel enum as string
 
@@ -76,7 +75,6 @@ class FactoidCreatedEvent(DomainEvent):
     """Event raised when a new factoid is created."""
 
     factoid_id: UUID
-    user_id: UUID
     conversation_id: UUID | None  # None for global factoids
     factoid_type: str  # FactoidType enum as string
     criticality: str  # FactoidCriticality enum as string

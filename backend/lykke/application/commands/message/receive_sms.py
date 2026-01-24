@@ -32,6 +32,7 @@ class ReceiveSmsMessageHandler(
             conversation = await uow.conversation_ro_repo.get(command.conversation_id)
 
             message = MessageEntity(
+                user_id=conversation.user_id,
                 conversation_id=conversation.id,
                 role=value_objects.MessageRole.USER,
                 content=command.body,
@@ -45,6 +46,7 @@ class ReceiveSmsMessageHandler(
             message.create()
             message.add_event(
                 MessageReceivedEvent(
+                    user_id=conversation.user_id,
                     message_id=message.id,
                     conversation_id=message.conversation_id,
                     role=message.role.value,

@@ -30,6 +30,7 @@ class DomainEvent:
     what happened.
     """
 
+    user_id: UUID
     occurred_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     entity_id: UUID | None = None
     entity_type: str | None = None
@@ -93,6 +94,7 @@ class AuditableDomainEvent:
     Example:
         @dataclass(frozen=True, kw_only=True)
         class TaskCompletedEvent(DomainEvent, AuditableDomainEvent):
+            user_id: UUID
             task_id: UUID
             completed_at: datetime
 

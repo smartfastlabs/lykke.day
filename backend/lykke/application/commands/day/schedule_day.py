@@ -336,7 +336,8 @@ class ScheduleDayHandler(
                             time_blocks=day_time_blocks,
                             starts_at=starts_at,
                             ends_at=ends_at,
-                        )
+                        ),
+                        user_id=day.user_id,
                     )
                 )
             uow.add(day)

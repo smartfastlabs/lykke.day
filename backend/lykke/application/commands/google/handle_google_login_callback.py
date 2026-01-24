@@ -134,6 +134,7 @@ class HandleGoogleLoginCallbackHandler(
                 auth_token_data.id = existing_auth_token.id
                 auth_token_data.add_event(
                     EntityUpdatedEvent(
+                        user_id=self.user_id,
                         update_object=AuthTokenUpdateObject(
                             token=auth_token_data.token,
                             refresh_token=auth_token_data.refresh_token,

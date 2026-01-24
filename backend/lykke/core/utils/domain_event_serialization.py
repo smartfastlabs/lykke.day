@@ -32,6 +32,7 @@ def serialize_domain_event(event: DomainEvent) -> dict[str, Any]:
 
     Example:
         >>> event = TaskCompletedEvent(
+        ...     user_id=uuid4(),
         ...     task_id=uuid4(),
         ...     completed_at=datetime(2024, 1, 1, 12, 0, tzinfo=UTC),
         ... )
@@ -39,6 +40,7 @@ def serialize_domain_event(event: DomainEvent) -> dict[str, Any]:
         {
             "event_type": "lykke.domain.events.task_events.TaskCompletedEvent",
             "event_data": {
+                "user_id": "123e4567-e89b-12d3-a456-426614174001",
                 "task_id": "123e4567-e89b-12d3-a456-426614174000",
                 "completed_at": "2024-01-01T12:00:00+00:00",
                 "occurred_at": "2024-01-01T12:00:05.123456+00:00"
