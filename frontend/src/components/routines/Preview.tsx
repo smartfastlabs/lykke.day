@@ -1,5 +1,5 @@
 import { Component, Show, For, createMemo, Setter, Accessor, createSignal, createEffect } from "solid-js";
-import { Routine, RoutineTask, TaskDefinition, TaskSchedule, RecurrenceSchedule, TaskType } from "@/types/api";
+import { Routine, RoutineTask, TaskDefinition, TaskSchedule, RecurrenceSchedule, TaskType, TimeWindow } from "@/types/api";
 import { ALL_TASK_TYPES } from "@/types/api/constants";
 import { Icon } from "@/components/shared/Icon";
 import TaskScheduleForm from "@/components/tasks/ScheduleForm";
@@ -13,7 +13,11 @@ interface RoutinePreviewProps {
   onCreateTaskDefinition?: (taskDef: TaskDefinition) => Promise<void>;
   onEditTask?: (task: RoutineTask) => void;
   onRemoveTask?: (taskDefinitionId: string) => void;
-  onTaskSubmit?: (schedule: TaskSchedule, taskSchedule: RecurrenceSchedule | null) => Promise<void>;
+  onTaskSubmit?: (
+    schedule: TaskSchedule,
+    taskSchedule: RecurrenceSchedule | null,
+    timeWindow: TimeWindow | null
+  ) => Promise<void>;
   onTaskCancel?: () => void;
   selectedTaskDefinitionId?: () => string | null;
   selectedAction?: () => "add" | "edit" | null;
@@ -21,6 +25,7 @@ interface RoutinePreviewProps {
   setTaskName?: Setter<string>;
   scheduleInitial?: () => TaskSchedule | null;
   taskScheduleInitial?: () => RecurrenceSchedule | null;
+  timeWindowInitial?: () => TimeWindow | null;
   isEditMode?: boolean;
   isLoading?: boolean;
   error?: string;
@@ -37,6 +42,10 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
   const [currentTaskSchedule, setCurrentTaskSchedule] = createSignal<RecurrenceSchedule | null>(
     null
   );
+  const [timeWindowAvailable, setTimeWindowAvailable] = createSignal("");
+  const [timeWindowStart, setTimeWindowStart] = createSignal("");
+  const [timeWindowEnd, setTimeWindowEnd] = createSignal("");
+  const [timeWindowCutoff, setTimeWindowCutoff] = createSignal("");
   
   // State for creating new task definition
   const [showCreateTaskDef, setShowCreateTaskDef] = createSignal(false);
@@ -61,6 +70,11 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
         });
       }
       setCurrentTaskSchedule(props.taskScheduleInitial?.() ?? null);
+      const initialWindow = props.timeWindowInitial?.() ?? null;
+      setTimeWindowAvailable(initialWindow?.available_time ?? "");
+      setTimeWindowStart(initialWindow?.start_time ?? "");
+      setTimeWindowEnd(initialWindow?.end_time ?? "");
+      setTimeWindowCutoff(initialWindow?.cutoff_time ?? "");
     }
   });
 
@@ -86,6 +100,16 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
     }
   };
 
+  const buildTimeWindow = (): TimeWindow | null => {
+    const timeWindow: TimeWindow = {
+      available_time: timeWindowAvailable() || null,
+      start_time: timeWindowStart() || null,
+      end_time: timeWindowEnd() || null,
+      cutoff_time: timeWindowCutoff() || null,
+    };
+    return Object.values(timeWindow).some((value) => value) ? timeWindow : null;
+  };
+
   const handleTaskSubmit = () => {
     const schedule = currentSchedule() ?? {
       timing_type: "FLEXIBLE" as const,
@@ -94,7 +118,8 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
       end_time: null,
     };
     const taskSchedule = currentTaskSchedule();
-    void props.onTaskSubmit?.(schedule, taskSchedule);
+    const timeWindow = buildTimeWindow();
+    void props.onTaskSubmit?.(schedule, taskSchedule, timeWindow);
   };
 
   const getTaskDefinitionName = (taskDefinitionId: string) =>
@@ -127,6 +152,25 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                   {props.routine.routine_schedule.frequency}
                 </div>
               </div>
+              <Show when={props.routine.time_window}>
+                <div>
+                  <label class="text-sm font-medium text-neutral-500">Time Window</label>
+                  <div class="mt-1 text-base text-neutral-900">
+                    {props.routine.time_window?.available_time
+                      ? `Preferred ${props.routine.time_window.available_time}`
+                      : "Window"}
+                    {props.routine.time_window?.start_time
+                      ? ` • ${props.routine.time_window.start_time}`
+                      : ""}
+                    {props.routine.time_window?.end_time
+                      ? ` - ${props.routine.time_window.end_time}`
+                      : ""}
+                    {props.routine.time_window?.cutoff_time
+                      ? ` • Cutoff ${props.routine.time_window.cutoff_time}`
+                      : ""}
+                  </div>
+                </div>
+              </Show>
             </div>
           </div>
         </Show>
@@ -174,7 +218,22 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                             )}
                           </div>
                         )}
-                        {!task.schedule && !task.task_schedule && (
+                        {task.time_window && (
+                          <div>
+                            Window:
+                            {task.time_window.available_time
+                              ? ` ${task.time_window.available_time}`
+                              : ""}
+                            {task.time_window.start_time
+                              ? ` • ${task.time_window.start_time}`
+                              : ""}
+                            {task.time_window.end_time ? ` - ${task.time_window.end_time}` : ""}
+                            {task.time_window.cutoff_time
+                              ? ` • Cutoff ${task.time_window.cutoff_time}`
+                              : ""}
+                          </div>
+                        )}
+                        {!task.schedule && !task.task_schedule && !task.time_window && (
                           <div>No schedule set</div>
                         )}
                       </div>
@@ -371,6 +430,62 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                       showOptionalToggle={true}
                       label="Task appears on specific days"
                     />
+                  </div>
+
+                  <div>
+                    <label class="text-sm font-medium text-neutral-700 mb-2 block">
+                      Time Window (optional)
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div class="space-y-1">
+                        <label class="text-xs font-medium text-neutral-600" for="time_window_available">
+                          Preferred time
+                        </label>
+                        <Input
+                          id="time_window_available"
+                          type="time"
+                          placeholder="Preferred time"
+                          value={timeWindowAvailable}
+                          onChange={setTimeWindowAvailable}
+                        />
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-xs font-medium text-neutral-600" for="time_window_start">
+                          Start time
+                        </label>
+                        <Input
+                          id="time_window_start"
+                          type="time"
+                          placeholder="Start time"
+                          value={timeWindowStart}
+                          onChange={setTimeWindowStart}
+                        />
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-xs font-medium text-neutral-600" for="time_window_end">
+                          End time
+                        </label>
+                        <Input
+                          id="time_window_end"
+                          type="time"
+                          placeholder="End time"
+                          value={timeWindowEnd}
+                          onChange={setTimeWindowEnd}
+                        />
+                      </div>
+                      <div class="space-y-1">
+                        <label class="text-xs font-medium text-neutral-600" for="time_window_cutoff">
+                          Cutoff time
+                        </label>
+                        <Input
+                          id="time_window_cutoff"
+                          type="time"
+                          placeholder="Cutoff time"
+                          value={timeWindowCutoff}
+                          onChange={setTimeWindowCutoff}
+                        />
+                      </div>
+                    </div>
                   </div>
                   
                   <div class="flex gap-2 pt-2">

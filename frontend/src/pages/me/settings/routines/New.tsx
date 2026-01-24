@@ -4,7 +4,7 @@ import SettingsPage from "@/components/shared/SettingsPage";
 import RoutinePreview from "@/components/routines/Preview";
 import RoutineForm from "@/components/routines/Form";
 import { routineAPI, taskDefinitionAPI } from "@/utils/api";
-import { Routine, RoutineTask, TaskDefinition, TaskSchedule } from "@/types/api";
+import { Routine, RoutineTask, TaskDefinition, TaskSchedule, TimeWindow, RecurrenceSchedule } from "@/types/api";
 
 export default function NewRoutine() {
   const navigate = useNavigate();
@@ -33,6 +33,8 @@ export default function NewRoutine() {
   const [selectedAction, setSelectedAction] = createSignal<"add" | "edit" | null>(null);
   const [taskName, setTaskName] = createSignal("");
   const [scheduleInitial, setScheduleInitial] = createSignal<TaskSchedule | null>(null);
+  const [taskScheduleInitial, setTaskScheduleInitial] = createSignal<RecurrenceSchedule | null>(null);
+  const [timeWindowInitial, setTimeWindowInitial] = createSignal<TimeWindow | null>(null);
 
   const handleSubmit = async (routine: Partial<Routine>) => {
     setError("");
@@ -74,6 +76,8 @@ export default function NewRoutine() {
     setSelectedRoutineTaskId(null);
     setSelectedAction(null);
     setScheduleInitial(null);
+    setTaskScheduleInitial(null);
+    setTimeWindowInitial(null);
     setTaskName("");
     setActionError("");
   };
@@ -84,6 +88,8 @@ export default function NewRoutine() {
     setSelectedAction("add");
     setTaskName(taskDef.name);
     setScheduleInitial(null);
+    setTaskScheduleInitial(null);
+    setTimeWindowInitial(null);
     setActionError("");
   };
 
@@ -94,6 +100,8 @@ export default function NewRoutine() {
     setSelectedAction("edit");
     setTaskName(task.name ?? "");
     setScheduleInitial(task.schedule ?? null);
+    setTaskScheduleInitial(task.task_schedule ?? null);
+    setTimeWindowInitial(task.time_window ?? null);
     setActionError("");
   };
 
@@ -106,7 +114,11 @@ export default function NewRoutine() {
       ? crypto.randomUUID()
       : Math.random().toString(36).slice(2);
 
-  const handleTaskSubmit = async (schedule: TaskSchedule) => {
+  const handleTaskSubmit = async (
+    schedule: TaskSchedule,
+    taskSchedule: RecurrenceSchedule | null,
+    timeWindow: TimeWindow | null
+  ) => {
     const action = selectedAction();
     const taskDefinitionId = selectedTaskDefinitionId();
     const routineTaskId = selectedRoutineTaskId();
@@ -124,6 +136,8 @@ export default function NewRoutine() {
           task_definition_id: taskDefinitionId,
           name: nameValue ?? undefined,
           schedule,
+          task_schedule: taskSchedule ?? undefined,
+          time_window: timeWindow ?? undefined,
         };
         setTasks((prev) => [...prev, newTask]);
       } else {
@@ -134,7 +148,13 @@ export default function NewRoutine() {
         setTasks((prev) =>
           prev.map((task) =>
             task.id === routineTaskId
-              ? { ...task, name: nameValue ?? undefined, schedule }
+              ? {
+                  ...task,
+                  name: nameValue ?? undefined,
+                  schedule,
+                  task_schedule: taskSchedule ?? undefined,
+                  time_window: timeWindow ?? undefined,
+                }
               : task
           )
         );
@@ -178,6 +198,8 @@ export default function NewRoutine() {
                     taskName={taskName}
                     setTaskName={setTaskName}
                     scheduleInitial={scheduleInitial}
+                    taskScheduleInitial={taskScheduleInitial}
+                    timeWindowInitial={timeWindowInitial}
                     isEditMode={true}
                     isLoading={isTaskLoading()}
                     error={actionError()}

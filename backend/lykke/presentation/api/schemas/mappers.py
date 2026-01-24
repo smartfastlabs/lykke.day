@@ -8,6 +8,7 @@ from lykke.domain.entities import (
     AuditableEntity,
     AuditLogEntity,
     BotPersonalityEntity,
+    BrainDumpEntity,
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
@@ -49,6 +50,7 @@ from lykke.presentation.api.schemas import (
     TaskDefinitionSchema,
     TaskScheduleSchema,
     TaskSchema,
+    TimeWindowSchema,
     TimeBlockDefinitionSchema,
     UseCaseConfigSchema,
     UserSchema,
@@ -72,14 +74,15 @@ def map_reminder_to_schema(reminder: value_objects.Reminder) -> ReminderSchema:
     )
 
 
-def map_brain_dump_item_to_schema(
-    item: value_objects.BrainDumpItem,
-) -> BrainDumpItemSchema:
-    """Convert BrainDumpItem value object to schema."""
+def map_brain_dump_item_to_schema(item: BrainDumpEntity) -> BrainDumpItemSchema:
+    """Convert BrainDump entity to schema."""
     return BrainDumpItemSchema(
         id=item.id,
+        user_id=item.user_id,
+        date=item.date,
         text=item.text,
         status=item.status,
+        type=item.type,
         created_at=item.created_at,
     )
 
@@ -123,6 +126,20 @@ def map_task_schedule_to_schema(
         start_time=schedule.start_time,
         end_time=schedule.end_time,
         timing_type=schedule.timing_type,
+    )
+
+
+def map_time_window_to_schema(
+    time_window: value_objects.TimeWindow | None,
+) -> TimeWindowSchema | None:
+    """Convert TimeWindow value object to TimeWindow schema."""
+    if time_window is None:
+        return None
+    return TimeWindowSchema(
+        available_time=time_window.available_time,
+        start_time=time_window.start_time,
+        end_time=time_window.end_time,
+        cutoff_time=time_window.cutoff_time,
     )
 
 
@@ -185,13 +202,17 @@ def map_day_template_to_schema(
     )
 
 
-def map_day_to_schema(day: DayEntity) -> DaySchema:
+def map_day_to_schema(
+    day: DayEntity,
+    *,
+    brain_dump_items: list[BrainDumpEntity] | None = None,
+) -> DaySchema:
     """Convert Day entity to Day schema."""
     template_schema = map_day_template_to_schema(day.template) if day.template else None
 
     reminder_schemas = [map_reminder_to_schema(reminder) for reminder in day.reminders]
     brain_dump_item_schemas = [
-        map_brain_dump_item_to_schema(item) for item in day.brain_dump_items
+        map_brain_dump_item_to_schema(item) for item in (brain_dump_items or [])
     ]
 
     return DaySchema(
@@ -252,7 +273,10 @@ def map_day_context_to_schema(
     user_timezone: str | None = None,
 ) -> DayContextSchema:
     """Convert DayContext value object to DayContext schema."""
-    day_schema = map_day_to_schema(context.day)
+    day_schema = map_day_to_schema(
+        context.day,
+        brain_dump_items=context.brain_dump_items,
+    )
     calendar_entry_schemas = [
         map_calendar_entry_to_schema(entry, user_timezone=user_timezone)
         for entry in context.calendar_entries
@@ -350,12 +374,15 @@ def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
                 day_number=task.task_schedule.day_number,
             )
 
+        time_window_schema = map_time_window_to_schema(task.time_window)
+
         task_schema = RoutineTaskSchema(
             id=task.id,
             task_definition_id=task.task_definition_id,
             name=task.name,
             schedule=schedule_schema,
             task_schedule=task_schedule_schema,
+            time_window=time_window_schema,
         )
         task_schemas.append(task_schema)
 
@@ -366,6 +393,7 @@ def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
         category=routine.category,
         routine_schedule=routine_schedule_schema,
         description=routine.description,
+        time_window=map_time_window_to_schema(routine.time_window),
         tasks=task_schemas,
     )
 

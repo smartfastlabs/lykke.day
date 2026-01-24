@@ -17,6 +17,8 @@ class Routine(Base):
     category = Column(String, nullable=False)  # TaskCategory enum as string
     routine_schedule = Column(JSONB, nullable=False)  # RecurrenceSchedule
     description = Column(String, nullable=False)
+    time_window = Column(JSONB)  # TimeWindow
     tasks = Column(JSONB)  # list[RoutineTask]
 
+    __table_args__ = (Index("idx_routines_user_id", "user_id"),)
     __table_args__ = (Index("idx_routines_user_id", "user_id"),)

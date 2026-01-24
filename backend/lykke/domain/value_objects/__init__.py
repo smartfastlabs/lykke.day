@@ -10,7 +10,6 @@ from .ai_chat import (
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .calendar_subscription import CalendarSubscription
 from .day import (
-    BrainDumpItem,
     BrainDumpItemStatus,
     BrainDumpItemType,
     DayContext,
@@ -29,6 +28,7 @@ from .query import (
     AuthTokenQuery,
     BaseQuery,
     BotPersonalityQuery,
+    BrainDumpQuery,
     CalendarEntryQuery,
     CalendarEntrySeriesQuery,
     CalendarQuery,
@@ -48,7 +48,7 @@ from .query import (
     UseCaseConfigQuery,
     UserQuery,
 )
-from .routine import DayOfWeek, RecurrenceSchedule, RoutineTask
+from .routine import DayOfWeek, RecurrenceSchedule, RoutineTask, TimeWindow
 from .sync import SyncSubscription
 from .task import (
     EventCategory,
@@ -96,9 +96,9 @@ __all__ = [
     "BaseValueObject",
     "BotPersonalityQuery",
     "BotPersonalityUpdateObject",
-    "BrainDumpItem",
     "BrainDumpItemStatus",
     "BrainDumpItemType",
+    "BrainDumpQuery",
     "CalendarEntryQuery",
     "CalendarEntrySeriesQuery",
     "CalendarEntrySeriesUpdateObject",
@@ -145,6 +145,7 @@ __all__ = [
     "RoutineQuery",
     "RoutineTask",
     "RoutineUpdateObject",
+    "TimeWindow",
     "SyncSubscription",
     "TaskCategory",
     "TaskDefinitionQuery",

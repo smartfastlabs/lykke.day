@@ -9,7 +9,18 @@ from .calendar import (
     SyncCalendarCommand,
     SyncCalendarHandler,
 )
-from .brain_dump import ProcessBrainDumpCommand, ProcessBrainDumpHandler
+from .brain_dump import (
+    CreateBrainDumpItemCommand,
+    CreateBrainDumpItemHandler,
+    DeleteBrainDumpItemCommand,
+    DeleteBrainDumpItemHandler,
+    ProcessBrainDumpCommand,
+    ProcessBrainDumpHandler,
+    UpdateBrainDumpItemStatusCommand,
+    UpdateBrainDumpItemStatusHandler,
+    UpdateBrainDumpItemTypeCommand,
+    UpdateBrainDumpItemTypeHandler,
+)
 from .day import (
     RescheduleDayCommand,
     RescheduleDayHandler,
@@ -43,6 +54,10 @@ from .task import (
 __all__ = [
     "CreateAdhocTaskCommand",
     "CreateAdhocTaskHandler",
+    "CreateBrainDumpItemCommand",
+    "CreateBrainDumpItemHandler",
+    "DeleteBrainDumpItemCommand",
+    "DeleteBrainDumpItemHandler",
     "ProcessBrainDumpCommand",
     "ProcessBrainDumpHandler",
     "ReceiveSmsMessageCommand",
@@ -66,4 +81,8 @@ __all__ = [
     "SyncCalendarHandler",
     "UpdateDayCommand",
     "UpdateDayHandler",
+    "UpdateBrainDumpItemStatusCommand",
+    "UpdateBrainDumpItemStatusHandler",
+    "UpdateBrainDumpItemTypeCommand",
+    "UpdateBrainDumpItemTypeHandler",
 ]

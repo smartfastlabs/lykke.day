@@ -5,19 +5,21 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
+from lykke.application.commands.brain_dump import (
+    CreateBrainDumpItemCommand,
+    CreateBrainDumpItemHandler,
+    DeleteBrainDumpItemCommand,
+    DeleteBrainDumpItemHandler,
+    UpdateBrainDumpItemStatusCommand,
+    UpdateBrainDumpItemStatusHandler,
+)
 from lykke.application.commands.day import (
-    AddBrainDumpItemToDayCommand,
-    AddBrainDumpItemToDayHandler,
     AddReminderToDayCommand,
     AddReminderToDayHandler,
     AddRoutineToDayCommand,
     AddRoutineToDayHandler,
-    RemoveBrainDumpItemCommand,
-    RemoveBrainDumpItemHandler,
     RemoveReminderCommand,
     RemoveReminderHandler,
-    UpdateBrainDumpItemStatusCommand,
-    UpdateBrainDumpItemStatusHandler,
     UpdateReminderStatusCommand,
     UpdateReminderStatusHandler,
 )
@@ -221,9 +223,9 @@ async def add_brain_dump_item_to_today(
 ) -> DayContextSchema:
     """Add a brain dump item to today."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(AddBrainDumpItemToDayHandler)
+    handler = command_factory.create(CreateBrainDumpItemHandler)
     day_context_handler_instance = query_factory.create(GetDayContextHandler)
-    await handler.handle(AddBrainDumpItemToDayCommand(date=date, text=text))
+    await handler.handle(CreateBrainDumpItemCommand(date=date, text=text))
     context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
     return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
 
@@ -256,9 +258,9 @@ async def remove_brain_dump_item_from_today(
 ) -> DayContextSchema:
     """Remove a brain dump item from today."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(RemoveBrainDumpItemHandler)
+    handler = command_factory.create(DeleteBrainDumpItemHandler)
     day_context_handler_instance = query_factory.create(GetDayContextHandler)
-    await handler.handle(RemoveBrainDumpItemCommand(date=date, item_id=item_id))
+    await handler.handle(DeleteBrainDumpItemCommand(date=date, item_id=item_id))
     context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
     return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
 

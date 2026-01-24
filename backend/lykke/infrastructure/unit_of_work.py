@@ -17,6 +17,7 @@ from lykke.domain.entities import (
     AuditLogEntity,
     AuthTokenEntity,
     BotPersonalityEntity,
+    BrainDumpEntity,
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
@@ -52,6 +53,7 @@ from lykke.infrastructure.repositories import (
     AuditLogRepository,
     AuthTokenRepository,
     BotPersonalityRepository,
+    BrainDumpRepository,
     CalendarEntryRepository,
     CalendarEntrySeriesRepository,
     CalendarRepository,
@@ -84,6 +86,8 @@ if TYPE_CHECKING:
         AuthTokenRepositoryReadWriteProtocol,
         BotPersonalityRepositoryReadOnlyProtocol,
         BotPersonalityRepositoryReadWriteProtocol,
+        BrainDumpRepositoryReadOnlyProtocol,
+        BrainDumpRepositoryReadWriteProtocol,
         CalendarEntryRepositoryReadOnlyProtocol,
         CalendarEntryRepositoryReadWriteProtocol,
         CalendarEntrySeriesRepositoryReadOnlyProtocol,
@@ -145,6 +149,7 @@ class SqlAlchemyUnitOfWork:
     audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
     bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
+    brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
     calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
@@ -169,6 +174,7 @@ class SqlAlchemyUnitOfWork:
             "audit_log_ro_repo",
         ),  # Read-only, uses same repo
         BotPersonalityEntity: ("bot_personality_ro_repo", "_bot_personality_rw_repo"),
+        BrainDumpEntity: ("brain_dump_ro_repo", "_brain_dump_rw_repo"),
         DayEntity: ("day_ro_repo", "_day_rw_repo"),
         DayTemplateEntity: ("day_template_ro_repo", "_day_template_rw_repo"),
         CalendarEntryEntity: ("calendar_entry_ro_repo", "_calendar_entry_rw_repo"),
@@ -225,6 +231,7 @@ class SqlAlchemyUnitOfWork:
         self._bot_personality_rw_repo: (
             BotPersonalityRepositoryReadWriteProtocol | None
         ) = None
+        self._brain_dump_rw_repo: BrainDumpRepositoryReadWriteProtocol | None = None
         self._calendar_entry_rw_repo: (
             CalendarEntryRepositoryReadWriteProtocol | None
         ) = None
@@ -397,6 +404,15 @@ class SqlAlchemyUnitOfWork:
             "BotPersonalityRepositoryReadOnlyProtocol", bot_personality_repo
         )
         self._bot_personality_rw_repo = bot_personality_repo
+
+        brain_dump_repo = cast(
+            "BrainDumpRepositoryReadWriteProtocol",
+            BrainDumpRepository(user_id=self.user_id),
+        )
+        self.brain_dump_ro_repo = cast(
+            "BrainDumpRepositoryReadOnlyProtocol", brain_dump_repo
+        )
+        self._brain_dump_rw_repo = brain_dump_repo
 
         conversation_repo = cast(
             "ConversationRepositoryReadWriteProtocol",
@@ -1116,6 +1132,12 @@ class SqlAlchemyReadOnlyRepositories:
             BotPersonalityRepository(user_id=self.user_id),
         )
         self.bot_personality_ro_repo = bot_personality_repo
+
+        brain_dump_repo = cast(
+            "BrainDumpRepositoryReadOnlyProtocol",
+            BrainDumpRepository(user_id=self.user_id),
+        )
+        self.brain_dump_ro_repo = brain_dump_repo
 
         conversation_repo = cast(
             "ConversationRepositoryReadOnlyProtocol",

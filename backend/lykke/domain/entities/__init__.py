@@ -6,6 +6,7 @@ from .bot_personality import BotPersonalityEntity
 from .calendar import CalendarEntity
 from .calendar_entry import CalendarEntryEntity
 from .calendar_entry_series import CalendarEntrySeriesEntity
+from .brain_dump import BrainDumpEntity
 from .conversation import ConversationEntity
 from .day import DayEntity
 from .day_template import DayTemplateEntity
@@ -27,6 +28,7 @@ __all__ = [
     "BaseEntityObject",
     "BaseObject",
     "BotPersonalityEntity",
+    "BrainDumpEntity",
     "CalendarEntity",
     "CalendarEntryEntity",
     "CalendarEntrySeriesEntity",

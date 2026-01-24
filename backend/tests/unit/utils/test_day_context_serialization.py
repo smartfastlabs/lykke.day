@@ -4,6 +4,7 @@ from uuid import uuid4
 from lykke.core.utils.day_context_serialization import serialize_day_context
 from lykke.domain import value_objects
 from lykke.domain.entities import (
+    BrainDumpEntity,
     CalendarEntryEntity,
     DayEntity,
     DayTemplateEntity,
@@ -37,12 +38,12 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
             created_at=current_time,
         )
     )
-    day.brain_dump_items.append(
-        value_objects.BrainDumpItem(
-            text="Buy milk",
-            status=value_objects.BrainDumpItemStatus.ACTIVE,
-            created_at=current_time,
-        )
+    brain_dump_item = BrainDumpEntity(
+        user_id=user_id,
+        date=day_date,
+        text="Buy milk",
+        status=value_objects.BrainDumpItemStatus.ACTIVE,
+        created_at=current_time,
     )
 
     task_schedule = value_objects.TaskSchedule(
@@ -99,6 +100,7 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
         day=day,
         tasks=[task],
         calendar_entries=[calendar_entry],
+        brain_dump_items=[brain_dump_item],
         messages=[message],
         push_notifications=[push_notification],
     )

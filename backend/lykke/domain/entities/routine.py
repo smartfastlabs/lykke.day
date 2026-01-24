@@ -26,6 +26,7 @@ class RoutineEntity(BaseEntityObject, AuditableEntity):
     category: value_objects.TaskCategory
     routine_schedule: value_objects.RecurrenceSchedule
     description: str = ""
+    time_window: value_objects.TimeWindow | None = None
     tasks: list[value_objects.RoutineTask] = field(default_factory=list)
 
     def _copy_with_tasks(self, tasks: list[value_objects.RoutineTask]) -> RoutineEntity:
@@ -37,6 +38,7 @@ class RoutineEntity(BaseEntityObject, AuditableEntity):
             category=self.category,
             routine_schedule=self.routine_schedule,
             description=self.description,
+            time_window=self.time_window,
             tasks=tasks,
         )
 
@@ -77,6 +79,11 @@ class RoutineEntity(BaseEntityObject, AuditableEntity):
                             task_update.task_schedule
                             if task_update.task_schedule is not None
                             else task.task_schedule
+                        ),
+                        time_window=(
+                            task_update.time_window
+                            if task_update.time_window is not None
+                            else task.time_window
                         ),
                     )
                 )

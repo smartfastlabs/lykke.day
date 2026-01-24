@@ -6,10 +6,7 @@ from datetime import UTC, timedelta
 import pytest
 from freezegun import freeze_time
 
-from lykke.application.utils.filters import (
-    calculate_cutoff_time,
-    filter_upcoming_tasks,
-)
+from lykke.application.utils.filters import calculate_cutoff_time, filter_upcoming_tasks
 from lykke.domain import value_objects
 from lykke.domain.entities import TaskEntity
 

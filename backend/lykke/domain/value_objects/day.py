@@ -8,6 +8,7 @@ from .base import BaseValueObject
 
 if TYPE_CHECKING:
     from lykke.domain.entities import (
+        BrainDumpEntity,
         CalendarEntryEntity,
         DayEntity,
         MessageEntity,
@@ -68,23 +69,12 @@ class BrainDumpItemType(str, Enum):
     GENERAL = "GENERAL"
     COMMAND = "COMMAND"
 
-
-@dataclass(kw_only=True)
-class BrainDumpItem(BaseValueObject):
-    """Brain dump item for quick capture of thoughts and reminders."""
-
-    id: UUID = field(default_factory=uuid4)
-    text: str
-    status: BrainDumpItemStatus = BrainDumpItemStatus.ACTIVE
-    created_at: datetime | None = field(default=None)
-    type: BrainDumpItemType = BrainDumpItemType.GENERAL
-
-
 @dataclass(kw_only=True)
 class DayContext(BaseValueObject):
     day: "DayEntity"
     calendar_entries: list["CalendarEntryEntity"] = field(default_factory=list)
     tasks: list["TaskEntity"] = field(default_factory=list)
+    brain_dump_items: list["BrainDumpEntity"] = field(default_factory=list)
 
 
 @dataclass(kw_only=True)

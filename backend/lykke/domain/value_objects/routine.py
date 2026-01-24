@@ -1,4 +1,5 @@
 import datetime
+from datetime import time
 from dataclasses import dataclass, field
 from enum import Enum
 from uuid import UUID, uuid4
@@ -85,9 +86,18 @@ class RecurrenceSchedule(BaseValueObject):
 
 
 @dataclass(kw_only=True)
+class TimeWindow(BaseValueObject):
+    available_time: time | None = None
+    start_time: time | None = None
+    end_time: time | None = None
+    cutoff_time: time | None = None
+
+
+@dataclass(kw_only=True)
 class RoutineTask(BaseValueObject):
     id: UUID = field(default_factory=uuid4)
     task_definition_id: UUID
     name: str | None = None
     schedule: TaskSchedule | None = None
     task_schedule: RecurrenceSchedule | None = None
+    time_window: TimeWindow | None = None

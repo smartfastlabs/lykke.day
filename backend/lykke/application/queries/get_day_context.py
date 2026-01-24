@@ -8,6 +8,7 @@ from typing import cast
 from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.repositories import (
     CalendarEntryRepositoryReadOnlyProtocol,
+    BrainDumpRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
@@ -16,7 +17,12 @@ from lykke.application.repositories import (
 from lykke.core.constants import DEFAULT_END_OF_DAY_TIME
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.entities import CalendarEntryEntity, DayEntity, TaskEntity
+from lykke.domain.entities import (
+    BrainDumpEntity,
+    CalendarEntryEntity,
+    DayEntity,
+    TaskEntity,
+)
 
 
 @dataclass(frozen=True)
@@ -32,6 +38,7 @@ class GetDayContextHandler(
     """Gets the complete context for a day."""
 
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
+    brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
@@ -52,12 +59,18 @@ class GetDayContextHandler(
         """
         day_id = DayEntity.id_from_date_and_user(date, self.user_id)
 
-        tasks_result, calendar_entries_result, day_result = await asyncio.gather(
+        (
+            tasks_result,
+            calendar_entries_result,
+            day_result,
+            brain_dump_items_result,
+        ) = await asyncio.gather(
             self.task_ro_repo.search(value_objects.TaskQuery(date=date)),
             self.calendar_entry_ro_repo.search(
                 value_objects.CalendarEntryQuery(date=date)
             ),
             self.day_ro_repo.get(day_id),
+            self.brain_dump_ro_repo.search(value_objects.BrainDumpQuery(date=date)),
             return_exceptions=True,
         )
 
@@ -67,6 +80,10 @@ class GetDayContextHandler(
         calendar_entries = cast(
             "list[CalendarEntryEntity]",
             self._unwrap_result(calendar_entries_result, "calendar entries result"),
+        )
+        brain_dump_items = cast(
+            "list[BrainDumpEntity]",
+            self._unwrap_result(brain_dump_items_result, "brain dump items result"),
         )
 
         if isinstance(day_result, NotFoundError):
@@ -81,7 +98,7 @@ class GetDayContextHandler(
                 )
             day = day_result
 
-        return self._build_context(day, tasks, calendar_entries)
+        return self._build_context(day, tasks, calendar_entries, brain_dump_items)
 
     @staticmethod
     def _unwrap_result(result: object, name: str) -> object:
@@ -95,6 +112,7 @@ class GetDayContextHandler(
         day: DayEntity,
         tasks: list[TaskEntity],
         calendar_entries: list[CalendarEntryEntity],
+        brain_dump_items: list[BrainDumpEntity],
     ) -> value_objects.DayContext:
         """Build a DayContext from loaded data.
 
@@ -115,4 +133,8 @@ class GetDayContextHandler(
                 else DEFAULT_END_OF_DAY_TIME,
             ),
             calendar_entries=sorted(calendar_entries, key=lambda e: e.starts_at),
+            brain_dump_items=sorted(
+                brain_dump_items,
+                key=lambda item: item.created_at,
+            ),
         )

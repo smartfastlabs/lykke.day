@@ -61,6 +61,11 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, BaseQuery]):
                 raise TypeError("routine_schedule must be a RecurrenceSchedule")
             row["routine_schedule"] = dataclass_to_json_dict(routine.routine_schedule)
 
+        if routine.time_window:
+            if not isinstance(routine.time_window, value_objects.TimeWindow):
+                raise TypeError("time_window must be a TimeWindow")
+            row["time_window"] = dataclass_to_json_dict(routine.time_window)
+
         if routine.tasks:
             if not isinstance(routine.tasks, list):
                 raise TypeError("tasks must be a list of RoutineTask")
@@ -76,8 +81,6 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, BaseQuery]):
     @classmethod
     def row_to_entity(cls, row: dict[str, Any]) -> RoutineEntity:
         """Convert a database row dict to a Routine entity."""
-        from datetime import time as time_type
-
         data = filter_init_false_fields(dict(row), RoutineEntity)
 
         category = data.get("category")
@@ -90,6 +93,22 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, BaseQuery]):
                 **routine_schedule
             )
 
+        time_window = data.get("time_window")
+        if time_window:
+            for time_field in [
+                "available_time",
+                "start_time",
+                "end_time",
+                "cutoff_time",
+            ]:
+                if time_window.get(time_field) and isinstance(
+                    time_window[time_field], str
+                ):
+                    time_window[time_field] = time.fromisoformat(
+                        time_window[time_field]
+                    )
+            data["time_window"] = value_objects.TimeWindow(**time_window)
+
         tasks = data.get("tasks") or []
         task_objects = []
         for task_dict in tasks:
@@ -101,7 +120,7 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, BaseQuery]):
                     if schedule_dict.get(time_field) and isinstance(
                         schedule_dict[time_field], str
                     ):
-                        schedule_dict[time_field] = time_type.fromisoformat(
+                        schedule_dict[time_field] = time.fromisoformat(
                             schedule_dict[time_field]
                         )
                 task_dict["schedule"] = value_objects.TaskSchedule(**schedule_dict)
@@ -110,6 +129,25 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, BaseQuery]):
             if task_dict.get("task_schedule"):
                 task_dict["task_schedule"] = value_objects.RecurrenceSchedule(
                     **task_dict["task_schedule"]
+                )
+
+            # Handle time_window with time fields
+            if task_dict.get("time_window"):
+                time_window_dict = task_dict["time_window"]
+                for time_field in [
+                    "available_time",
+                    "start_time",
+                    "end_time",
+                    "cutoff_time",
+                ]:
+                    if time_window_dict.get(time_field) and isinstance(
+                        time_window_dict[time_field], str
+                    ):
+                        time_window_dict[time_field] = time.fromisoformat(
+                            time_window_dict[time_field]
+                        )
+                task_dict["time_window"] = value_objects.TimeWindow(
+                    **time_window_dict
                 )
 
             task_objects.append(value_objects.RoutineTask(**task_dict))

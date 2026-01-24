@@ -37,7 +37,7 @@ Existing reminders (use IDs for updates):
 {% endfor %}
 
 Other brain dump items:
-{% for item in context.day.brain_dump_items %}
+{% for item in context.brain_dump_items %}
 - id: {{ item.id }}
   text: {{ item.text }}
   status: {{ item.status.value }}

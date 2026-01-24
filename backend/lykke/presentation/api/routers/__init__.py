@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from . import (
+    brain_dump,
     calendar_entry_series,
     calendars,
     day_templates,
@@ -37,6 +38,11 @@ router.include_router(
         "auth",
         "user",
     ],
+)
+router.include_router(
+    brain_dump.router,
+    prefix="/brain-dump",
+    tags=["brain-dump"],
 )
 router.include_router(
     calendar_entry_series.router,

@@ -1,5 +1,6 @@
 """Routine schema."""
 
+from datetime import time
 from uuid import UUID
 
 from pydantic import Field
@@ -19,6 +20,15 @@ class RecurrenceScheduleSchema(BaseSchema):
     day_number: int | None = None
 
 
+class TimeWindowSchema(BaseSchema):
+    """API schema for TimeWindow value object."""
+
+    available_time: time | None = None
+    start_time: time | None = None
+    end_time: time | None = None
+    cutoff_time: time | None = None
+
+
 class RoutineTaskSchema(BaseSchema):
     """API schema for RoutineTask value object."""
 
@@ -27,6 +37,7 @@ class RoutineTaskSchema(BaseSchema):
     name: str | None = None
     schedule: TaskScheduleSchema | None = None
     task_schedule: RecurrenceScheduleSchema | None = None
+    time_window: TimeWindowSchema | None = None
 
 
 class RoutineCreateSchema(BaseSchema):
@@ -36,6 +47,7 @@ class RoutineCreateSchema(BaseSchema):
     category: TaskCategory
     routine_schedule: RecurrenceScheduleSchema
     description: str = ""
+    time_window: TimeWindowSchema | None = None
     tasks: list[RoutineTaskSchema] = Field(default_factory=list)
 
 
@@ -47,6 +59,7 @@ class RoutineSchema(BaseEntitySchema):
     category: TaskCategory
     routine_schedule: RecurrenceScheduleSchema
     description: str = ""
+    time_window: TimeWindowSchema | None = None
     tasks: list[RoutineTaskSchema] = Field(default_factory=list)
 
 
@@ -57,6 +70,7 @@ class RoutineUpdateSchema(BaseSchema):
     category: TaskCategory | None = None
     routine_schedule: RecurrenceScheduleSchema | None = None
     description: str | None = None
+    time_window: TimeWindowSchema | None = None
     tasks: list[RoutineTaskSchema] | None = None
 
 
@@ -67,6 +81,7 @@ class RoutineTaskCreateSchema(BaseSchema):
     name: str | None = None
     schedule: TaskScheduleSchema | None = None
     task_schedule: RecurrenceScheduleSchema | None = None
+    time_window: TimeWindowSchema | None = None
 
 
 class RoutineTaskUpdateSchema(BaseSchema):
@@ -75,3 +90,4 @@ class RoutineTaskUpdateSchema(BaseSchema):
     name: str | None = None
     schedule: TaskScheduleSchema | None = None
     task_schedule: RecurrenceScheduleSchema | None = None
+    time_window: TimeWindowSchema | None = None

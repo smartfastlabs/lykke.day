@@ -11,9 +11,9 @@ if TYPE_CHECKING:
     from datetime import datetime, time
     from uuid import UUID
 
-    from .day import BrainDumpItem, DayStatus, DayTag, Reminder
+    from .day import DayStatus, DayTag, Reminder
     from .high_level_plan import HighLevelPlan
-    from .routine import RecurrenceSchedule, RoutineTask
+    from .routine import RecurrenceSchedule, RoutineTask, TimeWindow
     from .sync import SyncSubscription
     from .task import EventCategory, TaskCategory, TaskFrequency, TaskType
     from .time_block import (
@@ -62,6 +62,7 @@ class RoutineUpdateObject(BaseUpdateObject):
     category: TaskCategory | None = None
     routine_schedule: RecurrenceSchedule | None = None
     description: str | None = None
+    time_window: TimeWindow | None = None
     tasks: list[RoutineTask] | None = None
 
 
@@ -155,7 +156,6 @@ class DayUpdateObject(BaseUpdateObject):
     time_blocks: list[DayTimeBlock] | None = None
     active_time_block_id: UUID | None = None
     reminders: list[Reminder] | None = None
-    brain_dump_items: list[BrainDumpItem] | None = None
     high_level_plan: HighLevelPlan | None = None
 
 

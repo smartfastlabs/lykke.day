@@ -5,7 +5,11 @@ from .audit_log import AuditLogSchema
 from .auditable import AuditableSchema
 from .base_personality import BasePersonalitySchema
 from .bot_personality import BotPersonalitySchema
-from .brain_dump import BrainDumpItemSchema
+from .brain_dump import (
+    BrainDumpItemCreateSchema,
+    BrainDumpItemSchema,
+    BrainDumpItemUpdateSchema,
+)
 from .calendar import (
     CalendarCreateSchema,
     CalendarSchema,
@@ -47,6 +51,7 @@ from .routine import (
     RoutineSchema,
     RoutineTaskCreateSchema,
     RoutineTaskUpdateSchema,
+    TimeWindowSchema,
     RoutineUpdateSchema,
 )
 from .task import AdhocTaskCreateSchema, TaskScheduleSchema, TaskSchema
@@ -103,9 +108,12 @@ TaskDefinitionUpdateSchema.model_rebuild()
 DayContextSchema.model_rebuild()
 ReminderSchema.model_rebuild()
 BrainDumpItemSchema.model_rebuild()
+BrainDumpItemCreateSchema.model_rebuild()
+BrainDumpItemUpdateSchema.model_rebuild()
 RoutineSchema.model_rebuild()
 RoutineTaskCreateSchema.model_rebuild()
 RoutineTaskUpdateSchema.model_rebuild()
+TimeWindowSchema.model_rebuild()
 RoutineUpdateSchema.model_rebuild()
 UserSchema.model_rebuild()
 UserSettingsSchema.model_rebuild()
@@ -140,7 +148,9 @@ __all__ = [
     "AuditableSchema",
     "BasePersonalitySchema",
     "BotPersonalitySchema",
+    "BrainDumpItemCreateSchema",
     "BrainDumpItemSchema",
+    "BrainDumpItemUpdateSchema",
     "CalendarCreateSchema",
     "CalendarEntrySchema",
     "CalendarEntrySeriesSchema",
@@ -175,9 +185,11 @@ __all__ = [
     "RoutineSchema",
     "RoutineTaskCreateSchema",
     "RoutineTaskUpdateSchema",
+    "TimeWindowSchema",
     "RoutineUpdateSchema",
     "SendMessageRequestSchema",
     "SendMessageResponseSchema",
+    "StatusResponseSchema",
     "SyncSubscriptionSchema",
     "TaskDefinitionCreateSchema",
     "TaskDefinitionSchema",
@@ -189,7 +201,6 @@ __all__ = [
     "TimeBlockDefinitionUpdateSchema",
     "UseCaseConfigCreateSchema",
     "UseCaseConfigSchema",
-    "StatusResponseSchema",
     "UserSchema",
     "UserSettingsSchema",
     "UserSettingsUpdateSchema",

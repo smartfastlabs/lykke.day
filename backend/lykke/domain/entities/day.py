@@ -11,10 +11,6 @@ from lykke.domain import value_objects
 from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.events.day_events import (
-    BrainDumpItemAddedEvent,
-    BrainDumpItemRemovedEvent,
-    BrainDumpItemStatusChangedEvent,
-    BrainDumpItemTypeChangedEvent,
     DayCompletedEvent,
     DayScheduledEvent,
     DayUnscheduledEvent,
@@ -51,7 +47,6 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
     time_blocks: list[value_objects.DayTimeBlock] = field(default_factory=list)
     active_time_block_id: UUID | None = None
     reminders: list[value_objects.Reminder] = field(default_factory=list)
-    brain_dump_items: list[value_objects.BrainDumpItem] = field(default_factory=list)
     high_level_plan: value_objects.HighLevelPlan | None = None
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
@@ -419,151 +414,3 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
             )
         )
 
-    def add_brain_dump_item(self, text: str) -> value_objects.BrainDumpItem:
-        """Add a brain dump item to this day."""
-        item = value_objects.BrainDumpItem(
-            id=uuid4(),
-            text=text,
-            status=value_objects.BrainDumpItemStatus.ACTIVE,
-            created_at=datetime.now(UTC),
-        )
-
-        self.brain_dump_items = [*list(self.brain_dump_items), item]
-
-        self._add_event(
-            BrainDumpItemAddedEvent(
-                day_id=self.id,
-                user_id=self.user_id,
-                date=self.date,
-                item_id=item.id,
-                item_text=item.text,
-                entity_id=self.id,
-                entity_type="day",
-                entity_date=self.date,
-            )
-        )
-
-        return item
-
-    def update_brain_dump_item_status(
-        self, item_id: UUID, status: value_objects.BrainDumpItemStatus
-    ) -> None:
-        """Update the status of a brain dump item."""
-        item_index = None
-        old_item = None
-        for i, item in enumerate(self.brain_dump_items):
-            if item.id == item_id:
-                item_index = i
-                old_item = item
-                break
-
-        if item_index is None or old_item is None:
-            raise DomainError(
-                f"Brain dump item with id {item_id} not found in this day"
-            )
-
-        if old_item.status == status:
-            return
-
-        updated_item = value_objects.BrainDumpItem(
-            id=old_item.id,
-            text=old_item.text,
-            status=status,
-            created_at=old_item.created_at,
-        )
-
-        new_items = list(self.brain_dump_items)
-        new_items[item_index] = updated_item
-        self.brain_dump_items = new_items
-
-        self._add_event(
-            BrainDumpItemStatusChangedEvent(
-                user_id=self.user_id,
-                day_id=self.id,
-                date=self.date,
-                item_id=item_id,
-                old_status=old_item.status,
-                new_status=status,
-                item_text=old_item.text,
-                entity_id=self.id,
-                entity_type="day",
-                entity_date=self.date,
-            )
-        )
-
-    def update_brain_dump_item_type(
-        self, item_id: UUID, item_type: value_objects.BrainDumpItemType
-    ) -> None:
-        """Update the type of a brain dump item."""
-        item_index = None
-        old_item = None
-        for i, item in enumerate(self.brain_dump_items):
-            if item.id == item_id:
-                item_index = i
-                old_item = item
-                break
-
-        if item_index is None or old_item is None:
-            raise DomainError(
-                f"Brain dump item with id {item_id} not found in this day"
-            )
-
-        if old_item.type == item_type:
-            return
-
-        updated_item = value_objects.BrainDumpItem(
-            id=old_item.id,
-            text=old_item.text,
-            status=old_item.status,
-            created_at=old_item.created_at,
-            type=item_type,
-        )
-
-        new_items = list(self.brain_dump_items)
-        new_items[item_index] = updated_item
-        self.brain_dump_items = new_items
-
-        self._add_event(
-            BrainDumpItemTypeChangedEvent(
-                user_id=self.user_id,
-                day_id=self.id,
-                date=self.date,
-                item_id=item_id,
-                old_type=old_item.type,
-                new_type=item_type,
-                item_text=old_item.text,
-                entity_id=self.id,
-                entity_type="day",
-                entity_date=self.date,
-            )
-        )
-
-    def remove_brain_dump_item(self, item_id: UUID) -> None:
-        """Remove a brain dump item from this day."""
-        item_to_remove = None
-        for item in self.brain_dump_items:
-            if item.id == item_id:
-                item_to_remove = item
-                break
-
-        if item_to_remove is None:
-            raise DomainError(
-                f"Brain dump item with id {item_id} not found in this day"
-            )
-
-        self.brain_dump_items = [
-            item for item in self.brain_dump_items if item.id != item_id
-        ]
-
-        self._add_event(
-            BrainDumpItemRemovedEvent(
-                user_id=self.user_id,
-                day_id=self.id,
-                date=self.date,
-                item_id=item_id,
-                item_text=item_to_remove.text,
-                entity_id=self.id,
-                entity_type="day",
-                entity_date=self.date,
-            )
-        )

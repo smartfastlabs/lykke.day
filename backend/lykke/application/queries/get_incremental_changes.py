@@ -38,6 +38,7 @@ class GetIncrementalChangesHandler(
         self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
         self.routine_ro_repo = ro_repos.routine_ro_repo
         self.day_ro_repo = ro_repos.day_ro_repo
+        self.brain_dump_ro_repo = ro_repos.brain_dump_ro_repo
 
     async def handle(
         self, query: GetIncrementalChangesQuery
@@ -205,11 +206,14 @@ class GetIncrementalChangesHandler(
                 if not day:
                     return None
                 # Convert day to dict using schema mapper
-                from lykke.presentation.api.schemas.mappers import (
-                    map_day_to_schema,
-                )
+                from lykke.presentation.api.schemas.mappers import map_day_to_schema
 
-                day_schema = map_day_to_schema(day)
+                brain_dump_items = await self.brain_dump_ro_repo.search(
+                    value_objects.BrainDumpQuery(date=day.date)
+                )
+                day_schema = map_day_to_schema(
+                    day, brain_dump_items=brain_dump_items
+                )
                 return day_schema.model_dump(mode="json")
 
             return None

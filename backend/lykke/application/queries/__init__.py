@@ -9,6 +9,12 @@ from .compute_task_risk import (
     TaskRiskResult,
     TaskRiskScore,
 )
+from .brain_dump import (
+    GetBrainDumpItemHandler,
+    GetBrainDumpItemQuery,
+    SearchBrainDumpItemsHandler,
+    SearchBrainDumpItemsQuery,
+)
 from .generate_usecase_prompt import (
     GenerateUseCasePromptHandler,
     GenerateUseCasePromptQuery,
@@ -32,6 +38,8 @@ __all__ = [
     "BasePersonalityInfo",
     "ComputeTaskRiskHandler",
     "ComputeTaskRiskQuery",
+    "GetBrainDumpItemHandler",
+    "GetBrainDumpItemQuery",
     "GenerateUseCasePromptHandler",
     "GenerateUseCasePromptQuery",
     "GetDayContextHandler",
@@ -48,6 +56,8 @@ __all__ = [
     "PreviewDayQuery",
     "PreviewTasksHandler",
     "PreviewTasksQuery",
+    "SearchBrainDumpItemsHandler",
+    "SearchBrainDumpItemsQuery",
     "TaskRiskResult",
     "TaskRiskScore",
 ]

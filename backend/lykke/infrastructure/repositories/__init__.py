@@ -1,6 +1,7 @@
 from .audit_log import AuditLogRepository
 from .auth_token import AuthTokenRepository
 from .bot_personality import BotPersonalityRepository
+from .brain_dump import BrainDumpRepository
 from .calendar import CalendarRepository
 from .calendar_entry import CalendarEntryRepository
 from .calendar_entry_series import CalendarEntrySeriesRepository
@@ -22,6 +23,7 @@ __all__ = [
     "AuditLogRepository",
     "AuthTokenRepository",
     "BotPersonalityRepository",
+    "BrainDumpRepository",
     "CalendarEntryRepository",
     "CalendarEntrySeriesRepository",
     "CalendarRepository",

@@ -1,5 +1,5 @@
 import { Component, JSX, Show, createEffect, createSignal } from "solid-js";
-import { Routine, RecurrenceSchedule, TaskCategory, RoutineTask } from "@/types/api";
+import { Routine, RecurrenceSchedule, TaskCategory, RoutineTask, TimeWindow } from "@/types/api";
 import { ALL_TASK_CATEGORIES } from "@/types/api/constants";
 import {
   FormError,
@@ -35,12 +35,35 @@ const RoutineForm: Component<FormProps> = (props) => {
       day_number: null,
     }
   );
+  const [timeWindowAvailable, setTimeWindowAvailable] = createSignal(
+    props.initialData?.time_window?.available_time ?? ""
+  );
+  const [timeWindowStart, setTimeWindowStart] = createSignal(
+    props.initialData?.time_window?.start_time ?? ""
+  );
+  const [timeWindowEnd, setTimeWindowEnd] = createSignal(
+    props.initialData?.time_window?.end_time ?? ""
+  );
+  const [timeWindowCutoff, setTimeWindowCutoff] = createSignal(
+    props.initialData?.time_window?.cutoff_time ?? ""
+  );
+
+  const buildTimeWindow = (): TimeWindow | null => {
+    const timeWindow: TimeWindow = {
+      available_time: timeWindowAvailable() || null,
+      start_time: timeWindowStart() || null,
+      end_time: timeWindowEnd() || null,
+      cutoff_time: timeWindowCutoff() || null,
+    };
+    return Object.values(timeWindow).some((value) => value) ? timeWindow : null;
+  };
 
   const buildRoutine = (): Partial<Routine> => ({
     name: name().trim(),
     description: description().trim() || "",
     category: category(),
     routine_schedule: routineSchedule(),
+    time_window: buildTimeWindow(),
     tasks: props.tasks ?? props.initialData?.tasks ?? [],
   });
 
@@ -86,6 +109,62 @@ const RoutineForm: Component<FormProps> = (props) => {
         schedule={routineSchedule()}
         onScheduleChange={setRoutineSchedule}
       />
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-neutral-700 block">
+          Time Window (optional)
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="routine_time_window_available">
+              Available time
+            </label>
+            <Input
+              id="routine_time_window_available"
+              type="time"
+              placeholder="Available time"
+              value={timeWindowAvailable}
+              onChange={setTimeWindowAvailable}
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="routine_time_window_start">
+              Start time
+            </label>
+            <Input
+              id="routine_time_window_start"
+              type="time"
+              placeholder="Start time"
+              value={timeWindowStart}
+              onChange={setTimeWindowStart}
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="routine_time_window_end">
+              End time
+            </label>
+            <Input
+              id="routine_time_window_end"
+              type="time"
+              placeholder="End time"
+              value={timeWindowEnd}
+              onChange={setTimeWindowEnd}
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="routine_time_window_cutoff">
+              Cutoff time
+            </label>
+            <Input
+              id="routine_time_window_cutoff"
+              type="time"
+              placeholder="Cutoff time"
+              value={timeWindowCutoff}
+              onChange={setTimeWindowCutoff}
+            />
+          </div>
+        </div>
+      </div>
 
       <FormError error={props.error} />
 

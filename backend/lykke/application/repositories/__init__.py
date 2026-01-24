@@ -13,6 +13,10 @@ from .bot_personality_repository import (
     BotPersonalityRepositoryReadOnlyProtocol,
     BotPersonalityRepositoryReadWriteProtocol,
 )
+from .brain_dump_repository import (
+    BrainDumpRepositoryReadOnlyProtocol,
+    BrainDumpRepositoryReadWriteProtocol,
+)
 from .calendar_entry_repository import (
     CalendarEntryRepositoryReadOnlyProtocol,
     CalendarEntryRepositoryReadWriteProtocol,
@@ -85,6 +89,8 @@ __all__ = [
     "AuthTokenRepositoryReadWriteProtocol",
     "BotPersonalityRepositoryReadOnlyProtocol",
     "BotPersonalityRepositoryReadWriteProtocol",
+    "BrainDumpRepositoryReadOnlyProtocol",
+    "BrainDumpRepositoryReadWriteProtocol",
     "CalendarEntryRepositoryReadOnlyProtocol",
     "CalendarEntryRepositoryReadWriteProtocol",
     "CalendarEntrySeriesRepositoryReadOnlyProtocol",

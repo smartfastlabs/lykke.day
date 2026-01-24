@@ -8,7 +8,12 @@ from fastapi import WebSocket
 from fastapi.testclient import TestClient
 
 from lykke.core.config import settings
-from lykke.domain.entities import CalendarEntryEntity, DayEntity, TaskEntity
+from lykke.domain.entities import (
+    BrainDumpEntity,
+    CalendarEntryEntity,
+    DayEntity,
+    TaskEntity,
+)
 from lykke.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
@@ -330,13 +335,18 @@ async def test_realtime_brain_dump_update_notification(
 
     await schedule_day_for_user(user.id, test_date)
 
-    from lykke.infrastructure.repositories import DayRepository
+    from lykke.infrastructure.repositories import BrainDumpRepository, DayRepository
 
     day_repo = DayRepository(user_id=user.id)
     day_id = DayEntity.id_from_date_and_user(test_date, user.id)
     day = await day_repo.get(day_id)
-    day.add_brain_dump_item("Brain dump test item")
-    await day_repo.put(day)
+    brain_dump_repo = BrainDumpRepository(user_id=user.id)
+    brain_dump_item = BrainDumpEntity(
+        user_id=user.id,
+        date=test_date,
+        text="Brain dump test item",
+    )
+    await brain_dump_repo.put(brain_dump_item)
 
     with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
         ack = websocket.receive_json()
@@ -362,7 +372,7 @@ async def test_realtime_brain_dump_update_notification(
             day_id=day.id,
             user_id=user.id,
             date=test_date,
-            item_id=uuid4(),
+            item_id=brain_dump_item.id,
             item_text="Brain dump test item",
             occurred_at=datetime.now(UTC),
             entity_id=day.id,
@@ -371,7 +381,7 @@ async def test_realtime_brain_dump_update_notification(
         )
 
         # Create corresponding audit log
-        day_schema = map_day_to_schema(day)
+        day_schema = map_day_to_schema(day, brain_dump_items=[brain_dump_item])
         audit_log = AuditLogEntity(
             user_id=user.id,
             activity_type="BrainDumpItemAddedEvent",

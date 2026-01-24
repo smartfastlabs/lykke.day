@@ -15,6 +15,7 @@ from lykke.application.repositories import (
     AuditLogRepositoryReadOnlyProtocol,
     AuthTokenRepositoryReadOnlyProtocol,
     BotPersonalityRepositoryReadOnlyProtocol,
+    BrainDumpRepositoryReadOnlyProtocol,
     CalendarEntryRepositoryReadOnlyProtocol,
     CalendarEntrySeriesRepositoryReadOnlyProtocol,
     CalendarRepositoryReadOnlyProtocol,
@@ -62,6 +63,7 @@ class UnitOfWorkProtocol(Protocol):
     audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
     bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
+    brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
     calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
@@ -210,6 +212,7 @@ class ReadOnlyRepositories(Protocol):
     audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
     auth_token_ro_repo: AuthTokenRepositoryReadOnlyProtocol
     bot_personality_ro_repo: BotPersonalityRepositoryReadOnlyProtocol
+    brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
     calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol

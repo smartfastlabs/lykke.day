@@ -1,6 +1,6 @@
-{% if context.day.brain_dump_items %}
+{% if context.brain_dump_items %}
 Brain dump items:
-{% for item in context.day.brain_dump_items %}
+{% for item in context.brain_dump_items %}
 {% include "components/brain_dumps/item.j2" %}
 {% endfor %}
 {% endif %}

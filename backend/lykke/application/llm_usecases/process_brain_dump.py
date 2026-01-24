@@ -12,6 +12,7 @@ from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextQuery,
 )
 from lykke.domain import value_objects
+from lykke.domain.entities import BrainDumpEntity
 
 from .base import BaseUseCase, UseCasePromptInput
 
@@ -29,7 +30,7 @@ class ProcessBrainDumpUseCase(BaseUseCase):
         self,
         *,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
-        brain_dump_item: value_objects.BrainDumpItem,
+        brain_dump_item: BrainDumpEntity,
         brain_dump_date: datetime_date,
     ) -> None:
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler

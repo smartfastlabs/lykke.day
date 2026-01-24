@@ -23,7 +23,6 @@ class Day(Base):
     time_blocks = Column(JSONB)  # list[DayTimeBlock]
     active_time_block_id = Column(PGUUID)  # UUID | None
     reminders = Column(JSONB)  # list[Reminder]
-    brain_dump_items = Column(JSONB)  # list[BrainDumpItem]
     high_level_plan = Column(JSONB)  # HighLevelPlan | None
 
     __table_args__ = (

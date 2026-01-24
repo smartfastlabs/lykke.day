@@ -14,6 +14,7 @@ from lykke.infrastructure.repositories import (
     AuditLogRepository,
     AuthTokenRepository,
     BotPersonalityRepository,
+    BrainDumpRepository,
     CalendarEntryRepository,
     CalendarRepository,
     ConversationRepository,
@@ -105,6 +106,12 @@ async def user_repo():
 async def day_repo(test_user):
     """DayRepository scoped to test_user."""
     return DayRepository(user_id=test_user.id)
+
+
+@pytest_asyncio.fixture
+async def brain_dump_repo(test_user):
+    """BrainDumpRepository scoped to test_user."""
+    return BrainDumpRepository(user_id=test_user.id)
 
 
 @pytest_asyncio.fixture

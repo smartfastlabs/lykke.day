@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import (
+    BrainDumpEntity,
     DayEntity,
     DayTemplateEntity,
     RoutineEntity,
@@ -74,6 +75,33 @@ class _FakeTaskReadOnlyRepo:
         if date is None:
             return self._tasks
         return [task for task in self._tasks if task.scheduled_date == date]
+
+
+class _FakeBrainDumpReadOnlyRepo:
+    """Fake brain dump repository for testing."""
+
+    def __init__(
+        self,
+        items: list[BrainDumpEntity] | BrainDumpEntity | None = None,
+    ) -> None:
+        if isinstance(items, BrainDumpEntity):
+            self._items = [items]
+        elif items is not None:
+            self._items = items
+        else:
+            self._items = []
+
+    async def get(self, item_id: UUID):
+        for item in self._items:
+            if item_id == item.id:
+                return item
+        raise NotFoundError(f"BrainDumpEntity {item_id} not found")
+
+    async def search(self, query):
+        date = getattr(query, "date", None)
+        if date is None:
+            return self._items
+        return [item for item in self._items if item.date == date]
 
 
 class _FakeCalendarEntryReadOnlyRepo:
@@ -164,6 +192,7 @@ class _FakeReadOnlyRepos:
         audit_log_repo: Any | None = None,
         auth_token_repo: Any | None = None,
         bot_personality_repo: Any | None = None,
+        brain_dump_repo: Any | None = None,
         calendar_entry_repo: Any | None = None,
         calendar_entry_series_repo: Any | None = None,
         calendar_repo: Any | None = None,
@@ -186,6 +215,7 @@ class _FakeReadOnlyRepos:
         self.audit_log_ro_repo = audit_log_repo or fake
         self.auth_token_ro_repo = auth_token_repo or fake
         self.bot_personality_ro_repo = bot_personality_repo or fake
+        self.brain_dump_ro_repo = brain_dump_repo or fake
         self.calendar_entry_ro_repo = calendar_entry_repo or fake
         self.calendar_entry_series_ro_repo = calendar_entry_series_repo or fake
         self.calendar_ro_repo = calendar_repo or fake
@@ -212,6 +242,7 @@ class _FakeUoW:
         self,
         *,
         task_repo: Any | None = None,
+        brain_dump_repo: Any | None = None,
         day_repo: Any | None = None,
         day_template_repo: Any | None = None,
         user_repo: Any | None = None,
@@ -220,10 +251,12 @@ class _FakeUoW:
         created_entities: list[object] | None = None,
     ) -> None:
         self.added: list[object] = []
+        self.deleted: list[object] = []
         self.created_entities = created_entities or []
         self.created = self.created_entities
         self.bulk_deleted_tasks: list[object] = []
         self.task_ro_repo = task_repo
+        self.brain_dump_ro_repo = brain_dump_repo
         self.day_ro_repo = day_repo
         self.day_template_ro_repo = day_template_repo
         self.user_ro_repo = user_repo
@@ -245,6 +278,11 @@ class _FakeUoW:
         if hasattr(entity, "create"):
             entity.create()
         return entity
+
+    async def delete(self, entity):
+        if hasattr(entity, "delete"):
+            entity.delete()
+        self.deleted.append(entity)
 
     async def bulk_delete_tasks(self, query):
         self.bulk_deleted_tasks.append(query)

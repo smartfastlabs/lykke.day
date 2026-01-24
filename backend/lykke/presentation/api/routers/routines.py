@@ -32,7 +32,11 @@ from lykke.application.queries.routine import (
 from lykke.domain import value_objects
 from lykke.domain.entities import RoutineEntity, UserEntity
 from lykke.domain.value_objects import RoutineUpdateObject
-from lykke.domain.value_objects.routine import RoutineTask
+from lykke.domain.value_objects.routine import (
+    RecurrenceSchedule,
+    RoutineTask,
+    TimeWindow,
+)
 from lykke.presentation.api.schemas import (
     PagedResponseSchema,
     QuerySchema,
@@ -97,7 +101,6 @@ async def create_routine(
     """Create a new routine."""
     create_routine_handler = command_factory.create(CreateRoutineHandler)
     # Convert schema to domain dataclasses
-    from lykke.domain.value_objects.routine import RecurrenceSchedule, RoutineTask
     from lykke.domain.value_objects.task import TaskSchedule
 
     routine_schedule = RecurrenceSchedule(
@@ -105,6 +108,15 @@ async def create_routine(
         weekdays=routine_data.routine_schedule.weekdays,
         day_number=routine_data.routine_schedule.day_number,
     )
+
+    routine_time_window = None
+    if routine_data.time_window:
+        routine_time_window = TimeWindow(
+            available_time=routine_data.time_window.available_time,
+            start_time=routine_data.time_window.start_time,
+            end_time=routine_data.time_window.end_time,
+            cutoff_time=routine_data.time_window.cutoff_time,
+        )
 
     tasks = []
     for task_schema in routine_data.tasks or []:
@@ -125,6 +137,15 @@ async def create_routine(
                 day_number=task_schema.task_schedule.day_number,
             )
 
+        time_window = None
+        if task_schema.time_window:
+            time_window = TimeWindow(
+                available_time=task_schema.time_window.available_time,
+                start_time=task_schema.time_window.start_time,
+                end_time=task_schema.time_window.end_time,
+                cutoff_time=task_schema.time_window.cutoff_time,
+            )
+
         if task_schema.id:
             routine_task = RoutineTask(
                 id=task_schema.id,
@@ -132,6 +153,7 @@ async def create_routine(
                 name=task_schema.name,
                 schedule=task_schedule,
                 task_schedule=task_recurrence_schedule,
+                time_window=time_window,
             )
         else:
             routine_task = RoutineTask(
@@ -139,6 +161,7 @@ async def create_routine(
                 name=task_schema.name,
                 schedule=task_schedule,
                 task_schedule=task_recurrence_schedule,
+                time_window=time_window,
             )
         tasks.append(routine_task)
 
@@ -148,6 +171,7 @@ async def create_routine(
         category=routine_data.category,
         routine_schedule=routine_schedule,
         description=routine_data.description,
+        time_window=routine_time_window,
         tasks=tasks,
     )
     created = await create_routine_handler.handle(CreateRoutineCommand(routine=routine))
@@ -163,7 +187,6 @@ async def update_routine(
     """Update an existing routine."""
     update_routine_handler = command_factory.create(UpdateRoutineHandler)
     # Convert schema to domain dataclasses
-    from lykke.domain.value_objects.routine import RecurrenceSchedule, RoutineTask
     from lykke.domain.value_objects.task import TaskSchedule
 
     routine_schedule = None
@@ -172,6 +195,15 @@ async def update_routine(
             frequency=update_data.routine_schedule.frequency,
             weekdays=update_data.routine_schedule.weekdays,
             day_number=update_data.routine_schedule.day_number,
+        )
+
+    routine_time_window = None
+    if update_data.time_window:
+        routine_time_window = TimeWindow(
+            available_time=update_data.time_window.available_time,
+            start_time=update_data.time_window.start_time,
+            end_time=update_data.time_window.end_time,
+            cutoff_time=update_data.time_window.cutoff_time,
         )
 
     tasks = None
@@ -195,6 +227,15 @@ async def update_routine(
                     day_number=task_schema.task_schedule.day_number,
                 )
 
+            time_window = None
+            if task_schema.time_window:
+                time_window = TimeWindow(
+                    available_time=task_schema.time_window.available_time,
+                    start_time=task_schema.time_window.start_time,
+                    end_time=task_schema.time_window.end_time,
+                    cutoff_time=task_schema.time_window.cutoff_time,
+                )
+
             if task_schema.id:
                 routine_task = RoutineTask(
                     id=task_schema.id,
@@ -202,6 +243,7 @@ async def update_routine(
                     name=task_schema.name,
                     schedule=task_schedule,
                     task_schedule=task_recurrence_schedule,
+                    time_window=time_window,
                 )
             else:
                 routine_task = RoutineTask(
@@ -209,6 +251,7 @@ async def update_routine(
                     name=task_schema.name,
                     schedule=task_schedule,
                     task_schedule=task_recurrence_schedule,
+                    time_window=time_window,
                 )
             tasks.append(routine_task)
 
@@ -217,6 +260,7 @@ async def update_routine(
         category=update_data.category,
         routine_schedule=routine_schedule,
         description=update_data.description,
+        time_window=routine_time_window,
         tasks=tasks,
     )
     updated = await update_routine_handler.handle(
@@ -247,7 +291,6 @@ async def add_routine_task(
 ) -> RoutineSchema:
     """Attach a task definition to a routine."""
     add_routine_task_handler = command_factory.create(AddRoutineTaskHandler)
-    from lykke.domain.value_objects.routine import RecurrenceSchedule
     from lykke.domain.value_objects.task import TaskSchedule
 
     task_schedule = None
@@ -267,6 +310,15 @@ async def add_routine_task(
             day_number=routine_task.task_schedule.day_number,
         )
 
+    time_window = None
+    if routine_task.time_window:
+        time_window = TimeWindow(
+            available_time=routine_task.time_window.available_time,
+            start_time=routine_task.time_window.start_time,
+            end_time=routine_task.time_window.end_time,
+            cutoff_time=routine_task.time_window.cutoff_time,
+        )
+
     updated = await add_routine_task_handler.handle(
         AddRoutineTaskCommand(
             routine_id=uuid,
@@ -275,6 +327,7 @@ async def add_routine_task(
                 name=routine_task.name,
                 schedule=task_schedule,
                 task_schedule=task_recurrence_schedule,
+                time_window=time_window,
             ),
         )
     )
@@ -293,7 +346,6 @@ async def update_routine_task(
 ) -> RoutineSchema:
     """Update an attached routine task (name/schedule)."""
     update_routine_task_handler = command_factory.create(UpdateRoutineTaskHandler)
-    from lykke.domain.value_objects.routine import RecurrenceSchedule
     from lykke.domain.value_objects.task import TaskSchedule
 
     task_schedule = None
@@ -313,6 +365,15 @@ async def update_routine_task(
             day_number=routine_task_update.task_schedule.day_number,
         )
 
+    time_window = None
+    if routine_task_update.time_window:
+        time_window = TimeWindow(
+            available_time=routine_task_update.time_window.available_time,
+            start_time=routine_task_update.time_window.start_time,
+            end_time=routine_task_update.time_window.end_time,
+            cutoff_time=routine_task_update.time_window.cutoff_time,
+        )
+
     updated = await update_routine_task_handler.handle(
         UpdateRoutineTaskCommand(
             routine_id=uuid,
@@ -325,6 +386,7 @@ async def update_routine_task(
                 name=routine_task_update.name,
                 schedule=task_schedule,
                 task_schedule=task_recurrence_schedule,
+                time_window=time_window,
             ),
         )
     )

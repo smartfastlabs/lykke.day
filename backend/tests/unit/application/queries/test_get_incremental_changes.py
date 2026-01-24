@@ -133,6 +133,7 @@ class TestLoadEntityData:
         mock_ro_repos.calendar_entry_ro_repo = AsyncMock()
         mock_ro_repos.routine_ro_repo = AsyncMock()
         mock_ro_repos.day_ro_repo = AsyncMock()
+        mock_ro_repos.brain_dump_ro_repo = AsyncMock()
 
         return GetIncrementalChangesHandler(mock_ro_repos, user_id=uuid4())
 
@@ -215,6 +216,7 @@ class TestLoadEntityData:
             reminders=[],
         )
         handler_with_mocks.day_ro_repo.get = AsyncMock(return_value=mock_day)
+        handler_with_mocks.brain_dump_ro_repo.search = AsyncMock(return_value=[])
 
         result = await handler_with_mocks._load_entity_data(
             "day", day_id, user_timezone="America/Chicago"

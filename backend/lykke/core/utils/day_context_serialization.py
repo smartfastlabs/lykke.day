@@ -100,7 +100,7 @@ def serialize_day_context(
 
     # Serialize brain dump items
     brain_dump_items = []
-    for item in day.brain_dump_items:
+    for item in context.brain_dump_items:
         item_data: dict[str, Any] = {
             "id": str(item.id),
             "text": item.text,

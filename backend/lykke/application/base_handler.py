@@ -25,6 +25,7 @@ class BaseHandler:
         self.audit_log_ro_repo = ro_repos.audit_log_ro_repo
         self.auth_token_ro_repo = ro_repos.auth_token_ro_repo
         self.bot_personality_ro_repo = ro_repos.bot_personality_ro_repo
+        self.brain_dump_ro_repo = ro_repos.brain_dump_ro_repo
         self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
         self.calendar_entry_series_ro_repo = ro_repos.calendar_entry_series_ro_repo
         self.calendar_ro_repo = ro_repos.calendar_ro_repo

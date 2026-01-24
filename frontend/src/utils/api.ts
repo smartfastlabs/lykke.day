@@ -11,6 +11,7 @@ import {
   Routine,
   PushSubscription,
   TaskSchedule,
+  TimeWindow,
   RecurrenceSchedule,
   UseCaseConfig,
   NotificationUseCaseConfig,
@@ -490,6 +491,7 @@ export const routineAPI = {
       name?: string | null;
       schedule?: TaskSchedule | null;
       task_schedule?: RecurrenceSchedule | null;
+      time_window?: TimeWindow | null;
     }
   ): Promise<Routine> =>
     fetchData<Routine>(`/api/routines/${routineId}/tasks`, {
@@ -499,7 +501,12 @@ export const routineAPI = {
   updateTask: (
     routineId: string,
     routineTaskId: string,
-    payload: { name?: string | null; schedule?: TaskSchedule | null; task_schedule?: RecurrenceSchedule | null }
+    payload: {
+      name?: string | null;
+      schedule?: TaskSchedule | null;
+      task_schedule?: RecurrenceSchedule | null;
+      time_window?: TimeWindow | null;
+    }
   ): Promise<Routine> =>
     fetchData<Routine>(`/api/routines/${routineId}/tasks/${routineTaskId}`, {
       method: "PUT",

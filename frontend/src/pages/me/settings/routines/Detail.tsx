@@ -4,7 +4,7 @@ import DetailPage from "@/components/shared/DetailPage";
 import RoutineForm from "@/components/routines/Form";
 import RoutinePreview from "@/components/routines/Preview";
 import { routineAPI, taskDefinitionAPI } from "@/utils/api";
-import { Routine, RoutineTask, TaskDefinition, TaskSchedule, RecurrenceSchedule } from "@/types/api";
+import { Routine, RoutineTask, TaskDefinition, TaskSchedule, RecurrenceSchedule, TimeWindow } from "@/types/api";
 
 const RoutineDetailPage: Component = () => {
   const params = useParams();
@@ -31,6 +31,7 @@ const RoutineDetailPage: Component = () => {
   const [taskName, setTaskName] = createSignal("");
   const [scheduleInitial, setScheduleInitial] = createSignal<TaskSchedule | null>(null);
   const [taskScheduleInitial, setTaskScheduleInitial] = createSignal<RecurrenceSchedule | null>(null);
+  const [timeWindowInitial, setTimeWindowInitial] = createSignal<TimeWindow | null>(null);
   const [isTaskLoading, setIsTaskLoading] = createSignal(false);
 
   const handleUpdate = async (partialRoutine: Partial<Routine>) => {
@@ -76,6 +77,7 @@ const RoutineDetailPage: Component = () => {
     setSelectedAction(null);
     setScheduleInitial(null);
     setTaskScheduleInitial(null);
+    setTimeWindowInitial(null);
     setTaskName("");
     setActionError("");
   };
@@ -86,6 +88,7 @@ const RoutineDetailPage: Component = () => {
     setTaskName(taskDef.name);
     setScheduleInitial(null);
     setTaskScheduleInitial(null);
+    setTimeWindowInitial(null);
     setActionError("");
   };
 
@@ -96,10 +99,15 @@ const RoutineDetailPage: Component = () => {
     setTaskName(task.name ?? "");
     setScheduleInitial(task.schedule ?? null);
     setTaskScheduleInitial(task.task_schedule ?? null);
+    setTimeWindowInitial(task.time_window ?? null);
     setActionError("");
   };
 
-  const handleTaskSubmit = async (schedule: TaskSchedule, taskSchedule: RecurrenceSchedule | null) => {
+  const handleTaskSubmit = async (
+    schedule: TaskSchedule,
+    taskSchedule: RecurrenceSchedule | null,
+    timeWindow: TimeWindow | null
+  ) => {
     const current = routine();
     const action = selectedAction();
     const taskDefinitionId = selectedTaskDefinitionId();
@@ -118,6 +126,7 @@ const RoutineDetailPage: Component = () => {
           name: nameValue ?? undefined,
           schedule,
           task_schedule: taskSchedule ?? undefined,
+          time_window: timeWindow ?? undefined,
         });
       } else {
         if (!routineTaskId) {
@@ -128,6 +137,7 @@ const RoutineDetailPage: Component = () => {
           name: nameValue ?? undefined,
           schedule,
           task_schedule: taskSchedule ?? undefined,
+          time_window: timeWindow ?? undefined,
         });
       }
 
@@ -226,6 +236,7 @@ const RoutineDetailPage: Component = () => {
                   setTaskName={setTaskName}
                   scheduleInitial={scheduleInitial}
                   taskScheduleInitial={taskScheduleInitial}
+                  timeWindowInitial={timeWindowInitial}
                   isEditMode={true}
                   isLoading={isTaskLoading()}
                   error={actionError()}

@@ -25,9 +25,7 @@ from lykke.application.commands.task import (
 from lykke.application.llm_usecases import LLMUseCaseRunner, ProcessBrainDumpUseCase
 from lykke.application.queries.get_llm_prompt_context import GetLLMPromptContextHandler
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
-from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity
 
 
 @dataclass(frozen=True)
@@ -63,13 +61,16 @@ class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None])
 
     async def handle(self, command: ProcessBrainDumpCommand) -> None:
         """Run LLM processing for a brain dump item and apply actions."""
-        day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
-        day = await self.day_ro_repo.get(day_id)
-        item = next(
-            (item for item in day.brain_dump_items if item.id == command.item_id),
-            None,
-        )
-        if item is None:
+        try:
+            item = await self.brain_dump_ro_repo.get(command.item_id)
+        except Exception:
+            logger.debug(
+                "Brain dump item %s not found for day %s",
+                command.item_id,
+                command.date,
+            )
+            return
+        if item.date != command.date:
             logger.debug(
                 "Brain dump item %s not found for day %s",
                 command.item_id,
@@ -124,14 +125,16 @@ class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None])
         self, *, date: dt_date, item_id: UUID
     ) -> None:
         async with self.new_uow() as uow:
-            day_id = DayEntity.id_from_date_and_user(date, self.user_id)
-            day = await uow.day_ro_repo.get(day_id)
             try:
-                day.update_brain_dump_item_type(
-                    item_id=item_id,
-                    item_type=value_objects.BrainDumpItemType.COMMAND,
+                item = await uow.brain_dump_ro_repo.get(item_id)
+            except Exception:
+                logger.debug(
+                    "Brain dump item %s not found for day %s",
+                    item_id,
+                    date,
                 )
-            except DomainError:
+                return
+            if item.date != date:
                 logger.debug(
                     "Brain dump item %s not found for day %s",
                     item_id,
@@ -139,8 +142,9 @@ class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None])
                 )
                 return
 
-            if day.has_events():
-                uow.add(day)
+            updated = item.update_type(value_objects.BrainDumpItemType.COMMAND)
+            if updated.has_events():
+                uow.add(updated)
 
     async def _handle_add_task(self, date: dt_date, result: dict[str, Any]) -> None:
         name = result.get("name")

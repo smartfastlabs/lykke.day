@@ -51,8 +51,18 @@ export type TimeBlockDefinition = components["schemas"]["TimeBlockDefinitionSche
 export type Calendar = components["schemas"]["CalendarSchema"];
 export type CalendarEntrySeries = components["schemas"]["CalendarEntrySeriesSchema"];
 export type TaskDefinition = components["schemas"]["TaskDefinitionSchema"];
-export type Routine = components["schemas"]["RoutineSchema"];
-export type RoutineTask = components["schemas"]["RoutineTaskSchema-Output"];
+export type Routine = components["schemas"]["RoutineSchema"] & {
+  time_window?: TimeWindow | null;
+};
+export type TimeWindow = {
+  available_time?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  cutoff_time?: string | null;
+};
+export type RoutineTask = components["schemas"]["RoutineTaskSchema-Output"] & {
+  time_window?: TimeWindow | null;
+};
 export type PushSubscription = components["schemas"]["PushSubscriptionSchema"];
 
 // Value object types
