@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .base import BaseRequestObject
 
@@ -79,6 +79,19 @@ class UserUpdateObject(BaseUpdateObject):
     status: UserStatus | None = None
     default_conversation_id: UUID | None = None
     sms_conversation_id: UUID | None = None
+
+
+@dataclass(kw_only=True)
+class AuthTokenUpdateObject(BaseUpdateObject):
+    """Update object for AuthToken entity."""
+
+    token: str | None = None
+    refresh_token: str | None = None
+    token_uri: str | None = None
+    client_id: str | None = None
+    client_secret: str | None = None
+    scopes: list[Any] | None = None
+    expires_at: datetime | None = None
 
 
 @dataclass(kw_only=True)

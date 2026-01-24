@@ -22,6 +22,7 @@ from lykke.application.commands.day.schedule_day import ScheduleDayHandler
 from lykke.application.commands.day.update_reminder_status import (
     UpdateReminderStatusHandler,
 )
+from lykke.application.commands.google import HandleGoogleLoginCallbackHandler
 from lykke.application.commands.notifications import (
     MorningOverviewHandler,
     SmartNotificationHandler,
@@ -235,6 +236,17 @@ def _build_send_push_notification_handler(
     )
 
 
+def _build_google_login_callback_handler(
+    factory: CommandHandlerFactory,
+) -> HandleGoogleLoginCallbackHandler:
+    return HandleGoogleLoginCallbackHandler(
+        factory.ro_repos,
+        factory.uow_factory,
+        factory.user_id,
+        factory.google_gateway,
+    )
+
+
 def _build_smart_notification_handler(
     factory: CommandHandlerFactory,
 ) -> SmartNotificationHandler:
@@ -322,6 +334,7 @@ DEFAULT_COMMAND_HANDLER_REGISTRY: dict[
     ResetCalendarDataHandler: _build_reset_calendar_data_handler,
     ResetCalendarSyncHandler: _build_reset_calendar_sync_handler,
     SendPushNotificationHandler: _build_send_push_notification_handler,
+    HandleGoogleLoginCallbackHandler: _build_google_login_callback_handler,
     SmartNotificationHandler: _build_smart_notification_handler,
     MorningOverviewHandler: _build_morning_overview_handler,
     ProcessBrainDumpHandler: _build_process_brain_dump_handler,
@@ -425,6 +438,11 @@ class CommandHandlerFactory:
     def create(
         self, handler_class: type[SendPushNotificationHandler]
     ) -> SendPushNotificationHandler: ...
+
+    @overload
+    def create(
+        self, handler_class: type[HandleGoogleLoginCallbackHandler]
+    ) -> HandleGoogleLoginCallbackHandler: ...
 
     @overload
     def create(
