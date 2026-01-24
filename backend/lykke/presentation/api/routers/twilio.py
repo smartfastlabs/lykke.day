@@ -1,4 +1,5 @@
 from typing import Annotated, Any
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Request, Response
 from loguru import logger
@@ -7,10 +8,12 @@ from lykke.application.commands.message import (
     ReceiveSmsMessageCommand,
     ReceiveSmsMessageHandler,
 )
+from lykke.application.queries.user import GetUserByPhoneHandler, GetUserByPhoneQuery
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
-from lykke.domain import value_objects
-from lykke.infrastructure.repositories import UserRepository
-from lykke.presentation.handler_factory import CommandHandlerFactory
+from lykke.presentation.handler_factory import (
+    CommandHandlerFactory,
+    QueryHandlerFactory,
+)
 
 from .dependencies.services import (
     get_read_only_repository_factory,
@@ -47,10 +50,11 @@ async def twilio_sms_webhook(
         logger.warning("Twilio SMS webhook missing From/Body")
         return Response(status_code=200)
 
-    user_repo = UserRepository()
-    user = await user_repo.search_one_or_none(
-        value_objects.UserQuery(phone_number=from_number)
+    query_factory = QueryHandlerFactory(
+        user_id=uuid4(), ro_repo_factory=ro_repo_factory
     )
+    user_handler = query_factory.create(GetUserByPhoneHandler)
+    user = await user_handler.handle(GetUserByPhoneQuery(phone_number=from_number))
     if user is None:
         logger.warning("No user found for inbound SMS from {}", from_number)
         return Response(status_code=200)
