@@ -1,8 +1,7 @@
 """Routines table definition."""
 
 from sqlalchemy import Column, Date, Index, String
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
 
@@ -25,5 +24,4 @@ class Routine(Base):
         Index("idx_routines_date", "date"),
         Index("idx_routines_routine_definition_id", "routine_definition_id"),
         Index("idx_routines_user_id", "user_id"),
-    )
     )
