@@ -14,6 +14,7 @@ from .factoid import FactoidEntity
 from .message import MessageEntity
 from .push_notification import PushNotificationEntity
 from .push_subscription import PushSubscriptionEntity
+from .routine import RoutineEntity
 from .routine_definition import RoutineDefinitionEntity
 from .task import TaskEntity
 from .task_definition import TaskDefinitionEntity
@@ -39,6 +40,7 @@ __all__ = [
     "MessageEntity",
     "PushNotificationEntity",
     "PushSubscriptionEntity",
+    "RoutineEntity",
     "RoutineDefinitionEntity",
     "TaskDefinitionEntity",
     "TaskEntity",

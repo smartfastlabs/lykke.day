@@ -118,6 +118,13 @@ class RoutineDefinitionQuery(BaseQuery):
 
 
 @dataclass(kw_only=True)
+class RoutineQuery(DateQuery):
+    """Query class for Routine entities."""
+
+    routine_definition_ids: list[UUID] | None = None
+
+
+@dataclass(kw_only=True)
 class TaskQuery(DateQuery):
     """Query class for Task entities."""
 

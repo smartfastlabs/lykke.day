@@ -15,6 +15,7 @@ from .factoids import Factoid
 from .messages import Message
 from .push_notifications import PushNotification
 from .push_subscriptions import PushSubscription
+from .routines import Routine
 from .routine_definitions import RoutineDefinition
 from .task_definitions import TaskDefinition
 from .tasks import Task
@@ -37,6 +38,7 @@ factoids_tbl = Factoid.__table__
 messages_tbl = Message.__table__
 push_notifications_tbl = PushNotification.__table__
 push_subscriptions_tbl = PushSubscription.__table__
+routines_tbl = Routine.__table__
 routine_definitions_tbl = RoutineDefinition.__table__
 task_definitions_tbl = TaskDefinition.__table__
 tasks_tbl = Task.__table__
@@ -62,6 +64,7 @@ __all__ = [
     "Message",
     "PushNotification",
     "PushSubscription",
+    "Routine",
     "RoutineDefinition",
     "Task",
     "TaskDefinition",
@@ -84,6 +87,7 @@ __all__ = [
     "metadata",
     "push_notifications_tbl",
     "push_subscriptions_tbl",
+    "routines_tbl",
     "routine_definitions_tbl",
     "task_definitions_tbl",
     "tasks_tbl",
