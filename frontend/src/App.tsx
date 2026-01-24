@@ -32,7 +32,6 @@ import TodayEditPage from "@/pages/me/today/Edit";
 import ThatsAllPage from "@/pages/me/today/ThatsAll";
 import AddAdhocTaskPage from "@/pages/me/today/AddAdhocTask";
 import AddReminderPage from "@/pages/me/today/AddReminder";
-import AuditLogPage from "@/pages/me/AuditLog";
 import BrainDumpPage from "@/pages/me/BrainDump";
 import BrainDumpDumpPage from "@/pages/me/BrainDumpDump";
 import NavigationLayout from "@/pages/me/navigation/Layout";
@@ -238,7 +237,6 @@ export default function App() {
                 <Route path="/events" component={EventsView} />
                 <Route path="/edit" component={TodayEditPage} />
               </Route>
-              <Route path="/audit-log" component={AuditLogPage} />
               <Route path="/brain-dump" component={BrainDumpPage} />
               <Route path="/brain-dump/dump" component={BrainDumpDumpPage} />
               <Route path="/adhoc-task" component={AddAdhocTaskPage} />

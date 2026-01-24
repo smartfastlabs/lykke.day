@@ -6,7 +6,6 @@ from . import (
     day_templates,
     days,
     early_access,
-    events,
     google,
     me,
     push_subscriptions,
@@ -87,11 +86,6 @@ router.include_router(
     calendars.router,
     prefix="/calendars",
     tags=["calendars"],
-)
-router.include_router(
-    events.router,
-    prefix="/events",
-    tags=["events", "audit-logs"],
 )
 router.include_router(
     usecase_config.router,
