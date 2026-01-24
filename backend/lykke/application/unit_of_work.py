@@ -26,7 +26,7 @@ from lykke.application.repositories import (
     MessageRepositoryReadOnlyProtocol,
     PushNotificationRepositoryReadOnlyProtocol,
     PushSubscriptionRepositoryReadOnlyProtocol,
-    RoutineRepositoryReadOnlyProtocol,
+    RoutineDefinitionRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
@@ -74,7 +74,7 @@ class UnitOfWorkProtocol(Protocol):
     message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
-    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
@@ -223,7 +223,7 @@ class ReadOnlyRepositories(Protocol):
     message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
-    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol

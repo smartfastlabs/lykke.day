@@ -19,13 +19,15 @@ const DayTemplateListItem: Component<ListItemProps> = (props) => {
         </Show>
       </span>
 
-      {/* Template name and routine count */}
+      {/* Template name and routine definition count */}
       <div class="flex-1 min-w-0">
         <span class="text-sm text-gray-800 block truncate">
           {props.template.slug}
         </span>
         <span class="text-xs text-gray-500">
-          {props.template.routine_ids?.length || 0} routines
+          {props.template.routine_definition_ids?.length || 0} routine
+          definition
+          {props.template.routine_definition_ids?.length === 1 ? "" : "s"}
         </span>
       </div>
     </div>

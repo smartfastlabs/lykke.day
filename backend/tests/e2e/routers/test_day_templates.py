@@ -178,8 +178,8 @@ async def test_list_day_templates_pagination(authenticated_client):
 
 
 @pytest.mark.asyncio
-async def test_add_routine_to_day_template(authenticated_client):
-    """Test adding a routine to a day template."""
+async def test_add_routine_definition_to_day_template(authenticated_client):
+    """Test adding a routine definition to a day template."""
     client, user = await authenticated_client()
 
     # Create a day template
@@ -190,107 +190,113 @@ async def test_add_routine_to_day_template(authenticated_client):
     day_template = DayTemplateEntity(
         user_id=user.id,
         slug="routine-test",
-        routine_ids=[],
+        routine_definition_ids=[],
     )
     day_template = await day_template_repo.put(day_template)
 
-    # Create a routine
-    from lykke.domain.entities import RoutineEntity
+    # Create a routine definition
+    from lykke.domain.entities import RoutineDefinitionEntity
     from lykke.domain.value_objects.routine import RecurrenceSchedule
     from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
-    from lykke.infrastructure.repositories import RoutineRepository
+    from lykke.infrastructure.repositories import RoutineDefinitionRepository
 
-    routine_repo = RoutineRepository(user_id=user.id)
-    routine = RoutineEntity(
+    routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
+    routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
-        name="Test Routine",
+        name="Test Routine Definition",
         category=TaskCategory.HOUSE,
         description="Test description",
-        routine_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
+        routine_definition_schedule=RecurrenceSchedule(
+            frequency=TaskFrequency.DAILY
+        ),
         tasks=[],
     )
-    routine = await routine_repo.put(routine)
+    routine_definition = await routine_definition_repo.put(routine_definition)
 
-    # Add routine to day template
+    # Add routine definition to day template
     response = client.post(
-        f"/day-templates/{day_template.id}/routines",
-        json={"routine_id": str(routine.id)},
+        f"/day-templates/{day_template.id}/routine-definitions",
+        json={"routine_definition_id": str(routine_definition.id)},
     )
 
     assert response.status_code == 201
     data = response.json()
-    assert str(routine.id) in data["routine_ids"]
+    assert str(routine_definition.id) in data["routine_definition_ids"]
 
 
 @pytest.mark.asyncio
-async def test_add_duplicate_routine_to_day_template(authenticated_client):
-    """Test adding a duplicate routine to a day template returns error."""
+async def test_add_duplicate_routine_definition_to_day_template(authenticated_client):
+    """Test adding a duplicate routine definition to a day template returns error."""
     client, user = await authenticated_client()
 
-    # Create a day template with a routine already attached
-    from lykke.domain.entities import RoutineEntity
+    # Create a day template with a routine definition already attached
+    from lykke.domain.entities import RoutineDefinitionEntity
     from lykke.domain.entities.day_template import DayTemplateEntity
     from lykke.domain.value_objects.routine import RecurrenceSchedule
     from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
     from lykke.infrastructure.repositories import (
         DayTemplateRepository,
-        RoutineRepository,
+        RoutineDefinitionRepository,
     )
 
-    routine_repo = RoutineRepository(user_id=user.id)
-    routine = RoutineEntity(
+    routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
+    routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
-        name="Test Routine",
+        name="Test Routine Definition",
         category=TaskCategory.HOUSE,
         description="Test description",
-        routine_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
+        routine_definition_schedule=RecurrenceSchedule(
+            frequency=TaskFrequency.DAILY
+        ),
         tasks=[],
     )
-    routine = await routine_repo.put(routine)
+    routine_definition = await routine_definition_repo.put(routine_definition)
 
     day_template_repo = DayTemplateRepository(user_id=user.id)
     day_template = DayTemplateEntity(
         user_id=user.id,
         slug="duplicate-test",
-        routine_ids=[routine.id],
+        routine_definition_ids=[routine_definition.id],
     )
     day_template = await day_template_repo.put(day_template)
 
-    # Try to add the same routine again
+    # Try to add the same routine definition again
     response = client.post(
-        f"/day-templates/{day_template.id}/routines",
-        json={"routine_id": str(routine.id)},
+        f"/day-templates/{day_template.id}/routine-definitions",
+        json={"routine_definition_id": str(routine_definition.id)},
     )
 
     assert response.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_remove_routine_from_day_template(authenticated_client):
-    """Test removing a routine from a day template."""
+async def test_remove_routine_definition_from_day_template(authenticated_client):
+    """Test removing a routine definition from a day template."""
     client, user = await authenticated_client()
 
-    # Create a routine
-    from lykke.domain.entities import RoutineEntity
+    # Create a routine definition
+    from lykke.domain.entities import RoutineDefinitionEntity
     from lykke.domain.value_objects.routine import RecurrenceSchedule
     from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
-    from lykke.infrastructure.repositories import RoutineRepository
+    from lykke.infrastructure.repositories import RoutineDefinitionRepository
 
-    routine_repo = RoutineRepository(user_id=user.id)
-    routine = RoutineEntity(
+    routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
+    routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=user.id,
-        name="Test Routine",
+        name="Test Routine Definition",
         category=TaskCategory.HOUSE,
         description="Test description",
-        routine_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
+        routine_definition_schedule=RecurrenceSchedule(
+            frequency=TaskFrequency.DAILY
+        ),
         tasks=[],
     )
-    routine = await routine_repo.put(routine)
+    routine_definition = await routine_definition_repo.put(routine_definition)
 
-    # Create a day template with the routine attached
+    # Create a day template with the routine definition attached
     from lykke.domain.entities.day_template import DayTemplateEntity
     from lykke.infrastructure.repositories import DayTemplateRepository
 
@@ -298,26 +304,28 @@ async def test_remove_routine_from_day_template(authenticated_client):
     day_template = DayTemplateEntity(
         user_id=user.id,
         slug="remove-test",
-        routine_ids=[routine.id],
+        routine_definition_ids=[routine_definition.id],
     )
     day_template = await day_template_repo.put(day_template)
 
-    # Remove routine from day template
+    # Remove routine definition from day template
     response = client.delete(
-        f"/day-templates/{day_template.id}/routines/{routine.id}",
+        f"/day-templates/{day_template.id}/routine-definitions/{routine_definition.id}",
     )
 
     assert response.status_code == 200
     data = response.json()
-    assert str(routine.id) not in data["routine_ids"]
+    assert str(routine_definition.id) not in data["routine_definition_ids"]
 
 
 @pytest.mark.asyncio
-async def test_remove_nonexistent_routine_from_day_template(authenticated_client):
-    """Test removing a routine that doesn't exist from a day template returns error."""
+async def test_remove_nonexistent_routine_definition_from_day_template(
+    authenticated_client,
+):
+    """Test removing a routine definition that doesn't exist from a day template returns error."""
     client, user = await authenticated_client()
 
-    # Create a day template without any routines
+    # Create a day template without any routine definitions
     from lykke.domain.entities.day_template import DayTemplateEntity
     from lykke.infrastructure.repositories import DayTemplateRepository
 
@@ -325,14 +333,14 @@ async def test_remove_nonexistent_routine_from_day_template(authenticated_client
     day_template = DayTemplateEntity(
         user_id=user.id,
         slug="remove-nonexistent-test",
-        routine_ids=[],
+        routine_definition_ids=[],
     )
     day_template = await day_template_repo.put(day_template)
 
-    # Try to remove a routine that doesn't exist
-    fake_routine_id = uuid4()
+    # Try to remove a routine definition that doesn't exist
+    fake_routine_definition_id = uuid4()
     response = client.delete(
-        f"/day-templates/{day_template.id}/routines/{fake_routine_id}",
+        f"/day-templates/{day_template.id}/routine-definitions/{fake_routine_definition_id}",
     )
 
     assert response.status_code == 404

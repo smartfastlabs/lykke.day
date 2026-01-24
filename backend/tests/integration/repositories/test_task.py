@@ -276,7 +276,7 @@ def test_row_to_entity_parses_time_strings(test_user, test_date):
         "frequency": TaskFrequency.DAILY.value,
         "completed_at": None,
         "schedule": schedule_dict,
-        "routine_id": None,
+        "routine_definition_id": None,
         "tags": [],
         "actions": [],
     }

@@ -1,7 +1,10 @@
 """Day command handlers."""
 
 from .add_reminder import AddReminderToDayCommand, AddReminderToDayHandler
-from .add_routine import AddRoutineToDayCommand, AddRoutineToDayHandler
+from .add_routine import (
+    AddRoutineDefinitionToDayCommand,
+    AddRoutineDefinitionToDayHandler,
+)
 from .remove_reminder import RemoveReminderCommand, RemoveReminderHandler
 from .reschedule_day import RescheduleDayCommand, RescheduleDayHandler
 from .schedule_day import ScheduleDayCommand, ScheduleDayHandler
@@ -14,8 +17,8 @@ from .update_reminder_status import (
 __all__ = [
     "AddReminderToDayCommand",
     "AddReminderToDayHandler",
-    "AddRoutineToDayCommand",
-    "AddRoutineToDayHandler",
+    "AddRoutineDefinitionToDayCommand",
+    "AddRoutineDefinitionToDayHandler",
     "RemoveReminderCommand",
     "RemoveReminderHandler",
     "RescheduleDayCommand",

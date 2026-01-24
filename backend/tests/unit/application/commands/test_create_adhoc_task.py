@@ -30,7 +30,7 @@ async def test_create_adhoc_task_sets_adhoc_fields():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
     day = DayEntity.create_for_date(task_date, user_id, template)
@@ -72,7 +72,7 @@ async def test_create_adhoc_task_sets_adhoc_fields():
 
     assert result.type == value_objects.TaskType.ADHOC
     assert result.frequency == value_objects.TaskFrequency.ONCE
-    assert result.routine_id is None
+    assert result.routine_definition_id is None
     assert result.status == value_objects.TaskStatus.NOT_STARTED
     assert result.schedule == schedule
     assert result.tags == [value_objects.TaskTag.IMPORTANT]

@@ -21,7 +21,7 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
     day = DayEntity.create_for_date(day_date, user_id=user_id, template=template)

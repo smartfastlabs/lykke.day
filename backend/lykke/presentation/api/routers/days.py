@@ -341,14 +341,17 @@ async def _handle_client_messages(
                     if last_audit_timestamp is None:
                         last_audit_timestamp = dt_datetime.now(UTC)
 
-                    # Fetch all routines for the user
+                    # Fetch all routine definitions for the user
                     from lykke.presentation.api.schemas.mappers import (
-                        map_routine_to_schema,
+                        map_routine_definition_to_schema,
                     )
 
-                    routines = await get_day_context_handler.routine_ro_repo.all()
-                    routine_schemas = [
-                        map_routine_to_schema(routine) for routine in routines
+                    routine_definitions = (
+                        await get_day_context_handler.routine_definition_ro_repo.all()
+                    )
+                    routine_definition_schemas = [
+                        map_routine_definition_to_schema(routine_definition)
+                        for routine_definition in routine_definitions
                     ]
 
                     response = WebSocketSyncResponseSchema(
@@ -356,7 +359,7 @@ async def _handle_client_messages(
                             context, user_timezone=user_timezone
                         ),
                         changes=None,
-                        routines=routine_schemas,
+                        routine_definitions=routine_definition_schemas,
                         last_audit_log_timestamp=last_audit_timestamp.isoformat()
                         if last_audit_timestamp
                         else None,

@@ -25,7 +25,7 @@ class DayTemplateCreateSchema(BaseSchema):
     start_time: time | None = None
     end_time: time | None = None
     icon: str | None = None
-    routine_ids: list[UUID] = Field(default_factory=list)
+    routine_definition_ids: list[UUID] = Field(default_factory=list)
     time_blocks: list[DayTemplateTimeBlockSchema] = Field(default_factory=list)
     high_level_plan: HighLevelPlanSchema | None = None
 
@@ -43,15 +43,15 @@ class DayTemplateUpdateSchema(BaseSchema):
     start_time: time | None = None
     end_time: time | None = None
     icon: str | None = None
-    routine_ids: list[UUID] | None = None
+    routine_definition_ids: list[UUID] | None = None
     time_blocks: list[DayTemplateTimeBlockSchema] | None = None
     high_level_plan: HighLevelPlanSchema | None = None
 
 
-class DayTemplateRoutineCreateSchema(BaseSchema):
-    """API schema for attaching a routine to a day template."""
+class DayTemplateRoutineDefinitionCreateSchema(BaseSchema):
+    """API schema for attaching a routine definition to a day template."""
 
-    routine_id: UUID
+    routine_definition_id: UUID
 
 
 class DayTemplateTimeBlockCreateSchema(BaseSchema):

@@ -24,7 +24,7 @@ async def test_task_completed_event_auto_creates_audit_log(
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
     await day_template_repo.put(template)
@@ -82,7 +82,7 @@ async def test_task_punt_event_auto_creates_audit_log(
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
     await day_template_repo.put(template)

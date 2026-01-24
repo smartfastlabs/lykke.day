@@ -54,12 +54,13 @@ class DayTemplateRepository(
         )
 
         # Handle list fields - convert UUIDs to strings for JSON serialization
-        if template.routine_ids:
-            row["routine_ids"] = [
-                str(routine_id) for routine_id in template.routine_ids
+        if template.routine_definition_ids:
+            row["routine_definition_ids"] = [
+                str(routine_definition_id)
+                for routine_definition_id in template.routine_definition_ids
             ]
         else:
-            row["routine_ids"] = []
+            row["routine_definition_ids"] = []
 
         # Handle time_blocks - serialize to JSON
         if template.time_blocks:
@@ -81,18 +82,20 @@ class DayTemplateRepository(
     def row_to_entity(cls, row: dict[str, Any]) -> DayTemplateEntity:
         """Convert a database row dict to a DayTemplate entity.
 
-        Overrides base to handle UUID conversion for routine_ids stored as JSON strings.
+        Overrides base to handle UUID conversion for routine_definition_ids stored as JSON strings.
         """
         data = normalize_list_fields(dict(row), DayTemplateEntity)
 
         # Filter out fields with init=False (e.g., _domain_events)
         data = filter_init_false_fields(data, DayTemplateEntity)
 
-        # Convert string UUIDs back to UUID objects for routine_ids
-        if data.get("routine_ids"):
-            data["routine_ids"] = [
-                UUID(routine_id) if isinstance(routine_id, str) else routine_id
-                for routine_id in data["routine_ids"]
+        # Convert string UUIDs back to UUID objects for routine_definition_ids
+        if data.get("routine_definition_ids"):
+            data["routine_definition_ids"] = [
+                UUID(routine_definition_id)
+                if isinstance(routine_definition_id, str)
+                else routine_definition_id
+                for routine_definition_id in data["routine_definition_ids"]
             ]
 
         # Handle high_level_plan - it comes as a dict from JSONB

@@ -309,7 +309,7 @@ export interface paths {
         patch: operations["update_brain_dump_item_status_me_today_brain_dump__item_id__patch"];
         trace?: never;
     };
-    "/me/today/routines": {
+    "/me/today/routine-definitions": {
         parameters: {
             query?: never;
             header?: never;
@@ -319,10 +319,78 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Add Routine To Today
-         * @description Add a routine's tasks to today.
+         * Add Routine Definition To Today
+         * @description Add a routine definition's tasks to today.
          */
-        post: operations["add_routine_to_today_me_today_routines_post"];
+        post: operations["add_routine_definition_to_today_me_today_routine_definitions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/brain-dump/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Brain Dump Item
+         * @description Get a single brain dump item by ID.
+         */
+        get: operations["get_brain_dump_item_brain_dump__uuid__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Brain Dump Item
+         * @description Delete a brain dump item.
+         */
+        delete: operations["delete_brain_dump_item_brain_dump__uuid__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Brain Dump Item
+         * @description Update a brain dump item's status or type.
+         */
+        patch: operations["update_brain_dump_item_brain_dump__uuid__patch"];
+        trace?: never;
+    };
+    "/brain-dump/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Brain Dump Items
+         * @description Search brain dump items with pagination and optional filters.
+         */
+        post: operations["search_brain_dump_items_brain_dump__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/brain-dump/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Brain Dump Item
+         * @description Create a new brain dump item.
+         */
+        post: operations["create_brain_dump_item_brain_dump_create_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -600,7 +668,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/day-templates/{uuid}/routines": {
+    "/day-templates/{uuid}/routine-definitions": {
         parameters: {
             query?: never;
             header?: never;
@@ -610,17 +678,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Add Day Template Routine
-         * @description Attach a routine to a day template.
+         * Add Day Template Routine Definition
+         * @description Attach a routine definition to a day template.
          */
-        post: operations["add_day_template_routine_day_templates__uuid__routines_post"];
+        post: operations["add_day_template_routine_definition_day_templates__uuid__routine_definitions_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/day-templates/{uuid}/routines/{routine_id}": {
+    "/day-templates/{uuid}/routine-definitions/{routine_definition_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -631,10 +699,10 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Remove Day Template Routine
-         * @description Detach a routine from a day template.
+         * Remove Day Template Routine Definition
+         * @description Detach a routine definition from a day template.
          */
-        delete: operations["remove_day_template_routine_day_templates__uuid__routines__routine_id__delete"];
+        delete: operations["remove_day_template_routine_definition_day_templates__uuid__routine_definitions__routine_definition_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -748,7 +816,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/routines/{uuid}": {
+    "/routine-definitions/{uuid}": {
         parameters: {
             query?: never;
             header?: never;
@@ -756,27 +824,27 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Routine
-         * @description Get a single routine by ID.
+         * Get Routine Definition
+         * @description Get a single routine definition by ID.
          */
-        get: operations["get_routine_routines__uuid__get"];
+        get: operations["get_routine_definition_routine_definitions__uuid__get"];
         /**
-         * Update Routine
-         * @description Update an existing routine.
+         * Update Routine Definition
+         * @description Update an existing routine definition.
          */
-        put: operations["update_routine_routines__uuid__put"];
+        put: operations["update_routine_definition_routine_definitions__uuid__put"];
         post?: never;
         /**
-         * Delete Routine
-         * @description Delete a routine.
+         * Delete Routine Definition
+         * @description Delete a routine definition.
          */
-        delete: operations["delete_routine_routines__uuid__delete"];
+        delete: operations["delete_routine_definition_routine_definitions__uuid__delete"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/routines/": {
+    "/routine-definitions/": {
         parameters: {
             query?: never;
             header?: never;
@@ -786,17 +854,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Search Routines
-         * @description Search routines with pagination and optional filters.
+         * Search Routine Definitions
+         * @description Search routine definitions with pagination and optional filters.
          */
-        post: operations["search_routines_routines__post"];
+        post: operations["search_routine_definitions_routine_definitions__post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/routines/create": {
+    "/routine-definitions/create": {
         parameters: {
             query?: never;
             header?: never;
@@ -806,17 +874,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Create Routine
-         * @description Create a new routine.
+         * Create Routine Definition
+         * @description Create a new routine definition.
          */
-        post: operations["create_routine_routines_create_post"];
+        post: operations["create_routine_definition_routine_definitions_create_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/routines/{uuid}/tasks": {
+    "/routine-definitions/{uuid}/tasks": {
         parameters: {
             query?: never;
             header?: never;
@@ -826,17 +894,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Add Routine Task
-         * @description Attach a task definition to a routine.
+         * Add Routine Definition Task
+         * @description Attach a task definition to a routine definition.
          */
-        post: operations["add_routine_task_routines__uuid__tasks_post"];
+        post: operations["add_routine_definition_task_routine_definitions__uuid__tasks_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/routines/{uuid}/tasks/{routine_task_id}": {
+    "/routine-definitions/{uuid}/tasks/{routine_definition_task_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -845,22 +913,22 @@ export interface paths {
         };
         get?: never;
         /**
-         * Update Routine Task
-         * @description Update an attached routine task (name/schedule).
+         * Update Routine Definition Task
+         * @description Update an attached routine definition task (name/schedule).
          */
-        put: operations["update_routine_task_routines__uuid__tasks__routine_task_id__put"];
+        put: operations["update_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__put"];
         post?: never;
         /**
-         * Remove Routine Task
-         * @description Detach a routine task from a routine by RoutineTask.id.
+         * Remove Routine Definition Task
+         * @description Detach a routine definition task from a routine definition by RoutineDefinitionTask.id.
          */
-        delete: operations["remove_routine_task_routines__uuid__tasks__routine_task_id__delete"];
+        delete: operations["remove_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/routines/{uuid}/actions": {
+    "/routine-definitions/{uuid}/actions": {
         parameters: {
             query?: never;
             header?: never;
@@ -870,10 +938,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Record Routine Action
-         * @description Record an action on all tasks in a routine for today.
+         * Record Routine Definition Action
+         * @description Record an action on all tasks in a routine definition for today.
          */
-        post: operations["record_routine_action_routines__uuid__actions_post"];
+        post: operations["record_routine_definition_action_routine_definitions__uuid__actions_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1299,15 +1367,39 @@ export interface components {
             password: string;
         };
         /**
+         * BrainDumpItemCreateSchema
+         * @description API schema for creating brain dump items.
+         */
+        BrainDumpItemCreateSchema: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Text */
+            text: string;
+        };
+        /**
          * BrainDumpItemSchema
-         * @description API schema for BrainDumpItem value object.
+         * @description API schema for BrainDump entity.
          */
         BrainDumpItemSchema: {
             /** Id */
             id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
             /** Text */
             text: string;
             status: components["schemas"]["BrainDumpItemStatus"];
+            type: components["schemas"]["BrainDumpItemType"];
             /** Created At */
             created_at?: string | null;
         };
@@ -1317,6 +1409,39 @@ export interface components {
          * @enum {string}
          */
         BrainDumpItemStatus: "ACTIVE" | "COMPLETE" | "PUNT";
+        /**
+         * BrainDumpItemType
+         * @description Type of a brain dump item.
+         * @enum {string}
+         */
+        BrainDumpItemType: "GENERAL" | "COMMAND";
+        /**
+         * BrainDumpItemUpdateSchema
+         * @description API schema for updating a brain dump item.
+         */
+        BrainDumpItemUpdateSchema: {
+            status?: components["schemas"]["BrainDumpItemStatus"] | null;
+            type?: components["schemas"]["BrainDumpItemType"] | null;
+        };
+        /** BrainDumpQuery */
+        BrainDumpQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Date */
+            date?: string | null;
+            status?: components["schemas"]["BrainDumpItemStatus"] | null;
+            type?: components["schemas"]["BrainDumpItemType"] | null;
+        };
         /**
          * CalendarCreateSchema
          * @description API schema for creating a Calendar entity.
@@ -1600,8 +1725,8 @@ export interface components {
             end_time?: string | null;
             /** Icon */
             icon?: string | null;
-            /** Routine Ids */
-            routine_ids?: string[];
+            /** Routine Definition Ids */
+            routine_definition_ids?: string[];
             /** Time Blocks */
             time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][];
             high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
@@ -1624,15 +1749,15 @@ export interface components {
             slug?: string | null;
         };
         /**
-         * DayTemplateRoutineCreateSchema
-         * @description API schema for attaching a routine to a day template.
+         * DayTemplateRoutineDefinitionCreateSchema
+         * @description API schema for attaching a routine definition to a day template.
          */
-        DayTemplateRoutineCreateSchema: {
+        DayTemplateRoutineDefinitionCreateSchema: {
             /**
-             * Routine Id
+             * Routine Definition Id
              * Format: uuid
              */
-            routine_id: string;
+            routine_definition_id: string;
         };
         /**
          * DayTemplateSchema
@@ -1649,8 +1774,8 @@ export interface components {
             end_time?: string | null;
             /** Icon */
             icon?: string | null;
-            /** Routine Ids */
-            routine_ids?: string[];
+            /** Routine Definition Ids */
+            routine_definition_ids?: string[];
             /** Time Blocks */
             time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][];
             high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
@@ -1717,8 +1842,8 @@ export interface components {
             end_time?: string | null;
             /** Icon */
             icon?: string | null;
-            /** Routine Ids */
-            routine_ids?: string[] | null;
+            /** Routine Definition Ids */
+            routine_definition_ids?: string[] | null;
             /** Time Blocks */
             time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][] | null;
             high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
@@ -1738,10 +1863,10 @@ export interface components {
             high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
         };
         /**
-         * EarlyAccessRequest
+         * EarlyAccessRequestSchema
          * @description Request body for early access opt-in.
          */
-        EarlyAccessRequest: {
+        EarlyAccessRequestSchema: {
             /**
              * Email
              * Format: email
@@ -1788,13 +1913,25 @@ export interface components {
          * @description Schema for notification usecase config (typed).
          */
         NotificationUseCaseConfigSchema: {
-            /**
-             * User Amendments
-             * @default []
-             */
-            user_amendments: string[];
+            /** User Amendments */
+            user_amendments?: string[];
             /** Rendered Prompt */
             rendered_prompt?: string | null;
+        };
+        /** PagedResponseSchema[BrainDumpItemSchema] */
+        PagedResponseSchema_BrainDumpItemSchema_: {
+            /** Items */
+            items: components["schemas"]["BrainDumpItemSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
         };
         /** PagedResponseSchema[CalendarEntrySeriesSchema] */
         PagedResponseSchema_CalendarEntrySeriesSchema_: {
@@ -1856,10 +1993,10 @@ export interface components {
             /** Has Previous */
             has_previous: boolean;
         };
-        /** PagedResponseSchema[RoutineSchema] */
-        PagedResponseSchema_RoutineSchema_: {
+        /** PagedResponseSchema[RoutineDefinitionSchema] */
+        PagedResponseSchema_RoutineDefinitionSchema_: {
             /** Items */
-            items: components["schemas"]["RoutineSchema"][];
+            items: components["schemas"]["RoutineDefinitionSchema"][];
             /** Total */
             total: number;
             /** Limit */
@@ -1971,6 +2108,20 @@ export interface components {
             /** Device Name */
             device_name?: string | null;
         };
+        /** QuerySchema[BrainDumpQuery] */
+        QuerySchema_BrainDumpQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["BrainDumpQuery"] | null;
+        };
         /** QuerySchema[CalendarEntrySeriesQuery] */
         QuerySchema_CalendarEntrySeriesQuery_: {
             /**
@@ -2027,8 +2178,8 @@ export interface components {
             offset: number;
             filters?: components["schemas"]["PushSubscriptionQuery"] | null;
         };
-        /** QuerySchema[RoutineQuery] */
-        QuerySchema_RoutineQuery_: {
+        /** QuerySchema[RoutineDefinitionQuery] */
+        QuerySchema_RoutineDefinitionQuery_: {
             /**
              * Limit
              * @default 50
@@ -2039,7 +2190,7 @@ export interface components {
              * @default 0
              */
             offset: number;
-            filters?: components["schemas"]["RoutineQuery"] | null;
+            filters?: components["schemas"]["RoutineDefinitionQuery"] | null;
         };
         /** QuerySchema[TaskDefinitionQuery] */
         QuerySchema_TaskDefinitionQuery_: {
@@ -2100,24 +2251,25 @@ export interface components {
          */
         ReminderStatus: "INCOMPLETE" | "COMPLETE" | "PUNT";
         /**
-         * RoutineCreateSchema
-         * @description API schema for creating a Routine entity.
+         * RoutineDefinitionCreateSchema
+         * @description API schema for creating a RoutineDefinition entity.
          */
-        RoutineCreateSchema: {
+        RoutineDefinitionCreateSchema: {
             /** Name */
             name: string;
             category: components["schemas"]["TaskCategory"];
-            routine_schedule: components["schemas"]["RecurrenceScheduleSchema"];
+            routine_definition_schedule: components["schemas"]["RecurrenceScheduleSchema"];
             /**
              * Description
              * @default
              */
             description: string;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
             /** Tasks */
-            tasks?: components["schemas"]["RoutineTaskSchema-Input"][];
+            tasks?: components["schemas"]["RoutineDefinitionTaskSchema-Input"][];
         };
-        /** RoutineQuery */
-        RoutineQuery: {
+        /** RoutineDefinitionQuery */
+        RoutineDefinitionQuery: {
             /** Limit */
             limit?: number | null;
             /** Offset */
@@ -2132,10 +2284,10 @@ export interface components {
             created_after?: string | null;
         };
         /**
-         * RoutineSchema
-         * @description API schema for Routine entity.
+         * RoutineDefinitionSchema
+         * @description API schema for RoutineDefinition entity.
          */
-        RoutineSchema: {
+        RoutineDefinitionSchema: {
             /** Id */
             id?: string | null;
             /**
@@ -2146,20 +2298,21 @@ export interface components {
             /** Name */
             name: string;
             category: components["schemas"]["TaskCategory"];
-            routine_schedule: components["schemas"]["RecurrenceScheduleSchema"];
+            routine_definition_schedule: components["schemas"]["RecurrenceScheduleSchema"];
             /**
              * Description
              * @default
              */
             description: string;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
             /** Tasks */
-            tasks?: components["schemas"]["RoutineTaskSchema-Output"][];
+            tasks?: components["schemas"]["RoutineDefinitionTaskSchema-Output"][];
         };
         /**
-         * RoutineTaskCreateSchema
-         * @description API schema for attaching a RoutineTask.
+         * RoutineDefinitionTaskCreateSchema
+         * @description API schema for attaching a RoutineDefinitionTask.
          */
-        RoutineTaskCreateSchema: {
+        RoutineDefinitionTaskCreateSchema: {
             /**
              * Task Definition Id
              * Format: uuid
@@ -2169,12 +2322,13 @@ export interface components {
             name?: string | null;
             schedule?: components["schemas"]["TaskScheduleSchema"] | null;
             task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
         };
         /**
-         * RoutineTaskSchema
-         * @description API schema for RoutineTask value object.
+         * RoutineDefinitionTaskSchema
+         * @description API schema for RoutineDefinitionTask value object.
          */
-        "RoutineTaskSchema-Input": {
+        "RoutineDefinitionTaskSchema-Input": {
             /** Id */
             id?: string | null;
             /**
@@ -2186,12 +2340,13 @@ export interface components {
             name?: string | null;
             schedule?: components["schemas"]["TaskScheduleSchema"] | null;
             task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
         };
         /**
-         * RoutineTaskSchema
-         * @description API schema for RoutineTask value object.
+         * RoutineDefinitionTaskSchema
+         * @description API schema for RoutineDefinitionTask value object.
          */
-        "RoutineTaskSchema-Output": {
+        "RoutineDefinitionTaskSchema-Output": {
             /** Id */
             id?: string | null;
             /**
@@ -2203,36 +2358,39 @@ export interface components {
             name?: string | null;
             schedule?: components["schemas"]["TaskScheduleSchema"] | null;
             task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
         };
         /**
-         * RoutineTaskUpdateSchema
-         * @description API schema for updating an attached RoutineTask.
+         * RoutineDefinitionTaskUpdateSchema
+         * @description API schema for updating an attached RoutineDefinitionTask.
          */
-        RoutineTaskUpdateSchema: {
+        RoutineDefinitionTaskUpdateSchema: {
             /** Name */
             name?: string | null;
             schedule?: components["schemas"]["TaskScheduleSchema"] | null;
             task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
         };
         /**
-         * RoutineUpdateSchema
-         * @description API schema for Routine update requests.
+         * RoutineDefinitionUpdateSchema
+         * @description API schema for RoutineDefinition update requests.
          */
-        RoutineUpdateSchema: {
+        RoutineDefinitionUpdateSchema: {
             /** Name */
             name?: string | null;
             category?: components["schemas"]["TaskCategory"] | null;
-            routine_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
+            routine_definition_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
             /** Description */
             description?: string | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
             /** Tasks */
-            tasks?: components["schemas"]["RoutineTaskSchema-Input"][] | null;
+            tasks?: components["schemas"]["RoutineDefinitionTaskSchema-Input"][] | null;
         };
         /**
-         * StatusResponse
+         * StatusResponseSchema
          * @description Simple OK response.
          */
-        StatusResponse: {
+        StatusResponseSchema: {
             /**
              * Ok
              * @default true
@@ -2368,8 +2526,8 @@ export interface components {
             /** Completed At */
             completed_at?: string | null;
             schedule?: components["schemas"]["TaskScheduleSchema"] | null;
-            /** Routine Id */
-            routine_id?: string | null;
+            /** Routine Definition Id */
+            routine_definition_id?: string | null;
             /** Tags */
             tags?: components["schemas"]["TaskTag"][];
             /** Actions */
@@ -2458,6 +2616,20 @@ export interface components {
          * @enum {string}
          */
         TimeBlockType: "WORK" | "BREAK" | "MEAL" | "EXERCISE" | "COMMUTE" | "MEETING" | "FOCUS" | "ADMIN" | "CREATIVE" | "LEARNING" | "SOCIAL" | "PERSONAL" | "ROUTINE" | "SLEEP" | "OTHER";
+        /**
+         * TimeWindowSchema
+         * @description API schema for TimeWindow value object.
+         */
+        TimeWindowSchema: {
+            /** Available Time */
+            available_time?: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            /** End Time */
+            end_time?: string | null;
+            /** Cutoff Time */
+            cutoff_time?: string | null;
+        };
         /**
          * TimingType
          * @enum {string}
@@ -2848,7 +3020,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EarlyAccessRequest"];
+                "application/json": components["schemas"]["EarlyAccessRequestSchema"];
             };
         };
         responses: {
@@ -2858,7 +3030,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["StatusResponse"];
+                    "application/json": components["schemas"]["StatusResponseSchema"];
                 };
             };
             /** @description Validation Error */
@@ -3060,7 +3232,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
+                    "application/json": components["schemas"]["ReminderSchema"];
                 };
             };
             /** @description Validation Error */
@@ -3091,7 +3263,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
+                    "application/json": components["schemas"]["ReminderSchema"];
                 };
             };
             /** @description Validation Error */
@@ -3124,7 +3296,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
+                    "application/json": components["schemas"]["ReminderSchema"];
                 };
             };
             /** @description Validation Error */
@@ -3155,7 +3327,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
+                    "application/json": components["schemas"]["BrainDumpItemSchema"];
                 };
             };
             /** @description Validation Error */
@@ -3186,7 +3358,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
+                    "application/json": components["schemas"]["BrainDumpItemSchema"];
                 };
             };
             /** @description Validation Error */
@@ -3219,7 +3391,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
+                    "application/json": components["schemas"]["BrainDumpItemSchema"];
                 };
             };
             /** @description Validation Error */
@@ -3233,10 +3405,10 @@ export interface operations {
             };
         };
     };
-    add_routine_to_today_me_today_routines_post: {
+    add_routine_definition_to_today_me_today_routine_definitions_post: {
         parameters: {
             query: {
-                routine_id: string;
+                routine_definition_id: string;
             };
             header?: never;
             path?: never;
@@ -3250,7 +3422,168 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DayContextSchema"];
+                    "application/json": components["schemas"]["TaskSchema"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_brain_dump_item_brain_dump__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrainDumpItemSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_brain_dump_item_brain_dump__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_brain_dump_item_brain_dump__uuid__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BrainDumpItemUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrainDumpItemSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_brain_dump_items_brain_dump__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_BrainDumpQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_BrainDumpItemSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_brain_dump_item_brain_dump_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BrainDumpItemCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrainDumpItemSchema"];
                 };
             };
             /** @description Validation Error */
@@ -3834,7 +4167,7 @@ export interface operations {
             };
         };
     };
-    add_day_template_routine_day_templates__uuid__routines_post: {
+    add_day_template_routine_definition_day_templates__uuid__routine_definitions_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -3845,7 +4178,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["DayTemplateRoutineCreateSchema"];
+                "application/json": components["schemas"]["DayTemplateRoutineDefinitionCreateSchema"];
             };
         };
         responses: {
@@ -3869,13 +4202,13 @@ export interface operations {
             };
         };
     };
-    remove_day_template_routine_day_templates__uuid__routines__routine_id__delete: {
+    remove_day_template_routine_definition_day_templates__uuid__routine_definitions__routine_definition_id__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 uuid: string;
-                routine_id: string;
+                routine_definition_id: string;
             };
             cookie?: never;
         };
@@ -4130,7 +4463,7 @@ export interface operations {
             };
         };
     };
-    get_routine_routines__uuid__get: {
+    get_routine_definition_routine_definitions__uuid__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -4147,7 +4480,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RoutineSchema"];
+                    "application/json": components["schemas"]["RoutineDefinitionSchema"];
                 };
             };
             /** @description Validation Error */
@@ -4161,7 +4494,7 @@ export interface operations {
             };
         };
     };
-    update_routine_routines__uuid__put: {
+    update_routine_definition_routine_definitions__uuid__put: {
         parameters: {
             query?: never;
             header?: never;
@@ -4172,7 +4505,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RoutineUpdateSchema"];
+                "application/json": components["schemas"]["RoutineDefinitionUpdateSchema"];
             };
         };
         responses: {
@@ -4182,7 +4515,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RoutineSchema"];
+                    "application/json": components["schemas"]["RoutineDefinitionSchema"];
                 };
             };
             /** @description Validation Error */
@@ -4196,7 +4529,7 @@ export interface operations {
             };
         };
     };
-    delete_routine_routines__uuid__delete: {
+    delete_routine_definition_routine_definitions__uuid__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -4225,7 +4558,7 @@ export interface operations {
             };
         };
     };
-    search_routines_routines__post: {
+    search_routine_definitions_routine_definitions__post: {
         parameters: {
             query?: never;
             header?: never;
@@ -4234,7 +4567,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["QuerySchema_RoutineQuery_"];
+                "application/json": components["schemas"]["QuerySchema_RoutineDefinitionQuery_"];
             };
         };
         responses: {
@@ -4244,7 +4577,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PagedResponseSchema_RoutineSchema_"];
+                    "application/json": components["schemas"]["PagedResponseSchema_RoutineDefinitionSchema_"];
                 };
             };
             /** @description Validation Error */
@@ -4258,7 +4591,7 @@ export interface operations {
             };
         };
     };
-    create_routine_routines_create_post: {
+    create_routine_definition_routine_definitions_create_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -4267,7 +4600,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RoutineCreateSchema"];
+                "application/json": components["schemas"]["RoutineDefinitionCreateSchema"];
             };
         };
         responses: {
@@ -4277,7 +4610,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RoutineSchema"];
+                    "application/json": components["schemas"]["RoutineDefinitionSchema"];
                 };
             };
             /** @description Validation Error */
@@ -4291,7 +4624,7 @@ export interface operations {
             };
         };
     };
-    add_routine_task_routines__uuid__tasks_post: {
+    add_routine_definition_task_routine_definitions__uuid__tasks_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -4302,7 +4635,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RoutineTaskCreateSchema"];
+                "application/json": components["schemas"]["RoutineDefinitionTaskCreateSchema"];
             };
         };
         responses: {
@@ -4312,7 +4645,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RoutineSchema"];
+                    "application/json": components["schemas"]["RoutineDefinitionSchema"];
                 };
             };
             /** @description Validation Error */
@@ -4326,19 +4659,19 @@ export interface operations {
             };
         };
     };
-    update_routine_task_routines__uuid__tasks__routine_task_id__put: {
+    update_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__put: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 uuid: string;
-                routine_task_id: string;
+                routine_definition_task_id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RoutineTaskUpdateSchema"];
+                "application/json": components["schemas"]["RoutineDefinitionTaskUpdateSchema"];
             };
         };
         responses: {
@@ -4348,7 +4681,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RoutineSchema"];
+                    "application/json": components["schemas"]["RoutineDefinitionSchema"];
                 };
             };
             /** @description Validation Error */
@@ -4362,13 +4695,13 @@ export interface operations {
             };
         };
     };
-    remove_routine_task_routines__uuid__tasks__routine_task_id__delete: {
+    remove_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 uuid: string;
-                routine_task_id: string;
+                routine_definition_task_id: string;
             };
             cookie?: never;
         };
@@ -4380,7 +4713,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RoutineSchema"];
+                    "application/json": components["schemas"]["RoutineDefinitionSchema"];
                 };
             };
             /** @description Validation Error */
@@ -4394,7 +4727,7 @@ export interface operations {
             };
         };
     };
-    record_routine_action_routines__uuid__actions_post: {
+    record_routine_definition_action_routine_definitions__uuid__actions_post: {
         parameters: {
             query?: never;
             header?: never;

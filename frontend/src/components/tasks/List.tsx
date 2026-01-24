@@ -125,7 +125,9 @@ const TaskItem: Component<{ task: Task }> = (props) => {
               "text-orange-700 italic": props.task.status === "PUNT",
             }}
           >
-            {props.task.name.replace("Routine: ", "")}
+            {props.task.name
+              .replace("ROUTINE DEFINITION: ", "")
+              .replace("Routine Definition: ", "")}
           </span>
         </div>
 

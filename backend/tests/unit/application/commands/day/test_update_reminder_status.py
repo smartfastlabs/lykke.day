@@ -9,7 +9,7 @@ from lykke.application.commands.day import (
     UpdateReminderStatusCommand,
     UpdateReminderStatusHandler,
 )
-from lykke.core.exceptions import DomainError, NotFoundError
+from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
 from lykke.domain.events.day_events import ReminderStatusChangedEvent
@@ -30,7 +30,7 @@ async def test_update_reminder_status_updates_status():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -55,10 +55,12 @@ async def test_update_reminder_status_updates_status():
     )
 
     # Assert
-    updated_reminder = next(r for r in result.reminders if r.id == reminder.id)
-    assert updated_reminder.status == value_objects.ReminderStatus.COMPLETE
+    assert result.id == reminder.id
+    assert result.status == value_objects.ReminderStatus.COMPLETE
     assert len(uow_factory.uow.added) == 1
-    assert uow_factory.uow.added[0] == result
+    assert uow_factory.uow.added[0] == day
+    updated_reminder = next(r for r in day.reminders if r.id == reminder.id)
+    assert updated_reminder.status == value_objects.ReminderStatus.COMPLETE
 
 
 @pytest.mark.asyncio
@@ -70,7 +72,7 @@ async def test_update_reminder_status_emits_domain_event():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -95,7 +97,7 @@ async def test_update_reminder_status_emits_domain_event():
     )
 
     # Assert
-    events = result.collect_events()
+    events = day.collect_events()
     assert len(events) == 1
     assert isinstance(events[0], ReminderStatusChangedEvent)
     assert events[0].reminder_id == reminder.id
@@ -114,7 +116,7 @@ async def test_update_reminder_status_raises_error_if_reminder_not_found():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -147,7 +149,7 @@ async def test_update_reminder_status_no_change_does_not_add_to_uow():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -178,9 +180,9 @@ async def test_update_reminder_status_no_change_does_not_add_to_uow():
 
     # Assert - entity should not be added to UoW because status didn't change
     assert len(uow_factory.uow.added) == 0
-    assert result.reminders[0].status == value_objects.ReminderStatus.COMPLETE
+    assert result.status == value_objects.ReminderStatus.COMPLETE
     # No events should be emitted
-    events = result.collect_events()
+    events = day.collect_events()
     assert len(events) == 0
 
 
@@ -193,7 +195,7 @@ async def test_update_reminder_status_all_status_transitions():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -214,10 +216,8 @@ async def test_update_reminder_status_all_status_transitions():
             status=value_objects.ReminderStatus.COMPLETE,
         )
     )
-    assert result.reminders[0].status == value_objects.ReminderStatus.COMPLETE
-
-    # Update the day in repo for next test
-    day_repo._day = result
+    assert result.status == value_objects.ReminderStatus.COMPLETE
+    day_repo._day = uow_factory.uow.added[-1]
 
     # COMPLETE -> PUNT
     result = await handler.handle(
@@ -227,10 +227,10 @@ async def test_update_reminder_status_all_status_transitions():
             status=value_objects.ReminderStatus.PUNT,
         )
     )
-    assert result.reminders[0].status == value_objects.ReminderStatus.PUNT
+    assert result.status == value_objects.ReminderStatus.PUNT
 
     # Update the day in repo for next test
-    day_repo._day = result
+    day_repo._day = uow_factory.uow.added[-1]
 
     # PUNT -> INCOMPLETE
     result = await handler.handle(
@@ -240,4 +240,4 @@ async def test_update_reminder_status_all_status_transitions():
             status=value_objects.ReminderStatus.INCOMPLETE,
         )
     )
-    assert result.reminders[0].status == value_objects.ReminderStatus.INCOMPLETE
+    assert result.status == value_objects.ReminderStatus.INCOMPLETE

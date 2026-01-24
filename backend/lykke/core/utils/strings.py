@@ -52,3 +52,15 @@ def slugify(text: str) -> str:
     text = text.strip("-")
 
     return text
+
+
+_ENTITY_TYPE_OVERRIDES: dict[str, str] = {
+    "RoutineDefinitionEntity": "routine_definition",
+}
+
+
+def entity_type_from_class_name(class_name: str) -> str:
+    """Convert an entity class name into the audit log entity_type."""
+    if class_name in _ENTITY_TYPE_OVERRIDES:
+        return _ENTITY_TYPE_OVERRIDES[class_name]
+    return class_name.replace("Entity", "").lower()

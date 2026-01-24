@@ -6,16 +6,16 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 
 from lykke.application.commands.day_template import (
-    AddDayTemplateRoutineCommand,
-    AddDayTemplateRoutineHandler,
+    AddDayTemplateRoutineDefinitionCommand,
+    AddDayTemplateRoutineDefinitionHandler,
     AddDayTemplateTimeBlockCommand,
     AddDayTemplateTimeBlockHandler,
     CreateDayTemplateCommand,
     CreateDayTemplateHandler,
     DeleteDayTemplateCommand,
     DeleteDayTemplateHandler,
-    RemoveDayTemplateRoutineCommand,
-    RemoveDayTemplateRoutineHandler,
+    RemoveDayTemplateRoutineDefinitionCommand,
+    RemoveDayTemplateRoutineDefinitionHandler,
     RemoveDayTemplateTimeBlockCommand,
     RemoveDayTemplateTimeBlockHandler,
     UpdateDayTemplateCommand,
@@ -33,7 +33,7 @@ from lykke.domain.entities import UserEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.presentation.api.schemas import (
     DayTemplateCreateSchema,
-    DayTemplateRoutineCreateSchema,
+    DayTemplateRoutineDefinitionCreateSchema,
     DayTemplateSchema,
     DayTemplateTimeBlockCreateSchema,
     DayTemplateUpdateSchema,
@@ -106,7 +106,7 @@ async def create_day_template(
         start_time=day_template_data.start_time,
         end_time=day_template_data.end_time,
         icon=day_template_data.icon,
-        routine_ids=day_template_data.routine_ids,
+        routine_definition_ids=day_template_data.routine_definition_ids,
         time_blocks=time_blocks,
         high_level_plan=(
             value_objects.HighLevelPlan(
@@ -153,7 +153,7 @@ async def update_day_template(
         start_time=update_data.start_time,
         end_time=update_data.end_time,
         icon=update_data.icon,
-        routine_ids=update_data.routine_ids,
+        routine_definition_ids=update_data.routine_definition_ids,
         time_blocks=time_blocks,
         high_level_plan=(
             value_objects.HighLevelPlan(
@@ -184,42 +184,46 @@ async def delete_day_template(
 
 
 @router.post(
-    "/{uuid}/routines",
+    "/{uuid}/routine-definitions",
     response_model=DayTemplateSchema,
     status_code=status.HTTP_201_CREATED,
 )
-async def add_day_template_routine(
+async def add_day_template_routine_definition(
     uuid: UUID,
-    routine_data: DayTemplateRoutineCreateSchema,
+    routine_data: DayTemplateRoutineDefinitionCreateSchema,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> DayTemplateSchema:
-    """Attach a routine to a day template."""
-    add_day_template_routine_handler = command_factory.create(
-        AddDayTemplateRoutineHandler
+    """Attach a routine definition to a day template."""
+    add_day_template_routine_definition_handler = command_factory.create(
+        AddDayTemplateRoutineDefinitionHandler
     )
-    updated = await add_day_template_routine_handler.handle(
-        AddDayTemplateRoutineCommand(
-            day_template_id=uuid, routine_id=routine_data.routine_id
+    updated = await add_day_template_routine_definition_handler.handle(
+        AddDayTemplateRoutineDefinitionCommand(
+            day_template_id=uuid,
+            routine_definition_id=routine_data.routine_definition_id,
         )
     )
     return map_day_template_to_schema(updated)
 
 
 @router.delete(
-    "/{uuid}/routines/{routine_id}",
+    "/{uuid}/routine-definitions/{routine_definition_id}",
     response_model=DayTemplateSchema,
 )
-async def remove_day_template_routine(
+async def remove_day_template_routine_definition(
     uuid: UUID,
-    routine_id: UUID,
+    routine_definition_id: UUID,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> DayTemplateSchema:
-    """Detach a routine from a day template."""
-    remove_day_template_routine_handler = command_factory.create(
-        RemoveDayTemplateRoutineHandler
+    """Detach a routine definition from a day template."""
+    remove_day_template_routine_definition_handler = command_factory.create(
+        RemoveDayTemplateRoutineDefinitionHandler
     )
-    updated = await remove_day_template_routine_handler.handle(
-        RemoveDayTemplateRoutineCommand(day_template_id=uuid, routine_id=routine_id)
+    updated = await remove_day_template_routine_definition_handler.handle(
+        RemoveDayTemplateRoutineDefinitionCommand(
+            day_template_id=uuid,
+            routine_definition_id=routine_definition_id,
+        )
     )
     return map_day_template_to_schema(updated)
 

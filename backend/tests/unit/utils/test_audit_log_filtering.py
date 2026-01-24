@@ -34,12 +34,10 @@ def _make_audit_log(
 
 
 def _get_entity_type_name(entity_class_name: str) -> str:
-    """Get entity type name using the same logic as UnitOfWork.
+    """Get entity type name using the same logic as UnitOfWork."""
+    from lykke.core.utils.strings import entity_type_from_class_name
 
-    This mirrors the logic in infrastructure/unit_of_work.py:
-        entity_type = type(entity).__name__.replace("Entity", "").lower()
-    """
-    return entity_class_name.replace("Entity", "").lower()
+    return entity_type_from_class_name(entity_class_name)
 
 
 class TestEntityTypeNamingConsistency:
@@ -82,11 +80,12 @@ class TestEntityTypeNamingConsistency:
             f"DayEntity should generate 'day', got '{entity_type}'"
         )
 
-    def test_routine_entity_type_matches_filter(self):
-        """Test RoutineEntity generates 'routine' which matches the filter."""
-        entity_type = _get_entity_type_name("RoutineEntity")
-        assert entity_type == "routine", (
-            f"RoutineEntity should generate 'routine', got '{entity_type}'"
+    def test_routine_definition_entity_type_matches_filter(self):
+        """Test RoutineDefinitionEntity generates 'routine_definition' which matches the filter."""
+        entity_type = _get_entity_type_name("RoutineDefinitionEntity")
+        assert entity_type == "routine_definition", (
+            "RoutineDefinitionEntity should generate "
+            f"'routine_definition', got '{entity_type}'"
         )
 
 
@@ -271,14 +270,14 @@ class TestIsAuditLogForTodayDayFiltering:
 
 
 class TestIsAuditLogForTodayRoutineFiltering:
-    """Tests for routine entity filtering."""
+    """Tests for routine definition entity filtering."""
 
     @pytest.mark.asyncio
     async def test_routine_always_returns_true(self):
-        """Test routine entities are always considered relevant."""
+        """Test routine definition entities are always considered relevant."""
         today = dt_date(2025, 1, 15)
         audit_log = _make_audit_log(
-            entity_type="routine",
+            entity_type="routine_definition",
             entity_data={"name": "Morning Routine"},
         )
 

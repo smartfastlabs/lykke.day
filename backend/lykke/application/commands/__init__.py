@@ -45,8 +45,8 @@ from .notifications import (
 from .task import (
     CreateAdhocTaskCommand,
     CreateAdhocTaskHandler,
-    RecordRoutineActionCommand,
-    RecordRoutineActionHandler,
+    RecordRoutineDefinitionActionCommand,
+    RecordRoutineDefinitionActionHandler,
     RecordTaskActionCommand,
     RecordTaskActionHandler,
 )
@@ -65,8 +65,8 @@ __all__ = [
     "HandleGoogleLoginCallbackCommand",
     "HandleGoogleLoginCallbackHandler",
     "HandleGoogleLoginCallbackResult",
-    "RecordRoutineActionCommand",
-    "RecordRoutineActionHandler",
+    "RecordRoutineDefinitionActionCommand",
+    "RecordRoutineDefinitionActionHandler",
     "RecordTaskActionCommand",
     "RecordTaskActionHandler",
     "RescheduleDayCommand",

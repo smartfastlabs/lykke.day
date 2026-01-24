@@ -41,14 +41,14 @@ from .query import (
     PagedQueryResponse,
     PushNotificationQuery,
     PushSubscriptionQuery,
-    RoutineQuery,
+    RoutineDefinitionQuery,
     TaskDefinitionQuery,
     TaskQuery,
     TimeBlockDefinitionQuery,
     UseCaseConfigQuery,
     UserQuery,
 )
-from .routine import DayOfWeek, RecurrenceSchedule, RoutineTask, TimeWindow
+from .routine import DayOfWeek, RecurrenceSchedule, RoutineDefinitionTask, TimeWindow
 from .sync import SyncSubscription
 from .task import (
     EventCategory,
@@ -76,7 +76,7 @@ from .update import (
     DayTemplateUpdateObject,
     DayUpdateObject,
     PushSubscriptionUpdateObject,
-    RoutineUpdateObject,
+    RoutineDefinitionUpdateObject,
     TaskDefinitionUpdateObject,
     TimeBlockDefinitionUpdateObject,
     UserUpdateObject,
@@ -142,9 +142,9 @@ __all__ = [
     "RecurrenceSchedule",
     "Reminder",
     "ReminderStatus",
-    "RoutineQuery",
-    "RoutineTask",
-    "RoutineUpdateObject",
+    "RoutineDefinitionQuery",
+    "RoutineDefinitionTask",
+    "RoutineDefinitionUpdateObject",
     "TimeWindow",
     "SyncSubscription",
     "TaskCategory",

@@ -1,4 +1,4 @@
-"""Integration tests for RoutineRepository."""
+"""Integration tests for RoutineDefinitionRepository."""
 
 from datetime import time
 from uuid import uuid4
@@ -6,129 +6,146 @@ from uuid import uuid4
 import pytest
 
 from lykke.core.exceptions import NotFoundError
-from lykke.domain.entities import RoutineEntity
-from lykke.domain.value_objects.routine import RecurrenceSchedule, RoutineTask
+from lykke.domain.entities import RoutineDefinitionEntity
+from lykke.domain.value_objects.routine import (
+    RecurrenceSchedule,
+    RoutineDefinitionTask,
+)
 from lykke.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
     TaskSchedule,
     TimingType,
 )
-from lykke.infrastructure.repositories import RoutineRepository
+from lykke.infrastructure.repositories import RoutineDefinitionRepository
 
 
 @pytest.mark.asyncio
-async def test_get(routine_repo, test_user):
+async def test_get(routine_definition_repo, test_user):
     """Test getting a routine by ID."""
-    routine = RoutineEntity(
+    routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=test_user.id,
-        name="Test Routine",
+        name="Test Routine Definition",
         category=TaskCategory.HOUSE,
         description="Test description",
-        routine_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
+        routine_definition_schedule=RecurrenceSchedule(
+            frequency=TaskFrequency.DAILY
+        ),
         tasks=[],
     )
-    await routine_repo.put(routine)
+    await routine_definition_repo.put(routine_definition)
 
-    result = await routine_repo.get(routine.id)
+    result = await routine_definition_repo.get(routine_definition.id)
 
-    assert result.id == routine.id
-    assert result.name == "Test Routine"
+    assert result.id == routine_definition.id
+    assert result.name == "Test Routine Definition"
 
 
 @pytest.mark.asyncio
-async def test_get_not_found(routine_repo):
+async def test_get_not_found(routine_definition_repo):
     """Test getting a non-existent routine raises NotFoundError."""
     with pytest.raises(NotFoundError):
-        await routine_repo.get(uuid4())
+        await routine_definition_repo.get(uuid4())
 
 
 @pytest.mark.asyncio
-async def test_put(routine_repo, test_user):
+async def test_put(routine_definition_repo, test_user):
     """Test creating a new routine."""
-    routine = RoutineEntity(
+    routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=test_user.id,
-        name="New Routine",
+        name="New Routine Definition",
         category=TaskCategory.HOUSE,
         description="New description",
-        routine_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
+        routine_definition_schedule=RecurrenceSchedule(
+            frequency=TaskFrequency.DAILY
+        ),
         tasks=[],
     )
 
-    result = await routine_repo.put(routine)
+    result = await routine_definition_repo.put(routine_definition)
 
-    assert result.name == "New Routine"
+    assert result.name == "New Routine Definition"
     assert result.category == TaskCategory.HOUSE
 
 
 @pytest.mark.asyncio
-async def test_all(routine_repo, test_user):
+async def test_all(routine_definition_repo, test_user):
     """Test getting all routines."""
-    routine1 = RoutineEntity(
+    routine1 = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=test_user.id,
-        name="Routine 1",
+        name="Routine Definition 1",
         category=TaskCategory.HOUSE,
         description="Description 1",
-        routine_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
+        routine_definition_schedule=RecurrenceSchedule(
+            frequency=TaskFrequency.DAILY
+        ),
         tasks=[],
     )
-    routine2 = RoutineEntity(
+    routine2 = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=test_user.id,
-        name="Routine 2",
+        name="Routine Definition 2",
         category=TaskCategory.HOUSE,
         description="Description 2",
-        routine_schedule=RecurrenceSchedule(frequency=TaskFrequency.WEEKLY),
+        routine_definition_schedule=RecurrenceSchedule(
+            frequency=TaskFrequency.WEEKLY
+        ),
         tasks=[],
     )
-    await routine_repo.put(routine1)
-    await routine_repo.put(routine2)
+    await routine_definition_repo.put(routine1)
+    await routine_definition_repo.put(routine2)
 
-    all_routines = await routine_repo.all()
+    all_routine_definitions = await routine_definition_repo.all()
 
-    routine_ids = [r.id for r in all_routines]
-    assert routine1.id in routine_ids
-    assert routine2.id in routine_ids
+    routine_definition_ids = [r.id for r in all_routine_definitions]
+    assert routine1.id in routine_definition_ids
+    assert routine2.id in routine_definition_ids
 
 
 @pytest.mark.asyncio
-async def test_user_isolation(routine_repo, test_user, create_test_user):
+async def test_user_isolation(
+    routine_definition_repo, test_user, create_test_user
+):
     """Test that different users' routines are properly isolated."""
-    routine = RoutineEntity(
+    routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=test_user.id,
-        name="User1 Routine",
+        name="User1 Routine Definition",
         category=TaskCategory.HOUSE,
         description="Description",
-        routine_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
+        routine_definition_schedule=RecurrenceSchedule(
+            frequency=TaskFrequency.DAILY
+        ),
         tasks=[],
     )
-    await routine_repo.put(routine)
+    await routine_definition_repo.put(routine_definition)
 
     # Create another user
     user2 = await create_test_user()
-    routine_repo2 = RoutineRepository(user_id=user2.id)
+    routine_repo2 = RoutineDefinitionRepository(user_id=user2.id)
 
     # User2 should not see user1's routine
     with pytest.raises(NotFoundError):
-        await routine_repo2.get(routine.id)
+        await routine_repo2.get(routine_definition.id)
 
 
 @pytest.mark.asyncio
-async def test_put_with_task_schedule(routine_repo, test_user):
+async def test_put_with_task_schedule(routine_definition_repo, test_user):
     """Ensure tasks with schedules are serialized/deserialized."""
-    routine = RoutineEntity(
+    routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=test_user.id,
         name="With Task Schedule",
         category=TaskCategory.HOUSE,
         description="Has scheduled task",
-        routine_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
+        routine_definition_schedule=RecurrenceSchedule(
+            frequency=TaskFrequency.DAILY
+        ),
         tasks=[
-            RoutineTask(
+            RoutineDefinitionTask(
                 task_definition_id=uuid4(),
                 name="Test Task",
                 schedule=TaskSchedule(
@@ -140,8 +157,8 @@ async def test_put_with_task_schedule(routine_repo, test_user):
         ],
     )
 
-    await routine_repo.put(routine)
-    result = await routine_repo.get(routine.id)
+    await routine_definition_repo.put(routine_definition)
+    result = await routine_definition_repo.get(routine_definition.id)
 
     assert result.tasks
     first = result.tasks[0]

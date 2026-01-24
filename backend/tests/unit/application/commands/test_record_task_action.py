@@ -42,7 +42,7 @@ async def test_record_task_action_adds_task_and_day_to_uow():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -121,7 +121,7 @@ async def test_record_task_action_raises_domain_events():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -196,7 +196,7 @@ async def test_record_task_action_raises_if_day_missing():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -255,7 +255,7 @@ async def test_record_task_action_punt_updates_status():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 

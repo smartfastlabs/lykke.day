@@ -20,7 +20,11 @@ const settingsItems: LinkItem[] = [
     icon: faListCheck,
     url: "/me/settings/task-definitions",
   },
-  { label: "Routines", icon: faRepeat, url: "/me/settings/routines" },
+  {
+    label: "Routine Definitions",
+    icon: faRepeat,
+    url: "/me/settings/routine-definitions",
+  },
   { label: "Time Blocks", icon: faClock, url: "/me/settings/time-blocks" },
   { label: "Notifications", icon: faBell, url: "/me/settings/notifications" },
   { label: "LLM", icon: faBrain, url: "/me/settings/llm" },

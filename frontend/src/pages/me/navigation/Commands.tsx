@@ -27,7 +27,7 @@ const CommandsPage: Component = () => {
   const handleRescheduleToday = async () => {
     if (
       !confirm(
-        "This will delete all tasks and audit logs for today and create fresh tasks from your routines. Continue?"
+        "This will delete all tasks and audit logs for today and create fresh tasks from your routine definitions. Continue?"
       )
     ) {
       return;
@@ -48,7 +48,7 @@ const CommandsPage: Component = () => {
 
       setMessage({
         type: "success",
-        text: "Successfully rescheduled today! All tasks have been recreated from your routines.",
+        text: "Successfully rescheduled today! All tasks have been recreated from your routine definitions.",
       });
 
       // Reload the page after a short delay to show the updated tasks

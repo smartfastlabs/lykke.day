@@ -1,4 +1,4 @@
-"""Command to record an action on all tasks in a routine for today."""
+"""Command to record an action on all tasks in a routine definition for today."""
 
 from dataclasses import dataclass
 from datetime import date
@@ -10,24 +10,26 @@ from lykke.domain.entities import DayEntity, TaskEntity
 
 
 @dataclass(frozen=True)
-class RecordRoutineActionCommand(Command):
-    """Command to record an action on all tasks in a routine."""
+class RecordRoutineDefinitionActionCommand(Command):
+    """Command to record an action on all tasks in a routine definition."""
 
-    routine_id: UUID
+    routine_definition_id: UUID
     action: value_objects.Action
     date: date
 
 
-class RecordRoutineActionHandler(
-    BaseCommandHandler[RecordRoutineActionCommand, list[TaskEntity]]
+class RecordRoutineDefinitionActionHandler(
+    BaseCommandHandler[RecordRoutineDefinitionActionCommand, list[TaskEntity]]
 ):
-    """Records an action on all tasks in a routine for today."""
+    """Records an action on all tasks in a routine definition for today."""
 
-    async def handle(self, command: RecordRoutineActionCommand) -> list[TaskEntity]:
-        """Record an action on all tasks in a routine for today.
+    async def handle(
+        self, command: RecordRoutineDefinitionActionCommand
+    ) -> list[TaskEntity]:
+        """Record an action on all tasks in a routine definition for today.
 
         Args:
-            command: The command containing the routine ID, action, and date
+            command: The command containing the routine definition ID, action, and date
 
         Returns:
             List of updated Task entities
@@ -40,11 +42,11 @@ class RecordRoutineActionHandler(
             day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)
             day = await uow.day_ro_repo.get(day_id)
 
-            # Find all tasks for this routine on today's date
+            # Find all tasks for this routine definition on today's date
             tasks = await uow.task_ro_repo.search(
                 value_objects.TaskQuery(
                     date=command.date,
-                    routine_ids=[command.routine_id],
+                    routine_definition_ids=[command.routine_definition_id],
                 )
             )
 

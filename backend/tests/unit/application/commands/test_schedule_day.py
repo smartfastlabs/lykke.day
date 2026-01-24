@@ -37,7 +37,7 @@ async def test_schedule_day_creates_day_and_tasks():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -122,7 +122,7 @@ async def test_schedule_day_returns_existing_day_without_creating():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -180,7 +180,7 @@ async def test_schedule_day_deletes_existing_tasks():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -227,7 +227,7 @@ async def test_schedule_day_raises_error_if_no_template():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -272,7 +272,7 @@ async def test_schedule_day_uses_template_id_if_provided():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -329,7 +329,7 @@ async def test_schedule_day_copies_timeblocks_from_template():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[
             value_objects.DayTemplateTimeBlock(
                 time_block_definition_id=time_block_def_id,
@@ -418,7 +418,7 @@ async def test_schedule_day_copies_high_level_plan_from_template():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
         high_level_plan=value_objects.HighLevelPlan(
             title="Focus Day",

@@ -113,8 +113,8 @@ class PushNotificationQuery(BaseQuery):
 
 
 @dataclass(kw_only=True)
-class RoutineQuery(BaseQuery):
-    """Query class for Routine entities."""
+class RoutineDefinitionQuery(BaseQuery):
+    """Query class for RoutineDefinition entities."""
 
 
 @dataclass(kw_only=True)
@@ -122,7 +122,7 @@ class TaskQuery(DateQuery):
     """Query class for Task entities."""
 
     ids: list[UUID] | None = None
-    routine_ids: list[UUID] | None = None
+    routine_definition_ids: list[UUID] | None = None
     is_adhoc: bool | None = None
 
 

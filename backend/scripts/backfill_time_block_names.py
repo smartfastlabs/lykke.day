@@ -88,7 +88,7 @@ async def backfill_time_block_names() -> None:
                         user_id=template.user_id,
                         slug=template.slug,
                         icon=template.icon,
-                        routine_ids=template.routine_ids,
+                        routine_definition_ids=template.routine_definition_ids,
                         time_blocks=updated_time_blocks,
                     )
                     await day_template_repo.put(updated_template)

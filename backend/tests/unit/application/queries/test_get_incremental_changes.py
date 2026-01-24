@@ -36,12 +36,10 @@ def _make_audit_log(
 
 
 def _get_entity_type_name(entity_class_name: str) -> str:
-    """Get entity type name using the same logic as UnitOfWork.
+    """Get entity type name using the same logic as UnitOfWork."""
+    from lykke.core.utils.strings import entity_type_from_class_name
 
-    This mirrors the logic in infrastructure/unit_of_work.py:
-        entity_type = type(entity).__name__.replace("Entity", "").lower()
-    """
-    return entity_class_name.replace("Entity", "").lower()
+    return entity_type_from_class_name(entity_class_name)
 
 
 class TestEntityTypeHandling:
@@ -78,10 +76,10 @@ class TestEntityTypeHandling:
         entity_type = _get_entity_type_name("TaskEntity")
         assert entity_type == "task"
 
-    def test_routine_type_is_recognized(self):
-        """Test that 'routine' entity type is recognized."""
-        entity_type = _get_entity_type_name("RoutineEntity")
-        assert entity_type == "routine"
+    def test_routine_definition_type_is_recognized(self):
+        """Test that 'routine_definition' entity type is recognized."""
+        entity_type = _get_entity_type_name("RoutineDefinitionEntity")
+        assert entity_type == "routine_definition"
 
 
 class TestGetIncrementalChangesHandlerInit:
@@ -98,7 +96,7 @@ class TestGetIncrementalChangesHandlerInit:
         mock_ro_repos.audit_log_ro_repo = MagicMock()
         mock_ro_repos.task_ro_repo = MagicMock()
         mock_ro_repos.calendar_entry_ro_repo = MagicMock()
-        mock_ro_repos.routine_ro_repo = MagicMock()
+        mock_ro_repos.routine_definition_ro_repo = MagicMock()
         mock_ro_repos.day_ro_repo = MagicMock()
 
         handler = GetIncrementalChangesHandler(mock_ro_repos, user_id=uuid4())
@@ -117,7 +115,7 @@ class TestGetIncrementalChangesHandlerInit:
         assert hasattr(handler, "audit_log_ro_repo")
         assert hasattr(handler, "task_ro_repo")
         assert hasattr(handler, "calendar_entry_ro_repo")
-        assert hasattr(handler, "routine_ro_repo")
+        assert hasattr(handler, "routine_definition_ro_repo")
         assert hasattr(handler, "day_ro_repo")
 
 
@@ -131,7 +129,7 @@ class TestLoadEntityData:
         mock_ro_repos.audit_log_ro_repo = AsyncMock()
         mock_ro_repos.task_ro_repo = AsyncMock()
         mock_ro_repos.calendar_entry_ro_repo = AsyncMock()
-        mock_ro_repos.routine_ro_repo = AsyncMock()
+        mock_ro_repos.routine_definition_ro_repo = AsyncMock()
         mock_ro_repos.day_ro_repo = AsyncMock()
         mock_ro_repos.brain_dump_ro_repo = AsyncMock()
 
@@ -227,31 +225,37 @@ class TestLoadEntityData:
         handler_with_mocks.day_ro_repo.get.assert_called_once_with(day_id)
 
     @pytest.mark.asyncio
-    async def test_load_routine_entity_data(self, handler_with_mocks):
-        """Test loading routine entity data."""
+    async def test_load_routine_definition_entity_data(self, handler_with_mocks):
+        """Test loading routine definition entity data."""
         from lykke.domain import value_objects
-        from lykke.domain.entities import RoutineEntity
+        from lykke.domain.entities import RoutineDefinitionEntity
 
-        routine_id = uuid4()
-        mock_routine = RoutineEntity(
-            id=routine_id,
+        routine_definition_id = uuid4()
+        mock_routine_definition = RoutineDefinitionEntity(
+            id=routine_definition_id,
             user_id=uuid4(),
-            name="Morning Routine",
+            name="Morning Routine Definition",
             category=value_objects.TaskCategory.HYGIENE,
-            routine_schedule=value_objects.RecurrenceSchedule(
+            routine_definition_schedule=value_objects.RecurrenceSchedule(
                 frequency=value_objects.TaskFrequency.DAILY,
             ),
             tasks=[],
         )
-        handler_with_mocks.routine_ro_repo.get = AsyncMock(return_value=mock_routine)
+        handler_with_mocks.routine_definition_ro_repo.get = AsyncMock(
+            return_value=mock_routine_definition
+        )
 
         result = await handler_with_mocks._load_entity_data(
-            "routine", routine_id, user_timezone="America/Chicago"
+            "routine_definition",
+            routine_definition_id,
+            user_timezone="America/Chicago",
         )
 
         assert result is not None
-        assert result["name"] == "Morning Routine"
-        handler_with_mocks.routine_ro_repo.get.assert_called_once_with(routine_id)
+        assert result["name"] == "Morning Routine Definition"
+        handler_with_mocks.routine_definition_ro_repo.get.assert_called_once_with(
+            routine_definition_id
+        )
 
     @pytest.mark.asyncio
     async def test_load_unknown_entity_type_returns_none(self, handler_with_mocks):
@@ -286,10 +290,10 @@ class TestEntityTypeConsistencyIntegration:
     def test_all_daycontext_entity_types_are_handled(self):
         """Verify all DayContext entity types are handled in _load_entity_data.
 
-        DayContext includes: tasks, calendar_entries (calendarentry), routines, and day (for reminders)
+        DayContext includes: tasks, calendar_entries (calendarentry), routine_definitions, and day (for reminders)
         """
         # These are the entity types that should be handled
-        expected_types = {"task", "calendarentry", "routine", "day"}
+        expected_types = {"task", "calendarentry", "routine_definition", "day"}
 
         # Verify each type is recognized
         for _entity_type in expected_types:
@@ -303,7 +307,7 @@ class TestEntityTypeConsistencyIntegration:
         entity_mapping = {
             "TaskEntity": "task",
             "CalendarEntryEntity": "calendarentry",
-            "RoutineEntity": "routine",
+            "RoutineDefinitionEntity": "routine_definition",
             "DayEntity": "day",
         }
 

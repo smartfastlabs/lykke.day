@@ -43,7 +43,7 @@ class TaskSchema(BaseEntitySchema):
     frequency: TaskFrequency
     completed_at: datetime | None = None
     schedule: TaskScheduleSchema | None = None
-    routine_id: UUID | None = None
+    routine_definition_id: UUID | None = None
     tags: list[TaskTag] = Field(default_factory=list)
     actions: list["ActionSchema"] = Field(default_factory=list)
 

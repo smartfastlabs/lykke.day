@@ -3,7 +3,7 @@ from .entities import (
     CalendarEntity,
     CalendarEntryEntity,
     DayEntity,
-    RoutineEntity,
+    RoutineDefinitionEntity,
     TaskEntity,
     UserEntity,
 )
@@ -25,7 +25,7 @@ __all__ = [
     "CalendarEntity",
     "CalendarEntryEntity",
     "DayEntity",
-    "RoutineEntity",
+    "RoutineDefinitionEntity",
     "TaskEntity",
     "UserEntity",
     "UserSetting",

@@ -20,19 +20,19 @@ class DayTemplateUpdatedEvent(EntityUpdatedEvent[DayTemplateUpdateObject]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class DayTemplateRoutineAddedEvent(DomainEvent):
-    """Raised when a routine is attached to a day template."""
+class DayTemplateRoutineDefinitionAddedEvent(DomainEvent):
+    """Raised when a routine definition is attached to a day template."""
 
     day_template_id: UUID
-    routine_id: UUID
+    routine_definition_id: UUID
 
 
 @dataclass(frozen=True, kw_only=True)
-class DayTemplateRoutineRemovedEvent(DomainEvent):
-    """Raised when a routine is detached from a day template."""
+class DayTemplateRoutineDefinitionRemovedEvent(DomainEvent):
+    """Raised when a routine definition is detached from a day template."""
 
     day_template_id: UUID
-    routine_id: UUID
+    routine_definition_id: UUID
 
 
 @dataclass(frozen=True, kw_only=True)

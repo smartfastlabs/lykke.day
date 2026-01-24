@@ -1,18 +1,20 @@
 import { Component } from "solid-js";
-import { Routine } from "@/types/api";
+import { RoutineDefinition } from "@/types/api";
 import { GenericList } from "@/components/shared/GenericList";
 import RoutineListItem from "./ListItem";
 
 interface ListProps {
-  routines: Routine[];
-  onItemClick: (routine: Routine) => void;
+  routineDefinitions: RoutineDefinition[];
+  onItemClick: (routineDefinition: RoutineDefinition) => void;
 }
 
 const RoutineList: Component<ListProps> = (props) => {
   return (
     <GenericList
-      items={props.routines}
-      renderItem={(routine) => <RoutineListItem routine={routine} />}
+      items={props.routineDefinitions}
+      renderItem={(routineDefinition) => (
+        <RoutineListItem routineDefinition={routineDefinition} />
+      )}
       onItemClick={props.onItemClick}
     />
   );

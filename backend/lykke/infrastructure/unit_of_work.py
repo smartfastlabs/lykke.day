@@ -28,7 +28,7 @@ from lykke.domain.entities import (
     MessageEntity,
     PushNotificationEntity,
     PushSubscriptionEntity,
-    RoutineEntity,
+    RoutineDefinitionEntity,
     TaskDefinitionEntity,
     TaskEntity,
     TimeBlockDefinitionEntity,
@@ -64,7 +64,7 @@ from lykke.infrastructure.repositories import (
     MessageRepository,
     PushNotificationRepository,
     PushSubscriptionRepository,
-    RoutineRepository,
+    RoutineDefinitionRepository,
     TaskDefinitionRepository,
     TaskRepository,
     TimeBlockDefinitionRepository,
@@ -108,8 +108,8 @@ if TYPE_CHECKING:
         PushNotificationRepositoryReadWriteProtocol,
         PushSubscriptionRepositoryReadOnlyProtocol,
         PushSubscriptionRepositoryReadWriteProtocol,
-        RoutineRepositoryReadOnlyProtocol,
-        RoutineRepositoryReadWriteProtocol,
+        RoutineDefinitionRepositoryReadOnlyProtocol,
+        RoutineDefinitionRepositoryReadWriteProtocol,
         TaskDefinitionRepositoryReadOnlyProtocol,
         TaskDefinitionRepositoryReadWriteProtocol,
         TaskRepositoryReadOnlyProtocol,
@@ -160,7 +160,7 @@ class SqlAlchemyUnitOfWork:
     message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
-    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
@@ -191,7 +191,10 @@ class SqlAlchemyUnitOfWork:
             "_push_notification_rw_repo",
         ),
         TaskEntity: ("task_ro_repo", "_task_rw_repo"),
-        RoutineEntity: ("routine_ro_repo", "_routine_rw_repo"),
+        RoutineDefinitionEntity: (
+            "routine_definition_ro_repo",
+            "_routine_definition_rw_repo",
+        ),
         TaskDefinitionEntity: (
             "task_definition_ro_repo",
             "_task_definition_rw_repo",
@@ -252,7 +255,9 @@ class SqlAlchemyUnitOfWork:
         self._push_subscription_rw_repo: (
             PushSubscriptionRepositoryReadWriteProtocol | None
         ) = None
-        self._routine_rw_repo: RoutineRepositoryReadWriteProtocol | None = None
+        self._routine_definition_rw_repo: (
+            RoutineDefinitionRepositoryReadWriteProtocol | None
+        ) = None
         self._task_definition_rw_repo: (
             TaskDefinitionRepositoryReadWriteProtocol | None
         ) = None
@@ -354,12 +359,14 @@ class SqlAlchemyUnitOfWork:
         )
         self._push_subscription_rw_repo = push_subscription_repo
 
-        routine_repo = cast(
-            "RoutineRepositoryReadWriteProtocol",
-            RoutineRepository(user_id=self.user_id),
+        routine_definition_repo = cast(
+            "RoutineDefinitionRepositoryReadWriteProtocol",
+            RoutineDefinitionRepository(user_id=self.user_id),
         )
-        self.routine_ro_repo = cast("RoutineRepositoryReadOnlyProtocol", routine_repo)
-        self._routine_rw_repo = routine_repo
+        self.routine_definition_ro_repo = cast(
+            "RoutineDefinitionRepositoryReadOnlyProtocol", routine_definition_repo
+        )
+        self._routine_definition_rw_repo = routine_definition_repo
 
         task_definition_repo = cast(
             "TaskDefinitionRepositoryReadWriteProtocol",
@@ -753,8 +760,12 @@ class SqlAlchemyUnitOfWork:
                             ),
                         ):
                             # Infer entity_type from entity class name (e.g., "TaskEntity" -> "task")
-                            entity_type = (
-                                type(entity).__name__.replace("Entity", "").lower()
+                            from lykke.core.utils.strings import (
+                                entity_type_from_class_name,
+                            )
+
+                            entity_type = entity_type_from_class_name(
+                                type(entity).__name__
                             )
                             # For EntityUpdatedEvent, include update_object in meta
                             meta: dict[str, Any] = {}
@@ -831,7 +842,9 @@ class SqlAlchemyUnitOfWork:
         for entity in self._added_entities:
             entity_events = entity.collect_events()
             if entity_events:
-                entity_type = type(entity).__name__.replace("Entity", "").lower()
+                from lykke.core.utils.strings import entity_type_from_class_name
+
+                entity_type = entity_type_from_class_name(type(entity).__name__)
                 for event in entity_events:
                     if isinstance(
                         event,
@@ -1097,11 +1110,11 @@ class SqlAlchemyReadOnlyRepositories:
         )
         self.push_subscription_ro_repo = push_subscription_repo
 
-        routine_repo = cast(
-            "RoutineRepositoryReadOnlyProtocol",
-            RoutineRepository(user_id=self.user_id),
+        routine_definition_repo = cast(
+            "RoutineDefinitionRepositoryReadOnlyProtocol",
+            RoutineDefinitionRepository(user_id=self.user_id),
         )
-        self.routine_ro_repo = routine_repo
+        self.routine_definition_ro_repo = routine_definition_repo
 
         task_definition_repo = cast(
             "TaskDefinitionRepositoryReadOnlyProtocol",

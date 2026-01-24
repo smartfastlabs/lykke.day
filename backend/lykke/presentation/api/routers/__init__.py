@@ -80,8 +80,8 @@ router.include_router(
 )
 router.include_router(
     routines.router,
-    prefix="/routines",
-    tags=["routines"],
+    prefix="/routine-definitions",
+    tags=["routine-definitions"],
 )
 router.include_router(
     time_block_definitions.router,

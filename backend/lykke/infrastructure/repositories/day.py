@@ -91,11 +91,15 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
             if "user_id" in template_data and isinstance(template_data["user_id"], str):
                 template_data["user_id"] = UUID(template_data["user_id"])
 
-            # Convert routine_ids from strings to UUIDs
-            if template_data.get("routine_ids"):
-                template_data["routine_ids"] = [
-                    UUID(routine_id) if isinstance(routine_id, str) else routine_id
-                    for routine_id in template_data["routine_ids"]
+            # Convert routine_definition_ids from strings to UUIDs
+            if template_data.get("routine_definition_ids"):
+                template_data["routine_definition_ids"] = [
+                    UUID(routine_definition_id)
+                    if isinstance(routine_definition_id, str)
+                    else routine_definition_id
+                    for routine_definition_id in template_data[
+                        "routine_definition_ids"
+                    ]
                 ]
 
             # Convert start/end times from strings to time objects

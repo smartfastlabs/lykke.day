@@ -15,7 +15,7 @@ from tests.unit.fakes import (
     _FakeDayReadOnlyRepo,
     _FakeDayTemplateReadOnlyRepo,
     _FakeReadOnlyRepos,
-    _FakeRoutineReadOnlyRepo,
+    _FakeRoutineDefinitionReadOnlyRepo,
     _FakeTaskDefinitionReadOnlyRepo,
     _FakeUserReadOnlyRepo,
 )
@@ -30,7 +30,7 @@ async def test_preview_day_uses_provided_template():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -52,7 +52,7 @@ async def test_preview_day_uses_provided_template():
         day_template_repo=day_template_repo,
         user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
-        routine_repo=_FakeRoutineReadOnlyRepo(),
+        routine_definition_repo=_FakeRoutineDefinitionReadOnlyRepo(),
         task_definition_repo=_FakeTaskDefinitionReadOnlyRepo(),
     )
     handler = PreviewDayHandler(ro_repos, user_id)
@@ -79,7 +79,7 @@ async def test_preview_day_falls_back_to_user_default_template():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -101,7 +101,7 @@ async def test_preview_day_falls_back_to_user_default_template():
         day_template_repo=day_template_repo,
         user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
-        routine_repo=_FakeRoutineReadOnlyRepo(),
+        routine_definition_repo=_FakeRoutineDefinitionReadOnlyRepo(),
         task_definition_repo=_FakeTaskDefinitionReadOnlyRepo(),
     )
     handler = PreviewDayHandler(ro_repos, user_id)
@@ -122,7 +122,7 @@ async def test_preview_day_uses_existing_day_template_if_available():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="custom",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -146,7 +146,7 @@ async def test_preview_day_uses_existing_day_template_if_available():
         day_template_repo=day_template_repo,
         user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
-        routine_repo=_FakeRoutineReadOnlyRepo(),
+        routine_definition_repo=_FakeRoutineDefinitionReadOnlyRepo(),
         task_definition_repo=_FakeTaskDefinitionReadOnlyRepo(),
     )
     handler = PreviewDayHandler(ro_repos, user_id)
@@ -168,7 +168,7 @@ async def test_preview_day_returns_calendar_entries():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -193,7 +193,7 @@ async def test_preview_day_returns_calendar_entries():
         day_template_repo=day_template_repo,
         user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
-        routine_repo=_FakeRoutineReadOnlyRepo(),
+        routine_definition_repo=_FakeRoutineDefinitionReadOnlyRepo(),
         task_definition_repo=_FakeTaskDefinitionReadOnlyRepo(),
     )
     handler = PreviewDayHandler(ro_repos, user_id)

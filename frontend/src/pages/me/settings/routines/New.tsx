@@ -3,22 +3,29 @@ import { useNavigate } from "@solidjs/router";
 import SettingsPage from "@/components/shared/SettingsPage";
 import RoutinePreview from "@/components/routines/Preview";
 import RoutineForm from "@/components/routines/Form";
-import { routineAPI, taskDefinitionAPI } from "@/utils/api";
-import { Routine, RoutineTask, TaskDefinition, TaskSchedule, TimeWindow, RecurrenceSchedule } from "@/types/api";
+import { routineDefinitionAPI, taskDefinitionAPI } from "@/utils/api";
+import {
+  RecurrenceSchedule,
+  RoutineDefinition,
+  RoutineDefinitionTask,
+  TaskDefinition,
+  TaskSchedule,
+  TimeWindow,
+} from "@/types/api";
 
-export default function NewRoutine() {
+export default function NewRoutineDefinition() {
   const navigate = useNavigate();
   const [error, setError] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
   const [actionError, setActionError] = createSignal("");
   const [isTaskLoading, setIsTaskLoading] = createSignal(false);
 
-  const [tasks, setTasks] = createSignal<RoutineTask[]>([]);
-  const [draft, setDraft] = createSignal<Partial<Routine>>({
+  const [tasks, setTasks] = createSignal<RoutineDefinitionTask[]>([]);
+  const [draft, setDraft] = createSignal<Partial<RoutineDefinition>>({
     name: "",
     description: "",
     category: "HYGIENE",
-    routine_schedule: {
+    routine_definition_schedule: {
       frequency: "DAILY",
       weekdays: null,
       day_number: null,
@@ -29,41 +36,47 @@ export default function NewRoutine() {
   const [selectedTaskDefinitionId, setSelectedTaskDefinitionId] = createSignal<string | null>(
     null
   );
-  const [selectedRoutineTaskId, setSelectedRoutineTaskId] = createSignal<string | null>(null);
+  const [selectedRoutineDefinitionTaskId, setSelectedRoutineDefinitionTaskId] =
+    createSignal<string | null>(null);
   const [selectedAction, setSelectedAction] = createSignal<"add" | "edit" | null>(null);
   const [taskName, setTaskName] = createSignal("");
   const [scheduleInitial, setScheduleInitial] = createSignal<TaskSchedule | null>(null);
   const [taskScheduleInitial, setTaskScheduleInitial] = createSignal<RecurrenceSchedule | null>(null);
   const [timeWindowInitial, setTimeWindowInitial] = createSignal<TimeWindow | null>(null);
 
-  const handleSubmit = async (routine: Partial<Routine>) => {
+  const handleSubmit = async (
+    routineDefinition: Partial<RoutineDefinition>
+  ) => {
     setError("");
     setIsLoading(true);
 
     try {
-      await routineAPI.create(
+      await routineDefinitionAPI.create(
         {
-          ...routine,
+          ...routineDefinition,
           tasks: tasks(),
-        } as Routine
+        } as RoutineDefinition
       );
-      navigate("/me/settings/routines");
+      navigate("/me/settings/routine-definitions");
     } catch (err: unknown) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to create routine";
+        err instanceof Error
+          ? err.message
+          : "Failed to create routine definition";
       setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const routinePreview = createMemo<Routine>(() => ({
+  const routineDefinitionPreview = createMemo<RoutineDefinition>(() => ({
     id: undefined,
     user_id: "",
     name: draft().name ?? "",
     description: draft().description ?? "",
     category: draft().category ?? "HYGIENE",
-    routine_schedule: draft().routine_schedule ?? {
+    routine_definition_schedule:
+      draft().routine_definition_schedule ?? {
       frequency: "DAILY",
       weekdays: null,
       day_number: null,
@@ -73,7 +86,7 @@ export default function NewRoutine() {
 
   const resetTaskForm = () => {
     setSelectedTaskDefinitionId(null);
-    setSelectedRoutineTaskId(null);
+    setSelectedRoutineDefinitionTaskId(null);
     setSelectedAction(null);
     setScheduleInitial(null);
     setTaskScheduleInitial(null);
@@ -93,10 +106,10 @@ export default function NewRoutine() {
     setActionError("");
   };
 
-  const openEditTask = (task: RoutineTask) => {
+  const openEditTask = (task: RoutineDefinitionTask) => {
     if (!task.id) return;
     setSelectedTaskDefinitionId(task.task_definition_id);
-    setSelectedRoutineTaskId(task.id);
+    setSelectedRoutineDefinitionTaskId(task.id);
     setSelectedAction("edit");
     setTaskName(task.name ?? "");
     setScheduleInitial(task.schedule ?? null);
@@ -105,8 +118,10 @@ export default function NewRoutine() {
     setActionError("");
   };
 
-  const handleRemoveTask = (routineTaskId: string) => {
-    setTasks((prev) => prev.filter((task) => task.id !== routineTaskId));
+  const handleRemoveTask = (routineDefinitionTaskId: string) => {
+    setTasks((prev) =>
+      prev.filter((task) => task.id !== routineDefinitionTaskId)
+    );
   };
 
   const generateTaskId = () =>
@@ -121,7 +136,7 @@ export default function NewRoutine() {
   ) => {
     const action = selectedAction();
     const taskDefinitionId = selectedTaskDefinitionId();
-    const routineTaskId = selectedRoutineTaskId();
+    const routineDefinitionTaskId = selectedRoutineDefinitionTaskId();
     if (!action || !taskDefinitionId) return;
 
     setIsTaskLoading(true);
@@ -131,7 +146,7 @@ export default function NewRoutine() {
       const nameValue = taskName().trim() || null;
 
       if (action === "add") {
-        const newTask: RoutineTask = {
+        const newTask: RoutineDefinitionTask = {
           id: generateTaskId(),
           task_definition_id: taskDefinitionId,
           name: nameValue ?? undefined,
@@ -141,13 +156,13 @@ export default function NewRoutine() {
         };
         setTasks((prev) => [...prev, newTask]);
       } else {
-        if (!routineTaskId) {
-          setActionError("Routine task ID is required for update");
+        if (!routineDefinitionTaskId) {
+          setActionError("Routine definition task ID is required for update");
           return;
         }
         setTasks((prev) =>
           prev.map((task) =>
-            task.id === routineTaskId
+            task.id === routineDefinitionTaskId
               ? {
                   ...task,
                   name: nameValue ?? undefined,
@@ -162,7 +177,10 @@ export default function NewRoutine() {
 
       resetTaskForm();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to save routine task";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to save routine definition task";
       setActionError(message);
     } finally {
       setIsTaskLoading(false);
@@ -171,8 +189,11 @@ export default function NewRoutine() {
 
   return (
     <SettingsPage
-      heading="Create Routine"
-      bottomLink={{ label: "Back to Routines", url: "/me/settings/routines" }}
+      heading="Create Routine Definition"
+      bottomLink={{
+        label: "Back to Routine Definitions",
+        url: "/me/settings/routine-definitions",
+      }}
     >
       <div class="flex flex-col items-center justify-center px-6">
         <div class="w-full max-w-5xl space-y-8">
@@ -184,9 +205,9 @@ export default function NewRoutine() {
               error={error()}
               tasks={tasks()}
               beforeSubmit={
-                <Show when={routinePreview()}>
+                <Show when={routineDefinitionPreview()}>
                   <RoutinePreview
-                    routine={routinePreview()}
+                    routineDefinition={routineDefinitionPreview()}
                     taskDefinitions={taskDefinitions()}
                     onAddTask={openAddTask}
                     onEditTask={openEditTask}

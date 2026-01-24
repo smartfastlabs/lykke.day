@@ -1,8 +1,8 @@
 """DayTemplate command handlers."""
 
 from .add_day_template_routine import (
-    AddDayTemplateRoutineCommand,
-    AddDayTemplateRoutineHandler,
+    AddDayTemplateRoutineDefinitionCommand,
+    AddDayTemplateRoutineDefinitionHandler,
 )
 from .add_day_template_time_block import (
     AddDayTemplateTimeBlockCommand,
@@ -11,8 +11,8 @@ from .add_day_template_time_block import (
 from .create_day_template import CreateDayTemplateCommand, CreateDayTemplateHandler
 from .delete_day_template import DeleteDayTemplateCommand, DeleteDayTemplateHandler
 from .remove_day_template_routine import (
-    RemoveDayTemplateRoutineCommand,
-    RemoveDayTemplateRoutineHandler,
+    RemoveDayTemplateRoutineDefinitionCommand,
+    RemoveDayTemplateRoutineDefinitionHandler,
 )
 from .remove_day_template_time_block import (
     RemoveDayTemplateTimeBlockCommand,
@@ -21,16 +21,16 @@ from .remove_day_template_time_block import (
 from .update_day_template import UpdateDayTemplateCommand, UpdateDayTemplateHandler
 
 __all__ = [
-    "AddDayTemplateRoutineCommand",
-    "AddDayTemplateRoutineHandler",
+    "AddDayTemplateRoutineDefinitionCommand",
+    "AddDayTemplateRoutineDefinitionHandler",
     "AddDayTemplateTimeBlockCommand",
     "AddDayTemplateTimeBlockHandler",
     "CreateDayTemplateCommand",
     "CreateDayTemplateHandler",
     "DeleteDayTemplateCommand",
     "DeleteDayTemplateHandler",
-    "RemoveDayTemplateRoutineCommand",
-    "RemoveDayTemplateRoutineHandler",
+    "RemoveDayTemplateRoutineDefinitionCommand",
+    "RemoveDayTemplateRoutineDefinitionHandler",
     "RemoveDayTemplateTimeBlockCommand",
     "RemoveDayTemplateTimeBlockHandler",
     "UpdateDayTemplateCommand",

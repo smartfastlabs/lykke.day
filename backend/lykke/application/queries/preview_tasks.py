@@ -7,7 +7,7 @@ from loguru import logger
 
 from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.repositories import (
-    RoutineRepositoryReadOnlyProtocol,
+    RoutineDefinitionRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
 )
 from lykke.domain import value_objects
@@ -24,7 +24,7 @@ class PreviewTasksQuery(Query):
 class PreviewTasksHandler(BaseQueryHandler[PreviewTasksQuery, list[TaskEntity]]):
     """Previews tasks that would be created for a given date."""
 
-    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
 
     async def handle(self, query: PreviewTasksQuery) -> list[TaskEntity]:
@@ -42,36 +42,42 @@ class PreviewTasksHandler(BaseQueryHandler[PreviewTasksQuery, list[TaskEntity]])
         """
         result: list[TaskEntity] = []
 
-        for routine in await self.routine_ro_repo.all():
-            logger.debug(f"Checking routine: {routine.name}")
-            if routine.routine_schedule.is_active_for_date(target_date):
-                for routine_task in routine.tasks:
-                    # Check if task has its own schedule - if so, both routine and task schedules must match
+        for routine_definition in await self.routine_definition_ro_repo.all():
+            logger.debug(f"Checking routine definition: {routine_definition.name}")
+            if routine_definition.routine_definition_schedule.is_active_for_date(
+                target_date
+            ):
+                for routine_definition_task in routine_definition.tasks:
+                    # Check if task has its own schedule - if so, both routine definition and task schedules must match
                     if (
-                        routine_task.task_schedule is not None
-                        and not routine_task.task_schedule.is_active_for_date(
+                        routine_definition_task.task_schedule is not None
+                        and not routine_definition_task.task_schedule.is_active_for_date(
                             target_date
                         )
                     ):
                         logger.debug(
-                            f"Skipping task {routine_task.name} - task schedule doesn't match date"
+                            "Skipping task %s - task schedule doesn't match date",
+                            routine_definition_task.name,
                         )
                         continue
 
                     task_def = await self.task_definition_ro_repo.get(
-                        routine_task.task_definition_id,
+                        routine_definition_task.task_definition_id,
                     )
                     task = TaskEntity(
                         user_id=self.user_id,
-                        name=routine_task.name or f"ROUTINE: {routine.name}",
-                        frequency=routine.routine_schedule.frequency,
-                        routine_id=routine.id,
+                        name=(
+                            routine_definition_task.name
+                            or f"ROUTINE DEFINITION: {routine_definition.name}"
+                        ),
+                        frequency=routine_definition.routine_definition_schedule.frequency,
+                        routine_definition_id=routine_definition.id,
                         type=task_def.type,
                         description=task_def.description,
-                        schedule=routine_task.schedule,
+                        schedule=routine_definition_task.schedule,
                         scheduled_date=target_date,
                         status=value_objects.TaskStatus.NOT_STARTED,
-                        category=routine.category,
+                        category=routine_definition.category,
                     )
                     result.append(task)
 

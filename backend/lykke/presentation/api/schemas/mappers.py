@@ -19,7 +19,7 @@ from lykke.domain.entities import (
     MessageEntity,
     PushNotificationEntity,
     PushSubscriptionEntity,
-    RoutineEntity,
+    RoutineDefinitionEntity,
     TaskDefinitionEntity,
     TaskEntity,
     TimeBlockDefinitionEntity,
@@ -45,7 +45,7 @@ from lykke.presentation.api.schemas import (
     MessageSchema,
     PushSubscriptionSchema,
     ReminderSchema,
-    RoutineSchema,
+    RoutineDefinitionSchema,
     SyncSubscriptionSchema,
     TaskDefinitionSchema,
     TaskScheduleSchema,
@@ -161,7 +161,7 @@ def map_task_to_schema(task: TaskEntity) -> TaskSchema:
         frequency=task.frequency,
         completed_at=task.completed_at,
         schedule=schedule_schema,
-        routine_id=task.routine_id,
+        routine_definition_id=task.routine_definition_id,
         tags=task.tags,
         actions=action_schemas,
     )
@@ -188,7 +188,7 @@ def map_day_template_to_schema(
         start_time=template.start_time,
         end_time=template.end_time,
         icon=template.icon,
-        routine_ids=template.routine_ids,
+        routine_definition_ids=template.routine_definition_ids,
         time_blocks=time_blocks_schema,
         high_level_plan=(
             HighLevelPlanSchema(
@@ -348,20 +348,22 @@ def map_push_notification_to_schema(
     )
 
 
-def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
-    """Convert Routine entity to Routine schema."""
-    from .routine import RecurrenceScheduleSchema, RoutineTaskSchema
+def map_routine_definition_to_schema(
+    routine_definition: RoutineDefinitionEntity,
+) -> RoutineDefinitionSchema:
+    """Convert RoutineDefinition entity to RoutineDefinition schema."""
+    from .routine import RecurrenceScheduleSchema, RoutineDefinitionTaskSchema
 
     # Convert routine schedule
-    routine_schedule_schema = RecurrenceScheduleSchema(
-        frequency=routine.routine_schedule.frequency,
-        weekdays=routine.routine_schedule.weekdays,
-        day_number=routine.routine_schedule.day_number,
+    routine_definition_schedule_schema = RecurrenceScheduleSchema(
+        frequency=routine_definition.routine_definition_schedule.frequency,
+        weekdays=routine_definition.routine_definition_schedule.weekdays,
+        day_number=routine_definition.routine_definition_schedule.day_number,
     )
 
     # Convert tasks
     task_schemas = []
-    for task in routine.tasks:
+    for task in routine_definition.tasks:
         schedule_schema = None
         if task.schedule:
             schedule_schema = map_task_schedule_to_schema(task.schedule)
@@ -376,7 +378,7 @@ def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
 
         time_window_schema = map_time_window_to_schema(task.time_window)
 
-        task_schema = RoutineTaskSchema(
+        task_schema = RoutineDefinitionTaskSchema(
             id=task.id,
             task_definition_id=task.task_definition_id,
             name=task.name,
@@ -386,14 +388,14 @@ def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
         )
         task_schemas.append(task_schema)
 
-    return RoutineSchema(
-        id=routine.id,
-        user_id=routine.user_id,
-        name=routine.name,
-        category=routine.category,
-        routine_schedule=routine_schedule_schema,
-        description=routine.description,
-        time_window=map_time_window_to_schema(routine.time_window),
+    return RoutineDefinitionSchema(
+        id=routine_definition.id,
+        user_id=routine_definition.user_id,
+        name=routine_definition.name,
+        category=routine_definition.category,
+        routine_definition_schedule=routine_definition_schedule_schema,
+        description=routine_definition.description,
+        time_window=map_time_window_to_schema(routine_definition.time_window),
         tasks=task_schemas,
     )
 

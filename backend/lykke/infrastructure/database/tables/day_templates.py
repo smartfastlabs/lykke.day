@@ -17,7 +17,7 @@ class DayTemplate(Base):
     start_time = Column(Time)
     end_time = Column(Time)
     icon = Column(String)
-    routine_ids = Column(JSONB)  # list[UUID]
+    routine_definition_ids = Column(JSONB)  # list[UUID]
     time_blocks = Column(JSONB)  # list[DayTemplateTimeBlock]
     high_level_plan = Column(JSONB)  # HighLevelPlan | None
 

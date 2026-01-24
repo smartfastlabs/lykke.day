@@ -3,21 +3,29 @@ import { Component, Show, createResource, createSignal } from "solid-js";
 import DetailPage from "@/components/shared/DetailPage";
 import RoutineForm from "@/components/routines/Form";
 import RoutinePreview from "@/components/routines/Preview";
-import { routineAPI, taskDefinitionAPI } from "@/utils/api";
-import { Routine, RoutineTask, TaskDefinition, TaskSchedule, RecurrenceSchedule, TimeWindow } from "@/types/api";
+import { routineDefinitionAPI, taskDefinitionAPI } from "@/utils/api";
+import {
+  RecurrenceSchedule,
+  RoutineDefinition,
+  RoutineDefinitionTask,
+  TaskDefinition,
+  TaskSchedule,
+  TimeWindow,
+} from "@/types/api";
 
-const RoutineDetailPage: Component = () => {
+const RoutineDefinitionDetailPage: Component = () => {
   const params = useParams();
   const navigate = useNavigate();
   const [error, setError] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
   const [actionError, setActionError] = createSignal("");
 
-  const [routine, { mutate: mutateRoutine }] = createResource<Routine | undefined, string>(
+  const [routineDefinition, { mutate: mutateRoutineDefinition }] =
+    createResource<RoutineDefinition | undefined, string>(
     () => params.id,
     async (id) => {
-      console.log("LOADING ROUTINE", id);
-      return await routineAPI.get(id);
+      console.log("LOADING ROUTINE DEFINITION", id);
+      return await routineDefinitionAPI.get(id);
     }
   );
 
@@ -26,7 +34,8 @@ const RoutineDetailPage: Component = () => {
   const [selectedTaskDefinitionId, setSelectedTaskDefinitionId] = createSignal<string | null>(
     null
   );
-  const [selectedRoutineTaskId, setSelectedRoutineTaskId] = createSignal<string | null>(null);
+  const [selectedRoutineDefinitionTaskId, setSelectedRoutineDefinitionTaskId] =
+    createSignal<string | null>(null);
   const [selectedAction, setSelectedAction] = createSignal<"add" | "edit" | null>(null);
   const [taskName, setTaskName] = createSignal("");
   const [scheduleInitial, setScheduleInitial] = createSignal<TaskSchedule | null>(null);
@@ -34,21 +43,26 @@ const RoutineDetailPage: Component = () => {
   const [timeWindowInitial, setTimeWindowInitial] = createSignal<TimeWindow | null>(null);
   const [isTaskLoading, setIsTaskLoading] = createSignal(false);
 
-  const handleUpdate = async (partialRoutine: Partial<Routine>) => {
-    const current = routine();
+  const handleUpdate = async (
+    partialRoutineDefinition: Partial<RoutineDefinition>
+  ) => {
+    const current = routineDefinition();
     if (!current || !current.id) return;
 
     setError("");
     setIsLoading(true);
     try {
-      await routineAPI.update({
+      await routineDefinitionAPI.update({
         ...current,
-        ...partialRoutine,
+        ...partialRoutineDefinition,
         id: current.id,
       });
-      navigate("/me/settings/routines");
+      navigate("/me/settings/routine-definitions");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to update routine";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to update routine definition";
       setError(message);
     } finally {
       setIsLoading(false);
@@ -56,15 +70,18 @@ const RoutineDetailPage: Component = () => {
   };
 
   const handleDelete = async () => {
-    const current = routine();
+    const current = routineDefinition();
     if (!current || !current.id) return;
     setError("");
     setIsLoading(true);
     try {
-      await routineAPI.delete(current.id);
-      navigate("/me/settings/routines");
+      await routineDefinitionAPI.delete(current.id);
+      navigate("/me/settings/routine-definitions");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to delete routine";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to delete routine definition";
       setError(message);
     } finally {
       setIsLoading(false);
@@ -73,7 +90,7 @@ const RoutineDetailPage: Component = () => {
 
   const resetTaskForm = () => {
     setSelectedTaskDefinitionId(null);
-    setSelectedRoutineTaskId(null);
+    setSelectedRoutineDefinitionTaskId(null);
     setSelectedAction(null);
     setScheduleInitial(null);
     setTaskScheduleInitial(null);
@@ -92,9 +109,9 @@ const RoutineDetailPage: Component = () => {
     setActionError("");
   };
 
-  const openEditTask = (task: RoutineTask) => {
+  const openEditTask = (task: RoutineDefinitionTask) => {
     setSelectedTaskDefinitionId(task.task_definition_id);
-    setSelectedRoutineTaskId(task.id!);
+    setSelectedRoutineDefinitionTaskId(task.id!);
     setSelectedAction("edit");
     setTaskName(task.name ?? "");
     setScheduleInitial(task.schedule ?? null);
@@ -108,20 +125,20 @@ const RoutineDetailPage: Component = () => {
     taskSchedule: RecurrenceSchedule | null,
     timeWindow: TimeWindow | null
   ) => {
-    const current = routine();
+    const current = routineDefinition();
     const action = selectedAction();
     const taskDefinitionId = selectedTaskDefinitionId();
-    const routineTaskId = selectedRoutineTaskId();
+    const routineDefinitionTaskId = selectedRoutineDefinitionTaskId();
     if (!current || !current.id || !action || !taskDefinitionId) return;
 
     setIsTaskLoading(true);
     setActionError("");
     try {
       const nameValue = taskName().trim() || null;
-      let updated: Routine;
+      let updated: RoutineDefinition;
 
       if (action === "add") {
-        updated = await routineAPI.addTask(current.id, {
+        updated = await routineDefinitionAPI.addTask(current.id, {
           task_definition_id: taskDefinitionId,
           name: nameValue ?? undefined,
           schedule,
@@ -129,37 +146,49 @@ const RoutineDetailPage: Component = () => {
           time_window: timeWindow ?? undefined,
         });
       } else {
-        if (!routineTaskId) {
-          setActionError("Routine task ID is required for update");
+        if (!routineDefinitionTaskId) {
+          setActionError("Routine definition task ID is required for update");
           return;
         }
-        updated = await routineAPI.updateTask(current.id, routineTaskId, {
+        updated = await routineDefinitionAPI.updateTask(
+          current.id,
+          routineDefinitionTaskId,
+          {
           name: nameValue ?? undefined,
           schedule,
           task_schedule: taskSchedule ?? undefined,
           time_window: timeWindow ?? undefined,
-        });
+          }
+        );
       }
 
-      mutateRoutine(updated);
+      mutateRoutineDefinition(updated);
       resetTaskForm();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to save routine task";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to save routine definition task";
       setActionError(message);
     } finally {
       setIsTaskLoading(false);
     }
   };
 
-  const handleRemoveTask = async (routineTaskId: string) => {
-    const current = routine();
+  const handleRemoveTask = async (
+    routineDefinitionTaskId: string
+  ) => {
+    const current = routineDefinition();
     if (!current?.id) return;
 
     setIsTaskLoading(true);
     setActionError("");
     try {
-      const updated = await routineAPI.removeTask(current.id, routineTaskId);
-      mutateRoutine(updated);
+      const updated = await routineDefinitionAPI.removeTask(
+        current.id,
+        routineDefinitionTaskId
+      );
+      mutateRoutineDefinition(updated);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to remove task";
       setActionError(message);
@@ -171,7 +200,7 @@ const RoutineDetailPage: Component = () => {
   const handleCreateTaskDefinition = async (taskDef: TaskDefinition) => {
     setActionError("");
     try {
-      const current = routine();
+      const current = routineDefinition();
       if (!current?.user_id) {
         setActionError("Unable to determine user for task definition");
         return;
@@ -198,16 +227,19 @@ const RoutineDetailPage: Component = () => {
 
   return (
     <Show
-      when={routine()}
+      when={routineDefinition()}
       fallback={<div class="text-center text-gray-500 py-8">Loading...</div>}
     >
       {(current) => (
         <DetailPage
-          heading="Routine"
-          bottomLink={{ label: "Back to Routines", url: "/me/settings/routines" }}
+          heading="Routine Definition"
+          bottomLink={{
+            label: "Back to Routine Definitions",
+            url: "/me/settings/routine-definitions",
+          }}
           preview={
             <RoutinePreview
-              routine={current()}
+              routineDefinition={current()}
               taskDefinitions={taskDefinitions()}
               isEditMode={false}
             />
@@ -222,7 +254,7 @@ const RoutineDetailPage: Component = () => {
                   error={error()}
                 />
                 <RoutinePreview
-                  routine={current()}
+                  routineDefinition={current()}
                   taskDefinitions={taskDefinitions()}
                   onAddTask={openAddTask}
                   onCreateTaskDefinition={handleCreateTaskDefinition}
@@ -251,4 +283,4 @@ const RoutineDetailPage: Component = () => {
   );
 };
 
-export default RoutineDetailPage;
+export default RoutineDefinitionDetailPage;

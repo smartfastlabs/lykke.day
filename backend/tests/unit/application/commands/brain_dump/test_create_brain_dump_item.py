@@ -31,7 +31,7 @@ async def test_create_brain_dump_item_creates_item():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -77,7 +77,7 @@ async def test_create_brain_dump_item_day_not_found():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 

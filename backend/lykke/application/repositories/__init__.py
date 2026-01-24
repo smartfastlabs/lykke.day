@@ -58,8 +58,8 @@ from .push_subscription_repository import (
     PushSubscriptionRepositoryReadWriteProtocol,
 )
 from .routine_repository import (
-    RoutineRepositoryReadOnlyProtocol,
-    RoutineRepositoryReadWriteProtocol,
+    RoutineDefinitionRepositoryReadOnlyProtocol,
+    RoutineDefinitionRepositoryReadWriteProtocol,
 )
 from .task_definition_repository import (
     TaskDefinitionRepositoryReadOnlyProtocol,
@@ -111,8 +111,8 @@ __all__ = [
     "PushNotificationRepositoryReadWriteProtocol",
     "PushSubscriptionRepositoryReadOnlyProtocol",
     "PushSubscriptionRepositoryReadWriteProtocol",
-    "RoutineRepositoryReadOnlyProtocol",
-    "RoutineRepositoryReadWriteProtocol",
+    "RoutineDefinitionRepositoryReadOnlyProtocol",
+    "RoutineDefinitionRepositoryReadWriteProtocol",
     "TaskDefinitionRepositoryReadOnlyProtocol",
     "TaskDefinitionRepositoryReadWriteProtocol",
     "TaskRepositoryReadOnlyProtocol",

@@ -1,5 +1,11 @@
 import { Component, JSX, Show, createEffect, createSignal } from "solid-js";
-import { Routine, RecurrenceSchedule, TaskCategory, RoutineTask, TimeWindow } from "@/types/api";
+import {
+  RecurrenceSchedule,
+  RoutineDefinition,
+  RoutineDefinitionTask,
+  TaskCategory,
+  TimeWindow,
+} from "@/types/api";
 import { ALL_TASK_CATEGORIES } from "@/types/api/constants";
 import {
   FormError,
@@ -11,12 +17,12 @@ import {
 import RoutineScheduleForm from "./RoutineScheduleForm";
 
 interface FormProps {
-  onSubmit: (routine: Partial<Routine>) => Promise<void>;
-  onChange?: (routine: Partial<Routine>) => void;
+  onSubmit: (routineDefinition: Partial<RoutineDefinition>) => Promise<void>;
+  onChange?: (routineDefinition: Partial<RoutineDefinition>) => void;
   isLoading?: boolean;
   error?: string;
-  initialData?: Routine;
-  tasks?: RoutineTask[];
+  initialData?: RoutineDefinition;
+  tasks?: RoutineDefinitionTask[];
   beforeSubmit?: JSX.Element;
 }
 
@@ -28,13 +34,14 @@ const RoutineForm: Component<FormProps> = (props) => {
   const [category, setCategory] = createSignal<TaskCategory>(
     props.initialData?.category ?? "HYGIENE"
   );
-  const [routineSchedule, setRoutineSchedule] = createSignal<RecurrenceSchedule>(
-    props.initialData?.routine_schedule ?? {
+  const [routineDefinitionSchedule, setRoutineDefinitionSchedule] =
+    createSignal<RecurrenceSchedule>(
+      props.initialData?.routine_definition_schedule ?? {
       frequency: "DAILY",
       weekdays: null,
       day_number: null,
-    }
-  );
+      }
+    );
   const [timeWindowAvailable, setTimeWindowAvailable] = createSignal(
     props.initialData?.time_window?.available_time ?? ""
   );
@@ -58,22 +65,22 @@ const RoutineForm: Component<FormProps> = (props) => {
     return Object.values(timeWindow).some((value) => value) ? timeWindow : null;
   };
 
-  const buildRoutine = (): Partial<Routine> => ({
+  const buildRoutineDefinition = (): Partial<RoutineDefinition> => ({
     name: name().trim(),
     description: description().trim() || "",
     category: category(),
-    routine_schedule: routineSchedule(),
+    routine_definition_schedule: routineDefinitionSchedule(),
     time_window: buildTimeWindow(),
     tasks: props.tasks ?? props.initialData?.tasks ?? [],
   });
 
   createEffect(() => {
-    props.onChange?.(buildRoutine());
+    props.onChange?.(buildRoutineDefinition());
   });
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
-    await props.onSubmit(buildRoutine());
+    await props.onSubmit(buildRoutineDefinition());
   };
 
   const isUpdate = !!props.initialData;
@@ -106,8 +113,8 @@ const RoutineForm: Component<FormProps> = (props) => {
       />
 
       <RoutineScheduleForm
-        schedule={routineSchedule()}
-        onScheduleChange={setRoutineSchedule}
+        schedule={routineDefinitionSchedule()}
+        onScheduleChange={setRoutineDefinitionSchedule}
       />
 
       <div class="space-y-2">
@@ -116,11 +123,14 @@ const RoutineForm: Component<FormProps> = (props) => {
         </label>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div class="space-y-1">
-            <label class="text-xs font-medium text-neutral-600" for="routine_time_window_available">
+            <label
+              class="text-xs font-medium text-neutral-600"
+              for="routine_definition_time_window_available"
+            >
               Available time
             </label>
             <Input
-              id="routine_time_window_available"
+              id="routine_definition_time_window_available"
               type="time"
               placeholder="Available time"
               value={timeWindowAvailable}
@@ -128,11 +138,14 @@ const RoutineForm: Component<FormProps> = (props) => {
             />
           </div>
           <div class="space-y-1">
-            <label class="text-xs font-medium text-neutral-600" for="routine_time_window_start">
+            <label
+              class="text-xs font-medium text-neutral-600"
+              for="routine_definition_time_window_start"
+            >
               Start time
             </label>
             <Input
-              id="routine_time_window_start"
+              id="routine_definition_time_window_start"
               type="time"
               placeholder="Start time"
               value={timeWindowStart}
@@ -140,11 +153,14 @@ const RoutineForm: Component<FormProps> = (props) => {
             />
           </div>
           <div class="space-y-1">
-            <label class="text-xs font-medium text-neutral-600" for="routine_time_window_end">
+            <label
+              class="text-xs font-medium text-neutral-600"
+              for="routine_definition_time_window_end"
+            >
               End time
             </label>
             <Input
-              id="routine_time_window_end"
+              id="routine_definition_time_window_end"
               type="time"
               placeholder="End time"
               value={timeWindowEnd}
@@ -152,11 +168,14 @@ const RoutineForm: Component<FormProps> = (props) => {
             />
           </div>
           <div class="space-y-1">
-            <label class="text-xs font-medium text-neutral-600" for="routine_time_window_cutoff">
+            <label
+              class="text-xs font-medium text-neutral-600"
+              for="routine_definition_time_window_cutoff"
+            >
               Cutoff time
             </label>
             <Input
-              id="routine_time_window_cutoff"
+              id="routine_definition_time_window_cutoff"
               type="time"
               placeholder="Cutoff time"
               value={timeWindowCutoff}
@@ -173,7 +192,9 @@ const RoutineForm: Component<FormProps> = (props) => {
       <SubmitButton
         isLoading={props.isLoading}
         loadingText={isUpdate ? "Updating..." : "Creating..."}
-        text={isUpdate ? "Update Routine" : "Create Routine"}
+        text={
+          isUpdate ? "Update Routine Definition" : "Create Routine Definition"
+        }
       />
     </form>
   );

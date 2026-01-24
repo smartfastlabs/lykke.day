@@ -23,7 +23,7 @@ from lykke.infrastructure.repositories import (
     FactoidRepository,
     MessageRepository,
     PushSubscriptionRepository,
-    RoutineRepository,
+    RoutineDefinitionRepository,
     TaskDefinitionRepository,
     TaskRepository,
     TimeBlockDefinitionRepository,
@@ -151,9 +151,9 @@ async def push_subscription_repo(test_user):
 
 
 @pytest_asyncio.fixture
-async def routine_repo(test_user):
-    """RoutineRepository scoped to test_user."""
-    return RoutineRepository(user_id=test_user.id)
+async def routine_definition_repo(test_user):
+    """RoutineDefinitionRepository scoped to test_user."""
+    return RoutineDefinitionRepository(user_id=test_user.id)
 
 
 @pytest_asyncio.fixture

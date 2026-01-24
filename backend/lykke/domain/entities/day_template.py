@@ -27,7 +27,7 @@ class DayTemplateEntity(
     start_time: dt_time | None = None
     end_time: dt_time | None = None
     icon: str | None = None
-    routine_ids: list[UUID] = field(default_factory=list)
+    routine_definition_ids: list[UUID] = field(default_factory=list)
     time_blocks: list[value_objects.DayTemplateTimeBlock] = field(default_factory=list)
     high_level_plan: value_objects.HighLevelPlan | None = None
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
@@ -46,8 +46,10 @@ class DayTemplateEntity(
         name = f"{user_id}:{slug}"
         return uuid.uuid5(namespace, name)
 
-    def _copy_with_routine_ids(self, routine_ids: list[UUID]) -> DayTemplateEntity:
-        """Return a copy of this day template with updated routine_ids."""
+    def _copy_with_routine_definition_ids(
+        self, routine_definition_ids: list[UUID]
+    ) -> DayTemplateEntity:
+        """Return a copy of this day template with updated routine_definition_ids."""
         return DayTemplateEntity(
             id=self.id,
             user_id=self.user_id,
@@ -55,45 +57,53 @@ class DayTemplateEntity(
             start_time=self.start_time,
             end_time=self.end_time,
             icon=self.icon,
-            routine_ids=routine_ids,
+            routine_definition_ids=routine_definition_ids,
             time_blocks=self.time_blocks,
             high_level_plan=self.high_level_plan,
         )
 
-    def add_routine(self, routine_id: UUID) -> DayTemplateEntity:
-        """Attach a routine to the day template, enforcing uniqueness."""
-        if routine_id in self.routine_ids:
-            raise DomainError("Routine already attached to day template")
+    def add_routine_definition(self, routine_definition_id: UUID) -> DayTemplateEntity:
+        """Attach a routine definition to the day template, enforcing uniqueness."""
+        if routine_definition_id in self.routine_definition_ids:
+            raise DomainError("Routine definition already attached to day template")
 
-        updated = self._copy_with_routine_ids([*self.routine_ids, routine_id])
-        from lykke.domain.events.day_template_events import DayTemplateRoutineAddedEvent
+        updated = self._copy_with_routine_definition_ids(
+            [*self.routine_definition_ids, routine_definition_id]
+        )
+        from lykke.domain.events.day_template_events import (
+            DayTemplateRoutineDefinitionAddedEvent,
+        )
 
         updated._add_event(
-            DayTemplateRoutineAddedEvent(
+            DayTemplateRoutineDefinitionAddedEvent(
                 user_id=self.user_id,
                 day_template_id=updated.id,
-                routine_id=routine_id,
+                routine_definition_id=routine_definition_id,
             )
         )
         return updated
 
-    def remove_routine(self, routine_id: UUID) -> DayTemplateEntity:
-        """Detach a routine from the day template."""
-        if routine_id not in self.routine_ids:
-            raise NotFoundError("Routine not found in day template")
+    def remove_routine_definition(self, routine_definition_id: UUID) -> DayTemplateEntity:
+        """Detach a routine definition from the day template."""
+        if routine_definition_id not in self.routine_definition_ids:
+            raise NotFoundError("Routine definition not found in day template")
 
-        updated = self._copy_with_routine_ids(
-            [rid for rid in self.routine_ids if rid != routine_id]
+        updated = self._copy_with_routine_definition_ids(
+            [
+                rid
+                for rid in self.routine_definition_ids
+                if rid != routine_definition_id
+            ]
         )
         from lykke.domain.events.day_template_events import (
-            DayTemplateRoutineRemovedEvent,
+            DayTemplateRoutineDefinitionRemovedEvent,
         )
 
         updated._add_event(
-            DayTemplateRoutineRemovedEvent(
+            DayTemplateRoutineDefinitionRemovedEvent(
                 user_id=self.user_id,
                 day_template_id=updated.id,
-                routine_id=routine_id,
+                routine_definition_id=routine_definition_id,
             )
         )
         return updated
@@ -109,7 +119,7 @@ class DayTemplateEntity(
             start_time=self.start_time,
             end_time=self.end_time,
             icon=self.icon,
-            routine_ids=self.routine_ids,
+            routine_definition_ids=self.routine_definition_ids,
             time_blocks=time_blocks,
             high_level_plan=self.high_level_plan,
         )

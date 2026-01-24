@@ -48,7 +48,7 @@ class CreateAdhocTaskHandler(BaseCommandHandler[CreateAdhocTaskCommand, TaskEnti
                 category=command.category,
                 frequency=value_objects.TaskFrequency.ONCE,
                 schedule=command.schedule,
-                routine_id=None,
+                routine_definition_id=None,
                 tags=command.tags,
             )
             await uow.create(task)

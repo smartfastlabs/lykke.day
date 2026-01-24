@@ -51,7 +51,7 @@ export type TimeBlockDefinition = components["schemas"]["TimeBlockDefinitionSche
 export type Calendar = components["schemas"]["CalendarSchema"];
 export type CalendarEntrySeries = components["schemas"]["CalendarEntrySeriesSchema"];
 export type TaskDefinition = components["schemas"]["TaskDefinitionSchema"];
-export type Routine = components["schemas"]["RoutineSchema"] & {
+export type RoutineDefinition = components["schemas"]["RoutineDefinitionSchema"] & {
   time_window?: TimeWindow | null;
 };
 export type TimeWindow = {
@@ -60,7 +60,8 @@ export type TimeWindow = {
   end_time?: string | null;
   cutoff_time?: string | null;
 };
-export type RoutineTask = components["schemas"]["RoutineTaskSchema-Output"] & {
+export type RoutineDefinitionTask =
+  components["schemas"]["RoutineDefinitionTaskSchema-Output"] & {
   time_window?: TimeWindow | null;
 };
 export type PushSubscription = components["schemas"]["PushSubscriptionSchema"];

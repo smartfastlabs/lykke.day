@@ -22,7 +22,7 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
     frequency: value_objects.TaskFrequency
     completed_at: datetime | None = None
     schedule: value_objects.TaskSchedule | None = None
-    routine_id: UUID | None = None
+    routine_definition_id: UUID | None = None
     tags: list[value_objects.TaskTag] = field(default_factory=list)
     actions: list[value_objects.Action] = field(default_factory=list)
 

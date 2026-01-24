@@ -35,9 +35,7 @@ async def test_add_brain_dump_enqueues_processing(
 
     assert response.status_code == 200
     data = response.json()
-    brain_dump_items = data["day"]["brain_dump_items"]
-    assert brain_dump_items
-    item_id = UUID(brain_dump_items[-1]["id"])
+    item_id = UUID(data["id"])
 
     assert len(dummy_task.calls) == 1
     call = dummy_task.calls[0]

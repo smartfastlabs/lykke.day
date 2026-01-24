@@ -72,10 +72,10 @@ def mock_push_subscription_repo():
 
 
 @pytest.fixture
-def mock_routine_repo():
-    """Mocked RoutineRepositoryReadOnlyProtocol for unit tests."""
+def mock_routine_definition_repo():
+    """Mocked RoutineDefinitionRepositoryReadOnlyProtocol for unit tests."""
     return InstanceDouble(
-        "lykke.application.repositories.RoutineRepositoryReadOnlyProtocol"
+        "lykke.application.repositories.RoutineDefinitionRepositoryReadOnlyProtocol"
     )
 
 
@@ -136,7 +136,7 @@ def mock_uow_factory(
     mock_day_template_repo,
     mock_message_repo,
     mock_push_subscription_repo,
-    mock_routine_repo,
+    mock_routine_definition_repo,
     mock_task_definition_repo,
     mock_task_repo,
     mock_user_repo,
@@ -153,7 +153,7 @@ def mock_uow_factory(
             self.day_templates = mock_day_template_repo
             self.messages = mock_message_repo
             self.push_subscriptions = mock_push_subscription_repo
-            self.routines = mock_routine_repo
+            self.routine_definition_ro_repo = mock_routine_definition_repo
             self.task_definitions = mock_task_definition_repo
             self.tasks = mock_task_repo
             self.users = mock_user_repo

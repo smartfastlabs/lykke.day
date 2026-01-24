@@ -287,7 +287,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/EarlyAccessRequest"
+                "$ref": "#/components/schemas/EarlyAccessRequestSchema"
               }
             }
           },
@@ -299,7 +299,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/StatusResponse"
+                  "$ref": "#/components/schemas/StatusResponseSchema"
                 }
               }
             }
@@ -643,7 +643,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
+                  "$ref": "#/components/schemas/ReminderSchema"
                 }
               }
             }
@@ -701,7 +701,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
+                  "$ref": "#/components/schemas/ReminderSchema"
                 }
               }
             }
@@ -749,7 +749,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
+                  "$ref": "#/components/schemas/ReminderSchema"
                 }
               }
             }
@@ -798,7 +798,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
+                  "$ref": "#/components/schemas/BrainDumpItemSchema"
                 }
               }
             }
@@ -856,7 +856,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
+                  "$ref": "#/components/schemas/BrainDumpItemSchema"
                 }
               }
             }
@@ -904,7 +904,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
+                  "$ref": "#/components/schemas/BrainDumpItemSchema"
                 }
               }
             }
@@ -922,15 +922,15 @@
         }
       }
     },
-    "/me/today/routines": {
+    "/me/today/routine-definitions": {
       "post": {
         "tags": [
           "auth",
           "user"
         ],
-        "summary": "Add Routine To Today",
-        "description": "Add a routine's tasks to today.",
-        "operationId": "add_routine_to_today_me_today_routines_post",
+        "summary": "Add Routine Definition To Today",
+        "description": "Add a routine definition's tasks to today.",
+        "operationId": "add_routine_definition_to_today_me_today_routine_definitions_post",
         "security": [
           {
             "APIKeyCookie": []
@@ -938,13 +938,13 @@
         ],
         "parameters": [
           {
-            "name": "routine_id",
+            "name": "routine_definition_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Routine Id"
+              "title": "Routine Definition Id"
             }
           }
         ],
@@ -954,7 +954,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DayContextSchema"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskSchema"
+                  },
+                  "title": "Response Add Routine Definition To Today Me Today Routine Definitions Post"
                 }
               }
             }
@@ -970,6 +974,246 @@
             }
           }
         }
+      }
+    },
+    "/brain-dump/{uuid}": {
+      "get": {
+        "tags": [
+          "brain-dump"
+        ],
+        "summary": "Get Brain Dump Item",
+        "description": "Get a single brain dump item by ID.",
+        "operationId": "get_brain_dump_item_brain_dump__uuid__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrainDumpItemSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "brain-dump"
+        ],
+        "summary": "Update Brain Dump Item",
+        "description": "Update a brain dump item's status or type.",
+        "operationId": "update_brain_dump_item_brain_dump__uuid__patch",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrainDumpItemUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrainDumpItemSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "brain-dump"
+        ],
+        "summary": "Delete Brain Dump Item",
+        "description": "Delete a brain dump item.",
+        "operationId": "delete_brain_dump_item_brain_dump__uuid__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/brain-dump/": {
+      "post": {
+        "tags": [
+          "brain-dump"
+        ],
+        "summary": "Search Brain Dump Items",
+        "description": "Search brain dump items with pagination and optional filters.",
+        "operationId": "search_brain_dump_items_brain_dump__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_BrainDumpQuery_"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseSchema_BrainDumpItemSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/brain-dump/create": {
+      "post": {
+        "tags": [
+          "brain-dump"
+        ],
+        "summary": "Create Brain Dump Item",
+        "description": "Create a new brain dump item.",
+        "operationId": "create_brain_dump_item_brain_dump_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrainDumpItemCreateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrainDumpItemSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
       }
     },
     "/calendar-entry-series/{uuid}": {
@@ -1841,14 +2085,14 @@
         ]
       }
     },
-    "/day-templates/{uuid}/routines": {
+    "/day-templates/{uuid}/routine-definitions": {
       "post": {
         "tags": [
           "day-templates"
         ],
-        "summary": "Add Day Template Routine",
-        "description": "Attach a routine to a day template.",
-        "operationId": "add_day_template_routine_day_templates__uuid__routines_post",
+        "summary": "Add Day Template Routine Definition",
+        "description": "Attach a routine definition to a day template.",
+        "operationId": "add_day_template_routine_definition_day_templates__uuid__routine_definitions_post",
         "security": [
           {
             "APIKeyCookie": []
@@ -1871,7 +2115,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DayTemplateRoutineCreateSchema"
+                "$ref": "#/components/schemas/DayTemplateRoutineDefinitionCreateSchema"
               }
             }
           }
@@ -1900,14 +2144,14 @@
         }
       }
     },
-    "/day-templates/{uuid}/routines/{routine_id}": {
+    "/day-templates/{uuid}/routine-definitions/{routine_definition_id}": {
       "delete": {
         "tags": [
           "day-templates"
         ],
-        "summary": "Remove Day Template Routine",
-        "description": "Detach a routine from a day template.",
-        "operationId": "remove_day_template_routine_day_templates__uuid__routines__routine_id__delete",
+        "summary": "Remove Day Template Routine Definition",
+        "description": "Detach a routine definition from a day template.",
+        "operationId": "remove_day_template_routine_definition_day_templates__uuid__routine_definitions__routine_definition_id__delete",
         "security": [
           {
             "APIKeyCookie": []
@@ -1925,13 +2169,13 @@
             }
           },
           {
-            "name": "routine_id",
+            "name": "routine_definition_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Routine Id"
+              "title": "Routine Definition Id"
             }
           }
         ],
@@ -2326,14 +2570,14 @@
         ]
       }
     },
-    "/routines/{uuid}": {
+    "/routine-definitions/{uuid}": {
       "get": {
         "tags": [
-          "routines"
+          "routine-definitions"
         ],
-        "summary": "Get Routine",
-        "description": "Get a single routine by ID.",
-        "operationId": "get_routine_routines__uuid__get",
+        "summary": "Get Routine Definition",
+        "description": "Get a single routine definition by ID.",
+        "operationId": "get_routine_definition_routine_definitions__uuid__get",
         "security": [
           {
             "APIKeyCookie": []
@@ -2357,7 +2601,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RoutineSchema"
+                  "$ref": "#/components/schemas/RoutineDefinitionSchema"
                 }
               }
             }
@@ -2376,11 +2620,11 @@
       },
       "put": {
         "tags": [
-          "routines"
+          "routine-definitions"
         ],
-        "summary": "Update Routine",
-        "description": "Update an existing routine.",
-        "operationId": "update_routine_routines__uuid__put",
+        "summary": "Update Routine Definition",
+        "description": "Update an existing routine definition.",
+        "operationId": "update_routine_definition_routine_definitions__uuid__put",
         "security": [
           {
             "APIKeyCookie": []
@@ -2403,7 +2647,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RoutineUpdateSchema"
+                "$ref": "#/components/schemas/RoutineDefinitionUpdateSchema"
               }
             }
           }
@@ -2414,7 +2658,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RoutineSchema"
+                  "$ref": "#/components/schemas/RoutineDefinitionSchema"
                 }
               }
             }
@@ -2433,11 +2677,11 @@
       },
       "delete": {
         "tags": [
-          "routines"
+          "routine-definitions"
         ],
-        "summary": "Delete Routine",
-        "description": "Delete a routine.",
-        "operationId": "delete_routine_routines__uuid__delete",
+        "summary": "Delete Routine Definition",
+        "description": "Delete a routine definition.",
+        "operationId": "delete_routine_definition_routine_definitions__uuid__delete",
         "security": [
           {
             "APIKeyCookie": []
@@ -2472,19 +2716,19 @@
         }
       }
     },
-    "/routines/": {
+    "/routine-definitions/": {
       "post": {
         "tags": [
-          "routines"
+          "routine-definitions"
         ],
-        "summary": "Search Routines",
-        "description": "Search routines with pagination and optional filters.",
-        "operationId": "search_routines_routines__post",
+        "summary": "Search Routine Definitions",
+        "description": "Search routine definitions with pagination and optional filters.",
+        "operationId": "search_routine_definitions_routine_definitions__post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/QuerySchema_RoutineQuery_"
+                "$ref": "#/components/schemas/QuerySchema_RoutineDefinitionQuery_"
               }
             }
           },
@@ -2496,7 +2740,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResponseSchema_RoutineSchema_"
+                  "$ref": "#/components/schemas/PagedResponseSchema_RoutineDefinitionSchema_"
                 }
               }
             }
@@ -2519,19 +2763,19 @@
         ]
       }
     },
-    "/routines/create": {
+    "/routine-definitions/create": {
       "post": {
         "tags": [
-          "routines"
+          "routine-definitions"
         ],
-        "summary": "Create Routine",
-        "description": "Create a new routine.",
-        "operationId": "create_routine_routines_create_post",
+        "summary": "Create Routine Definition",
+        "description": "Create a new routine definition.",
+        "operationId": "create_routine_definition_routine_definitions_create_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RoutineCreateSchema"
+                "$ref": "#/components/schemas/RoutineDefinitionCreateSchema"
               }
             }
           },
@@ -2543,7 +2787,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RoutineSchema"
+                  "$ref": "#/components/schemas/RoutineDefinitionSchema"
                 }
               }
             }
@@ -2566,14 +2810,14 @@
         ]
       }
     },
-    "/routines/{uuid}/tasks": {
+    "/routine-definitions/{uuid}/tasks": {
       "post": {
         "tags": [
-          "routines"
+          "routine-definitions"
         ],
-        "summary": "Add Routine Task",
-        "description": "Attach a task definition to a routine.",
-        "operationId": "add_routine_task_routines__uuid__tasks_post",
+        "summary": "Add Routine Definition Task",
+        "description": "Attach a task definition to a routine definition.",
+        "operationId": "add_routine_definition_task_routine_definitions__uuid__tasks_post",
         "security": [
           {
             "APIKeyCookie": []
@@ -2596,7 +2840,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RoutineTaskCreateSchema"
+                "$ref": "#/components/schemas/RoutineDefinitionTaskCreateSchema"
               }
             }
           }
@@ -2607,7 +2851,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RoutineSchema"
+                  "$ref": "#/components/schemas/RoutineDefinitionSchema"
                 }
               }
             }
@@ -2625,14 +2869,14 @@
         }
       }
     },
-    "/routines/{uuid}/tasks/{routine_task_id}": {
+    "/routine-definitions/{uuid}/tasks/{routine_definition_task_id}": {
       "put": {
         "tags": [
-          "routines"
+          "routine-definitions"
         ],
-        "summary": "Update Routine Task",
-        "description": "Update an attached routine task (name/schedule).",
-        "operationId": "update_routine_task_routines__uuid__tasks__routine_task_id__put",
+        "summary": "Update Routine Definition Task",
+        "description": "Update an attached routine definition task (name/schedule).",
+        "operationId": "update_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__put",
         "security": [
           {
             "APIKeyCookie": []
@@ -2650,13 +2894,13 @@
             }
           },
           {
-            "name": "routine_task_id",
+            "name": "routine_definition_task_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Routine Task Id"
+              "title": "Routine Definition Task Id"
             }
           }
         ],
@@ -2665,7 +2909,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RoutineTaskUpdateSchema"
+                "$ref": "#/components/schemas/RoutineDefinitionTaskUpdateSchema"
               }
             }
           }
@@ -2676,7 +2920,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RoutineSchema"
+                  "$ref": "#/components/schemas/RoutineDefinitionSchema"
                 }
               }
             }
@@ -2695,11 +2939,11 @@
       },
       "delete": {
         "tags": [
-          "routines"
+          "routine-definitions"
         ],
-        "summary": "Remove Routine Task",
-        "description": "Detach a routine task from a routine by RoutineTask.id.",
-        "operationId": "remove_routine_task_routines__uuid__tasks__routine_task_id__delete",
+        "summary": "Remove Routine Definition Task",
+        "description": "Detach a routine definition task from a routine definition by RoutineDefinitionTask.id.",
+        "operationId": "remove_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__delete",
         "security": [
           {
             "APIKeyCookie": []
@@ -2717,13 +2961,13 @@
             }
           },
           {
-            "name": "routine_task_id",
+            "name": "routine_definition_task_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Routine Task Id"
+              "title": "Routine Definition Task Id"
             }
           }
         ],
@@ -2733,7 +2977,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RoutineSchema"
+                  "$ref": "#/components/schemas/RoutineDefinitionSchema"
                 }
               }
             }
@@ -2751,14 +2995,14 @@
         }
       }
     },
-    "/routines/{uuid}/actions": {
+    "/routine-definitions/{uuid}/actions": {
       "post": {
         "tags": [
-          "routines"
+          "routine-definitions"
         ],
-        "summary": "Record Routine Action",
-        "description": "Record an action on all tasks in a routine for today.",
-        "operationId": "record_routine_action_routines__uuid__actions_post",
+        "summary": "Record Routine Definition Action",
+        "description": "Record an action on all tasks in a routine definition for today.",
+        "operationId": "record_routine_definition_action_routine_definitions__uuid__actions_post",
         "security": [
           {
             "APIKeyCookie": []
@@ -2796,7 +3040,7 @@
                   "items": {
                     "$ref": "#/components/schemas/TaskSchema"
                   },
-                  "title": "Response Record Routine Action Routines  Uuid  Actions Post"
+                  "title": "Response Record Routine Definition Action Routine Definitions  Uuid  Actions Post"
                 }
               }
             }
@@ -3941,6 +4185,26 @@
         ],
         "title": "Body_reset_reset_password_auth_reset_password_post"
       },
+      "BrainDumpItemCreateSchema": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "text"
+        ],
+        "title": "BrainDumpItemCreateSchema",
+        "description": "API schema for creating brain dump items."
+      },
       "BrainDumpItemSchema": {
         "properties": {
           "id": {
@@ -3955,12 +4219,25 @@
             ],
             "title": "Id"
           },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
           "text": {
             "type": "string",
             "title": "Text"
           },
           "status": {
             "$ref": "#/components/schemas/BrainDumpItemStatus"
+          },
+          "type": {
+            "$ref": "#/components/schemas/BrainDumpItemType"
           },
           "created_at": {
             "anyOf": [
@@ -3977,11 +4254,14 @@
         },
         "type": "object",
         "required": [
+          "user_id",
+          "date",
           "text",
-          "status"
+          "status",
+          "type"
         ],
         "title": "BrainDumpItemSchema",
-        "description": "API schema for BrainDumpItem value object."
+        "description": "API schema for BrainDump entity."
       },
       "BrainDumpItemStatus": {
         "type": "string",
@@ -3992,6 +4272,148 @@
         ],
         "title": "BrainDumpItemStatus",
         "description": "Status of a brain dump item."
+      },
+      "BrainDumpItemType": {
+        "type": "string",
+        "enum": [
+          "GENERAL",
+          "COMMAND"
+        ],
+        "title": "BrainDumpItemType",
+        "description": "Type of a brain dump item."
+      },
+      "BrainDumpItemUpdateSchema": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrainDumpItemStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrainDumpItemType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "BrainDumpItemUpdateSchema",
+        "description": "API schema for updating a brain dump item."
+      },
+      "BrainDumpQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrainDumpItemStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrainDumpItemType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "BrainDumpQuery"
       },
       "CalendarCreateSchema": {
         "properties": {
@@ -4854,13 +5276,13 @@
             ],
             "title": "Icon"
           },
-          "routine_ids": {
+          "routine_definition_ids": {
             "items": {
               "type": "string",
               "format": "uuid"
             },
             "type": "array",
-            "title": "Routine Ids"
+            "title": "Routine Definition Ids"
           },
           "time_blocks": {
             "items": {
@@ -4972,20 +5394,20 @@
         "type": "object",
         "title": "DayTemplateQuery"
       },
-      "DayTemplateRoutineCreateSchema": {
+      "DayTemplateRoutineDefinitionCreateSchema": {
         "properties": {
-          "routine_id": {
+          "routine_definition_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Routine Id"
+            "title": "Routine Definition Id"
           }
         },
         "type": "object",
         "required": [
-          "routine_id"
+          "routine_definition_id"
         ],
-        "title": "DayTemplateRoutineCreateSchema",
-        "description": "API schema for attaching a routine to a day template."
+        "title": "DayTemplateRoutineDefinitionCreateSchema",
+        "description": "API schema for attaching a routine definition to a day template."
       },
       "DayTemplateSchema": {
         "properties": {
@@ -5040,13 +5462,13 @@
             ],
             "title": "Icon"
           },
-          "routine_ids": {
+          "routine_definition_ids": {
             "items": {
               "type": "string",
               "format": "uuid"
             },
             "type": "array",
-            "title": "Routine Ids"
+            "title": "Routine Definition Ids"
           },
           "time_blocks": {
             "items": {
@@ -5186,7 +5608,7 @@
             ],
             "title": "Icon"
           },
-          "routine_ids": {
+          "routine_definition_ids": {
             "anyOf": [
               {
                 "items": {
@@ -5199,7 +5621,7 @@
                 "type": "null"
               }
             ],
-            "title": "Routine Ids"
+            "title": "Routine Definition Ids"
           },
           "time_blocks": {
             "anyOf": [
@@ -5295,7 +5717,7 @@
         "title": "DayUpdateSchema",
         "description": "API schema for Day update requests."
       },
-      "EarlyAccessRequest": {
+      "EarlyAccessRequestSchema": {
         "properties": {
           "email": {
             "type": "string",
@@ -5307,7 +5729,7 @@
         "required": [
           "email"
         ],
-        "title": "EarlyAccessRequest",
+        "title": "EarlyAccessRequestSchema",
         "description": "Request body for early access opt-in."
       },
       "ErrorModel": {
@@ -5409,8 +5831,7 @@
               "type": "string"
             },
             "type": "array",
-            "title": "User Amendments",
-            "default": []
+            "title": "User Amendments"
           },
           "rendered_prompt": {
             "anyOf": [
@@ -5427,6 +5848,47 @@
         "type": "object",
         "title": "NotificationUseCaseConfigSchema",
         "description": "Schema for notification usecase config (typed)."
+      },
+      "PagedResponseSchema_BrainDumpItemSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BrainDumpItemSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedResponseSchema[BrainDumpItemSchema]"
       },
       "PagedResponseSchema_CalendarEntrySeriesSchema_": {
         "properties": {
@@ -5592,11 +6054,11 @@
         ],
         "title": "PagedResponseSchema[PushSubscriptionSchema]"
       },
-      "PagedResponseSchema_RoutineSchema_": {
+      "PagedResponseSchema_RoutineDefinitionSchema_": {
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/RoutineSchema"
+              "$ref": "#/components/schemas/RoutineDefinitionSchema"
             },
             "type": "array",
             "title": "Items"
@@ -5631,7 +6093,7 @@
           "has_next",
           "has_previous"
         ],
-        "title": "PagedResponseSchema[RoutineSchema]"
+        "title": "PagedResponseSchema[RoutineDefinitionSchema]"
       },
       "PagedResponseSchema_TaskDefinitionSchema_": {
         "properties": {
@@ -5908,6 +6370,35 @@
         "title": "PushSubscriptionUpdateSchema",
         "description": "API schema for PushSubscription update requests."
       },
+      "QuerySchema_BrainDumpQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrainDumpQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[BrainDumpQuery]"
+      },
       "QuerySchema_CalendarEntrySeriesQuery_": {
         "properties": {
           "limit": {
@@ -6024,7 +6515,7 @@
         "type": "object",
         "title": "QuerySchema[PushSubscriptionQuery]"
       },
-      "QuerySchema_RoutineQuery_": {
+      "QuerySchema_RoutineDefinitionQuery_": {
         "properties": {
           "limit": {
             "type": "integer",
@@ -6042,7 +6533,7 @@
           "filters": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/RoutineQuery"
+                "$ref": "#/components/schemas/RoutineDefinitionQuery"
               },
               {
                 "type": "null"
@@ -6051,7 +6542,7 @@
           }
         },
         "type": "object",
-        "title": "QuerySchema[RoutineQuery]"
+        "title": "QuerySchema[RoutineDefinitionQuery]"
       },
       "QuerySchema_TaskDefinitionQuery_": {
         "properties": {
@@ -6201,7 +6692,7 @@
         "title": "ReminderStatus",
         "description": "Status of a reminder."
       },
-      "RoutineCreateSchema": {
+      "RoutineDefinitionCreateSchema": {
         "properties": {
           "name": {
             "type": "string",
@@ -6210,7 +6701,7 @@
           "category": {
             "$ref": "#/components/schemas/TaskCategory"
           },
-          "routine_schedule": {
+          "routine_definition_schedule": {
             "$ref": "#/components/schemas/RecurrenceScheduleSchema"
           },
           "description": {
@@ -6218,9 +6709,19 @@
             "title": "Description",
             "default": ""
           },
+          "time_window": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeWindowSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "tasks": {
             "items": {
-              "$ref": "#/components/schemas/RoutineTaskSchema-Input"
+              "$ref": "#/components/schemas/RoutineDefinitionTaskSchema-Input"
             },
             "type": "array",
             "title": "Tasks"
@@ -6230,12 +6731,12 @@
         "required": [
           "name",
           "category",
-          "routine_schedule"
+          "routine_definition_schedule"
         ],
-        "title": "RoutineCreateSchema",
-        "description": "API schema for creating a Routine entity."
+        "title": "RoutineDefinitionCreateSchema",
+        "description": "API schema for creating a RoutineDefinition entity."
       },
-      "RoutineQuery": {
+      "RoutineDefinitionQuery": {
         "properties": {
           "limit": {
             "anyOf": [
@@ -6307,9 +6808,9 @@
           }
         },
         "type": "object",
-        "title": "RoutineQuery"
+        "title": "RoutineDefinitionQuery"
       },
-      "RoutineSchema": {
+      "RoutineDefinitionSchema": {
         "properties": {
           "id": {
             "anyOf": [
@@ -6335,7 +6836,7 @@
           "category": {
             "$ref": "#/components/schemas/TaskCategory"
           },
-          "routine_schedule": {
+          "routine_definition_schedule": {
             "$ref": "#/components/schemas/RecurrenceScheduleSchema"
           },
           "description": {
@@ -6343,9 +6844,19 @@
             "title": "Description",
             "default": ""
           },
+          "time_window": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeWindowSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "tasks": {
             "items": {
-              "$ref": "#/components/schemas/RoutineTaskSchema-Output"
+              "$ref": "#/components/schemas/RoutineDefinitionTaskSchema-Output"
             },
             "type": "array",
             "title": "Tasks"
@@ -6356,12 +6867,12 @@
           "user_id",
           "name",
           "category",
-          "routine_schedule"
+          "routine_definition_schedule"
         ],
-        "title": "RoutineSchema",
-        "description": "API schema for Routine entity."
+        "title": "RoutineDefinitionSchema",
+        "description": "API schema for RoutineDefinition entity."
       },
-      "RoutineTaskCreateSchema": {
+      "RoutineDefinitionTaskCreateSchema": {
         "properties": {
           "task_definition_id": {
             "type": "string",
@@ -6398,16 +6909,26 @@
                 "type": "null"
               }
             ]
+          },
+          "time_window": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeWindowSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
         "required": [
           "task_definition_id"
         ],
-        "title": "RoutineTaskCreateSchema",
-        "description": "API schema for attaching a RoutineTask."
+        "title": "RoutineDefinitionTaskCreateSchema",
+        "description": "API schema for attaching a RoutineDefinitionTask."
       },
-      "RoutineTaskSchema-Input": {
+      "RoutineDefinitionTaskSchema-Input": {
         "properties": {
           "id": {
             "anyOf": [
@@ -6456,16 +6977,26 @@
                 "type": "null"
               }
             ]
+          },
+          "time_window": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeWindowSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
         "required": [
           "task_definition_id"
         ],
-        "title": "RoutineTaskSchema",
-        "description": "API schema for RoutineTask value object."
+        "title": "RoutineDefinitionTaskSchema",
+        "description": "API schema for RoutineDefinitionTask value object."
       },
-      "RoutineTaskSchema-Output": {
+      "RoutineDefinitionTaskSchema-Output": {
         "properties": {
           "id": {
             "anyOf": [
@@ -6514,16 +7045,26 @@
                 "type": "null"
               }
             ]
+          },
+          "time_window": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeWindowSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
         "required": [
           "task_definition_id"
         ],
-        "title": "RoutineTaskSchema",
-        "description": "API schema for RoutineTask value object."
+        "title": "RoutineDefinitionTaskSchema",
+        "description": "API schema for RoutineDefinitionTask value object."
       },
-      "RoutineTaskUpdateSchema": {
+      "RoutineDefinitionTaskUpdateSchema": {
         "properties": {
           "name": {
             "anyOf": [
@@ -6555,13 +7096,23 @@
                 "type": "null"
               }
             ]
+          },
+          "time_window": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeWindowSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
-        "title": "RoutineTaskUpdateSchema",
-        "description": "API schema for updating an attached RoutineTask."
+        "title": "RoutineDefinitionTaskUpdateSchema",
+        "description": "API schema for updating an attached RoutineDefinitionTask."
       },
-      "RoutineUpdateSchema": {
+      "RoutineDefinitionUpdateSchema": {
         "properties": {
           "name": {
             "anyOf": [
@@ -6584,7 +7135,7 @@
               }
             ]
           },
-          "routine_schedule": {
+          "routine_definition_schedule": {
             "anyOf": [
               {
                 "$ref": "#/components/schemas/RecurrenceScheduleSchema"
@@ -6605,11 +7156,21 @@
             ],
             "title": "Description"
           },
+          "time_window": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeWindowSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "tasks": {
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/RoutineTaskSchema-Input"
+                  "$ref": "#/components/schemas/RoutineDefinitionTaskSchema-Input"
                 },
                 "type": "array"
               },
@@ -6621,10 +7182,10 @@
           }
         },
         "type": "object",
-        "title": "RoutineUpdateSchema",
-        "description": "API schema for Routine update requests."
+        "title": "RoutineDefinitionUpdateSchema",
+        "description": "API schema for RoutineDefinition update requests."
       },
-      "StatusResponse": {
+      "StatusResponseSchema": {
         "properties": {
           "ok": {
             "type": "boolean",
@@ -6633,7 +7194,7 @@
           }
         },
         "type": "object",
-        "title": "StatusResponse",
+        "title": "StatusResponseSchema",
         "description": "Simple OK response."
       },
       "SyncSubscriptionSchema": {
@@ -7059,7 +7620,7 @@
               }
             ]
           },
-          "routine_id": {
+          "routine_definition_id": {
             "anyOf": [
               {
                 "type": "string",
@@ -7069,7 +7630,7 @@
                 "type": "null"
               }
             ],
-            "title": "Routine Id"
+            "title": "Routine Definition Id"
           },
           "tags": {
             "items": {
@@ -7395,6 +7956,61 @@
           "OTHER"
         ],
         "title": "TimeBlockType"
+      },
+      "TimeWindowSchema": {
+        "properties": {
+          "available_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Time"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "cutoff_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cutoff Time"
+          }
+        },
+        "type": "object",
+        "title": "TimeWindowSchema",
+        "description": "API schema for TimeWindow value object."
       },
       "TimingType": {
         "type": "string",

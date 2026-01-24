@@ -10,7 +10,7 @@ from lykke.domain.entities import (
     BrainDumpEntity,
     DayEntity,
     DayTemplateEntity,
-    RoutineEntity,
+    RoutineDefinitionEntity,
     TaskEntity,
     TimeBlockDefinitionEntity,
     UserEntity,
@@ -126,29 +126,31 @@ class _FakeTimeBlockDefinitionReadOnlyRepo:
         raise NotFoundError(f"TimeBlockDefinition {def_id} not found")
 
 
-class _FakeRoutineReadOnlyRepo:
-    """Fake routine repository for testing."""
+class _FakeRoutineDefinitionReadOnlyRepo:
+    """Fake routine definition repository for testing."""
 
     def __init__(
         self,
-        routine: RoutineEntity | None = None,
-        routines: list[RoutineEntity] | None = None,
+        routine_definition: RoutineDefinitionEntity | None = None,
+        routine_definitions: list[RoutineDefinitionEntity] | None = None,
     ) -> None:
-        if routines is not None:
-            self._routines = routines
-        elif routine is not None:
-            self._routines = [routine]
+        if routine_definitions is not None:
+            self._routine_definitions = routine_definitions
+        elif routine_definition is not None:
+            self._routine_definitions = [routine_definition]
         else:
-            self._routines = []
+            self._routine_definitions = []
 
-    async def get(self, routine_id: UUID):
-        for routine in self._routines:
-            if routine_id == routine.id:
-                return routine
-        raise NotFoundError(f"Routine {routine_id} not found")
+    async def get(self, routine_definition_id: UUID):
+        for routine_definition in self._routine_definitions:
+            if routine_definition_id == routine_definition.id:
+                return routine_definition
+        raise NotFoundError(
+            f"Routine definition {routine_definition_id} not found"
+        )
 
     async def all(self):
-        return self._routines
+        return self._routine_definitions
 
 
 class _FakeTaskDefinitionReadOnlyRepo:
@@ -204,7 +206,7 @@ class _FakeReadOnlyRepos:
         notification_repo: Any | None = None,
         push_notification_repo: Any | None = None,
         push_subscription_repo: Any | None = None,
-        routine_repo: Any | None = None,
+        routine_definition_repo: Any | None = None,
         task_definition_repo: Any | None = None,
         task_repo: Any | None = None,
         time_block_definition_repo: Any | None = None,
@@ -227,7 +229,7 @@ class _FakeReadOnlyRepos:
         self.notification_ro_repo = notification_repo or fake
         self.push_notification_ro_repo = push_notification_repo or fake
         self.push_subscription_ro_repo = push_subscription_repo or fake
-        self.routine_ro_repo = routine_repo or fake
+        self.routine_definition_ro_repo = routine_definition_repo or fake
         self.task_definition_ro_repo = task_definition_repo or fake
         self.task_ro_repo = task_repo or fake
         self.time_block_definition_ro_repo = time_block_definition_repo or fake

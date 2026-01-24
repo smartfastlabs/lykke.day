@@ -3,8 +3,8 @@ import { Component, Show, createResource, createSignal } from "solid-js";
 import DetailPage from "@/components/shared/DetailPage";
 import DayTemplateForm from "@/components/day-templates/Form";
 import DayTemplatePreview from "@/components/day-templates/Preview";
-import { dayTemplateAPI, routineAPI } from "@/utils/api";
-import { DayTemplate, Routine } from "@/types/api";
+import { dayTemplateAPI, routineDefinitionAPI } from "@/utils/api";
+import { DayTemplate, RoutineDefinition } from "@/types/api";
 
 const DayTemplateDetailPage: Component = () => {
   const params = useParams();
@@ -22,7 +22,9 @@ const DayTemplateDetailPage: Component = () => {
     async (id) => dayTemplateAPI.get(id)
   );
 
-  const [routines] = createResource<Routine[]>(routineAPI.getAll);
+  const [routineDefinitions] = createResource<RoutineDefinition[]>(
+    routineDefinitionAPI.getAll
+  );
 
   const handleUpdate = async (partialTemplate: Partial<DayTemplate>) => {
     const current = dayTemplate();
@@ -64,36 +66,50 @@ const DayTemplateDetailPage: Component = () => {
     }
   };
 
-  const handleAddRoutine = async (routineId: string) => {
+  const handleAddRoutineDefinition = async (
+    routineDefinitionId: string
+  ) => {
     const current = dayTemplate();
     if (!current?.id) return;
 
     setIsRoutineLoading(true);
     setActionError("");
     try {
-      const updated = await dayTemplateAPI.addRoutine(current.id, routineId);
+      const updated = await dayTemplateAPI.addRoutineDefinition(
+        current.id,
+        routineDefinitionId
+      );
       mutateDayTemplate(updated);
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to add routine";
+        err instanceof Error
+          ? err.message
+          : "Failed to add routine definition";
       setActionError(message);
     } finally {
       setIsRoutineLoading(false);
     }
   };
 
-  const handleRemoveRoutine = async (routineId: string) => {
+  const handleRemoveRoutineDefinition = async (
+    routineDefinitionId: string
+  ) => {
     const current = dayTemplate();
     if (!current?.id) return;
 
     setIsRoutineLoading(true);
     setActionError("");
     try {
-      const updated = await dayTemplateAPI.removeRoutine(current.id, routineId);
+      const updated = await dayTemplateAPI.removeRoutineDefinition(
+        current.id,
+        routineDefinitionId
+      );
       mutateDayTemplate(updated);
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to remove routine";
+        err instanceof Error
+          ? err.message
+          : "Failed to remove routine definition";
       setActionError(message);
     } finally {
       setIsRoutineLoading(false);
@@ -169,9 +185,9 @@ const DayTemplateDetailPage: Component = () => {
               <div class="w-full max-w-3xl">
                 <DayTemplatePreview
                   dayTemplate={current()}
-                  routines={routines()}
-                  onAddRoutine={handleAddRoutine}
-                  onRemoveRoutine={handleRemoveRoutine}
+                  routineDefinitions={routineDefinitions()}
+                  onAddRoutineDefinition={handleAddRoutineDefinition}
+                  onRemoveRoutineDefinition={handleRemoveRoutineDefinition}
                   onAddTimeBlock={handleAddTimeBlock}
                   onRemoveTimeBlock={handleRemoveTimeBlock}
                   isEditMode={false}
@@ -192,9 +208,9 @@ const DayTemplateDetailPage: Component = () => {
                 />
                 <DayTemplatePreview
                   dayTemplate={current()}
-                  routines={routines()}
-                  onAddRoutine={handleAddRoutine}
-                  onRemoveRoutine={handleRemoveRoutine}
+                  routineDefinitions={routineDefinitions()}
+                  onAddRoutineDefinition={handleAddRoutineDefinition}
+                  onRemoveRoutineDefinition={handleRemoveRoutineDefinition}
                   onAddTimeBlock={handleAddTimeBlock}
                   onRemoveTimeBlock={handleRemoveTimeBlock}
                   isEditMode={true}

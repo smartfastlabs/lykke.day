@@ -71,7 +71,7 @@ def test_row_to_entity_converts_string_values_to_enums():
         "frequency": "WEEKLY",
         "completed_at": None,
         "schedule": None,
-        "routine_id": None,
+        "routine_definition_id": None,
         "tags": [],
         "actions": [],
     }

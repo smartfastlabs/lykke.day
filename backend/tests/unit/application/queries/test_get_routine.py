@@ -1,69 +1,79 @@
-"""Unit tests for GetRoutineHandler."""
+"""Unit tests for GetRoutineDefinitionHandler."""
 
 from uuid import uuid4
 
 import pytest
 
-from lykke.application.queries.routine import GetRoutineHandler, GetRoutineQuery
+from lykke.application.queries.routine import (
+    GetRoutineDefinitionHandler,
+    GetRoutineDefinitionQuery,
+)
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.entities import RoutineEntity
-from tests.unit.fakes import _FakeReadOnlyRepos, _FakeRoutineReadOnlyRepo
+from lykke.domain.entities import RoutineDefinitionEntity
+from tests.unit.fakes import (
+    _FakeReadOnlyRepos,
+    _FakeRoutineDefinitionReadOnlyRepo,
+)
 
 
 @pytest.mark.asyncio
-async def test_get_routine_returns_routine_by_id():
-    """Verify get_routine returns the correct routine."""
+async def test_get_routine_definition_returns_routine_definition_by_id():
+    """Verify get_routine_definition returns the correct routine definition."""
     user_id = uuid4()
-    routine_id = uuid4()
+    routine_definition_id = uuid4()
 
-    routine = RoutineEntity(
-        id=routine_id,
+    routine_definition = RoutineDefinitionEntity(
+        id=routine_definition_id,
         user_id=user_id,
-        name="Morning Routine",
+        name="Morning Routine Definition",
         category=value_objects.TaskCategory.HEALTH,
-        routine_schedule=value_objects.RecurrenceSchedule(
+        routine_definition_schedule=value_objects.RecurrenceSchedule(
             frequency=value_objects.TaskFrequency.DAILY,
         ),
         tasks=[],
     )
 
     # Setup repository
-    routine_repo = _FakeRoutineReadOnlyRepo(routine)
-    ro_repos = _FakeReadOnlyRepos(routine_repo=routine_repo)
-    handler = GetRoutineHandler(ro_repos, user_id)
+    routine_repo = _FakeRoutineDefinitionReadOnlyRepo(routine_definition)
+    ro_repos = _FakeReadOnlyRepos(routine_definition_repo=routine_repo)
+    handler = GetRoutineDefinitionHandler(ro_repos, user_id)
 
     # Act
-    result = await handler.handle(GetRoutineQuery(routine_id=routine_id))
+    result = await handler.handle(
+        GetRoutineDefinitionQuery(routine_definition_id=routine_definition_id)
+    )
 
     # Assert
-    assert result == routine
-    assert result.id == routine_id
-    assert result.name == "Morning Routine"
+    assert result == routine_definition
+    assert result.id == routine_definition_id
+    assert result.name == "Morning Routine Definition"
 
 
 @pytest.mark.asyncio
-async def test_get_routine_raises_not_found_for_invalid_id():
-    """Verify get_routine raises NotFoundError for invalid ID."""
+async def test_get_routine_definition_raises_not_found_for_invalid_id():
+    """Verify get_routine_definition raises NotFoundError for invalid ID."""
     user_id = uuid4()
     invalid_id = uuid4()
 
-    routine = RoutineEntity(
+    routine_definition = RoutineDefinitionEntity(
         id=uuid4(),  # Different ID
         user_id=user_id,
-        name="Morning Routine",
+        name="Morning Routine Definition",
         category=value_objects.TaskCategory.HEALTH,
-        routine_schedule=value_objects.RecurrenceSchedule(
+        routine_definition_schedule=value_objects.RecurrenceSchedule(
             frequency=value_objects.TaskFrequency.DAILY,
         ),
         tasks=[],
     )
 
     # Setup repository
-    routine_repo = _FakeRoutineReadOnlyRepo(routine)
-    ro_repos = _FakeReadOnlyRepos(routine_repo=routine_repo)
-    handler = GetRoutineHandler(ro_repos, user_id)
+    routine_repo = _FakeRoutineDefinitionReadOnlyRepo(routine_definition)
+    ro_repos = _FakeReadOnlyRepos(routine_definition_repo=routine_repo)
+    handler = GetRoutineDefinitionHandler(ro_repos, user_id)
 
     # Act & Assert
     with pytest.raises(NotFoundError):
-        await handler.handle(GetRoutineQuery(routine_id=invalid_id))
+        await handler.handle(
+            GetRoutineDefinitionQuery(routine_definition_id=invalid_id)
+        )

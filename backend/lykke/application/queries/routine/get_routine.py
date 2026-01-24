@@ -1,35 +1,39 @@
-"""Query to get a routine by ID."""
+"""Query to get a routine definition by ID."""
 
 from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler, Query
-from lykke.application.repositories import RoutineRepositoryReadOnlyProtocol
-from lykke.domain.entities import RoutineEntity
+from lykke.application.repositories import RoutineDefinitionRepositoryReadOnlyProtocol
+from lykke.domain.entities import RoutineDefinitionEntity
 
 
 @dataclass(frozen=True)
-class GetRoutineQuery(Query):
-    """Query to get a routine by ID."""
+class GetRoutineDefinitionQuery(Query):
+    """Query to get a routine definition by ID."""
 
-    routine_id: UUID
+    routine_definition_id: UUID
 
 
-class GetRoutineHandler(BaseQueryHandler[GetRoutineQuery, RoutineEntity]):
-    """Retrieves a single routine by ID."""
+class GetRoutineDefinitionHandler(
+    BaseQueryHandler[GetRoutineDefinitionQuery, RoutineDefinitionEntity]
+):
+    """Retrieves a single routine definition by ID."""
 
-    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
+    routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
 
-    async def handle(self, query: GetRoutineQuery) -> RoutineEntity:
-        """Get a single routine by ID.
+    async def handle(
+        self, query: GetRoutineDefinitionQuery
+    ) -> RoutineDefinitionEntity:
+        """Get a single routine definition by ID.
 
         Args:
-            query: The query containing the routine ID
+            query: The query containing the routine definition ID
 
         Returns:
-            The routine entity
+            The routine definition entity
 
         Raises:
-            NotFoundError: If routine not found
+            NotFoundError: If routine definition not found
         """
-        return await self.routine_ro_repo.get(query.routine_id)
+        return await self.routine_definition_ro_repo.get(query.routine_definition_id)

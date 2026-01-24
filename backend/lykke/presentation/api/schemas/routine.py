@@ -29,8 +29,8 @@ class TimeWindowSchema(BaseSchema):
     cutoff_time: time | None = None
 
 
-class RoutineTaskSchema(BaseSchema):
-    """API schema for RoutineTask value object."""
+class RoutineDefinitionTaskSchema(BaseSchema):
+    """API schema for RoutineDefinitionTask value object."""
 
     id: UUID | None = None
     task_definition_id: UUID
@@ -40,42 +40,42 @@ class RoutineTaskSchema(BaseSchema):
     time_window: TimeWindowSchema | None = None
 
 
-class RoutineCreateSchema(BaseSchema):
-    """API schema for creating a Routine entity."""
+class RoutineDefinitionCreateSchema(BaseSchema):
+    """API schema for creating a RoutineDefinition entity."""
 
     name: str
     category: TaskCategory
-    routine_schedule: RecurrenceScheduleSchema
+    routine_definition_schedule: RecurrenceScheduleSchema
     description: str = ""
     time_window: TimeWindowSchema | None = None
-    tasks: list[RoutineTaskSchema] = Field(default_factory=list)
+    tasks: list[RoutineDefinitionTaskSchema] = Field(default_factory=list)
 
 
-class RoutineSchema(BaseEntitySchema):
-    """API schema for Routine entity."""
+class RoutineDefinitionSchema(BaseEntitySchema):
+    """API schema for RoutineDefinition entity."""
 
     user_id: UUID
     name: str
     category: TaskCategory
-    routine_schedule: RecurrenceScheduleSchema
+    routine_definition_schedule: RecurrenceScheduleSchema
     description: str = ""
     time_window: TimeWindowSchema | None = None
-    tasks: list[RoutineTaskSchema] = Field(default_factory=list)
+    tasks: list[RoutineDefinitionTaskSchema] = Field(default_factory=list)
 
 
-class RoutineUpdateSchema(BaseSchema):
-    """API schema for Routine update requests."""
+class RoutineDefinitionUpdateSchema(BaseSchema):
+    """API schema for RoutineDefinition update requests."""
 
     name: str | None = None
     category: TaskCategory | None = None
-    routine_schedule: RecurrenceScheduleSchema | None = None
+    routine_definition_schedule: RecurrenceScheduleSchema | None = None
     description: str | None = None
     time_window: TimeWindowSchema | None = None
-    tasks: list[RoutineTaskSchema] | None = None
+    tasks: list[RoutineDefinitionTaskSchema] | None = None
 
 
-class RoutineTaskCreateSchema(BaseSchema):
-    """API schema for attaching a RoutineTask."""
+class RoutineDefinitionTaskCreateSchema(BaseSchema):
+    """API schema for attaching a RoutineDefinitionTask."""
 
     task_definition_id: UUID
     name: str | None = None
@@ -84,8 +84,8 @@ class RoutineTaskCreateSchema(BaseSchema):
     time_window: TimeWindowSchema | None = None
 
 
-class RoutineTaskUpdateSchema(BaseSchema):
-    """API schema for updating an attached RoutineTask."""
+class RoutineDefinitionTaskUpdateSchema(BaseSchema):
+    """API schema for updating an attached RoutineDefinitionTask."""
 
     name: str | None = None
     schedule: TaskScheduleSchema | None = None

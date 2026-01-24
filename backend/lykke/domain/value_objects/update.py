@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     from .day import DayStatus, DayTag, Reminder
     from .high_level_plan import HighLevelPlan
-    from .routine import RecurrenceSchedule, RoutineTask, TimeWindow
+    from .routine import RecurrenceSchedule, RoutineDefinitionTask, TimeWindow
     from .sync import SyncSubscription
     from .task import EventCategory, TaskCategory, TaskFrequency, TaskType
     from .time_block import (
@@ -55,15 +55,15 @@ class TimeBlockDefinitionUpdateObject(BaseUpdateObject):
 
 
 @dataclass(kw_only=True)
-class RoutineUpdateObject(BaseUpdateObject):
-    """Update object for Routine entity."""
+class RoutineDefinitionUpdateObject(BaseUpdateObject):
+    """Update object for RoutineDefinition entity."""
 
     name: str | None = None
     category: TaskCategory | None = None
-    routine_schedule: RecurrenceSchedule | None = None
+    routine_definition_schedule: RecurrenceSchedule | None = None
     description: str | None = None
     time_window: TimeWindow | None = None
-    tasks: list[RoutineTask] | None = None
+    tasks: list[RoutineDefinitionTask] | None = None
 
 
 @dataclass(kw_only=True)
@@ -103,7 +103,7 @@ class DayTemplateUpdateObject(BaseUpdateObject):
     start_time: time | None = None
     end_time: time | None = None
     icon: str | None = None
-    routine_ids: list[UUID] | None = None
+    routine_definition_ids: list[UUID] | None = None
     time_blocks: list[DayTemplateTimeBlock] | None = None
     high_level_plan: HighLevelPlan | None = None
 

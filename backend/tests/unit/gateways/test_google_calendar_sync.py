@@ -127,7 +127,7 @@ def mock_uow(
         day_ro_repo = None
         day_template_ro_repo = None
         push_subscription_ro_repo = None
-        routine_ro_repo = None
+        routine_definition_ro_repo = None
         task_definition_ro_repo = None
         task_ro_repo = None
         time_block_definition_ro_repo = None
@@ -180,7 +180,7 @@ def mock_ro_repos(
             self.notification_ro_repo = None
             self.push_notification_ro_repo = None
             self.push_subscription_ro_repo = None
-            self.routine_ro_repo = None
+            self.routine_definition_ro_repo = None
             self.task_definition_ro_repo = None
             self.task_ro_repo = None
             self.time_block_definition_ro_repo = None

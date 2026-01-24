@@ -22,7 +22,7 @@ def test_day(test_user_id: str) -> DayEntity:
     template = DayTemplateEntity(
         user_id=test_user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
     return DayEntity.create_for_date(

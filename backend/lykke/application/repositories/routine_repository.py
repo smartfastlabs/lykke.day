@@ -1,20 +1,24 @@
-"""Protocol for RoutineRepository."""
+"""Protocol for RoutineDefinitionRepository."""
 
 from lykke.application.repositories.base import (
     ReadOnlyRepositoryProtocol,
     ReadWriteRepositoryProtocol,
 )
 from lykke.domain import value_objects
-from lykke.domain.entities import RoutineEntity
+from lykke.domain.entities import RoutineDefinitionEntity
 
 
-class RoutineRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[RoutineEntity]):
-    """Read-only protocol defining the interface for routine repositories."""
+class RoutineDefinitionRepositoryReadOnlyProtocol(
+    ReadOnlyRepositoryProtocol[RoutineDefinitionEntity]
+):
+    """Read-only protocol defining the interface for routine definition repositories."""
 
-    Query = value_objects.RoutineQuery
+    Query = value_objects.RoutineDefinitionQuery
 
 
-class RoutineRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[RoutineEntity]):
-    """Read-write protocol defining the interface for routine repositories."""
+class RoutineDefinitionRepositoryReadWriteProtocol(
+    ReadWriteRepositoryProtocol[RoutineDefinitionEntity]
+):
+    """Read-write protocol defining the interface for routine definition repositories."""
 
-    Query = value_objects.RoutineQuery
+    Query = value_objects.RoutineDefinitionQuery

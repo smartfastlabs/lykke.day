@@ -1,5 +1,13 @@
 import { Component, Show, For, createMemo, Setter, Accessor, createSignal, createEffect } from "solid-js";
-import { Routine, RoutineTask, TaskDefinition, TaskSchedule, RecurrenceSchedule, TaskType, TimeWindow } from "@/types/api";
+import {
+  RecurrenceSchedule,
+  RoutineDefinition,
+  RoutineDefinitionTask,
+  TaskDefinition,
+  TaskSchedule,
+  TaskType,
+  TimeWindow,
+} from "@/types/api";
 import { ALL_TASK_TYPES } from "@/types/api/constants";
 import { Icon } from "@/components/shared/Icon";
 import TaskScheduleForm from "@/components/tasks/ScheduleForm";
@@ -7,11 +15,11 @@ import RoutineScheduleForm from "@/components/routines/RoutineScheduleForm";
 import { Input, Button, Select, TextArea } from "@/components/forms";
 
 interface RoutinePreviewProps {
-  routine: Routine;
+  routineDefinition: RoutineDefinition;
   taskDefinitions?: TaskDefinition[];
   onAddTask?: (taskDef: TaskDefinition) => void;
   onCreateTaskDefinition?: (taskDef: TaskDefinition) => Promise<void>;
-  onEditTask?: (task: RoutineTask) => void;
+  onEditTask?: (task: RoutineDefinitionTask) => void;
   onRemoveTask?: (taskDefinitionId: string) => void;
   onTaskSubmit?: (
     schedule: TaskSchedule,
@@ -33,7 +41,9 @@ interface RoutinePreviewProps {
 }
 
 const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
-  const attachedTasks = createMemo(() => props.routine.tasks ?? []);
+  const attachedTasks = createMemo(
+    () => props.routineDefinition.tasks ?? []
+  );
 
   const availableDefinitions = createMemo(() => props.taskDefinitions ?? []);
   
@@ -134,39 +144,45 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
             <div class="space-y-3">
               <div>
                 <label class="text-sm font-medium text-neutral-500">Name</label>
-                <div class="mt-1 text-base text-neutral-900">{props.routine.name}</div>
+                <div class="mt-1 text-base text-neutral-900">
+                  {props.routineDefinition.name}
+                </div>
               </div>
-              <Show when={props.routine.description}>
+              <Show when={props.routineDefinition.description}>
                 <div>
                   <label class="text-sm font-medium text-neutral-500">Description</label>
-                  <div class="mt-1 text-base text-neutral-900">{props.routine.description}</div>
+                  <div class="mt-1 text-base text-neutral-900">
+                    {props.routineDefinition.description}
+                  </div>
                 </div>
               </Show>
               <div>
                 <label class="text-sm font-medium text-neutral-500">Category</label>
-                <div class="mt-1 text-base text-neutral-900">{props.routine.category}</div>
+                <div class="mt-1 text-base text-neutral-900">
+                  {props.routineDefinition.category}
+                </div>
               </div>
               <div>
                 <label class="text-sm font-medium text-neutral-500">Frequency</label>
                 <div class="mt-1 text-base text-neutral-900">
-                  {props.routine.routine_schedule.frequency}
+                  {props.routineDefinition.routine_definition_schedule.frequency}
                 </div>
               </div>
-              <Show when={props.routine.time_window}>
+              <Show when={props.routineDefinition.time_window}>
                 <div>
                   <label class="text-sm font-medium text-neutral-500">Time Window</label>
                   <div class="mt-1 text-base text-neutral-900">
-                    {props.routine.time_window?.available_time
-                      ? `Preferred ${props.routine.time_window.available_time}`
+                    {props.routineDefinition.time_window?.available_time
+                      ? `Preferred ${props.routineDefinition.time_window.available_time}`
                       : "Window"}
-                    {props.routine.time_window?.start_time
-                      ? ` • ${props.routine.time_window.start_time}`
+                    {props.routineDefinition.time_window?.start_time
+                      ? ` • ${props.routineDefinition.time_window.start_time}`
                       : ""}
-                    {props.routine.time_window?.end_time
-                      ? ` - ${props.routine.time_window.end_time}`
+                    {props.routineDefinition.time_window?.end_time
+                      ? ` - ${props.routineDefinition.time_window.end_time}`
                       : ""}
-                    {props.routine.time_window?.cutoff_time
-                      ? ` • Cutoff ${props.routine.time_window.cutoff_time}`
+                    {props.routineDefinition.time_window?.cutoff_time
+                      ? ` • Cutoff ${props.routineDefinition.time_window.cutoff_time}`
                       : ""}
                   </div>
                 </div>
@@ -175,12 +191,16 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
           </div>
         </Show>
 
-        {/* Routine Tasks */}
+        {/* Routine Definition Tasks */}
         <div class="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-medium text-neutral-900">Routine Tasks</h2>
-              <p class="text-sm text-neutral-500">Tasks attached to this routine.</p>
+              <h2 class="text-lg font-medium text-neutral-900">
+                Routine Definition Tasks
+              </h2>
+              <p class="text-sm text-neutral-500">
+                Tasks attached to this routine definition.
+              </p>
             </div>
             <Show when={props.isEditMode}>
               <div class="flex items-center gap-2 text-sm text-neutral-500">

@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 
 from lykke.application.commands.day import RemoveReminderCommand, RemoveReminderHandler
-from lykke.core.exceptions import DomainError, NotFoundError
+from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
 from lykke.domain.events.day_events import ReminderRemovedEvent
@@ -28,7 +28,7 @@ async def test_remove_reminder_removes_reminder_from_day():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -50,11 +50,13 @@ async def test_remove_reminder_removes_reminder_from_day():
     )
 
     # Assert
-    assert len(result.reminders) == 1
-    assert result.reminders[0].id == reminder2.id
-    assert result.reminders[0].name == "Reminder 2"
+    assert result.id == reminder1.id
+    assert result.name == "Reminder 1"
     assert len(uow_factory.uow.added) == 1
-    assert uow_factory.uow.added[0] == result
+    assert uow_factory.uow.added[0] == day
+    assert len(day.reminders) == 1
+    assert day.reminders[0].id == reminder2.id
+    assert day.reminders[0].name == "Reminder 2"
 
 
 @pytest.mark.asyncio
@@ -66,7 +68,7 @@ async def test_remove_reminder_emits_domain_event():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -87,7 +89,7 @@ async def test_remove_reminder_emits_domain_event():
     )
 
     # Assert
-    events = result.collect_events()
+    events = day.collect_events()
     assert len(events) == 1
     assert isinstance(events[0], ReminderRemovedEvent)
     assert events[0].reminder_id == reminder.id
@@ -105,7 +107,7 @@ async def test_remove_reminder_raises_error_if_reminder_not_found():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -134,7 +136,7 @@ async def test_remove_reminder_with_multiple_reminders():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -155,6 +157,7 @@ async def test_remove_reminder_with_multiple_reminders():
     )
 
     # Assert
-    assert len(result.reminders) == 2
-    assert result.reminders[0].id == reminder1.id
-    assert result.reminders[1].id == reminder3.id
+    assert result.id == reminder2.id
+    assert len(day.reminders) == 2
+    assert day.reminders[0].id == reminder1.id
+    assert day.reminders[1].id == reminder3.id

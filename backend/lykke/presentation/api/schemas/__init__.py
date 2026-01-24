@@ -26,7 +26,7 @@ from .day import DaySchema, DayUpdateSchema
 from .day_context import DayContextSchema
 from .day_template import (
     DayTemplateCreateSchema,
-    DayTemplateRoutineCreateSchema,
+    DayTemplateRoutineDefinitionCreateSchema,
     DayTemplateSchema,
     DayTemplateTimeBlockCreateSchema,
     DayTemplateTimeBlockSchema,
@@ -47,12 +47,12 @@ from .push_subscription import (
 from .query import QuerySchema
 from .reminder import ReminderSchema
 from .routine import (
-    RoutineCreateSchema,
-    RoutineSchema,
-    RoutineTaskCreateSchema,
-    RoutineTaskUpdateSchema,
+    RoutineDefinitionCreateSchema,
+    RoutineDefinitionSchema,
+    RoutineDefinitionTaskCreateSchema,
+    RoutineDefinitionTaskUpdateSchema,
     TimeWindowSchema,
-    RoutineUpdateSchema,
+    RoutineDefinitionUpdateSchema,
 )
 from .task import AdhocTaskCreateSchema, TaskScheduleSchema, TaskSchema
 from .task_definition import (
@@ -97,7 +97,7 @@ CalendarEntrySeriesSchema.model_rebuild()
 CalendarEntrySeriesUpdateSchema.model_rebuild()
 DaySchema.model_rebuild()
 DayTemplateCreateSchema.model_rebuild()
-DayTemplateRoutineCreateSchema.model_rebuild()
+DayTemplateRoutineDefinitionCreateSchema.model_rebuild()
 DayTemplateSchema.model_rebuild()
 DayTemplateUpdateSchema.model_rebuild()
 DayUpdateSchema.model_rebuild()
@@ -110,11 +110,11 @@ ReminderSchema.model_rebuild()
 BrainDumpItemSchema.model_rebuild()
 BrainDumpItemCreateSchema.model_rebuild()
 BrainDumpItemUpdateSchema.model_rebuild()
-RoutineSchema.model_rebuild()
-RoutineTaskCreateSchema.model_rebuild()
-RoutineTaskUpdateSchema.model_rebuild()
+RoutineDefinitionSchema.model_rebuild()
+RoutineDefinitionTaskCreateSchema.model_rebuild()
+RoutineDefinitionTaskUpdateSchema.model_rebuild()
 TimeWindowSchema.model_rebuild()
-RoutineUpdateSchema.model_rebuild()
+RoutineDefinitionUpdateSchema.model_rebuild()
 UserSchema.model_rebuild()
 UserSettingsSchema.model_rebuild()
 UserSettingsUpdateSchema.model_rebuild()
@@ -161,7 +161,7 @@ __all__ = [
     "DayContextSchema",
     "DaySchema",
     "DayTemplateCreateSchema",
-    "DayTemplateRoutineCreateSchema",
+    "DayTemplateRoutineDefinitionCreateSchema",
     "DayTemplateSchema",
     "DayTemplateTimeBlockCreateSchema",
     "DayTemplateTimeBlockSchema",
@@ -181,12 +181,12 @@ __all__ = [
     "PushSubscriptionUpdateSchema",
     "QuerySchema",
     "ReminderSchema",
-    "RoutineCreateSchema",
-    "RoutineSchema",
-    "RoutineTaskCreateSchema",
-    "RoutineTaskUpdateSchema",
+    "RoutineDefinitionCreateSchema",
+    "RoutineDefinitionSchema",
+    "RoutineDefinitionTaskCreateSchema",
+    "RoutineDefinitionTaskUpdateSchema",
     "TimeWindowSchema",
-    "RoutineUpdateSchema",
+    "RoutineDefinitionUpdateSchema",
     "SendMessageRequestSchema",
     "SendMessageResponseSchema",
     "StatusResponseSchema",

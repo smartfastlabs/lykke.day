@@ -12,7 +12,7 @@ from .factoid import FactoidRepository
 from .message import MessageRepository
 from .push_notification import PushNotificationRepository
 from .push_subscription import PushSubscriptionRepository
-from .routine import RoutineRepository
+from .routine import RoutineDefinitionRepository
 from .task import TaskRepository
 from .task_definition import TaskDefinitionRepository
 from .time_block_definition import TimeBlockDefinitionRepository
@@ -34,7 +34,7 @@ __all__ = [
     "MessageRepository",
     "PushNotificationRepository",
     "PushSubscriptionRepository",
-    "RoutineRepository",
+    "RoutineDefinitionRepository",
     "TaskDefinitionRepository",
     "TaskRepository",
     "TimeBlockDefinitionRepository",

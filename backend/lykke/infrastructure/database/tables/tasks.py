@@ -23,12 +23,12 @@ class Task(Base):
     frequency = Column(String, nullable=False)  # TaskFrequency enum as string
     completed_at = Column(DateTime)
     schedule = Column(JSONB)  # TaskSchedule | None
-    routine_id = Column(PGUUID)
+    routine_definition_id = Column(PGUUID)
     tags = Column(JSONB)  # list[TaskTag]
     actions = Column(JSONB)  # list[Action]
 
     __table_args__ = (
         Index("idx_tasks_date", "date"),
-        Index("idx_tasks_routine_id", "routine_id"),
+        Index("idx_tasks_routine_definition_id", "routine_definition_id"),
         Index("idx_tasks_user_id", "user_id"),
     )

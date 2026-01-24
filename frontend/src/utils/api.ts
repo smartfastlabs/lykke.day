@@ -8,7 +8,7 @@ import {
   Calendar,
   CalendarEntrySeries,
   TaskDefinition,
-  Routine,
+  RoutineDefinition,
   PushSubscription,
   TaskSchedule,
   TimeWindow,
@@ -384,20 +384,25 @@ export const pushAPI = {
 
 export const dayTemplateAPI = {
   ...createCrudMethods<DayTemplate>("day-templates"),
-  addRoutine: (
+  addRoutineDefinition: (
     dayTemplateId: string,
-    routineId: string
-  ): Promise<DayTemplate> =>
-    fetchData<DayTemplate>(`/api/day-templates/${dayTemplateId}/routines`, {
-      method: "POST",
-      body: JSON.stringify({ routine_id: routineId }),
-    }),
-  removeRoutine: (
-    dayTemplateId: string,
-    routineId: string
+    routineDefinitionId: string
   ): Promise<DayTemplate> =>
     fetchData<DayTemplate>(
-      `/api/day-templates/${dayTemplateId}/routines/${routineId}`,
+      `/api/day-templates/${dayTemplateId}/routine-definitions`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          routine_definition_id: routineDefinitionId,
+        }),
+      }
+    ),
+  removeRoutineDefinition: (
+    dayTemplateId: string,
+    routineDefinitionId: string
+  ): Promise<DayTemplate> =>
+    fetchData<DayTemplate>(
+      `/api/day-templates/${dayTemplateId}/routine-definitions/${routineDefinitionId}`,
       {
         method: "DELETE",
       }
@@ -473,21 +478,32 @@ export const usecaseConfigAPI = {
     }),
 };
 
-export const routineAPI = {
-  setRoutineAction: (routineId: string, action: string): Promise<Task[]> =>
-    fetchData<Task[]>(`/api/routines/${routineId}/actions`, {
-      method: "POST",
-      body: JSON.stringify({ type: action }),
-    }),
-  addToToday: (routineId: string): Promise<Task[]> => {
-    const params = new URLSearchParams({ routine_id: routineId });
-    return fetchData<Task[]>(`/api/me/today/routines?${params.toString()}`, {
-      method: "POST",
+export const routineDefinitionAPI = {
+  setRoutineDefinitionAction: (
+    routineDefinitionId: string,
+    action: string
+  ): Promise<Task[]> =>
+    fetchData<Task[]>(
+      `/api/routine-definitions/${routineDefinitionId}/actions`,
+      {
+        method: "POST",
+        body: JSON.stringify({ type: action }),
+      }
+    ),
+  addToToday: (routineDefinitionId: string): Promise<Task[]> => {
+    const params = new URLSearchParams({
+      routine_definition_id: routineDefinitionId,
     });
+    return fetchData<Task[]>(
+      `/api/me/today/routine-definitions?${params.toString()}`,
+      {
+        method: "POST",
+      }
+    );
   },
-  ...createCrudMethods<Routine>("routines"),
+  ...createCrudMethods<RoutineDefinition>("routine-definitions"),
   addTask: (
-    routineId: string,
+    routineDefinitionId: string,
     payload: {
       task_definition_id: string;
       name?: string | null;
@@ -495,29 +511,41 @@ export const routineAPI = {
       task_schedule?: RecurrenceSchedule | null;
       time_window?: TimeWindow | null;
     }
-  ): Promise<Routine> =>
-    fetchData<Routine>(`/api/routines/${routineId}/tasks`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
+  ): Promise<RoutineDefinition> =>
+    fetchData<RoutineDefinition>(
+      `/api/routine-definitions/${routineDefinitionId}/tasks`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    ),
   updateTask: (
-    routineId: string,
-    routineTaskId: string,
+    routineDefinitionId: string,
+    routineDefinitionTaskId: string,
     payload: {
       name?: string | null;
       schedule?: TaskSchedule | null;
       task_schedule?: RecurrenceSchedule | null;
       time_window?: TimeWindow | null;
     }
-  ): Promise<Routine> =>
-    fetchData<Routine>(`/api/routines/${routineId}/tasks/${routineTaskId}`, {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    }),
-  removeTask: (routineId: string, routineTaskId: string): Promise<Routine> =>
-    fetchData<Routine>(`/api/routines/${routineId}/tasks/${routineTaskId}`, {
-      method: "DELETE",
-    }),
+  ): Promise<RoutineDefinition> =>
+    fetchData<RoutineDefinition>(
+      `/api/routine-definitions/${routineDefinitionId}/tasks/${routineDefinitionTaskId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      }
+    ),
+  removeTask: (
+    routineDefinitionId: string,
+    routineDefinitionTaskId: string
+  ): Promise<RoutineDefinition> =>
+    fetchData<RoutineDefinition>(
+      `/api/routine-definitions/${routineDefinitionId}/tasks/${routineDefinitionTaskId}`,
+      {
+        method: "DELETE",
+      }
+    ),
 };
 
 export const calendarAPI = {

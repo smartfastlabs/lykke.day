@@ -20,9 +20,14 @@ import {
   ReminderStatus,
   BrainDumpItem,
   BrainDumpItemStatus,
-  Routine,
+  RoutineDefinition,
 } from "@/types/api";
-import { taskAPI, reminderAPI, brainDumpAPI, routineAPI } from "@/utils/api";
+import {
+  brainDumpAPI,
+  reminderAPI,
+  routineDefinitionAPI,
+  taskAPI,
+} from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 
 interface StreamingDataContextValue {
@@ -33,7 +38,7 @@ interface StreamingDataContextValue {
   reminders: Accessor<Reminder[]>;
   brainDumpItems: Accessor<BrainDumpItem[]>;
   day: Accessor<Day | undefined>;
-  routines: Accessor<Routine[] | undefined>;
+  routineDefinitions: Accessor<RoutineDefinition[] | undefined>;
   // Loading and error states
   isLoading: Accessor<boolean>;
   error: Accessor<Error | undefined>;
@@ -44,8 +49,11 @@ interface StreamingDataContextValue {
   sync: () => void;
   syncIncremental: (sinceTimestamp: string) => void;
   setTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
-  setRoutineAction: (routineId: string, status: TaskStatus) => Promise<void>;
-  addRoutineToToday: (routineId: string) => Promise<void>;
+  setRoutineDefinitionAction: (
+    routineDefinitionId: string,
+    status: TaskStatus
+  ) => Promise<void>;
+  addRoutineDefinitionToToday: (routineDefinitionId: string) => Promise<void>;
   addAdhocTask: (name: string, category: TaskCategory) => Promise<void>;
   addReminder: (name: string) => Promise<void>;
   updateReminderStatus: (reminder: Reminder, status: ReminderStatus) => Promise<void>;
@@ -75,7 +83,7 @@ interface SyncResponseMessage extends WebSocketMessage {
   type: "sync_response";
   day_context?: DayContext;
   changes?: EntityChange[];
-  routines?: Routine[];
+  routine_definitions?: RoutineDefinition[];
   last_audit_log_timestamp?: string | null;
 }
 
@@ -109,7 +117,7 @@ interface EntityChange {
   change_type: "created" | "updated" | "deleted";
   entity_type: string;
   entity_id: string;
-  entity_data: Task | Event | Routine | Routine | null;
+  entity_data: Task | Event | RoutineDefinition | RoutineDefinition | null;
 }
 
 export function StreamingDataProvider(props: ParentProps) {
@@ -124,13 +132,15 @@ export function StreamingDataProvider(props: ParentProps) {
     string | null
   >(null);
 
-  // Routines store - separate from day context since routines aren't date-specific
-  const [routinesStore, setRoutinesStore] = createStore<{
-    routines: Routine[];
-  }>({ routines: [] });
+  // Routine definitions store - separate from day context since they aren't date-specific
+  const [routineDefinitionsStore, setRoutineDefinitionsStore] = createStore<{
+    routineDefinitions: RoutineDefinition[];
+  }>({ routineDefinitions: [] });
 
-  // Expose routines from store
-  const routines = createMemo(() => routinesStore.routines);
+  // Expose routine definitions from store
+  const routineDefinitions = createMemo(
+    () => routineDefinitionsStore.routineDefinitions
+  );
 
   let ws: WebSocket | null = null;
   let reconnectTimeout: number | null = null;
@@ -328,9 +338,11 @@ export function StreamingDataProvider(props: ParentProps) {
       }
       setIsOutOfSync(false);
 
-      // Update routines from full sync response
-      if (message.routines) {
-        setRoutinesStore({ routines: message.routines });
+      // Update routine definitions from full sync response
+      if (message.routine_definitions) {
+        setRoutineDefinitionsStore({
+          routineDefinitions: message.routine_definitions,
+        });
       }
     } else if (message.changes) {
       // Incremental changes - apply to existing store
@@ -343,8 +355,8 @@ export function StreamingDataProvider(props: ParentProps) {
 
   // Apply incremental changes to store
   const applyChanges = (changes: EntityChange[]) => {
-    // Track routine updates separately since they're in a different store
-    let updatedRoutines: Routine[] | null = null;
+    // Track routine definition updates separately since they're in a different store
+    let updatedRoutineDefinitions: RoutineDefinition[] | null = null;
 
     setDayContextStore((current) => {
       if (!current.data) {
@@ -404,22 +416,25 @@ export function StreamingDataProvider(props: ParentProps) {
               updatedEvents.splice(index, 1);
             }
           }
-        } else if (change.entity_type === "routine") {
-          const routine = change.entity_data as Routine;
-          // Initialize updatedRoutines if not already done
-          if (updatedRoutines === null) {
-            updatedRoutines = [...routinesStore.routines];
+        } else if (change.entity_type === "routine_definition") {
+          const routineDefinition = change.entity_data as RoutineDefinition;
+          // Initialize updatedRoutineDefinitions if not already done
+          if (updatedRoutineDefinitions === null) {
+            updatedRoutineDefinitions = [
+              ...routineDefinitionsStore.routineDefinitions,
+            ];
           }
 
           if (change.change_type === "created") {
-            updatedRoutines.push(routine);
+            updatedRoutineDefinitions.push(routineDefinition);
           } else if (change.change_type === "updated") {
-            updatedRoutines = updatedRoutines.map((r) =>
-              r.id === routine.id ? routine : r
+            updatedRoutineDefinitions = updatedRoutineDefinitions.map(
+              (item) =>
+                item.id === routineDefinition.id ? routineDefinition : item
             );
           } else if (change.change_type === "deleted") {
-            updatedRoutines = updatedRoutines.filter(
-              (r) => r.id !== change.entity_id
+            updatedRoutineDefinitions = updatedRoutineDefinitions.filter(
+              (item) => item.id !== change.entity_id
             );
           }
         } else if (change.entity_type === "day") {
@@ -437,9 +452,11 @@ export function StreamingDataProvider(props: ParentProps) {
       return { data: updated };
     });
 
-    // Update routines store if routines were modified
-    if (updatedRoutines !== null) {
-      setRoutinesStore({ routines: updatedRoutines });
+    // Update routine definitions store if routine definitions were modified
+    if (updatedRoutineDefinitions !== null) {
+      setRoutineDefinitionsStore({
+        routineDefinitions: updatedRoutineDefinitions,
+      });
     }
   };
 
@@ -536,11 +553,11 @@ export function StreamingDataProvider(props: ParentProps) {
             (e) => e.id !== auditLog.entity_id
           );
           updated.events = updated.calendar_entries;
-        } else if (auditLog.entity_type === "routine") {
-          setRoutinesStore((current) => {
+        } else if (auditLog.entity_type === "routine_definition") {
+          setRoutineDefinitionsStore((current) => {
             const updated = {
-              routines: current.routines.filter(
-                (r) => r.id !== auditLog.entity_id
+              routineDefinitions: current.routineDefinitions.filter(
+                (routineDefinition) => routineDefinition.id !== auditLog.entity_id
               ),
             };
             return updated;
@@ -615,21 +632,24 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
-  const setRoutineAction = async (
-    routineId: string,
+  const setRoutineDefinitionAction = async (
+    routineDefinitionId: string,
     status: TaskStatus
   ): Promise<void> => {
-    // Optimistic update: update all tasks with this routine_id
+    // Optimistic update: update all tasks with this routine_definition_id
     const previousTasks = tasks();
     const updatedTasks = previousTasks.map((t: Task) =>
-      t.routine_id === routineId ? { ...t, status } : t
+      t.routine_definition_id === routineDefinitionId
+        ? { ...t, status }
+        : t
     );
     // Update all tasks locally
     updatedTasks.forEach((task) => updateTaskLocally(task));
 
     try {
-      const updatedTasksFromAPI = await routineAPI.setRoutineAction(
-        routineId,
+      const updatedTasksFromAPI =
+        await routineDefinitionAPI.setRoutineDefinitionAction(
+        routineDefinitionId,
         status
       );
       // Update each task with the API response
@@ -641,8 +661,12 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
-  const addRoutineToToday = async (routineId: string): Promise<void> => {
-    const tasksFromAPI = await routineAPI.addToToday(routineId);
+  const addRoutineDefinitionToToday = async (
+    routineDefinitionId: string
+  ): Promise<void> => {
+    const tasksFromAPI = await routineDefinitionAPI.addToToday(
+      routineDefinitionId
+    );
     upsertTasksLocally(tasksFromAPI);
   };
 
@@ -825,7 +849,7 @@ export function StreamingDataProvider(props: ParentProps) {
     reminders,
     brainDumpItems,
     day,
-    routines,
+    routineDefinitions,
     isLoading,
     error,
     isConnected,
@@ -833,8 +857,8 @@ export function StreamingDataProvider(props: ParentProps) {
     sync,
     syncIncremental,
     setTaskStatus,
-    setRoutineAction,
-    addRoutineToToday,
+    setRoutineDefinitionAction,
+    addRoutineDefinitionToToday,
     addAdhocTask,
     addReminder,
     updateReminderStatus,

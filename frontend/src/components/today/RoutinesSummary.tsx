@@ -10,19 +10,19 @@ import {
   faChevronRight,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
-import type { Routine, Task } from "@/types/api";
+import type { RoutineDefinition, Task } from "@/types/api";
 import { useStreamingData } from "@/providers/streamingData";
 import { SwipeableItem } from "@/components/shared/SwipeableItem";
 import TaskList from "@/components/tasks/List";
-import { routineAPI } from "@/utils/api";
+import { routineDefinitionAPI } from "@/utils/api";
 
 export interface RoutinesSummaryProps {
   tasks: Task[];
 }
 
-interface RoutineGroup {
-  routineId: string;
-  routineName: string;
+interface RoutineDefinitionGroup {
+  routineDefinitionId: string;
+  routineDefinitionName: string;
   tasks: Task[];
   completedCount: number;
   puntedCount: number;
@@ -31,72 +31,79 @@ interface RoutineGroup {
 }
 
 export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
-  // Get routines, setTaskStatus, and setRoutineAction from StreamingDataProvider
-  const { routines, setRoutineAction, addRoutineToToday } = useStreamingData();
+  // Get routine definitions and actions from StreamingDataProvider
+  const {
+    routineDefinitions,
+    setRoutineDefinitionAction,
+    addRoutineDefinitionToToday,
+  } = useStreamingData();
 
-  // Track which routines are expanded (persists across re-renders)
-  const [expandedRoutines, setExpandedRoutines] = createSignal<Set<string>>(
+  // Track which routine definitions are expanded (persists across re-renders)
+  const [expandedRoutineDefinitions, setExpandedRoutineDefinitions] =
+    createSignal<Set<string>>(
     new Set()
   );
   const [showAddRoutine, setShowAddRoutine] = createSignal(false);
   const [isAddingRoutine, setIsAddingRoutine] = createSignal(false);
-  const [fetchedRoutines, setFetchedRoutines] = createSignal<Routine[]>([]);
+  const [fetchedRoutineDefinitions, setFetchedRoutineDefinitions] = createSignal<
+    RoutineDefinition[]
+  >([]);
   const [isLoadingRoutines, setIsLoadingRoutines] = createSignal(false);
 
-  const toggleRoutineExpanded = (routineId: string) => {
-    setExpandedRoutines((prev) => {
+  const toggleRoutineExpanded = (routineDefinitionId: string) => {
+    setExpandedRoutineDefinitions((prev) => {
       const next = new Set(prev);
-      if (next.has(routineId)) {
-        next.delete(routineId);
+      if (next.has(routineDefinitionId)) {
+        next.delete(routineDefinitionId);
       } else {
-        next.add(routineId);
+        next.add(routineDefinitionId);
       }
       return next;
     });
   };
 
-  const isRoutineExpanded = (routineId: string) => {
-    return expandedRoutines().has(routineId);
+  const isRoutineExpanded = (routineDefinitionId: string) => {
+    return expandedRoutineDefinitions().has(routineDefinitionId);
   };
 
-  const routineSource = createMemo(() => {
-    const routineList = routines() ?? [];
-    if (routineList.length > 0) {
-      return routineList;
+  const routineDefinitionSource = createMemo(() => {
+    const routineDefinitionList = routineDefinitions() ?? [];
+    if (routineDefinitionList.length > 0) {
+      return routineDefinitionList;
     }
-    return fetchedRoutines();
+    return fetchedRoutineDefinitions();
   });
 
-  // Create a map of routine ID to routine name
-  const routineMap = createMemo(() => {
+  // Create a map of routine definition ID to routine definition name
+  const routineDefinitionMap = createMemo(() => {
     const map = new Map<string, string>();
-    const routineList = routineSource();
-    routineList.forEach((routine) => {
-      if (routine.id) {
-        map.set(routine.id, routine.name);
+    const routineDefinitionList = routineDefinitionSource();
+    routineDefinitionList.forEach((routineDefinition) => {
+      if (routineDefinition.id) {
+        map.set(routineDefinition.id, routineDefinition.name);
       }
     });
     return map;
   });
 
-  // Group tasks by routine_id
-  const routineGroups = createMemo<RoutineGroup[]>(() => {
+  // Group tasks by routine_definition_id
+  const routineDefinitionGroups = createMemo<RoutineDefinitionGroup[]>(() => {
     const groups = new Map<string, Task[]>();
 
-    // Group tasks by routine_id
+    // Group tasks by routine_definition_id
     props.tasks.forEach((task) => {
-      if (task.routine_id) {
-        if (!groups.has(task.routine_id)) {
-          groups.set(task.routine_id, []);
+      if (task.routine_definition_id) {
+        if (!groups.has(task.routine_definition_id)) {
+          groups.set(task.routine_definition_id, []);
         }
-        groups.get(task.routine_id)!.push(task);
+        groups.get(task.routine_definition_id)!.push(task);
       }
     });
 
-    // Convert to array of RoutineGroups
-    const map = routineMap();
+    // Convert to array of RoutineDefinitionGroups
+    const map = routineDefinitionMap();
     return Array.from(groups.entries())
-      .map(([routineId, tasks]) => {
+      .map(([routineDefinitionId, tasks]) => {
         const completedCount = tasks.filter(
           (t) => t.status === "COMPLETE"
         ).length;
@@ -105,12 +112,13 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
           (t) => t.status !== "COMPLETE" && t.status !== "PUNT"
         ).length;
 
-        // Get the routine name from the routines map
-        const routineName = map.get(routineId) || "Routine";
+        // Get the routine definition name from the map
+        const routineDefinitionName =
+          map.get(routineDefinitionId) || "Routine Definition";
 
         return {
-          routineId,
-          routineName,
+          routineDefinitionId,
+          routineDefinitionName,
           tasks,
           completedCount,
           puntedCount,
@@ -118,26 +126,31 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
           totalCount: tasks.length,
         };
       })
-      .filter((routine) => {
-        // Hide routines where every task is complete or punted
-        return routine.pendingCount > 0;
+      .filter((routineDefinition) => {
+        // Hide routine definitions where every task is complete or punted
+        return routineDefinition.pendingCount > 0;
       });
   });
 
-  const hasRoutines = createMemo(() => routineGroups().length > 0);
-  const routineIdsInTasks = createMemo(() => {
+  const hasRoutineDefinitions = createMemo(
+    () => routineDefinitionGroups().length > 0
+  );
+  const routineDefinitionIdsInTasks = createMemo(() => {
     const ids = new Set<string>();
     props.tasks.forEach((task) => {
-      if (task.routine_id) {
-        ids.add(task.routine_id);
+      if (task.routine_definition_id) {
+        ids.add(task.routine_definition_id);
       }
     });
     return ids;
   });
-  const availableRoutines = createMemo(() => {
-    const routineList = routineSource();
-    const usedIds = routineIdsInTasks();
-    return routineList.filter((routine) => routine.id && !usedIds.has(routine.id));
+  const availableRoutineDefinitions = createMemo(() => {
+    const routineDefinitionList = routineDefinitionSource();
+    const usedIds = routineDefinitionIdsInTasks();
+    return routineDefinitionList.filter(
+      (routineDefinition) =>
+        routineDefinition.id && !usedIds.has(routineDefinition.id)
+    );
   });
 
   const getRoutineIcon = (name: string) => {
@@ -150,11 +163,11 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
     return faLeaf;
   };
 
-  const handleAddRoutine = async (routineId: string) => {
+  const handleAddRoutineDefinition = async (routineDefinitionId: string) => {
     if (isAddingRoutine()) return;
     setIsAddingRoutine(true);
     try {
-      await addRoutineToToday(routineId);
+      await addRoutineDefinitionToToday(routineDefinitionId);
       setShowAddRoutine(false);
     } finally {
       setIsAddingRoutine(false);
@@ -164,12 +177,16 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
   const handleOpenAddRoutine = async () => {
     setShowAddRoutine(true);
     if (isLoadingRoutines()) return;
-    if ((routines() ?? []).length > 0 || fetchedRoutines().length > 0) return;
+    if (
+      (routineDefinitions() ?? []).length > 0 ||
+      fetchedRoutineDefinitions().length > 0
+    )
+      return;
 
     setIsLoadingRoutines(true);
     try {
-      const fetched = await routineAPI.getAll();
-      setFetchedRoutines(fetched);
+      const fetched = await routineDefinitionAPI.getAll();
+      setFetchedRoutineDefinitions(fetched);
     } finally {
       setIsLoadingRoutines(false);
     }
@@ -181,41 +198,49 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
         <div class="flex items-center justify-between gap-3 mb-5">
           <div class="flex items-center gap-3">
             <Icon icon={faLeaf} class="w-5 h-5 fill-amber-600" />
-            <h3 class="text-lg font-semibold text-stone-800">Routines</h3>
+            <h3 class="text-lg font-semibold text-stone-800">
+              Routine Definitions
+            </h3>
           </div>
           <button
             type="button"
             onClick={handleOpenAddRoutine}
             class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/80 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Add routine"
-            title="Add routine"
+            aria-label="Add routine definition"
+            title="Add routine definition"
           >
             <Icon icon={faPlus} class="w-4 h-4 fill-amber-600/80" />
           </button>
         </div>
 
         <div class="space-y-4">
-          <Show when={!hasRoutines()}>
+          <Show when={!hasRoutineDefinitions()}>
             <div class="text-sm text-stone-500">
-              No routines for today yet. Add one to get started.
+              No routine definitions for today yet. Add one to get started.
             </div>
           </Show>
-          <For each={routineGroups()}>
-            {(routine) => {
+          <For each={routineDefinitionGroups()}>
+            {(routineDefinition) => {
               const completionPercentage = () =>
-                routine.totalCount > 0
+                routineDefinition.totalCount > 0
                   ? Math.round(
-                      (routine.completedCount / routine.totalCount) * 100
+                      (routineDefinition.completedCount /
+                        routineDefinition.totalCount) *
+                        100
                     )
                   : 0;
 
               const puntedPercentage = () =>
-                routine.totalCount > 0
-                  ? Math.round((routine.puntedCount / routine.totalCount) * 100)
+                routineDefinition.totalCount > 0
+                  ? Math.round(
+                      (routineDefinition.puntedCount /
+                        routineDefinition.totalCount) *
+                        100
+                    )
                   : 0;
 
               const pendingPercentage = () =>
-                routine.totalCount > 0
+                routineDefinition.totalCount > 0
                   ? Math.max(
                       0,
                       100 - completionPercentage() - puntedPercentage()
@@ -223,13 +248,16 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                   : 0;
 
               const isComplete = () =>
-                routine.completedCount === routine.totalCount;
+                routineDefinition.completedCount ===
+                routineDefinition.totalCount;
 
               const isPunted = () =>
-                routine.puntedCount === routine.totalCount &&
-                routine.puntedCount > 0;
+                routineDefinition.puntedCount ===
+                  routineDefinition.totalCount &&
+                routineDefinition.puntedCount > 0;
 
-              const isExpanded = () => isRoutineExpanded(routine.routineId);
+              const isExpanded = () =>
+                isRoutineExpanded(routineDefinition.routineDefinitionId);
 
               const getStatusClass = () => {
                 if (isComplete())
@@ -254,15 +282,29 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                   {/* Routine Header - Swipeable */}
                   <div class="-mx-4 -mt-4 mb-1">
                     <SwipeableItem
-                      onSwipeRight={() => setRoutineAction(routine.routineId, "COMPLETE")}
-                      onSwipeLeft={() => setRoutineAction(routine.routineId, "PUNT")}
+                      onSwipeRight={() =>
+                        setRoutineDefinitionAction(
+                          routineDefinition.routineDefinitionId,
+                          "COMPLETE"
+                        )
+                      }
+                      onSwipeLeft={() =>
+                        setRoutineDefinitionAction(
+                          routineDefinition.routineDefinitionId,
+                          "PUNT"
+                        )
+                      }
                       rightLabel="✅ Complete All Tasks"
                       leftLabel="🗑 Punt All Tasks"
                       statusClass={getSwipeableStatusClass()}
                     >
                       <button
                         class="w-full flex items-start justify-between mb-3 text-left"
-                        onClick={() => toggleRoutineExpanded(routine.routineId)}
+                        onClick={() =>
+                          toggleRoutineExpanded(
+                            routineDefinition.routineDefinitionId
+                          )
+                        }
                       >
                       <div class="flex items-center gap-2">
                         <Icon
@@ -270,7 +312,9 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                           class={`w-3 h-3 transition-transform duration-200 ${isComplete() ? "fill-green-600" : isPunted() ? "fill-red-600" : "fill-amber-700"}`}
                         />
                         <Icon
-                          icon={getRoutineIcon(routine.routineName)}
+                          icon={getRoutineIcon(
+                            routineDefinition.routineDefinitionName
+                          )}
                           class={`w-4 h-4 ${isComplete() ? "fill-green-600" : isPunted() ? "fill-red-600" : "fill-amber-700"}`}
                         />
                         <span
@@ -281,7 +325,7 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                             "text-stone-800": !isComplete() && !isPunted(),
                           }}
                         >
-                          {routine.routineName}
+                          {routineDefinition.routineDefinitionName}
                         </span>
                       </div>
                       <div class="flex items-center gap-2">
@@ -293,7 +337,8 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                             "text-amber-700": !isComplete() && !isPunted(),
                           }}
                         >
-                          {routine.completedCount}/{routine.totalCount}
+                          {routineDefinition.completedCount}/
+                          {routineDefinition.totalCount}
                         </span>
                         <Show when={isComplete()}>
                           <Icon
@@ -307,7 +352,13 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                   </div>
 
                   {/* Progress Bar */}
-                  <Show when={routine.totalCount > 0 && (routine.completedCount > 0 || routine.puntedCount > 0)}>
+                  <Show
+                    when={
+                      routineDefinition.totalCount > 0 &&
+                      (routineDefinition.completedCount > 0 ||
+                        routineDefinition.puntedCount > 0)
+                    }
+                  >
                     <div class="relative w-full h-1.5 bg-white/80 rounded-full overflow-hidden mb-3">
                       <div class="flex h-full w-full">
                         <Show when={completionPercentage() > 0}>
@@ -335,7 +386,7 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                   {/* Task List - Collapsible */}
                   <Show when={isExpanded()}>
                     <div class="space-y-1.5 mt-3 transition-opacity duration-300 ease-in-out">
-                      <TaskList tasks={() => routine.tasks} />
+                      <TaskList tasks={() => routineDefinition.tasks} />
                     </div>
                   </Show>
                 </div>
@@ -348,7 +399,9 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 px-4">
           <div class="w-full max-w-md rounded-2xl bg-white shadow-xl shadow-amber-900/10 border border-white/70">
             <div class="flex items-center justify-between px-5 py-4 border-b border-stone-100">
-              <h4 class="text-base font-semibold text-stone-800">Add a routine</h4>
+              <h4 class="text-base font-semibold text-stone-800">
+                Add a routine definition
+              </h4>
               <button
                 type="button"
                 onClick={() => setShowAddRoutine(false)}
@@ -363,27 +416,34 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                 when={isLoadingRoutines()}
                 fallback={
                   <Show
-                    when={availableRoutines().length > 0}
+                    when={availableRoutineDefinitions().length > 0}
                     fallback={
                       <div class="text-sm text-stone-500">
-                        {routineSource().length === 0
-                          ? "No routines created yet."
-                          : "All routines are already on today's list."}
+                        {routineDefinitionSource().length === 0
+                          ? "No routine definitions created yet."
+                          : "All routine definitions are already on today's list."}
                       </div>
                     }
                   >
-                    <For each={availableRoutines()}>
-                      {(routine) => (
+                    <For each={availableRoutineDefinitions()}>
+                      {(routineDefinition) => (
                         <button
                           type="button"
-                          onClick={() => routine.id && handleAddRoutine(routine.id)}
-                          disabled={isAddingRoutine() || !routine.id}
+                          onClick={() =>
+                            routineDefinition.id &&
+                            handleAddRoutineDefinition(routineDefinition.id)
+                          }
+                          disabled={
+                            isAddingRoutine() || !routineDefinition.id
+                          }
                           class="w-full text-left px-4 py-3 rounded-xl border border-amber-100/70 bg-amber-50/40 text-stone-700 hover:bg-amber-50/70 transition disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                          <div class="font-medium">{routine.name}</div>
-                          <Show when={routine.description}>
+                          <div class="font-medium">
+                            {routineDefinition.name}
+                          </div>
+                          <Show when={routineDefinition.description}>
                             <div class="text-xs text-stone-500 mt-1">
-                              {routine.description}
+                              {routineDefinition.description}
                             </div>
                           </Show>
                         </button>
@@ -392,7 +452,9 @@ export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
                   </Show>
                 }
               >
-                <div class="text-sm text-stone-500">Loading routines...</div>
+                <div class="text-sm text-stone-500">
+                  Loading routine definitions...
+                </div>
               </Show>
             </div>
           </div>

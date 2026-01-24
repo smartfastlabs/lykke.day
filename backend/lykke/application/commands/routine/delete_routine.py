@@ -1,4 +1,4 @@
-"""Command to delete a routine."""
+"""Command to delete a routine definition."""
 
 from dataclasses import dataclass
 from uuid import UUID
@@ -7,21 +7,25 @@ from lykke.application.commands.base import BaseCommandHandler, Command
 
 
 @dataclass(frozen=True)
-class DeleteRoutineCommand(Command):
-    """Command to delete a routine."""
+class DeleteRoutineDefinitionCommand(Command):
+    """Command to delete a routine definition."""
 
-    routine_id: UUID
+    routine_definition_id: UUID
 
 
-class DeleteRoutineHandler(BaseCommandHandler[DeleteRoutineCommand, None]):
-    """Deletes a routine."""
+class DeleteRoutineDefinitionHandler(
+    BaseCommandHandler[DeleteRoutineDefinitionCommand, None]
+):
+    """Deletes a routine definition."""
 
-    async def handle(self, command: DeleteRoutineCommand) -> None:
-        """Delete a routine.
+    async def handle(self, command: DeleteRoutineDefinitionCommand) -> None:
+        """Delete a routine definition.
 
         Args:
-            command: The command containing the routine ID to delete.
+            command: The command containing the routine definition ID to delete.
         """
         async with self.new_uow() as uow:
-            routine = await uow.routine_ro_repo.get(command.routine_id)
-            await uow.delete(routine)
+            routine_definition = await uow.routine_definition_ro_repo.get(
+                command.routine_definition_id
+            )
+            await uow.delete(routine_definition)

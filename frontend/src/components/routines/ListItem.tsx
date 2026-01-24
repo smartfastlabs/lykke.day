@@ -1,18 +1,23 @@
 import { Component } from "solid-js";
-import { Routine } from "@/types/api";
+import { RoutineDefinition } from "@/types/api";
 
 interface ListItemProps {
-  routine: Routine;
+  routineDefinition: RoutineDefinition;
 }
 
 const RoutineListItem: Component<ListItemProps> = (props) => {
   return (
     <div class="flex items-center gap-4">
       <div class="flex-1 min-w-0">
-        <span class="text-sm text-gray-800 block truncate">{props.routine.name}</span>
+        <span class="text-sm text-gray-800 block truncate">
+          {props.routineDefinition.name}
+        </span>
         <span class="text-xs text-gray-500">
-          {props.routine.category} • {props.routine.routine_schedule.frequency}
-          {props.routine.description ? ` • ${props.routine.description}` : ""}
+          {props.routineDefinition.category} •{" "}
+          {props.routineDefinition.routine_definition_schedule.frequency}
+          {props.routineDefinition.description
+            ? ` • ${props.routineDefinition.description}`
+            : ""}
         </span>
       </div>
     </div>

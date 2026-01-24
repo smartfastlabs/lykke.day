@@ -32,7 +32,7 @@ async def test_add_reminder_adds_reminder_to_existing_day():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -67,11 +67,12 @@ async def test_add_reminder_adds_reminder_to_existing_day():
     )
 
     # Assert
-    assert len(result.reminders) == 1
-    assert result.reminders[0].name == "Test Reminder"
-    assert result.reminders[0].status == value_objects.ReminderStatus.INCOMPLETE
+    assert result.name == "Test Reminder"
+    assert result.status == value_objects.ReminderStatus.INCOMPLETE
     assert len(uow_factory.uow.added) == 1
-    assert uow_factory.uow.added[0] == result
+    assert uow_factory.uow.added[0] == day
+    assert len(day.reminders) == 1
+    assert day.reminders[0].id == result.id
 
 
 @pytest.mark.asyncio
@@ -83,7 +84,7 @@ async def test_add_reminder_emits_domain_event():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -118,7 +119,7 @@ async def test_add_reminder_emits_domain_event():
     )
 
     # Assert
-    events = result.collect_events()
+    events = day.collect_events()
     assert len(events) == 1
     assert isinstance(events[0], ReminderAddedEvent)
     assert events[0].reminder_name == "Test Reminder"
@@ -134,7 +135,7 @@ async def test_add_reminder_raises_if_day_missing():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 
@@ -177,7 +178,7 @@ async def test_add_reminder_enforces_max_five():
     template = DayTemplateEntity(
         user_id=user_id,
         slug="default",
-        routine_ids=[],
+        routine_definition_ids=[],
         time_blocks=[],
     )
 

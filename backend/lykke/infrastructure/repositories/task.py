@@ -29,13 +29,17 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
         if query.ids:
             stmt = stmt.where(self.table.c.id.in_(query.ids))
 
-        if query.routine_ids:
-            stmt = stmt.where(self.table.c.routine_id.in_(query.routine_ids))
+        if query.routine_definition_ids:
+            stmt = stmt.where(
+                self.table.c.routine_definition_id.in_(
+                    query.routine_definition_ids
+                )
+            )
 
         if query.is_adhoc is True:
-            stmt = stmt.where(self.table.c.routine_id.is_(None))
+            stmt = stmt.where(self.table.c.routine_definition_id.is_(None))
         elif query.is_adhoc is False:
-            stmt = stmt.where(self.table.c.routine_id.is_not(None))
+            stmt = stmt.where(self.table.c.routine_definition_id.is_not(None))
 
         return stmt
 
@@ -63,7 +67,7 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
             "category": get_enum_value(task.category),
             "frequency": get_enum_value(task.frequency),
             "completed_at": task.completed_at,
-            "routine_id": task.routine_id,
+            "routine_definition_id": task.routine_definition_id,
         }
 
         # Handle JSONB fields

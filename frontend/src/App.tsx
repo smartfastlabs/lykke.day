@@ -49,9 +49,9 @@ import NotificationConfigPage from "@/pages/me/settings/notifications/Index";
 import TaskDefinitionsPage from "@/pages/me/settings/task-definitions/Index";
 import NewTaskDefinitionPage from "@/pages/me/settings/task-definitions/New";
 import TaskDefinitionDetailPage from "@/pages/me/settings/task-definitions/Detail";
-import RoutinesPage from "@/pages/me/settings/routines/Index";
-import NewRoutinePage from "@/pages/me/settings/routines/New";
-import RoutineDetailPage from "@/pages/me/settings/routines/Detail";
+import RoutineDefinitionsPage from "@/pages/me/settings/routines/Index";
+import NewRoutineDefinitionPage from "@/pages/me/settings/routines/New";
+import RoutineDefinitionDetailPage from "@/pages/me/settings/routines/Detail";
 import TimeBlocksPage from "@/pages/me/settings/time-blocks/Index";
 import NewTimeBlockPage from "@/pages/me/settings/time-blocks/New";
 import TimeBlockDetailPage from "@/pages/me/settings/time-blocks/Detail";
@@ -282,9 +282,18 @@ export default function App() {
                   path="/task-definitions/:id"
                   component={TaskDefinitionDetailPage}
                 />
-                <Route path="/routines" component={RoutinesPage} />
-                <Route path="/routines/new" component={NewRoutinePage} />
-                <Route path="/routines/:id" component={RoutineDetailPage} />
+                <Route
+                  path="/routine-definitions"
+                  component={RoutineDefinitionsPage}
+                />
+                <Route
+                  path="/routine-definitions/new"
+                  component={NewRoutineDefinitionPage}
+                />
+                <Route
+                  path="/routine-definitions/:id"
+                  component={RoutineDefinitionDetailPage}
+                />
                 <Route path="/time-blocks" component={TimeBlocksPage} />
                 <Route path="/time-blocks/new" component={NewTimeBlockPage} />
                 <Route

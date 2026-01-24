@@ -16,8 +16,8 @@ from lykke.application.commands.brain_dump import (
 from lykke.application.commands.day import (
     AddReminderToDayCommand,
     AddReminderToDayHandler,
-    AddRoutineToDayCommand,
-    AddRoutineToDayHandler,
+    AddRoutineDefinitionToDayCommand,
+    AddRoutineDefinitionToDayHandler,
     RemoveReminderCommand,
     RemoveReminderHandler,
     UpdateReminderStatusCommand,
@@ -247,20 +247,23 @@ async def remove_brain_dump_item_from_today(
 
 
 # ============================================================================
-# Today's Routines
+# Today's Routine Definitions
 # ============================================================================
 
 
-@router.post("/today/routines", response_model=list[TaskSchema])
-async def add_routine_to_today(
-    routine_id: UUID,
+@router.post("/today/routine-definitions", response_model=list[TaskSchema])
+async def add_routine_definition_to_today(
+    routine_definition_id: UUID,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> list[TaskSchema]:
-    """Add a routine's tasks to today."""
+    """Add a routine definition's tasks to today."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(AddRoutineToDayHandler)
+    handler = command_factory.create(AddRoutineDefinitionToDayHandler)
     tasks = await handler.handle(
-        AddRoutineToDayCommand(date=date, routine_id=routine_id)
+        AddRoutineDefinitionToDayCommand(
+            date=date,
+            routine_definition_id=routine_definition_id,
+        )
     )
     return [map_task_to_schema(task) for task in tasks]
