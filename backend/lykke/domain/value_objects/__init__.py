@@ -12,6 +12,7 @@ from .calendar_subscription import CalendarSubscription
 from .day import (
     BrainDumpItem,
     BrainDumpItemStatus,
+    BrainDumpItemType,
     DayContext,
     DayMode,
     DayStatus,
@@ -97,6 +98,7 @@ __all__ = [
     "BotPersonalityUpdateObject",
     "BrainDumpItem",
     "BrainDumpItemStatus",
+    "BrainDumpItemType",
     "CalendarEntryQuery",
     "CalendarEntrySeriesQuery",
     "CalendarEntrySeriesUpdateObject",

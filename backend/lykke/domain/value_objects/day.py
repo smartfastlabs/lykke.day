@@ -62,6 +62,13 @@ class BrainDumpItemStatus(str, Enum):
     PUNT = "PUNT"
 
 
+class BrainDumpItemType(str, Enum):
+    """Type of a brain dump item."""
+
+    GENERAL = "GENERAL"
+    COMMAND = "COMMAND"
+
+
 @dataclass(kw_only=True)
 class BrainDumpItem(BaseValueObject):
     """Brain dump item for quick capture of thoughts and reminders."""
@@ -70,6 +77,7 @@ class BrainDumpItem(BaseValueObject):
     text: str
     status: BrainDumpItemStatus = BrainDumpItemStatus.ACTIVE
     created_at: datetime | None = field(default=None)
+    type: BrainDumpItemType = BrainDumpItemType.GENERAL
 
 
 @dataclass(kw_only=True)

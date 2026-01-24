@@ -94,6 +94,10 @@ class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None])
                 self.user_id,
             )
             return
+        await self._mark_brain_dump_item_as_command(
+            date=command.date,
+            item_id=command.item_id,
+        )
         if not isinstance(result, dict):
             logger.error(
                 "Unexpected result for brain dump tool %s: %s", tool_name, result
@@ -115,9 +119,46 @@ class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None])
 
         logger.error("Unknown brain dump tool: %s", tool_name)
 
-    async def _handle_add_task(
-        self, date: dt_date, result: dict[str, Any]
+    async def _mark_brain_dump_item_as_command(
+        self, *, date: dt_date, item_id: UUID
     ) -> None:
+        async with self.new_uow() as uow:
+            day_id = DayEntity.id_from_date_and_user(date, self.user_id)
+            day = await uow.day_ro_repo.get(day_id)
+
+            item_index = None
+            existing_item = None
+            for i, item in enumerate(day.brain_dump_items):
+                if item.id == item_id:
+                    item_index = i
+                    existing_item = item
+                    break
+
+            if item_index is None or existing_item is None:
+                logger.debug(
+                    "Brain dump item %s not found for day %s",
+                    item_id,
+                    date,
+                )
+                return
+
+            if existing_item.type == value_objects.BrainDumpItemType.COMMAND:
+                return
+
+            updated_item = value_objects.BrainDumpItem(
+                id=existing_item.id,
+                text=existing_item.text,
+                status=existing_item.status,
+                created_at=existing_item.created_at,
+                type=value_objects.BrainDumpItemType.COMMAND,
+            )
+
+            updated_items = list(day.brain_dump_items)
+            updated_items[item_index] = updated_item
+            day.brain_dump_items = updated_items
+            uow.add(day)
+
+    async def _handle_add_task(self, date: dt_date, result: dict[str, Any]) -> None:
         name = result.get("name")
         category = result.get("category")
         if not isinstance(name, str) or not isinstance(
@@ -160,9 +201,7 @@ class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None])
             )
         )
 
-    async def _handle_add_reminder(
-        self, date: dt_date, result: dict[str, Any]
-    ) -> None:
+    async def _handle_add_reminder(self, date: dt_date, result: dict[str, Any]) -> None:
         reminder = result.get("reminder")
         if not isinstance(reminder, str):
             logger.error("Invalid add_reminder result: %s", result)

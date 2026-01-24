@@ -183,3 +183,41 @@ async def test_process_brain_dump_update_reminder_updates_status() -> None:
     command = reminder_status_recorder.commands[0]
     assert command.reminder_id == reminder_id
     assert command.status == value_objects.ReminderStatus.COMPLETE
+
+
+@pytest.mark.asyncio
+async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
+    user_id = uuid4()
+    date = dt_date(2025, 11, 27)
+    template = DayTemplateEntity(user_id=user_id, slug="default")
+    day = DayEntity.create_for_date(date, user_id=user_id, template=template)
+    day.add_brain_dump_item("Follow up on invoice")
+
+    runner = _FakeLLMRunner(
+        tool_name="add_task",
+        result={
+            "name": "Follow up on invoice",
+            "category": value_objects.TaskCategory.WORK,
+        },
+        day=day,
+    )
+    uow = _FakeUoW(day_repo=_FakeDayReadOnlyRepo(day))
+
+    handler = ProcessBrainDumpHandler(
+        _FakeReadOnlyRepos(day_repo=_FakeDayReadOnlyRepo(day)),
+        _FakeUoWFactory(uow),
+        user_id,
+        runner,
+        object(),
+        _Recorder(commands=[]),
+        _Recorder(commands=[]),
+        _Recorder(commands=[]),
+        _Recorder(commands=[]),
+    )
+
+    await handler.handle(
+        ProcessBrainDumpCommand(date=date, item_id=day.brain_dump_items[0].id)
+    )
+
+    assert day.brain_dump_items[0].type == value_objects.BrainDumpItemType.COMMAND
+    assert uow.added == [day]
