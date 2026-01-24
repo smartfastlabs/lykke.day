@@ -420,6 +420,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
         self._add_event(
             BrainDumpItemAddedEvent(
                 day_id=self.id,
+                user_id=self.user_id,
                 date=self.date,
                 item_id=item.id,
                 item_text=item.text,

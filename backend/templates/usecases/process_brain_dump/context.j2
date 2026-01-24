@@ -1,0 +1,44 @@
+Brain dump processing context.
+Current time: {{ fmt_datetime(current_time) }}
+
+New brain dump item:
+- id: {{ brain_dump_item.id }}
+  text: {{ brain_dump_item.text }}
+  status: {{ brain_dump_item.status.value }}
+  {{- kv_line("  ", "created_at", brain_dump_item.created_at and fmt_datetime(brain_dump_item.created_at)) -}}
+
+Day:
+- date: {{ context.day.date.isoformat() }}
+  status: {{ context.day.status.value }}
+  {% if context.day.tags %}tags: {{ context.day.tags | map(attribute='value') | list }}{% endif %}
+
+Existing tasks (use IDs for updates):
+{% for task in context.tasks %}
+- id: {{ task.id }}
+  name: {{ task.name }}
+  status: {{ task.status.value }}
+  category: {{ task.category.value }}
+  scheduled_date: {{ task.scheduled_date.isoformat() }}
+  {{- kv_line("  ", "description", task.description) -}}
+  {% if task.tags %}tags: {{ task.tags | map(attribute='value') | list }}{% endif %}
+  schedule:
+    {{- kv_line("    ", "timing_type", task.schedule and task.schedule.timing_type.value) -}}
+    {{- kv_line("    ", "available_time", task.schedule and task.schedule.available_time and fmt_time(task.schedule.available_time)) -}}
+    {{- kv_line("    ", "start_time", task.schedule and task.schedule.start_time and fmt_time(task.schedule.start_time)) -}}
+    {{- kv_line("    ", "end_time", task.schedule and task.schedule.end_time and fmt_time(task.schedule.end_time)) -}}
+{% endfor %}
+
+Existing reminders (use IDs for updates):
+{% for reminder in context.day.reminders %}
+- id: {{ reminder.id }}
+  name: {{ reminder.name }}
+  status: {{ reminder.status.value }}
+  {{- kv_line("  ", "created_at", reminder.created_at and fmt_datetime(reminder.created_at)) -}}
+{% endfor %}
+
+Other brain dump items:
+{% for item in context.day.brain_dump_items %}
+- id: {{ item.id }}
+  text: {{ item.text }}
+  status: {{ item.status.value }}
+{% endfor %}

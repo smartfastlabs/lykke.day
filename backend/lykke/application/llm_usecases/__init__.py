@@ -3,6 +3,7 @@
 from .base import BaseUseCase, UseCasePromptInput
 from .morning_overview import MorningOverviewUseCase
 from .notification import NotificationUseCase
+from .process_brain_dump import ProcessBrainDumpUseCase
 from .runner import LLMUseCaseRunner, LLMRunResult
 
 __all__ = [
@@ -10,6 +11,7 @@ __all__ = [
     "UseCasePromptInput",
     "MorningOverviewUseCase",
     "NotificationUseCase",
+    "ProcessBrainDumpUseCase",
     "LLMRunResult",
     "LLMUseCaseRunner",
 ]

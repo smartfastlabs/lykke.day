@@ -87,6 +87,7 @@ class BrainDumpItemAddedEvent(DomainEvent, AuditableDomainEvent):
     """
 
     day_id: UUID
+    user_id: UUID
     date: dt_date
     item_id: UUID
     item_text: str

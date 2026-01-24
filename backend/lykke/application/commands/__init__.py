@@ -9,6 +9,7 @@ from .calendar import (
     SyncCalendarCommand,
     SyncCalendarHandler,
 )
+from .brain_dump import ProcessBrainDumpCommand, ProcessBrainDumpHandler
 from .day import (
     RescheduleDayCommand,
     RescheduleDayHandler,
@@ -37,6 +38,8 @@ from .task import (
 __all__ = [
     "CreateAdhocTaskCommand",
     "CreateAdhocTaskHandler",
+    "ProcessBrainDumpCommand",
+    "ProcessBrainDumpHandler",
     "ReceiveSmsMessageCommand",
     "ReceiveSmsMessageHandler",
     "RecordRoutineActionCommand",

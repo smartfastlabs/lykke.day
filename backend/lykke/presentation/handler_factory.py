@@ -6,6 +6,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, TypeVar, overload
 
 from lykke.application.commands.base import BaseCommandHandler
+from lykke.application.commands.brain_dump import ProcessBrainDumpHandler
 from lykke.application.commands.calendar import (
     ResetCalendarDataHandler,
     ResetCalendarSyncHandler,
@@ -15,18 +16,27 @@ from lykke.application.commands.calendar import (
     SyncCalendarHandler,
     UnsubscribeCalendarHandler,
 )
+from lykke.application.commands.day.add_reminder import AddReminderToDayHandler
 from lykke.application.commands.day.reschedule_day import RescheduleDayHandler
 from lykke.application.commands.day.schedule_day import ScheduleDayHandler
+from lykke.application.commands.day.update_reminder_status import (
+    UpdateReminderStatusHandler,
+)
 from lykke.application.commands.notifications import (
     MorningOverviewHandler,
     SmartNotificationHandler,
+)
+from lykke.application.commands.push_subscription import SendPushNotificationHandler
+from lykke.application.commands.task import (
+    CreateAdhocTaskHandler,
+    RecordTaskActionHandler,
 )
 from lykke.application.llm_usecases import (
     LLMUseCaseRunner,
     MorningOverviewUseCase,
     NotificationUseCase,
+    ProcessBrainDumpUseCase,
 )
-from lykke.application.commands.push_subscription import SendPushNotificationHandler
 from lykke.application.queries import (
     ComputeTaskRiskHandler,
     GenerateUseCasePromptHandler,
@@ -276,6 +286,29 @@ def _build_morning_overview_handler(
     )
 
 
+def _build_process_brain_dump_handler(
+    factory: CommandHandlerFactory,
+) -> ProcessBrainDumpHandler:
+    llm_usecase_runner = LLMUseCaseRunner(
+        user_id=factory.user_id,
+        user_ro_repo=factory.ro_repos.user_ro_repo,
+        generate_usecase_prompt_handler=factory.query_factory.create(
+            GenerateUseCasePromptHandler
+        ),
+    )
+    return ProcessBrainDumpHandler(
+        factory.ro_repos,
+        factory.uow_factory,
+        factory.user_id,
+        llm_usecase_runner,
+        factory.query_factory.create(GetLLMPromptContextHandler),
+        factory.create(CreateAdhocTaskHandler),
+        factory.create(AddReminderToDayHandler),
+        factory.create(UpdateReminderStatusHandler),
+        factory.create(RecordTaskActionHandler),
+    )
+
+
 DEFAULT_COMMAND_HANDLER_REGISTRY: dict[
     type[BaseCommandHandler], CommandHandlerProvider
 ] = {
@@ -291,6 +324,7 @@ DEFAULT_COMMAND_HANDLER_REGISTRY: dict[
     SendPushNotificationHandler: _build_send_push_notification_handler,
     SmartNotificationHandler: _build_smart_notification_handler,
     MorningOverviewHandler: _build_morning_overview_handler,
+    ProcessBrainDumpHandler: _build_process_brain_dump_handler,
 }
 
 
@@ -401,6 +435,11 @@ class CommandHandlerFactory:
     def create(
         self, handler_class: type[MorningOverviewHandler]
     ) -> MorningOverviewHandler: ...
+
+    @overload
+    def create(
+        self, handler_class: type[ProcessBrainDumpHandler]
+    ) -> ProcessBrainDumpHandler: ...
 
     @overload
     def create(self, handler_class: type[CommandHandlerT]) -> CommandHandlerT: ...

@@ -1,5 +1,6 @@
 """Background task definitions using Taskiq."""
 
+from datetime import date as dt_date
 from typing import Annotated, cast
 from uuid import UUID
 
@@ -9,6 +10,10 @@ from taskiq.schedule_sources import LabelScheduleSource
 from taskiq_dependencies import Depends
 
 from lykke.application.commands import ScheduleDayCommand, ScheduleDayHandler
+from lykke.application.commands.brain_dump import (
+    ProcessBrainDumpCommand,
+    ProcessBrainDumpHandler,
+)
 from lykke.application.commands.calendar import (
     SubscribeCalendarCommand,
     SubscribeCalendarHandler,
@@ -34,7 +39,6 @@ from lykke.core.utils.dates import (
     get_current_date,
     get_current_datetime_in_timezone,
     get_current_time,
-    resolve_timezone,
 )
 from lykke.domain import value_objects
 from lykke.infrastructure.gateways import (
@@ -181,6 +185,20 @@ def get_morning_overview_handler(
         uow_factory=uow_factory,
     )
     return factory.create(MorningOverviewHandler)
+
+
+def get_process_brain_dump_handler(
+    user_id: UUID,
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
+) -> ProcessBrainDumpHandler:
+    """Get a ProcessBrainDumpHandler instance for a user."""
+    factory = CommandHandlerFactory(
+        user_id=user_id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+    )
+    return factory.create(ProcessBrainDumpHandler)
 
 
 @broker.task  # type: ignore[untyped-decorator]
@@ -548,6 +566,55 @@ async def evaluate_morning_overview_task(
             # Catch-all for resilient background job
             logger.exception(f"Error evaluating morning overview for user {user_id}")
 
+    finally:
+        await pubsub_gateway.close()
+
+
+@broker.task  # type: ignore[untyped-decorator]
+async def process_brain_dump_item_task(
+    user_id: UUID,
+    day_date: str,
+    item_id: UUID,
+) -> None:
+    """Process a brain dump item for a specific user."""
+    logger.info(
+        "Starting brain dump processing for user %s item %s", user_id, item_id
+    )
+
+    try:
+        date = dt_date.fromisoformat(day_date)
+    except ValueError:
+        logger.warning(
+            "Invalid brain dump date %s for user %s item %s",
+            day_date,
+            user_id,
+            item_id,
+        )
+        return
+
+    pubsub_gateway = RedisPubSubGateway()
+    try:
+        handler = get_process_brain_dump_handler(
+            user_id=user_id,
+            uow_factory=get_unit_of_work_factory(pubsub_gateway),
+            ro_repo_factory=get_read_only_repository_factory(),
+        )
+
+        try:
+            await handler.handle(
+                ProcessBrainDumpCommand(date=date, item_id=item_id)
+            )
+            logger.debug(
+                "Brain dump processing completed for user %s item %s",
+                user_id,
+                item_id,
+            )
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(
+                "Error processing brain dump for user %s item %s",
+                user_id,
+                item_id,
+            )
     finally:
         await pubsub_gateway.close()
 

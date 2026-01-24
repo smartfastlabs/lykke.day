@@ -359,6 +359,7 @@ async def test_realtime_brain_dump_update_notification(
         # Create domain event
         domain_event = BrainDumpItemAddedEvent(
             day_id=day.id,
+            user_id=user.id,
             date=test_date,
             item_id=uuid4(),
             item_text="Brain dump test item",

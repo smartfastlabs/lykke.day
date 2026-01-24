@@ -54,6 +54,7 @@ def test_add_brain_dump_item_emits_domain_event(test_day: DayEntity) -> None:
     assert events[0].item_id == item.id
     assert events[0].item_text == item.text
     assert events[0].day_id == test_day.id
+    assert events[0].user_id == test_day.user_id
     assert events[0].date == test_day.date
 
 
