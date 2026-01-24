@@ -24,7 +24,6 @@ from lykke.application.commands.day import (
     UpdateReminderStatusHandler,
 )
 from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
-from lykke.application.queries import GetDayContextHandler, GetDayContextQuery
 from lykke.application.queries.list_base_personalities import (
     ListBasePersonalitiesHandler,
     ListBasePersonalitiesQuery,
@@ -32,18 +31,19 @@ from lykke.application.queries.list_base_personalities import (
 from lykke.core.utils.dates import get_current_date
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
-from lykke.domain.value_objects import (
-    UserSetting,
-    UserUpdateObject,
-)
+from lykke.domain.value_objects import UserSetting, UserUpdateObject
 from lykke.presentation.api.schemas import (
     BasePersonalitySchema,
-    DayContextSchema,
+    BrainDumpItemSchema,
+    ReminderSchema,
+    TaskSchema,
     UserSchema,
     UserUpdateSchema,
 )
 from lykke.presentation.api.schemas.mappers import (
-    map_day_context_to_schema,
+    map_brain_dump_item_to_schema,
+    map_reminder_to_schema,
+    map_task_to_schema,
     map_user_to_schema,
 )
 from lykke.presentation.handler_factory import (
@@ -155,58 +155,48 @@ async def list_base_personalities(
 # ============================================================================
 
 
-@router.post("/today/reminders", response_model=DayContextSchema)
+@router.post("/today/reminders", response_model=ReminderSchema)
 async def add_reminder_to_today(
     name: str,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
-) -> DayContextSchema:
+) -> ReminderSchema:
     """Add a reminder to today."""
     date = get_current_date(user.settings.timezone)
     handler = command_factory.create(AddReminderToDayHandler)
-    day_context_handler_instance = query_factory.create(GetDayContextHandler)
-    await handler.handle(AddReminderToDayCommand(date=date, reminder=name))
-    # Get the full context to return
-    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
-    return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
+    reminder = await handler.handle(AddReminderToDayCommand(date=date, reminder=name))
+    return map_reminder_to_schema(reminder)
 
 
-@router.patch("/today/reminders/{reminder_id}", response_model=DayContextSchema)
+@router.patch("/today/reminders/{reminder_id}", response_model=ReminderSchema)
 async def update_today_reminder_status(
     reminder_id: UUID,
     status: value_objects.ReminderStatus,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
-) -> DayContextSchema:
+) -> ReminderSchema:
     """Update a reminder's status for today."""
     date = get_current_date(user.settings.timezone)
     handler = command_factory.create(UpdateReminderStatusHandler)
-    day_context_handler_instance = query_factory.create(GetDayContextHandler)
-    await handler.handle(
+    reminder = await handler.handle(
         UpdateReminderStatusCommand(date=date, reminder_id=reminder_id, status=status)
     )
-    # Get the full context to return
-    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
-    return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
+    return map_reminder_to_schema(reminder)
 
 
-@router.delete("/today/reminders/{reminder_id}", response_model=DayContextSchema)
+@router.delete("/today/reminders/{reminder_id}", response_model=ReminderSchema)
 async def remove_reminder_from_today(
     reminder_id: UUID,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
-) -> DayContextSchema:
+) -> ReminderSchema:
     """Remove a reminder from today."""
     date = get_current_date(user.settings.timezone)
     handler = command_factory.create(RemoveReminderHandler)
-    day_context_handler_instance = query_factory.create(GetDayContextHandler)
-    await handler.handle(RemoveReminderCommand(date=date, reminder_id=reminder_id))
-    # Get the full context to return
-    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
-    return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
+    reminder = await handler.handle(
+        RemoveReminderCommand(date=date, reminder_id=reminder_id)
+    )
+    return map_reminder_to_schema(reminder)
 
 
 # ============================================================================
@@ -214,55 +204,46 @@ async def remove_reminder_from_today(
 # ============================================================================
 
 
-@router.post("/today/brain-dump", response_model=DayContextSchema)
+@router.post("/today/brain-dump", response_model=BrainDumpItemSchema)
 async def add_brain_dump_item_to_today(
     text: str,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
-) -> DayContextSchema:
+) -> BrainDumpItemSchema:
     """Add a brain dump item to today."""
     date = get_current_date(user.settings.timezone)
     handler = command_factory.create(CreateBrainDumpItemHandler)
-    day_context_handler_instance = query_factory.create(GetDayContextHandler)
-    await handler.handle(CreateBrainDumpItemCommand(date=date, text=text))
-    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
-    return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
+    item = await handler.handle(CreateBrainDumpItemCommand(date=date, text=text))
+    return map_brain_dump_item_to_schema(item)
 
 
-@router.patch("/today/brain-dump/{item_id}", response_model=DayContextSchema)
+@router.patch("/today/brain-dump/{item_id}", response_model=BrainDumpItemSchema)
 async def update_brain_dump_item_status(
     item_id: UUID,
     status: value_objects.BrainDumpItemStatus,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
-) -> DayContextSchema:
+) -> BrainDumpItemSchema:
     """Update a brain dump item's status for today."""
     date = get_current_date(user.settings.timezone)
     handler = command_factory.create(UpdateBrainDumpItemStatusHandler)
-    day_context_handler_instance = query_factory.create(GetDayContextHandler)
-    await handler.handle(
+    item = await handler.handle(
         UpdateBrainDumpItemStatusCommand(date=date, item_id=item_id, status=status)
     )
-    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
-    return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
+    return map_brain_dump_item_to_schema(item)
 
 
-@router.delete("/today/brain-dump/{item_id}", response_model=DayContextSchema)
+@router.delete("/today/brain-dump/{item_id}", response_model=BrainDumpItemSchema)
 async def remove_brain_dump_item_from_today(
     item_id: UUID,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
-) -> DayContextSchema:
+) -> BrainDumpItemSchema:
     """Remove a brain dump item from today."""
     date = get_current_date(user.settings.timezone)
     handler = command_factory.create(DeleteBrainDumpItemHandler)
-    day_context_handler_instance = query_factory.create(GetDayContextHandler)
-    await handler.handle(DeleteBrainDumpItemCommand(date=date, item_id=item_id))
-    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
-    return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
+    item = await handler.handle(DeleteBrainDumpItemCommand(date=date, item_id=item_id))
+    return map_brain_dump_item_to_schema(item)
 
 
 # ============================================================================
@@ -270,17 +251,16 @@ async def remove_brain_dump_item_from_today(
 # ============================================================================
 
 
-@router.post("/today/routines", response_model=DayContextSchema)
+@router.post("/today/routines", response_model=list[TaskSchema])
 async def add_routine_to_today(
     routine_id: UUID,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
-    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
-) -> DayContextSchema:
+) -> list[TaskSchema]:
     """Add a routine's tasks to today."""
     date = get_current_date(user.settings.timezone)
     handler = command_factory.create(AddRoutineToDayHandler)
-    day_context_handler_instance = query_factory.create(GetDayContextHandler)
-    await handler.handle(AddRoutineToDayCommand(date=date, routine_id=routine_id))
-    context = await day_context_handler_instance.handle(GetDayContextQuery(date=date))
-    return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
+    tasks = await handler.handle(
+        AddRoutineToDayCommand(date=date, routine_id=routine_id)
+    )
+    return [map_task_to_schema(task) for task in tasks]

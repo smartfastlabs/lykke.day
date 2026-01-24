@@ -69,6 +69,7 @@ class BrainDumpItemType(str, Enum):
     GENERAL = "GENERAL"
     COMMAND = "COMMAND"
 
+
 @dataclass(kw_only=True)
 class DayContext(BaseValueObject):
     day: "DayEntity"

@@ -19,11 +19,13 @@ class UpdateReminderStatusCommand(Command):
 
 
 class UpdateReminderStatusHandler(
-    BaseCommandHandler[UpdateReminderStatusCommand, DayEntity]
+    BaseCommandHandler[UpdateReminderStatusCommand, value_objects.Reminder]
 ):
     """Updates a reminder's status on a day."""
 
-    async def handle(self, command: UpdateReminderStatusCommand) -> DayEntity:
+    async def handle(
+        self, command: UpdateReminderStatusCommand
+    ) -> value_objects.Reminder:
         """Update a reminder's status on a day.
 
         Args:
@@ -41,10 +43,12 @@ class UpdateReminderStatusHandler(
             day = await uow.day_ro_repo.get(day_id)
 
             # Update the reminder status (this emits a domain event if status changed)
-            day.update_reminder_status(command.reminder_id, command.status)
+            updated_reminder = day.update_reminder_status(
+                command.reminder_id, command.status
+            )
 
             # Only add entity to UoW if it was actually modified (has events)
             # If status didn't change, update_reminder_status returns early without events
             if day.has_events():
                 uow.add(day)
-            return day
+            return updated_reminder

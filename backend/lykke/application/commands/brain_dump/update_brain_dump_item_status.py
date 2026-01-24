@@ -7,6 +7,7 @@ from uuid import UUID
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
+from lykke.domain.entities import BrainDumpEntity
 
 
 @dataclass(frozen=True)
@@ -19,11 +20,13 @@ class UpdateBrainDumpItemStatusCommand(Command):
 
 
 class UpdateBrainDumpItemStatusHandler(
-    BaseCommandHandler[UpdateBrainDumpItemStatusCommand, None]
+    BaseCommandHandler[UpdateBrainDumpItemStatusCommand, BrainDumpEntity]
 ):
     """Updates a brain dump item's status."""
 
-    async def handle(self, command: UpdateBrainDumpItemStatusCommand) -> None:
+    async def handle(
+        self, command: UpdateBrainDumpItemStatusCommand
+    ) -> BrainDumpEntity:
         """Update a brain dump item's status."""
         async with self.new_uow() as uow:
             item = await uow.brain_dump_ro_repo.get(command.item_id)
@@ -35,3 +38,4 @@ class UpdateBrainDumpItemStatusHandler(
             updated = item.update_status(command.status)
             if updated.has_events():
                 uow.add(updated)
+            return updated

@@ -15,6 +15,8 @@ import {
   RecurrenceSchedule,
   UseCaseConfig,
   NotificationUseCaseConfig,
+  Reminder,
+  BrainDumpItem,
 } from "@/types/api";
 import type {
   BasePersonalityOption,
@@ -183,17 +185,17 @@ export const taskAPI = {
 };
 
 export const reminderAPI = {
-  addReminder: (name: string): Promise<DayContext> => {
+  addReminder: (name: string): Promise<Reminder> => {
     // The endpoint expects name as a query parameter
     const params = new URLSearchParams({ name });
-    return fetchData<DayContext>(`/api/me/today/reminders?${params.toString()}`, {
+    return fetchData<Reminder>(`/api/me/today/reminders?${params.toString()}`, {
       method: "POST",
     });
   },
 
-  updateReminderStatus: (reminderId: string, status: string): Promise<DayContext> => {
+  updateReminderStatus: (reminderId: string, status: string): Promise<Reminder> => {
     const params = new URLSearchParams({ status });
-    return fetchData<DayContext>(
+    return fetchData<Reminder>(
       `/api/me/today/reminders/${reminderId}?${params.toString()}`,
       {
         method: "PATCH",
@@ -201,23 +203,23 @@ export const reminderAPI = {
     );
   },
 
-  removeReminder: (reminderId: string): Promise<DayContext> =>
-    fetchData<DayContext>(`/api/me/today/reminders/${reminderId}`, {
+  removeReminder: (reminderId: string): Promise<Reminder> =>
+    fetchData<Reminder>(`/api/me/today/reminders/${reminderId}`, {
       method: "DELETE",
     }),
 };
 
 export const brainDumpAPI = {
-  addItem: (text: string): Promise<DayContext> => {
+  addItem: (text: string): Promise<BrainDumpItem> => {
     const params = new URLSearchParams({ text });
-    return fetchData<DayContext>(`/api/me/today/brain-dump?${params.toString()}`, {
+    return fetchData<BrainDumpItem>(`/api/me/today/brain-dump?${params.toString()}`, {
       method: "POST",
     });
   },
 
-  updateItemStatus: (itemId: string, status: string): Promise<DayContext> => {
+  updateItemStatus: (itemId: string, status: string): Promise<BrainDumpItem> => {
     const params = new URLSearchParams({ status });
-    return fetchData<DayContext>(
+    return fetchData<BrainDumpItem>(
       `/api/me/today/brain-dump/${itemId}?${params.toString()}`,
       {
         method: "PATCH",
@@ -225,8 +227,8 @@ export const brainDumpAPI = {
     );
   },
 
-  removeItem: (itemId: string): Promise<DayContext> =>
-    fetchData<DayContext>(`/api/me/today/brain-dump/${itemId}`, {
+  removeItem: (itemId: string): Promise<BrainDumpItem> =>
+    fetchData<BrainDumpItem>(`/api/me/today/brain-dump/${itemId}`, {
       method: "DELETE",
     }),
 };
@@ -477,9 +479,9 @@ export const routineAPI = {
       method: "POST",
       body: JSON.stringify({ type: action }),
     }),
-  addToToday: (routineId: string): Promise<DayContext> => {
+  addToToday: (routineId: string): Promise<Task[]> => {
     const params = new URLSearchParams({ routine_id: routineId });
-    return fetchData<DayContext>(`/api/me/today/routines?${params.toString()}`, {
+    return fetchData<Task[]>(`/api/me/today/routines?${params.toString()}`, {
       method: "POST",
     });
   },

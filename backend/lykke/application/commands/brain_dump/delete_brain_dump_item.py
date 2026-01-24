@@ -6,6 +6,7 @@ from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.core.exceptions import DomainError
+from lykke.domain.entities import BrainDumpEntity
 
 
 @dataclass(frozen=True)
@@ -16,10 +17,12 @@ class DeleteBrainDumpItemCommand(Command):
     item_id: UUID
 
 
-class DeleteBrainDumpItemHandler(BaseCommandHandler[DeleteBrainDumpItemCommand, None]):
+class DeleteBrainDumpItemHandler(
+    BaseCommandHandler[DeleteBrainDumpItemCommand, BrainDumpEntity]
+):
     """Deletes a brain dump item."""
 
-    async def handle(self, command: DeleteBrainDumpItemCommand) -> None:
+    async def handle(self, command: DeleteBrainDumpItemCommand) -> BrainDumpEntity:
         """Delete a brain dump item."""
         async with self.new_uow() as uow:
             item = await uow.brain_dump_ro_repo.get(command.item_id)
@@ -30,3 +33,4 @@ class DeleteBrainDumpItemHandler(BaseCommandHandler[DeleteBrainDumpItemCommand, 
 
             item.mark_removed()
             await uow.delete(item)
+            return item

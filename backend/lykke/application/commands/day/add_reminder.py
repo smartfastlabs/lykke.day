@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 
 
@@ -15,10 +16,14 @@ class AddReminderToDayCommand(Command):
     reminder: str
 
 
-class AddReminderToDayHandler(BaseCommandHandler[AddReminderToDayCommand, DayEntity]):
+class AddReminderToDayHandler(
+    BaseCommandHandler[AddReminderToDayCommand, value_objects.Reminder]
+):
     """Adds a reminder to a day."""
 
-    async def handle(self, command: AddReminderToDayCommand) -> DayEntity:
+    async def handle(
+        self, command: AddReminderToDayCommand
+    ) -> value_objects.Reminder:
         """Add a reminder to a day.
 
         Args:
@@ -36,7 +41,8 @@ class AddReminderToDayHandler(BaseCommandHandler[AddReminderToDayCommand, DayEnt
             day = await uow.day_ro_repo.get(day_id)
 
             # Add the reminder (this emits a domain event)
-            day.add_reminder(command.reminder)
+            reminder = day.add_reminder(command.reminder)
 
             # Add entity to UoW for saving
-            return uow.add(day)
+            uow.add(day)
+            return reminder

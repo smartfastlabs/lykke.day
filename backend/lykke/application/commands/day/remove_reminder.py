@@ -5,7 +5,6 @@ from datetime import date
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
-from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 
@@ -18,10 +17,14 @@ class RemoveReminderCommand(Command):
     reminder_id: UUID
 
 
-class RemoveReminderHandler(BaseCommandHandler[RemoveReminderCommand, DayEntity]):
+class RemoveReminderHandler(
+    BaseCommandHandler[RemoveReminderCommand, value_objects.Reminder]
+):
     """Removes a reminder from a day."""
 
-    async def handle(self, command: RemoveReminderCommand) -> DayEntity:
+    async def handle(
+        self, command: RemoveReminderCommand
+    ) -> value_objects.Reminder:
         """Remove a reminder from a day.
 
         Args:
@@ -39,7 +42,8 @@ class RemoveReminderHandler(BaseCommandHandler[RemoveReminderCommand, DayEntity]
             day = await uow.day_ro_repo.get(day_id)
 
             # Remove the reminder (this emits a domain event)
-            day.remove_reminder(command.reminder_id)
+            removed_reminder = day.remove_reminder(command.reminder_id)
 
             # Add entity to UoW for saving
-            return uow.add(day)
+            uow.add(day)
+            return removed_reminder

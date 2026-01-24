@@ -325,7 +325,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
 
     def update_reminder_status(
         self, reminder_id: UUID, status: value_objects.ReminderStatus
-    ) -> None:
+    ) -> value_objects.Reminder:
         """Update the status of a reminder.
 
         Args:
@@ -348,7 +348,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
 
         if old_reminder.status == status:
             # No change needed
-            return
+            return old_reminder
 
         # Create updated reminder with new status
         updated_reminder = value_objects.Reminder(
@@ -377,8 +377,9 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
                 entity_date=self.date,
             )
         )
+        return updated_reminder
 
-    def remove_reminder(self, reminder_id: UUID) -> None:
+    def remove_reminder(self, reminder_id: UUID) -> value_objects.Reminder:
         """Remove a reminder from this day.
 
         Args:
@@ -413,4 +414,5 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
                 entity_date=self.date,
             )
         )
+        return reminder_to_remove
 

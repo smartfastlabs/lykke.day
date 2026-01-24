@@ -582,6 +582,21 @@ export function StreamingDataProvider(props: ParentProps) {
     });
   };
 
+  const upsertTasksLocally = (incomingTasks: Task[]) => {
+    setDayContextStore((current) => {
+      if (!current.data) return current;
+      const existingTasks = current.data.tasks ?? [];
+      const taskMap = new Map(existingTasks.map((task) => [task.id, task]));
+      incomingTasks.forEach((task) => taskMap.set(task.id, task));
+      return {
+        data: {
+          ...current.data,
+          tasks: Array.from(taskMap.values()),
+        },
+      };
+    });
+  };
+
   const setTaskStatus = async (
     task: Task,
     status: TaskStatus
@@ -627,8 +642,8 @@ export function StreamingDataProvider(props: ParentProps) {
   };
 
   const addRoutineToToday = async (routineId: string): Promise<void> => {
-    const context = await routineAPI.addToToday(routineId);
-    setDayContextStore({ data: context });
+    const tasksFromAPI = await routineAPI.addToToday(routineId);
+    upsertTasksLocally(tasksFromAPI);
   };
 
   const addAdhocTask = async (
@@ -681,8 +696,8 @@ export function StreamingDataProvider(props: ParentProps) {
   };
 
   const addReminder = async (name: string): Promise<void> => {
-    const context = await reminderAPI.addReminder(name);
-    setDayContextStore({ data: context });
+    const reminder = await reminderAPI.addReminder(name);
+    updateRemindersLocally([...(reminders() ?? []), reminder]);
   };
 
   const updateReminderStatus = async (
@@ -697,8 +712,14 @@ export function StreamingDataProvider(props: ParentProps) {
     updateRemindersLocally(updatedReminders);
 
     try {
-      const context = await reminderAPI.updateReminderStatus(reminder.id, status);
-      setDayContextStore({ data: context });
+      const updatedReminder = await reminderAPI.updateReminderStatus(
+        reminder.id,
+        status
+      );
+      const nextReminders = previousReminders.map((r: Reminder) =>
+        r.id === updatedReminder.id ? updatedReminder : r
+      );
+      updateRemindersLocally(nextReminders);
     } catch (error) {
       // Rollback on error
       updateRemindersLocally(previousReminders);
@@ -713,8 +734,11 @@ export function StreamingDataProvider(props: ParentProps) {
     updateRemindersLocally(updatedReminders);
 
     try {
-      const context = await reminderAPI.removeReminder(reminderId);
-      setDayContextStore({ data: context });
+      const removedReminder = await reminderAPI.removeReminder(reminderId);
+      const nextReminders = previousReminders.filter(
+        (r) => r.id !== removedReminder.id
+      );
+      updateRemindersLocally(nextReminders);
     } catch (error) {
       // Rollback on error
       updateRemindersLocally(previousReminders);
@@ -723,8 +747,8 @@ export function StreamingDataProvider(props: ParentProps) {
   };
 
   const addBrainDumpItem = async (text: string): Promise<void> => {
-    const context = await brainDumpAPI.addItem(text);
-    setDayContextStore({ data: context });
+    const item = await brainDumpAPI.addItem(text);
+    updateBrainDumpItemsLocally([...(brainDumpItems() ?? []), item]);
   };
 
   const updateBrainDumpItemStatus = async (
@@ -738,8 +762,11 @@ export function StreamingDataProvider(props: ParentProps) {
     updateBrainDumpItemsLocally(updatedItems);
 
     try {
-      const context = await brainDumpAPI.updateItemStatus(item.id, status);
-      setDayContextStore({ data: context });
+      const updatedItem = await brainDumpAPI.updateItemStatus(item.id, status);
+      const nextItems = previousItems.map((existing) =>
+        existing.id === updatedItem.id ? updatedItem : existing
+      );
+      updateBrainDumpItemsLocally(nextItems);
     } catch (error) {
       updateBrainDumpItemsLocally(previousItems);
       throw error;
@@ -752,8 +779,9 @@ export function StreamingDataProvider(props: ParentProps) {
     updateBrainDumpItemsLocally(updatedItems);
 
     try {
-      const context = await brainDumpAPI.removeItem(itemId);
-      setDayContextStore({ data: context });
+      const removedItem = await brainDumpAPI.removeItem(itemId);
+      const nextItems = previousItems.filter((item) => item.id !== removedItem.id);
+      updateBrainDumpItemsLocally(nextItems);
     } catch (error) {
       updateBrainDumpItemsLocally(previousItems);
       throw error;
