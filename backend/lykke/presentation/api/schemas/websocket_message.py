@@ -7,7 +7,7 @@ from .audit_log import AuditLogSchema
 from .base import BaseSchema
 from .day_context import DayContextSchema
 from .message import MessageSchema
-from .routine_definition import RoutineDefinitionSchema
+from .routine import RoutineSchema
 
 
 class WebSocketUserMessageSchema(BaseSchema):
@@ -79,7 +79,7 @@ class WebSocketSyncResponseSchema(BaseSchema):
     changes: list[EntityChangeSchema] | None = (
         None  # Incremental changes if since_timestamp was provided (only for today's entities)
     )
-    routine_definitions: list[RoutineDefinitionSchema] | None = (
-        None  # All routine definitions (included in full sync response)
+    routines: list[RoutineSchema] | None = (
+        None  # Routines (included in full sync response)
     )
     last_audit_log_timestamp: str | None  # ISO format datetime - always included

@@ -13,6 +13,7 @@ if TYPE_CHECKING:
         DayEntity,
         MessageEntity,
         PushNotificationEntity,
+        RoutineEntity,
         TaskEntity,
     )
 
@@ -75,6 +76,7 @@ class DayContext(BaseValueObject):
     day: "DayEntity"
     calendar_entries: list["CalendarEntryEntity"] = field(default_factory=list)
     tasks: list["TaskEntity"] = field(default_factory=list)
+    routines: list["RoutineEntity"] = field(default_factory=list)
     brain_dump_items: list["BrainDumpEntity"] = field(default_factory=list)
 
 

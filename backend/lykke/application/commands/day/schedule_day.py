@@ -19,6 +19,7 @@ from lykke.domain.entities import (
     CalendarEntryEntity,
     DayEntity,
     DayTemplateEntity,
+    RoutineEntity,
     TaskEntity,
 )
 from lykke.domain.events.day_events import DayUpdatedEvent
@@ -219,17 +220,21 @@ class ScheduleDayHandler(
             else:
                 try:
                     existing_day = await uow.day_ro_repo.get(day_id)
-                    tasks, calendar_entries = await asyncio.gather(
+                    tasks, calendar_entries, existing_routines = await asyncio.gather(
                         uow.task_ro_repo.search(
                             value_objects.TaskQuery(date=command.date)
                         ),
                         uow.calendar_entry_ro_repo.search(
                             value_objects.CalendarEntryQuery(date=command.date)
                         ),
+                        uow.routine_ro_repo.search(
+                            value_objects.RoutineQuery(date=command.date)
+                        ),
                     )
                     return value_objects.DayContext(
                         day=existing_day,
                         tasks=tasks,
+                        routines=existing_routines,
                         calendar_entries=calendar_entries,
                     )
                 except NotFoundError:
@@ -239,6 +244,10 @@ class ScheduleDayHandler(
             # Delete existing tasks for this date (defensive cleanup)
             await uow.bulk_delete_tasks(
                 value_objects.TaskQuery(date=command.date, is_adhoc=False)
+            )
+            # Delete existing routines for this date (defensive cleanup)
+            await uow.bulk_delete_routines(
+                value_objects.RoutineQuery(date=command.date)
             )
 
         # Get preview of what the day would look like
@@ -347,8 +356,27 @@ class ScheduleDayHandler(
         for task in tasks:
             await uow.create(task)
 
+        # Create routines for active routine definitions
+        routines: list[RoutineEntity] = []
+        routine_definitions = await uow.routine_definition_ro_repo.all()
+        for routine_definition in routine_definitions:
+            if routine_definition.routine_definition_schedule.is_active_for_date(
+                command.date
+            ):
+                routine = RoutineEntity(
+                    user_id=self.user_id,
+                    date=command.date,
+                    routine_definition_id=routine_definition.id,
+                    name=routine_definition.name,
+                    category=routine_definition.category,
+                    description=routine_definition.description,
+                    time_window=routine_definition.time_window,
+                )
+                routines.append(await uow.create(routine))
+
         return value_objects.DayContext(
             day=day,
             tasks=tasks,
+            routines=routines,
             calendar_entries=preview_result.calendar_entries,
         )

@@ -28,6 +28,7 @@ from lykke.domain.entities import (
     MessageEntity,
     PushNotificationEntity,
     PushSubscriptionEntity,
+    RoutineEntity,
     RoutineDefinitionEntity,
     TaskDefinitionEntity,
     TaskEntity,
@@ -64,6 +65,7 @@ from lykke.infrastructure.repositories import (
     MessageRepository,
     PushNotificationRepository,
     PushSubscriptionRepository,
+    RoutineRepository,
     RoutineDefinitionRepository,
     TaskDefinitionRepository,
     TaskRepository,
@@ -110,6 +112,8 @@ if TYPE_CHECKING:
         PushSubscriptionRepositoryReadWriteProtocol,
         RoutineDefinitionRepositoryReadOnlyProtocol,
         RoutineDefinitionRepositoryReadWriteProtocol,
+        RoutineRepositoryReadOnlyProtocol,
+        RoutineRepositoryReadWriteProtocol,
         TaskDefinitionRepositoryReadOnlyProtocol,
         TaskDefinitionRepositoryReadWriteProtocol,
         TaskRepositoryReadOnlyProtocol,
@@ -160,6 +164,7 @@ class SqlAlchemyUnitOfWork:
     message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
@@ -191,6 +196,7 @@ class SqlAlchemyUnitOfWork:
             "_push_notification_rw_repo",
         ),
         TaskEntity: ("task_ro_repo", "_task_rw_repo"),
+        RoutineEntity: ("routine_ro_repo", "_routine_rw_repo"),
         RoutineDefinitionEntity: (
             "routine_definition_ro_repo",
             "_routine_definition_rw_repo",
@@ -258,6 +264,7 @@ class SqlAlchemyUnitOfWork:
         self._routine_definition_rw_repo: (
             RoutineDefinitionRepositoryReadWriteProtocol | None
         ) = None
+        self._routine_rw_repo: RoutineRepositoryReadWriteProtocol | None = None
         self._task_definition_rw_repo: (
             TaskDefinitionRepositoryReadWriteProtocol | None
         ) = None
@@ -367,6 +374,13 @@ class SqlAlchemyUnitOfWork:
             "RoutineDefinitionRepositoryReadOnlyProtocol", routine_definition_repo
         )
         self._routine_definition_rw_repo = routine_definition_repo
+
+        routine_repo = cast(
+            "RoutineRepositoryReadWriteProtocol",
+            RoutineRepository(user_id=self.user_id),
+        )
+        self.routine_ro_repo = cast("RoutineRepositoryReadOnlyProtocol", routine_repo)
+        self._routine_rw_repo = routine_repo
 
         task_definition_repo = cast(
             "TaskDefinitionRepositoryReadWriteProtocol",
@@ -631,6 +645,13 @@ class SqlAlchemyUnitOfWork:
             raise RuntimeError("Task repository not initialized")
 
         await self._task_rw_repo.bulk_delete(query)
+
+    async def bulk_delete_routines(self, query: value_objects.RoutineQuery) -> None:
+        """Bulk delete routines matching the query."""
+        if self._routine_rw_repo is None:
+            raise RuntimeError("Routine repository not initialized")
+
+        await self._routine_rw_repo.bulk_delete(query)
 
     async def bulk_delete_audit_logs(self, query: value_objects.AuditLogQuery) -> None:
         """Bulk delete audit logs matching the query.
@@ -1115,6 +1136,12 @@ class SqlAlchemyReadOnlyRepositories:
             RoutineDefinitionRepository(user_id=self.user_id),
         )
         self.routine_definition_ro_repo = routine_definition_repo
+
+        routine_repo = cast(
+            "RoutineRepositoryReadOnlyProtocol",
+            RoutineRepository(user_id=self.user_id),
+        )
+        self.routine_ro_repo = routine_repo
 
         task_definition_repo = cast(
             "TaskDefinitionRepositoryReadOnlyProtocol",

@@ -11,6 +11,7 @@ from lykke.application.repositories import (
     BrainDumpRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
+    RoutineRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
 )
@@ -21,6 +22,7 @@ from lykke.domain.entities import (
     BrainDumpEntity,
     CalendarEntryEntity,
     DayEntity,
+    RoutineEntity,
     TaskEntity,
 )
 
@@ -41,6 +43,7 @@ class GetDayContextHandler(
     brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
@@ -62,6 +65,7 @@ class GetDayContextHandler(
         (
             tasks_result,
             calendar_entries_result,
+            routines_result,
             day_result,
             brain_dump_items_result,
         ) = await asyncio.gather(
@@ -69,6 +73,7 @@ class GetDayContextHandler(
             self.calendar_entry_ro_repo.search(
                 value_objects.CalendarEntryQuery(date=date)
             ),
+            self.routine_ro_repo.search(value_objects.RoutineQuery(date=date)),
             self.day_ro_repo.get(day_id),
             self.brain_dump_ro_repo.search(value_objects.BrainDumpQuery(date=date)),
             return_exceptions=True,
@@ -80,6 +85,10 @@ class GetDayContextHandler(
         calendar_entries = cast(
             "list[CalendarEntryEntity]",
             self._unwrap_result(calendar_entries_result, "calendar entries result"),
+        )
+        routines = cast(
+            "list[RoutineEntity]",
+            self._unwrap_result(routines_result, "routines result"),
         )
         brain_dump_items = cast(
             "list[BrainDumpEntity]",
@@ -98,7 +107,12 @@ class GetDayContextHandler(
                 )
             day = day_result
 
-        return self._build_context(day, tasks, calendar_entries, brain_dump_items)
+        if not routines:
+            routines = await self._build_routines_from_tasks(date, tasks)
+
+        return self._build_context(
+            day, tasks, calendar_entries, routines, brain_dump_items
+        )
 
     @staticmethod
     def _unwrap_result(result: object, name: str) -> object:
@@ -112,6 +126,7 @@ class GetDayContextHandler(
         day: DayEntity,
         tasks: list[TaskEntity],
         calendar_entries: list[CalendarEntryEntity],
+        routines: list[RoutineEntity],
         brain_dump_items: list[BrainDumpEntity],
     ) -> value_objects.DayContext:
         """Build a DayContext from loaded data.
@@ -133,8 +148,40 @@ class GetDayContextHandler(
                 else DEFAULT_END_OF_DAY_TIME,
             ),
             calendar_entries=sorted(calendar_entries, key=lambda e: e.starts_at),
+            routines=sorted(
+                routines,
+                key=lambda r: getattr(r, "name", ""),
+            ),
             brain_dump_items=sorted(
                 brain_dump_items,
                 key=lambda item: item.created_at,
             ),
         )
+
+    async def _build_routines_from_tasks(
+        self, date: datetime_date, tasks: list[TaskEntity]
+    ) -> list[RoutineEntity]:
+        routine_definition_ids = {
+            task.routine_definition_id
+            for task in tasks
+            if task.routine_definition_id is not None
+        }
+        if not routine_definition_ids:
+            return []
+
+        routine_definitions = await self.routine_definition_ro_repo.all()
+        routines: list[RoutineEntity] = []
+        for routine_definition in routine_definitions:
+            if routine_definition.id in routine_definition_ids:
+                routines.append(
+                    RoutineEntity(
+                        user_id=self.user_id,
+                        date=date,
+                        routine_definition_id=routine_definition.id,
+                        name=routine_definition.name,
+                        category=routine_definition.category,
+                        description=routine_definition.description,
+                        time_window=routine_definition.time_window,
+                    )
+                )
+        return routines

@@ -36,6 +36,7 @@ class GetIncrementalChangesHandler(
         self.audit_log_ro_repo = ro_repos.audit_log_ro_repo
         self.task_ro_repo = ro_repos.task_ro_repo
         self.calendar_entry_ro_repo = ro_repos.calendar_entry_ro_repo
+        self.routine_ro_repo = ro_repos.routine_ro_repo
         self.routine_definition_ro_repo = ro_repos.routine_definition_ro_repo
         self.day_ro_repo = ro_repos.day_ro_repo
         self.brain_dump_ro_repo = ro_repos.brain_dump_ro_repo
@@ -204,6 +205,15 @@ class GetIncrementalChangesHandler(
                     routine_definition
                 )
                 return routine_definition_schema.model_dump(mode="json")
+
+            elif entity_type == "routine":
+                routine = await self.routine_ro_repo.get(entity_id)
+                if not routine:
+                    return None
+                from lykke.presentation.api.schemas.mappers import map_routine_to_schema
+
+                routine_schema = map_routine_to_schema(routine)
+                return routine_schema.model_dump(mode="json")
 
             elif entity_type == "day":
                 day = await self.day_ro_repo.get(entity_id)

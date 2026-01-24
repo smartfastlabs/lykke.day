@@ -290,10 +290,10 @@ class TestEntityTypeConsistencyIntegration:
     def test_all_daycontext_entity_types_are_handled(self):
         """Verify all DayContext entity types are handled in _load_entity_data.
 
-        DayContext includes: tasks, calendar_entries (calendarentry), routine_definitions, and day (for reminders)
+        DayContext includes: tasks, calendar_entries (calendarentry), routines, and day (for reminders)
         """
         # These are the entity types that should be handled
-        expected_types = {"task", "calendarentry", "routine_definition", "day"}
+        expected_types = {"task", "calendarentry", "routine", "day"}
 
         # Verify each type is recognized
         for _entity_type in expected_types:
@@ -307,7 +307,7 @@ class TestEntityTypeConsistencyIntegration:
         entity_mapping = {
             "TaskEntity": "task",
             "CalendarEntryEntity": "calendarentry",
-            "RoutineDefinitionEntity": "routine_definition",
+            "RoutineEntity": "routine",
             "DayEntity": "day",
         }
 

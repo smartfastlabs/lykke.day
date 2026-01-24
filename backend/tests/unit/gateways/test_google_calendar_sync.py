@@ -180,6 +180,7 @@ def mock_ro_repos(
             self.notification_ro_repo = None
             self.push_notification_ro_repo = None
             self.push_subscription_ro_repo = None
+            self.routine_ro_repo = None
             self.routine_definition_ro_repo = None
             self.task_definition_ro_repo = None
             self.task_ro_repo = None

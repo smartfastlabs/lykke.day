@@ -1663,6 +1663,8 @@ export interface components {
             calendar_entries?: components["schemas"]["CalendarEntrySchema"][];
             /** Tasks */
             tasks?: components["schemas"]["TaskSchema"][];
+            /** Routines */
+            routines?: components["schemas"]["RoutineSchema"][];
         };
         /**
          * DayOfWeek
@@ -2385,6 +2387,35 @@ export interface components {
             time_window?: components["schemas"]["TimeWindowSchema"] | null;
             /** Tasks */
             tasks?: components["schemas"]["RoutineDefinitionTaskSchema-Input"][] | null;
+        };
+        /**
+         * RoutineSchema
+         * @description API schema for Routine entity.
+         */
+        RoutineSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Routine Definition Id
+             * Format: uuid
+             */
+            routine_definition_id: string;
+            /** Name */
+            name: string;
+            category: components["schemas"]["TaskCategory"];
+            /** Description */
+            description: string;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
         };
         /**
          * StatusResponseSchema

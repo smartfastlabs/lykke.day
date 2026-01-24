@@ -26,6 +26,7 @@ from lykke.application.repositories import (
     MessageRepositoryReadOnlyProtocol,
     PushNotificationRepositoryReadOnlyProtocol,
     PushSubscriptionRepositoryReadOnlyProtocol,
+    RoutineRepositoryReadOnlyProtocol,
     RoutineDefinitionRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
@@ -74,6 +75,7 @@ class UnitOfWorkProtocol(Protocol):
     message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
@@ -176,6 +178,10 @@ class UnitOfWorkProtocol(Protocol):
         """Bulk delete tasks matching query filters."""
         ...
 
+    async def bulk_delete_routines(self, query: value_objects.RoutineQuery) -> None:
+        """Bulk delete routines matching query filters."""
+        ...
+
     async def bulk_delete_audit_logs(self, query: value_objects.AuditLogQuery) -> None:
         """Bulk delete audit logs matching query filters."""
         ...
@@ -223,6 +229,7 @@ class ReadOnlyRepositories(Protocol):
     message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
+    routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol

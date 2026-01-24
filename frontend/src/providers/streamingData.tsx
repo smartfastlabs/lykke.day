@@ -10,7 +10,6 @@ import {
 } from "solid-js";
 import { createStore } from "solid-js/store";
 import {
-  DayContext,
   Task,
   TaskCategory,
   Event,
@@ -20,7 +19,8 @@ import {
   ReminderStatus,
   BrainDumpItem,
   BrainDumpItemStatus,
-  RoutineDefinition,
+  DayContextWithRoutines,
+  Routine,
 } from "@/types/api";
 import {
   brainDumpAPI,
@@ -32,13 +32,13 @@ import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 
 interface StreamingDataContextValue {
   // The main data - provides loading/error states
-  dayContext: Accessor<DayContext | undefined>;
+  dayContext: Accessor<DayContextWithRoutines | undefined>;
   tasks: Accessor<Task[]>;
   events: Accessor<Event[]>;
   reminders: Accessor<Reminder[]>;
   brainDumpItems: Accessor<BrainDumpItem[]>;
   day: Accessor<Day | undefined>;
-  routineDefinitions: Accessor<RoutineDefinition[] | undefined>;
+  routines: Accessor<Routine[]>;
   // Loading and error states
   isLoading: Accessor<boolean>;
   error: Accessor<Error | undefined>;
@@ -49,11 +49,7 @@ interface StreamingDataContextValue {
   sync: () => void;
   syncIncremental: (sinceTimestamp: string) => void;
   setTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
-  setRoutineDefinitionAction: (
-    routineDefinitionId: string,
-    status: TaskStatus
-  ) => Promise<void>;
-  addRoutineDefinitionToToday: (routineDefinitionId: string) => Promise<void>;
+  setRoutineAction: (routineDefinitionId: string, status: TaskStatus) => Promise<void>;
   addAdhocTask: (name: string, category: TaskCategory) => Promise<void>;
   addReminder: (name: string) => Promise<void>;
   updateReminderStatus: (reminder: Reminder, status: ReminderStatus) => Promise<void>;
@@ -81,9 +77,9 @@ interface SyncRequestMessage extends WebSocketMessage {
 
 interface SyncResponseMessage extends WebSocketMessage {
   type: "sync_response";
-  day_context?: DayContext;
+  day_context?: DayContextWithRoutines;
   changes?: EntityChange[];
-  routine_definitions?: RoutineDefinition[];
+  routines?: Routine[];
   last_audit_log_timestamp?: string | null;
 }
 
@@ -117,12 +113,12 @@ interface EntityChange {
   change_type: "created" | "updated" | "deleted";
   entity_type: string;
   entity_id: string;
-  entity_data: Task | Event | RoutineDefinition | RoutineDefinition | null;
+  entity_data: Task | Event | Routine | null;
 }
 
 export function StreamingDataProvider(props: ParentProps) {
   const [dayContextStore, setDayContextStore] = createStore<{
-    data: DayContext | undefined;
+    data: DayContextWithRoutines | undefined;
   }>({ data: undefined });
   const [isLoading, setIsLoading] = createSignal(true);
   const [error, setError] = createSignal<Error | undefined>(undefined);
@@ -132,15 +128,10 @@ export function StreamingDataProvider(props: ParentProps) {
     string | null
   >(null);
 
-  // Routine definitions store - separate from day context since they aren't date-specific
-  const [routineDefinitionsStore, setRoutineDefinitionsStore] = createStore<{
-    routineDefinitions: RoutineDefinition[];
-  }>({ routineDefinitions: [] });
-
-  // Expose routine definitions from store
-  const routineDefinitions = createMemo(
-    () => routineDefinitionsStore.routineDefinitions
-  );
+  const routines = createMemo(() => {
+    const context = dayContextStore.data as DayContextWithRoutines | undefined;
+    return context?.routines ?? [];
+  });
 
   let ws: WebSocket | null = null;
   let reconnectTimeout: number | null = null;
@@ -338,10 +329,16 @@ export function StreamingDataProvider(props: ParentProps) {
       }
       setIsOutOfSync(false);
 
-      // Update routine definitions from full sync response
-      if (message.routine_definitions) {
-        setRoutineDefinitionsStore({
-          routineDefinitions: message.routine_definitions,
+      // Update routines if provided separately
+      if (message.routines) {
+        setDayContextStore((current) => {
+          if (!current.data) return current;
+          return {
+            data: {
+              ...current.data,
+              routines: message.routines,
+            },
+          };
         });
       }
     } else if (message.changes) {
@@ -355,9 +352,6 @@ export function StreamingDataProvider(props: ParentProps) {
 
   // Apply incremental changes to store
   const applyChanges = (changes: EntityChange[]) => {
-    // Track routine definition updates separately since they're in a different store
-    let updatedRoutineDefinitions: RoutineDefinition[] | null = null;
-
     setDayContextStore((current) => {
       if (!current.data) {
         // If no current context, we can't apply incremental changes
@@ -370,6 +364,9 @@ export function StreamingDataProvider(props: ParentProps) {
       const updatedTasks = [...(updated.tasks ?? [])];
       const updatedEvents = [
         ...(updated.calendar_entries ?? updated.events ?? []),
+      ];
+      const updatedRoutines = [
+        ...((updated as DayContextWithRoutines).routines ?? []),
       ];
 
       for (const change of changes) {
@@ -416,26 +413,24 @@ export function StreamingDataProvider(props: ParentProps) {
               updatedEvents.splice(index, 1);
             }
           }
-        } else if (change.entity_type === "routine_definition") {
-          const routineDefinition = change.entity_data as RoutineDefinition;
-          // Initialize updatedRoutineDefinitions if not already done
-          if (updatedRoutineDefinitions === null) {
-            updatedRoutineDefinitions = [
-              ...routineDefinitionsStore.routineDefinitions,
-            ];
-          }
-
+        } else if (change.entity_type === "routine") {
+          const routine = change.entity_data as Routine;
           if (change.change_type === "created") {
-            updatedRoutineDefinitions.push(routineDefinition);
+            updatedRoutines.push(routine);
           } else if (change.change_type === "updated") {
-            updatedRoutineDefinitions = updatedRoutineDefinitions.map(
-              (item) =>
-                item.id === routineDefinition.id ? routineDefinition : item
-            );
+            const index = updatedRoutines.findIndex((item) => item.id === routine.id);
+            if (index >= 0) {
+              updatedRoutines[index] = routine;
+            } else {
+              updatedRoutines.push(routine);
+            }
           } else if (change.change_type === "deleted") {
-            updatedRoutineDefinitions = updatedRoutineDefinitions.filter(
-              (item) => item.id !== change.entity_id
+            const index = updatedRoutines.findIndex(
+              (item) => item.id === change.entity_id
             );
+            if (index >= 0) {
+              updatedRoutines.splice(index, 1);
+            }
           }
         } else if (change.entity_type === "day") {
           const updatedDay = change.entity_data as Day;
@@ -448,16 +443,10 @@ export function StreamingDataProvider(props: ParentProps) {
       updated.tasks = updatedTasks;
       updated.calendar_entries = updatedEvents;
       updated.events = updatedEvents;
+      (updated as DayContextWithRoutines).routines = updatedRoutines;
 
       return { data: updated };
     });
-
-    // Update routine definitions store if routine definitions were modified
-    if (updatedRoutineDefinitions !== null) {
-      setRoutineDefinitionsStore({
-        routineDefinitions: updatedRoutineDefinitions,
-      });
-    }
   };
 
   // Handle real-time audit log events
@@ -553,16 +542,11 @@ export function StreamingDataProvider(props: ParentProps) {
             (e) => e.id !== auditLog.entity_id
           );
           updated.events = updated.calendar_entries;
-        } else if (auditLog.entity_type === "routine_definition") {
-          setRoutineDefinitionsStore((current) => {
-            const updated = {
-              routineDefinitions: current.routineDefinitions.filter(
-                (routineDefinition) => routineDefinition.id !== auditLog.entity_id
-              ),
-            };
-            return updated;
-          });
-          return current;
+        } else if (auditLog.entity_type === "routine") {
+          const routinesList = (updated as DayContextWithRoutines).routines ?? [];
+          (updated as DayContextWithRoutines).routines = routinesList.filter(
+            (routine) => routine.id !== auditLog.entity_id
+          );
         }
 
         return { data: updated };
@@ -632,7 +616,7 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
-  const setRoutineDefinitionAction = async (
+  const setRoutineAction = async (
     routineDefinitionId: string,
     status: TaskStatus
   ): Promise<void> => {
@@ -649,9 +633,9 @@ export function StreamingDataProvider(props: ParentProps) {
     try {
       const updatedTasksFromAPI =
         await routineDefinitionAPI.setRoutineDefinitionAction(
-        routineDefinitionId,
-        status
-      );
+          routineDefinitionId,
+          status
+        );
       // Update each task with the API response
       updatedTasksFromAPI.forEach((task) => updateTaskLocally(task));
     } catch (error) {
@@ -661,14 +645,6 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
-  const addRoutineDefinitionToToday = async (
-    routineDefinitionId: string
-  ): Promise<void> => {
-    const tasksFromAPI = await routineDefinitionAPI.addToToday(
-      routineDefinitionId
-    );
-    upsertTasksLocally(tasksFromAPI);
-  };
 
   const addAdhocTask = async (
     name: string,
@@ -852,7 +828,7 @@ export function StreamingDataProvider(props: ParentProps) {
     reminders,
     brainDumpItems,
     day,
-    routineDefinitions,
+    routines,
     isLoading,
     error,
     isConnected,
@@ -860,8 +836,7 @@ export function StreamingDataProvider(props: ParentProps) {
     sync,
     syncIncremental,
     setTaskStatus,
-    setRoutineDefinitionAction,
-    addRoutineDefinitionToToday,
+    setRoutineAction,
     addAdhocTask,
     addReminder,
     updateReminderStatus,

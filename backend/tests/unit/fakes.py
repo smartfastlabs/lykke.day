@@ -153,6 +153,19 @@ class _FakeRoutineDefinitionReadOnlyRepo:
         return self._routine_definitions
 
 
+class _FakeRoutineReadOnlyRepo:
+    """Fake routine repository for testing."""
+
+    def __init__(self, routines: list[object] | None = None) -> None:
+        self._routines = routines or []
+
+    async def search(self, _query):
+        return self._routines
+
+    async def all(self):
+        return self._routines
+
+
 class _FakeTaskDefinitionReadOnlyRepo:
     """Fake task definition repository for testing."""
 
@@ -206,6 +219,7 @@ class _FakeReadOnlyRepos:
         notification_repo: Any | None = None,
         push_notification_repo: Any | None = None,
         push_subscription_repo: Any | None = None,
+        routine_repo: Any | None = None,
         routine_definition_repo: Any | None = None,
         task_definition_repo: Any | None = None,
         task_repo: Any | None = None,
@@ -229,6 +243,7 @@ class _FakeReadOnlyRepos:
         self.notification_ro_repo = notification_repo or fake
         self.push_notification_ro_repo = push_notification_repo or fake
         self.push_subscription_ro_repo = push_subscription_repo or fake
+        self.routine_ro_repo = routine_repo or _FakeRoutineReadOnlyRepo()
         self.routine_definition_ro_repo = routine_definition_repo or fake
         self.task_definition_ro_repo = task_definition_repo or fake
         self.task_ro_repo = task_repo or fake
@@ -250,6 +265,8 @@ class _FakeUoW:
         user_repo: Any | None = None,
         calendar_entry_repo: Any | None = None,
         time_block_definition_repo: Any | None = None,
+        routine_definition_repo: Any | None = None,
+        routine_repo: Any | None = None,
         created_entities: list[object] | None = None,
     ) -> None:
         self.added: list[object] = []
@@ -257,6 +274,7 @@ class _FakeUoW:
         self.created_entities = created_entities or []
         self.created = self.created_entities
         self.bulk_deleted_tasks: list[object] = []
+        self.bulk_deleted_routines: list[object] = []
         self.task_ro_repo = task_repo
         self.brain_dump_ro_repo = brain_dump_repo
         self.day_ro_repo = day_repo
@@ -264,6 +282,11 @@ class _FakeUoW:
         self.user_ro_repo = user_repo
         self.calendar_entry_ro_repo = calendar_entry_repo
         self.time_block_definition_ro_repo = time_block_definition_repo
+        self.routine_definition_ro_repo = (
+            routine_definition_repo
+            or _FakeRoutineDefinitionReadOnlyRepo(routine_definitions=[])
+        )
+        self.routine_ro_repo = routine_repo or _FakeRoutineReadOnlyRepo()
 
     async def __aenter__(self):
         return self
@@ -289,6 +312,9 @@ class _FakeUoW:
     async def bulk_delete_tasks(self, query):
         self.bulk_deleted_tasks.append(query)
 
+    async def bulk_delete_routines(self, query):
+        self.bulk_deleted_routines.append(query)
+
 
 class _FakeUoWFactory:
     def __init__(self, uow: _FakeUoW) -> None:
@@ -311,9 +337,10 @@ class _FakePreviewDayHandler:
         self._tasks = tasks
         self._calendar_entries = calendar_entries or []
 
-    async def preview_day(self, _date, template_id=None):
+    async def preview_day(self, _date, _template_id=None):
         return value_objects.DayContext(
             day=self._day,
             tasks=self._tasks,
             calendar_entries=self._calendar_entries,
+            routines=[],
         )
