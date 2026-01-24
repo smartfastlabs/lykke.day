@@ -46,7 +46,7 @@ from .push_subscription import (
 )
 from .query import QuerySchema
 from .reminder import ReminderSchema
-from .routine import (
+from .routine_definition import (
     RoutineDefinitionCreateSchema,
     RoutineDefinitionSchema,
     RoutineDefinitionTaskCreateSchema,

@@ -1,7 +1,7 @@
 """Day command handlers."""
 
 from .add_reminder import AddReminderToDayCommand, AddReminderToDayHandler
-from .add_routine import (
+from .add_routine_definition import (
     AddRoutineDefinitionToDayCommand,
     AddRoutineDefinitionToDayHandler,
 )

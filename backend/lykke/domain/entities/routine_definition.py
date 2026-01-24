@@ -8,7 +8,7 @@ from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.base import BaseEntityObject
-from lykke.domain.events.routine import (
+from lykke.domain.events.routine_definition import (
     RoutineDefinitionTaskAddedEvent,
     RoutineDefinitionTaskRemovedEvent,
     RoutineDefinitionTaskUpdatedEvent,

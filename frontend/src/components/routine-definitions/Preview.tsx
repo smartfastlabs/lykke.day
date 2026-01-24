@@ -11,7 +11,7 @@ import {
 import { ALL_TASK_TYPES } from "@/types/api/constants";
 import { Icon } from "@/components/shared/Icon";
 import TaskScheduleForm from "@/components/tasks/ScheduleForm";
-import RoutineScheduleForm from "@/components/routines/RoutineScheduleForm";
+import RoutineScheduleForm from "@/components/routine-definitions/RoutineScheduleForm";
 import { Input, Button, Select, TextArea } from "@/components/forms";
 
 interface RoutinePreviewProps {
@@ -540,4 +540,3 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
 };
 
 export default RoutinePreview;
-

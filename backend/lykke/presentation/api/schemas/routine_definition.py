@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import Field
 
-from lykke.domain.value_objects.routine import DayOfWeek
+from lykke.domain.value_objects.routine_definition import DayOfWeek
 from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
 
 from .base import BaseEntitySchema, BaseSchema

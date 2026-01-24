@@ -23,7 +23,7 @@ class RemoveDayTemplateRoutineDefinitionHandler(
     async def handle(
         self, command: RemoveDayTemplateRoutineDefinitionCommand
     ) -> DayTemplateEntity:
-        """Remove an attached routine definition from the day template.
+        """Detach a routine definition from the day template.
 
         Args:
             command: The command containing the day template ID and routine definition ID to detach.
@@ -33,7 +33,7 @@ class RemoveDayTemplateRoutineDefinitionHandler(
         """
         async with self.new_uow() as uow:
             day_template = await uow.day_template_ro_repo.get(command.day_template_id)
-            updated_day_template = day_template.remove_routine_definition(
+            updated = day_template.remove_routine_definition(
                 command.routine_definition_id
             )
-            return uow.add(updated_day_template)
+            return uow.add(updated)

@@ -3,7 +3,7 @@ import { Component, Show, createResource } from "solid-js";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import SettingsPage, { ActionButton } from "@/components/shared/SettingsPage";
 import { routineDefinitionAPI } from "@/utils/api";
-import RoutineList from "@/components/routines/List";
+import RoutineList from "@/components/routine-definitions/List";
 
 const RoutineDefinitionsPage: Component = () => {
   const navigate = useNavigate();

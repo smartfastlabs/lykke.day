@@ -1,7 +1,6 @@
 import { globalNotifications } from "@/providers/notifications";
 import {
   Task,
-  DayContext,
   Day,
   DayTemplate,
   TimeBlockDefinition,

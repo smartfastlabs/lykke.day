@@ -9,7 +9,7 @@ from lykke.application.commands import (
     RecordRoutineDefinitionActionCommand,
     RecordRoutineDefinitionActionHandler,
 )
-from lykke.application.commands.routine import (
+from lykke.application.commands.routine_definition import (
     AddRoutineDefinitionTaskCommand,
     AddRoutineDefinitionTaskHandler,
     CreateRoutineDefinitionCommand,
@@ -23,7 +23,7 @@ from lykke.application.commands.routine import (
     UpdateRoutineDefinitionTaskCommand,
     UpdateRoutineDefinitionTaskHandler,
 )
-from lykke.application.queries.routine import (
+from lykke.application.queries.routine_definition import (
     GetRoutineDefinitionHandler,
     GetRoutineDefinitionQuery,
     SearchRoutineDefinitionsHandler,
@@ -32,7 +32,7 @@ from lykke.application.queries.routine import (
 from lykke.domain import value_objects
 from lykke.domain.entities import RoutineDefinitionEntity, UserEntity
 from lykke.domain.value_objects import RoutineDefinitionUpdateObject
-from lykke.domain.value_objects.routine import (
+from lykke.domain.value_objects.routine_definition import (
     RecurrenceSchedule,
     RoutineDefinitionTask,
     TimeWindow,

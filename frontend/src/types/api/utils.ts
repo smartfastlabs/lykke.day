@@ -79,12 +79,7 @@ export interface Reminder {
   created_at?: string | null;
 }
 
-export interface BrainDumpItem {
-  id: string;
-  text: string;
-  status: BrainDumpItemStatus;
-  created_at?: string | null;
-}
+export type BrainDumpItem = components["schemas"]["BrainDumpItemSchema"];
 
 // Enum types
 export type TaskStatus = components["schemas"]["TaskStatus"];
@@ -101,6 +96,7 @@ export type ActionType = components["schemas"]["ActionType"];
 export type ReminderStatus = "INCOMPLETE" | "COMPLETE" | "PUNT";
 
 export type BrainDumpItemStatus = "ACTIVE" | "COMPLETE" | "PUNT";
+export type BrainDumpItemType = components["schemas"]["BrainDumpItemType"];
 
 // UseCase Config types
 export interface UseCaseConfig {

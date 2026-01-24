@@ -7,7 +7,7 @@ import pytest
 
 from lykke.core.exceptions import NotFoundError
 from lykke.domain.entities import RoutineDefinitionEntity
-from lykke.domain.value_objects.routine import (
+from lykke.domain.value_objects.routine_definition import (
     RecurrenceSchedule,
     RoutineDefinitionTask,
 )

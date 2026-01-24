@@ -196,7 +196,7 @@ async def test_add_routine_definition_to_day_template(authenticated_client):
 
     # Create a routine definition
     from lykke.domain.entities import RoutineDefinitionEntity
-    from lykke.domain.value_objects.routine import RecurrenceSchedule
+    from lykke.domain.value_objects.routine_definition import RecurrenceSchedule
     from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
     from lykke.infrastructure.repositories import RoutineDefinitionRepository
 
@@ -233,7 +233,7 @@ async def test_add_duplicate_routine_definition_to_day_template(authenticated_cl
     # Create a day template with a routine definition already attached
     from lykke.domain.entities import RoutineDefinitionEntity
     from lykke.domain.entities.day_template import DayTemplateEntity
-    from lykke.domain.value_objects.routine import RecurrenceSchedule
+    from lykke.domain.value_objects.routine_definition import RecurrenceSchedule
     from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
     from lykke.infrastructure.repositories import (
         DayTemplateRepository,
@@ -278,7 +278,7 @@ async def test_remove_routine_definition_from_day_template(authenticated_client)
 
     # Create a routine definition
     from lykke.domain.entities import RoutineDefinitionEntity
-    from lykke.domain.value_objects.routine import RecurrenceSchedule
+    from lykke.domain.value_objects.routine_definition import RecurrenceSchedule
     from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
     from lykke.infrastructure.repositories import RoutineDefinitionRepository
 

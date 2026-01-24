@@ -11,7 +11,7 @@ from lykke.domain.value_objects.update import RoutineDefinitionUpdateObject
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from lykke.domain.value_objects.routine import RoutineDefinitionTask
+    from lykke.domain.value_objects.routine_definition import RoutineDefinitionTask
 
 
 @dataclass(frozen=True, kw_only=True)

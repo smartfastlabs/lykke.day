@@ -48,7 +48,12 @@ from .query import (
     UseCaseConfigQuery,
     UserQuery,
 )
-from .routine import DayOfWeek, RecurrenceSchedule, RoutineDefinitionTask, TimeWindow
+from .routine_definition import (
+    DayOfWeek,
+    RecurrenceSchedule,
+    RoutineDefinitionTask,
+    TimeWindow,
+)
 from .sync import SyncSubscription
 from .task import (
     EventCategory,

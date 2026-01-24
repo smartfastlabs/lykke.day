@@ -57,7 +57,7 @@ from .push_subscription_repository import (
     PushSubscriptionRepositoryReadOnlyProtocol,
     PushSubscriptionRepositoryReadWriteProtocol,
 )
-from .routine_repository import (
+from .routine_definition_repository import (
     RoutineDefinitionRepositoryReadOnlyProtocol,
     RoutineDefinitionRepositoryReadWriteProtocol,
 )

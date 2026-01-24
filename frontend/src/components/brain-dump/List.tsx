@@ -21,7 +21,9 @@ const BrainDumpItemRow: Component<{ item: BrainDumpItem }> = (props) => {
 
   const handleSwipeLeft = () => {
     if (props.item.status === "COMPLETE") {
-      removeBrainDumpItem(props.item.id);
+      if (props.item.id) {
+        removeBrainDumpItem(props.item.id);
+      }
     } else {
       updateBrainDumpItemStatus(props.item, "PUNT");
     }

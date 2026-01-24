@@ -3,12 +3,12 @@ import { Icon } from "@/components/shared/Icon";
 import { faDroplet, faSun, faMoon } from "@fortawesome/free-solid-svg-icons";
 import type { RoutineDefinition } from "@/types/api";
 
-export interface RoutinesCardProps {
+export interface RoutineDefinitionsCardProps {
   routineDefinitions: RoutineDefinition[];
   href: string;
 }
 
-export const RoutinesCard: Component<RoutinesCardProps> = (props) => (
+export const RoutineDefinitionsCard: Component<RoutineDefinitionsCardProps> = (props) => (
   <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-5 backdrop-blur-sm md:col-span-2">
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center gap-3">
@@ -63,4 +63,3 @@ export const RoutinesCard: Component<RoutinesCardProps> = (props) => (
     </div>
   </div>
 );
-

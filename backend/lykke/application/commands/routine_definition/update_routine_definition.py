@@ -5,7 +5,7 @@ from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain.entities import RoutineDefinitionEntity
-from lykke.domain.events.routine import RoutineDefinitionUpdatedEvent
+from lykke.domain.events.routine_definition import RoutineDefinitionUpdatedEvent
 from lykke.domain.value_objects import RoutineDefinitionUpdateObject
 
 

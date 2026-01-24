@@ -779,6 +779,9 @@ export function StreamingDataProvider(props: ParentProps) {
     item: BrainDumpItem,
     status: BrainDumpItemStatus
   ): Promise<void> => {
+    if (!item.id) {
+      return;
+    }
     const previousItems = brainDumpItems();
     const updatedItems = previousItems.map((i) =>
       i.id === item.id ? { ...i, status } : i

@@ -16,7 +16,7 @@ import { SwipeableItem } from "@/components/shared/SwipeableItem";
 import TaskList from "@/components/tasks/List";
 import { routineDefinitionAPI } from "@/utils/api";
 
-export interface RoutinesSummaryProps {
+export interface RoutineDefinitionsSummaryProps {
   tasks: Task[];
 }
 
@@ -30,7 +30,7 @@ interface RoutineDefinitionGroup {
   totalCount: number;
 }
 
-export const RoutinesSummary: Component<RoutinesSummaryProps> = (props) => {
+export const RoutineDefinitionsSummary: Component<RoutineDefinitionsSummaryProps> = (props) => {
   // Get routine definitions and actions from StreamingDataProvider
   const {
     routineDefinitions,

@@ -352,7 +352,7 @@ def map_routine_definition_to_schema(
     routine_definition: RoutineDefinitionEntity,
 ) -> RoutineDefinitionSchema:
     """Convert RoutineDefinition entity to RoutineDefinition schema."""
-    from .routine import RecurrenceScheduleSchema, RoutineDefinitionTaskSchema
+    from .routine_definition import RecurrenceScheduleSchema, RoutineDefinitionTaskSchema
 
     # Convert routine schedule
     routine_definition_schedule_schema = RecurrenceScheduleSchema(

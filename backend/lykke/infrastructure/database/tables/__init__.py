@@ -15,7 +15,7 @@ from .factoids import Factoid
 from .messages import Message
 from .push_notifications import PushNotification
 from .push_subscriptions import PushSubscription
-from .routines import RoutineDefinition
+from .routine_definitions import RoutineDefinition
 from .task_definitions import TaskDefinition
 from .tasks import Task
 from .time_block_definitions import TimeBlockDefinition

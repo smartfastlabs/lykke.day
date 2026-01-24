@@ -25,5 +25,3 @@ const RoutineListItem: Component<ListItemProps> = (props) => {
 };
 
 export default RoutineListItem;
-
-

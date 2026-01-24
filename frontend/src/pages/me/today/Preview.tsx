@@ -12,7 +12,7 @@ import { useStreamingData } from "@/providers/streamingData";
 import {
   TasksSection,
   EventsSection,
-  RoutinesSummary,
+  RoutineDefinitionsSummary,
   RemindersSummary,
   UpcomingSection,
   RightNowSection,
@@ -243,7 +243,7 @@ export const TodayPage: Component = () => {
       </div>
 
       <div class="mb-6">
-        <RoutinesSummary tasks={allTasks()} />
+        <RoutineDefinitionsSummary tasks={allTasks()} />
       </div>
     </>
   );

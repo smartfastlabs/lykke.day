@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from lykke.application.queries.routine import (
+from lykke.application.queries.routine_definition import (
     GetRoutineDefinitionHandler,
     GetRoutineDefinitionQuery,
 )

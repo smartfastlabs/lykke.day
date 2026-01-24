@@ -1,7 +1,7 @@
 """Task command handlers."""
 
 from .create_adhoc_task import CreateAdhocTaskCommand, CreateAdhocTaskHandler
-from .record_routine_action import (
+from .record_routine_definition_action import (
     RecordRoutineDefinitionActionCommand,
     RecordRoutineDefinitionActionHandler,
 )

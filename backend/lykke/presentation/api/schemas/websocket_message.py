@@ -7,7 +7,7 @@ from .audit_log import AuditLogSchema
 from .base import BaseSchema
 from .day_context import DayContextSchema
 from .message import MessageSchema
-from .routine import RoutineDefinitionSchema
+from .routine_definition import RoutineDefinitionSchema
 
 
 class WebSocketUserMessageSchema(BaseSchema):

@@ -4,7 +4,7 @@ import datetime
 
 import pytest
 
-from lykke.domain.value_objects.routine import RecurrenceSchedule
+from lykke.domain.value_objects.routine_definition import RecurrenceSchedule
 from lykke.domain.value_objects.task import TaskFrequency
 
 
@@ -26,7 +26,7 @@ def test_is_routine_active_with_weekdays(
     date: datetime.date, weekdays: list[int], expected: bool
 ) -> None:
     """Test is_active_for_date with specific weekdays."""
-    from lykke.domain.value_objects.routine import DayOfWeek
+    from lykke.domain.value_objects.routine_definition import DayOfWeek
 
     schedule = RecurrenceSchedule(
         frequency=TaskFrequency.WEEKLY,

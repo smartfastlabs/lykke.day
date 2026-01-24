@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 
 from lykke.domain.entities import RoutineDefinitionEntity
-from lykke.domain.value_objects.routine import RecurrenceSchedule
+from lykke.domain.value_objects.routine_definition import RecurrenceSchedule
 from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
 from lykke.infrastructure.repositories import RoutineDefinitionRepository
 
