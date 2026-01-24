@@ -21,6 +21,11 @@ from lykke.application.commands.notifications import (
     MorningOverviewHandler,
     SmartNotificationHandler,
 )
+from lykke.application.llm_usecases import (
+    LLMUseCaseRunner,
+    MorningOverviewUseCase,
+    NotificationUseCase,
+)
 from lykke.application.commands.push_subscription import SendPushNotificationHandler
 from lykke.application.queries import (
     ComputeTaskRiskHandler,
@@ -223,12 +228,23 @@ def _build_send_push_notification_handler(
 def _build_smart_notification_handler(
     factory: CommandHandlerFactory,
 ) -> SmartNotificationHandler:
+    llm_usecase_runner = LLMUseCaseRunner(
+        user_id=factory.user_id,
+        user_ro_repo=factory.ro_repos.user_ro_repo,
+        generate_usecase_prompt_handler=factory.query_factory.create(
+            GenerateUseCasePromptHandler
+        ),
+    )
     return SmartNotificationHandler(
         factory.ro_repos,
         factory.uow_factory,
         factory.user_id,
-        factory.query_factory.create(GetLLMPromptContextHandler),
-        factory.query_factory.create(GenerateUseCasePromptHandler),
+        llm_usecase_runner,
+        NotificationUseCase(
+            get_llm_prompt_context_handler=factory.query_factory.create(
+                GetLLMPromptContextHandler
+            )
+        ),
         factory.create(SendPushNotificationHandler),
     )
 
@@ -236,13 +252,26 @@ def _build_smart_notification_handler(
 def _build_morning_overview_handler(
     factory: CommandHandlerFactory,
 ) -> MorningOverviewHandler:
+    llm_usecase_runner = LLMUseCaseRunner(
+        user_id=factory.user_id,
+        user_ro_repo=factory.ro_repos.user_ro_repo,
+        generate_usecase_prompt_handler=factory.query_factory.create(
+            GenerateUseCasePromptHandler
+        ),
+    )
     return MorningOverviewHandler(
         factory.ro_repos,
         factory.uow_factory,
         factory.user_id,
-        factory.query_factory.create(GetLLMPromptContextHandler),
-        factory.query_factory.create(ComputeTaskRiskHandler),
-        factory.query_factory.create(GenerateUseCasePromptHandler),
+        llm_usecase_runner,
+        MorningOverviewUseCase(
+            get_llm_prompt_context_handler=factory.query_factory.create(
+                GetLLMPromptContextHandler
+            ),
+            compute_task_risk_handler=factory.query_factory.create(
+                ComputeTaskRiskHandler
+            ),
+        ),
         factory.create(SendPushNotificationHandler),
     )
 
