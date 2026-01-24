@@ -28,6 +28,7 @@ from .day_template import (
     DayTemplateTimeBlockSchema,
     DayTemplateUpdateSchema,
 )
+from .early_access import EarlyAccessRequestSchema, StatusResponseSchema
 from .factoid import FactoidSchema
 from .high_level_plan import HighLevelPlanSchema
 from .message import MessageSchema, SendMessageRequestSchema, SendMessageResponseSchema
@@ -156,6 +157,7 @@ __all__ = [
     "DayTemplateTimeBlockSchema",
     "DayTemplateUpdateSchema",
     "DayUpdateSchema",
+    "EarlyAccessRequestSchema",
     "EntityChangeSchema",
     "FactoidSchema",
     "HighLevelPlanSchema",
@@ -187,6 +189,7 @@ __all__ = [
     "TimeBlockDefinitionUpdateSchema",
     "UseCaseConfigCreateSchema",
     "UseCaseConfigSchema",
+    "StatusResponseSchema",
     "UserSchema",
     "UserSettingsSchema",
     "UserSettingsUpdateSchema",

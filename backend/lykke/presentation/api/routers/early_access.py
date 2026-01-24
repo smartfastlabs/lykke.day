@@ -6,12 +6,15 @@ from typing import Annotated
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, EmailStr, field_validator
 
 from lykke.application.commands.user import CreateLeadUserCommand, CreateLeadUserHandler
 from lykke.application.unit_of_work import (  # noqa: TC001
     ReadOnlyRepositoryFactory,
     UnitOfWorkFactory,
+)
+from lykke.presentation.api.schemas import (
+    EarlyAccessRequestSchema,
+    StatusResponseSchema,
 )
 from lykke.presentation.handler_factory import CommandHandlerFactory
 
@@ -21,26 +24,6 @@ from .dependencies.services import (
 )
 
 router = APIRouter()
-
-
-class EarlyAccessRequest(BaseModel):
-    """Request body for early access opt-in."""
-
-    email: EmailStr
-
-    @field_validator("email")
-    @classmethod
-    def email_not_empty(cls, value: EmailStr) -> str:
-        cleaned = value.strip()
-        if not cleaned:
-            raise ValueError("email is required")
-        return cleaned.lower()
-
-
-class StatusResponse(BaseModel):
-    """Simple OK response."""
-
-    ok: bool = True
 
 
 def get_synthetic_user_id() -> UUID:
@@ -63,17 +46,17 @@ def get_early_access_command_handler_factory(
     )
 
 
-@router.post("/early-access", response_model=StatusResponse, status_code=200)
+@router.post("/early-access", response_model=StatusResponseSchema, status_code=200)
 async def request_early_access(
-    data: EarlyAccessRequest,
+    data: EarlyAccessRequestSchema,
     command_handler_factory: Annotated[
         CommandHandlerFactory, Depends(get_early_access_command_handler_factory)
     ],
-) -> StatusResponse:
+) -> StatusResponseSchema:
     """Capture lead contact as a user with status NEW_LEAD."""
     normalized_email = data.email.strip().lower()
 
     handler = command_handler_factory.create(CreateLeadUserHandler)
     await handler.handle(CreateLeadUserCommand(email=normalized_email))
 
-    return StatusResponse()
+    return StatusResponseSchema()

@@ -19,10 +19,9 @@ from lykke.application.queries.usecase_config import (
     GetUseCaseConfigHandler,
     GetUseCaseConfigQuery,
 )
-from lykke.domain.entities import UseCaseConfigEntity, UserEntity
+from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import (
     NotificationUseCaseConfigSchema,
-    UseCaseConfigSchema,
 )
 from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
@@ -33,18 +32,6 @@ from .dependencies.factories import command_handler_factory, query_handler_facto
 from .dependencies.user import get_current_user
 
 router = APIRouter()
-
-
-def map_usecase_config_to_schema(config: UseCaseConfigEntity) -> UseCaseConfigSchema:
-    """Map UseCaseConfigEntity to UseCaseConfigSchema."""
-    return UseCaseConfigSchema(
-        id=config.id,
-        user_id=config.user_id,
-        usecase=config.usecase,
-        config=config.config,
-        created_at=config.created_at,
-        updated_at=config.updated_at,
-    )
 
 
 @router.get(
