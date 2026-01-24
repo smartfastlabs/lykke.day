@@ -13,7 +13,11 @@ if TYPE_CHECKING:
     from datetime import date as dt_date
     from uuid import UUID
 
-    from lykke.domain.value_objects.day import BrainDumpItemStatus, ReminderStatus
+    from lykke.domain.value_objects.day import (
+        BrainDumpItemStatus,
+        BrainDumpItemType,
+        ReminderStatus,
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -109,6 +113,18 @@ class BrainDumpItemStatusChangedEvent(DomainEvent, AuditableDomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
+class BrainDumpItemTypeChangedEvent(DomainEvent):
+    """Event raised when a brain dump item's type changes."""
+
+    day_id: UUID
+    date: dt_date
+    item_id: UUID
+    old_type: BrainDumpItemType
+    new_type: BrainDumpItemType
+    item_text: str
+
+
+@dataclass(frozen=True, kw_only=True)
 class BrainDumpItemRemovedEvent(DomainEvent, AuditableDomainEvent):
     """Event raised when a brain dump item is removed.
 
@@ -126,6 +142,7 @@ __all__ = [
     "BrainDumpItemAddedEvent",
     "BrainDumpItemRemovedEvent",
     "BrainDumpItemStatusChangedEvent",
+    "BrainDumpItemTypeChangedEvent",
     "DayCompletedEvent",
     "DayScheduledEvent",
     "DayUnscheduledEvent",

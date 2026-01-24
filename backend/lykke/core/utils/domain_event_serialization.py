@@ -10,10 +10,19 @@ from dataclasses import asdict, fields, is_dataclass
 from datetime import UTC, date as dt_date, datetime, time
 from enum import Enum
 from types import UnionType
-from typing import Any, Union, get_args, get_origin
+from typing import Any, Union, get_args, get_origin, get_type_hints
 from uuid import UUID
 
 from lykke.domain.events.base import DomainEvent
+
+_DEFAULT_TYPE_HINTS: dict[str, Any] = {
+    "UUID": UUID,
+    "datetime": datetime,
+    "date": dt_date,
+    "dt_date": dt_date,
+    "time": time,
+    "Any": Any,
+}
 
 
 def serialize_domain_event(event: DomainEvent) -> dict[str, Any]:
@@ -162,15 +171,43 @@ def deserialize_domain_event(data: dict[str, Any]) -> DomainEvent:
     return cast("DomainEvent", event)
 
 
+class _SafeTypeNamespace(dict):
+    def __missing__(self, key: str) -> Any:
+        return object
+
+
+def _build_type_hint_namespace(event_class: type[DomainEvent]) -> dict[str, Any]:
+    module = importlib.import_module(event_class.__module__)
+    namespace = _SafeTypeNamespace(vars(module))
+    namespace.update(_DEFAULT_TYPE_HINTS)
+    return namespace
+
+
+def _get_event_type_hints(
+    event_class: type[DomainEvent], namespace: dict[str, Any]
+) -> dict[str, Any]:
+    try:
+        return get_type_hints(
+            event_class, globalns=namespace, localns=namespace, include_extras=True
+        )
+    except (NameError, TypeError, SyntaxError):
+        return {}
+
+
 def _coerce_event_data(
     event_class: type[DomainEvent], event_data: dict[str, Any]
 ) -> dict[str, Any]:
     """Coerce serialized event data into annotated field types."""
     coerced_data: dict[str, Any] = dict(event_data)
+    namespace = _build_type_hint_namespace(event_class)
+    type_hints = _get_event_type_hints(event_class, namespace)
     for field in fields(event_class):
         if field.name not in event_data:
             continue
-        coerced_data[field.name] = _coerce_value(event_data[field.name], field.type)
+        resolved_annotation = type_hints.get(field.name, field.type)
+        coerced_data[field.name] = _coerce_value(
+            event_data[field.name], resolved_annotation
+        )
     return coerced_data
 
 

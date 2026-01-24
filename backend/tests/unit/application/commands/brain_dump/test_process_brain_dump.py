@@ -16,6 +16,7 @@ from lykke.application.commands.brain_dump import (
 from lykke.application.llm_usecases import LLMRunResult
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
+from lykke.domain.events.day_events import BrainDumpItemTypeChangedEvent
 from tests.unit.fakes import (
     _FakeDayReadOnlyRepo,
     _FakeReadOnlyRepos,
@@ -220,4 +221,6 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
     )
 
     assert day.brain_dump_items[0].type == value_objects.BrainDumpItemType.COMMAND
+    events = day.collect_events()
+    assert any(isinstance(event, BrainDumpItemTypeChangedEvent) for event in events)
     assert uow.added == [day]

@@ -25,6 +25,7 @@ from lykke.application.commands.task import (
 from lykke.application.llm_usecases import LLMUseCaseRunner, ProcessBrainDumpUseCase
 from lykke.application.queries.get_llm_prompt_context import GetLLMPromptContextHandler
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
+from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 
@@ -125,16 +126,12 @@ class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None])
         async with self.new_uow() as uow:
             day_id = DayEntity.id_from_date_and_user(date, self.user_id)
             day = await uow.day_ro_repo.get(day_id)
-
-            item_index = None
-            existing_item = None
-            for i, item in enumerate(day.brain_dump_items):
-                if item.id == item_id:
-                    item_index = i
-                    existing_item = item
-                    break
-
-            if item_index is None or existing_item is None:
+            try:
+                day.update_brain_dump_item_type(
+                    item_id=item_id,
+                    item_type=value_objects.BrainDumpItemType.COMMAND,
+                )
+            except DomainError:
                 logger.debug(
                     "Brain dump item %s not found for day %s",
                     item_id,
@@ -142,21 +139,8 @@ class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None])
                 )
                 return
 
-            if existing_item.type == value_objects.BrainDumpItemType.COMMAND:
-                return
-
-            updated_item = value_objects.BrainDumpItem(
-                id=existing_item.id,
-                text=existing_item.text,
-                status=existing_item.status,
-                created_at=existing_item.created_at,
-                type=value_objects.BrainDumpItemType.COMMAND,
-            )
-
-            updated_items = list(day.brain_dump_items)
-            updated_items[item_index] = updated_item
-            day.brain_dump_items = updated_items
-            uow.add(day)
+            if day.has_events():
+                uow.add(day)
 
     async def _handle_add_task(self, date: dt_date, result: dict[str, Any]) -> None:
         name = result.get("name")

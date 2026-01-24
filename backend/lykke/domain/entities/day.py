@@ -14,6 +14,7 @@ from lykke.domain.events.day_events import (
     BrainDumpItemAddedEvent,
     BrainDumpItemRemovedEvent,
     BrainDumpItemStatusChangedEvent,
+    BrainDumpItemTypeChangedEvent,
     DayCompletedEvent,
     DayScheduledEvent,
     DayUnscheduledEvent,
@@ -483,6 +484,53 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
                 item_id=item_id,
                 old_status=old_item.status,
                 new_status=status,
+                item_text=old_item.text,
+                entity_id=self.id,
+                entity_type="day",
+                entity_date=self.date,
+            )
+        )
+
+    def update_brain_dump_item_type(
+        self, item_id: UUID, item_type: value_objects.BrainDumpItemType
+    ) -> None:
+        """Update the type of a brain dump item."""
+        item_index = None
+        old_item = None
+        for i, item in enumerate(self.brain_dump_items):
+            if item.id == item_id:
+                item_index = i
+                old_item = item
+                break
+
+        if item_index is None or old_item is None:
+            raise DomainError(
+                f"Brain dump item with id {item_id} not found in this day"
+            )
+
+        if old_item.type == item_type:
+            return
+
+        updated_item = value_objects.BrainDumpItem(
+            id=old_item.id,
+            text=old_item.text,
+            status=old_item.status,
+            created_at=old_item.created_at,
+            type=item_type,
+        )
+
+        new_items = list(self.brain_dump_items)
+        new_items[item_index] = updated_item
+        self.brain_dump_items = new_items
+
+        self._add_event(
+            BrainDumpItemTypeChangedEvent(
+                user_id=self.user_id,
+                day_id=self.id,
+                date=self.date,
+                item_id=item_id,
+                old_type=old_item.type,
+                new_type=item_type,
                 item_text=old_item.text,
                 entity_id=self.id,
                 entity_type="day",

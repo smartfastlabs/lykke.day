@@ -7,7 +7,7 @@ from lykke.core.utils.domain_event_serialization import (
     deserialize_domain_event,
     serialize_domain_event,
 )
-from lykke.domain.events.task_events import TaskCompletedEvent
+from lykke.domain.events.task_events import TaskCompletedEvent, TaskStateUpdatedEvent
 
 
 def test_serialize_domain_event_task_completed() -> None:
@@ -54,10 +54,33 @@ def test_deserialize_domain_event_round_trip() -> None:
     deserialized = deserialize_domain_event(serialized)
 
     assert isinstance(deserialized, TaskCompletedEvent)
-    assert deserialized.task_id == str(task_id)
-    assert deserialized.completed_at == completed_at.isoformat()
-    assert deserialized.task_scheduled_date == scheduled_date.isoformat()
+    assert deserialized.task_id == task_id
+    assert deserialized.completed_at == completed_at
+    assert deserialized.task_scheduled_date == scheduled_date
     assert deserialized.task_name is None
+
+
+def test_deserialize_domain_event_coerces_entity_date() -> None:
+    user_id = uuid4()
+    task_id = uuid4()
+    scheduled_date = date(2025, 1, 3)
+    event = TaskStateUpdatedEvent(
+        user_id=user_id,
+        task_id=task_id,
+        action_type="COMPLETE",
+        old_status="NOT_STARTED",
+        new_status="COMPLETE",
+        completed_at=datetime(2025, 1, 3, 12, 0, tzinfo=UTC),
+        entity_id=task_id,
+        entity_type="task",
+        entity_date=scheduled_date,
+    )
+
+    serialized = serialize_domain_event(event)
+    deserialized = deserialize_domain_event(serialized)
+
+    assert isinstance(deserialized, TaskStateUpdatedEvent)
+    assert deserialized.entity_date == scheduled_date
 
 
 def test_deserialize_domain_event_requires_type_and_data() -> None:
