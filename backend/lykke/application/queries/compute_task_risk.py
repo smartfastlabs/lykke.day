@@ -5,13 +5,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
-from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler, Query
-from lykke.application.repositories import AuditLogRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
+    from lykke.application.repositories import AuditLogRepositoryReadOnlyProtocol
     from lykke.domain.entities import TaskEntity
 
 
@@ -39,16 +40,12 @@ class TaskRiskResult:
     high_risk_tasks: list[TaskRiskScore]
 
 
-class ComputeTaskRiskHandler(
-    BaseQueryHandler[ComputeTaskRiskQuery, TaskRiskResult]
-):
+class ComputeTaskRiskHandler(BaseQueryHandler[ComputeTaskRiskQuery, TaskRiskResult]):
     """Compute risk scores for tasks based on tags and completion history."""
 
     audit_log_ro_repo: AuditLogRepositoryReadOnlyProtocol
 
-    async def handle(
-        self, query: ComputeTaskRiskQuery
-    ) -> TaskRiskResult:
+    async def handle(self, query: ComputeTaskRiskQuery) -> TaskRiskResult:
         """Compute risk scores for tasks."""
         high_risk_tasks: list[TaskRiskScore] = []
 
@@ -120,7 +117,9 @@ class ComputeTaskRiskHandler(
                 risk_reasons.append(f"low completion rate ({completion_rate:.0f}%)")
             elif completion_rate < 60.0:
                 risk_score += 20.0
-                risk_reasons.append(f"moderate completion rate ({completion_rate:.0f}%)")
+                risk_reasons.append(
+                    f"moderate completion rate ({completion_rate:.0f}%)"
+                )
 
             # Consider frequency - non-daily tasks are inherently more "out of the ordinary"
             # We already skipped DAILY tasks above, so this check is safe
@@ -146,7 +145,9 @@ class ComputeTaskRiskHandler(
                     TaskRiskScore(
                         task_id=task.id,
                         completion_rate=completion_rate,
-                        risk_reason=", ".join(risk_reasons) if risk_reasons else "high risk",
+                        risk_reason=", ".join(risk_reasons)
+                        if risk_reasons
+                        else "high risk",
                     )
                 )
 

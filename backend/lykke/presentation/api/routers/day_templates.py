@@ -41,7 +41,10 @@ from lykke.presentation.api.schemas import (
     QuerySchema,
 )
 from lykke.presentation.api.schemas.mappers import map_day_template_to_schema
-from lykke.presentation.handler_factory import CommandHandlerFactory, QueryHandlerFactory
+from lykke.presentation.handler_factory import (
+    CommandHandlerFactory,
+    QueryHandlerFactory,
+)
 
 from .dependencies.factories import command_handler_factory, query_handler_factory
 from .dependencies.repositories import get_time_block_definition_ro_repo
@@ -82,9 +85,7 @@ async def search_day_templates(
 async def create_day_template(
     day_template_data: DayTemplateCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> DayTemplateSchema:
     """Create a new day template."""
     create_day_template_handler = command_factory.create(CreateDayTemplateHandler)
@@ -127,9 +128,7 @@ async def create_day_template(
 async def update_day_template(
     uuid: UUID,
     update_data: DayTemplateUpdateSchema,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> DayTemplateSchema:
     """Update a day template."""
     update_day_template_handler = command_factory.create(UpdateDayTemplateHandler)
@@ -175,9 +174,7 @@ async def update_day_template(
 @router.delete("/{uuid}", status_code=200)
 async def delete_day_template(
     uuid: UUID,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> None:
     """Delete a day template."""
     delete_day_template_handler = command_factory.create(DeleteDayTemplateHandler)
@@ -194,9 +191,7 @@ async def delete_day_template(
 async def add_day_template_routine(
     uuid: UUID,
     routine_data: DayTemplateRoutineCreateSchema,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> DayTemplateSchema:
     """Attach a routine to a day template."""
     add_day_template_routine_handler = command_factory.create(
@@ -217,9 +212,7 @@ async def add_day_template_routine(
 async def remove_day_template_routine(
     uuid: UUID,
     routine_id: UUID,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> DayTemplateSchema:
     """Detach a routine from a day template."""
     remove_day_template_routine_handler = command_factory.create(
@@ -239,9 +232,7 @@ async def remove_day_template_routine(
 async def add_day_template_time_block(
     uuid: UUID,
     time_block_data: DayTemplateTimeBlockCreateSchema,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     time_block_def_repo: Annotated[
         TimeBlockDefinitionRepositoryReadOnlyProtocol,
         Depends(get_time_block_definition_ro_repo),
@@ -276,9 +267,7 @@ async def remove_day_template_time_block(
     uuid: UUID,
     time_block_definition_id: UUID,
     start_time: str,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> DayTemplateSchema:
     """Remove a time block from a day template."""
     from datetime import time as time_type

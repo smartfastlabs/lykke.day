@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
@@ -15,6 +14,9 @@ from lykke.domain.entities import (
     TimeBlockDefinitionEntity,
     UserEntity,
 )
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 
 class _FakeDayTemplateReadOnlyRepo:
@@ -100,7 +102,9 @@ class _FakeRoutineReadOnlyRepo:
     """Fake routine repository for testing."""
 
     def __init__(
-        self, routine: RoutineEntity | None = None, routines: list[RoutineEntity] | None = None
+        self,
+        routine: RoutineEntity | None = None,
+        routines: list[RoutineEntity] | None = None,
     ) -> None:
         if routines is not None:
             self._routines = routines

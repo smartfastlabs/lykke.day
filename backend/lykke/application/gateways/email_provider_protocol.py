@@ -16,5 +16,3 @@ class EmailProviderGatewayProtocol(Protocol):
         """
 
         ...
-
-

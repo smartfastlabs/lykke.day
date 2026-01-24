@@ -2,8 +2,7 @@ import asyncio
 import json
 import re
 from datetime import UTC, datetime
-from typing import Any, cast
-from uuid import UUID
+from typing import TYPE_CHECKING, Any, cast
 from zoneinfo import ZoneInfo
 
 from google.auth.exceptions import RefreshError
@@ -11,16 +10,20 @@ from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from loguru import logger
+
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.core.config import settings
 from lykke.core.exceptions import TokenExpiredError
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity
 from lykke.domain.entities import (
+    AuthTokenEntity,
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
 )
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 # Google OAuth Flow
 CLIENT_SECRET_FILE = ".credentials.json"

@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from lykke.domain.events.base import DomainEvent, EntityUpdatedEvent
-from lykke.domain.value_objects.routine import RoutineTask
 from lykke.domain.value_objects.update import RoutineUpdateObject
+
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from lykke.domain.value_objects.routine import RoutineTask
 
 
 @dataclass(frozen=True, kw_only=True)

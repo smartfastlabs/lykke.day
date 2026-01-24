@@ -14,5 +14,3 @@ class SMSProviderProtocol(Protocol):
             message: Message body to send.
         """
         ...
-
-

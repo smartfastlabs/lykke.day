@@ -20,9 +20,7 @@ class StubPubSubSubscription:
         """Exit the subscription context."""
         pass
 
-    async def get_message(
-        self, timeout: float | None = None
-    ) -> dict[str, Any] | None:
+    async def get_message(self, timeout: float | None = None) -> dict[str, Any] | None:
         """Return None (no messages)."""
         return None
 

@@ -1,8 +1,7 @@
 """UseCase configs table definition."""
 
 from sqlalchemy import Column, DateTime, Index, String
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
 

@@ -15,10 +15,14 @@ class RemoveDayTemplateRoutineCommand(Command):
     routine_id: UUID
 
 
-class RemoveDayTemplateRoutineHandler(BaseCommandHandler[RemoveDayTemplateRoutineCommand, DayTemplateEntity]):
+class RemoveDayTemplateRoutineHandler(
+    BaseCommandHandler[RemoveDayTemplateRoutineCommand, DayTemplateEntity]
+):
     """Detach a routine from a day template."""
 
-    async def handle(self, command: RemoveDayTemplateRoutineCommand) -> DayTemplateEntity:
+    async def handle(
+        self, command: RemoveDayTemplateRoutineCommand
+    ) -> DayTemplateEntity:
         """Remove an attached routine from the day template.
 
         Args:
@@ -31,4 +35,3 @@ class RemoveDayTemplateRoutineHandler(BaseCommandHandler[RemoveDayTemplateRoutin
             day_template = await uow.day_template_ro_repo.get(command.day_template_id)
             updated_day_template = day_template.remove_routine(command.routine_id)
             return uow.add(updated_day_template)
-

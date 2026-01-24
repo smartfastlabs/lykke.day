@@ -17,7 +17,7 @@ from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 def test_calendar_entry(test_user_id: str) -> CalendarEntryEntity:
     """Create a calendar entry for testing."""
     from uuid import uuid4
-    
+
     calendar = CalendarEntity(
         user_id=test_user_id,
         name="Test Calendar",
@@ -90,9 +90,7 @@ def test_is_calendar_entry_eligible_for_upcoming_too_far_future(
     test_calendar_entry.starts_at = datetime.datetime(
         2025, 11, 27, 20, 0, 0, tzinfo=UTC
     )
-    test_calendar_entry.ends_at = datetime.datetime(
-        2025, 11, 27, 21, 0, 0, tzinfo=UTC
-    )
+    test_calendar_entry.ends_at = datetime.datetime(2025, 11, 27, 21, 0, 0, tzinfo=UTC)
     with freeze_time("2025-11-27 10:00:00-06:00", real_asyncio=True):
         now = datetime.datetime(2025, 11, 27, 10, 0, 0, tzinfo=UTC)
         look_ahead = timedelta(hours=3)
@@ -105,7 +103,7 @@ def test_is_calendar_entry_eligible_for_upcoming_no_ends_at(
 ) -> None:
     """Test calendar entries without ends_at are handled correctly."""
     from uuid import uuid4
-    
+
     calendar = CalendarEntity(
         user_id=test_user_id,
         name="Test Calendar",
@@ -134,7 +132,7 @@ def test_is_calendar_entry_eligible_for_upcoming_no_ends_at(
 def test_filter_upcoming_calendar_entries(test_user_id: str) -> None:
     """Test filter_upcoming_calendar_entries filters entries correctly."""
     from uuid import uuid4
-    
+
     auth_token_id = uuid4()
     calendar = CalendarEntity(
         user_id=test_user_id,
@@ -201,7 +199,7 @@ def test_filter_upcoming_calendar_entries_ongoing_events(
 ) -> None:
     """Test filter_upcoming_calendar_entries includes ongoing events."""
     from uuid import uuid4
-    
+
     calendar = CalendarEntity(
         user_id=test_user_id,
         name="Test Calendar",
@@ -227,4 +225,3 @@ def test_filter_upcoming_calendar_entries_ongoing_events(
         result = filter_upcoming_calendar_entries([ongoing_entry], look_ahead)
         assert len(result) == 1
         assert result[0].name == "Ongoing Event"
-

@@ -17,7 +17,9 @@ class AddRoutineToDayCommand(Command):
     routine_id: UUID
 
 
-class AddRoutineToDayHandler(BaseCommandHandler[AddRoutineToDayCommand, list[TaskEntity]]):
+class AddRoutineToDayHandler(
+    BaseCommandHandler[AddRoutineToDayCommand, list[TaskEntity]]
+):
     """Adds a routine's tasks to a day."""
 
     async def handle(self, command: AddRoutineToDayCommand) -> list[TaskEntity]:

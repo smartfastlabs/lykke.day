@@ -6,7 +6,7 @@ from uuid import UUID
 
 class PubSubGatewayProtocol(Protocol):
     """Protocol defining the interface for pub/sub messaging gateways.
-    
+
     Enables publishing messages to user-specific channels that can be
     subscribed to by other processes (e.g., WebSocket handlers).
     """
@@ -39,7 +39,7 @@ class PubSubGatewayProtocol(Protocol):
 
         Returns:
             A subscription context manager that can be used to receive and send messages
-            
+
         Usage:
             async with gateway.subscribe_to_user_channel(user_id, "auditlog") as sub:
                 message = await sub.get_message()
@@ -50,7 +50,7 @@ class PubSubGatewayProtocol(Protocol):
 
 class PubSubSubscription(Protocol):
     """Protocol for a pub/sub subscription.
-    
+
     Represents an active subscription to a channel. Can be used as an async
     context manager for automatic cleanup.
     """
@@ -68,9 +68,7 @@ class PubSubSubscription(Protocol):
         """Exit the subscription context and clean up resources."""
         ...
 
-    async def get_message(
-        self, timeout: float | None = None
-    ) -> dict[str, Any] | None:
+    async def get_message(self, timeout: float | None = None) -> dict[str, Any] | None:
         """Get the next message from the subscription.
 
         Args:

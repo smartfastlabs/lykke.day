@@ -15,7 +15,9 @@ class RemoveRoutineTaskCommand(Command):
     routine_task_id: UUID
 
 
-class RemoveRoutineTaskHandler(BaseCommandHandler[RemoveRoutineTaskCommand, RoutineEntity]):
+class RemoveRoutineTaskHandler(
+    BaseCommandHandler[RemoveRoutineTaskCommand, RoutineEntity]
+):
     """Detach a RoutineTask from a routine."""
 
     async def handle(self, command: RemoveRoutineTaskCommand) -> RoutineEntity:

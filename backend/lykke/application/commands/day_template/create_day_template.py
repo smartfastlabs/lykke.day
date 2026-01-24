@@ -13,7 +13,9 @@ class CreateDayTemplateCommand(Command):
     day_template: DayTemplateEntity
 
 
-class CreateDayTemplateHandler(BaseCommandHandler[CreateDayTemplateCommand, DayTemplateEntity]):
+class CreateDayTemplateHandler(
+    BaseCommandHandler[CreateDayTemplateCommand, DayTemplateEntity]
+):
     """Creates a new day template."""
 
     async def handle(self, command: CreateDayTemplateCommand) -> DayTemplateEntity:

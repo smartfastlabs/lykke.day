@@ -4,6 +4,7 @@ from datetime import time
 from uuid import uuid4
 
 import pytest
+
 from lykke.core.exceptions import NotFoundError
 from lykke.domain.entities import RoutineEntity
 from lykke.domain.value_objects.routine import RecurrenceSchedule, RoutineTask

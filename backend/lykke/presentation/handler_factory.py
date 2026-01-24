@@ -3,19 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TypeVar, overload
-from uuid import UUID
+from typing import TYPE_CHECKING, TypeVar, overload
 
+from lykke.application.commands.base import BaseCommandHandler
 from lykke.application.commands.calendar import (
-    ResyncCalendarHandler,
     ResetCalendarDataHandler,
     ResetCalendarSyncHandler,
+    ResyncCalendarHandler,
     SubscribeCalendarHandler,
     SyncAllCalendarsHandler,
     SyncCalendarHandler,
     UnsubscribeCalendarHandler,
 )
-from lykke.application.commands.base import BaseCommandHandler
 from lykke.application.commands.day.reschedule_day import RescheduleDayHandler
 from lykke.application.commands.day.schedule_day import ScheduleDayHandler
 from lykke.application.commands.notifications import (
@@ -31,15 +30,18 @@ from lykke.application.queries import (
     PreviewDayHandler,
 )
 from lykke.application.queries.base import BaseQueryHandler
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositories,
-    ReadOnlyRepositoryFactory,
-    UnitOfWorkFactory,
-)
 from lykke.infrastructure.gateways import GoogleCalendarGateway, WebPushGateway
 
-from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+    from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
+    from lykke.application.unit_of_work import (
+        ReadOnlyRepositories,
+        ReadOnlyRepositoryFactory,
+        UnitOfWorkFactory,
+    )
 
 QueryHandlerT = TypeVar("QueryHandlerT", bound=BaseQueryHandler)
 CommandHandlerT = TypeVar("CommandHandlerT", bound=BaseCommandHandler)
@@ -58,7 +60,7 @@ CommandHandlerProvider = Callable[["CommandHandlerFactory"], BaseCommandHandler]
 
 
 def _build_get_llm_prompt_context_handler(
-    factory: "QueryHandlerFactory",
+    factory: QueryHandlerFactory,
 ) -> GetLLMPromptContextHandler:
     return GetLLMPromptContextHandler(
         factory.ro_repos,
@@ -107,7 +109,7 @@ class QueryHandlerFactory:
 
 
 def _build_schedule_day_handler(
-    factory: "CommandHandlerFactory",
+    factory: CommandHandlerFactory,
 ) -> ScheduleDayHandler:
     return ScheduleDayHandler(
         factory.ro_repos,
@@ -118,7 +120,7 @@ def _build_schedule_day_handler(
 
 
 def _build_reschedule_day_handler(
-    factory: "CommandHandlerFactory",
+    factory: CommandHandlerFactory,
 ) -> RescheduleDayHandler:
     return RescheduleDayHandler(
         factory.ro_repos,
@@ -129,7 +131,7 @@ def _build_reschedule_day_handler(
 
 
 def _build_sync_calendar_handler(
-    factory: "CommandHandlerFactory",
+    factory: CommandHandlerFactory,
 ) -> SyncCalendarHandler:
     return SyncCalendarHandler(
         factory.ro_repos,
@@ -140,7 +142,7 @@ def _build_sync_calendar_handler(
 
 
 def _build_sync_all_calendars_handler(
-    factory: "CommandHandlerFactory",
+    factory: CommandHandlerFactory,
 ) -> SyncAllCalendarsHandler:
     return SyncAllCalendarsHandler(
         factory.ro_repos,
@@ -151,7 +153,7 @@ def _build_sync_all_calendars_handler(
 
 
 def _build_subscribe_calendar_handler(
-    factory: "CommandHandlerFactory",
+    factory: CommandHandlerFactory,
 ) -> SubscribeCalendarHandler:
     return SubscribeCalendarHandler(
         factory.ro_repos,
@@ -162,7 +164,7 @@ def _build_subscribe_calendar_handler(
 
 
 def _build_unsubscribe_calendar_handler(
-    factory: "CommandHandlerFactory",
+    factory: CommandHandlerFactory,
 ) -> UnsubscribeCalendarHandler:
     return UnsubscribeCalendarHandler(
         factory.ro_repos,
@@ -173,7 +175,7 @@ def _build_unsubscribe_calendar_handler(
 
 
 def _build_resync_calendar_handler(
-    factory: "CommandHandlerFactory",
+    factory: CommandHandlerFactory,
 ) -> ResyncCalendarHandler:
     return ResyncCalendarHandler(
         factory.ro_repos,
@@ -185,7 +187,7 @@ def _build_resync_calendar_handler(
 
 
 def _build_reset_calendar_data_handler(
-    factory: "CommandHandlerFactory",
+    factory: CommandHandlerFactory,
 ) -> ResetCalendarDataHandler:
     return ResetCalendarDataHandler(
         factory.ro_repos,
@@ -196,7 +198,7 @@ def _build_reset_calendar_data_handler(
 
 
 def _build_reset_calendar_sync_handler(
-    factory: "CommandHandlerFactory",
+    factory: CommandHandlerFactory,
 ) -> ResetCalendarSyncHandler:
     return ResetCalendarSyncHandler(
         factory.ro_repos,
@@ -208,7 +210,7 @@ def _build_reset_calendar_sync_handler(
 
 
 def _build_send_push_notification_handler(
-    factory: "CommandHandlerFactory",
+    factory: CommandHandlerFactory,
 ) -> SendPushNotificationHandler:
     return SendPushNotificationHandler(
         ro_repos=factory.ro_repos,
@@ -219,7 +221,7 @@ def _build_send_push_notification_handler(
 
 
 def _build_smart_notification_handler(
-    factory: "CommandHandlerFactory",
+    factory: CommandHandlerFactory,
 ) -> SmartNotificationHandler:
     return SmartNotificationHandler(
         factory.ro_repos,
@@ -232,7 +234,7 @@ def _build_smart_notification_handler(
 
 
 def _build_morning_overview_handler(
-    factory: "CommandHandlerFactory",
+    factory: CommandHandlerFactory,
 ) -> MorningOverviewHandler:
     return MorningOverviewHandler(
         factory.ro_repos,
@@ -245,7 +247,9 @@ def _build_morning_overview_handler(
     )
 
 
-DEFAULT_COMMAND_HANDLER_REGISTRY: dict[type[BaseCommandHandler], CommandHandlerProvider] = {
+DEFAULT_COMMAND_HANDLER_REGISTRY: dict[
+    type[BaseCommandHandler], CommandHandlerProvider
+] = {
     ScheduleDayHandler: _build_schedule_day_handler,
     RescheduleDayHandler: _build_reschedule_day_handler,
     SyncCalendarHandler: _build_sync_calendar_handler,
@@ -315,28 +319,44 @@ class CommandHandlerFactory:
     def create(self, handler_class: type[ScheduleDayHandler]) -> ScheduleDayHandler: ...
 
     @overload
-    def create(self, handler_class: type[RescheduleDayHandler]) -> RescheduleDayHandler: ...
+    def create(
+        self, handler_class: type[RescheduleDayHandler]
+    ) -> RescheduleDayHandler: ...
 
     @overload
-    def create(self, handler_class: type[SyncCalendarHandler]) -> SyncCalendarHandler: ...
+    def create(
+        self, handler_class: type[SyncCalendarHandler]
+    ) -> SyncCalendarHandler: ...
 
     @overload
-    def create(self, handler_class: type[SyncAllCalendarsHandler]) -> SyncAllCalendarsHandler: ...
+    def create(
+        self, handler_class: type[SyncAllCalendarsHandler]
+    ) -> SyncAllCalendarsHandler: ...
 
     @overload
-    def create(self, handler_class: type[SubscribeCalendarHandler]) -> SubscribeCalendarHandler: ...
+    def create(
+        self, handler_class: type[SubscribeCalendarHandler]
+    ) -> SubscribeCalendarHandler: ...
 
     @overload
-    def create(self, handler_class: type[UnsubscribeCalendarHandler]) -> UnsubscribeCalendarHandler: ...
+    def create(
+        self, handler_class: type[UnsubscribeCalendarHandler]
+    ) -> UnsubscribeCalendarHandler: ...
 
     @overload
-    def create(self, handler_class: type[ResyncCalendarHandler]) -> ResyncCalendarHandler: ...
+    def create(
+        self, handler_class: type[ResyncCalendarHandler]
+    ) -> ResyncCalendarHandler: ...
 
     @overload
-    def create(self, handler_class: type[ResetCalendarDataHandler]) -> ResetCalendarDataHandler: ...
+    def create(
+        self, handler_class: type[ResetCalendarDataHandler]
+    ) -> ResetCalendarDataHandler: ...
 
     @overload
-    def create(self, handler_class: type[ResetCalendarSyncHandler]) -> ResetCalendarSyncHandler: ...
+    def create(
+        self, handler_class: type[ResetCalendarSyncHandler]
+    ) -> ResetCalendarSyncHandler: ...
 
     @overload
     def create(
@@ -344,10 +364,14 @@ class CommandHandlerFactory:
     ) -> SendPushNotificationHandler: ...
 
     @overload
-    def create(self, handler_class: type[SmartNotificationHandler]) -> SmartNotificationHandler: ...
+    def create(
+        self, handler_class: type[SmartNotificationHandler]
+    ) -> SmartNotificationHandler: ...
 
     @overload
-    def create(self, handler_class: type[MorningOverviewHandler]) -> MorningOverviewHandler: ...
+    def create(
+        self, handler_class: type[MorningOverviewHandler]
+    ) -> MorningOverviewHandler: ...
 
     @overload
     def create(self, handler_class: type[CommandHandlerT]) -> CommandHandlerT: ...

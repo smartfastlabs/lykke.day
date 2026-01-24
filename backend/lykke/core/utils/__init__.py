@@ -29,4 +29,3 @@ __all__ = [
     "send_pdf_to_printer",
     "slugify",
 ]
-

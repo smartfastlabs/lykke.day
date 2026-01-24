@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from datetime import date as datetime_date
+from typing import TYPE_CHECKING
 
-from lykke.domain import value_objects
+if TYPE_CHECKING:
+    from datetime import date as datetime_date
+
+    from lykke.domain import value_objects
 
 
 class BaseUseCase(ABC):

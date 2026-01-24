@@ -15,15 +15,24 @@ class SearchCalendarEntrySeriesQuery(Query):
     search_query: value_objects.CalendarEntrySeriesQuery | None = None
 
 
-class SearchCalendarEntrySeriesHandler(BaseQueryHandler[SearchCalendarEntrySeriesQuery, value_objects.PagedQueryResponse[CalendarEntrySeriesEntity]]):
+class SearchCalendarEntrySeriesHandler(
+    BaseQueryHandler[
+        SearchCalendarEntrySeriesQuery,
+        value_objects.PagedQueryResponse[CalendarEntrySeriesEntity],
+    ]
+):
     """Search calendar entry series with pagination."""
 
     calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
 
-    async def handle(self, query: SearchCalendarEntrySeriesQuery) -> value_objects.PagedQueryResponse[CalendarEntrySeriesEntity]:
+    async def handle(
+        self, query: SearchCalendarEntrySeriesQuery
+    ) -> value_objects.PagedQueryResponse[CalendarEntrySeriesEntity]:
         """Search calendar entry series with pagination."""
         if query.search_query is not None:
-            result = await self.calendar_entry_series_ro_repo.paged_search(query.search_query)
+            result = await self.calendar_entry_series_ro_repo.paged_search(
+                query.search_query
+            )
             return result
 
         items = await self.calendar_entry_series_ro_repo.all()

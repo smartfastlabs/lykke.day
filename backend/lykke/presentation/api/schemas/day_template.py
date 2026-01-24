@@ -1,14 +1,12 @@
 """DayTemplate schema."""
 
 from datetime import time
-
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
 from .base import BaseEntitySchema, BaseSchema
 from .high_level_plan import HighLevelPlanSchema
-
 
 
 class DayTemplateTimeBlockSchema(BaseModel):
@@ -63,4 +61,3 @@ class DayTemplateTimeBlockCreateSchema(BaseSchema):
     start_time: time
     end_time: time
     # Note: name is not required in create request - it will be fetched from the TimeBlockDefinition
-

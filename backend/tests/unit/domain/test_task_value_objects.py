@@ -4,6 +4,7 @@ import datetime
 from datetime import time
 
 import pytest
+
 from lykke.domain.value_objects.task import TaskSchedule, TimingType
 
 

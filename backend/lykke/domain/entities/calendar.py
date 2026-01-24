@@ -2,17 +2,19 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ..value_objects.sync import SyncSubscription
-from ..value_objects.task import EventCategory
-from ..value_objects.update import CalendarUpdateObject
+from lykke.domain.value_objects.update import CalendarUpdateObject
+
 from .base import BaseEntityObject
 
 if TYPE_CHECKING:
-    from ..events.calendar_events import CalendarUpdatedEvent
+    from datetime import datetime
+
+    from lykke.domain.events.calendar_events import CalendarUpdatedEvent
+    from lykke.domain.value_objects.sync import SyncSubscription
+    from lykke.domain.value_objects.task import EventCategory
 
 
 @dataclass(kw_only=True)

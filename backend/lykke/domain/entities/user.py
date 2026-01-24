@@ -3,14 +3,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
-from uuid import UUID
 
-from .. import value_objects
-from ..value_objects.update import UserUpdateObject
+from lykke.domain import value_objects
+from lykke.domain.value_objects.update import UserUpdateObject
+
 from .base import BaseEntityObject
 
 if TYPE_CHECKING:
-    from ..events.user_events import UserUpdatedEvent
+    from uuid import UUID
+
+    from lykke.domain.events.user_events import UserUpdatedEvent
 
 
 @dataclass(kw_only=True)
@@ -47,11 +49,13 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
         update_dict: dict[str, Any] = {
             k: v for k, v in update_object.__dict__.items() if v is not None
         }
-        
+
         # Merge settings if provided - don't replace entire settings object
         # The /me endpoint already merges settings correctly, so we just need to ensure
         # the settings object is properly passed through
-        if "settings" in update_dict and isinstance(update_dict["settings"], value_objects.UserSetting):
+        if "settings" in update_dict and isinstance(
+            update_dict["settings"], value_objects.UserSetting
+        ):
             # Settings are already merged in the /me endpoint, so we can use them directly
             pass
 

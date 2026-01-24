@@ -76,28 +76,30 @@ async def test_multiple_subscribers() -> None:
     message = {"event": "broadcast", "data": "multi-subscriber test"}
 
     # Create two subscriptions for the same channel using context managers
-    async with gateway.subscribe_to_user_channel(
-        user_id=user_id, channel_type="domain-events"
-    ) as sub1:
-        async with gateway.subscribe_to_user_channel(
+    async with (
+        gateway.subscribe_to_user_channel(
             user_id=user_id, channel_type="domain-events"
-        ) as sub2:
-            # Wait for subscriptions to be ready
-            await asyncio.sleep(0.1)
+        ) as sub1,
+        gateway.subscribe_to_user_channel(
+            user_id=user_id, channel_type="domain-events"
+        ) as sub2,
+    ):
+        # Wait for subscriptions to be ready
+        await asyncio.sleep(0.1)
 
-            # Publish one message
-            await gateway.publish_to_user_channel(
-                user_id=user_id, channel_type="domain-events", message=message
-            )
+        # Publish one message
+        await gateway.publish_to_user_channel(
+            user_id=user_id, channel_type="domain-events", message=message
+        )
 
-            # Both subscribers should receive the message
-            received1 = await sub1.get_message(timeout=2.0)
-            received2 = await sub2.get_message(timeout=2.0)
+        # Both subscribers should receive the message
+        received1 = await sub1.get_message(timeout=2.0)
+        received2 = await sub2.get_message(timeout=2.0)
 
-            assert received1 is not None
-            assert received1["event"] == "broadcast"
-            assert received2 is not None
-            assert received2["event"] == "broadcast"
+        assert received1 is not None
+        assert received1["event"] == "broadcast"
+        assert received2 is not None
+        assert received2["event"] == "broadcast"
 
     await gateway.close()
 
@@ -109,28 +111,30 @@ async def test_channel_isolation() -> None:
     user1_id = uuid4()
     user2_id = uuid4()
 
-    async with gateway.subscribe_to_user_channel(
-        user_id=user1_id, channel_type="domain-events"
-    ) as sub1:
-        async with gateway.subscribe_to_user_channel(
+    async with (
+        gateway.subscribe_to_user_channel(
+            user_id=user1_id, channel_type="domain-events"
+        ) as sub1,
+        gateway.subscribe_to_user_channel(
             user_id=user2_id, channel_type="domain-events"
-        ) as sub2:
-            await asyncio.sleep(0.1)
+        ) as sub2,
+    ):
+        await asyncio.sleep(0.1)
 
-            # Publish message to user1's channel
-            message1 = {"event": "user1_event", "data": "for user1"}
-            await gateway.publish_to_user_channel(
-                user_id=user1_id, channel_type="domain-events", message=message1
-            )
+        # Publish message to user1's channel
+        message1 = {"event": "user1_event", "data": "for user1"}
+        await gateway.publish_to_user_channel(
+            user_id=user1_id, channel_type="domain-events", message=message1
+        )
 
-            # User1 should receive the message
-            received1 = await sub1.get_message(timeout=2.0)
-            assert received1 is not None
-            assert received1["event"] == "user1_event"
+        # User1 should receive the message
+        received1 = await sub1.get_message(timeout=2.0)
+        assert received1 is not None
+        assert received1["event"] == "user1_event"
 
-            # User2 should NOT receive the message (timeout)
-            received2 = await sub2.get_message(timeout=0.5)
-            assert received2 is None
+        # User2 should NOT receive the message (timeout)
+        received2 = await sub2.get_message(timeout=0.5)
+        assert received2 is None
 
     await gateway.close()
 

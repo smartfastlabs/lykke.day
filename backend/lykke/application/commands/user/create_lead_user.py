@@ -36,4 +36,3 @@ class CreateLeadUserHandler(BaseCommandHandler[CreateLeadUserCommand, None]):
             )
 
             await uow.create(lead)
-

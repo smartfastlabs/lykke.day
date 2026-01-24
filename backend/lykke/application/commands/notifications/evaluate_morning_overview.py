@@ -8,6 +8,7 @@ from typing import Any, Literal
 from uuid import UUID
 
 from loguru import logger
+
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.commands.push_subscription import (
     SendPushNotificationCommand,

@@ -1,12 +1,14 @@
 from typing import Any
 
 from lykke.domain.entities import PushSubscriptionEntity
-
-from .base import BaseQuery, UserScopedBaseRepository
 from lykke.infrastructure.database.tables import push_subscriptions_tbl
 
+from .base import BaseQuery, UserScopedBaseRepository
 
-class PushSubscriptionRepository(UserScopedBaseRepository[PushSubscriptionEntity, BaseQuery]):
+
+class PushSubscriptionRepository(
+    UserScopedBaseRepository[PushSubscriptionEntity, BaseQuery]
+):
     Object = PushSubscriptionEntity
     table = push_subscriptions_tbl
     QueryClass = BaseQuery

@@ -4,6 +4,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+
 from lykke.application.commands.usecase_config import (
     CreateUseCaseConfigCommand,
     CreateUseCaseConfigHandler,
@@ -23,7 +24,10 @@ from lykke.presentation.api.schemas import (
     NotificationUseCaseConfigSchema,
     UseCaseConfigSchema,
 )
-from lykke.presentation.handler_factory import CommandHandlerFactory, QueryHandlerFactory
+from lykke.presentation.handler_factory import (
+    CommandHandlerFactory,
+    QueryHandlerFactory,
+)
 
 from .dependencies.factories import command_handler_factory, query_handler_factory
 from .dependencies.user import get_current_user
@@ -88,9 +92,7 @@ async def update_usecase_config(
     usecase: str,
     config_data: NotificationUseCaseConfigSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
 ) -> NotificationUseCaseConfigSchema:
     """Create or update usecase config."""
@@ -134,9 +136,7 @@ async def update_usecase_config(
 @router.delete("/usecase-configs/{usecase_config_id}", status_code=200)
 async def delete_usecase_config(
     usecase_config_id: UUID,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> None:
     """Delete a usecase config."""
     delete_handler = command_factory.create(DeleteUseCaseConfigHandler)

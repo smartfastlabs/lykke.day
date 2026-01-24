@@ -24,9 +24,7 @@ class CreateUseCaseConfigHandler(
 ):
     """Creates or updates a usecase config."""
 
-    async def handle(
-        self, command: CreateUseCaseConfigCommand
-    ) -> UseCaseConfigEntity:
+    async def handle(self, command: CreateUseCaseConfigCommand) -> UseCaseConfigEntity:
         """Create or update a usecase config."""
         async with self.new_uow(command.user_id) as uow:
             # Check if config already exists
@@ -37,7 +35,7 @@ class CreateUseCaseConfigHandler(
                 # Update existing config - get the existing entity and modify it
                 existing_config = existing[0]
                 from datetime import UTC, datetime
-                
+
                 # Clone the existing entity with updated values
                 # Note: clone() creates a new instance, so _domain_events will be a new empty list
                 updated_config = existing_config.clone(
@@ -47,7 +45,10 @@ class CreateUseCaseConfigHandler(
                 # Add EntityUpdatedEvent so UoW knows to update, not insert
                 # Use BaseUpdateObject since UseCaseConfig doesn't have a specific update object type
                 from lykke.domain.value_objects.update import BaseUpdateObject
-                updated_config.add_event(EntityUpdatedEvent(update_object=BaseUpdateObject()))
+
+                updated_config.add_event(
+                    EntityUpdatedEvent(update_object=BaseUpdateObject())
+                )
                 # Ensure the entity is added to UoW for tracking
                 uow.add(updated_config)
                 return updated_config

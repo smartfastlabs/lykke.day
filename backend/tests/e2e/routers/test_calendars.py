@@ -3,8 +3,8 @@
 from uuid import uuid4
 
 import pytest
-from lykke.domain.entities import CalendarEntity
-from lykke.domain.entities import AuthTokenEntity
+
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity
 from lykke.infrastructure.repositories import AuthTokenRepository, CalendarRepository
 
 
@@ -88,7 +88,7 @@ async def test_get_calendar(authenticated_client):
 @pytest.mark.asyncio
 async def test_get_calendar_not_found(authenticated_client):
     """Test getting a non-existent calendar returns 404."""
-    client, user = await authenticated_client()
+    client, _user = await authenticated_client()
 
     fake_id = uuid4()
     response = client.get(f"/calendars/{fake_id}")
@@ -244,7 +244,7 @@ async def test_delete_calendar(authenticated_client):
 @pytest.mark.asyncio
 async def test_delete_calendar_not_found(authenticated_client):
     """Test deleting a non-existent calendar returns 404."""
-    client, user = await authenticated_client()
+    client, _user = await authenticated_client()
 
     fake_id = uuid4()
     response = client.delete(f"/calendars/{fake_id}")

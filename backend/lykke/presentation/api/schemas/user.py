@@ -62,4 +62,3 @@ class UserUpdateSchema(BaseSchema):
     settings: UserSettingsUpdateSchema | None = None
     default_conversation_id: UUID | None = None
     sms_conversation_id: UUID | None = None
-

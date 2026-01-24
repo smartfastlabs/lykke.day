@@ -17,7 +17,9 @@ class UpdateDayTemplateCommand(Command):
     update_data: DayTemplateUpdateObject
 
 
-class UpdateDayTemplateHandler(BaseCommandHandler[UpdateDayTemplateCommand, DayTemplateEntity]):
+class UpdateDayTemplateHandler(
+    BaseCommandHandler[UpdateDayTemplateCommand, DayTemplateEntity]
+):
     """Updates an existing day template."""
 
     async def handle(self, command: UpdateDayTemplateCommand) -> DayTemplateEntity:

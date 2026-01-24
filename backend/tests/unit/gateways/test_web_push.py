@@ -1,6 +1,5 @@
 """Unit tests for WebPushGateway using dobles."""
 
-
 import pytest
 
 from lykke.domain.entities import PushSubscriptionEntity

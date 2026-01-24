@@ -24,11 +24,10 @@ def get_classes_from_file(file_path: Path, base_class_suffix: str) -> list[str]:
 
         classes = []
         for node in ast.walk(tree):
-            if isinstance(node, ast.ClassDef):
-                if node.name.endswith(base_class_suffix):
-                    # Remove the suffix to get the base name
-                    base_name = node.name[: -len(base_class_suffix)]
-                    classes.append(base_name)
+            if isinstance(node, ast.ClassDef) and node.name.endswith(base_class_suffix):
+                # Remove the suffix to get the base name
+                base_name = node.name[: -len(base_class_suffix)]
+                classes.append(base_name)
         return classes
     except Exception as e:
         print(f"Error parsing {file_path}: {e}", file=sys.stderr)
@@ -43,15 +42,18 @@ def get_functions_from_file(file_path: Path, prefix: str) -> list[str]:
 
         functions = []
         for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef):
-                if node.name.startswith(prefix) and "_to_schema" in node.name:
-                    # Extract the entity name from map_<entity>_to_schema
-                    entity_name = node.name[len(prefix) : -len("_to_schema")]
-                    # Convert snake_case to PascalCase
-                    pascal_name = "".join(
-                        word.capitalize() for word in entity_name.split("_")
-                    )
-                    functions.append(pascal_name)
+            if (
+                isinstance(node, ast.FunctionDef)
+                and node.name.startswith(prefix)
+                and "_to_schema" in node.name
+            ):
+                # Extract the entity name from map_<entity>_to_schema
+                entity_name = node.name[len(prefix) : -len("_to_schema")]
+                # Convert snake_case to PascalCase
+                pascal_name = "".join(
+                    word.capitalize() for word in entity_name.split("_")
+                )
+                functions.append(pascal_name)
         return functions
     except Exception as e:
         print(f"Error parsing {file_path}: {e}", file=sys.stderr)
@@ -99,7 +101,7 @@ def main() -> int:
     repos_dir = lykke_dir / "infrastructure" / "repositories"
 
     # Entities that are never exposed via API (should be excluded from checks)
-    EXCLUDED_ENTITIES = {"AuthToken"}
+    excluded_entities = {"AuthToken"}
 
     if not entities_dir.exists():
         print(f"Error: {entities_dir} not found", file=sys.stderr)
@@ -113,7 +115,7 @@ def main() -> int:
         entities.update(get_classes_from_file(file_path, "Entity"))
 
     # Filter out excluded entities
-    entities = entities - EXCLUDED_ENTITIES
+    entities = entities - excluded_entities
 
     # Collect all schemas
     schemas = set()

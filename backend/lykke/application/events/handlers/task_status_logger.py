@@ -1,5 +1,7 @@
 """Demo event handler that logs task status changes."""
 
+from typing import ClassVar
+
 from loguru import logger
 
 from lykke.domain.events.base import DomainEvent
@@ -22,7 +24,10 @@ class TaskStatusLoggerHandler(DomainEventHandler):
     - Sync with external systems
     """
 
-    handles = [TaskStatusChangedEvent, TaskCompletedEvent]
+    handles: ClassVar[list[type[DomainEvent]]] = [
+        TaskStatusChangedEvent,
+        TaskCompletedEvent,
+    ]
 
     async def handle(self, event: DomainEvent) -> None:
         """Log task status changes."""
@@ -32,7 +37,4 @@ class TaskStatusLoggerHandler(DomainEventHandler):
                 f"{event.old_status} → {event.new_status}"
             )
         elif isinstance(event, TaskCompletedEvent):
-            logger.info(
-                f"✅ Task {event.task_id} completed at {event.completed_at}"
-            )
-
+            logger.info(f"✅ Task {event.task_id} completed at {event.completed_at}")

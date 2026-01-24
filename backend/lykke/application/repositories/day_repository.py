@@ -18,4 +18,3 @@ class DayRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[DayEntity]):
     """Read-write protocol defining the interface for day repositories."""
 
     Query = value_objects.DayQuery
-

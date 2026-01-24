@@ -30,4 +30,3 @@ class BaseDateSchema(BaseEntitySchema):
     """Base schema for entities with a date."""
 
     date: date
-

@@ -10,8 +10,7 @@ from lykke.application.commands.calendar.subscribe_calendar import (
 )
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity
-from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity, CalendarEntryEntity
 from lykke.infrastructure.gateways import StubPubSubGateway
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositories,
@@ -118,4 +117,3 @@ async def test_subscribe_calendar_persists_subscription(
     assert persisted.sync_subscription_id == "channel-id"
     assert updated_calendar.sync_subscription_id == "channel-id"
     assert google_gateway.calls and google_gateway.calls[0]["client_state"]
-

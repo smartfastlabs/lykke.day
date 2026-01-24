@@ -8,16 +8,17 @@ from contextlib import asynccontextmanager
 from typing import Any, ClassVar, Generic, TypeVar
 from uuid import UUID
 
+from sqlalchemy import delete, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.sql import Select
+
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities.base import BaseEntityObject
 from lykke.infrastructure.database import get_engine
 from lykke.infrastructure.database.transaction import get_transaction_connection
 from lykke.infrastructure.repositories.base.utils import normalize_list_fields
-from sqlalchemy import delete, select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlalchemy.sql import Select
 
 ObjectType = TypeVar("ObjectType", bound=BaseEntityObject)
 QueryType = TypeVar("QueryType", bound=value_objects.BaseQuery)
@@ -166,6 +167,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
     def _strip_pagination(self, query: QueryType) -> QueryType:
         """Return a copy of the query with pagination removed."""
         from dataclasses import replace
+
         return replace(query, limit=None, offset=None)
 
     def _get_engine(self) -> AsyncEngine:
@@ -435,7 +437,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
             stmt = delete(self.table)
             if where_clause is not None:
                 stmt = stmt.where(where_clause)
-            
+
             # Explicitly apply user scope to ensure proper filtering
             stmt = self._apply_user_scope_to_mutate(stmt)
 
@@ -455,11 +457,7 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         If this repository is user-scoped, the delete is filtered by user_id.
         """
         # Handle both key (UUID) and object deletion
-        if isinstance(key, UUID):
-            obj_id = key
-        else:
-            # key is actually the object
-            obj_id = key.id
+        obj_id = key if isinstance(key, UUID) else key.id
 
         async with self._get_connection(for_write=True) as conn:
             stmt = delete(self.table).where(self.table.c.id == obj_id)

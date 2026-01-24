@@ -45,7 +45,9 @@ async def test_remove_reminder_removes_reminder_from_day():
     handler = RemoveReminderHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.handle(RemoveReminderCommand(date=task_date, reminder_id=reminder1.id))
+    result = await handler.handle(
+        RemoveReminderCommand(date=task_date, reminder_id=reminder1.id)
+    )
 
     # Assert
     assert len(result.reminders) == 1
@@ -80,7 +82,9 @@ async def test_remove_reminder_emits_domain_event():
     handler = RemoveReminderHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.handle(RemoveReminderCommand(date=task_date, reminder_id=reminder.id))
+    result = await handler.handle(
+        RemoveReminderCommand(date=task_date, reminder_id=reminder.id)
+    )
 
     # Assert
     events = result.collect_events()
@@ -116,7 +120,9 @@ async def test_remove_reminder_raises_error_if_reminder_not_found():
 
     # Act & Assert
     with pytest.raises(DomainError, match="not found"):
-        await handler.handle(RemoveReminderCommand(date=task_date, reminder_id=fake_reminder_id))
+        await handler.handle(
+            RemoveReminderCommand(date=task_date, reminder_id=fake_reminder_id)
+        )
 
 
 @pytest.mark.asyncio
@@ -144,7 +150,9 @@ async def test_remove_reminder_with_multiple_reminders():
     handler = RemoveReminderHandler(ro_repos, uow_factory, user_id)
 
     # Remove middle reminder
-    result = await handler.handle(RemoveReminderCommand(date=task_date, reminder_id=reminder2.id))
+    result = await handler.handle(
+        RemoveReminderCommand(date=task_date, reminder_id=reminder2.id)
+    )
 
     # Assert
     assert len(result.reminders) == 2

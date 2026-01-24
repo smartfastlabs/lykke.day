@@ -18,4 +18,3 @@ class RoutineRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[RoutineEnti
     """Read-write protocol defining the interface for routine repositories."""
 
     Query = value_objects.RoutineQuery
-

@@ -1,12 +1,11 @@
 """AuditLog entity for tracking user activities."""
 
 from dataclasses import dataclass, field
-from datetime import UTC
-from datetime import date as dt_date
-from datetime import datetime
+from datetime import UTC, date as dt_date, datetime
 from typing import Any
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
 from lykke.core.exceptions import DomainError
 
 from .base import BaseEntityObject

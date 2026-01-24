@@ -33,4 +33,3 @@ class GetRoutineHandler(BaseQueryHandler[GetRoutineQuery, RoutineEntity]):
             NotFoundError: If routine not found
         """
         return await self.routine_ro_repo.get(query.routine_id)
-

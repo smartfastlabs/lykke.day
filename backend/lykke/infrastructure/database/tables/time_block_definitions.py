@@ -19,4 +19,3 @@ class TimeBlockDefinition(Base):
     category = Column(String, nullable=False)  # TimeBlockCategory enum as string
 
     __table_args__ = (Index("idx_time_block_definitions_user_id", "user_id"),)
-

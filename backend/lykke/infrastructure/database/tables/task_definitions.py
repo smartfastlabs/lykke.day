@@ -18,4 +18,3 @@ class TaskDefinition(Base):
     type = Column(String, nullable=False)  # TaskType enum as string
 
     __table_args__ = (Index("idx_task_definitions_user_id", "user_id"),)
-

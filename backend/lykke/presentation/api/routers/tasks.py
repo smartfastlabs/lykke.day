@@ -4,6 +4,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
+
 from lykke.application.commands import (
     CreateAdhocTaskCommand,
     CreateAdhocTaskHandler,
@@ -24,9 +25,7 @@ router = APIRouter()
 async def add_task_action(
     _id: uuid.UUID,
     action: value_objects.Action,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> TaskSchema:
     """Record an action on a task."""
     handler = command_factory.create(RecordTaskActionHandler)
@@ -37,9 +36,7 @@ async def add_task_action(
 @router.post("/adhoc", response_model=TaskSchema, status_code=201)
 async def create_adhoc_task(
     task_data: AdhocTaskCreateSchema,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> TaskSchema:
     """Create an adhoc task."""
     handler = command_factory.create(CreateAdhocTaskHandler)

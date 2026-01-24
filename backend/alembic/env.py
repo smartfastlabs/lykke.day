@@ -1,11 +1,12 @@
 import asyncio
 from logging.config import fileConfig
 
+from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import create_async_engine
+
 from alembic import context
 from lykke.core.config import settings
 from lykke.infrastructure.database.tables import metadata
-from sqlalchemy import pool
-from sqlalchemy.ext.asyncio import create_async_engine
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

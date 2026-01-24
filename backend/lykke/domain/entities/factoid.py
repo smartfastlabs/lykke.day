@@ -18,7 +18,9 @@ class FactoidEntity(BaseEntityObject):
     user_id: UUID
     conversation_id: UUID | None = None  # None for global factoids
     factoid_type: value_objects.FactoidType
-    criticality: value_objects.FactoidCriticality = value_objects.FactoidCriticality.NORMAL
+    criticality: value_objects.FactoidCriticality = (
+        value_objects.FactoidCriticality.NORMAL
+    )
     content: str
     embedding: list[float] | None = None  # Vector embedding for semantic search
     ai_suggested: bool = False  # AI marked as important

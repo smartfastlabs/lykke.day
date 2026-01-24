@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
+
 from lykke.core.exceptions import NotFoundError
 from lykke.domain.entities import AuditLogEntity
 from lykke.domain.value_objects.query import AuditLogQuery
@@ -351,7 +352,7 @@ async def test_user_scoping(audit_log_repo, test_user, create_test_user):
 async def test_paged_search(audit_log_repo, test_user):
     """Test paged search with limit and offset."""
     # Create multiple audit logs
-    for i in range(5):
+    for _i in range(5):
         task_id = uuid4()
         log = AuditLogEntity(
             user_id=test_user.id,

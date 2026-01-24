@@ -27,7 +27,7 @@ def test_factoid_creation() -> None:
     """Test creating a factoid entity."""
     user_id = uuid4()
     content = "User prefers morning meetings"
-    
+
     factoid = FactoidEntity(
         user_id=user_id,
         factoid_type=value_objects.FactoidType.SEMANTIC,
@@ -99,7 +99,9 @@ def test_update_criticality_changes_level(factoid: FactoidEntity) -> None:
     )
 
     assert updated.criticality == value_objects.FactoidCriticality.CRITICAL
-    assert factoid.criticality == value_objects.FactoidCriticality.NORMAL  # Original unchanged
+    assert (
+        factoid.criticality == value_objects.FactoidCriticality.NORMAL
+    )  # Original unchanged
 
 
 def test_update_criticality_sets_user_confirmed(factoid: FactoidEntity) -> None:
@@ -119,7 +121,9 @@ def test_update_criticality_sets_user_confirmed(factoid: FactoidEntity) -> None:
     assert updated.user_confirmed is True
 
 
-def test_update_criticality_preserves_previous_confirmation(factoid: FactoidEntity) -> None:
+def test_update_criticality_preserves_previous_confirmation(
+    factoid: FactoidEntity,
+) -> None:
     """Test that update_criticality preserves user_confirmed if already set."""
     # First update with user confirmation
     confirmed = factoid.update_criticality(
@@ -198,7 +202,7 @@ def test_factoid_types() -> None:
 def test_factoid_with_embedding() -> None:
     """Test factoid with vector embedding."""
     embedding = [0.1, 0.2, 0.3, 0.4, 0.5]
-    
+
     factoid = FactoidEntity(
         user_id=uuid4(),
         factoid_type=value_objects.FactoidType.SEMANTIC,

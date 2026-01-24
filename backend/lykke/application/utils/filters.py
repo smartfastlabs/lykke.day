@@ -1,6 +1,7 @@
 """Query filtering utilities for tasks and calendar entries."""
 
 import datetime
+
 from lykke.core.utils.dates import (
     get_current_datetime,
     get_current_datetime_in_timezone,

@@ -3,10 +3,9 @@
 import json
 from dataclasses import dataclass
 from typing import Any
+from uuid import UUID
 
 from loguru import logger
-
-from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
@@ -31,7 +30,9 @@ class SendPushNotificationCommand(Command):
     llm_provider: str | None = None
 
 
-class SendPushNotificationHandler(BaseCommandHandler[SendPushNotificationCommand, None]):
+class SendPushNotificationHandler(
+    BaseCommandHandler[SendPushNotificationCommand, None]
+):
     """Sends push notifications to subscriptions and tracks them."""
 
     def __init__(
@@ -81,18 +82,24 @@ class SendPushNotificationHandler(BaseCommandHandler[SendPushNotificationCommand
         # Send to each subscription
         for subscription in command.subscriptions:
             try:
-                logger.info(f"Sending push notification to subscription {subscription.id}")
+                logger.info(
+                    f"Sending push notification to subscription {subscription.id}"
+                )
                 await self._web_push_gateway.send_notification(
                     subscription=subscription,
                     content=command.content,
                 )
                 successful_subscription_ids.append(subscription.id)
-                logger.info(f"Successfully sent push notification to subscription {subscription.id}")
+                logger.info(
+                    f"Successfully sent push notification to subscription {subscription.id}"
+                )
             except Exception as e:
                 failed_subscription_ids.append(subscription.id)
-                error_msg = f"Subscription {subscription.id}: {str(e)}"
+                error_msg = f"Subscription {subscription.id}: {e!s}"
                 error_messages.append(error_msg)
-                logger.error(f"Failed to send push notification to subscription {subscription.id}: {e}")
+                logger.error(
+                    f"Failed to send push notification to subscription {subscription.id}: {e}"
+                )
 
         # Create PushNotificationEntity to track this send attempt
         # Use the user_id from the first subscription (all should be for the same user)

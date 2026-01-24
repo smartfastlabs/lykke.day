@@ -18,4 +18,3 @@ class TimeBlockDefinitionUpdatedEvent(
     EntityUpdatedEvent[TimeBlockDefinitionUpdateObject]
 ):
     """Event raised when a time block definition is updated via apply_update()."""
-

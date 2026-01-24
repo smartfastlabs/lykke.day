@@ -39,4 +39,3 @@ class UpdateUserHandler(BaseCommandHandler[UpdateUserCommand, UserEntity]):
 
             # Add entity to UoW for saving
             return uow.add(user)
-

@@ -58,7 +58,9 @@ async def test_preview_day_uses_provided_template():
     handler = PreviewDayHandler(ro_repos, user_id)
 
     # Act
-    result = await handler.handle(PreviewDayQuery(date=task_date, template_id=template.id))
+    result = await handler.handle(
+        PreviewDayQuery(date=task_date, template_id=template.id)
+    )
 
     # Assert
     assert result.day.date == task_date
@@ -197,7 +199,9 @@ async def test_preview_day_returns_calendar_entries():
     handler = PreviewDayHandler(ro_repos, user_id)
 
     # Act
-    result = await handler.handle(PreviewDayQuery(date=task_date, template_id=template.id))
+    result = await handler.handle(
+        PreviewDayQuery(date=task_date, template_id=template.id)
+    )
 
     # Assert
     assert result.calendar_entries == mock_entries

@@ -1,5 +1,6 @@
 import aiohttp
 from loguru import logger
+
 from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
 from lykke.core.config import settings
 from lykke.core.exceptions import AuthenticationError, ServerError
@@ -34,19 +35,19 @@ class TwilioGateway(SMSProviderProtocol):
         url = f"{self._BASE_URL}/{account_sid}/Messages.json"
         auth = aiohttp.BasicAuth(account_sid, auth_token)
 
-        async with aiohttp.ClientSession(auth=auth) as session:
-            async with session.post(url, data=payload) as response:
-                if response.status >= 400:
-                    error_text = await response.text()
-                    logger.error(
-                        "Twilio send_message failed: status={} body={}",
-                        response.status,
-                        error_text,
-                    )
-                    raise ServerError(
-                        f"Failed to send SMS via Twilio: {response.status} {response.reason}",
-                    )
+        async with (
+            aiohttp.ClientSession(auth=auth) as session,
+            session.post(url, data=payload) as response,
+        ):
+            if response.status >= 400:
+                error_text = await response.text()
+                logger.error(
+                    "Twilio send_message failed: status={} body={}",
+                    response.status,
+                    error_text,
+                )
+                raise ServerError(
+                    f"Failed to send SMS via Twilio: {response.status} {response.reason}",
+                )
 
         logger.info("Twilio SMS queued for {}", phone_number)
-
-

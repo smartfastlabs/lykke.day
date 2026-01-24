@@ -1,19 +1,16 @@
 """Unit tests for UpdateUserHandler."""
 
-# pylint: disable=import-error
-import pathlib
-import sys
-
 import pytest
-
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-if str(ROOT) not in sys.path:
-    sys.path.append(str(ROOT))
 
 from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
 from lykke.domain.entities import UserEntity
 from lykke.domain.value_objects import UserSetting, UserStatus, UserUpdateObject
-from tests.unit.fakes import _FakeReadOnlyRepos, _FakeUoW, _FakeUoWFactory, _FakeUserReadOnlyRepo
+from tests.unit.fakes import (
+    _FakeReadOnlyRepos,
+    _FakeUoW,
+    _FakeUoWFactory,
+    _FakeUserReadOnlyRepo,
+)
 
 
 @pytest.mark.asyncio

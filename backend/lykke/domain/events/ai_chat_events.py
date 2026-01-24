@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from lykke.domain.value_objects.update import (
     BotPersonalityUpdateObject,
@@ -11,6 +11,9 @@ from lykke.domain.value_objects.update import (
 )
 
 from .base import AuditableDomainEvent, DomainEvent, EntityUpdatedEvent
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 __all__ = [
     "BotPersonalityUpdatedEvent",
@@ -41,7 +44,7 @@ class ConversationUpdatedEvent(EntityUpdatedEvent[ConversationUpdateObject]):
 @dataclass(frozen=True, kw_only=True)
 class MessageSentEvent(DomainEvent, AuditableDomainEvent):
     """Event raised when a message is sent in a conversation.
-    
+
     Uses AuditableDomainEvent: User sent a message in AI chat conversation,
     this is a deliberate user action that represents engagement with the AI.
     Important for conversation history and context.

@@ -16,7 +16,9 @@ class UnsubscribeCalendarCommand(Command):
     calendar: CalendarEntity
 
 
-class UnsubscribeCalendarHandler(BaseCommandHandler[UnsubscribeCalendarCommand, CalendarEntity]):
+class UnsubscribeCalendarHandler(
+    BaseCommandHandler[UnsubscribeCalendarCommand, CalendarEntity]
+):
     """Removes push subscriptions for a calendar."""
 
     def __init__(
@@ -54,4 +56,3 @@ class UnsubscribeCalendarHandler(BaseCommandHandler[UnsubscribeCalendarCommand, 
             calendar.sync_subscription_id = None
 
             return uow.add(calendar)
-

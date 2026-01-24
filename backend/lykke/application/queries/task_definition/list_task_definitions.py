@@ -15,12 +15,19 @@ class SearchTaskDefinitionsQuery(Query):
     search_query: value_objects.TaskDefinitionQuery | None = None
 
 
-class SearchTaskDefinitionsHandler(BaseQueryHandler[SearchTaskDefinitionsQuery, value_objects.PagedQueryResponse[TaskDefinitionEntity]]):
+class SearchTaskDefinitionsHandler(
+    BaseQueryHandler[
+        SearchTaskDefinitionsQuery,
+        value_objects.PagedQueryResponse[TaskDefinitionEntity],
+    ]
+):
     """Searches task definitions with pagination."""
 
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
 
-    async def handle(self, query: SearchTaskDefinitionsQuery) -> value_objects.PagedQueryResponse[TaskDefinitionEntity]:
+    async def handle(
+        self, query: SearchTaskDefinitionsQuery
+    ) -> value_objects.PagedQueryResponse[TaskDefinitionEntity]:
         """Search task definitions with pagination.
 
         Args:
@@ -46,4 +53,3 @@ class SearchTaskDefinitionsHandler(BaseQueryHandler[SearchTaskDefinitionsQuery, 
                 has_next=False,
                 has_previous=False,
             )
-

@@ -3,22 +3,26 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, time
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from .base import BaseRequestObject
-from .day import BrainDumpItem, DayStatus, DayTag, Reminder
-from .high_level_plan import HighLevelPlan
-from .routine import RecurrenceSchedule, RoutineTask
-from .sync import SyncSubscription
-from .task import EventCategory, TaskCategory, TaskFrequency, TaskType
-from .time_block import (
-    DayTemplateTimeBlock,
-    DayTimeBlock,
-    TimeBlockCategory,
-    TimeBlockType,
-)
-from .user import UserSetting, UserStatus
+
+if TYPE_CHECKING:
+    from datetime import datetime, time
+    from uuid import UUID
+
+    from .day import BrainDumpItem, DayStatus, DayTag, Reminder
+    from .high_level_plan import HighLevelPlan
+    from .routine import RecurrenceSchedule, RoutineTask
+    from .sync import SyncSubscription
+    from .task import EventCategory, TaskCategory, TaskFrequency, TaskType
+    from .time_block import (
+        DayTemplateTimeBlock,
+        DayTimeBlock,
+        TimeBlockCategory,
+        TimeBlockType,
+    )
+    from .user import UserSetting, UserStatus
 
 
 @dataclass(kw_only=True)

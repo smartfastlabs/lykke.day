@@ -15,7 +15,9 @@ class GetTaskDefinitionQuery(Query):
     task_definition_id: UUID
 
 
-class GetTaskDefinitionHandler(BaseQueryHandler[GetTaskDefinitionQuery, TaskDefinitionEntity]):
+class GetTaskDefinitionHandler(
+    BaseQueryHandler[GetTaskDefinitionQuery, TaskDefinitionEntity]
+):
     """Retrieves a single task definition by ID."""
 
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
@@ -33,4 +35,3 @@ class GetTaskDefinitionHandler(BaseQueryHandler[GetTaskDefinitionQuery, TaskDefi
             NotFoundError: If task definition not found
         """
         return await self.task_definition_ro_repo.get(query.task_definition_id)
-

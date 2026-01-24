@@ -13,7 +13,9 @@ class DeletePushSubscriptionCommand(Command):
     subscription_id: UUID
 
 
-class DeletePushSubscriptionHandler(BaseCommandHandler[DeletePushSubscriptionCommand, None]):
+class DeletePushSubscriptionHandler(
+    BaseCommandHandler[DeletePushSubscriptionCommand, None]
+):
     """Deletes a push subscription."""
 
     async def handle(self, command: DeletePushSubscriptionCommand) -> None:
@@ -26,6 +28,7 @@ class DeletePushSubscriptionHandler(BaseCommandHandler[DeletePushSubscriptionCom
             NotFoundError: If push subscription not found
         """
         async with self.new_uow() as uow:
-            subscription = await uow.push_subscription_ro_repo.get(command.subscription_id)
+            subscription = await uow.push_subscription_ro_repo.get(
+                command.subscription_id
+            )
             await uow.delete(subscription)
-

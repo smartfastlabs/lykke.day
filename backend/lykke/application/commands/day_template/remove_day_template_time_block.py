@@ -17,10 +17,14 @@ class RemoveDayTemplateTimeBlockCommand(Command):
     start_time: time
 
 
-class RemoveDayTemplateTimeBlockHandler(BaseCommandHandler[RemoveDayTemplateTimeBlockCommand, DayTemplateEntity]):
+class RemoveDayTemplateTimeBlockHandler(
+    BaseCommandHandler[RemoveDayTemplateTimeBlockCommand, DayTemplateEntity]
+):
     """Remove a time block from a day template."""
 
-    async def handle(self, command: RemoveDayTemplateTimeBlockCommand) -> DayTemplateEntity:
+    async def handle(
+        self, command: RemoveDayTemplateTimeBlockCommand
+    ) -> DayTemplateEntity:
         """Remove a time block from the day template.
 
         Args:

@@ -11,7 +11,9 @@ from .base import UserScopedBaseRepository
 
 
 class PushNotificationRepository(
-    UserScopedBaseRepository[PushNotificationEntity, value_objects.PushNotificationQuery]
+    UserScopedBaseRepository[
+        PushNotificationEntity, value_objects.PushNotificationQuery
+    ]
 ):
     Object = PushNotificationEntity
     table = push_notifications_tbl

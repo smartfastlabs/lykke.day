@@ -18,4 +18,3 @@ class DayContextSchema(BaseSchema):
     day: "DaySchema"
     calendar_entries: list["CalendarEntrySchema"] = Field(default_factory=list)
     tasks: list["TaskSchema"] = Field(default_factory=list)
-

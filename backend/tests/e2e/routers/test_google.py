@@ -7,7 +7,7 @@ import pytest
 @pytest.mark.skip("depends on .credentials.json file")
 async def test_google_login_redirect(authenticated_client):
     """Test Google login redirects to authorization URL."""
-    client, user = await authenticated_client()
+    client, _user = await authenticated_client()
 
     response = client.get("/google/login", follow_redirects=False)
 
@@ -19,7 +19,7 @@ async def test_google_login_redirect(authenticated_client):
 @pytest.mark.asyncio
 async def test_google_login_callback_missing_params(authenticated_client):
     """Test Google login callback with missing parameters."""
-    client, user = await authenticated_client()
+    client, _user = await authenticated_client()
 
     response = client.get("/google/callback/login")
 
@@ -30,7 +30,7 @@ async def test_google_login_callback_missing_params(authenticated_client):
 @pytest.mark.asyncio
 async def test_google_login_callback_invalid_state(authenticated_client):
     """Test Google login callback with invalid state."""
-    client, user = await authenticated_client()
+    client, _user = await authenticated_client()
 
     response = client.get(
         "/google/callback/login",

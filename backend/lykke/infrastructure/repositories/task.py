@@ -42,6 +42,7 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
     @staticmethod
     def entity_to_row(task: TaskEntity) -> dict[str, Any]:
         """Convert a Task entity to a database row dict."""
+
         # Helper to safely get enum value (handles both enum and string)
         def get_enum_value(val: Any) -> str | None:
             if val is None:

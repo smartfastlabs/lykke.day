@@ -3,14 +3,15 @@
 from uuid import uuid4
 
 import pytest
+
 from lykke.core.exceptions import NotFoundError
+from lykke.core.utils.dates import get_current_datetime
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, TaskEntity
 from lykke.infrastructure.database.transaction import (
     TransactionManager,
     get_transaction_connection,
 )
-from lykke.core.utils.dates import get_current_datetime
 
 
 @pytest.mark.asyncio

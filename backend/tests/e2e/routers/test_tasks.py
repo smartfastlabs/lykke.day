@@ -29,6 +29,7 @@ async def test_complete_task_action(authenticated_client, test_date):
 
     # Ensure day exists by scheduling it
     from tests.e2e.conftest import schedule_day_for_user
+
     await schedule_day_for_user(user.id, test_date)
 
     # Create a test task
@@ -72,6 +73,7 @@ async def test_punt_task_action(authenticated_client, test_date):
 
     # Ensure day exists by scheduling it
     from tests.e2e.conftest import schedule_day_for_user
+
     await schedule_day_for_user(user.id, test_date)
 
     # Create a test task

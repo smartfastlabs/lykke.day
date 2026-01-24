@@ -20,8 +20,11 @@ from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
 )
-from lykke.presentation.handler_factory import CommandHandlerFactory, QueryHandlerFactory
 from lykke.presentation.api.routers.dependencies.user import get_current_user_from_token
+from lykke.presentation.handler_factory import (
+    CommandHandlerFactory,
+    QueryHandlerFactory,
+)
 
 
 async def get_pubsub_gateway(

@@ -254,7 +254,13 @@ class TestIsAuditLogForTodayDayFiltering:
             entity_type="day",
             entity_data={
                 "date": "2025-01-15",
-                "reminders": [{"id": str(uuid4()), "name": "Test Reminder", "status": "INCOMPLETE"}],
+                "reminders": [
+                    {
+                        "id": str(uuid4()),
+                        "name": "Test Reminder",
+                        "status": "INCOMPLETE",
+                    }
+                ],
             },
         )
 

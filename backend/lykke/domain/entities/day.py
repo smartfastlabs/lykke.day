@@ -7,33 +7,34 @@ from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from lykke.core.exceptions import DomainError
+from lykke.domain import value_objects
 from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
-
-from .. import value_objects
-from ..events.day_events import (  # pylint: disable=no-name-in-module
-    DayCompletedEvent,
-    DayScheduledEvent,
-    DayUnscheduledEvent,
+from lykke.domain.events.day_events import (
     BrainDumpItemAddedEvent,
     BrainDumpItemRemovedEvent,
     BrainDumpItemStatusChangedEvent,
+    DayCompletedEvent,
+    DayScheduledEvent,
+    DayUnscheduledEvent,
     ReminderAddedEvent,
     ReminderRemovedEvent,
     ReminderStatusChangedEvent,
 )
-from ..events.task_events import (
+from lykke.domain.events.task_events import (
     TaskActionRecordedEvent,
     TaskCompletedEvent,
     TaskPuntedEvent,
     TaskStatusChangedEvent,
 )
-from ..value_objects.update import DayUpdateObject
+from lykke.domain.value_objects.update import DayUpdateObject
+
 from .base import BaseEntityObject
-from .task import TaskEntity
 
 if TYPE_CHECKING:
-    from ..events.day_events import DayUpdatedEvent
+    from lykke.domain.events.day_events import DayUpdatedEvent
+
+    from .task import TaskEntity
 
 
 @dataclass(kw_only=True)
@@ -282,7 +283,8 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
             DomainError: If the day already has 5 active reminders
         """
         active_reminders = [
-            reminder for reminder in self.reminders
+            reminder
+            for reminder in self.reminders
             if reminder.status == value_objects.ReminderStatus.INCOMPLETE
         ]
         if len(active_reminders) >= 5:
@@ -299,7 +301,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
         )
 
         # Create a new list with the new reminder (reminders list is immutable)
-        self.reminders = list(self.reminders) + [reminder]
+        self.reminders = [*list(self.reminders), reminder]
 
         self._add_event(
             ReminderAddedEvent(
@@ -388,7 +390,9 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
             raise DomainError(f"Reminder with id {reminder_id} not found in this day")
 
         # Create new list without the removed reminder
-        self.reminders = [reminder for reminder in self.reminders if reminder.id != reminder_id]
+        self.reminders = [
+            reminder for reminder in self.reminders if reminder.id != reminder_id
+        ]
 
         self._add_event(
             ReminderRemovedEvent(
@@ -411,7 +415,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
             created_at=datetime.now(UTC),
         )
 
-        self.brain_dump_items = list(self.brain_dump_items) + [item]
+        self.brain_dump_items = [*list(self.brain_dump_items), item]
 
         self._add_event(
             BrainDumpItemAddedEvent(
@@ -440,7 +444,9 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
                 break
 
         if item_index is None or old_item is None:
-            raise DomainError(f"Brain dump item with id {item_id} not found in this day")
+            raise DomainError(
+                f"Brain dump item with id {item_id} not found in this day"
+            )
 
         if old_item.status == status:
             return

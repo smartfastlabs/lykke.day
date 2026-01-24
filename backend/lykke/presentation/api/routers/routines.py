@@ -1,11 +1,14 @@
 """Router for Routine CRUD operations."""
 
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
-from lykke.application.commands import RecordRoutineActionCommand, RecordRoutineActionHandler
+from lykke.application.commands import (
+    RecordRoutineActionCommand,
+    RecordRoutineActionHandler,
+)
 from lykke.application.commands.routine import (
     AddRoutineTaskCommand,
     AddRoutineTaskHandler,
@@ -41,11 +44,17 @@ from lykke.presentation.api.schemas import (
     TaskSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_routine_to_schema
-from lykke.presentation.handler_factory import CommandHandlerFactory, QueryHandlerFactory
+from lykke.presentation.handler_factory import (
+    CommandHandlerFactory,
+    QueryHandlerFactory,
+)
 
 from .dependencies.factories import command_handler_factory, query_handler_factory
 from .dependencies.user import get_current_user
 from .utils import build_search_query, create_paged_response
+
+if TYPE_CHECKING:
+    from datetime import date
 
 router = APIRouter()
 
@@ -69,7 +78,9 @@ async def search_routines(
     """Search routines with pagination and optional filters."""
     list_routines_handler = query_factory.create(SearchRoutinesHandler)
     search_query = build_search_query(query, value_objects.RoutineQuery)
-    result = await list_routines_handler.handle(SearchRoutinesQuery(search_query=search_query))
+    result = await list_routines_handler.handle(
+        SearchRoutinesQuery(search_query=search_query)
+    )
     return create_paged_response(result, map_routine_to_schema)
 
 
@@ -81,9 +92,7 @@ async def search_routines(
 async def create_routine(
     routine_data: RoutineCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> RoutineSchema:
     """Create a new routine."""
     create_routine_handler = command_factory.create(CreateRoutineHandler)
@@ -149,9 +158,7 @@ async def create_routine(
 async def update_routine(
     uuid: UUID,
     update_data: RoutineUpdateSchema,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> RoutineSchema:
     """Update an existing routine."""
     update_routine_handler = command_factory.create(UpdateRoutineHandler)
@@ -221,9 +228,7 @@ async def update_routine(
 @router.delete("/{uuid}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_routine(
     uuid: UUID,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> None:
     """Delete a routine."""
     delete_routine_handler = command_factory.create(DeleteRoutineHandler)
@@ -238,9 +243,7 @@ async def delete_routine(
 async def add_routine_task(
     uuid: UUID,
     routine_task: RoutineTaskCreateSchema,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> RoutineSchema:
     """Attach a task definition to a routine."""
     add_routine_task_handler = command_factory.create(AddRoutineTaskHandler)
@@ -286,14 +289,10 @@ async def update_routine_task(
     uuid: UUID,
     routine_task_id: UUID,
     routine_task_update: RoutineTaskUpdateSchema,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> RoutineSchema:
     """Update an attached routine task (name/schedule)."""
-    update_routine_task_handler = command_factory.create(
-        UpdateRoutineTaskHandler
-    )
+    update_routine_task_handler = command_factory.create(UpdateRoutineTaskHandler)
     from lykke.domain.value_objects.routine import RecurrenceSchedule
     from lykke.domain.value_objects.task import TaskSchedule
 
@@ -339,14 +338,10 @@ async def update_routine_task(
 async def remove_routine_task(
     uuid: UUID,
     routine_task_id: UUID,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> RoutineSchema:
     """Detach a routine task from a routine by RoutineTask.id."""
-    remove_routine_task_handler = command_factory.create(
-        RemoveRoutineTaskHandler
-    )
+    remove_routine_task_handler = command_factory.create(RemoveRoutineTaskHandler)
     updated = await remove_routine_task_handler.handle(
         RemoveRoutineTaskCommand(routine_id=uuid, routine_task_id=routine_task_id)
     )
@@ -357,13 +352,10 @@ async def remove_routine_task(
 async def record_routine_action(
     uuid: UUID,
     action: value_objects.Action,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> list[TaskSchema]:
     """Record an action on all tasks in a routine for today."""
-    from datetime import date
     from lykke.core.utils.dates import get_current_date
     from lykke.presentation.api.schemas.mappers import map_task_to_schema
 

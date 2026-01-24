@@ -48,13 +48,13 @@ async def test_audit_log_broadcast_on_commit(test_user: UserEntity) -> None:
 
         # Verify the message was received and is a domain event
         assert received_message is not None
-        
+
         # Deserialize as domain event
         domain_event = deserialize_domain_event(received_message)
-        
+
         # Creating an AuditLogEntity emits EntityCreatedEvent
         assert isinstance(domain_event, EntityCreatedEvent)
-        
+
         # Domain events don't have all the entity details - that's in the audit log itself
         # The event just signals that something was created
 
@@ -112,7 +112,7 @@ async def test_multiple_audit_logs_broadcast(test_user: UserEntity) -> None:
         # Both should be EntityCreatedEvent (creating audit logs)
         assert isinstance(event1, EntityCreatedEvent)
         assert isinstance(event2, EntityCreatedEvent)
-        
+
         # The events signal that audit logs were created
         # The actual audit log data is stored in the database
 
@@ -227,7 +227,7 @@ async def test_user_isolation_in_broadcast(test_user: UserEntity) -> None:
         # User1 should receive the message (domain event)
         received_msg1 = await sub1.get_message(timeout=2.0)
         assert received_msg1 is not None
-        
+
         # Deserialize to verify it's a valid domain event
         event1 = deserialize_domain_event(received_msg1)
         assert isinstance(event1, EntityCreatedEvent)

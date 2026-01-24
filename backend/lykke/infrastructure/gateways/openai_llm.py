@@ -1,10 +1,11 @@
 """OpenAI (ChatGPT) LLM gateway implementation."""
 
 import json
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
-from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
 from loguru import logger
 from pydantic import SecretStr
 
@@ -30,15 +31,15 @@ def _normalize_response_content(content: str | list[str | dict[str, Any]]) -> st
     return "\n".join(parts)
 
 
-def _extract_tool_call_args(
-    response: Any, tool_name: str
-) -> dict[str, Any] | None:
+def _extract_tool_call_args(response: Any, tool_name: str) -> dict[str, Any] | None:
     tool_calls: list[Any] = []
     if getattr(response, "tool_calls", None):
         tool_calls = list(response.tool_calls)
     if not tool_calls:
         additional_kwargs = getattr(response, "additional_kwargs", {}) or {}
-        raw_calls = additional_kwargs.get("tool_calls") or additional_kwargs.get("tool_call")
+        raw_calls = additional_kwargs.get("tool_calls") or additional_kwargs.get(
+            "tool_call"
+        )
         if raw_calls:
             tool_calls = raw_calls if isinstance(raw_calls, list) else [raw_calls]
 
@@ -140,7 +141,9 @@ class OpenAILLMGateway:
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM response as JSON: {e}")
-            logger.debug(f"Response text: {response_text if 'response_text' in locals() else 'N/A'}")
+            logger.debug(
+                f"Response text: {response_text if 'response_text' in locals() else 'N/A'}"
+            )
             return None
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Error running use case with OpenAI: {e}")

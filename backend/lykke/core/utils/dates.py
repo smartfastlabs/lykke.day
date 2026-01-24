@@ -68,7 +68,7 @@ def get_time_between(
     timezone: str | None = None,
 ) -> datetime.timedelta:
     """Calculate time difference between two times/datetimes.
-    
+
     All datetimes are converted to UTC for comparison.
     """
     today = get_current_date(timezone)
@@ -76,13 +76,16 @@ def get_time_between(
 
     if isinstance(t1, datetime.time):
         # Combine with today's date in the configured timezone, then convert to UTC
-        t1 = datetime.datetime.combine(today, t1, tzinfo=desired_timezone).astimezone(UTC)
+        t1 = datetime.datetime.combine(today, t1, tzinfo=desired_timezone).astimezone(
+            UTC
+        )
 
     if not t2:
         t2 = get_current_datetime()
     elif isinstance(t2, datetime.time):
         # Combine with today's date in the configured timezone, then convert to UTC
-        t2 = datetime.datetime.combine(today, t2, tzinfo=desired_timezone).astimezone(UTC)
+        t2 = datetime.datetime.combine(today, t2, tzinfo=desired_timezone).astimezone(
+            UTC
+        )
 
     return t1 - t2
-

@@ -79,8 +79,7 @@ def test_build_for_tasks_multiple_tasks(test_user_id: str) -> None:
 
 def test_build_for_calendar_entries_single(test_user_id: str) -> None:
     """Test building notification payload for a single calendar entry."""
-    from uuid import uuid4
-    
+
     calendar = CalendarEntity(
         user_id=test_user_id,
         name="Test Calendar",
@@ -114,8 +113,7 @@ def test_build_for_calendar_entries_single(test_user_id: str) -> None:
 
 def test_build_for_calendar_entries_multiple(test_user_id: str) -> None:
     """Test building notification payload for multiple calendar entries."""
-    from uuid import uuid4
-    
+
     calendar = CalendarEntity(
         user_id=test_user_id,
         name="Test Calendar",
@@ -146,9 +144,7 @@ def test_build_for_calendar_entries_multiple(test_user_id: str) -> None:
         frequency=value_objects.TaskFrequency.ONCE,
     )
 
-    payload = build_notification_payload_for_calendar_entries(
-        [entry1, entry2]
-    )
+    payload = build_notification_payload_for_calendar_entries([entry1, entry2])
 
     assert payload.title == "2 events starting soon"
     assert payload.body == "You have 2 events starting soon"
@@ -158,8 +154,7 @@ def test_build_for_calendar_entries_multiple(test_user_id: str) -> None:
 
 def test_build_for_calendar_entries_no_ends_at(test_user_id: str) -> None:
     """Test building notification payload for calendar entry without ends_at."""
-    from uuid import uuid4
-    
+
     calendar = CalendarEntity(
         user_id=test_user_id,
         name="Test Calendar",
@@ -186,7 +181,6 @@ def test_build_for_calendar_entries_no_ends_at(test_user_id: str) -> None:
 
 def test_build_for_calendar_entry_change_created(test_user_id: str) -> None:
     """Test building notification payload for calendar entry created event."""
-    from uuid import uuid4
 
     calendar = CalendarEntity(
         user_id=test_user_id,
@@ -218,7 +212,6 @@ def test_build_for_calendar_entry_change_created(test_user_id: str) -> None:
 
 def test_build_for_calendar_entry_change_edited(test_user_id: str) -> None:
     """Test building notification payload for calendar entry edited event."""
-    from uuid import uuid4
 
     calendar = CalendarEntity(
         user_id=test_user_id,
@@ -249,7 +242,6 @@ def test_build_for_calendar_entry_change_edited(test_user_id: str) -> None:
 
 def test_build_for_calendar_entry_change_deleted(test_user_id: str) -> None:
     """Test building notification payload for calendar entry deleted event."""
-    from uuid import uuid4
 
     entry_snapshot = {
         "id": str(uuid4()),
@@ -261,11 +253,12 @@ def test_build_for_calendar_entry_change_deleted(test_user_id: str) -> None:
         "status": "confirmed",
     }
 
-    payload = build_notification_payload_for_calendar_entry_change("deleted", entry_snapshot)
+    payload = build_notification_payload_for_calendar_entry_change(
+        "deleted", entry_snapshot
+    )
 
     assert payload.title == "Calendar event deleted"
     assert payload.body == "Deleted Event"
     assert payload.data["change_type"] == "deleted"
     assert payload.data["calendar_entry_id"] == entry_snapshot["id"]
     assert payload.data["calendar_entry"]["name"] == "Deleted Event"
-

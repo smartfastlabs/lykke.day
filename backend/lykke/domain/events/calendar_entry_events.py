@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 from lykke.domain.value_objects.update import CalendarEntryUpdateObject
 
 from .base import DomainEvent, EntityUpdatedEvent
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
 __all__ = [
     "CalendarEntryCreatedEvent",
-    "CalendarEntryUpdatedEvent",
     "CalendarEntryDeletedEvent",
+    "CalendarEntryUpdatedEvent",
 ]
 
 

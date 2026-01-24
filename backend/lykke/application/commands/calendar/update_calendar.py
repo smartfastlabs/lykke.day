@@ -44,4 +44,3 @@ class UpdateCalendarHandler(BaseCommandHandler[UpdateCalendarCommand, CalendarEn
 
             # Add entity to UoW for saving
             return uow.add(calendar)
-

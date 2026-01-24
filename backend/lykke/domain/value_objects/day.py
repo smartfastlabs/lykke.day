@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 from .base import BaseValueObject
 
 if TYPE_CHECKING:
-    from ..entities import (
+    from lykke.domain.entities import (
         CalendarEntryEntity,
         DayEntity,
         MessageEntity,

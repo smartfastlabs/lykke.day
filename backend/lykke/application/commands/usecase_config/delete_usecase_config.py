@@ -13,9 +13,7 @@ class DeleteUseCaseConfigCommand(Command):
     usecase_config_id: UUID
 
 
-class DeleteUseCaseConfigHandler(
-    BaseCommandHandler[DeleteUseCaseConfigCommand, None]
-):
+class DeleteUseCaseConfigHandler(BaseCommandHandler[DeleteUseCaseConfigCommand, None]):
     """Deletes a usecase config."""
 
     async def handle(self, command: DeleteUseCaseConfigCommand) -> None:

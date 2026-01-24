@@ -18,8 +18,8 @@ from lykke.application.unit_of_work import (
 from lykke.core.constants import CALENDAR_DEFAULT_LOOKBACK, CALENDAR_SYNC_LOOKBACK
 from lykke.core.exceptions import NotFoundError, TokenExpiredError
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity
 from lykke.domain.entities import (
+    AuthTokenEntity,
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
@@ -142,7 +142,9 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
             existing_entries = await uow.calendar_entry_ro_repo.search(
                 value_objects.CalendarEntryQuery(platform_ids=platform_ids_to_check)
             )
-            existing_entries_map = {entry.platform_id: entry for entry in existing_entries}
+            existing_entries_map = {
+                entry.platform_id: entry for entry in existing_entries
+            }
 
         # Process entries - create new or update existing
         for entry in entries_to_upsert:
@@ -167,13 +169,20 @@ class SyncCalendarHandler(BaseCommandHandler[SyncCalendarCommand, CalendarEntity
                     update_fields["frequency"] = entry.frequency
                 if existing_entry.category != entry.category:
                     update_fields["category"] = entry.category
-                if existing_entry.calendar_entry_series_id != entry.calendar_entry_series_id:
-                    update_fields["calendar_entry_series_id"] = entry.calendar_entry_series_id
+                if (
+                    existing_entry.calendar_entry_series_id
+                    != entry.calendar_entry_series_id
+                ):
+                    update_fields["calendar_entry_series_id"] = (
+                        entry.calendar_entry_series_id
+                    )
 
                 # Only update if there are changes
                 if update_fields:
                     update_object = CalendarEntryUpdateObject(**update_fields)
-                    updated_entry = existing_entry.apply_calendar_entry_update(update_object)
+                    updated_entry = existing_entry.apply_calendar_entry_update(
+                        update_object
+                    )
                     uow.add(updated_entry)
                 # If no changes, skip (entry already exists and is up to date)
 

@@ -44,21 +44,23 @@ class SendGridGateway(EmailProviderGatewayProtocol):
             ],
         }
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
+        async with (
+            aiohttp.ClientSession() as session,
+            session.post(
                 self._BASE_URL,
                 headers=headers,
                 json=payload,
-            ) as response:
-                if response.status >= 400:
-                    error_text = await response.text()
-                    logger.error(
-                        "SendGrid send_message failed: status={} body={}",
-                        response.status,
-                        error_text,
-                    )
-                    raise ServerError(
-                        f"Failed to send email via SendGrid: {response.status} {response.reason}",
-                    )
+            ) as response,
+        ):
+            if response.status >= 400:
+                error_text = await response.text()
+                logger.error(
+                    "SendGrid send_message failed: status={} body={}",
+                    response.status,
+                    error_text,
+                )
+                raise ServerError(
+                    f"Failed to send email via SendGrid: {response.status} {response.reason}",
+                )
 
         logger.info("SendGrid email queued for {}", email_address)

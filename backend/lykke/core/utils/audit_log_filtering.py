@@ -1,7 +1,6 @@
 """Helper functions to filter audit logs by checking if entities are associated with a specific date."""
 
-from datetime import date as dt_date
-from datetime import datetime as dt_datetime
+from datetime import date as dt_date, datetime as dt_datetime
 from typing import Any
 
 from lykke.core.utils.dates import resolve_timezone

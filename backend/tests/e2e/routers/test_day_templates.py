@@ -8,7 +8,7 @@ import pytest
 @pytest.mark.asyncio
 async def test_list_day_templates(authenticated_client):
     """Test listing day templates."""
-    client, user = await authenticated_client()
+    client, _user = await authenticated_client()
 
     response = client.post("/day-templates/", json={"limit": 50, "offset": 0})
 
@@ -27,7 +27,7 @@ async def test_list_day_templates(authenticated_client):
 @pytest.mark.asyncio
 async def test_get_day_template(authenticated_client):
     """Test getting a single day template by UUID."""
-    client, user = await authenticated_client()
+    client, _user = await authenticated_client()
 
     # First, list templates to get a UUID
     list_response = client.post("/day-templates/", json={"limit": 50, "offset": 0})
@@ -48,7 +48,7 @@ async def test_get_day_template(authenticated_client):
 @pytest.mark.asyncio
 async def test_get_day_template_not_found(authenticated_client):
     """Test getting a non-existent day template returns 404."""
-    client, user = await authenticated_client()
+    client, _user = await authenticated_client()
 
     fake_id = uuid4()
     response = client.get(f"/day-templates/{fake_id}")
@@ -144,7 +144,7 @@ async def test_delete_day_template(authenticated_client):
 @pytest.mark.asyncio
 async def test_delete_day_template_not_found(authenticated_client):
     """Test deleting a non-existent day template returns 404."""
-    client, user = await authenticated_client()
+    client, _user = await authenticated_client()
 
     fake_id = uuid4()
     response = client.delete(f"/day-templates/{fake_id}")

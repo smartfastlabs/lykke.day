@@ -47,4 +47,3 @@ class CalendarUpdateSchema(BaseSchema):
     auth_token_id: UUID | None = None
     default_event_category: EventCategory | None = None
     last_sync_at: datetime | None = None
-

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from ..entities.base import BaseEntityObject
+from lykke.domain.entities.base import BaseEntityObject
 
 
 @dataclass(kw_only=True)
@@ -19,4 +19,3 @@ class NotificationPayload(BaseEntityObject):
     tag: str | None = None
     actions: list[NotificationAction] = field(default_factory=list)
     data: dict | None = None
-

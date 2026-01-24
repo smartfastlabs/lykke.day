@@ -22,9 +22,8 @@ async def generate_pdf_from_page(
         await page.wait_for_selector("text=Your Agenda (P1)")
 
         if pdf_path is None:
-            tmp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
-            pdf_path = tmp_file.name
-            tmp_file.close()
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
+                pdf_path = tmp_file.name
 
         # PDF page is exactly 3.5" x 5.5"
         await page.pdf(
@@ -61,4 +60,3 @@ async def send_pdf_to_printer(
     if delete_after:
         with contextlib.suppress(FileExistsError):
             await aiofiles.os.remove(pdf_path)
-

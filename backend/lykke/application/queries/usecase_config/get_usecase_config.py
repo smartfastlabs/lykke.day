@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 
 from lykke.application.queries.base import BaseQueryHandler, Query
-from lykke.domain.entities.usecase_config import UseCaseConfigEntity
 from lykke.domain import value_objects
+from lykke.domain.entities.usecase_config import UseCaseConfigEntity
 
 
 @dataclass(frozen=True)

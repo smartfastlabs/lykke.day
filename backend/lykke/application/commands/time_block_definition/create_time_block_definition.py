@@ -13,10 +13,14 @@ class CreateTimeBlockDefinitionCommand(Command):
     time_block_definition: TimeBlockDefinitionEntity
 
 
-class CreateTimeBlockDefinitionHandler(BaseCommandHandler[CreateTimeBlockDefinitionCommand, TimeBlockDefinitionEntity]):
+class CreateTimeBlockDefinitionHandler(
+    BaseCommandHandler[CreateTimeBlockDefinitionCommand, TimeBlockDefinitionEntity]
+):
     """Creates a new time block definition."""
 
-    async def handle(self, command: CreateTimeBlockDefinitionCommand) -> TimeBlockDefinitionEntity:
+    async def handle(
+        self, command: CreateTimeBlockDefinitionCommand
+    ) -> TimeBlockDefinitionEntity:
         """Create a new time block definition.
 
         Args:
@@ -27,4 +31,3 @@ class CreateTimeBlockDefinitionHandler(BaseCommandHandler[CreateTimeBlockDefinit
         """
         async with self.new_uow() as uow:
             return await uow.create(command.time_block_definition)
-

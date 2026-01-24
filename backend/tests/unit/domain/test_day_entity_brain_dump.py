@@ -39,8 +39,7 @@ def test_add_brain_dump_item_adds_item(test_day: DayEntity) -> None:
     assert len(test_day.brain_dump_items) == 1
     assert test_day.brain_dump_items[0].text == "Remember to get bread"
     assert (
-        test_day.brain_dump_items[0].status
-        == value_objects.BrainDumpItemStatus.ACTIVE
+        test_day.brain_dump_items[0].status == value_objects.BrainDumpItemStatus.ACTIVE
     )
     assert item.id == test_day.brain_dump_items[0].id
 

@@ -23,7 +23,7 @@ def test_message_creation() -> None:
     """Test creating a message entity."""
     conversation_id = uuid4()
     content = "Test message"
-    
+
     message = MessageEntity(
         conversation_id=conversation_id,
         role=value_objects.MessageRole.ASSISTANT,
@@ -44,7 +44,7 @@ def test_message_with_metadata() -> None:
         "model": "claude-3-opus",
         "temperature": 0.7,
     }
-    
+
     message = MessageEntity(
         conversation_id=uuid4(),
         role=value_objects.MessageRole.ASSISTANT,
@@ -141,7 +141,7 @@ def test_message_immutability() -> None:
 
     # Clone with updated content
     updated = original.clone(content="Updated content")
-    
+
     assert original.content == "Original content"
     assert updated.content == "Updated content"
     assert original.id == updated.id  # ID preserved

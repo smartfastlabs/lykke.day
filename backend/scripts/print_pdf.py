@@ -17,9 +17,8 @@ async def generate_pdf_from_page(url: str) -> str:
         await page.goto(url, wait_until="networkidle")
         await page.wait_for_selector("text=Ready")
 
-        tmp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
-        pdf_path = tmp_file.name
-        tmp_file.close()
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
+            pdf_path = tmp_file.name
 
         # PDF page is exactly 3.5" x 5.5"
         await page.pdf(

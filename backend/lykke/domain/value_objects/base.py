@@ -16,4 +16,3 @@ class BaseRequestObject(BaseValueObject):
 @dataclass(kw_only=True)
 class BaseResponseObject(BaseValueObject):
     pass
-

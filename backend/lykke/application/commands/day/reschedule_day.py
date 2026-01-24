@@ -24,7 +24,9 @@ class RescheduleDayCommand(Command):
     template_id: UUID | None = None
 
 
-class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, value_objects.DayContext]):
+class RescheduleDayHandler(
+    BaseCommandHandler[RescheduleDayCommand, value_objects.DayContext]
+):
     """Reschedules a day by cleaning up existing tasks and audit logs, then creating fresh tasks."""
 
     def __init__(
@@ -65,7 +67,9 @@ class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, value_object
             existing_tasks = await uow.task_ro_repo.search(
                 value_objects.TaskQuery(date=command.date, is_adhoc=False)
             )
-            logger.info(f"Found {len(existing_tasks)} existing tasks for {command.date}, deleting...")
+            logger.info(
+                f"Found {len(existing_tasks)} existing tasks for {command.date}, deleting..."
+            )
 
             await uow.bulk_delete_tasks(
                 value_objects.TaskQuery(date=command.date, is_adhoc=False)
@@ -89,7 +93,9 @@ class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, value_object
             # Note: Audit logs are normally immutable, but reschedule is a special case
             # where we want a clean slate
             logger.info(f"Deleting audit logs for {command.date}")
-            await uow.bulk_delete_audit_logs(value_objects.AuditLogQuery(date=command.date))
+            await uow.bulk_delete_audit_logs(
+                value_objects.AuditLogQuery(date=command.date)
+            )
 
             # Step 4: Reset reminders (clear all existing reminders from rescheduled day)
             # Reminders should be re-added if needed after rescheduling
@@ -98,7 +104,9 @@ class RescheduleDayHandler(BaseCommandHandler[RescheduleDayCommand, value_object
                 reminder_ids_to_remove = [reminder.id for reminder in day.reminders]
                 for reminder_id in reminder_ids_to_remove:
                     day.remove_reminder(reminder_id)
-                logger.info(f"Cleared {len(reminder_ids_to_remove)} reminders from rescheduled day")
+                logger.info(
+                    f"Cleared {len(reminder_ids_to_remove)} reminders from rescheduled day"
+                )
 
             # Step 5: Reuse ScheduleDay logic to rebuild template, time blocks, and tasks
             day_context = await self.schedule_day_handler.schedule_day_in_uow(

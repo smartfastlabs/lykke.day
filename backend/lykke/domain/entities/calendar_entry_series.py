@@ -3,10 +3,13 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ..value_objects.task import EventCategory, TaskFrequency
 from .base import BaseEntityObject
+
+if TYPE_CHECKING:
+    from lykke.domain.value_objects.task import EventCategory, TaskFrequency
 
 
 @dataclass(kw_only=True)

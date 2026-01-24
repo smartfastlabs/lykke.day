@@ -6,26 +6,28 @@ import secrets
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
-from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositories,
-    UnitOfWorkFactory,
-    UnitOfWorkProtocol,
-)
 from lykke.core.config import settings
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity
-from lykke.domain.entities import CalendarEntity
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.domain.value_objects.sync import SyncSubscription
 
-from .sync_calendar import SyncCalendarHandler
+if TYPE_CHECKING:
+    from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+    from lykke.application.unit_of_work import (
+        ReadOnlyRepositories,
+        UnitOfWorkFactory,
+        UnitOfWorkProtocol,
+    )
+
+    from .sync_calendar import SyncCalendarHandler
 
 
 @dataclass(frozen=True)
@@ -33,7 +35,9 @@ class ResetCalendarSyncCommand(Command):
     """Command to reset calendar sync (takes no args, uses handler's user_id)."""
 
 
-class ResetCalendarSyncHandler(BaseCommandHandler[ResetCalendarSyncCommand, list[CalendarEntity]]):
+class ResetCalendarSyncHandler(
+    BaseCommandHandler[ResetCalendarSyncCommand, list[CalendarEntity]]
+):
     """Resets calendar sync by unsubscribing, deleting future events, resubscribing, and syncing."""
 
     def __init__(
@@ -50,51 +54,49 @@ class ResetCalendarSyncHandler(BaseCommandHandler[ResetCalendarSyncCommand, list
 
     async def handle(self, command: ResetCalendarSyncCommand) -> list[CalendarEntity]:
         """Reset sync for all calendars with subscriptions enabled.
-        
+
         This operation:
         1. Gets all calendars with sync_subscription enabled
         2. Unsubscribes them from push notifications
         3. Deletes all future calendar entries for those calendars
         4. Resubscribes them to push notifications
         5. Performs initial sync for each calendar
-        
+
         Returns:
             List of updated CalendarEntity objects
         """
         logger.info(f"Resetting calendar sync for user {self.user_id}")
-        
+
         async with self.new_uow() as uow:
             # Step 1: Get all calendars with sync_subscription enabled
             all_calendars = await uow.calendar_ro_repo.all()
             subscribed_calendars = [
                 cal for cal in all_calendars if cal.sync_subscription is not None
             ]
-            
+
             logger.info(
                 f"Found {len(subscribed_calendars)} calendars with subscriptions enabled"
             )
-            
+
             if not subscribed_calendars:
                 logger.info("No calendars with subscriptions found, nothing to reset")
                 return []
-            
+
             # Store calendar IDs for later use (before unsubscribing)
             calendar_ids = [cal.id for cal in subscribed_calendars]
-            
+
             # Step 2: Unsubscribe all calendars
             for calendar in subscribed_calendars:
                 try:
                     token = await uow.auth_token_ro_repo.get(calendar.auth_token_id)
                     await self._unsubscribe(calendar, token, uow)
                 except Exception as e:
-                    logger.error(
-                        f"Error unsubscribing calendar {calendar.id}: {e}"
-                    )
+                    logger.error(f"Error unsubscribing calendar {calendar.id}: {e}")
                     # Continue with other calendars even if one fails
-            
+
             # Step 3: Delete all future calendar entries for these calendars
             await self._delete_future_calendar_entries(calendar_ids, uow)
-            
+
             # Step 4: Resubscribe all calendars (re-fetch to get updated state)
             updated_calendars = []
             for calendar_id in calendar_ids:
@@ -104,11 +106,9 @@ class ResetCalendarSyncHandler(BaseCommandHandler[ResetCalendarSyncCommand, list
                     calendar = await self._subscribe(calendar, token, uow)
                     updated_calendars.append(calendar)
                 except Exception as e:
-                    logger.error(
-                        f"Error resubscribing calendar {calendar_id}: {e}"
-                    )
+                    logger.error(f"Error resubscribing calendar {calendar_id}: {e}")
                     # Continue with other calendars even if one fails
-        
+
         # Step 5: Perform initial sync for each calendar (using new UoW contexts)
         synced_calendars = []
         for calendar in updated_calendars:
@@ -120,10 +120,8 @@ class ResetCalendarSyncHandler(BaseCommandHandler[ResetCalendarSyncCommand, list
                 logger.error(f"Error syncing calendar {calendar.id}: {e}")
                 # Still return the calendar even if sync fails
                 synced_calendars.append(calendar)
-        
-        logger.info(
-            f"Successfully reset sync for {len(synced_calendars)} calendars"
-        )
+
+        logger.info(f"Successfully reset sync for {len(synced_calendars)} calendars")
         return synced_calendars
 
     async def _delete_future_calendar_entries(
@@ -131,8 +129,10 @@ class ResetCalendarSyncHandler(BaseCommandHandler[ResetCalendarSyncCommand, list
     ) -> None:
         """Delete all future calendar entries for the given calendars."""
         now = datetime.now(UTC)
-        logger.info(f"Deleting future calendar entries for {len(calendar_ids)} calendars")
-        
+        logger.info(
+            f"Deleting future calendar entries for {len(calendar_ids)} calendars"
+        )
+
         # Get all entries for these calendars
         all_entries = []
         for calendar_id in calendar_ids:
@@ -140,19 +140,18 @@ class ResetCalendarSyncHandler(BaseCommandHandler[ResetCalendarSyncCommand, list
                 value_objects.CalendarEntryQuery(calendar_id=calendar_id)
             )
             all_entries.extend(entries)
-        
+
         # Filter to only future entries
         future_entries = [
-            entry for entry in all_entries
-            if entry.starts_at and entry.starts_at >= now
+            entry for entry in all_entries if entry.starts_at and entry.starts_at >= now
         ]
-        
+
         logger.info(f"Found {len(future_entries)} future calendar entries to delete")
-        
+
         # Delete future entries
         for entry in future_entries:
             await uow.delete(entry)
-        
+
         logger.info(f"Deleted {len(future_entries)} future calendar entries")
 
     async def _unsubscribe(

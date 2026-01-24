@@ -18,7 +18,9 @@ def mock_user_repo():
 @pytest.fixture
 def mock_day_repo():
     """Mocked DayRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble("lykke.application.repositories.DayRepositoryReadOnlyProtocol")
+    return InstanceDouble(
+        "lykke.application.repositories.DayRepositoryReadOnlyProtocol"
+    )
 
 
 @pytest.fixture
@@ -40,7 +42,9 @@ def mock_calendar_entry_repo():
 @pytest.fixture
 def mock_task_repo():
     """Mocked TaskRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble("lykke.application.repositories.TaskRepositoryReadOnlyProtocol")
+    return InstanceDouble(
+        "lykke.application.repositories.TaskRepositoryReadOnlyProtocol"
+    )
 
 
 @pytest.fixture
@@ -70,7 +74,9 @@ def mock_push_subscription_repo():
 @pytest.fixture
 def mock_routine_repo():
     """Mocked RoutineRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble("lykke.application.repositories.RoutineRepositoryReadOnlyProtocol")
+    return InstanceDouble(
+        "lykke.application.repositories.RoutineRepositoryReadOnlyProtocol"
+    )
 
 
 @pytest.fixture

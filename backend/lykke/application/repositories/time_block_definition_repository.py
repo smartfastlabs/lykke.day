@@ -20,4 +20,3 @@ class TimeBlockDefinitionRepositoryReadWriteProtocol(
     """Read-write protocol defining the interface for time block definition repositories."""
 
     Query = value_objects.TimeBlockDefinitionQuery
-

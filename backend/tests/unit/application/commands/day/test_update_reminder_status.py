@@ -5,7 +5,10 @@ from uuid import uuid4
 
 import pytest
 
-from lykke.application.commands.day import UpdateReminderStatusCommand, UpdateReminderStatusHandler
+from lykke.application.commands.day import (
+    UpdateReminderStatusCommand,
+    UpdateReminderStatusHandler,
+)
 from lykke.core.exceptions import DomainError, NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
@@ -152,7 +155,7 @@ async def test_update_reminder_status_no_change_does_not_add_to_uow():
     reminder = day.add_reminder("Test Reminder")
     # Clear events from add_reminder
     day.collect_events()
-    
+
     # Set reminder status to COMPLETE
     day.update_reminder_status(reminder.id, value_objects.ReminderStatus.COMPLETE)
     # Clear events from update

@@ -3,6 +3,7 @@
 from uuid import uuid4
 
 import pytest
+
 from lykke.domain.entities import CalendarEntrySeriesEntity
 from lykke.domain.value_objects.task import EventCategory, TaskFrequency
 from lykke.infrastructure.repositories import CalendarEntrySeriesRepository
@@ -23,10 +24,7 @@ async def test_list_calendar_entry_series(authenticated_client):
     )
     await repo.put(series)
 
-    response = client.post(
-        "/calendar-entry-series/",
-        json={"limit": 50, "offset": 0}
-    )
+    response = client.post("/calendar-entry-series/", json={"limit": 50, "offset": 0})
 
     assert response.status_code == 200
     data = response.json()
@@ -100,7 +98,7 @@ async def test_search_calendar_entry_series_by_calendar(authenticated_client):
         json={
             "limit": 50,
             "offset": 0,
-            "filters": {"calendar_id": str(target_calendar_id)}
+            "filters": {"calendar_id": str(target_calendar_id)},
         },
     )
 
@@ -108,5 +106,3 @@ async def test_search_calendar_entry_series_by_calendar(authenticated_client):
     data = response.json()
     assert data["total"] >= 1
     assert all(item["calendar_id"] == str(target_calendar_id) for item in data["items"])
-
-

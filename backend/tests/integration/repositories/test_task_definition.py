@@ -5,8 +5,8 @@ from uuid import uuid4
 import pytest
 
 from lykke.core.exceptions import NotFoundError
-from lykke.domain.value_objects.task import TaskType
 from lykke.domain.entities import TaskDefinitionEntity
+from lykke.domain.value_objects.task import TaskType
 from lykke.infrastructure.repositories import TaskDefinitionRepository
 
 

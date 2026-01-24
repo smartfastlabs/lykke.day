@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 from freezegun import freeze_time
+
 from lykke.core.utils.dates import (
     get_current_date,
     get_current_datetime,
@@ -15,6 +16,7 @@ from lykke.core.utils.dates import (
 )
 
 USER_TIMEZONE = "America/Chicago"
+
 
 @pytest.mark.parametrize(
     ("frozen_time", "expected_date"),
@@ -128,4 +130,3 @@ def test_get_time_between_mixed_time_datetime(test_date: datetime.date) -> None:
         # Should be approximately 2 hours (accounting for timezone conversion)
         # t1 is converted to UTC from local timezone, so there may be offset
         assert abs(result.total_seconds()) < 86400  # Within 24 hours (reasonable range)
-

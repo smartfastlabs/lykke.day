@@ -1,8 +1,9 @@
 """Taskiq worker configuration."""
 
+from taskiq_redis import ListQueueBroker
+
 from lykke.core.config import settings
 from lykke.core.observability import init_sentry_taskiq
-from taskiq_redis import ListQueueBroker
 
 init_sentry_taskiq()
 

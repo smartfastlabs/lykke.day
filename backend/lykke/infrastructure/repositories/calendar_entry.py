@@ -1,5 +1,5 @@
-from typing import Any, ClassVar
 from datetime import UTC
+from typing import Any, ClassVar
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy.sql import Select

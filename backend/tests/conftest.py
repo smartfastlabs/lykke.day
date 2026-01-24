@@ -5,6 +5,7 @@ import os
 
 import pytest
 from freezegun import freeze_time
+
 from lykke.core.config import settings
 from lykke.core.utils.dates import get_current_date
 

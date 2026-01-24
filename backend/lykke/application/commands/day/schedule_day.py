@@ -15,7 +15,12 @@ from lykke.application.unit_of_work import (
 )
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
-from lykke.domain.entities import CalendarEntryEntity, DayEntity, DayTemplateEntity, TaskEntity
+from lykke.domain.entities import (
+    CalendarEntryEntity,
+    DayEntity,
+    DayTemplateEntity,
+    TaskEntity,
+)
 from lykke.domain.events.day_events import DayUpdatedEvent
 
 
@@ -27,7 +32,9 @@ class ScheduleDayCommand(Command):
     template_id: UUID | None = None
 
 
-class ScheduleDayHandler(BaseCommandHandler[ScheduleDayCommand, value_objects.DayContext]):
+class ScheduleDayHandler(
+    BaseCommandHandler[ScheduleDayCommand, value_objects.DayContext]
+):
     """Schedules a day with tasks from routines."""
 
     @staticmethod
@@ -213,7 +220,9 @@ class ScheduleDayHandler(BaseCommandHandler[ScheduleDayCommand, value_objects.Da
                 try:
                     existing_day = await uow.day_ro_repo.get(day_id)
                     tasks, calendar_entries = await asyncio.gather(
-                        uow.task_ro_repo.search(value_objects.TaskQuery(date=command.date)),
+                        uow.task_ro_repo.search(
+                            value_objects.TaskQuery(date=command.date)
+                        ),
                         uow.calendar_entry_ro_repo.search(
                             value_objects.CalendarEntryQuery(date=command.date)
                         ),
@@ -268,7 +277,9 @@ class ScheduleDayHandler(BaseCommandHandler[ScheduleDayCommand, value_objects.Da
         day_time_blocks: list[value_objects.DayTimeBlock] = []
         if template.time_blocks:
             # Get unique time block definition IDs
-            unique_def_ids = {tb.time_block_definition_id for tb in template.time_blocks}
+            unique_def_ids = {
+                tb.time_block_definition_id for tb in template.time_blocks
+            }
             # Fetch all time block definitions
             time_block_defs = await asyncio.gather(
                 *[

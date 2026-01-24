@@ -57,7 +57,9 @@ async def test_put_creates_new(time_block_definition_repo: Any, test_user: Any) 
 
 
 @pytest.mark.asyncio
-async def test_put_updates_existing(time_block_definition_repo: Any, test_user: Any) -> None:
+async def test_put_updates_existing(
+    time_block_definition_repo: Any, test_user: Any
+) -> None:
     """Test updating an existing time block definition."""
     time_block_def = TimeBlockDefinitionEntity(
         user_id=test_user.id,
@@ -87,7 +89,10 @@ async def test_enum_conversion(time_block_definition_repo: Any, test_user: Any) 
     """Test that enums are properly converted to/from database."""
     # Test all enum types
     test_cases = [
-        (value_objects.TimeBlockType.WORK, value_objects.TimeBlockCategory.PROFESSIONAL),
+        (
+            value_objects.TimeBlockType.WORK,
+            value_objects.TimeBlockCategory.PROFESSIONAL,
+        ),
         (value_objects.TimeBlockType.BREAK, value_objects.TimeBlockCategory.RECREATION),
         (value_objects.TimeBlockType.MEAL, value_objects.TimeBlockCategory.NUTRITION),
         (value_objects.TimeBlockType.EXERCISE, value_objects.TimeBlockCategory.FITNESS),
@@ -194,4 +199,3 @@ async def test_delete(time_block_definition_repo: Any, test_user: Any) -> None:
     # Verify it's gone
     with pytest.raises(NotFoundError):
         await time_block_definition_repo.get(time_block_def.id)
-

@@ -20,9 +20,9 @@ async def test_get(auth_token_repo, test_user):
         refresh_token="refresh_token",
     )
     await auth_token_repo.put(auth_token)
-    
+
     result = await auth_token_repo.get(auth_token.id)
-    
+
     assert result.id == auth_token.id
     assert result.platform == "google"
     assert result.token == "test_token"
@@ -44,9 +44,9 @@ async def test_put(auth_token_repo, test_user):
         platform="google",
         token="new_token",
     )
-    
+
     result = await auth_token_repo.put(auth_token)
-    
+
     assert result.token == "new_token"
     assert result.platform == "google"
 
@@ -68,9 +68,9 @@ async def test_all(auth_token_repo, test_user):
     )
     await auth_token_repo.put(token1)
     await auth_token_repo.put(token2)
-    
+
     all_tokens = await auth_token_repo.all()
-    
+
     token_ids = [t.id for t in all_tokens]
     assert token1.id in token_ids
     assert token2.id in token_ids
@@ -86,12 +86,11 @@ async def test_user_isolation(auth_token_repo, test_user, create_test_user):
         token="user1_token",
     )
     await auth_token_repo.put(token)
-    
+
     # Create another user
-    user2 = await create_test_user()
+    await create_test_user()
     auth_token_repo2 = AuthTokenRepository()
-    
+
     # AuthTokenRepository is not user-scoped, so user2 can see user1's token
     retrieved_token = await auth_token_repo2.get(token.id)
     assert retrieved_token.id == token.id
-

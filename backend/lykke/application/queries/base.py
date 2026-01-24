@@ -5,12 +5,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Generic, TypeVar
-from uuid import UUID
 
 from lykke.application.base_handler import BaseHandler
-from lykke.application.unit_of_work import ReadOnlyRepositories
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
+    from lykke.application.unit_of_work import ReadOnlyRepositories
     from lykke.domain.entities.day_template import DayTemplateEntity
 
 # Query type and result type

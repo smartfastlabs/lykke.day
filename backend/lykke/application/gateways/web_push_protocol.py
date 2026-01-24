@@ -21,4 +21,3 @@ class WebPushGatewayProtocol(Protocol):
             content: The notification content (string, dict, or NotificationPayload).
         """
         ...
-

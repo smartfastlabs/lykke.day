@@ -109,12 +109,16 @@ def test_update_reminder_status_emits_domain_event(test_day: DayEntity) -> None:
     assert events[0].date == test_day.date
 
 
-def test_update_reminder_status_raises_error_if_reminder_not_found(test_day: DayEntity) -> None:
+def test_update_reminder_status_raises_error_if_reminder_not_found(
+    test_day: DayEntity,
+) -> None:
     """Test update_reminder_status raises error if reminder doesn't exist."""
     fake_reminder_id = uuid4()
 
     with pytest.raises(DomainError, match="not found"):
-        test_day.update_reminder_status(fake_reminder_id, value_objects.ReminderStatus.COMPLETE)
+        test_day.update_reminder_status(
+            fake_reminder_id, value_objects.ReminderStatus.COMPLETE
+        )
 
 
 def test_update_reminder_status_no_change_if_same_status(test_day: DayEntity) -> None:
@@ -123,7 +127,9 @@ def test_update_reminder_status_no_change_if_same_status(test_day: DayEntity) ->
     # Clear events from add_reminder
     test_day.collect_events()
 
-    test_day.update_reminder_status(reminder.id, value_objects.ReminderStatus.INCOMPLETE)
+    test_day.update_reminder_status(
+        reminder.id, value_objects.ReminderStatus.INCOMPLETE
+    )
 
     # No event should be emitted for no-op status change
     events = test_day.collect_events()
@@ -143,7 +149,9 @@ def test_update_reminder_status_all_transitions(test_day: DayEntity) -> None:
     assert test_day.reminders[0].status == value_objects.ReminderStatus.PUNT
 
     # PUNT -> INCOMPLETE
-    test_day.update_reminder_status(reminder.id, value_objects.ReminderStatus.INCOMPLETE)
+    test_day.update_reminder_status(
+        reminder.id, value_objects.ReminderStatus.INCOMPLETE
+    )
     assert test_day.reminders[0].status == value_objects.ReminderStatus.INCOMPLETE
 
 
@@ -176,7 +184,9 @@ def test_remove_reminder_emits_domain_event(test_day: DayEntity) -> None:
     assert events[0].date == test_day.date
 
 
-def test_remove_reminder_raises_error_if_reminder_not_found(test_day: DayEntity) -> None:
+def test_remove_reminder_raises_error_if_reminder_not_found(
+    test_day: DayEntity,
+) -> None:
     """Test remove_reminder raises error if reminder doesn't exist."""
     fake_reminder_id = uuid4()
 

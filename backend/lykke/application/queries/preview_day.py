@@ -6,7 +6,10 @@ from datetime import date
 from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler, Query
-from lykke.application.queries.preview_tasks import PreviewTasksHandler, PreviewTasksQuery
+from lykke.application.queries.preview_tasks import (
+    PreviewTasksHandler,
+    PreviewTasksQuery,
+)
 from lykke.application.repositories import (
     CalendarEntryRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
@@ -104,4 +107,3 @@ class PreviewDayHandler(BaseQueryHandler[PreviewDayQuery, value_objects.DayConte
         return await self.day_template_ro_repo.search_one(
             value_objects.DayTemplateQuery(slug=template_slug)
         )
-

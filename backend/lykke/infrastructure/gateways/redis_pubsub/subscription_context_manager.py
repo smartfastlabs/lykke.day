@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 class _SubscriptionContextManager:
     """Internal context manager for subscriptions.
-    
+
     This handles the async initialization required for subscribing.
     Implements the PubSubSubscription protocol.
     """
@@ -62,9 +62,7 @@ class _SubscriptionContextManager:
         if self._subscription is not None:
             await self._subscription.close()
 
-    async def get_message(
-        self, timeout: float | None = None
-    ) -> dict[str, Any] | None:
+    async def get_message(self, timeout: float | None = None) -> dict[str, Any] | None:
         """Get the next message from the subscription.
 
         This method is included for protocol compatibility but should not be

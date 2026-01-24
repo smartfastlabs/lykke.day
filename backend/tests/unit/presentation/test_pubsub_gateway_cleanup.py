@@ -5,6 +5,7 @@ were created for each request/WebSocket connection but never cleaned up, causing
 Redis connection leaks.
 """
 
+import contextlib
 from unittest.mock import MagicMock
 
 import pytest
@@ -59,10 +60,8 @@ async def test_pubsub_gateway_cleanup_is_called():
     # In real usage, the gateway would be used here
 
     # Close the generator (simulates FastAPI cleaning up after request)
-    try:
+    with contextlib.suppress(StopAsyncIteration):
         await gen.__anext__()
-    except StopAsyncIteration:
-        pass  # Expected - generator is exhausted
 
     # Verify cleanup was called
     assert cleanup_called, "Gateway close() should be called when generator exits"
@@ -101,10 +100,8 @@ async def test_pubsub_gateway_cleanup_on_exception():
         pass  # Expected error
     finally:
         # Clean up the generator (FastAPI does this automatically)
-        try:
+        with contextlib.suppress(StopAsyncIteration):
             await gen.__anext__()
-        except StopAsyncIteration:
-            pass
 
     # Verify cleanup was still called despite the exception
     assert cleanup_called, "Gateway close() should be called even when exception occurs"
@@ -138,7 +135,5 @@ async def test_multiple_gateway_instances_are_independent():
 
     # Clean up both generators
     for gen in [gen1, gen2]:
-        try:
+        with contextlib.suppress(StopAsyncIteration):
             await gen.__anext__()
-        except StopAsyncIteration:
-            pass

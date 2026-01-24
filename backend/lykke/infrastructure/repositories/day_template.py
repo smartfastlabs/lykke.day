@@ -2,6 +2,8 @@ from datetime import time as dt_time
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy.sql import Select
+
 from lykke.domain import value_objects
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.infrastructure.database.tables import day_templates_tbl
@@ -9,7 +11,6 @@ from lykke.infrastructure.repositories.base.utils import (
     filter_init_false_fields,
     normalize_list_fields,
 )
-from sqlalchemy.sql import Select
 
 from .base import DayTemplateQuery, UserScopedBaseRepository
 
@@ -95,14 +96,13 @@ class DayTemplateRepository(
             ]
 
         # Handle high_level_plan - it comes as a dict from JSONB
-        if data.get("high_level_plan"):
-            if isinstance(data["high_level_plan"], dict):
-                plan_data = data["high_level_plan"]
-                data["high_level_plan"] = value_objects.HighLevelPlan(
-                    title=plan_data.get("title"),
-                    text=plan_data.get("text"),
-                    intentions=plan_data.get("intentions") or [],
-                )
+        if data.get("high_level_plan") and isinstance(data["high_level_plan"], dict):
+            plan_data = data["high_level_plan"]
+            data["high_level_plan"] = value_objects.HighLevelPlan(
+                title=plan_data.get("title"),
+                text=plan_data.get("text"),
+                intentions=plan_data.get("intentions") or [],
+            )
 
         # Handle time_blocks - deserialize from JSON
         if data.get("time_blocks"):
@@ -129,4 +129,3 @@ class DayTemplateRepository(
             ]
 
         return DayTemplateEntity(**data)
-

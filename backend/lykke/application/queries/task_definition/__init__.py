@@ -1,7 +1,10 @@
 """TaskDefinition query handlers."""
 
 from .get_task_definition import GetTaskDefinitionHandler, GetTaskDefinitionQuery
-from .list_task_definitions import SearchTaskDefinitionsHandler, SearchTaskDefinitionsQuery
+from .list_task_definitions import (
+    SearchTaskDefinitionsHandler,
+    SearchTaskDefinitionsQuery,
+)
 
 __all__ = [
     "GetTaskDefinitionHandler",
@@ -9,4 +12,3 @@ __all__ = [
     "SearchTaskDefinitionsHandler",
     "SearchTaskDefinitionsQuery",
 ]
-

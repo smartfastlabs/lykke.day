@@ -23,9 +23,7 @@ class UpdateBrainDumpItemStatusHandler(
 ):
     """Updates a brain dump item's status on a day."""
 
-    async def handle(
-        self, command: UpdateBrainDumpItemStatusCommand
-    ) -> DayEntity:
+    async def handle(self, command: UpdateBrainDumpItemStatusCommand) -> DayEntity:
         """Update a brain dump item's status on a day."""
         async with self.new_uow() as uow:
             day_id = DayEntity.id_from_date_and_user(command.date, self.user_id)

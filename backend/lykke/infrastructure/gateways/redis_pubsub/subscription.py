@@ -10,7 +10,7 @@ from redis import asyncio as aioredis  # type: ignore
 
 class RedisSubscription:
     """Redis implementation of PubSubSubscription protocol.
-    
+
     Can be used as an async context manager for automatic cleanup.
     """
 
@@ -59,8 +59,8 @@ class RedisSubscription:
 
         try:
             # Get the current event loop to ensure we use the correct one
-            loop = asyncio.get_event_loop()
-            
+            asyncio.get_event_loop()
+
             # Use asyncio.wait_for for timeout if specified
             if timeout is not None:
                 # Wait for a message with timeout
@@ -76,7 +76,7 @@ class RedisSubscription:
                             data = message["data"]
                             if isinstance(data, bytes):
                                 data = data.decode("utf-8")
-                            return cast(dict[str, Any], json.loads(data))
+                            return cast("dict[str, Any]", json.loads(data))
 
                 return await asyncio.wait_for(_wait_for_message(), timeout=timeout)
             else:
@@ -90,9 +90,9 @@ class RedisSubscription:
                         data = message["data"]
                         if isinstance(data, bytes):
                             data = data.decode("utf-8")
-                        return cast(dict[str, Any], json.loads(data))
+                        return cast("dict[str, Any]", json.loads(data))
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return None
         except RuntimeError as e:
             # Handle event loop errors gracefully in test contexts
@@ -111,10 +111,11 @@ class RedisSubscription:
         except Exception as e:
             error_str = str(e).lower()
             # Check for connection-related errors that indicate the connection is broken
-            if any(keyword in error_str for keyword in ["closed", "connection", "disconnect"]):
-                logger.error(
-                    f"Connection error for Redis channel {self._channel}: {e}"
-                )
+            if any(
+                keyword in error_str
+                for keyword in ["closed", "connection", "disconnect"]
+            ):
+                logger.error(f"Connection error for Redis channel {self._channel}: {e}")
                 # Mark as closed so we don't keep trying on a broken connection
                 self._closed = True
                 raise
@@ -156,4 +157,6 @@ class RedisSubscription:
                 await self._pubsub.unsubscribe(self._channel)
                 await self._pubsub.close()
             except Exception as e:
-                logger.error(f"Error closing Redis subscription for {self._channel}: {e}")
+                logger.error(
+                    f"Error closing Redis subscription for {self._channel}: {e}"
+                )

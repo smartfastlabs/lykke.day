@@ -22,4 +22,3 @@ class CalendarEntrySeriesRepositoryReadWriteProtocol(
     """Read-write protocol for calendar entry series repositories."""
 
     Query = value_objects.CalendarEntrySeriesQuery
-

@@ -17,13 +17,17 @@ class GetCalendarEntrySeriesQuery(Query):
     calendar_entry_series_id: UUID
 
 
-class GetCalendarEntrySeriesHandler(BaseQueryHandler[GetCalendarEntrySeriesQuery, CalendarEntrySeriesEntity]):
+class GetCalendarEntrySeriesHandler(
+    BaseQueryHandler[GetCalendarEntrySeriesQuery, CalendarEntrySeriesEntity]
+):
     """Retrieve a single calendar entry series by ID."""
 
     calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
 
-    async def handle(self, query: GetCalendarEntrySeriesQuery) -> CalendarEntrySeriesEntity:
+    async def handle(
+        self, query: GetCalendarEntrySeriesQuery
+    ) -> CalendarEntrySeriesEntity:
         """Get a calendar entry series by ID."""
-        return await self.calendar_entry_series_ro_repo.get(query.calendar_entry_series_id)
-
-
+        return await self.calendar_entry_series_ro_repo.get(
+            query.calendar_entry_series_id
+        )

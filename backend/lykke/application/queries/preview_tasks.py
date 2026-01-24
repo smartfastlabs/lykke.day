@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from loguru import logger
+
 from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.repositories import (
     RoutineRepositoryReadOnlyProtocol,
@@ -46,13 +47,17 @@ class PreviewTasksHandler(BaseQueryHandler[PreviewTasksQuery, list[TaskEntity]])
             if routine.routine_schedule.is_active_for_date(target_date):
                 for routine_task in routine.tasks:
                     # Check if task has its own schedule - if so, both routine and task schedules must match
-                    if routine_task.task_schedule is not None:
-                        if not routine_task.task_schedule.is_active_for_date(target_date):
-                            logger.debug(
-                                f"Skipping task {routine_task.name} - task schedule doesn't match date"
-                            )
-                            continue
-                    
+                    if (
+                        routine_task.task_schedule is not None
+                        and not routine_task.task_schedule.is_active_for_date(
+                            target_date
+                        )
+                    ):
+                        logger.debug(
+                            f"Skipping task {routine_task.name} - task schedule doesn't match date"
+                        )
+                        continue
+
                     task_def = await self.task_definition_ro_repo.get(
                         routine_task.task_definition_id,
                     )

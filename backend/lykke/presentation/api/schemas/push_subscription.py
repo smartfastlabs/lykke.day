@@ -36,4 +36,3 @@ class PushSubscriptionCreateSchema(BaseSchema):
     device_name: str
     endpoint: str
     keys: PushSubscriptionKeysSchema
-

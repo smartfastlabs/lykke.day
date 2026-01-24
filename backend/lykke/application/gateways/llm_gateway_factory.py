@@ -1,6 +1,7 @@
 """Factory for creating LLM gateway instances based on provider."""
 
 from loguru import logger
+
 from lykke.core.config import settings
 from lykke.core.exceptions import DomainError
 from lykke.domain.value_objects.ai_chat import LLMProvider

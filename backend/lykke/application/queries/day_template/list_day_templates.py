@@ -15,12 +15,18 @@ class SearchDayTemplatesQuery(Query):
     search_query: value_objects.DayTemplateQuery | None = None
 
 
-class SearchDayTemplatesHandler(BaseQueryHandler[SearchDayTemplatesQuery, value_objects.PagedQueryResponse[DayTemplateEntity]]):
+class SearchDayTemplatesHandler(
+    BaseQueryHandler[
+        SearchDayTemplatesQuery, value_objects.PagedQueryResponse[DayTemplateEntity]
+    ]
+):
     """Searches day templates with pagination."""
 
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
 
-    async def handle(self, query: SearchDayTemplatesQuery) -> value_objects.PagedQueryResponse[DayTemplateEntity]:
+    async def handle(
+        self, query: SearchDayTemplatesQuery
+    ) -> value_objects.PagedQueryResponse[DayTemplateEntity]:
         """Search day templates with pagination.
 
         Args:

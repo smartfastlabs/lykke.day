@@ -1,4 +1,5 @@
 from typing import Any
+
 from sqlalchemy.sql import Select
 
 from lykke.domain.entities import AuthTokenEntity

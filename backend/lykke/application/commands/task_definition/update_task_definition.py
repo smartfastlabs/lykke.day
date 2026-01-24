@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.domain.entities import TaskDefinitionEntity
 from lykke.domain.events.task_events import TaskDefinitionUpdatedEvent
 from lykke.domain.value_objects import TaskDefinitionUpdateObject
-from lykke.domain.entities import TaskDefinitionEntity
 
 
 @dataclass(frozen=True)
@@ -17,10 +17,14 @@ class UpdateTaskDefinitionCommand(Command):
     update_data: TaskDefinitionUpdateObject
 
 
-class UpdateTaskDefinitionHandler(BaseCommandHandler[UpdateTaskDefinitionCommand, TaskDefinitionEntity]):
+class UpdateTaskDefinitionHandler(
+    BaseCommandHandler[UpdateTaskDefinitionCommand, TaskDefinitionEntity]
+):
     """Updates an existing task definition."""
 
-    async def handle(self, command: UpdateTaskDefinitionCommand) -> TaskDefinitionEntity:
+    async def handle(
+        self, command: UpdateTaskDefinitionCommand
+    ) -> TaskDefinitionEntity:
         """Update an existing task definition.
 
         Args:
@@ -34,7 +38,9 @@ class UpdateTaskDefinitionHandler(BaseCommandHandler[UpdateTaskDefinitionCommand
         """
         async with self.new_uow() as uow:
             # Get the existing task definition
-            task_definition = await uow.task_definition_ro_repo.get(command.task_definition_id)
+            task_definition = await uow.task_definition_ro_repo.get(
+                command.task_definition_id
+            )
 
             # Apply updates using domain method (adds EntityUpdatedEvent)
             task_definition = task_definition.apply_update(

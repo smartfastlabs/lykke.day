@@ -20,4 +20,3 @@ class Routine(Base):
     tasks = Column(JSONB)  # list[RoutineTask]
 
     __table_args__ = (Index("idx_routines_user_id", "user_id"),)
-

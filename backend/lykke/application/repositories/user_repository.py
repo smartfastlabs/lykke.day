@@ -12,12 +12,13 @@ from lykke.domain.entities import UserEntity
 
 class UserRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[UserEntity], Protocol):
     """Read-only protocol defining the interface for user repositories."""
-    
+
     Query: type[value_objects.UserQuery] = value_objects.UserQuery
 
 
-class UserRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[UserEntity], Protocol):
+class UserRepositoryReadWriteProtocol(
+    ReadWriteRepositoryProtocol[UserEntity], Protocol
+):
     """Read-write protocol defining the interface for user repositories."""
-    
-    Query: type[value_objects.UserQuery] = value_objects.UserQuery
 
+    Query: type[value_objects.UserQuery] = value_objects.UserQuery

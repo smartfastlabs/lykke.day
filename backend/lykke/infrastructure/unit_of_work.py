@@ -2,64 +2,17 @@
 
 from __future__ import annotations
 
-from contextvars import Token
 from dataclasses import replace
 from datetime import UTC, date as dt_date, datetime
-from typing import TYPE_CHECKING, Any, TypeVar, cast
-from uuid import UUID
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from sqlalchemy.ext.asyncio import AsyncConnection
-
 from lykke.application.events import send_domain_events
-from lykke.application.gateways import PubSubGatewayProtocol
-from lykke.application.repositories import (
-    AuditLogRepositoryReadOnlyProtocol,
-    AuthTokenRepositoryReadOnlyProtocol,
-    AuthTokenRepositoryReadWriteProtocol,
-    BotPersonalityRepositoryReadOnlyProtocol,
-    BotPersonalityRepositoryReadWriteProtocol,
-    CalendarEntryRepositoryReadOnlyProtocol,
-    CalendarEntryRepositoryReadWriteProtocol,
-    CalendarEntrySeriesRepositoryReadOnlyProtocol,
-    CalendarEntrySeriesRepositoryReadWriteProtocol,
-    CalendarRepositoryReadOnlyProtocol,
-    CalendarRepositoryReadWriteProtocol,
-    ConversationRepositoryReadOnlyProtocol,
-    ConversationRepositoryReadWriteProtocol,
-    DayRepositoryReadOnlyProtocol,
-    DayRepositoryReadWriteProtocol,
-    DayTemplateRepositoryReadOnlyProtocol,
-    DayTemplateRepositoryReadWriteProtocol,
-    FactoidRepositoryReadOnlyProtocol,
-    FactoidRepositoryReadWriteProtocol,
-    MessageRepositoryReadOnlyProtocol,
-    MessageRepositoryReadWriteProtocol,
-    PushNotificationRepositoryReadOnlyProtocol,
-    PushNotificationRepositoryReadWriteProtocol,
-    PushSubscriptionRepositoryReadOnlyProtocol,
-    PushSubscriptionRepositoryReadWriteProtocol,
-    RoutineRepositoryReadOnlyProtocol,
-    RoutineRepositoryReadWriteProtocol,
-    TaskDefinitionRepositoryReadOnlyProtocol,
-    TaskDefinitionRepositoryReadWriteProtocol,
-    TaskRepositoryReadOnlyProtocol,
-    TaskRepositoryReadWriteProtocol,
-    TimeBlockDefinitionRepositoryReadOnlyProtocol,
-    UseCaseConfigRepositoryReadOnlyProtocol,
-    UseCaseConfigRepositoryReadWriteProtocol,
-    TimeBlockDefinitionRepositoryReadWriteProtocol,
-    UserRepositoryReadOnlyProtocol,
-    UserRepositoryReadWriteProtocol,
-)
 from lykke.application.unit_of_work import (
-    ReadOnlyRepositories,
     ReadOnlyRepositoryFactory,
-    UnitOfWorkProtocol,
 )
 from lykke.core.exceptions import BadRequestError, NotFoundError
 from lykke.core.utils.serialization import dataclass_to_json_dict
-from lykke.domain import value_objects
 from lykke.domain.entities import (
     AuditLogEntity,
     AuthTokenEntity,
@@ -118,7 +71,57 @@ from lykke.infrastructure.repositories import (
 )
 
 if TYPE_CHECKING:
+    from contextvars import Token
     from typing import Self
+    from uuid import UUID
+
+    from sqlalchemy.ext.asyncio import AsyncConnection
+
+    from lykke.application.gateways import PubSubGatewayProtocol
+    from lykke.application.repositories import (
+        AuditLogRepositoryReadOnlyProtocol,
+        AuthTokenRepositoryReadOnlyProtocol,
+        AuthTokenRepositoryReadWriteProtocol,
+        BotPersonalityRepositoryReadOnlyProtocol,
+        BotPersonalityRepositoryReadWriteProtocol,
+        CalendarEntryRepositoryReadOnlyProtocol,
+        CalendarEntryRepositoryReadWriteProtocol,
+        CalendarEntrySeriesRepositoryReadOnlyProtocol,
+        CalendarEntrySeriesRepositoryReadWriteProtocol,
+        CalendarRepositoryReadOnlyProtocol,
+        CalendarRepositoryReadWriteProtocol,
+        ConversationRepositoryReadOnlyProtocol,
+        ConversationRepositoryReadWriteProtocol,
+        DayRepositoryReadOnlyProtocol,
+        DayRepositoryReadWriteProtocol,
+        DayTemplateRepositoryReadOnlyProtocol,
+        DayTemplateRepositoryReadWriteProtocol,
+        FactoidRepositoryReadOnlyProtocol,
+        FactoidRepositoryReadWriteProtocol,
+        MessageRepositoryReadOnlyProtocol,
+        MessageRepositoryReadWriteProtocol,
+        PushNotificationRepositoryReadOnlyProtocol,
+        PushNotificationRepositoryReadWriteProtocol,
+        PushSubscriptionRepositoryReadOnlyProtocol,
+        PushSubscriptionRepositoryReadWriteProtocol,
+        RoutineRepositoryReadOnlyProtocol,
+        RoutineRepositoryReadWriteProtocol,
+        TaskDefinitionRepositoryReadOnlyProtocol,
+        TaskDefinitionRepositoryReadWriteProtocol,
+        TaskRepositoryReadOnlyProtocol,
+        TaskRepositoryReadWriteProtocol,
+        TimeBlockDefinitionRepositoryReadOnlyProtocol,
+        TimeBlockDefinitionRepositoryReadWriteProtocol,
+        UseCaseConfigRepositoryReadOnlyProtocol,
+        UseCaseConfigRepositoryReadWriteProtocol,
+        UserRepositoryReadOnlyProtocol,
+        UserRepositoryReadWriteProtocol,
+    )
+    from lykke.application.unit_of_work import (
+        ReadOnlyRepositories,
+        UnitOfWorkProtocol,
+    )
+    from lykke.domain import value_objects
 
 # Type variable for entities
 _T = TypeVar("_T", bound=BaseEntityObject)
@@ -160,7 +163,7 @@ class SqlAlchemyUnitOfWork:
 
     # Entity type to repository attribute name mapping
     # Maps: entity_type -> (ro_repo_attr, rw_repo_attr)
-    _ENTITY_REPO_MAP: dict[type, tuple[str, str]] = {
+    _ENTITY_REPO_MAP: ClassVar[dict[type, tuple[str, str]]] = {
         AuditLogEntity: (
             "audit_log_ro_repo",
             "audit_log_ro_repo",
@@ -693,7 +696,7 @@ class SqlAlchemyUnitOfWork:
             # Check for EntityCreatedEvent, EntityDeletedEvent, EntityUpdatedEvent
             has_created_event = any(isinstance(e, EntityCreatedEvent) for e in events)
             has_deleted_event = any(isinstance(e, EntityDeletedEvent) for e in events)
-            has_updated_event = any(isinstance(e, EntityUpdatedEvent) for e in events)
+            any(isinstance(e, EntityUpdatedEvent) for e in events)
 
             # Create audit logs from audited events (skip for AuditLogEntity itself to avoid loops)
             if not isinstance(entity, AuditLogEntity):
@@ -786,7 +789,7 @@ class SqlAlchemyUnitOfWork:
     async def _get_user_timezone(self) -> str | None:
         """Fetch and cache the user's timezone setting."""
         if self._user_timezone_cache is not _UNSET:
-            return cast(str | None, self._user_timezone_cache)
+            return cast("str | None", self._user_timezone_cache)
         try:
             user = await self.user_ro_repo.get(self.user_id)
             timezone = user.settings.timezone if user.settings else None
@@ -807,7 +810,7 @@ class SqlAlchemyUnitOfWork:
         events: list[DomainEvent] = []
         user_timezone: str | None = None
         if self._user_timezone_cache is not _UNSET:
-            user_timezone = cast(str | None, self._user_timezone_cache)
+            user_timezone = cast("str | None", self._user_timezone_cache)
 
         for entity in self._added_entities:
             entity_events = entity.collect_events()
@@ -823,10 +826,14 @@ class SqlAlchemyUnitOfWork:
                             entity, occurred_at, user_timezone=user_timezone
                         )
                         event_entity_id = (
-                            event.entity_id if event.entity_id is not None else entity.id
+                            event.entity_id
+                            if event.entity_id is not None
+                            else entity.id
                         )
                         event_entity_type = (
-                            event.entity_type if event.entity_type is not None else entity_type
+                            event.entity_type
+                            if event.entity_type is not None
+                            else entity_type
                         )
                         event_entity_date = (
                             event.entity_date
@@ -869,7 +876,9 @@ class SqlAlchemyUnitOfWork:
         """
         await send_domain_events(events)
 
-    async def _broadcast_domain_events_to_redis(self, events: list[DomainEvent]) -> None:
+    async def _broadcast_domain_events_to_redis(
+        self, events: list[DomainEvent]
+    ) -> None:
         """Broadcast ALL domain events via Redis PubSub after successful commit.
 
         Publishes all domain events to user-specific Redis channels for real-time

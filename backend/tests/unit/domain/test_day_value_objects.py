@@ -73,8 +73,9 @@ def test_day_context_creation(test_user_id: str) -> None:
 
 def test_day_context_defaults() -> None:
     """Test DayContext has default empty lists."""
-    from lykke.domain.entities import DayEntity
     from uuid import uuid4
+
+    from lykke.domain.entities import DayEntity
 
     test_user_id = uuid4()
     day = DayEntity(
@@ -141,4 +142,3 @@ def test_reminder_creation_with_all_fields() -> None:
     assert reminder.name == "Test Reminder"
     assert reminder.status == ReminderStatus.COMPLETE
     assert reminder.created_at == created_at
-

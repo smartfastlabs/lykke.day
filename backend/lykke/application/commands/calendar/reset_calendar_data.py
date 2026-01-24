@@ -5,23 +5,31 @@ from __future__ import annotations
 import secrets
 import uuid
 from dataclasses import dataclass
-from typing import Iterable
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
-from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositories,
-    UnitOfWorkFactory,
-    UnitOfWorkProtocol,
-)
 from lykke.core.config import settings
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity
-from lykke.domain.entities import CalendarEntity, CalendarEntryEntity, CalendarEntrySeriesEntity
+from lykke.domain.entities import (
+    AuthTokenEntity,
+    CalendarEntity,
+    CalendarEntryEntity,
+    CalendarEntrySeriesEntity,
+)
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.domain.value_objects.sync import SyncSubscription
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+    from lykke.application.unit_of_work import (
+        ReadOnlyRepositories,
+        UnitOfWorkFactory,
+        UnitOfWorkProtocol,
+    )
 
 
 @dataclass(frozen=True)
@@ -29,7 +37,9 @@ class ResetCalendarDataCommand(Command):
     """Command to reset calendar data (takes no args, uses handler's user_id)."""
 
 
-class ResetCalendarDataHandler(BaseCommandHandler[ResetCalendarDataCommand, list[CalendarEntity]]):
+class ResetCalendarDataHandler(
+    BaseCommandHandler[ResetCalendarDataCommand, list[CalendarEntity]]
+):
     """Delete calendar entries/series and refresh subscriptions for the user."""
 
     def __init__(
@@ -64,9 +74,9 @@ class ResetCalendarDataHandler(BaseCommandHandler[ResetCalendarDataCommand, list
 
     async def _delete_calendar_entries(self, uow: UnitOfWorkProtocol) -> None:
         """Delete all calendar entries for the scoped user."""
-        entries: Iterable[CalendarEntryEntity] = await uow.calendar_entry_ro_repo.search(
-            value_objects.CalendarEntryQuery()
-        )
+        entries: Iterable[
+            CalendarEntryEntity
+        ] = await uow.calendar_entry_ro_repo.search(value_objects.CalendarEntryQuery())
         for entry in entries:
             await uow.delete(entry)
 
@@ -129,4 +139,3 @@ class ResetCalendarDataHandler(BaseCommandHandler[ResetCalendarDataCommand, list
 
         refreshed_calendar = calendar.apply_update(update_data, CalendarUpdatedEvent)
         return uow.add(refreshed_calendar)
-

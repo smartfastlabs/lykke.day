@@ -3,6 +3,7 @@
 These tests verify that dependencies are properly configured and injected.
 """
 
+import contextlib
 from unittest.mock import MagicMock
 
 import pytest
@@ -36,16 +37,14 @@ async def test_get_pubsub_gateway_returns_redis_gateway():
     websocket.app.state.redis_pool = None
     gen = get_pubsub_gateway(websocket)
     gateway = await gen.__anext__()
-    
+
     assert isinstance(gateway, RedisPubSubGateway)
     # Gateway should be usable
     assert gateway is not None
-    
+
     # Clean up by exhausting the generator
-    try:
+    with contextlib.suppress(StopAsyncIteration):
         await gen.__anext__()
-    except StopAsyncIteration:
-        pass
 
 
 @pytest.mark.asyncio
@@ -61,7 +60,7 @@ async def test_get_unit_of_work_factory_requires_pubsub_gateway():
     """
     # Create a mock request
     request = _create_mock_request()
-    
+
     # Call the dependency function with the request (it's now an async generator)
     gen = get_unit_of_work_factory(request)
     factory = await gen.__anext__()
@@ -72,33 +71,33 @@ async def test_get_unit_of_work_factory_requires_pubsub_gateway():
     # Verify the factory has the pubsub_gateway configured
     # by checking that it passes it through when creating a UoW
     from uuid import uuid4
+
     uow = factory.create(user_id=uuid4())
 
     # The UoW should have the pubsub_gateway set
     assert hasattr(uow, "_pubsub_gateway")
     assert uow._pubsub_gateway is not None
-    
+
     # Clean up by exhausting the generator
-    try:
+    with contextlib.suppress(StopAsyncIteration):
         await gen.__anext__()
-    except StopAsyncIteration:
-        pass
 
 
 def test_unit_of_work_factory_requires_pubsub_gateway():
     """Test that SqlAlchemyUnitOfWorkFactory requires a pubsub_gateway parameter.
-    
+
     This ensures that pubsub_gateway is always provided, preventing audit logs
     from not being broadcast.
     """
     # Create factory with a stub pubsub_gateway
     stub_gateway = StubPubSubGateway()
     factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=stub_gateway)
-    
+
     # Create a UoW
     from uuid import uuid4
+
     uow = factory.create(user_id=uuid4())
-    
+
     # The UoW should have the pubsub_gateway set
     assert hasattr(uow, "_pubsub_gateway")
     assert uow._pubsub_gateway is stub_gateway

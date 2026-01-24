@@ -21,5 +21,3 @@ __all__ = [
     "UpdateRoutineTaskCommand",
     "UpdateRoutineTaskHandler",
 ]
-
-

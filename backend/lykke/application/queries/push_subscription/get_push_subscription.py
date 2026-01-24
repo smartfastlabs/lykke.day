@@ -15,7 +15,9 @@ class GetPushSubscriptionQuery(Query):
     push_subscription_id: UUID
 
 
-class GetPushSubscriptionHandler(BaseQueryHandler[GetPushSubscriptionQuery, PushSubscriptionEntity]):
+class GetPushSubscriptionHandler(
+    BaseQueryHandler[GetPushSubscriptionQuery, PushSubscriptionEntity]
+):
     """Retrieves a single push subscription by ID."""
 
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
@@ -33,4 +35,3 @@ class GetPushSubscriptionHandler(BaseQueryHandler[GetPushSubscriptionQuery, Push
             NotFoundError: If push subscription not found
         """
         return await self.push_subscription_ro_repo.get(query.push_subscription_id)
-

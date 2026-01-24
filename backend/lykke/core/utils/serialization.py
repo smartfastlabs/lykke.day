@@ -68,4 +68,3 @@ def _serialize_value(value: Any) -> Any:
         return dataclass_to_json_dict(value)
 
     return value
-

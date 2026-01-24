@@ -17,7 +17,9 @@ class UpdateRoutineTaskCommand(Command):
     routine_task: RoutineTask
 
 
-class UpdateRoutineTaskHandler(BaseCommandHandler[UpdateRoutineTaskCommand, RoutineEntity]):
+class UpdateRoutineTaskHandler(
+    BaseCommandHandler[UpdateRoutineTaskCommand, RoutineEntity]
+):
     """Update the metadata or schedule of an attached RoutineTask."""
 
     async def handle(self, command: UpdateRoutineTaskCommand) -> RoutineEntity:

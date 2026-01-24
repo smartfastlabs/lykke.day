@@ -1,14 +1,16 @@
 """Event handler that sends push notifications when calendar entries change."""
 
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from loguru import logger
 
-from lykke.application.commands.push_subscription import SendPushNotificationCommand, SendPushNotificationHandler
-from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
-from lykke.application.notifications import build_notification_payload_for_calendar_entry_change
-from lykke.domain.entities import CalendarEntryEntity
+from lykke.application.commands.push_subscription import (
+    SendPushNotificationCommand,
+    SendPushNotificationHandler,
+)
+from lykke.application.notifications import (
+    build_notification_payload_for_calendar_entry_change,
+)
 from lykke.domain.events.base import DomainEvent
 from lykke.domain.events.calendar_entry_events import (
     CalendarEntryCreatedEvent,
@@ -19,6 +21,12 @@ from lykke.infrastructure.gateways import WebPushGateway
 
 from .base import DomainEventHandler
 
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
+    from lykke.domain.entities import CalendarEntryEntity
+
 
 class CalendarEntryPushNotificationHandler(DomainEventHandler):
     """Sends push notifications when calendar entries are created, updated, or deleted.
@@ -27,7 +35,11 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
     and sends a push notification to each one.
     """
 
-    handles = [CalendarEntryCreatedEvent, CalendarEntryUpdatedEvent, CalendarEntryDeletedEvent]
+    handles: ClassVar[list[type[DomainEvent]]] = [
+        CalendarEntryCreatedEvent,
+        CalendarEntryUpdatedEvent,
+        CalendarEntryDeletedEvent,
+    ]
 
     async def handle(self, event: DomainEvent) -> None:
         """Handle calendar entry events by sending push notifications.
@@ -78,7 +90,9 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
 
         # At this point, entry_data should not be None
         if entry_data is None:
-            logger.error(f"Entry data is None for {change_type} event on entry {calendar_entry_id}")
+            logger.error(
+                f"Entry data is None for {change_type} event on entry {calendar_entry_id}"
+            )
             return
 
         # Build notification payload
@@ -88,12 +102,16 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
                 entry_data=entry_data,
             )
         except Exception as e:
-            logger.error(f"Failed to build notification payload for entry {calendar_entry_id}: {e}")
+            logger.error(
+                f"Failed to build notification payload for entry {calendar_entry_id}: {e}"
+            )
             return
 
         # Send push notification to all subscriptions in one batch
         if self._uow_factory is None:
-            logger.error("UnitOfWorkFactory not available for sending push notifications")
+            logger.error(
+                "UnitOfWorkFactory not available for sending push notifications"
+            )
             return
 
         web_push_gateway: WebPushGatewayProtocol = WebPushGateway()

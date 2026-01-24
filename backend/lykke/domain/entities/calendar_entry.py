@@ -1,12 +1,11 @@
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC
-from datetime import date as dt_date
-from datetime import datetime, time, timedelta
+from datetime import UTC, date as dt_date, datetime, time, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from gcsa.event import Event as GoogleEvent
+
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities.auditable import AuditableEntity
@@ -122,11 +121,8 @@ class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
             return True
 
         # Exclude calendar entries that are too far in the future
-        if (self.starts_at - now) > look_ahead:
-            return False
-
         # Calendar entry will start within look_ahead window
-        return True
+        return (self.starts_at - now) <= look_ahead
 
     def create(self) -> "CalendarEntryEntity":
         """Mark this entity as newly created by adding EntityCreatedEvent and CalendarEntryCreatedEvent.

@@ -1,5 +1,7 @@
 """Event handler that triggers smart notification evaluation on task status changes."""
 
+from typing import ClassVar
+
 from loguru import logger
 
 from lykke.application.events.handlers.base import DomainEventHandler
@@ -18,7 +20,11 @@ class SmartNotificationTriggerHandler(DomainEventHandler):
     should be sent. It runs asynchronously and doesn't block the transaction.
     """
 
-    handles = [TaskCompletedEvent, TaskStatusChangedEvent, TaskPuntedEvent]
+    handles: ClassVar[list[type[DomainEvent]]] = [
+        TaskCompletedEvent,
+        TaskStatusChangedEvent,
+        TaskPuntedEvent,
+    ]
 
     async def handle(self, event: DomainEvent) -> None:
         """Handle task status change events by enqueuing notification evaluation.
@@ -42,7 +48,9 @@ class SmartNotificationTriggerHandler(DomainEventHandler):
         # This runs asynchronously and doesn't block the transaction
         # Import here to avoid circular imports
         try:
-            from lykke.presentation.workers.tasks import evaluate_smart_notification_task
+            from lykke.presentation.workers.tasks import (
+                evaluate_smart_notification_task,
+            )
 
             await evaluate_smart_notification_task.kiq(
                 user_id=user_id,

@@ -16,9 +16,9 @@ UserQuery = value_objects.UserQuery
 __all__ = [
     "AuthTokenQuery",
     "BaseQuery",
+    "BaseRepository",
     "CalendarEntryQuery",
     "CalendarEntrySeriesQuery",
-    "BaseRepository",
     "DateQuery",
     "DayTemplateQuery",
     "TaskQuery",

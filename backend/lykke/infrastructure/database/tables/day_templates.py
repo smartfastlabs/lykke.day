@@ -25,4 +25,3 @@ class DayTemplate(Base):
         Index("idx_day_templates_user_id", "user_id"),
         Index("idx_day_templates_user_slug", "user_id", "slug", unique=True),
     )
-

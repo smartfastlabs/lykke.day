@@ -43,12 +43,11 @@ usecase_configs_tbl = UseCaseConfig.__table__
 users_tbl = User.__table__
 
 __all__ = [
-    # Base and metadata
-    "Base",
-    "metadata",
     # ORM Models
     "AuditLog",
     "AuthToken",
+    # Base and metadata
+    "Base",
     "BotPersonality",
     "Calendar",
     "CalendarEntry",
@@ -78,6 +77,7 @@ __all__ = [
     "days_tbl",
     "factoids_tbl",
     "messages_tbl",
+    "metadata",
     "push_notifications_tbl",
     "push_subscriptions_tbl",
     "routines_tbl",

@@ -2,10 +2,11 @@
 
 from typing import Any
 
+from sqlalchemy.sql import Select
+
 from lykke.domain import value_objects
 from lykke.domain.entities import ConversationEntity
 from lykke.infrastructure.database.tables import conversations_tbl
-from sqlalchemy.sql import Select
 
 from .base import UserScopedBaseRepository
 
@@ -31,7 +32,9 @@ class ConversationRepository(
             stmt = stmt.where(self.table.c.status == query.status)
 
         if query.bot_personality_id is not None:
-            stmt = stmt.where(self.table.c.bot_personality_id == query.bot_personality_id)
+            stmt = stmt.where(
+                self.table.c.bot_personality_id == query.bot_personality_id
+            )
 
         return stmt
 

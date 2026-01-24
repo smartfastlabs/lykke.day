@@ -22,7 +22,9 @@ class SubscribeCalendarCommand(Command):
     calendar: CalendarEntity
 
 
-class SubscribeCalendarHandler(BaseCommandHandler[SubscribeCalendarCommand, CalendarEntity]):
+class SubscribeCalendarHandler(
+    BaseCommandHandler[SubscribeCalendarCommand, CalendarEntity]
+):
     """Subscribes a calendar to push notifications for changes."""
 
     def __init__(

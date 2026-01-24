@@ -1,6 +1,6 @@
 from datetime import UTC, date as dt_date, datetime
-from zoneinfo import ZoneInfo
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 from dateutil.tz import tzoffset
 
@@ -162,4 +162,3 @@ def test_from_google_sets_category_when_provided() -> None:
     )
 
     assert entry.category == EventCategory.WORK
-

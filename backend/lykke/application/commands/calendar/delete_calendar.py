@@ -28,4 +28,3 @@ class DeleteCalendarHandler(BaseCommandHandler[DeleteCalendarCommand, None]):
         async with self.new_uow() as uow:
             calendar = await uow.calendar_ro_repo.get(command.calendar_id)
             await uow.delete(calendar)
-

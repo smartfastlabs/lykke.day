@@ -139,8 +139,8 @@ class TestLoadEntityData:
     @pytest.mark.asyncio
     async def test_load_task_entity_data(self, handler_with_mocks):
         """Test loading task entity data."""
-        from lykke.domain.entities import TaskEntity
         from lykke.domain import value_objects
+        from lykke.domain.entities import TaskEntity
 
         task_id = uuid4()
         mock_task = TaskEntity(
@@ -170,8 +170,8 @@ class TestLoadEntityData:
 
         REGRESSION TEST: Previously used 'calendar_entry' instead of 'calendarentry'.
         """
-        from lykke.domain.entities import CalendarEntryEntity
         from lykke.domain import value_objects
+        from lykke.domain.entities import CalendarEntryEntity
 
         entry_id = uuid4()
         mock_entry = CalendarEntryEntity(
@@ -186,7 +186,9 @@ class TestLoadEntityData:
             status="confirmed",
             frequency=value_objects.TaskFrequency.ONCE,
         )
-        handler_with_mocks.calendar_entry_ro_repo.get = AsyncMock(return_value=mock_entry)
+        handler_with_mocks.calendar_entry_ro_repo.get = AsyncMock(
+            return_value=mock_entry
+        )
 
         # Use the correct entity type (no underscore)
         result = await handler_with_mocks._load_entity_data(
@@ -225,8 +227,8 @@ class TestLoadEntityData:
     @pytest.mark.asyncio
     async def test_load_routine_entity_data(self, handler_with_mocks):
         """Test loading routine entity data."""
-        from lykke.domain.entities import RoutineEntity
         from lykke.domain import value_objects
+        from lykke.domain.entities import RoutineEntity
 
         routine_id = uuid4()
         mock_routine = RoutineEntity(
@@ -258,7 +260,9 @@ class TestLoadEntityData:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_load_calendar_entry_wrong_type_returns_none(self, handler_with_mocks):
+    async def test_load_calendar_entry_wrong_type_returns_none(
+        self, handler_with_mocks
+    ):
         """Test that 'calendar_entry' (with underscore) returns None.
 
         REGRESSION TEST: This documents that 'calendar_entry' is NOT a valid type.
@@ -286,7 +290,7 @@ class TestEntityTypeConsistencyIntegration:
         expected_types = {"task", "calendarentry", "routine", "day"}
 
         # Verify each type is recognized
-        for entity_type in expected_types:
+        for _entity_type in expected_types:
             # The handler should not return None for these types
             # (when the entity exists)
             pass  # This is verified by the individual tests above

@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from pydantic import Field
+
 from .base import BaseEntitySchema
 
 
@@ -20,5 +22,5 @@ class FactoidSchema(BaseEntitySchema):
     user_confirmed: bool = False
     last_accessed: datetime
     access_count: int = 0
-    meta: dict[str, Any] = {}
+    meta: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime

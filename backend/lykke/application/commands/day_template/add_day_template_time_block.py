@@ -16,10 +16,14 @@ class AddDayTemplateTimeBlockCommand(Command):
     time_block: value_objects.DayTemplateTimeBlock
 
 
-class AddDayTemplateTimeBlockHandler(BaseCommandHandler[AddDayTemplateTimeBlockCommand, DayTemplateEntity]):
+class AddDayTemplateTimeBlockHandler(
+    BaseCommandHandler[AddDayTemplateTimeBlockCommand, DayTemplateEntity]
+):
     """Add a time block to a day template."""
 
-    async def handle(self, command: AddDayTemplateTimeBlockCommand) -> DayTemplateEntity:
+    async def handle(
+        self, command: AddDayTemplateTimeBlockCommand
+    ) -> DayTemplateEntity:
         """Add a time block to the day template.
 
         Args:

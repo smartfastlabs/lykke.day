@@ -18,7 +18,9 @@ class UpdateReminderStatusCommand(Command):
     status: value_objects.ReminderStatus
 
 
-class UpdateReminderStatusHandler(BaseCommandHandler[UpdateReminderStatusCommand, DayEntity]):
+class UpdateReminderStatusHandler(
+    BaseCommandHandler[UpdateReminderStatusCommand, DayEntity]
+):
     """Updates a reminder's status on a day."""
 
     async def handle(self, command: UpdateReminderStatusCommand) -> DayEntity:

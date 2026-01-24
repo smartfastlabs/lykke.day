@@ -15,7 +15,9 @@ class AddDayTemplateRoutineCommand(Command):
     routine_id: UUID
 
 
-class AddDayTemplateRoutineHandler(BaseCommandHandler[AddDayTemplateRoutineCommand, DayTemplateEntity]):
+class AddDayTemplateRoutineHandler(
+    BaseCommandHandler[AddDayTemplateRoutineCommand, DayTemplateEntity]
+):
     """Attach a routine to a day template."""
 
     async def handle(self, command: AddDayTemplateRoutineCommand) -> DayTemplateEntity:
@@ -31,4 +33,3 @@ class AddDayTemplateRoutineHandler(BaseCommandHandler[AddDayTemplateRoutineComma
             day_template = await uow.day_template_ro_repo.get(command.day_template_id)
             updated = day_template.add_routine(command.routine_id)
             return uow.add(updated)
-

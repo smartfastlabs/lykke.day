@@ -15,12 +15,18 @@ class SearchCalendarsQuery(Query):
     search_query: value_objects.CalendarQuery | None = None
 
 
-class SearchCalendarsHandler(BaseQueryHandler[SearchCalendarsQuery, value_objects.PagedQueryResponse[CalendarEntity]]):
+class SearchCalendarsHandler(
+    BaseQueryHandler[
+        SearchCalendarsQuery, value_objects.PagedQueryResponse[CalendarEntity]
+    ]
+):
     """Searches calendars with pagination."""
 
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
 
-    async def handle(self, query: SearchCalendarsQuery) -> value_objects.PagedQueryResponse[CalendarEntity]:
+    async def handle(
+        self, query: SearchCalendarsQuery
+    ) -> value_objects.PagedQueryResponse[CalendarEntity]:
         """Search calendars with pagination.
 
         Args:

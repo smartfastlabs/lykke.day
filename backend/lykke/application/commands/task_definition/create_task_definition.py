@@ -13,10 +13,14 @@ class CreateTaskDefinitionCommand(Command):
     task_definition: TaskDefinitionEntity
 
 
-class CreateTaskDefinitionHandler(BaseCommandHandler[CreateTaskDefinitionCommand, TaskDefinitionEntity]):
+class CreateTaskDefinitionHandler(
+    BaseCommandHandler[CreateTaskDefinitionCommand, TaskDefinitionEntity]
+):
     """Creates a new task definition."""
 
-    async def handle(self, command: CreateTaskDefinitionCommand) -> TaskDefinitionEntity:
+    async def handle(
+        self, command: CreateTaskDefinitionCommand
+    ) -> TaskDefinitionEntity:
         """Create a new task definition.
 
         Args:

@@ -32,4 +32,3 @@ class Task(Base):
         Index("idx_tasks_routine_id", "routine_id"),
         Index("idx_tasks_user_id", "user_id"),
     )
-

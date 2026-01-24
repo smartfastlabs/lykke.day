@@ -3,10 +3,11 @@
 import json
 from typing import Any
 
+from sqlalchemy.sql import Select
+
 from lykke.domain.entities.usecase_config import UseCaseConfigEntity
 from lykke.infrastructure.database.tables import usecase_configs_tbl
 from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
-from sqlalchemy.sql import Select
 
 from .base import UseCaseConfigQuery, UserScopedBaseRepository
 

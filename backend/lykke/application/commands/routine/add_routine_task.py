@@ -32,4 +32,3 @@ class AddRoutineTaskHandler(BaseCommandHandler[AddRoutineTaskCommand, RoutineEnt
             routine = await uow.routine_ro_repo.get(command.routine_id)
             updated = routine.add_task(command.routine_task)
             return uow.add(updated)
-

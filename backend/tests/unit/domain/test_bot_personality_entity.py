@@ -23,7 +23,7 @@ def test_bot_personality_creation() -> None:
     user_id = uuid4()
     name = "Professional Coach"
     system_prompt = "You are a professional life coach."
-    
+
     personality = BotPersonalityEntity(
         user_id=user_id,
         name=name,
@@ -57,7 +57,9 @@ def test_user_specific_personality(bot_personality: BotPersonalityEntity) -> Non
     assert bot_personality.is_system_default() is False
 
 
-def test_get_full_prompt_without_amendments(bot_personality: BotPersonalityEntity) -> None:
+def test_get_full_prompt_without_amendments(
+    bot_personality: BotPersonalityEntity,
+) -> None:
     """Test getting full prompt when no amendments exist."""
     full_prompt = bot_personality.get_full_prompt()
     assert full_prompt == bot_personality.system_prompt
@@ -68,7 +70,7 @@ def test_get_full_prompt_with_amendments() -> None:
     """Test getting full prompt with user amendments."""
     system_prompt = "You are a helpful assistant."
     amendments = "Always be extra polite and use emojis."
-    
+
     personality = BotPersonalityEntity(
         user_id=uuid4(),
         name="Custom Assistant",
@@ -99,7 +101,7 @@ def test_personality_inheritance() -> None:
     """Test personality that inherits from a base personality."""
     base_id = uuid4()
     user_id = uuid4()
-    
+
     derived_personality = BotPersonalityEntity(
         user_id=user_id,
         name="My Custom Assistant",
@@ -119,7 +121,7 @@ def test_personality_with_metadata() -> None:
         "verbosity": "concise",
         "use_emojis": False,
     }
-    
+
     personality = BotPersonalityEntity(
         user_id=uuid4(),
         name="Professional",
@@ -140,7 +142,7 @@ def test_personality_immutability() -> None:
 
     # Clone with updated name
     updated = original.clone(name="Updated")
-    
+
     assert original.name == "Original"
     assert updated.name == "Updated"
     assert original.id == updated.id  # ID preserved
@@ -173,7 +175,7 @@ def test_complex_amendments() -> None:
 - Always explain your reasoning
 - Provide examples when possible
 - Ask clarifying questions if needed"""
-    
+
     personality = BotPersonalityEntity(
         user_id=uuid4(),
         name="Code Helper",

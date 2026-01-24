@@ -21,4 +21,3 @@ class UserUpdate(schemas.BaseUserUpdate):
     """Schema for updating user data."""
 
     phone_number: str | None = None
-

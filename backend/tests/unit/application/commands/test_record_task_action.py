@@ -5,7 +5,10 @@ from uuid import uuid4
 
 import pytest
 
-from lykke.application.commands.task import RecordTaskActionCommand, RecordTaskActionHandler
+from lykke.application.commands.task import (
+    RecordTaskActionCommand,
+    RecordTaskActionHandler,
+)
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import (
@@ -14,7 +17,10 @@ from lykke.domain.entities import (
     TaskEntity,
     UserEntity,
 )
-from lykke.domain.events.task_events import TaskActionRecordedEvent, TaskStateUpdatedEvent
+from lykke.domain.events.task_events import (
+    TaskActionRecordedEvent,
+    TaskStateUpdatedEvent,
+)
 from tests.unit.fakes import (
     _FakeDayReadOnlyRepo,
     _FakeDayTemplateReadOnlyRepo,
@@ -86,7 +92,9 @@ async def test_record_task_action_adds_task_and_day_to_uow():
     )
 
     # Act
-    result = await handler.handle(RecordTaskActionCommand(task_id=task.id, action=action))
+    result = await handler.handle(
+        RecordTaskActionCommand(task_id=task.id, action=action)
+    )
 
     # Assert
     assert result.status == value_objects.TaskStatus.COMPLETE
@@ -161,14 +169,18 @@ async def test_record_task_action_raises_domain_events():
     )
 
     # Act
-    result = await handler.handle(RecordTaskActionCommand(task_id=task.id, action=action))
+    result = await handler.handle(
+        RecordTaskActionCommand(task_id=task.id, action=action)
+    )
 
     # Assert - check that task has domain events
-    task_events = [e for e in result._domain_events if isinstance(e, TaskStateUpdatedEvent)]
+    task_events = [
+        e for e in result._domain_events if isinstance(e, TaskStateUpdatedEvent)
+    ]
     assert len(task_events) > 0
 
     # Check day has domain events
-    day_from_uow = [e for e in uow_factory.uow.added if isinstance(e, DayEntity)][0]
+    day_from_uow = next(e for e in uow_factory.uow.added if isinstance(e, DayEntity))
     day_events = [
         e for e in day_from_uow._domain_events if isinstance(e, TaskActionRecordedEvent)
     ]
@@ -291,7 +303,9 @@ async def test_record_task_action_punt_updates_status():
     )
 
     # Act
-    result = await handler.handle(RecordTaskActionCommand(task_id=task.id, action=action))
+    result = await handler.handle(
+        RecordTaskActionCommand(task_id=task.id, action=action)
+    )
 
     # Assert
     assert result.status == value_objects.TaskStatus.PUNT

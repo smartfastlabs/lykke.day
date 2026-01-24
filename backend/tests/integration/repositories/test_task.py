@@ -289,7 +289,7 @@ def test_row_to_entity_parses_time_strings(test_user, test_date):
 
 def test_entity_to_row_and_back_preserves_enums(test_user, test_date):
     """Test that converting a task entity to row and back preserves enum values correctly.
-    
+
     This is a regression test for a bug where str(task.status) was producing
     'TaskStatus.NOT_STARTED' instead of 'NOT_STARTED', causing deserialization to fail.
     """
@@ -305,19 +305,21 @@ def test_entity_to_row_and_back_preserves_enums(test_user, test_date):
         frequency=TaskFrequency.WEEKLY,
         scheduled_date=test_date,
     )
-    
+
     # Convert to row (simulating save to database)
     row = TaskRepository.entity_to_row(task)
-    
+
     # Verify the row has string values, not enum representations
-    assert row["status"] == "NOT_STARTED", f"Expected 'NOT_STARTED', got {row['status']}"
+    assert row["status"] == "NOT_STARTED", (
+        f"Expected 'NOT_STARTED', got {row['status']}"
+    )
     assert row["type"] == "CHORE", f"Expected 'CHORE', got {row['type']}"
     assert row["category"] == "CLEANING", f"Expected 'CLEANING', got {row['category']}"
     assert row["frequency"] == "WEEKLY", f"Expected 'WEEKLY', got {row['frequency']}"
-    
+
     # Convert back to entity (simulating load from database)
     restored_task = TaskRepository.row_to_entity(row)
-    
+
     # Verify enums are properly restored
     assert restored_task.status == TaskStatus.NOT_STARTED
     assert restored_task.type == TaskType.CHORE

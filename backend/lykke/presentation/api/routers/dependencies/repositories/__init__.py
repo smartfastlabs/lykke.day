@@ -22,17 +22,14 @@ from lykke.infrastructure.repositories import (
     CalendarRepository,
     TimeBlockDefinitionRepository,
 )
-
-from ..user import get_current_user
+from lykke.presentation.api.routers.dependencies.user import get_current_user
 
 
 def get_auth_token_repo(
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> AuthTokenRepositoryReadWriteProtocol:
     """Get an instance of AuthTokenRepository (not user-scoped)."""
-    return cast(
-        "AuthTokenRepositoryReadWriteProtocol", AuthTokenRepository()
-    )
+    return cast("AuthTokenRepositoryReadWriteProtocol", AuthTokenRepository())
 
 
 def get_calendar_repo(

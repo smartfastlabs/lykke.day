@@ -19,7 +19,9 @@ class TimeBlockDefinitionRepository(
     QueryClass = BaseQuery
 
     @staticmethod
-    def entity_to_row(time_block_definition: TimeBlockDefinitionEntity) -> dict[str, Any]:
+    def entity_to_row(
+        time_block_definition: TimeBlockDefinitionEntity,
+    ) -> dict[str, Any]:
         """Convert a TimeBlockDefinition entity to a database row dict."""
         row: dict[str, Any] = {
             "id": time_block_definition.id,
@@ -46,4 +48,3 @@ class TimeBlockDefinitionRepository(
             data["category"] = value_objects.TimeBlockCategory(data["category"])
 
         return cls.Object(**data)
-

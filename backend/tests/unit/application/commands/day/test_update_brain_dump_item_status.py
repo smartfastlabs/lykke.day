@@ -70,7 +70,9 @@ async def test_update_brain_dump_item_status_updates():
         )
     )
 
-    assert result.brain_dump_items[0].status == value_objects.BrainDumpItemStatus.COMPLETE
+    assert (
+        result.brain_dump_items[0].status == value_objects.BrainDumpItemStatus.COMPLETE
+    )
     events = result.collect_events()
     assert len(events) == 1
     assert isinstance(events[0], BrainDumpItemStatusChangedEvent)

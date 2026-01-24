@@ -128,15 +128,15 @@ def deserialize_domain_event(data: dict[str, Any]) -> DomainEvent:
     # Parse fully qualified class name
     try:
         module_name, class_name = event_type.rsplit(".", 1)
-    except ValueError:
-        raise ValueError(f"Invalid event_type format: {event_type}")
+    except ValueError as e:
+        raise ValueError(f"Invalid event_type format: {event_type}") from e
 
     # Import the module and get the class
     try:
         module = importlib.import_module(module_name)
         event_class = getattr(module, class_name)
     except (ImportError, AttributeError) as e:
-        raise ValueError(f"Could not load event class {event_type}: {e}")
+        raise ValueError(f"Could not load event class {event_type}: {e}") from e
 
     # Verify it's a DomainEvent subclass
     if not issubclass(event_class, DomainEvent):
@@ -149,15 +149,20 @@ def deserialize_domain_event(data: dict[str, Any]) -> DomainEvent:
         coerced_event_data = _coerce_event_data(event_class, event_data)
         event = event_class(**coerced_event_data)
     except TypeError as e:
-        raise ValueError(f"Could not instantiate {event_type} with provided data: {e}")
+        raise ValueError(
+            f"Could not instantiate {event_type} with provided data: {e}"
+        ) from e
 
     # Type assertion: We've already verified event_class is a DomainEvent subclass
     # but mypy can't infer this from the dynamic loading
     from typing import cast
-    return cast(DomainEvent, event)
+
+    return cast("DomainEvent", event)
 
 
-def _coerce_event_data(event_class: type[DomainEvent], event_data: dict[str, Any]) -> dict[str, Any]:
+def _coerce_event_data(
+    event_class: type[DomainEvent], event_data: dict[str, Any]
+) -> dict[str, Any]:
     """Coerce serialized event data into annotated field types."""
     coerced_data: dict[str, Any] = dict(event_data)
     for field in fields(event_class):
@@ -180,7 +185,7 @@ def _coerce_value(value: Any, annotation: Any) -> Any:
             return [_coerce_value(item, item_type) for item in value]
         return value
     if origin is dict:
-        key_type, value_type = (get_args(annotation) + (Any, Any))[:2]
+        key_type, value_type = ((*get_args(annotation), Any, Any))[:2]
         if isinstance(value, dict):
             return {
                 _coerce_value(key, key_type): _coerce_value(val, value_type)

@@ -9,8 +9,6 @@ from uuid import UUID
 
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 
-
-
 @dataclass(kw_only=True)
 class BaseQuery(BaseValueObject):
     """Base query class for building flexible queries with pagination, ordering, and filtering."""
@@ -93,7 +91,9 @@ class PushSubscriptionQuery(BaseQuery):
 class PushNotificationQuery(BaseQuery):
     """Query class for PushNotification entities."""
 
-    push_subscription_id: UUID | None = None  # Find notifications containing this subscription ID
+    push_subscription_id: UUID | None = (
+        None  # Find notifications containing this subscription ID
+    )
     status: str | None = None
     sent_after: datetime | None = None
     sent_before: datetime | None = None

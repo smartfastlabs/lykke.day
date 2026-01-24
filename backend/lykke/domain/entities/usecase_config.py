@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 from .base import BaseEntityObject
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 
 @dataclass(kw_only=True)

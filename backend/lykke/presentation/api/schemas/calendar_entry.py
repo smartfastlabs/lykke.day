@@ -1,8 +1,7 @@
 """CalendarEntry schema."""
 
-from typing import TYPE_CHECKING
-
 from datetime import date, datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from pydantic import Field
@@ -32,4 +31,3 @@ class CalendarEntrySchema(BaseEntitySchema):
     updated_at: datetime
     actions: list["ActionSchema"] = Field(default_factory=list)
     date: date  # Computed field from starts_at
-

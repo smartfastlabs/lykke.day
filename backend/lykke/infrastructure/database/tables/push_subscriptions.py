@@ -20,4 +20,3 @@ class PushSubscription(Base):
     created_at = Column(DateTime, nullable=False)
 
     __table_args__ = (Index("idx_push_subscriptions_user_id", "user_id"),)
-

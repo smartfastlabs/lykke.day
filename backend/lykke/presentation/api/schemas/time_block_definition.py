@@ -32,4 +32,3 @@ class TimeBlockDefinitionUpdateSchema(BaseSchema):
     description: str | None = None
     type: value_objects.TimeBlockType | None = None
     category: value_objects.TimeBlockCategory | None = None
-

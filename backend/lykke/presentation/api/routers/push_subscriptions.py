@@ -20,8 +20,7 @@ from lykke.application.queries.push_subscription import (
     SearchPushSubscriptionsQuery,
 )
 from lykke.domain import value_objects
-from lykke.domain.entities import PushSubscriptionEntity
-from lykke.domain.entities import UserEntity
+from lykke.domain.entities import PushSubscriptionEntity, UserEntity
 from lykke.presentation.api.schemas import (
     PagedResponseSchema,
     PushSubscriptionCreateSchema,
@@ -30,7 +29,10 @@ from lykke.presentation.api.schemas import (
     QuerySchema,
 )
 from lykke.presentation.api.schemas.mappers import map_push_subscription_to_schema
-from lykke.presentation.handler_factory import CommandHandlerFactory, QueryHandlerFactory
+from lykke.presentation.handler_factory import (
+    CommandHandlerFactory,
+    QueryHandlerFactory,
+)
 
 from .dependencies.factories import command_handler_factory, query_handler_factory
 from .dependencies.user import get_current_user
@@ -51,7 +53,9 @@ async def search_subscriptions(
         SearchPushSubscriptionsHandler
     )
     search_query = build_search_query(query, value_objects.PushSubscriptionQuery)
-    result = await list_push_subscriptions_handler.handle(SearchPushSubscriptionsQuery(search_query=search_query))
+    result = await list_push_subscriptions_handler.handle(
+        SearchPushSubscriptionsQuery(search_query=search_query)
+    )
     return create_paged_response(result, map_push_subscription_to_schema)
 
 
@@ -71,9 +75,7 @@ async def get_subscription(
 async def update_subscription(
     subscription_id: str,
     update_data: PushSubscriptionUpdateSchema,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> PushSubscriptionSchema:
     update_push_subscription_handler = command_factory.create(
         UpdatePushSubscriptionHandler
@@ -82,7 +84,9 @@ async def update_subscription(
         device_name=update_data.device_name
     )
     result = await update_push_subscription_handler.handle(
-        UpdatePushSubscriptionCommand(subscription_id=UUID(subscription_id), update_data=update_object)
+        UpdatePushSubscriptionCommand(
+            subscription_id=UUID(subscription_id), update_data=update_object
+        )
     )
     return map_push_subscription_to_schema(result)
 
@@ -90,9 +94,7 @@ async def update_subscription(
 @router.delete("/subscriptions/{subscription_id}")
 async def delete_subscription(
     subscription_id: str,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> None:
     delete_push_subscription_handler = command_factory.create(
         DeletePushSubscriptionHandler
@@ -107,16 +109,12 @@ async def subscribe(
     background_tasks: BackgroundTasks,
     request: PushSubscriptionCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> PushSubscriptionSchema:
     create_push_subscription_handler = command_factory.create(
         CreatePushSubscriptionHandler
     )
-    send_push_notification_handler = command_factory.create(
-        SendPushNotificationHandler
-    )
+    send_push_notification_handler = command_factory.create(SendPushNotificationHandler)
     subscription = PushSubscriptionEntity(
         user_id=user.id,
         device_name=request.device_name,
@@ -124,7 +122,9 @@ async def subscribe(
         p256dh=request.keys.p256dh,
         auth=request.keys.auth,
     )
-    result = await create_push_subscription_handler.handle(CreatePushSubscriptionCommand(subscription=subscription))
+    result = await create_push_subscription_handler.handle(
+        CreatePushSubscriptionCommand(subscription=subscription)
+    )
 
     background_tasks.add_task(
         send_push_notification_handler.handle,
@@ -144,9 +144,7 @@ async def subscribe(
 async def send_test_push(
     background_tasks: BackgroundTasks,
     query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> dict[str, int]:
     """Send a test push notification to all user's subscribed devices.
 
@@ -156,9 +154,7 @@ async def send_test_push(
     search_push_subscriptions_handler = query_factory.create(
         SearchPushSubscriptionsHandler
     )
-    send_push_notification_handler = command_factory.create(
-        SendPushNotificationHandler
-    )
+    send_push_notification_handler = command_factory.create(SendPushNotificationHandler)
     result = await search_push_subscriptions_handler.handle(
         SearchPushSubscriptionsQuery()
     )

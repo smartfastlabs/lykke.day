@@ -14,5 +14,3 @@ class CalendarEntrySeriesUpdatedEvent(
     EntityUpdatedEvent[CalendarEntrySeriesUpdateObject]
 ):
     """Event raised when a calendar entry series is updated."""
-
-

@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
+
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import BotPersonalityEntity
@@ -82,8 +83,6 @@ async def test_put_update(bot_personality_repo, test_user):
     assert retrieved.name == "Updated Name"
 
 
-
-
 @pytest.mark.asyncio
 async def test_search_by_name(bot_personality_repo, test_user):
     """Test searching bot personalities by name."""
@@ -108,8 +107,6 @@ async def test_search_by_name(bot_personality_repo, test_user):
 
     assert len(results) == 1
     assert results[0].id == personality1.id
-
-
 
 
 @pytest.mark.asyncio

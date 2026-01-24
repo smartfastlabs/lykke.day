@@ -5,24 +5,26 @@ from __future__ import annotations
 import secrets
 import uuid
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
-from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositories,
-    UnitOfWorkFactory,
-    UnitOfWorkProtocol,
-)
 from lykke.core.config import settings
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity
-from lykke.domain.entities import CalendarEntity
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity
 from lykke.domain.events.calendar_events import CalendarUpdatedEvent
 from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.domain.value_objects.sync import SyncSubscription
 
-from .sync_calendar import SyncCalendarHandler
+if TYPE_CHECKING:
+    from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+    from lykke.application.unit_of_work import (
+        ReadOnlyRepositories,
+        UnitOfWorkFactory,
+        UnitOfWorkProtocol,
+    )
+
+    from .sync_calendar import SyncCalendarHandler
 
 
 @dataclass(frozen=True)
@@ -140,4 +142,3 @@ class ResyncCalendarHandler(BaseCommandHandler[ResyncCalendarCommand, CalendarEn
 
         calendar = calendar.apply_update(update_data, CalendarUpdatedEvent)
         return uow.add(calendar)
-

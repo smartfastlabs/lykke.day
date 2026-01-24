@@ -4,8 +4,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Protocol
 
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity
 from lykke.domain.entities import (
+    AuthTokenEntity,
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,

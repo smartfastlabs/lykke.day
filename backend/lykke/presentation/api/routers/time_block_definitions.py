@@ -20,8 +20,7 @@ from lykke.application.queries.time_block_definition import (
     SearchTimeBlockDefinitionsQuery,
 )
 from lykke.domain import value_objects
-from lykke.domain.entities import TimeBlockDefinitionEntity
-from lykke.domain.entities import UserEntity
+from lykke.domain.entities import TimeBlockDefinitionEntity, UserEntity
 from lykke.presentation.api.schemas import (
     PagedResponseSchema,
     QuerySchema,
@@ -30,7 +29,10 @@ from lykke.presentation.api.schemas import (
     TimeBlockDefinitionUpdateSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_time_block_definition_to_schema
-from lykke.presentation.handler_factory import CommandHandlerFactory, QueryHandlerFactory
+from lykke.presentation.handler_factory import (
+    CommandHandlerFactory,
+    QueryHandlerFactory,
+)
 
 from .dependencies.factories import command_handler_factory, query_handler_factory
 from .dependencies.user import get_current_user
@@ -54,9 +56,7 @@ async def get_time_block_definition(
     return map_time_block_definition_to_schema(time_block_definition)
 
 
-@router.post(
-    "/", response_model=PagedResponseSchema[TimeBlockDefinitionSchema]
-)
+@router.post("/", response_model=PagedResponseSchema[TimeBlockDefinitionSchema])
 async def search_time_block_definitions(
     query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
     query: QuerySchema[value_objects.TimeBlockDefinitionQuery],
@@ -66,7 +66,9 @@ async def search_time_block_definitions(
         SearchTimeBlockDefinitionsHandler
     )
     search_query = build_search_query(query, value_objects.TimeBlockDefinitionQuery)
-    result = await list_time_block_definitions_handler.handle(SearchTimeBlockDefinitionsQuery(search_query=search_query))
+    result = await list_time_block_definitions_handler.handle(
+        SearchTimeBlockDefinitionsQuery(search_query=search_query)
+    )
     return create_paged_response(result, map_time_block_definition_to_schema)
 
 
@@ -78,9 +80,7 @@ async def search_time_block_definitions(
 async def create_time_block_definition(
     time_block_definition_data: TimeBlockDefinitionCreateSchema,
     user: Annotated[UserEntity, Depends(get_current_user)],
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> TimeBlockDefinitionSchema:
     """Create a new time block definition."""
     create_time_block_definition_handler = command_factory.create(
@@ -103,9 +103,7 @@ async def create_time_block_definition(
 async def update_time_block_definition(
     uuid: UUID,
     update_data: TimeBlockDefinitionUpdateSchema,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> TimeBlockDefinitionSchema:
     """Update an existing time block definition."""
     update_time_block_definition_handler = command_factory.create(
@@ -118,7 +116,9 @@ async def update_time_block_definition(
         category=update_data.category,
     )
     updated = await update_time_block_definition_handler.handle(
-        UpdateTimeBlockDefinitionCommand(time_block_definition_id=uuid, update_data=update_object)
+        UpdateTimeBlockDefinitionCommand(
+            time_block_definition_id=uuid, update_data=update_object
+        )
     )
     return map_time_block_definition_to_schema(updated)
 
@@ -126,13 +126,12 @@ async def update_time_block_definition(
 @router.delete("/{uuid}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_time_block_definition(
     uuid: UUID,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> None:
     """Delete a time block definition."""
     delete_time_block_definition_handler = command_factory.create(
         DeleteTimeBlockDefinitionHandler
     )
-    await delete_time_block_definition_handler.handle(DeleteTimeBlockDefinitionCommand(time_block_definition_id=uuid))
-
+    await delete_time_block_definition_handler.handle(
+        DeleteTimeBlockDefinitionCommand(time_block_definition_id=uuid)
+    )

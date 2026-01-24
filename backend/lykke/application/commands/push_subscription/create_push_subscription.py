@@ -15,10 +15,14 @@ class CreatePushSubscriptionCommand(Command):
     subscription: PushSubscriptionEntity
 
 
-class CreatePushSubscriptionHandler(BaseCommandHandler[CreatePushSubscriptionCommand, PushSubscriptionEntity]):
+class CreatePushSubscriptionHandler(
+    BaseCommandHandler[CreatePushSubscriptionCommand, PushSubscriptionEntity]
+):
     """Creates a new push subscription."""
 
-    async def handle(self, command: CreatePushSubscriptionCommand) -> PushSubscriptionEntity:
+    async def handle(
+        self, command: CreatePushSubscriptionCommand
+    ) -> PushSubscriptionEntity:
         """Create a new push subscription.
 
         Args:

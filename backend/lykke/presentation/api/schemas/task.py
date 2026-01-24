@@ -1,8 +1,7 @@
 """Task schema."""
 
-from typing import TYPE_CHECKING, Optional
-
 from datetime import date, datetime, time
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID
 
 from pydantic import Field
@@ -43,7 +42,7 @@ class TaskSchema(BaseEntitySchema):
     category: TaskCategory
     frequency: TaskFrequency
     completed_at: datetime | None = None
-    schedule: Optional[TaskScheduleSchema] = None
+    schedule: TaskScheduleSchema | None = None
     routine_id: UUID | None = None
     tags: list[TaskTag] = Field(default_factory=list)
     actions: list["ActionSchema"] = Field(default_factory=list)
@@ -56,6 +55,5 @@ class AdhocTaskCreateSchema(BaseSchema):
     name: str
     description: str | None = None
     category: TaskCategory
-    schedule: Optional[TaskScheduleSchema] = None
+    schedule: TaskScheduleSchema | None = None
     tags: list[TaskTag] = Field(default_factory=list)
-

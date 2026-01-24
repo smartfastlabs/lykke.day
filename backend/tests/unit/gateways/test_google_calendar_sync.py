@@ -5,10 +5,10 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+
 from lykke.application.commands.calendar.sync_calendar import SyncCalendarHandler
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity
-from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity, CalendarEntryEntity
 from lykke.domain.value_objects import TaskFrequency
 from lykke.domain.value_objects.sync import SyncSubscription
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway

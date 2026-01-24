@@ -25,5 +25,3 @@ class DeleteRoutineHandler(BaseCommandHandler[DeleteRoutineCommand, None]):
         async with self.new_uow() as uow:
             routine = await uow.routine_ro_repo.get(command.routine_id)
             await uow.delete(routine)
-
-

@@ -5,18 +5,20 @@ Revises: 7706cb7b0cd6
 Create Date: 2026-01-14 09:51:03.885953
 
 """
-from typing import Sequence, Union
 
-from alembic import op
+from collections.abc import Sequence
+from typing import Union
+
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'f1849ad9161b'
-down_revision: Union[str, Sequence[str], None] = '7706cb7b0cd6'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+revision: str = "f1849ad9161b"
+down_revision: str | Sequence[str] | None = "7706cb7b0cd6"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -32,9 +34,7 @@ def upgrade() -> None:
         sa.Column("meta", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        "idx_audit_logs_user_id", "audit_logs", ["user_id"], unique=False
-    )
+    op.create_index("idx_audit_logs_user_id", "audit_logs", ["user_id"], unique=False)
     op.create_index(
         "idx_audit_logs_activity_type", "audit_logs", ["activity_type"], unique=False
     )

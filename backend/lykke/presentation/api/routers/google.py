@@ -153,38 +153,36 @@ async def google_login_callback(
             )
             # Fall through to matching logic
 
-    if not existing_auth_token:
+    if not existing_auth_token and google_platform_ids:
         # Try to match by finding calendars with matching platform_ids
         # This handles the case where we're re-authenticating but don't have auth_token_id
-        if google_platform_ids:
-            # Find existing calendars that match these platform_ids
-            existing_calendars = await calendar_repo.search(
-                CalendarQuery()  # Will get all user's calendars due to user scoping
-            )
-            matching_calendar = next(
-                (
-                    cal
-                    for cal in existing_calendars
-                    if cal.platform_id in google_platform_ids
-                    and cal.platform == "google"
-                ),
-                None,
-            )
+        # Find existing calendars that match these platform_ids
+        existing_calendars = await calendar_repo.search(
+            CalendarQuery()  # Will get all user's calendars due to user scoping
+        )
+        matching_calendar = next(
+            (
+                cal
+                for cal in existing_calendars
+                if cal.platform_id in google_platform_ids and cal.platform == "google"
+            ),
+            None,
+        )
 
-            if matching_calendar:
-                # Found a matching calendar, use its auth_token_id
-                try:
-                    existing_auth_token = await auth_token_repo.get(
-                        matching_calendar.auth_token_id
-                    )
-                    logger.info(
-                        f"Matched existing auth token {existing_auth_token.id} "
-                        f"via calendar {matching_calendar.id} for user {user.id}"
-                    )
-                except Exception as e:
-                    logger.warning(
-                        f"Could not find auth token {matching_calendar.auth_token_id}: {e}"
-                    )
+        if matching_calendar:
+            # Found a matching calendar, use its auth_token_id
+            try:
+                existing_auth_token = await auth_token_repo.get(
+                    matching_calendar.auth_token_id
+                )
+                logger.info(
+                    f"Matched existing auth token {existing_auth_token.id} "
+                    f"via calendar {matching_calendar.id} for user {user.id}"
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Could not find auth token {matching_calendar.auth_token_id}: {e}"
+                )
 
     # Create or update the auth token
     auth_token_data = AuthTokenEntity(

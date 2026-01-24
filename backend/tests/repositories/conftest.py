@@ -6,6 +6,7 @@ from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
 from zoneinfo import ZoneInfo
 
 import pytest_asyncio
+
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity, UserEntity
 from lykke.domain.value_objects.task import TaskFrequency
 from lykke.domain.value_objects.user import UserSetting

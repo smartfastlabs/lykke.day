@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date as dt_date
-from uuid import UUID
+from typing import TYPE_CHECKING
 
-from lykke.domain.value_objects.day import BrainDumpItemStatus, ReminderStatus
 from lykke.domain.value_objects.update import DayUpdateObject
 
 from .base import AuditableDomainEvent, DomainEvent, EntityUpdatedEvent
+
+if TYPE_CHECKING:
+    from datetime import date as dt_date
+    from uuid import UUID
+
+    from lykke.domain.value_objects.day import BrainDumpItemStatus, ReminderStatus
+
 
 @dataclass(frozen=True, kw_only=True)
 class DayScheduledEvent(DomainEvent):
@@ -76,7 +81,7 @@ class ReminderRemovedEvent(DomainEvent):
 @dataclass(frozen=True, kw_only=True)
 class BrainDumpItemAddedEvent(DomainEvent, AuditableDomainEvent):
     """Event raised when a brain dump item is added.
-    
+
     Uses AuditableDomainEvent: User explicitly added a brain dump item,
     this is a user-facing action they'd want to see in their activity timeline.
     """
@@ -90,7 +95,7 @@ class BrainDumpItemAddedEvent(DomainEvent, AuditableDomainEvent):
 @dataclass(frozen=True, kw_only=True)
 class BrainDumpItemStatusChangedEvent(DomainEvent, AuditableDomainEvent):
     """Event raised when a brain dump item status changes.
-    
+
     Uses AuditableDomainEvent: User changed status of brain dump item
     (e.g., marked as done), this is a user-facing action worth tracking.
     """
@@ -106,7 +111,7 @@ class BrainDumpItemStatusChangedEvent(DomainEvent, AuditableDomainEvent):
 @dataclass(frozen=True, kw_only=True)
 class BrainDumpItemRemovedEvent(DomainEvent, AuditableDomainEvent):
     """Event raised when a brain dump item is removed.
-    
+
     Uses AuditableDomainEvent: User explicitly removed a brain dump item,
     this is a user-facing action they'd want to see in their history.
     """
@@ -118,14 +123,14 @@ class BrainDumpItemRemovedEvent(DomainEvent, AuditableDomainEvent):
 
 
 __all__ = [
+    "BrainDumpItemAddedEvent",
+    "BrainDumpItemRemovedEvent",
+    "BrainDumpItemStatusChangedEvent",
     "DayCompletedEvent",
     "DayScheduledEvent",
     "DayUnscheduledEvent",
     "DayUpdatedEvent",
-    "BrainDumpItemAddedEvent",
-    "BrainDumpItemStatusChangedEvent",
-    "BrainDumpItemRemovedEvent",
     "ReminderAddedEvent",
-    "ReminderStatusChangedEvent",
     "ReminderRemovedEvent",
+    "ReminderStatusChangedEvent",
 ]

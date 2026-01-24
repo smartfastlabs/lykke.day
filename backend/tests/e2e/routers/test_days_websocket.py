@@ -625,7 +625,7 @@ async def test_sync_detection_out_of_sync(authenticated_client, test_date, monke
         websocket.send_json(sync_request)
         sync_response = websocket.receive_json()
         assert sync_response["type"] == "sync_response"
-        baseline_timestamp = sync_response["last_audit_log_timestamp"]
+        sync_response["last_audit_log_timestamp"]
 
         # Simulate receiving a real-time event and verify timestamp is included
         # This allows frontend to detect out-of-sync situations

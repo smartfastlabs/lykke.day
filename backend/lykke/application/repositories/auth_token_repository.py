@@ -8,9 +8,7 @@ from lykke.domain import value_objects
 from lykke.domain.entities import AuthTokenEntity
 
 
-class AuthTokenRepositoryReadOnlyProtocol(
-    ReadOnlyRepositoryProtocol[AuthTokenEntity]
-):
+class AuthTokenRepositoryReadOnlyProtocol(ReadOnlyRepositoryProtocol[AuthTokenEntity]):
     """Read-only protocol defining the interface for auth token repositories."""
 
     Query = value_objects.AuthTokenQuery

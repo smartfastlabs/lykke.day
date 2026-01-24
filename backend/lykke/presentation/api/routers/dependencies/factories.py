@@ -6,7 +6,10 @@ from fastapi import Depends
 
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
-from lykke.presentation.handler_factory import CommandHandlerFactory, QueryHandlerFactory
+from lykke.presentation.handler_factory import (
+    CommandHandlerFactory,
+    QueryHandlerFactory,
+)
 
 from .services import (
     get_read_only_repository_factory,
@@ -14,6 +17,7 @@ from .services import (
     get_unit_of_work_factory_websocket,
 )
 from .user import get_current_user, get_current_user_from_token
+
 
 def query_handler_factory(
     user: Annotated[UserEntity, Depends(get_current_user)],

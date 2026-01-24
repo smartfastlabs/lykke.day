@@ -44,7 +44,9 @@ def serialize_day_context(
             if task.schedule.end_time:
                 schedule_data["end_time"] = task.schedule.end_time.isoformat()
             if task.schedule.available_time:
-                schedule_data["available_time"] = task.schedule.available_time.isoformat()
+                schedule_data["available_time"] = (
+                    task.schedule.available_time.isoformat()
+                )
             if task.schedule.timing_type:
                 schedule_data["timing_type"] = task.schedule.timing_type.value
             if schedule_data:
@@ -55,7 +57,9 @@ def serialize_day_context(
 
         # Calculate time until task (if scheduled)
         if task.schedule and task.schedule.start_time:
-            task_datetime = datetime.combine(task.scheduled_date, task.schedule.start_time)
+            task_datetime = datetime.combine(
+                task.scheduled_date, task.schedule.start_time
+            )
             if task_datetime.tzinfo is None:
                 task_datetime = task_datetime.replace(tzinfo=current_time.tzinfo or UTC)
             time_until = (task_datetime - current_time).total_seconds() / 60  # minutes

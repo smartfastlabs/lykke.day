@@ -22,10 +22,14 @@ class SearchTimeBlockDefinitionsQuery(Query):
     search_query: value_objects.TimeBlockDefinitionQuery
 
 
-class GetTimeBlockDefinitionHandler(BaseQueryHandler[GetTimeBlockDefinitionQuery, TimeBlockDefinitionEntity]):
+class GetTimeBlockDefinitionHandler(
+    BaseQueryHandler[GetTimeBlockDefinitionQuery, TimeBlockDefinitionEntity]
+):
     """Query handler to get a single time block definition by ID."""
 
-    async def handle(self, query: GetTimeBlockDefinitionQuery) -> TimeBlockDefinitionEntity:
+    async def handle(
+        self, query: GetTimeBlockDefinitionQuery
+    ) -> TimeBlockDefinitionEntity:
         """Get a time block definition by ID.
 
         Args:
@@ -34,13 +38,22 @@ class GetTimeBlockDefinitionHandler(BaseQueryHandler[GetTimeBlockDefinitionQuery
         Returns:
             The time block definition entity.
         """
-        return await self.time_block_definition_ro_repo.get(query.time_block_definition_id)
+        return await self.time_block_definition_ro_repo.get(
+            query.time_block_definition_id
+        )
 
 
-class SearchTimeBlockDefinitionsHandler(BaseQueryHandler[SearchTimeBlockDefinitionsQuery, value_objects.PagedQueryResponse[TimeBlockDefinitionEntity]]):
+class SearchTimeBlockDefinitionsHandler(
+    BaseQueryHandler[
+        SearchTimeBlockDefinitionsQuery,
+        value_objects.PagedQueryResponse[TimeBlockDefinitionEntity],
+    ]
+):
     """Query handler to search time block definitions with pagination."""
 
-    async def handle(self, query: SearchTimeBlockDefinitionsQuery) -> value_objects.PagedQueryResponse[TimeBlockDefinitionEntity]:
+    async def handle(
+        self, query: SearchTimeBlockDefinitionsQuery
+    ) -> value_objects.PagedQueryResponse[TimeBlockDefinitionEntity]:
         """Search time block definitions with pagination.
 
         Args:
@@ -50,4 +63,3 @@ class SearchTimeBlockDefinitionsHandler(BaseQueryHandler[SearchTimeBlockDefiniti
             Paged response containing time block definitions.
         """
         return await self.time_block_definition_ro_repo.paged_search(query.search_query)
-

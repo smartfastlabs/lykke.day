@@ -44,6 +44,7 @@ def normalize_postgres_url(url: str) -> str:
 
     return re.sub(pattern, replacement, url)
 
+
 # Tables in order of dependencies (parent tables first)
 # This ensures foreign key constraints are satisfied
 TABLE_NAMES = [
@@ -89,9 +90,7 @@ def mask_password(url: str) -> str:
     return re.sub(r"(://[^:]+:)[^@]+(@)", r"\1****\2", url)
 
 
-async def fetch_all_rows(
-    conn: AsyncConnection, table: Table
-) -> list[dict[str, Any]]:
+async def fetch_all_rows(conn: AsyncConnection, table: Table) -> list[dict[str, Any]]:
     """Fetch all rows from a table."""
     result = await conn.execute(table.select())
     rows = result.fetchall()
@@ -197,9 +196,7 @@ async def run_migration(mode: str) -> None:
         dest_metadata = MetaData()
 
         async with source_engine.connect() as source_conn:
-            await source_conn.run_sync(
-                lambda conn: source_metadata.reflect(bind=conn)
-            )
+            await source_conn.run_sync(lambda conn: source_metadata.reflect(bind=conn))
 
         async with dest_engine.connect() as dest_conn:
             await dest_conn.run_sync(lambda conn: dest_metadata.reflect(bind=conn))
@@ -236,19 +233,21 @@ async def run_migration(mode: str) -> None:
         total_source = 0
         total_migrated = 0
 
-        async with source_engine.connect() as source_conn:
-            async with dest_engine.begin() as dest_conn:
-                for table_name in TABLE_NAMES:
-                    source_count, migrated = await migrate_table(
-                        source_conn,
-                        dest_conn,
-                        source_metadata,
-                        dest_metadata,
-                        table_name,
-                        mode,
-                    )
-                    total_source += source_count
-                    total_migrated += migrated
+        async with (
+            source_engine.connect() as source_conn,
+            dest_engine.begin() as dest_conn,
+        ):
+            for table_name in TABLE_NAMES:
+                source_count, migrated = await migrate_table(
+                    source_conn,
+                    dest_conn,
+                    source_metadata,
+                    dest_metadata,
+                    table_name,
+                    mode,
+                )
+                total_source += source_count
+                total_migrated += migrated
 
         # Show final summary
         print("\n" + "-" * 40)
@@ -260,7 +259,7 @@ async def run_migration(mode: str) -> None:
                     print(f"   {table_name}: {count} rows")
 
         print("\n" + "=" * 60)
-        print(f"✅ Migration complete!")
+        print("✅ Migration complete!")
         print(f"   Total rows in source: {total_source}")
         print(f"   Total rows migrated:  {total_migrated}")
         print("=" * 60 + "\n")
@@ -304,4 +303,3 @@ Environment Variables:
 
 if __name__ == "__main__":
     main()
-

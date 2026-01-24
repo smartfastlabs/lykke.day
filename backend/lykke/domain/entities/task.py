@@ -150,12 +150,8 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
                 return False
 
         # Check start_time - task must start before cutoff
-        elif self.schedule.start_time:
-            if cutoff_time < self.schedule.start_time:
-                return False
-
-        # Check end_time - task must not have ended
-        if self.schedule.end_time and now > self.schedule.end_time:
+        elif self.schedule.start_time and cutoff_time < self.schedule.start_time:
             return False
 
-        return True
+        # Check end_time - task must not have ended
+        return not (self.schedule.end_time and now > self.schedule.end_time)

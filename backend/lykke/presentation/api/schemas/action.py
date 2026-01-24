@@ -16,4 +16,3 @@ class ActionSchema(BaseEntitySchema):
     type: ActionType
     data: dict[str, str] = Field(default_factory=dict)
     created_at: datetime
-

@@ -5,7 +5,10 @@ from uuid import uuid4
 
 import pytest
 
-from lykke.application.commands.day import AddReminderToDayCommand, AddReminderToDayHandler
+from lykke.application.commands.day import (
+    AddReminderToDayCommand,
+    AddReminderToDayHandler,
+)
 from lykke.core.exceptions import DomainError, NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity, UserEntity
@@ -59,7 +62,9 @@ async def test_add_reminder_adds_reminder_to_existing_day():
     handler = AddReminderToDayHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.handle(AddReminderToDayCommand(date=task_date, reminder="Test Reminder"))
+    result = await handler.handle(
+        AddReminderToDayCommand(date=task_date, reminder="Test Reminder")
+    )
 
     # Assert
     assert len(result.reminders) == 1
@@ -108,7 +113,9 @@ async def test_add_reminder_emits_domain_event():
     handler = AddReminderToDayHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.handle(AddReminderToDayCommand(date=task_date, reminder="Test Reminder"))
+    result = await handler.handle(
+        AddReminderToDayCommand(date=task_date, reminder="Test Reminder")
+    )
 
     # Assert
     events = result.collect_events()
@@ -156,7 +163,9 @@ async def test_add_reminder_raises_if_day_missing():
 
     # Act / Assert
     with pytest.raises(NotFoundError, match="Day"):
-        await handler.handle(AddReminderToDayCommand(date=task_date, reminder="Test Reminder"))
+        await handler.handle(
+            AddReminderToDayCommand(date=task_date, reminder="Test Reminder")
+        )
 
 
 @pytest.mark.asyncio
@@ -204,4 +213,6 @@ async def test_add_reminder_enforces_max_five():
 
     # Act & Assert
     with pytest.raises(DomainError, match="at most 5 active reminders"):
-        await handler.handle(AddReminderToDayCommand(date=task_date, reminder="Reminder 6"))
+        await handler.handle(
+            AddReminderToDayCommand(date=task_date, reminder="Reminder 6")
+        )

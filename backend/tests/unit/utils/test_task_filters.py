@@ -15,6 +15,7 @@ from lykke.domain.entities import TaskEntity
 
 USER_TIMEZONE = "America/Chicago"
 
+
 @pytest.fixture
 def test_task_pending(test_user_id: str) -> TaskEntity:
     """Create a pending task for testing."""
@@ -311,4 +312,3 @@ def test_filter_upcoming_tasks_cutoff_before_now(test_user_id: str) -> None:
         result = filter_upcoming_tasks([task], look_ahead, timezone=USER_TIMEZONE)
         # When cutoff wraps around, it returns all tasks
         assert len(result) == 1
-

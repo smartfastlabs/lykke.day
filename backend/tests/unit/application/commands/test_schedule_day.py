@@ -101,9 +101,9 @@ async def test_schedule_day_creates_day_and_tasks():
 
     # Verify day was created
     assert len(uow_factory.uow.created_entities) >= 1
-    created_day = [
+    created_day = next(
         e for e in uow_factory.uow.created_entities if isinstance(e, DayEntity)
-    ][0]
+    )
     assert created_day.date == task_date
 
     # Verify tasks were created
@@ -402,9 +402,9 @@ async def test_schedule_day_copies_timeblocks_from_template():
     assert day_tb2.name == template_tb2.name
 
     # Verify the created day entity also has the timeblocks
-    created_day = [
+    created_day = next(
         e for e in uow_factory.uow.created_entities if isinstance(e, DayEntity)
-    ][0]
+    )
     assert len(created_day.time_blocks) == 2, "Created day should have 2 timeblocks"
 
 
@@ -464,9 +464,9 @@ async def test_schedule_day_copies_high_level_plan_from_template():
     assert result.day.high_level_plan.intentions == ["Be present", "Stay off phone"]
 
     # Verify the created day entity also has the high_level_plan
-    created_day = [
+    created_day = next(
         e for e in uow_factory.uow.created_entities if isinstance(e, DayEntity)
-    ][0]
+    )
     assert created_day.high_level_plan is not None
     assert created_day.high_level_plan.title == template.high_level_plan.title
     assert created_day.high_level_plan.text == template.high_level_plan.text

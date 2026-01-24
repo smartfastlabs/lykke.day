@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import inspect
-from collections.abc import Callable
-from typing import Any, cast, get_type_hints
+from typing import TYPE_CHECKING, Any, cast, get_type_hints
 
 from pydantic import BaseModel, Field, create_model
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def build_tool_spec_from_callable(
@@ -34,7 +36,7 @@ def build_tool_spec_from_callable(
         fields[name] = (annotation, Field(default=default_value))
 
     model_name = "".join(part.title() for part in tool_name.split("_")) + "Args"
-    model = create_model(model_name, **cast(dict[str, Any], fields))
+    model = create_model(model_name, **cast("dict[str, Any]", fields))
     schema = model.model_json_schema()
     description = on_complete.__doc__ or "Finalize the use case."
     return {"name": tool_name, "description": description, "parameters": schema}, model

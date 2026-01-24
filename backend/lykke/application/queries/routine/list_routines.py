@@ -15,12 +15,18 @@ class SearchRoutinesQuery(Query):
     search_query: value_objects.RoutineQuery | None = None
 
 
-class SearchRoutinesHandler(BaseQueryHandler[SearchRoutinesQuery, value_objects.PagedQueryResponse[RoutineEntity]]):
+class SearchRoutinesHandler(
+    BaseQueryHandler[
+        SearchRoutinesQuery, value_objects.PagedQueryResponse[RoutineEntity]
+    ]
+):
     """Searches routines with pagination."""
 
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
 
-    async def handle(self, query: SearchRoutinesQuery) -> value_objects.PagedQueryResponse[RoutineEntity]:
+    async def handle(
+        self, query: SearchRoutinesQuery
+    ) -> value_objects.PagedQueryResponse[RoutineEntity]:
         """Search routines with pagination.
 
         Args:
@@ -46,4 +52,3 @@ class SearchRoutinesHandler(BaseQueryHandler[SearchRoutinesQuery, value_objects.
                 has_next=False,
                 has_previous=False,
             )
-

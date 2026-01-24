@@ -23,7 +23,10 @@ from lykke.presentation.api.schemas import (
     QuerySchema,
 )
 from lykke.presentation.api.schemas.mappers import map_calendar_entry_series_to_schema
-from lykke.presentation.handler_factory import CommandHandlerFactory, QueryHandlerFactory
+from lykke.presentation.handler_factory import (
+    CommandHandlerFactory,
+    QueryHandlerFactory,
+)
 
 from .dependencies.factories import command_handler_factory, query_handler_factory
 from .utils import build_search_query, create_paged_response
@@ -55,7 +58,9 @@ async def search_calendar_entry_series(
     """Search calendar entry series with pagination and optional filters."""
     list_handler = query_factory.create(SearchCalendarEntrySeriesHandler)
     search_query = build_search_query(query, value_objects.CalendarEntrySeriesQuery)
-    result = await list_handler.handle(SearchCalendarEntrySeriesQuery(search_query=search_query))
+    result = await list_handler.handle(
+        SearchCalendarEntrySeriesQuery(search_query=search_query)
+    )
     return create_paged_response(result, map_calendar_entry_series_to_schema)
 
 
@@ -63,9 +68,7 @@ async def search_calendar_entry_series(
 async def update_calendar_entry_series(
     uuid: UUID,
     update_data: CalendarEntrySeriesUpdateSchema,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> CalendarEntrySeriesSchema:
     """Update a calendar entry series."""
     update_handler = command_factory.create(UpdateCalendarEntrySeriesHandler)
@@ -73,5 +76,9 @@ async def update_calendar_entry_series(
         name=update_data.name,
         event_category=update_data.event_category,
     )
-    updated = await update_handler.handle(UpdateCalendarEntrySeriesCommand(calendar_entry_series_id=uuid, update_data=update_object))
+    updated = await update_handler.handle(
+        UpdateCalendarEntrySeriesCommand(
+            calendar_entry_series_id=uuid, update_data=update_object
+        )
+    )
     return map_calendar_entry_series_to_schema(updated)

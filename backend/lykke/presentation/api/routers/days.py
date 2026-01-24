@@ -45,6 +45,7 @@ from lykke.presentation.api.schemas.websocket_message import (
 )
 from lykke.presentation.handler_factory import CommandHandlerFactory
 
+from .dependencies.factories import command_handler_factory
 from .dependencies.services import (
     day_context_handler_websocket,
     get_pubsub_gateway,
@@ -52,7 +53,6 @@ from .dependencies.services import (
     get_schedule_day_handler_websocket,
     incremental_changes_handler_websocket,
 )
-from .dependencies.factories import command_handler_factory
 from .dependencies.user import get_current_user
 
 router = APIRouter()
@@ -65,9 +65,7 @@ router = APIRouter()
 
 @router.put("/today/reschedule", response_model=DayContextSchema)
 async def reschedule_today(
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> DayContextSchema:
     """Reschedule today by cleaning up and recreating all tasks."""
@@ -81,9 +79,7 @@ async def reschedule_today(
 async def update_day(
     day_id: UUID,
     update_data: DayUpdateSchema,
-    command_factory: Annotated[
-        CommandHandlerFactory, Depends(command_handler_factory)
-    ],
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
     ro_repo_factory: Annotated[
         ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)

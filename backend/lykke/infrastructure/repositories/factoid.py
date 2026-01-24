@@ -2,10 +2,11 @@
 
 from typing import Any
 
+from sqlalchemy.sql import Select
+
 from lykke.domain import value_objects
 from lykke.domain.entities import FactoidEntity
 from lykke.infrastructure.database.tables import factoids_tbl
-from sqlalchemy.sql import Select
 
 from .base import UserScopedBaseRepository
 

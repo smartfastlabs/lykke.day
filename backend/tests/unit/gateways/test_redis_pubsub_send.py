@@ -16,25 +16,27 @@ async def test_send_message_through_subscription() -> None:
     message = {"event": "test", "data": "hello"}
 
     # Create two subscriptions - one to send, one to receive
-    async with gateway.subscribe_to_user_channel(
-        user_id=user_id, channel_type="domain-events"
-    ) as sub1:
-        async with gateway.subscribe_to_user_channel(
+    async with (
+        gateway.subscribe_to_user_channel(
             user_id=user_id, channel_type="domain-events"
-        ) as sub2:
-            await asyncio.sleep(0.1)
+        ) as sub1,
+        gateway.subscribe_to_user_channel(
+            user_id=user_id, channel_type="domain-events"
+        ) as sub2,
+    ):
+        await asyncio.sleep(0.1)
 
-            # Send message through sub1
-            await sub1.send_message(message)
+        # Send message through sub1
+        await sub1.send_message(message)
 
-            # Receive on both subscriptions (sender also receives)
-            received1 = await sub1.get_message(timeout=2.0)
-            received2 = await sub2.get_message(timeout=2.0)
+        # Receive on both subscriptions (sender also receives)
+        received1 = await sub1.get_message(timeout=2.0)
+        received2 = await sub2.get_message(timeout=2.0)
 
-            assert received1 is not None
-            assert received1["event"] == "test"
-            assert received2 is not None
-            assert received2["event"] == "test"
+        assert received1 is not None
+        assert received1["event"] == "test"
+        assert received2 is not None
+        assert received2["event"] == "test"
 
     await gateway.close()
 
@@ -45,29 +47,31 @@ async def test_bidirectional_communication() -> None:
     gateway = RedisPubSubGateway()
     user_id = uuid4()
 
-    async with gateway.subscribe_to_user_channel(
-        user_id=user_id, channel_type="domain-events"
-    ) as sub1:
-        async with gateway.subscribe_to_user_channel(
+    async with (
+        gateway.subscribe_to_user_channel(
             user_id=user_id, channel_type="domain-events"
-        ) as sub2:
-            await asyncio.sleep(0.1)
+        ) as sub1,
+        gateway.subscribe_to_user_channel(
+            user_id=user_id, channel_type="domain-events"
+        ) as sub2,
+    ):
+        await asyncio.sleep(0.1)
 
-            # Sub1 sends message
-            await sub1.send_message({"from": "sub1", "message": "hello sub2"})
+        # Sub1 sends message
+        await sub1.send_message({"from": "sub1", "message": "hello sub2"})
 
-            # Sub2 receives and responds
-            msg = await sub2.get_message(timeout=2.0)
-            assert msg is not None
-            assert msg["from"] == "sub1"
+        # Sub2 receives and responds
+        msg = await sub2.get_message(timeout=2.0)
+        assert msg is not None
+        assert msg["from"] == "sub1"
 
-            await sub2.send_message({"from": "sub2", "message": "hello sub1"})
+        await sub2.send_message({"from": "sub2", "message": "hello sub1"})
 
-            # Sub1 receives response (skip its own sent message)
-            await sub1.get_message(timeout=2.0)  # Skip own message
-            response = await sub1.get_message(timeout=2.0)
-            assert response is not None
-            assert response["from"] == "sub2"
+        # Sub1 receives response (skip its own sent message)
+        await sub1.get_message(timeout=2.0)  # Skip own message
+        response = await sub1.get_message(timeout=2.0)
+        assert response is not None
+        assert response["from"] == "sub2"
 
     await gateway.close()
 
@@ -85,7 +89,9 @@ async def test_send_message_after_close_raises_error() -> None:
         subscription = sub
 
     # Subscription is now closed
-    with pytest.raises(RuntimeError, match="Cannot send message on closed subscription"):
+    with pytest.raises(
+        RuntimeError, match="Cannot send message on closed subscription"
+    ):
         await subscription.send_message({"test": "message"})
 
     await gateway.close()
@@ -139,7 +145,9 @@ async def test_context_manager_cleanup() -> None:
         await subscription.send_message({"test": "active"})
 
     # After exiting context, subscription should be closed
-    with pytest.raises(RuntimeError, match="Cannot send message on closed subscription"):
+    with pytest.raises(
+        RuntimeError, match="Cannot send message on closed subscription"
+    ):
         await subscription.send_message({"test": "closed"})
 
     await gateway.close()

@@ -6,16 +6,17 @@ This module provides:
 - Auto-registration of all event handlers
 """
 
+from lykke.application.unit_of_work import (
+    ReadOnlyRepositoryFactory,
+    UnitOfWorkFactory,
+)
+
 from .handlers import (
     DomainEventHandler,
     TaskStatusLoggerHandler,
     UserForgotPasswordLoggerHandler,
 )
 from .signals import domain_event_signal, send_domain_events
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositoryFactory,
-    UnitOfWorkFactory,
-)
 
 
 def register_all_handlers(

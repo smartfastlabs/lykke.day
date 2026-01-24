@@ -22,18 +22,22 @@ class UpdateCalendarEntrySeriesCommand(Command):
     update_data: CalendarEntrySeriesUpdateObject
 
 
-class UpdateCalendarEntrySeriesHandler(BaseCommandHandler[UpdateCalendarEntrySeriesCommand, CalendarEntrySeriesEntity]):
+class UpdateCalendarEntrySeriesHandler(
+    BaseCommandHandler[UpdateCalendarEntrySeriesCommand, CalendarEntrySeriesEntity]
+):
     """Update an existing calendar entry series."""
 
     calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
 
-    async def handle(self, command: UpdateCalendarEntrySeriesCommand) -> CalendarEntrySeriesEntity:
+    async def handle(
+        self, command: UpdateCalendarEntrySeriesCommand
+    ) -> CalendarEntrySeriesEntity:
         """Update the specified calendar entry series."""
         async with self.new_uow() as uow:
-            series = await uow.calendar_entry_series_ro_repo.get(command.calendar_entry_series_id)
+            series = await uow.calendar_entry_series_ro_repo.get(
+                command.calendar_entry_series_id
+            )
             series = series.apply_update(
                 command.update_data, CalendarEntrySeriesUpdatedEvent
             )
             return uow.add(series)
-
-

@@ -47,18 +47,19 @@ class TokenExpiredError(BaseError):
 
 class DomainError(BaseError):
     """Error raised when a domain invariant is violated."""
+
     status_code = 400
     _message = "Domain rule violation"
 
 
 __all__ = [
-    "BaseError",
-    "NotFoundError",
-    "PushNotificationError",
-    "BadRequestError",
     "AuthenticationError",
     "AuthorizationError",
+    "BadRequestError",
+    "BaseError",
+    "DomainError",
+    "NotFoundError",
+    "PushNotificationError",
     "ServerError",
     "TokenExpiredError",
-    "DomainError",
 ]

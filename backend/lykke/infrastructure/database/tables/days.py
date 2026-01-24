@@ -30,4 +30,3 @@ class Day(Base):
         Index("idx_days_date", "date"),
         Index("idx_days_user_id", "user_id"),
     )
-

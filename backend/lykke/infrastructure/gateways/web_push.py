@@ -2,12 +2,13 @@ import json
 
 import aiohttp
 from loguru import logger
+from webpush import WebPush, WebPushMessage, WebPushSubscription  # type: ignore
+
 from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.core.config import settings
 from lykke.core.exceptions import PushNotificationError
 from lykke.domain import value_objects
 from lykke.domain.entities import PushSubscriptionEntity
-from webpush import WebPush, WebPushMessage, WebPushSubscription  # type: ignore
 
 wp = WebPush(
     public_key=settings.VAPID_PUBLIC_KEY.encode("utf-8"),

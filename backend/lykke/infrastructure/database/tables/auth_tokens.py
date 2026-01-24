@@ -24,4 +24,3 @@ class AuthToken(Base):
     created_at = Column(DateTime, nullable=False)
 
     __table_args__ = (Index("idx_auth_tokens_user_id", "user_id"),)
-

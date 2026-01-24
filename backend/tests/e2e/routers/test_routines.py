@@ -72,7 +72,7 @@ async def test_get_routine(authenticated_client):
 @pytest.mark.asyncio
 async def test_get_routine_not_found(authenticated_client):
     """Test getting a non-existent routine returns 404."""
-    client, user = await authenticated_client()
+    client, _user = await authenticated_client()
 
     fake_id = uuid4()
     response = client.get(f"/routines/{fake_id}")
@@ -217,4 +217,3 @@ async def test_list_routines_pagination(authenticated_client):
     assert data["offset"] == 0
     assert "has_next" in data
     assert "has_previous" in data
-

@@ -18,4 +18,3 @@ class TaskRepositoryReadWriteProtocol(ReadWriteRepositoryProtocol[TaskEntity]):
     """Read-write protocol defining the interface for task repositories."""
 
     Query = value_objects.TaskQuery
-

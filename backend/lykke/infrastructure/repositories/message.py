@@ -3,10 +3,11 @@
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy.sql import Select
+
 from lykke.domain import value_objects
 from lykke.domain.entities import MessageEntity
 from lykke.infrastructure.database.tables import messages_tbl
-from sqlalchemy.sql import Select
 
 from .base import BaseRepository
 

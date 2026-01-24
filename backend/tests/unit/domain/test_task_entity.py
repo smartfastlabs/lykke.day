@@ -139,4 +139,3 @@ def test_mark_ready_already_ready(test_task: TaskEntity) -> None:
 
     assert old_status == value_objects.TaskStatus.READY
     assert test_task.status == value_objects.TaskStatus.READY
-

@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import pytest
 import pytest_asyncio
+
 from lykke.domain.entities import BotPersonalityEntity, ConversationEntity, UserEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.value_objects.ai_chat import ConversationChannel, LLMProvider

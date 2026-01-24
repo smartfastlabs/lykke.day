@@ -3,6 +3,7 @@
 from uuid import UUID, uuid4
 
 import pytest
+
 from lykke.core.exceptions import NotFoundError
 from lykke.core.utils.dates import get_current_datetime
 from lykke.domain import value_objects

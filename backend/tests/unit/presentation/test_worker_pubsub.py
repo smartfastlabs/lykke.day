@@ -88,7 +88,11 @@ class TestWorkerPubSubGateway:
         from lykke.presentation.workers import tasks
 
         # Check that RedisPubSubGateway is imported
-        assert hasattr(tasks, "RedisPubSubGateway") or "RedisPubSubGateway" in dir(tasks) or True
+        assert (
+            hasattr(tasks, "RedisPubSubGateway")
+            or "RedisPubSubGateway" in dir(tasks)
+            or True
+        )
         # Note: The actual import check is done by verifying the factory creates the right type
 
 

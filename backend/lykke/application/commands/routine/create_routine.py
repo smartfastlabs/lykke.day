@@ -27,5 +27,3 @@ class CreateRoutineHandler(BaseCommandHandler[CreateRoutineCommand, RoutineEntit
         """
         async with self.new_uow() as uow:
             return await uow.create(command.routine)
-
-

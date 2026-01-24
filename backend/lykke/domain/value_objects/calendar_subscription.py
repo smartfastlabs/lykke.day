@@ -19,4 +19,3 @@ class CalendarSubscription(BaseValueObject):
     channel_id: str
     resource_id: str
     expiration: datetime
-

@@ -3,11 +3,12 @@ from dataclasses import fields
 from datetime import UTC, datetime
 from typing import Any
 
+from sqlalchemy.sql import Select
+
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.database.tables import users_tbl
 from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
-from sqlalchemy.sql import Select
 
 from .base import BaseRepository
 

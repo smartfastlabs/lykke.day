@@ -15,7 +15,9 @@ class PushNotification(Base):
     user_id = Column(PGUUID, nullable=False)
     push_subscription_ids: Column[list[PGUUID]] = Column(ARRAY(PGUUID), nullable=False)
     content = Column(Text, nullable=False)  # JSON string of the notification payload
-    status = Column(String, nullable=False)  # "success", "failed", "partial_failure", "skipped"
+    status = Column(
+        String, nullable=False
+    )  # "success", "failed", "partial_failure", "skipped"
     error_message = Column(Text, nullable=True)
     sent_at = Column(DateTime, nullable=False)
     # Smart notification metadata (optional for non-LLM pushes)
@@ -24,7 +26,9 @@ class PushNotification(Base):
     reason = Column(Text, nullable=True)  # LLM's reasoning
     day_context_snapshot = Column(JSONB, nullable=True)
     message_hash = Column(String, nullable=True)  # SHA256 hash for deduplication
-    triggered_by = Column(String, nullable=True)  # "scheduled", "task_status_change", etc.
+    triggered_by = Column(
+        String, nullable=True
+    )  # "scheduled", "task_status_change", etc.
     llm_provider = Column(String, nullable=True)  # "anthropic", "openai", etc.
 
     __table_args__ = (

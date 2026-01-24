@@ -13,8 +13,7 @@ from lykke.application.commands.calendar.reset_calendar_sync import (
 from lykke.application.commands.calendar.sync_calendar import SyncCalendarHandler
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.domain import value_objects
-from lykke.domain.entities import AuthTokenEntity
-from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity, CalendarEntryEntity
 from lykke.domain.value_objects.sync import SyncSubscription
 from lykke.infrastructure.gateways import StubPubSubGateway
 from lykke.infrastructure.unit_of_work import (
@@ -190,7 +189,7 @@ async def test_reset_calendar_sync_unsubscribes_deletes_future_events_and_resubs
 
     # Verify results
     assert len(updated_calendars) == 1
-    updated_calendar = updated_calendars[0]
+    updated_calendars[0]
 
     # Verify unsubscribe was called
     assert len(google_gateway.unsubscribe_calls) == 1
@@ -408,11 +407,15 @@ async def test_reset_calendar_sync_handles_no_subscribed_calendars(
         sync_subscription_id=None,
     )
     await calendar_repo.put(calendar)
-    
+
     # Verify calendar was persisted without subscription
     persisted = await calendar_repo.get(calendar.id)
-    assert persisted.sync_subscription is None, "Calendar should not have a subscription"
-    assert persisted.sync_subscription_id is None, "Calendar should not have a subscription_id"
+    assert persisted.sync_subscription is None, (
+        "Calendar should not have a subscription"
+    )
+    assert persisted.sync_subscription_id is None, (
+        "Calendar should not have a subscription_id"
+    )
 
     expiration = datetime.now(UTC) + timedelta(days=1)
     google_gateway = FakeGoogleGateway(expiration=expiration)

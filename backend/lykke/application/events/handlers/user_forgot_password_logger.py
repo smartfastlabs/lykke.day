@@ -1,6 +1,9 @@
 """Event handler that logs forgot password requests."""
 
+from typing import ClassVar
+
 from loguru import logger
+
 from lykke.domain.events.base import DomainEvent
 from lykke.domain.events.user_events import UserForgotPasswordEvent
 
@@ -10,7 +13,7 @@ from .base import DomainEventHandler
 class UserForgotPasswordLoggerHandler(DomainEventHandler):
     """Log the details required to compose a reset password email."""
 
-    handles = [UserForgotPasswordEvent]
+    handles: ClassVar[list[type[DomainEvent]]] = [UserForgotPasswordEvent]
 
     async def handle(self, event: DomainEvent) -> None:
         """Log the information needed for composing a reset email."""

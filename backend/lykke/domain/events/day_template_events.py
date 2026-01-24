@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import time
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from lykke.domain.value_objects.update import DayTemplateUpdateObject
 
 from .base import DomainEvent, EntityUpdatedEvent
+
+if TYPE_CHECKING:
+    from datetime import time
+    from uuid import UUID
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,4 +52,3 @@ class DayTemplateTimeBlockRemovedEvent(DomainEvent):
     day_template_id: UUID
     time_block_definition_id: UUID
     start_time: time
-

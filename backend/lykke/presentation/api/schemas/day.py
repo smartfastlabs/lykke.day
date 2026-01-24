@@ -1,8 +1,7 @@
 """Day schema."""
 
-from typing import TYPE_CHECKING, Optional
-
 from datetime import date, datetime
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID
 
 from pydantic import Field
@@ -42,4 +41,3 @@ class DayUpdateSchema(BaseSchema):
     tags: list[DayTag] | None = None
     template_id: UUID | None = None
     high_level_plan: HighLevelPlanSchema | None = None
-

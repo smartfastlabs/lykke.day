@@ -26,7 +26,9 @@ class GetDayContextQuery(Query):
     date: datetime_date
 
 
-class GetDayContextHandler(BaseQueryHandler[GetDayContextQuery, value_objects.DayContext]):
+class GetDayContextHandler(
+    BaseQueryHandler[GetDayContextQuery, value_objects.DayContext]
+):
     """Gets the complete context for a day."""
 
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol

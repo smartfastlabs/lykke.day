@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import UUID
 
 from pydantic import Field
+
 from lykke.domain.value_objects.task import EventCategory, TaskFrequency
 
 from .base import BaseEntitySchema, BaseSchema
@@ -31,5 +32,3 @@ class CalendarEntrySeriesUpdateSchema(BaseSchema):
 
     name: str | None = None
     event_category: EventCategory | None = None
-
-

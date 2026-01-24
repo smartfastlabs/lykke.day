@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date as dt_date, datetime
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
-from lykke.domain.entities.audit_log import AuditLogEntity
 from lykke.domain.value_objects.update import TaskDefinitionUpdateObject
 
 from .base import AuditableDomainEvent, DomainEvent, EntityUpdatedEvent
+
+if TYPE_CHECKING:
+    from datetime import date as dt_date, datetime
+    from uuid import UUID
+
+    from lykke.domain.entities.audit_log import AuditLogEntity
 
 __all__ = [
     "TaskActionRecordedEvent",

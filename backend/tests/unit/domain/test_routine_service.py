@@ -59,4 +59,3 @@ def test_is_routine_active_all_frequencies_no_weekdays(
     schedule = RecurrenceSchedule(frequency=frequency, weekdays=None)
     result = schedule.is_active_for_date(datetime.date(2025, 11, 27))
     assert result is True
-

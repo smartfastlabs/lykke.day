@@ -70,9 +70,7 @@ async def test_search_one_or_none_by_email(user_repo, create_test_user):
     email = f"specific-{uuid4()}@example.com"
     user = await create_test_user(email=email)
 
-    result = await user_repo.search_one_or_none(
-        value_objects.UserQuery(email=email)
-    )
+    result = await user_repo.search_one_or_none(value_objects.UserQuery(email=email))
 
     assert result is not None
     assert result.id == user.id

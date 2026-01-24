@@ -2,15 +2,15 @@
 
 import datetime
 from datetime import UTC
-from uuid import UUID, uuid4, uuid5, NAMESPACE_DNS
+from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
 from zoneinfo import ZoneInfo
 
 import pytest
 
 from lykke.core.exceptions import NotFoundError
 from lykke.domain.entities import CalendarEntryEntity
-from lykke.domain.value_objects.task import TaskFrequency
 from lykke.domain.value_objects.query import CalendarEntryQuery
+from lykke.domain.value_objects.task import TaskFrequency
 from lykke.infrastructure.repositories import CalendarEntryRepository
 
 USER_TIMEZONE = "America/Chicago"
@@ -37,9 +37,9 @@ async def test_get(calendar_entry_repo, test_user, test_date):
         user_timezone=USER_TIMEZONE,
     )
     await calendar_entry_repo.put(calendar_entry)
-    
+
     result = await calendar_entry_repo.get(calendar_entry.id)
-    
+
     assert result.id == calendar_entry.id
     assert result.name == "Test Calendar Entry"
     assert result.user_id == test_user.id
@@ -72,9 +72,9 @@ async def test_put(calendar_entry_repo, test_user, test_date):
         starts_at=starts_at,
         user_timezone=USER_TIMEZONE,
     )
-    
+
     result = await calendar_entry_repo.put(calendar_entry)
-    
+
     assert result.name == "New Calendar Entry"
     assert result.user_id == test_user.id
     assert result.date == test_date
@@ -101,13 +101,13 @@ async def test_put_update(calendar_entry_repo, test_user, test_date):
         user_timezone=USER_TIMEZONE,
     )
     await calendar_entry_repo.put(calendar_entry)
-    
+
     # Update the calendar entry
     calendar_entry.name = "Updated Calendar Entry"
     result = await calendar_entry_repo.put(calendar_entry)
-    
+
     assert result.name == "Updated Calendar Entry"
-    
+
     # Verify it was saved
     retrieved = await calendar_entry_repo.get(calendar_entry.id)
     assert retrieved.name == "Updated Calendar Entry"
@@ -126,7 +126,7 @@ async def test_all(calendar_entry_repo, test_user, test_date, test_date_tomorrow
         datetime.time(hour=14),
         tzinfo=ZoneInfo(USER_TIMEZONE),
     ).astimezone(UTC)
-    
+
     calendar_entry1 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
@@ -153,16 +153,18 @@ async def test_all(calendar_entry_repo, test_user, test_date, test_date_tomorrow
     )
     await calendar_entry_repo.put(calendar_entry1)
     await calendar_entry_repo.put(calendar_entry2)
-    
+
     all_calendar_entries = await calendar_entry_repo.all()
-    
+
     calendar_entry_ids = [e.id for e in all_calendar_entries]
     assert calendar_entry1.id in calendar_entry_ids
     assert calendar_entry2.id in calendar_entry_ids
 
 
 @pytest.mark.asyncio
-async def test_search_query(calendar_entry_repo, test_user, test_date, test_date_tomorrow):
+async def test_search_query(
+    calendar_entry_repo, test_user, test_date, test_date_tomorrow
+):
     """Test searching calendar entries with DateQuery."""
     starts_at1 = datetime.datetime.combine(
         test_date,
@@ -174,7 +176,7 @@ async def test_search_query(calendar_entry_repo, test_user, test_date, test_date
         datetime.time(hour=14),
         tzinfo=ZoneInfo(USER_TIMEZONE),
     ).astimezone(UTC)
-    
+
     calendar_entry1 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
@@ -201,12 +203,10 @@ async def test_search_query(calendar_entry_repo, test_user, test_date, test_date
     )
     await calendar_entry_repo.put(calendar_entry1)
     await calendar_entry_repo.put(calendar_entry2)
-    
+
     # Search for specific date
-    results = await calendar_entry_repo.search(
-        CalendarEntryQuery(date=test_date)
-    )
-    
+    results = await calendar_entry_repo.search(CalendarEntryQuery(date=test_date))
+
     assert len(results) == 1
     assert results[0].date == test_date
     assert results[0].name == "Calendar Entry Today"
@@ -233,17 +233,19 @@ async def test_delete(calendar_entry_repo, test_user, test_date):
         user_timezone=USER_TIMEZONE,
     )
     await calendar_entry_repo.put(calendar_entry)
-    
+
     # Delete it
     await calendar_entry_repo.delete(calendar_entry)
-    
+
     # Should not be found
     with pytest.raises(NotFoundError):
         await calendar_entry_repo.get(calendar_entry.id)
 
 
 @pytest.mark.asyncio
-async def test_delete_many(calendar_entry_repo, test_user, test_date, test_date_tomorrow):
+async def test_delete_many(
+    calendar_entry_repo, test_user, test_date, test_date_tomorrow
+):
     """Test deleting multiple calendar entries by date."""
     starts_at1 = datetime.datetime.combine(
         test_date,
@@ -260,7 +262,7 @@ async def test_delete_many(calendar_entry_repo, test_user, test_date, test_date_
         datetime.time(hour=16),
         tzinfo=ZoneInfo(USER_TIMEZONE),
     ).astimezone(UTC)
-    
+
     calendar_entry1 = CalendarEntryEntity(
         id=uuid4(),
         user_id=test_user.id,
@@ -300,16 +302,14 @@ async def test_delete_many(calendar_entry_repo, test_user, test_date, test_date_
     await calendar_entry_repo.put(calendar_entry1)
     await calendar_entry_repo.put(calendar_entry2)
     await calendar_entry_repo.put(calendar_entry3)
-    
+
     # Delete all calendar entries for test_date
     await calendar_entry_repo.delete_many(CalendarEntryQuery(date=test_date))
-    
+
     # Calendar entries on test_date should be gone
-    results = await calendar_entry_repo.search(
-        CalendarEntryQuery(date=test_date)
-    )
+    results = await calendar_entry_repo.search(CalendarEntryQuery(date=test_date))
     assert len(results) == 0
-    
+
     # Calendar entry on test_date_tomorrow should still exist
     results_tomorrow = await calendar_entry_repo.search(
         CalendarEntryQuery(date=test_date_tomorrow)
@@ -319,14 +319,16 @@ async def test_delete_many(calendar_entry_repo, test_user, test_date, test_date_
 
 
 @pytest.mark.asyncio
-async def test_user_isolation(calendar_entry_repo, test_user, create_test_user, test_date):
+async def test_user_isolation(
+    calendar_entry_repo, test_user, create_test_user, test_date
+):
     """Test that different users' calendar entries are properly isolated."""
     starts_at = datetime.datetime.combine(
         test_date,
         datetime.time(hour=10),
         tzinfo=ZoneInfo(USER_TIMEZONE),
     ).astimezone(UTC)
-    
+
     # Create calendar entry for test_user
     calendar_entry = CalendarEntryEntity(
         id=uuid4(),
@@ -341,16 +343,15 @@ async def test_user_isolation(calendar_entry_repo, test_user, create_test_user, 
         user_timezone=USER_TIMEZONE,
     )
     await calendar_entry_repo.put(calendar_entry)
-    
+
     # Create another user
     user2 = await create_test_user()
     calendar_entry_repo2 = CalendarEntryRepository(user_id=user2.id)
-    
+
     # User2 should not see user1's calendar entry
     with pytest.raises(NotFoundError):
         await calendar_entry_repo2.get(calendar_entry.id)
-    
+
     # User1 should still see their calendar entry
     result = await calendar_entry_repo.get(calendar_entry.id)
     assert result.user_id == test_user.id
-

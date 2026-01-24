@@ -16,10 +16,14 @@ class UpdatePushSubscriptionCommand(Command):
     update_data: PushSubscriptionUpdateObject
 
 
-class UpdatePushSubscriptionHandler(BaseCommandHandler[UpdatePushSubscriptionCommand, PushSubscriptionEntity]):
+class UpdatePushSubscriptionHandler(
+    BaseCommandHandler[UpdatePushSubscriptionCommand, PushSubscriptionEntity]
+):
     """Updates an existing push subscription."""
 
-    async def handle(self, command: UpdatePushSubscriptionCommand) -> PushSubscriptionEntity:
+    async def handle(
+        self, command: UpdatePushSubscriptionCommand
+    ) -> PushSubscriptionEntity:
         """Update an existing push subscription.
 
         Args:
@@ -30,7 +34,9 @@ class UpdatePushSubscriptionHandler(BaseCommandHandler[UpdatePushSubscriptionCom
         """
         async with self.new_uow() as uow:
             # Get the existing push subscription
-            subscription = await uow.push_subscription_ro_repo.get(command.subscription_id)
+            subscription = await uow.push_subscription_ro_repo.get(
+                command.subscription_id
+            )
 
             # Update fields if provided
             if command.update_data.device_name is not None:
@@ -46,4 +52,3 @@ class UpdatePushSubscriptionHandler(BaseCommandHandler[UpdatePushSubscriptionCom
 
             # Add to UoW for saving
             return uow.add(subscription)
-

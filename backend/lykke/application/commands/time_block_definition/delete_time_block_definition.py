@@ -13,7 +13,9 @@ class DeleteTimeBlockDefinitionCommand(Command):
     time_block_definition_id: UUID
 
 
-class DeleteTimeBlockDefinitionHandler(BaseCommandHandler[DeleteTimeBlockDefinitionCommand, None]):
+class DeleteTimeBlockDefinitionHandler(
+    BaseCommandHandler[DeleteTimeBlockDefinitionCommand, None]
+):
     """Deletes a time block definition."""
 
     async def handle(self, command: DeleteTimeBlockDefinitionCommand) -> None:
@@ -27,4 +29,3 @@ class DeleteTimeBlockDefinitionHandler(BaseCommandHandler[DeleteTimeBlockDefinit
                 command.time_block_definition_id
             )
             await uow.delete(time_block_definition)
-

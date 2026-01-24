@@ -5,7 +5,10 @@ from uuid import uuid4
 
 import pytest
 
-from lykke.application.commands.task import CreateAdhocTaskCommand, CreateAdhocTaskHandler
+from lykke.application.commands.task import (
+    CreateAdhocTaskCommand,
+    CreateAdhocTaskHandler,
+)
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
 from tests.unit.fakes import (

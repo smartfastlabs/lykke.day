@@ -19,10 +19,14 @@ class UpdateTimeBlockDefinitionCommand(Command):
     update_data: TimeBlockDefinitionUpdateObject
 
 
-class UpdateTimeBlockDefinitionHandler(BaseCommandHandler[UpdateTimeBlockDefinitionCommand, TimeBlockDefinitionEntity]):
+class UpdateTimeBlockDefinitionHandler(
+    BaseCommandHandler[UpdateTimeBlockDefinitionCommand, TimeBlockDefinitionEntity]
+):
     """Updates an existing time block definition."""
 
-    async def handle(self, command: UpdateTimeBlockDefinitionCommand) -> TimeBlockDefinitionEntity:
+    async def handle(
+        self, command: UpdateTimeBlockDefinitionCommand
+    ) -> TimeBlockDefinitionEntity:
         """Update an existing time block definition.
 
         Args:
@@ -44,4 +48,3 @@ class UpdateTimeBlockDefinitionHandler(BaseCommandHandler[UpdateTimeBlockDefinit
 
             # Add entity to UoW for saving
             return uow.add(time_block_definition)
-

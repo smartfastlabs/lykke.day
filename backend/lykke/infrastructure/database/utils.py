@@ -8,6 +8,7 @@ from lykke.core.config import settings
 # Global async engine instance
 _engine: AsyncEngine | None = None
 
+
 async def reset_engine() -> AsyncEngine:
     """Reset the global async database engine."""
     global _engine

@@ -20,9 +20,7 @@ class CreateAdhocTaskCommand(Command):
     tags: list[value_objects.TaskTag] = field(default_factory=list)
 
 
-class CreateAdhocTaskHandler(
-    BaseCommandHandler[CreateAdhocTaskCommand, TaskEntity]
-):
+class CreateAdhocTaskHandler(BaseCommandHandler[CreateAdhocTaskCommand, TaskEntity]):
     """Creates an adhoc task."""
 
     async def handle(self, command: CreateAdhocTaskCommand) -> TaskEntity:

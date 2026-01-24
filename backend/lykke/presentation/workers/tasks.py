@@ -489,7 +489,7 @@ async def evaluate_morning_overviews_for_all_users_task(
                 ro_repos.push_notification_ro_repo
             )
 
-            today = get_current_date(user.settings.timezone)
+            get_current_date(user.settings.timezone)
             today_start = get_current_datetime_in_timezone(user.settings.timezone)
             today_start = today_start.replace(hour=0, minute=0, second=0, microsecond=0)
 
