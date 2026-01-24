@@ -1,7 +1,7 @@
 """Anthropic (Claude) LLM gateway implementation."""
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any
 
 from langchain_anthropic import ChatAnthropic
@@ -10,6 +10,7 @@ from loguru import logger
 from pydantic import SecretStr
 
 from lykke.core.config import settings
+from lykke.application.gateways.llm_protocol import LLMTool, LLMToolCallResult
 from lykke.infrastructure.gateways.llm_tools import build_tool_spec_from_callable
 
 
@@ -67,6 +68,16 @@ def _extract_tool_call_args(response: Any, tool_name: str) -> dict[str, Any] | N
     return None
 
 
+def _extract_tool_call(
+    response: Any, tool_names: Sequence[str]
+) -> tuple[str, dict[str, Any]] | None:
+    for tool_name in tool_names:
+        tool_args = _extract_tool_call_args(response, tool_name)
+        if tool_args is not None:
+            return tool_name, tool_args
+    return None
+
+
 class AnthropicLLMGateway:
     """Anthropic (Claude) implementation of LLM gateway."""
 
@@ -85,41 +96,50 @@ class AnthropicLLMGateway:
         system_prompt: str,
         context_prompt: str,
         ask_prompt: str,
-        on_complete: Callable[..., Any],
-    ) -> Any | None:
+        tools: Sequence[LLMTool],
+    ) -> LLMToolCallResult | None:
         """Run an LLM use case and return the on_complete result.
 
         Args:
             system_prompt: The system prompt defining the LLM's role and instructions
             context_prompt: The user context prompt to evaluate
             ask_prompt: The specific ask prompt for the LLM
-            on_complete: Callback invoked with tool arguments
+            tools: Tools available for the LLM to call
 
         Returns:
-            The on_complete result or None if no completion was returned
+            The tool call result or None if no completion was returned
         """
         try:
-            tool_spec, model = build_tool_spec_from_callable(on_complete)
-            tools = [tool_spec]
-            default_tool_name = tool_spec["name"]
+            if not tools:
+                raise ValueError("At least one tool must be provided")
+
+            tool_specs: list[dict[str, Any]] = []
+            models_by_name: dict[str, Any] = {}
+            callbacks_by_name: dict[str, Callable[..., Any]] = {}
+
+            for tool in tools:
+                tool_spec, model = build_tool_spec_from_callable(
+                    tool.callback, tool_name=tool.name, description=tool.description
+                )
+                tool_specs.append(tool_spec)
+                models_by_name[tool.name] = model
+                callbacks_by_name[tool.name] = tool.callback
             # Call LLM with provided prompts
             messages = [
                 SystemMessage(content=system_prompt),
                 HumanMessage(content=context_prompt),
                 HumanMessage(content=ask_prompt),
             ]
-            llm = self._llm.bind_tools(tools)
+            llm = self._llm.bind_tools(tool_specs)
             response = await llm.ainvoke(messages)
 
-            decision_data: dict[str, Any] | None = None
-            decision_data = _extract_tool_call_args(response, default_tool_name)
-            if decision_data is None:
+            tool_call = _extract_tool_call(response, list(models_by_name.keys()))
+            if tool_call is None:
                 logger.debug(
-                    f"LLM response missing tool call '{default_tool_name}', "
-                    "falling back to content parsing"
+                    "LLM response missing tool call, falling back to content parsing"
                 )
 
-            if decision_data is None:
+            if tool_call is None:
                 # Parse response content as a fallback
                 response_text = _normalize_response_content(response.content).strip()
 
@@ -133,13 +153,28 @@ class AnthropicLLMGateway:
                     json_end = response_text.find("```", json_start)
                     response_text = response_text[json_start:json_end].strip()
 
-                decision_data = json.loads(response_text)
+                parsed_data: Any = json.loads(response_text)
+                tool_name: str | None = None
+                tool_args: dict[str, Any] | None = None
+                if isinstance(parsed_data, dict):
+                    tool_name = parsed_data.get("tool_name") or parsed_data.get("name")
+                    tool_args = parsed_data.get("args")
+                    if tool_name and isinstance(tool_args, dict):
+                        tool_call = (tool_name, tool_args)
+                    elif len(models_by_name) == 1:
+                        only_tool = next(iter(models_by_name.keys()))
+                        tool_call = (only_tool, parsed_data)
 
-            if not isinstance(decision_data, dict):
+            if tool_call is None:
+                return None
+            tool_name, tool_args = tool_call
+            if tool_name not in models_by_name:
+                logger.error(f"LLM selected unknown tool '{tool_name}'")
                 return None
 
-            validated = model(**decision_data)
-            return on_complete(**validated.model_dump())
+            validated = models_by_name[tool_name](**tool_args)
+            result = callbacks_by_name[tool_name](**validated.model_dump())
+            return LLMToolCallResult(tool_name=tool_name, result=result)
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM response as JSON: {e}")

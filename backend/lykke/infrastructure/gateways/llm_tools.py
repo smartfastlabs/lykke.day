@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 def build_tool_spec_from_callable(
     on_complete: Callable[..., Any],
     tool_name: str = "on_complete",
+    description: str | None = None,
 ) -> tuple[dict[str, Any], type[BaseModel]]:
     """Build a tool spec + Pydantic model from a callable signature."""
     signature = inspect.signature(on_complete)
@@ -38,5 +39,9 @@ def build_tool_spec_from_callable(
     model_name = "".join(part.title() for part in tool_name.split("_")) + "Args"
     model = create_model(model_name, **cast("dict[str, Any]", fields))
     schema = model.model_json_schema()
-    description = on_complete.__doc__ or "Finalize the use case."
-    return {"name": tool_name, "description": description, "parameters": schema}, model
+    tool_description = description or on_complete.__doc__ or "Finalize the use case."
+    return {
+        "name": tool_name,
+        "description": tool_description,
+        "parameters": schema,
+    }, model

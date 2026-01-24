@@ -1,9 +1,27 @@
 """Protocol for LLM gateway implementations."""
 
-from collections.abc import Callable
-from typing import Protocol, TypeVar
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
+from typing import Any, Protocol, TypeVar
 
 T = TypeVar("T")
+
+
+@dataclass(frozen=True)
+class LLMTool:
+    """Tool definition for LLM calls."""
+
+    name: str
+    callback: Callable[..., Any]
+    description: str | None = None
+
+
+@dataclass(frozen=True)
+class LLMToolCallResult:
+    """Result for a tool call returned by the LLM."""
+
+    tool_name: str
+    result: Any
 
 
 class LLMGatewayProtocol(Protocol):
@@ -18,17 +36,17 @@ class LLMGatewayProtocol(Protocol):
         system_prompt: str,
         context_prompt: str,
         ask_prompt: str,
-        on_complete: Callable[..., T],
-    ) -> T | None:
-        """Run an LLM use case and return the on_complete result.
+        tools: Sequence[LLMTool],
+    ) -> LLMToolCallResult | None:
+        """Run an LLM use case and return the tool call result.
 
         Args:
             system_prompt: The system prompt defining the LLM's role and instructions
             context_prompt: The user context prompt to evaluate
             ask_prompt: The specific ask prompt for the LLM
-            on_complete: Callback invoked with tool arguments
+            tools: Tools available for the LLM to call
 
         Returns:
-            The on_complete result or None if no completion was returned
+            The tool call result or None if no completion was returned
         """
         raise NotImplementedError
