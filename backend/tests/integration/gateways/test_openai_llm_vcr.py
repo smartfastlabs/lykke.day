@@ -1,0 +1,41 @@
+"""Integration test for Anthropic gateway with VCR."""
+
+import os
+
+import pytest
+
+from lykke.application.gateways.llm_protocol import LLMTool
+from lykke.infrastructure.gateways.anthropic_llm import AnthropicLLMGateway
+
+
+@pytest.mark.asyncio
+@pytest.mark.vcr(
+    cassette_library_dir="tests/integration/cassettes",
+    cassette_name="anthropic_llm_simple_tool",
+)
+async def test_anthropic_llm_gateway_with_vcr() -> None:
+    """Record or replay a simple Anthropic tool call via VCR."""
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        pytest.skip("ANTHROPIC_API_KEY is required to record the cassette.")
+
+    def echo_message(message: str) -> dict[str, str]:
+        return {"message": message}
+
+    gateway = AnthropicLLMGateway()
+    result = await gateway.run_usecase(
+        system_prompt="You are a test assistant.",
+        context_prompt="Context for a basic integration test.",
+        ask_prompt="Call the echo_message tool with message 'hello'.",
+        tools=[
+            LLMTool(
+                name="echo_message",
+                callback=echo_message,
+                description="Echo a message.",
+            )
+        ],
+    )
+
+    assert result is not None
+    assert result.tool_name == "echo_message"
+    assert isinstance(result.result, dict)
+    assert result.result.get("message") == "hello"

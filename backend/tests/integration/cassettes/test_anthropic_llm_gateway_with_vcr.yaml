@@ -1,0 +1,107 @@
+interactions:
+- request:
+    body: '{"max_tokens":8192,"messages":[{"role":"user","content":[{"type":"text","text":"Context
+      for a basic integration test."},{"type":"text","text":"Call the echo_message
+      tool with message ''hello''."}]}],"model":"claude-3-5-haiku-20241022","system":"You
+      are a test assistant.","temperature":0.7,"tools":[{"name":"echo_message","input_schema":{"properties":{"message":{"title":"Message","type":"string"}},"required":["message"],"title":"EchoMessageArgs","type":"object"},"description":"Echo
+      a message."}]}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '497'
+      Content-Type:
+      - application/json
+      Host:
+      - api.anthropic.com
+      User-Agent:
+      - AsyncAnthropic/Python 0.76.0
+      X-Stainless-Arch:
+      - arm64
+      X-Stainless-Async:
+      - async:asyncio
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - MacOS
+      X-Stainless-Package-Version:
+      - 0.76.0
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.13.2
+      anthropic-version:
+      - '2023-06-01'
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-timeout:
+      - NOT_GIVEN
+    method: POST
+    uri: https://api.anthropic.com/v1/messages
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAA/3VRz0/CMBT+V5ZeuGwGBjjdTbjgxYRgBGNMU7snq3TtXNspkP3vvg4noPG09vv1
+        3tftSaEzkCQlXDKXQTSMxlHOxMZFcT8eDfpxTEIiMhQUZk37g8nDnZjcLOvdnNfMXL0tH0fXiy1q
+        7LYErwJj2BoQqLT0ADNGGMuURYhrZQFP6dO+01v49Ez7ScltT8ogB1kGW+0CzvBmcwiA55p+JwdW
+        axl8CJu3VIf20CV17yKYQQU903KvTnErtGqDUtKEx6mYQZ2Brpu/O2y3mifuZTaNV0kxWEzvd/V4
+        GYNvp1jhfaeLeK8qHa69/2mdknYN0jTPITFWl7QCZrQ6H9kSBt4dKI4e5aQMiTsE7A+h1OoNKEPS
+        4eUI343xHCjHLF+Hniv6HY909h/Xef0AKHMooGKSjou/+iM7yH+zTUi0s6dQkmAdqGrBgVoBFRb1
+        PztjVYaP8AVSbFn1XgIAAA==
+    headers:
+      CF-RAY:
+      - 9c2c29fe69494799-DFW
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Sat, 24 Jan 2026 02:40:06 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Robots-Tag:
+      - none
+      anthropic-ratelimit-input-tokens-limit:
+      - '50000'
+      anthropic-ratelimit-input-tokens-remaining:
+      - '50000'
+      anthropic-ratelimit-input-tokens-reset:
+      - '2026-01-24T02:40:05Z'
+      anthropic-ratelimit-output-tokens-limit:
+      - '10000'
+      anthropic-ratelimit-output-tokens-remaining:
+      - '10000'
+      anthropic-ratelimit-output-tokens-reset:
+      - '2026-01-24T02:40:06Z'
+      anthropic-ratelimit-requests-limit:
+      - '50'
+      anthropic-ratelimit-requests-remaining:
+      - '49'
+      anthropic-ratelimit-requests-reset:
+      - '2026-01-24T02:40:06Z'
+      anthropic-ratelimit-tokens-limit:
+      - '60000'
+      anthropic-ratelimit-tokens-remaining:
+      - '60000'
+      anthropic-ratelimit-tokens-reset:
+      - '2026-01-24T02:40:05Z'
+      cf-cache-status:
+      - DYNAMIC
+      request-id:
+      - req_011CXRRsDxWJMDeEEGrJN3JQ
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-envoy-upstream-service-time:
+      - '1397'
+    status:
+      code: 200
+      message: OK
+version: 1

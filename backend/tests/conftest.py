@@ -85,3 +85,13 @@ def test_datetime_evening():
         real_asyncio=True,
     ):
         yield datetime.datetime(2025, 11, 27, 18, 0, 0, tzinfo=UTC)
+
+
+@pytest.fixture(scope="module")
+def vcr_config():
+    """Default VCR configuration for recorded HTTP interactions."""
+    return {
+        "filter_headers": ["authorization", "x-api-key"],
+        "record_mode": "once",
+        "match_on": ["method", "scheme", "host", "port", "path", "query", "body"],
+    }
