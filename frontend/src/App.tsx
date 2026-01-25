@@ -28,6 +28,7 @@ import PreviewView from "@/pages/me/today/Preview";
 import TasksView from "@/pages/me/today/Tasks";
 import EventsView from "@/pages/me/today/Events";
 import RemindersView from "@/pages/me/today/Reminders";
+import RoutinesView from "@/pages/me/today/Routines";
 import TodayEditPage from "@/pages/me/today/Edit";
 import ThatsAllPage from "@/pages/me/today/ThatsAll";
 import AddAdhocTaskPage from "@/pages/me/today/AddAdhocTask";
@@ -247,6 +248,7 @@ export default function App() {
                 <Route path="/tasks" component={TasksView} />
                 <Route path="/events" component={EventsView} />
                 <Route path="/reminders" component={RemindersView} />
+                <Route path="/routines" component={RoutinesView} />
                 <Route path="/edit" component={TodayEditPage} />
               </Route>
               <Route path="/nav" component={NavigationLayout}>
