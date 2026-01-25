@@ -1,4 +1,5 @@
 from datetime import time
+from uuid import UUID
 from typing import Any
 
 from lykke.core.utils.serialization import dataclass_to_json_dict
@@ -103,6 +104,12 @@ class RoutineDefinitionRepository(
         tasks = data.get("tasks") or []
         task_objects = []
         for task_dict in tasks:
+            if task_dict.get("id") and isinstance(task_dict["id"], str):
+                task_dict["id"] = UUID(task_dict["id"])
+            if task_dict.get("task_definition_id") and isinstance(
+                task_dict["task_definition_id"], str
+            ):
+                task_dict["task_definition_id"] = UUID(task_dict["task_definition_id"])
             # Handle schedule with time fields
             if task_dict.get("schedule"):
                 schedule_dict = task_dict["schedule"]
