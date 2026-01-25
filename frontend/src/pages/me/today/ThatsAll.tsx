@@ -44,8 +44,8 @@ export const ThatsAllPage: Component = () => {
   });
 
   return (
-    <Page>
-      <div class="max-w-2xl mx-auto px-6 py-12 min-h-[70vh] flex flex-col justify-center">
+    <Page variant="app" hideFooter>
+      <div class="max-w-2xl mx-auto px-6 py-12 min-h-[100dvh] box-border flex flex-col justify-center">
         <div class="text-center mb-8">
           <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 mb-6 shadow-lg">
             <span class="text-4xl">🌙</span>

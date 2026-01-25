@@ -45,8 +45,8 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
   const dateLabel = createMemo(() => `${weekday()} ${monthDay()}`);
 
   return (
-    <Page>
-      <div class="min-h-screen relative overflow-hidden">
+    <Page variant="app" hideFooter>
+      <div class="min-h-[100dvh] box-border relative overflow-hidden">
         <Show
           when={!isLoading() && dayContext()}
           fallback={

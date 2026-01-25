@@ -36,8 +36,8 @@ const BrainDumpPage: Component = () => {
   };
 
   return (
-    <Page>
-      <div class="min-h-screen relative overflow-hidden">
+    <Page variant="app" hideFooter>
+      <div class="min-h-[100dvh] box-border relative overflow-hidden">
         <div class="relative z-10 max-w-3xl mx-auto px-6 py-8">
           <div class="flex items-center gap-3 mb-6">
             <Icon icon={faBrain} class="w-6 h-6 fill-sky-600" />
