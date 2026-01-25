@@ -3,9 +3,10 @@ import { useNavigate } from "@solidjs/router";
 import SettingsPage from "@/components/shared/SettingsPage";
 import AmendmentsEditor from "@/components/shared/AmendmentsEditor";
 import { Input } from "@/components/forms";
+import LLMSnapshotDetails from "@/components/llm/LLMSnapshotDetails";
 import { useAuth } from "@/providers/auth";
 import { usecaseConfigAPI, authAPI } from "@/utils/api";
-import type { NotificationUseCaseConfig } from "@/types/api";
+import type { LLMRunResultSnapshot, NotificationUseCaseConfig } from "@/types/api";
 import { globalNotifications } from "@/providers/notifications";
 
 const NotificationConfigPage: Component = () => {
@@ -14,6 +15,9 @@ const NotificationConfigPage: Component = () => {
   const [config, { mutate }] = createResource<NotificationUseCaseConfig>(
     usecaseConfigAPI.getNotificationConfig
   );
+  const [snapshotPreview, { refetch: refetchSnapshotPreview }] = createResource<
+    LLMRunResultSnapshot | null
+  >(usecaseConfigAPI.getNotificationLLMSnapshotPreview);
   const [amendments, setAmendments] = createSignal<string[]>([]);
   const [morningOverviewTime, setMorningOverviewTime] = createSignal<string>("");
   const [isSaving, setIsSaving] = createSignal(false);
@@ -62,6 +66,8 @@ const NotificationConfigPage: Component = () => {
         });
         await refetchUser();
       }
+
+      refetchSnapshotPreview();
       
       globalNotifications.addSuccess("Notification settings saved successfully");
     } catch (err) {
@@ -141,17 +147,31 @@ const NotificationConfigPage: Component = () => {
           placeholder="Enter a new customization instruction..."
         />
 
-        <Show when={config()?.rendered_prompt}>
+        <div class="rounded-2xl border border-amber-100/80 bg-white/80 p-5 shadow-sm shadow-amber-900/5 space-y-4">
           <div>
             <h2 class="text-lg font-semibold mb-2">Fully Rendered Prompt</h2>
-            <p class="text-sm text-gray-600 mb-4">
-              This is what the AI sees when evaluating notifications for you.
+            <p class="text-sm text-gray-600">
+              This preview shows the full prompt, tools, and context that would
+              be stored with a notification decision.
             </p>
-            <div class="bg-gray-50 border border-gray-200 rounded-md p-4 overflow-auto">
-              <pre class="text-sm text-gray-800 whitespace-pre-wrap font-mono">{config()?.rendered_prompt}</pre>
-            </div>
           </div>
-        </Show>
+          <Show
+            when={!snapshotPreview.loading}
+            fallback={<div class="text-sm text-stone-500">Loading preview...</div>}
+          >
+            <Show
+              when={snapshotPreview()}
+              fallback={
+                <div class="text-sm text-stone-500">
+                  No LLM snapshot preview is available yet. Configure an LLM
+                  provider to see the full prompt.
+                </div>
+              }
+            >
+              {(snapshot) => <LLMSnapshotDetails snapshot={snapshot()!} />}
+            </Show>
+          </Show>
+        </div>
 
         <div class="flex justify-end gap-3 pt-4 border-t">
           <button

@@ -27,6 +27,7 @@ from .list_base_personalities import (
     ListBasePersonalitiesQuery,
 )
 from .preview_day import PreviewDayHandler, PreviewDayQuery
+from .preview_llm_snapshot import PreviewLLMSnapshotHandler, PreviewLLMSnapshotQuery
 from .preview_tasks import PreviewTasksHandler, PreviewTasksQuery
 from .usecase_config import GetUseCaseConfigHandler, GetUseCaseConfigQuery
 
@@ -48,6 +49,8 @@ __all__ = [
     "ListBasePersonalitiesQuery",
     "PreviewDayHandler",
     "PreviewDayQuery",
+    "PreviewLLMSnapshotHandler",
+    "PreviewLLMSnapshotQuery",
     "PreviewTasksHandler",
     "PreviewTasksQuery",
     "SearchBrainDumpsHandler",

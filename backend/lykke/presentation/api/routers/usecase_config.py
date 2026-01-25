@@ -1,6 +1,6 @@
 """Router for usecase configs."""
 
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,10 +12,15 @@ from lykke.application.commands.usecase_config import (
     DeleteUseCaseConfigHandler,
 )
 from lykke.application.llm import render_system_prompt
+from lykke.application.queries import (
+    PreviewLLMSnapshotHandler,
+    PreviewLLMSnapshotQuery,
+)
 from lykke.application.queries.usecase_config import (
     GetUseCaseConfigHandler,
     GetUseCaseConfigQuery,
 )
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import (
     NotificationUseCaseConfigSchema,
@@ -107,6 +112,23 @@ async def update_usecase_config(
         )
 
     return config_data
+
+
+@router.get(
+    "/usecase-configs/{usecase:str}/llm-preview",
+    response_model=dict[str, Any] | None,
+)
+async def get_llm_snapshot_preview(
+    usecase: str,
+    _user: Annotated[UserEntity, Depends(get_current_user)],
+    query_factory: Annotated[QueryHandlerFactory, Depends(query_handler_factory)],
+) -> dict[str, Any] | None:
+    """Build a synthetic LLM snapshot preview for a usecase."""
+    query_handler = query_factory.create(PreviewLLMSnapshotHandler)
+    snapshot = await query_handler.handle(PreviewLLMSnapshotQuery(usecase=usecase))
+    if snapshot is None:
+        return None
+    return dataclass_to_json_dict(snapshot)
 
 
 @router.delete("/usecase-configs/{usecase_config_id}", status_code=200)

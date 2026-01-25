@@ -26,7 +26,7 @@ const TodayNotificationsPage: Component = () => {
 
   const handleNavigate = (id?: string | null) => {
     if (!id) return;
-    navigate(`/me/today/notifications/${id}`);
+    navigate(`/me/notifications/${id}`);
   };
 
   return (

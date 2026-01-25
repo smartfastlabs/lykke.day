@@ -37,6 +37,7 @@ from lykke.application.queries import (
     GetDayContextHandler,
     GetLLMPromptContextHandler,
     PreviewDayHandler,
+    PreviewLLMSnapshotHandler,
 )
 from lykke.application.queries.base import BaseQueryHandler
 from lykke.infrastructure.gateways import GoogleCalendarGateway, WebPushGateway
@@ -78,8 +79,19 @@ def _build_get_llm_prompt_context_handler(
     )
 
 
+def _build_preview_llm_snapshot_handler(
+    factory: QueryHandlerFactory,
+) -> PreviewLLMSnapshotHandler:
+    return PreviewLLMSnapshotHandler(
+        factory.ro_repos,
+        factory.user_id,
+        factory.create(GetLLMPromptContextHandler),
+    )
+
+
 DEFAULT_QUERY_HANDLER_REGISTRY: dict[type[BaseQueryHandler], QueryHandlerProvider] = {
     GetLLMPromptContextHandler: _build_get_llm_prompt_context_handler,
+    PreviewLLMSnapshotHandler: _build_preview_llm_snapshot_handler,
 }
 
 

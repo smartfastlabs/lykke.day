@@ -15,7 +15,7 @@ const TodayBrainDumpsPage: Component = () => {
 
   const handleNavigate = (id?: string | null) => {
     if (!id) return;
-    navigate(`/me/today/brain-dumps/${id}`);
+    navigate(`/me/brain-dumps/${id}`);
   };
 
   return (

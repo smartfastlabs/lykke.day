@@ -14,6 +14,7 @@ import {
   RecurrenceSchedule,
   UseCaseConfig,
   NotificationUseCaseConfig,
+  LLMRunResultSnapshot,
   Reminder,
   BrainDumpItem,
   PushNotification,
@@ -501,6 +502,17 @@ export const usecaseConfigAPI = {
     fetchData<NotificationUseCaseConfig>("/api/usecase-configs/notification", {
       method: "PUT",
       body: JSON.stringify(config),
+    }),
+
+  getNotificationLLMSnapshotPreview: (): Promise<LLMRunResultSnapshot | null> =>
+    fetchData<LLMRunResultSnapshot | null>(
+      "/api/usecase-configs/notification/llm-preview",
+      { suppressError: true }
+    ).catch((err) => {
+      if (err instanceof ApiRequestError && err.status === 404) {
+        return null;
+      }
+      throw err;
     }),
 };
 

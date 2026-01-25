@@ -1,6 +1,6 @@
 import { Title, MetaProvider } from "@solidjs/meta";
 import { Navigate, Route, Router, useNavigate } from "@solidjs/router";
-import { Suspense, onMount, onCleanup } from "solid-js";
+import { onMount, onCleanup } from "solid-js";
 import "@/index.css";
 
 import { NotificationProvider } from "@/providers/notifications";
@@ -208,7 +208,7 @@ export default function App() {
                 <NavigationHandler />
                 <MetaProvider>
                   <Title>lykke.day</Title>
-                  <Suspense>{props.children}</Suspense>
+                  {props.children}
                   <CookieDisclaimer />
                 </MetaProvider>
               </AuthProvider>
@@ -245,6 +245,14 @@ export default function App() {
               <Route path="/adhoc-task" component={AddAdhocTaskPage} />
               <Route path="/add-reminder" component={AddReminderPage} />
               <Route path="/thats-all-for-today" component={ThatsAllPage} />
+              <Route
+                path="/notifications/:id"
+                component={TodayNotificationDetailPage}
+              />
+              <Route
+                path="/brain-dumps/:id"
+                component={TodayBrainDumpDetailPage}
+              />
               <Route path="/today" component={HomeLayout}>
                 <Route path="/" component={PreviewView} />
                 <Route path="/tasks" component={TasksView} />
@@ -252,15 +260,7 @@ export default function App() {
                 <Route path="/reminders" component={RemindersView} />
                 <Route path="/routines" component={RoutinesView} />
                 <Route path="/brain-dumps" component={TodayBrainDumpsPage} />
-                <Route
-                  path="/brain-dumps/:id"
-                  component={TodayBrainDumpDetailPage}
-                />
                 <Route path="/notifications" component={TodayNotificationsPage} />
-                <Route
-                  path="/notifications/:id"
-                  component={TodayNotificationDetailPage}
-                />
                 <Route path="/edit" component={TodayEditPage} />
               </Route>
               <Route path="/nav" component={NavigationLayout}>
