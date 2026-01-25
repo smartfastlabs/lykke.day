@@ -40,9 +40,9 @@ async def create_adhoc_task(
 ) -> TaskSchema:
     """Create an adhoc task."""
     handler = command_factory.create(CreateAdhocTaskHandler)
-    schedule = (
-        value_objects.TaskSchedule(**task_data.schedule.model_dump())
-        if task_data.schedule
+    time_window = (
+        value_objects.TimeWindow(**task_data.time_window.model_dump())
+        if task_data.time_window
         else None
     )
     task = await handler.handle(
@@ -51,7 +51,7 @@ async def create_adhoc_task(
             name=task_data.name,
             category=task_data.category,
             description=task_data.description,
-            schedule=schedule,
+            time_window=time_window,
             tags=task_data.tags,
         )
     )

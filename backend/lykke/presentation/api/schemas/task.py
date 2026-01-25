@@ -12,22 +12,13 @@ from lykke.domain.value_objects.task import (
     TaskStatus,
     TaskTag,
     TaskType,
-    TimingType,
 )
 
 from .base import BaseEntitySchema, BaseSchema
+from .routine_definition import TimeWindowSchema
 
 if TYPE_CHECKING:
     from .action import ActionSchema
-
-
-class TaskScheduleSchema(BaseSchema):
-    """API schema for TaskSchedule value object."""
-
-    available_time: time | None = None
-    start_time: time | None = None
-    end_time: time | None = None
-    timing_type: TimingType
 
 
 class TaskSchema(BaseEntitySchema):
@@ -42,7 +33,7 @@ class TaskSchema(BaseEntitySchema):
     category: TaskCategory
     frequency: TaskFrequency
     completed_at: datetime | None = None
-    schedule: TaskScheduleSchema | None = None
+    time_window: TimeWindowSchema | None = None
     routine_definition_id: UUID | None = None
     tags: list[TaskTag] = Field(default_factory=list)
     actions: list["ActionSchema"] = Field(default_factory=list)
@@ -55,5 +46,5 @@ class AdhocTaskCreateSchema(BaseSchema):
     name: str
     description: str | None = None
     category: TaskCategory
-    schedule: TaskScheduleSchema | None = None
+    time_window: TimeWindowSchema | None = None
     tags: list[TaskTag] = Field(default_factory=list)

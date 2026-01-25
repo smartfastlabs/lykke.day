@@ -126,24 +126,25 @@ class ScheduleDayHandler(
                     day_end_dt = candidate
 
         for task in tasks:
-            schedule = task.schedule
-            if not schedule:
+            time_window = task.time_window
+            if not time_window:
                 continue
 
             start_dt = None
             end_dt = None
-            if schedule.start_time is not None:
+            start_time = time_window.start_time or time_window.available_time
+            if start_time is not None:
                 start_dt = cls._time_to_local_datetime(
                     date,
-                    schedule.start_time,
+                    start_time,
                     timezone=timezone,
                     template_start=template_start,
                     template_crosses_midnight=template_crosses_midnight,
                 )
-            if schedule.end_time is not None:
+            if time_window.end_time is not None:
                 end_dt = cls._time_to_local_datetime(
                     date,
-                    schedule.end_time,
+                    time_window.end_time,
                     timezone=timezone,
                     template_start=template_start,
                     template_crosses_midnight=template_crosses_midnight,

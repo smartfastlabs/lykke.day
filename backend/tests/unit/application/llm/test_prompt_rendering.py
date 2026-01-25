@@ -35,4 +35,4 @@ async def test_render_system_prompt_uses_base_personality_slug() -> None:
         usecase_config_ro_repo=usecase_config_repo,
     )
 
-    assert "no-nonsense assistant" in result
+    assert "direct, no-nonsense tone" in result

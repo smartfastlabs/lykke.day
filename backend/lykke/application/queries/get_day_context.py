@@ -143,9 +143,13 @@ class GetDayContextHandler(
             day=day,
             tasks=sorted(
                 tasks,
-                key=lambda x: x.schedule.start_time
-                if x.schedule and x.schedule.start_time
-                else DEFAULT_END_OF_DAY_TIME,
+                key=lambda x: (
+                    x.time_window.start_time
+                    if x.time_window and x.time_window.start_time
+                    else x.time_window.available_time
+                    if x.time_window and x.time_window.available_time
+                    else DEFAULT_END_OF_DAY_TIME
+                ),
             ),
             calendar_entries=sorted(calendar_entries, key=lambda e: e.starts_at),
             routines=sorted(

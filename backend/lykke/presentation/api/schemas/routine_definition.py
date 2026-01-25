@@ -9,7 +9,6 @@ from lykke.domain.value_objects.routine_definition import DayOfWeek
 from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
 
 from .base import BaseEntitySchema, BaseSchema
-from .task import TaskScheduleSchema
 
 
 class RecurrenceScheduleSchema(BaseSchema):
@@ -35,7 +34,6 @@ class RoutineDefinitionTaskSchema(BaseSchema):
     id: UUID | None = None
     task_definition_id: UUID
     name: str | None = None
-    schedule: TaskScheduleSchema | None = None
     task_schedule: RecurrenceScheduleSchema | None = None
     time_window: TimeWindowSchema | None = None
 
@@ -79,7 +77,6 @@ class RoutineDefinitionTaskCreateSchema(BaseSchema):
 
     task_definition_id: UUID
     name: str | None = None
-    schedule: TaskScheduleSchema | None = None
     task_schedule: RecurrenceScheduleSchema | None = None
     time_window: TimeWindowSchema | None = None
 
@@ -88,6 +85,5 @@ class RoutineDefinitionTaskUpdateSchema(BaseSchema):
     """API schema for updating an attached RoutineDefinitionTask."""
 
     name: str | None = None
-    schedule: TaskScheduleSchema | None = None
     task_schedule: RecurrenceScheduleSchema | None = None
     time_window: TimeWindowSchema | None = None

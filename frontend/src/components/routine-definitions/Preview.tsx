@@ -4,7 +4,6 @@ import {
   RoutineDefinition,
   RoutineDefinitionTask,
   TaskDefinition,
-  TaskSchedule,
   TaskType,
   TimeWindow,
 } from "@/types/api";
@@ -22,7 +21,6 @@ interface RoutinePreviewProps {
   onEditTask?: (task: RoutineDefinitionTask) => void;
   onRemoveTask?: (taskDefinitionId: string) => void;
   onTaskSubmit?: (
-    schedule: TaskSchedule,
     taskSchedule: RecurrenceSchedule | null,
     timeWindow: TimeWindow | null
   ) => Promise<void>;
@@ -31,7 +29,6 @@ interface RoutinePreviewProps {
   selectedAction?: () => "add" | "edit" | null;
   taskName?: Accessor<string>;
   setTaskName?: Setter<string>;
-  scheduleInitial?: () => TaskSchedule | null;
   taskScheduleInitial?: () => RecurrenceSchedule | null;
   timeWindowInitial?: () => TimeWindow | null;
   isEditMode?: boolean;
@@ -49,10 +46,10 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
   const availableDefinitions = createMemo(() => props.taskDefinitions ?? []);
   
   // Track schedule state for the form
-  const [currentSchedule, setCurrentSchedule] = createSignal<TaskSchedule | null>(null);
   const [currentTaskSchedule, setCurrentTaskSchedule] = createSignal<RecurrenceSchedule | null>(
     null
   );
+  const [currentTimeWindow, setCurrentTimeWindow] = createSignal<TimeWindow | null>(null);
   
   // State for creating new task definition
   const [showCreateTaskDef, setShowCreateTaskDef] = createSignal(false);
@@ -66,19 +63,8 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
   // Update schedule state when form opens
   createEffect(() => {
     if (props.selectedAction?.()) {
-      const initialSchedule = props.scheduleInitial?.();
-      if (initialSchedule) {
-        setCurrentSchedule(initialSchedule);
-      } else {
-        // Initialize with default schedule if adding new task
-        setCurrentSchedule({
-          timing_type: "FLEXIBLE" as const,
-          available_time: null,
-          start_time: null,
-          end_time: null,
-        });
-      }
       setCurrentTaskSchedule(props.taskScheduleInitial?.() ?? null);
+      setCurrentTimeWindow(props.timeWindowInitial?.() ?? null);
     }
   });
 
@@ -114,14 +100,9 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
   };
 
   const handleTaskSubmit = () => {
-    const schedule = currentSchedule() ?? {
-      timing_type: "FLEXIBLE" as const,
-      available_time: null,
-      start_time: null,
-      end_time: null,
-    };
     const taskSchedule = currentTaskSchedule();
-    void props.onTaskSubmit?.(schedule, taskSchedule, null);
+    const timeWindow = currentTimeWindow();
+    void props.onTaskSubmit?.(taskSchedule, timeWindow);
   };
 
   const getTaskDefinitionName = (taskDefinitionId: string) =>
@@ -235,11 +216,12 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                         {task.name || getTaskDefinitionName(task.task_definition_id)}
                       </div>
                       <div class="text-xs text-neutral-500 space-y-1">
-                        {task.schedule && (
+                        {task.time_window && (
                           <div>
-                            Time: {task.schedule.timing_type}
-                            {task.schedule.start_time ? ` • ${task.schedule.start_time}` : ""}
-                            {task.schedule.end_time ? ` - ${task.schedule.end_time}` : ""}
+                            Time Window:
+                            {task.time_window.start_time ? ` ${task.time_window.start_time}` : ""}
+                            {task.time_window.end_time ? ` - ${task.time_window.end_time}` : ""}
+                            {task.time_window.available_time ? ` (available: ${task.time_window.available_time})` : ""}
                           </div>
                         )}
                         {task.task_schedule && (
@@ -250,7 +232,7 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                             )}
                           </div>
                         )}
-                        {!task.schedule && !task.task_schedule && (
+                        {!task.time_window && !task.task_schedule && (
                           <div>No schedule set</div>
                         )}
                       </div>
@@ -457,12 +439,12 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
 
                     <div>
                       <label class="text-sm font-medium text-neutral-700 mb-2 block">
-                        Time Schedule (when during the day)
+                        Time Window (when during the day)
                       </label>
                       <TaskScheduleForm
-                        initialSchedule={props.scheduleInitial?.() ?? undefined}
-                        onChange={(schedule: TaskSchedule) => {
-                          setCurrentSchedule(schedule);
+                        initialSchedule={props.timeWindowInitial?.() ?? undefined}
+                        onChange={(timeWindow: TimeWindow | null) => {
+                          setCurrentTimeWindow(timeWindow);
                         }}
                         onSubmit={() => Promise.resolve()}
                         onCancel={() => {}}

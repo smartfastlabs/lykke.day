@@ -28,4 +28,5 @@ class DeleteRoutineDefinitionHandler(
             routine_definition = await uow.routine_definition_ro_repo.get(
                 command.routine_definition_id
             )
-            await uow.delete(routine_definition)
+            routine_definition.delete()
+            uow.add(routine_definition)

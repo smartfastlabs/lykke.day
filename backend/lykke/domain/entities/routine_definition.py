@@ -78,11 +78,6 @@ class RoutineDefinitionEntity(BaseEntityObject, AuditableEntity):
                         name=task_update.name
                         if task_update.name is not None
                         else task.name,
-                        schedule=(
-                            task_update.schedule
-                            if task_update.schedule is not None
-                            else task.schedule
-                        ),
                         task_schedule=(
                             task_update.task_schedule
                             if task_update.task_schedule is not None

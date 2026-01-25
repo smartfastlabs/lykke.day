@@ -1,126 +1,101 @@
 import { Component, Show, createSignal } from "solid-js";
-import { FormError, Input, Select, SubmitButton } from "@/components/forms";
-import { TaskSchedule, TimingType } from "@/types/api";
+import { FormError, Input, SubmitButton } from "@/components/forms";
+import { TimeWindow } from "@/types/api";
 
 interface TaskScheduleFormProps {
-  initialSchedule?: TaskSchedule | null;
-  onSubmit: (schedule: TaskSchedule) => Promise<void>;
-  onChange?: (schedule: TaskSchedule) => void;
+  initialSchedule?: TimeWindow | null;
+  onSubmit: (timeWindow: TimeWindow | null) => Promise<void>;
+  onChange?: (timeWindow: TimeWindow | null) => void;
   onCancel?: () => void;
   isLoading?: boolean;
   submitText?: string;
 }
 
-const TIMING_OPTIONS: TimingType[] = [
-  "FIXED_TIME",
-  "TIME_WINDOW",
-  "DEADLINE",
-  "FLEXIBLE",
-];
-
 const TaskScheduleForm: Component<TaskScheduleFormProps> = (props) => {
-  const [timingType, setTimingType] = createSignal<TimingType>(
-    props.initialSchedule?.timing_type ?? "FLEXIBLE"
-  );
   const [availableTime, setAvailableTime] = createSignal(
     props.initialSchedule?.available_time ?? ""
   );
   const [startTime, setStartTime] = createSignal(props.initialSchedule?.start_time ?? "");
   const [endTime, setEndTime] = createSignal(props.initialSchedule?.end_time ?? "");
+  const [cutoffTime, setCutoffTime] = createSignal(props.initialSchedule?.cutoff_time ?? "");
   const [error, setError] = createSignal("");
 
   const validate = (): boolean => {
     setError("");
-    const type = timingType();
-
-    if (type === "FIXED_TIME" && !startTime()) {
-      setError("Start time is required for fixed time tasks.");
-      return false;
-    }
-    if (type === "TIME_WINDOW" && (!startTime() || !endTime())) {
-      setError("Start and end times are required for a time window.");
-      return false;
-    }
-    if (type === "DEADLINE" && !endTime()) {
-      setError("End time is required for a deadline.");
-      return false;
-    }
+    // Validation is optional - all fields are optional
     return true;
   };
 
-  const buildSchedule = (): TaskSchedule => ({
-    timing_type: timingType(),
-    available_time: availableTime() || null,
-    start_time: startTime() || null,
-    end_time: endTime() || null,
-  });
+  const buildTimeWindow = (): TimeWindow | null => {
+    const timeWindow: TimeWindow = {
+      available_time: availableTime() || null,
+      start_time: startTime() || null,
+      end_time: endTime() || null,
+      cutoff_time: cutoffTime() || null,
+    };
+    // Return null if all fields are empty
+    return Object.values(timeWindow).some((value) => value) ? timeWindow : null;
+  };
 
   const handleChange = () => {
     if (props.onChange) {
-      props.onChange(buildSchedule());
+      props.onChange(buildTimeWindow());
     }
   };
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     if (!validate()) return;
-    await props.onSubmit(buildSchedule());
+    await props.onSubmit(buildTimeWindow());
   };
 
   return (
     <form class="space-y-4" onSubmit={handleSubmit}>
-      <Select
-        id="timing_type"
-        placeholder="Timing Type"
-        value={timingType}
-        onChange={(val) => {
-          setTimingType(val);
-          handleChange();
-        }}
-        options={TIMING_OPTIONS}
-        required
-      />
-
-      <Show when={timingType() === "FLEXIBLE"}>
-        <Input
-          id="available_time"
-          type="time"
-          placeholder="Preferred time (optional)"
-          value={availableTime}
-          onChange={(val) => {
-            setAvailableTime(val);
-            handleChange();
-          }}
-        />
-      </Show>
-
-      <Show when={timingType() === "FIXED_TIME" || timingType() === "TIME_WINDOW"}>
-        <Input
-          id="start_time"
-          type="time"
-          placeholder="Start time"
-          value={startTime}
-          onChange={(val) => {
-            setStartTime(val);
-            handleChange();
-          }}
-          required={timingType() !== "FLEXIBLE"}
-        />
-      </Show>
-
-      <Show when={timingType() === "TIME_WINDOW" || timingType() === "DEADLINE"}>
-        <Input
-          id="end_time"
-          type="time"
-          placeholder="End time"
-          value={endTime}
-          onChange={(val) => {
-            setEndTime(val);
-            handleChange();
-          }}
-          required={timingType() === "TIME_WINDOW" || timingType() === "DEADLINE"}
-        />
-      </Show>
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-gray-700">Time Window (all optional)</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <Input
+            id="available_time"
+            type="time"
+            placeholder="Available time"
+            value={availableTime}
+            onChange={(val) => {
+              setAvailableTime(val);
+              handleChange();
+            }}
+          />
+          <Input
+            id="start_time"
+            type="time"
+            placeholder="Start time"
+            value={startTime}
+            onChange={(val) => {
+              setStartTime(val);
+              handleChange();
+            }}
+          />
+          <Input
+            id="end_time"
+            type="time"
+            placeholder="End time"
+            value={endTime}
+            onChange={(val) => {
+              setEndTime(val);
+              handleChange();
+            }}
+          />
+          <Input
+            id="cutoff_time"
+            type="time"
+            placeholder="Cutoff time"
+            value={cutoffTime}
+            onChange={(val) => {
+              setCutoffTime(val);
+              handleChange();
+            }}
+          />
+        </div>
+      </div>
 
       <FormError error={error()} />
 

@@ -1,7 +1,7 @@
 import { Component, For, Show } from "solid-js";
 import type { Accessor } from "solid-js";
 import { getCategoryIcon, getTypeIcon } from "@/utils/icons";
-import { TaskStatus, Task, TaskSchedule } from "@/types/api";
+import { TaskStatus, Task, TimeWindow } from "@/types/api";
 import { Icon } from "@/components/shared/Icon";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useStreamingData } from "@/providers/streamingData";
@@ -20,44 +20,39 @@ interface TimeDisplay {
   secondary: string | null;
 }
 
-const getTimeDisplay = (schedule?: TaskSchedule): TimeDisplay | null => {
-  if (!schedule) return null;
+const getTimeDisplay = (timeWindow?: TimeWindow): TimeDisplay | null => {
+  if (!timeWindow) return null;
 
-  if (schedule.timing_type === "TIME_WINDOW" && schedule.start_time) {
+  // Time window: both start and end
+  if (timeWindow.start_time && timeWindow.end_time) {
     return {
-      primary: formatTimeString(schedule.start_time),
-      secondary: schedule.end_time ? formatTimeString(schedule.end_time) : null,
+      primary: formatTimeString(timeWindow.start_time),
+      secondary: formatTimeString(timeWindow.end_time),
     };
   }
 
-  if (schedule.timing_type === "FIXED_TIME" && schedule.start_time) {
+  // Fixed time: start_time only
+  if (timeWindow.start_time) {
     return {
-      primary: formatTimeString(schedule.start_time),
+      primary: formatTimeString(timeWindow.start_time),
       secondary: null,
     };
   }
 
-  if (schedule.timing_type === "DEADLINE") {
+  // Deadline: end_time only
+  if (timeWindow.end_time) {
     return {
-      primary: schedule.end_time
-        ? `by ${formatTimeString(schedule.end_time)}`
-        : null,
+      primary: `by ${formatTimeString(timeWindow.end_time)}`,
       secondary: null,
     };
   }
-  if (schedule.timing_type === "FLEXIBLE") {
-    if (schedule.available_time) {
-      return {
-        primary: `after ${formatTimeString(schedule.available_time)}`,
-        secondary: null,
-      };
-    }
-    if (schedule.end_time) {
-      return {
-        primary: `before ${formatTimeString(schedule.end_time)}`,
-        secondary: null,
-      };
-    }
+
+  // Flexible: available_time only
+  if (timeWindow.available_time) {
+    return {
+      primary: `after ${formatTimeString(timeWindow.available_time)}`,
+      secondary: null,
+    };
   }
 
   return null;
@@ -77,7 +72,7 @@ const getStatusClasses = (status: TaskStatus): string => {
 };
 
 const TaskItem: Component<{ task: Task }> = (props) => {
-  const time = () => getTimeDisplay(props.task.schedule ?? undefined);
+  const time = () => getTimeDisplay(props.task.time_window ?? undefined);
   const icon = () =>
     getCategoryIcon(props.task.category) || getTypeIcon(props.task.type);
 
@@ -147,23 +142,14 @@ const TaskItem: Component<{ task: Task }> = (props) => {
 };
 
 // Sorting helpers
-const getSortableTime = (schedule: TaskSchedule): string | null => {
-  switch (schedule.timing_type) {
-    case "TIME_WINDOW":
-    case "FIXED_TIME":
-      return schedule.start_time ?? null;
-    case "DEADLINE":
-      return schedule.end_time ?? null;
-    case "FLEXIBLE":
-      return schedule.available_time ?? schedule.end_time ?? null;
-    default:
-      return (
-        schedule.start_time ??
-        schedule.end_time ??
-        schedule.available_time ??
-        null
-      );
-  }
+const getSortableTime = (timeWindow: TimeWindow): string | null => {
+  // Prefer start_time, then end_time, then available_time
+  return (
+    timeWindow.start_time ??
+    timeWindow.end_time ??
+    timeWindow.available_time ??
+    null
+  );
 };
 
 const parseDateTimeToTimestamp = (dateStr: string, timeStr: string): number => {
@@ -181,10 +167,10 @@ const parseDateTimeToTimestamp = (dateStr: string, timeStr: string): number => {
 };
 
 const getTaskSortTimestamp = (task: Task): number => {
-  const schedule = task.schedule;
-  if (!schedule) return Number.POSITIVE_INFINITY;
+  const timeWindow = task.time_window;
+  if (!timeWindow) return Number.POSITIVE_INFINITY;
 
-  const timeStr = getSortableTime(schedule);
+  const timeStr = getSortableTime(timeWindow);
   if (!timeStr) return Number.POSITIVE_INFINITY;
 
   return parseDateTimeToTimestamp(task.scheduled_date, timeStr);

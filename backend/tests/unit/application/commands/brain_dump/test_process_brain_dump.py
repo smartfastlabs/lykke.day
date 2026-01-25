@@ -46,7 +46,6 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
         "name": "Write project brief",
         "category": value_objects.TaskCategory.WORK,
         "description": "Draft the first version of the brief",
-        "timing_type": value_objects.TimingType.FLEXIBLE,
         "start_time": time(9, 0),
         "tags": [value_objects.TaskTag.IMPORTANT],
     }
@@ -104,9 +103,8 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
     assert command.name == "Write project brief"
     assert command.category == value_objects.TaskCategory.WORK
     assert command.scheduled_date == date
-    assert command.schedule is not None
-    assert command.schedule.timing_type == value_objects.TimingType.FLEXIBLE
-    assert command.schedule.start_time == time(9, 0)
+    assert command.time_window is not None
+    assert command.time_window.start_time == time(9, 0)
 
 
 @pytest.mark.asyncio

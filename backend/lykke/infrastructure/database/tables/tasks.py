@@ -22,7 +22,7 @@ class Task(Base):
     category = Column(String, nullable=False)  # TaskCategory enum as string
     frequency = Column(String, nullable=False)  # TaskFrequency enum as string
     completed_at = Column(DateTime)
-    schedule = Column(JSONB)  # TaskSchedule | None
+    time_window = Column(JSONB)  # TimeWindow | None
     routine_definition_id = Column(PGUUID)
     tags = Column(JSONB)  # list[TaskTag]
     actions = Column(JSONB)  # list[Action]

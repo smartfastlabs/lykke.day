@@ -55,7 +55,7 @@ from .routine_definition import (
     RoutineDefinitionUpdateSchema,
     TimeWindowSchema,
 )
-from .task import AdhocTaskCreateSchema, TaskScheduleSchema, TaskSchema
+from .task import AdhocTaskCreateSchema, TaskSchema
 from .task_definition import (
     TaskDefinitionCreateSchema,
     TaskDefinitionSchema,
@@ -198,7 +198,6 @@ __all__ = [
     "TaskDefinitionCreateSchema",
     "TaskDefinitionSchema",
     "TaskDefinitionUpdateSchema",
-    "TaskScheduleSchema",
     "TaskSchema",
     "TimeBlockDefinitionCreateSchema",
     "TimeBlockDefinitionSchema",

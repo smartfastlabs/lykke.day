@@ -5,7 +5,7 @@ from enum import Enum
 from uuid import UUID, uuid4
 
 from .base import BaseValueObject
-from .task import TaskFrequency, TaskSchedule
+from .task import TaskFrequency
 
 
 class DayOfWeek(int, Enum):
@@ -98,6 +98,5 @@ class RoutineDefinitionTask(BaseValueObject):
     id: UUID = field(default_factory=uuid4)
     task_definition_id: UUID
     name: str | None = None
-    schedule: TaskSchedule | None = None
     task_schedule: RecurrenceSchedule | None = None
     time_window: TimeWindow | None = None

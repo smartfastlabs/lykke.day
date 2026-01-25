@@ -29,12 +29,11 @@ def test_task_pending(test_user_id: str) -> TaskEntity:
 
 
 @pytest.fixture
-def test_task_with_schedule(test_user_id: str) -> TaskEntity:
-    """Create a task with schedule for testing."""
-    schedule = value_objects.TaskSchedule(
+def test_task_with_time_window(test_user_id: str) -> TaskEntity:
+    """Create a task with time window for testing."""
+    time_window = value_objects.TimeWindow(
         start_time=datetime.time(10, 0),
         end_time=datetime.time(12, 0),
-        timing_type=value_objects.TimingType.TIME_WINDOW,
     )
     return TaskEntity(
         user_id=test_user_id,
@@ -45,7 +44,7 @@ def test_task_with_schedule(test_user_id: str) -> TaskEntity:
         description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
-        schedule=schedule,
+        time_window=time_window,
     )
 
 
@@ -73,10 +72,7 @@ def test_is_task_eligible_for_upcoming_status(
         description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
-        schedule=value_objects.TaskSchedule(
-            start_time=datetime.time(10, 0),
-            timing_type=value_objects.TimingType.FIXED_TIME,
-        ),
+        time_window=value_objects.TimeWindow(start_time=datetime.time(10, 0)),
     )
     with freeze_time("2025-11-27 09:00:00-06:00", real_asyncio=True):
         now = datetime.time(9, 0)
@@ -86,21 +82,21 @@ def test_is_task_eligible_for_upcoming_status(
 
 
 def test_is_task_eligible_for_upcoming_completed_task(
-    test_task_with_schedule: TaskEntity,
+    test_task_with_time_window: TaskEntity,
 ) -> None:
     """Test completed tasks are not eligible."""
-    test_task_with_schedule.completed_at = datetime.datetime.now(UTC)
+    test_task_with_time_window.completed_at = datetime.datetime.now(UTC)
     with freeze_time("2025-11-27 09:00:00-06:00", real_asyncio=True):
         now = datetime.time(9, 0)
         cutoff = datetime.time(12, 0)
-        result = test_task_with_schedule.is_eligible_for_upcoming(now, cutoff)
+        result = test_task_with_time_window.is_eligible_for_upcoming(now, cutoff)
         assert result is False
 
 
-def test_is_task_eligible_for_upcoming_no_schedule(
+def test_is_task_eligible_for_upcoming_no_time_window(
     test_task_pending: TaskEntity,
 ) -> None:
-    """Test tasks without schedule are not eligible."""
+    """Test tasks without time windows are not eligible."""
     with freeze_time("2025-11-27 09:00:00-06:00", real_asyncio=True):
         now = datetime.time(9, 0)
         cutoff = datetime.time(12, 0)
@@ -112,10 +108,9 @@ def test_is_task_eligible_for_upcoming_available_time_before_now(
     test_user_id: str,
 ) -> None:
     """Test task with available_time before now is eligible."""
-    schedule = value_objects.TaskSchedule(
+    time_window = value_objects.TimeWindow(
         available_time=datetime.time(8, 0),
         start_time=datetime.time(10, 0),
-        timing_type=value_objects.TimingType.FLEXIBLE,
     )
     task = TaskEntity(
         user_id=test_user_id,
@@ -126,7 +121,7 @@ def test_is_task_eligible_for_upcoming_available_time_before_now(
         description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
-        schedule=schedule,
+        time_window=time_window,
     )
     with freeze_time("2025-11-27 09:00:00-06:00", real_asyncio=True):
         now = datetime.time(9, 0)
@@ -139,10 +134,9 @@ def test_is_task_eligible_for_upcoming_available_time_after_now(
     test_user_id: str,
 ) -> None:
     """Test task with available_time after now is not eligible."""
-    schedule = value_objects.TaskSchedule(
+    time_window = value_objects.TimeWindow(
         available_time=datetime.time(10, 0),
         start_time=datetime.time(11, 0),
-        timing_type=value_objects.TimingType.FLEXIBLE,
     )
     task = TaskEntity(
         user_id=test_user_id,
@@ -153,7 +147,7 @@ def test_is_task_eligible_for_upcoming_available_time_after_now(
         description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
-        schedule=schedule,
+        time_window=time_window,
     )
     with freeze_time("2025-11-27 09:00:00-06:00", real_asyncio=True):
         now = datetime.time(9, 0)
@@ -166,10 +160,7 @@ def test_is_task_eligible_for_upcoming_start_time_after_cutoff(
     test_user_id: str,
 ) -> None:
     """Test task with start_time after cutoff is not eligible."""
-    schedule = value_objects.TaskSchedule(
-        start_time=datetime.time(13, 0),
-        timing_type=value_objects.TimingType.FIXED_TIME,
-    )
+    time_window = value_objects.TimeWindow(start_time=datetime.time(13, 0))
     task = TaskEntity(
         user_id=test_user_id,
         scheduled_date=datetime.date(2025, 11, 27),
@@ -179,7 +170,7 @@ def test_is_task_eligible_for_upcoming_start_time_after_cutoff(
         description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
-        schedule=schedule,
+        time_window=time_window,
     )
     with freeze_time("2025-11-27 09:00:00-06:00", real_asyncio=True):
         now = datetime.time(9, 0)
@@ -192,10 +183,9 @@ def test_is_task_eligible_for_upcoming_end_time_passed(
     test_user_id: str,
 ) -> None:
     """Test task with end_time that has passed is not eligible."""
-    schedule = value_objects.TaskSchedule(
+    time_window = value_objects.TimeWindow(
         start_time=datetime.time(8, 0),
         end_time=datetime.time(9, 0),
-        timing_type=value_objects.TimingType.TIME_WINDOW,
     )
     task = TaskEntity(
         user_id=test_user_id,
@@ -206,7 +196,7 @@ def test_is_task_eligible_for_upcoming_end_time_passed(
         description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
-        schedule=schedule,
+        time_window=time_window,
     )
     with freeze_time("2025-11-27 10:00:00-06:00", real_asyncio=True):
         now = datetime.time(10, 0)
@@ -246,10 +236,7 @@ def test_filter_upcoming_tasks(test_user_id: str) -> None:
         description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
-        schedule=value_objects.TaskSchedule(
-            start_time=datetime.time(11, 0),
-            timing_type=value_objects.TimingType.FIXED_TIME,
-        ),
+        time_window=value_objects.TimeWindow(start_time=datetime.time(11, 0)),
     )
     ineligible_task = TaskEntity(
         user_id=test_user_id,
@@ -260,10 +247,7 @@ def test_filter_upcoming_tasks(test_user_id: str) -> None:
         description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
-        schedule=value_objects.TaskSchedule(
-            start_time=datetime.time(11, 0),
-            timing_type=value_objects.TimingType.FIXED_TIME,
-        ),
+        time_window=value_objects.TimeWindow(start_time=datetime.time(11, 0)),
     )
     no_schedule_task = TaskEntity(
         user_id=test_user_id,
@@ -296,10 +280,7 @@ def test_filter_upcoming_tasks_cutoff_before_now(test_user_id: str) -> None:
         description="Test",
         category=value_objects.TaskCategory.HYGIENE,
         frequency=value_objects.TaskFrequency.DAILY,
-        schedule=value_objects.TaskSchedule(
-            start_time=datetime.time(10, 0),
-            timing_type=value_objects.TimingType.FIXED_TIME,
-        ),
+        time_window=value_objects.TimeWindow(start_time=datetime.time(10, 0)),
     )
 
     with freeze_time("2025-11-27 23:00:00-06:00", real_asyncio=True):

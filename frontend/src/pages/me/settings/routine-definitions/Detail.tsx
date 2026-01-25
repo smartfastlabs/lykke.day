@@ -10,7 +10,6 @@ import {
   RoutineDefinition,
   RoutineDefinitionTask,
   TaskDefinition,
-  TaskSchedule,
   TimeWindow,
 } from "@/types/api";
 
@@ -39,7 +38,6 @@ const RoutineDefinitionDetailPage: Component = () => {
     createSignal<string | null>(null);
   const [selectedAction, setSelectedAction] = createSignal<"add" | "edit" | null>(null);
   const [taskName, setTaskName] = createSignal("");
-  const [scheduleInitial, setScheduleInitial] = createSignal<TaskSchedule | null>(null);
   const [taskScheduleInitial, setTaskScheduleInitial] = createSignal<RecurrenceSchedule | null>(null);
   const [timeWindowInitial, setTimeWindowInitial] = createSignal<TimeWindow | null>(null);
   const [isTaskLoading, setIsTaskLoading] = createSignal(false);
@@ -130,7 +128,6 @@ const RoutineDefinitionDetailPage: Component = () => {
     setSelectedTaskDefinitionId(null);
     setSelectedRoutineDefinitionTaskId(null);
     setSelectedAction(null);
-    setScheduleInitial(null);
     setTaskScheduleInitial(null);
     setTimeWindowInitial(null);
     setTaskName("");
@@ -141,7 +138,6 @@ const RoutineDefinitionDetailPage: Component = () => {
     setSelectedTaskDefinitionId(taskDef.id!);
     setSelectedAction("add");
     setTaskName(taskDef.name);
-    setScheduleInitial(null);
     setTaskScheduleInitial(null);
     setTimeWindowInitial(null);
     setActionError("");
@@ -152,14 +148,12 @@ const RoutineDefinitionDetailPage: Component = () => {
     setSelectedRoutineDefinitionTaskId(task.id!);
     setSelectedAction("edit");
     setTaskName(task.name ?? "");
-    setScheduleInitial(task.schedule ?? null);
     setTaskScheduleInitial(task.task_schedule ?? null);
     setTimeWindowInitial(task.time_window ?? null);
     setActionError("");
   };
 
   const handleTaskSubmit = async (
-    schedule: TaskSchedule,
     taskSchedule: RecurrenceSchedule | null,
     timeWindow: TimeWindow | null
   ) => {
@@ -180,7 +174,6 @@ const RoutineDefinitionDetailPage: Component = () => {
         updated = await routineDefinitionAPI.addTask(current.id, {
           task_definition_id: taskDefinitionId,
           name: nameValue ?? undefined,
-          schedule,
           task_schedule: taskSchedule ?? undefined,
           time_window: timeWindow ?? undefined,
         });
@@ -194,7 +187,6 @@ const RoutineDefinitionDetailPage: Component = () => {
           routineDefinitionTaskId,
           {
           name: nameValue ?? undefined,
-          schedule,
           task_schedule: taskSchedule ?? undefined,
           time_window: timeWindow ?? undefined,
           }
@@ -351,7 +343,6 @@ const RoutineDefinitionDetailPage: Component = () => {
                 selectedAction={selectedAction}
                 taskName={taskName}
                 setTaskName={setTaskName}
-                scheduleInitial={scheduleInitial}
                 taskScheduleInitial={taskScheduleInitial}
                 timeWindowInitial={timeWindowInitial}
                 isEditMode={true}

@@ -123,10 +123,7 @@ async def test_create_routine_definition_with_tasks(authenticated_client):
             {
                 "task_definition_id": task_definition_id,
                 "name": "Make bed",
-                "schedule": {
-                    "timing_type": "FIXED_TIME",
-                    "start_time": "07:30:00",
-                },
+                "time_window": {"start_time": "07:30:00"},
             }
         ],
     }
@@ -140,7 +137,7 @@ async def test_create_routine_definition_with_tasks(authenticated_client):
     assert body["tasks"]
     assert body["tasks"][0]["task_definition_id"] == task_definition_id
     assert body["tasks"][0]["name"] == "Make bed"
-    assert body["tasks"][0]["schedule"]["start_time"] == "07:30:00"
+    assert body["tasks"][0]["time_window"]["start_time"] == "07:30:00"
 
 
 @pytest.mark.asyncio

@@ -47,10 +47,9 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
         created_at=current_time,
     )
 
-    task_schedule = value_objects.TaskSchedule(
+    task_time_window = value_objects.TimeWindow(
         start_time=time(10, 0),
         end_time=time(11, 0),
-        timing_type=value_objects.TimingType.FIXED_TIME,
     )
     task = TaskEntity(
         user_id=user_id,
@@ -60,7 +59,7 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
         type=value_objects.TaskType.WORK,
         category=value_objects.TaskCategory.WORK,
         frequency=value_objects.TaskFrequency.ONCE,
-        schedule=task_schedule,
+        time_window=task_time_window,
     )
 
     calendar_entry = CalendarEntryEntity(
@@ -144,7 +143,7 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
     assert serialized["high_level_plan"]["title"] == "Focus"
 
     assert serialized["tasks"][0]["id"] == str(task.id)
-    assert serialized["tasks"][0]["schedule"]["start_time"] == "10:00:00"
+    assert serialized["tasks"][0]["time_window"]["start_time"] == "10:00:00"
     assert serialized["tasks"][0]["minutes_until_start"] == 60
 
     assert serialized["calendar_entries"][0]["id"] == str(calendar_entry.id)

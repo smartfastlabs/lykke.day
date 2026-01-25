@@ -138,10 +138,10 @@ class ProcessBrainDumpHandler(
             name: str,
             category: value_objects.TaskCategory,
             description: str | None = None,
-            timing_type: value_objects.TimingType | None = None,
             available_time: time | None = None,
             start_time: time | None = None,
             end_time: time | None = None,
+            cutoff_time: time | None = None,
             tags: list[value_objects.TaskTag] | None = None,
         ) -> None:
             """Create a new task based on the brain dump item."""
@@ -150,17 +150,13 @@ class ProcessBrainDumpHandler(
                 item_id=brain_dump_item.id,
             )
 
-            has_times = any([available_time, start_time, end_time])
-            if timing_type is None and has_times:
-                timing_type = value_objects.TimingType.FLEXIBLE
-
-            schedule = None
-            if timing_type is not None:
-                schedule = value_objects.TaskSchedule(
-                    timing_type=timing_type,
+            time_window = None
+            if any([available_time, start_time, end_time, cutoff_time]):
+                time_window = value_objects.TimeWindow(
                     available_time=available_time,
                     start_time=start_time,
                     end_time=end_time,
+                    cutoff_time=cutoff_time,
                 )
 
             task_tags = tags or []
@@ -170,7 +166,7 @@ class ProcessBrainDumpHandler(
                     name=name,
                     category=category,
                     description=description,
-                    schedule=schedule,
+                    time_window=time_window,
                     tags=task_tags,
                 )
             )
@@ -240,8 +236,7 @@ class ProcessBrainDumpHandler(
                 prompt_notes=[
                     "Use when the item is a to-do or action.",
                     "category must be one of the TaskCategory enum values (UPPERCASE).",
-                    "timing_type must be one of the TimingType enum values (UPPERCASE) if provided.",
-                    "Time fields should be 24h format HH:MM.",
+                    "Time fields (available_time, start_time, end_time, cutoff_time) should be 24h format HH:MM.",
                 ],
             ),
             LLMTool(

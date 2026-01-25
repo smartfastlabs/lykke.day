@@ -1,7 +1,7 @@
 """Integration tests for TaskRepository."""
 
 import datetime
-from uuid import uuid4, uuid5
+from uuid import uuid4
 
 import pytest
 
@@ -11,11 +11,10 @@ from lykke.domain.value_objects.query import TaskQuery
 from lykke.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
-    TaskSchedule,
     TaskStatus,
     TaskType,
-    TimingType,
 )
+from lykke.domain.value_objects.routine_definition import TimeWindow
 from lykke.infrastructure.repositories import TaskRepository
 
 
@@ -227,10 +226,9 @@ async def test_user_isolation(task_repo, test_user, create_test_user, test_date)
 
 
 @pytest.mark.asyncio
-async def test_task_with_schedule(task_repo, test_user, test_date):
-    """Test creating a task with a schedule."""
-    schedule = TaskSchedule(
-        timing_type=TimingType.DEADLINE,
+async def test_task_with_time_window(task_repo, test_user, test_date):
+    """Test creating a task with a time window."""
+    time_window = TimeWindow(
         start_time=datetime.time(10, 0),
         end_time=datetime.time(12, 0),
     )
@@ -245,23 +243,23 @@ async def test_task_with_schedule(task_repo, test_user, test_date):
         category=TaskCategory.HOUSE,
         frequency=TaskFrequency.DAILY,
         scheduled_date=test_date,
-        schedule=schedule,
+        time_window=time_window,
     )
 
     result = await task_repo.put(task)
 
-    assert result.schedule is not None
-    assert result.schedule.start_time == datetime.time(10, 0)
-    assert result.schedule.end_time == datetime.time(12, 0)
+    assert result.time_window is not None
+    assert result.time_window.start_time == datetime.time(10, 0)
+    assert result.time_window.end_time == datetime.time(12, 0)
 
 
 def test_row_to_entity_parses_time_strings(test_user, test_date):
-    """Ensure time-only strings in schedule JSON deserialize without ValueError."""
-    schedule_dict = {
-        "timing_type": TimingType.DEADLINE.value,
+    """Ensure time-only strings in time_window JSON deserialize without ValueError."""
+    time_window_dict = {
         "start_time": "20:00:00",
         "end_time": None,
         "available_time": None,
+        "cutoff_time": None,
     }
     row = {
         "id": uuid4(),
@@ -275,7 +273,7 @@ def test_row_to_entity_parses_time_strings(test_user, test_date):
         "category": TaskCategory.HOUSE.value,
         "frequency": TaskFrequency.DAILY.value,
         "completed_at": None,
-        "schedule": schedule_dict,
+        "time_window": time_window_dict,
         "routine_definition_id": None,
         "tags": [],
         "actions": [],
@@ -283,8 +281,8 @@ def test_row_to_entity_parses_time_strings(test_user, test_date):
 
     entity = TaskRepository.row_to_entity(row)
 
-    assert entity.schedule is not None
-    assert entity.schedule.start_time == datetime.time(20, 0)
+    assert entity.time_window is not None
+    assert entity.time_window.start_time == datetime.time(20, 0)
 
 
 def test_entity_to_row_and_back_preserves_enums(test_user, test_date):

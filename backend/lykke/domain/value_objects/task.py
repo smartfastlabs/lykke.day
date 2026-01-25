@@ -118,26 +118,5 @@ class TaskStatus(str, Enum):
     PENDING = "PENDING"
 
 
-class TimingType(str, Enum):
-    DEADLINE = "DEADLINE"
-    FIXED_TIME = "FIXED_TIME"
-    TIME_WINDOW = "TIME_WINDOW"
-    FLEXIBLE = "FLEXIBLE"
-
-
-@dataclass(kw_only=True)
-class TaskSchedule(BaseValueObject):
-    available_time: time | None = None
-    start_time: time | None = None
-    end_time: time | None = None
-    timing_type: TimingType
-
-    def __bool__(self) -> bool:
-        for foo in (
-            self.available_time,
-            self.start_time,
-            self.end_time,
-        ):
-            if foo is not None:
-                return True
-        return False
+# TaskSchedule has been replaced by TimeWindow for consistency
+# See routine_definition.py for TimeWindow definition

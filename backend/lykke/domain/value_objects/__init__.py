@@ -65,11 +65,9 @@ from .task import (
     EventCategory,
     TaskCategory,
     TaskFrequency,
-    TaskSchedule,
     TaskStatus,
     TaskTag,
     TaskType,
-    TimingType,
 )
 from .time_block import (
     DayTemplateTimeBlock,
@@ -168,7 +166,6 @@ __all__ = [
     "TaskDefinitionUpdateObject",
     "TaskFrequency",
     "TaskQuery",
-    "TaskSchedule",
     "TaskStatus",
     "TaskTag",
     "TaskType",
@@ -177,7 +174,6 @@ __all__ = [
     "TimeBlockDefinitionUpdateObject",
     "TimeBlockType",
     "TimeWindow",
-    "TimingType",
     "UseCaseConfigQuery",
     "UserQuery",
     "UserSetting",

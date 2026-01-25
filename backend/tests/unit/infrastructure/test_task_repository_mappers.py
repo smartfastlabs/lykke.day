@@ -70,7 +70,7 @@ def test_row_to_entity_converts_string_values_to_enums():
         "category": "CLEANING",
         "frequency": "WEEKLY",
         "completed_at": None,
-        "schedule": None,
+        "time_window": None,
         "routine_definition_id": None,
         "tags": [],
         "actions": [],

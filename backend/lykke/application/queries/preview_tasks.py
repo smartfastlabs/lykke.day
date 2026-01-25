@@ -64,6 +64,10 @@ class PreviewTasksHandler(BaseQueryHandler[PreviewTasksQuery, list[TaskEntity]])
                     task_def = await self.task_definition_ro_repo.get(
                         routine_definition_task.task_definition_id,
                     )
+                    task_time_window = (
+                        routine_definition_task.time_window
+                        or routine_definition.time_window
+                    )
                     task = TaskEntity(
                         user_id=self.user_id,
                         name=(
@@ -74,7 +78,7 @@ class PreviewTasksHandler(BaseQueryHandler[PreviewTasksQuery, list[TaskEntity]])
                         routine_definition_id=routine_definition.id,
                         type=task_def.type,
                         description=task_def.description,
-                        schedule=routine_definition_task.schedule,
+                        time_window=task_time_window,
                         scheduled_date=target_date,
                         status=value_objects.TaskStatus.NOT_STARTED,
                         category=routine_definition.category,

@@ -118,18 +118,6 @@ class RoutineDefinitionRepository(
                 task_dict["task_definition_id"], str
             ):
                 task_dict["task_definition_id"] = UUID(task_dict["task_definition_id"])
-            # Handle schedule with time fields
-            if task_dict.get("schedule"):
-                schedule_dict = task_dict["schedule"]
-                # Convert time strings to time objects
-                for time_field in ["available_time", "start_time", "end_time"]:
-                    if schedule_dict.get(time_field) and isinstance(
-                        schedule_dict[time_field], str
-                    ):
-                        schedule_dict[time_field] = time.fromisoformat(
-                            schedule_dict[time_field]
-                        )
-                task_dict["schedule"] = value_objects.TaskSchedule(**schedule_dict)
 
             # Handle task_schedule (recurrence schedule)
             if task_dict.get("task_schedule"):

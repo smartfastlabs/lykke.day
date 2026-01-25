@@ -10,7 +10,6 @@ from lykke.application.commands.task import (
     CreateAdhocTaskCommand,
     CreateAdhocTaskHandler,
 )
-from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
 from tests.support.dobles import (
@@ -66,9 +65,8 @@ async def test_create_adhoc_task_sets_adhoc_fields():
     uow_factory = create_uow_factory_double(uow)
     handler = CreateAdhocTaskHandler(ro_repos, uow_factory, user_id)
 
-    schedule = value_objects.TaskSchedule(
+    time_window = value_objects.TimeWindow(
         available_time=dt_time(9, 0),
-        timing_type=value_objects.TimingType.FIXED_TIME,
     )
 
     result = await handler.handle(
@@ -77,7 +75,7 @@ async def test_create_adhoc_task_sets_adhoc_fields():
             name="Adhoc task",
             category=value_objects.TaskCategory.WORK,
             description="One-off task",
-            schedule=schedule,
+            time_window=time_window,
             tags=[value_objects.TaskTag.IMPORTANT],
         )
     )
@@ -86,5 +84,5 @@ async def test_create_adhoc_task_sets_adhoc_fields():
     assert result.frequency == value_objects.TaskFrequency.ONCE
     assert result.routine_definition_id is None
     assert result.status == value_objects.TaskStatus.NOT_STARTED
-    assert result.schedule == schedule
+    assert result.time_window == time_window
     assert result.tags == [value_objects.TaskTag.IMPORTANT]

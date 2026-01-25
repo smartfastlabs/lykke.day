@@ -38,28 +38,30 @@ def serialize_day_context(
         if task.description:
             task_data["description"] = task.description
 
-        if task.schedule:
-            schedule_data: dict[str, Any] = {}
-            if task.schedule.start_time:
-                schedule_data["start_time"] = task.schedule.start_time.isoformat()
-            if task.schedule.end_time:
-                schedule_data["end_time"] = task.schedule.end_time.isoformat()
-            if task.schedule.available_time:
-                schedule_data["available_time"] = (
-                    task.schedule.available_time.isoformat()
+        if task.time_window:
+            time_window_data: dict[str, Any] = {}
+            if task.time_window.start_time:
+                time_window_data["start_time"] = task.time_window.start_time.isoformat()
+            if task.time_window.end_time:
+                time_window_data["end_time"] = task.time_window.end_time.isoformat()
+            if task.time_window.available_time:
+                time_window_data["available_time"] = (
+                    task.time_window.available_time.isoformat()
                 )
-            if task.schedule.timing_type:
-                schedule_data["timing_type"] = task.schedule.timing_type.value
-            if schedule_data:
-                task_data["schedule"] = schedule_data
+            if task.time_window.cutoff_time:
+                time_window_data["cutoff_time"] = (
+                    task.time_window.cutoff_time.isoformat()
+                )
+            if time_window_data:
+                task_data["time_window"] = time_window_data
 
         if task.completed_at:
             task_data["completed_at"] = task.completed_at.isoformat()
 
         # Calculate time until task (if scheduled)
-        if task.schedule and task.schedule.start_time:
+        if task.time_window and task.time_window.start_time:
             task_datetime = datetime.combine(
-                task.scheduled_date, task.schedule.start_time
+                task.scheduled_date, task.time_window.start_time
             )
             if task_datetime.tzinfo is None:
                 task_datetime = task_datetime.replace(tzinfo=current_time.tzinfo or UTC)

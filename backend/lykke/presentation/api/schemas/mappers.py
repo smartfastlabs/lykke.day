@@ -51,7 +51,6 @@ from lykke.presentation.api.schemas import (
     RoutineSchema,
     SyncSubscriptionSchema,
     TaskDefinitionSchema,
-    TaskScheduleSchema,
     TaskSchema,
     TimeBlockDefinitionSchema,
     TimeWindowSchema,
@@ -122,21 +121,6 @@ def map_time_block_definition_to_schema(
     )
 
 
-def map_task_schedule_to_schema(
-    schedule: value_objects.TaskSchedule | None,
-) -> TaskScheduleSchema | None:
-    """Convert TaskSchedule value object to TaskSchedule schema."""
-    if schedule is None:
-        return None
-    # Convert dataclass to schema using field mapping
-    return TaskScheduleSchema(
-        available_time=schedule.available_time,
-        start_time=schedule.start_time,
-        end_time=schedule.end_time,
-        timing_type=schedule.timing_type,
-    )
-
-
 def map_time_window_to_schema(
     time_window: value_objects.TimeWindow | None,
 ) -> TimeWindowSchema | None:
@@ -155,7 +139,7 @@ def map_task_to_schema(task: TaskEntity) -> TaskSchema:
     """Convert Task entity to Task schema."""
     # Convert nested entities
     action_schemas = [map_action_to_schema(action) for action in task.actions]
-    schedule_schema = map_task_schedule_to_schema(task.schedule)
+    time_window_schema = map_time_window_to_schema(task.time_window)
 
     return TaskSchema(
         id=task.id,
@@ -168,7 +152,7 @@ def map_task_to_schema(task: TaskEntity) -> TaskSchema:
         category=task.category,
         frequency=task.frequency,
         completed_at=task.completed_at,
-        schedule=schedule_schema,
+        time_window=time_window_schema,
         routine_definition_id=task.routine_definition_id,
         tags=task.tags,
         actions=action_schemas,
@@ -379,10 +363,6 @@ def map_routine_definition_to_schema(
     # Convert tasks
     task_schemas = []
     for task in routine_definition.tasks:
-        schedule_schema = None
-        if task.schedule:
-            schedule_schema = map_task_schedule_to_schema(task.schedule)
-
         task_schedule_schema = None
         if task.task_schedule:
             task_schedule_schema = RecurrenceScheduleSchema(
@@ -397,7 +377,6 @@ def map_routine_definition_to_schema(
             id=task.id,
             task_definition_id=task.task_definition_id,
             name=task.name,
-            schedule=schedule_schema,
             task_schedule=task_schedule_schema,
             time_window=time_window_schema,
         )

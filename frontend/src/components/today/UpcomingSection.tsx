@@ -22,29 +22,30 @@ export interface UpcomingSectionProps {
 
 const getTaskTime = (task: Task): Date | null => {
   const taskDate = task.scheduled_date;
-  if (!taskDate || !task.schedule) return null;
+  if (!taskDate || !task.time_window) return null;
 
-  const schedule = task.schedule;
-  
-  // For FIXED_TIME, use start_time
-  if (schedule.timing_type === "FIXED_TIME" && schedule.start_time) {
-    return getTime(taskDate, schedule.start_time);
+  const timeWindow = task.time_window;
+
+  // Prefer start_time for fixed time tasks
+  if (timeWindow.start_time && !timeWindow.end_time) {
+    return getTime(taskDate, timeWindow.start_time);
   }
-  
-  // For DEADLINE, use end_time
-  if (schedule.timing_type === "DEADLINE" && schedule.end_time) {
-    return getTime(taskDate, schedule.end_time);
+
+  // Use end_time for deadline tasks
+  if (timeWindow.end_time && !timeWindow.start_time) {
+    return getTime(taskDate, timeWindow.end_time);
   }
-  
-  // For others, use available_time or start_time as fallback
-  if (schedule.available_time) {
-    return getTime(taskDate, schedule.available_time);
+
+  // For time windows, use start_time
+  if (timeWindow.start_time) {
+    return getTime(taskDate, timeWindow.start_time);
   }
-  
-  if (schedule.start_time) {
-    return getTime(taskDate, schedule.start_time);
+
+  // Fallback to available_time
+  if (timeWindow.available_time) {
+    return getTime(taskDate, timeWindow.available_time);
   }
-  
+
   return null;
 };
 

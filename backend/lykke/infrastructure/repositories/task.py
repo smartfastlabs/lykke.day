@@ -73,8 +73,8 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
         # Handle JSONB fields
         from lykke.core.utils.serialization import dataclass_to_json_dict
 
-        if task.schedule:
-            row["schedule"] = dataclass_to_json_dict(task.schedule)
+        if task.time_window:
+            row["time_window"] = dataclass_to_json_dict(task.time_window)
 
         if task.tags:
             row["tags"] = [tag.value for tag in task.tags]
@@ -110,27 +110,20 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
         if "frequency" in data and isinstance(data["frequency"], str):
             data["frequency"] = value_objects.TaskFrequency(data["frequency"])
 
-        # Handle JSONB fields - schedule, tags, actions
+        # Handle JSONB fields - time_window, tags, actions
 
-        if isinstance(data.get("schedule"), dict):
-            # TaskSchedule is a Pydantic model
-            schedule_dict = data["schedule"]
-            # Convert enum strings back to enums
-            if "timing_type" in schedule_dict and isinstance(
-                schedule_dict["timing_type"], str
-            ):
-                schedule_dict["timing_type"] = value_objects.TimingType(
-                    schedule_dict["timing_type"]
-                )
+        if isinstance(data.get("time_window"), dict):
+            # TimeWindow value object
+            time_window_dict = data["time_window"]
             # Convert time strings back to time objects if needed
-            for time_field in ["available_time", "start_time", "end_time"]:
-                if time_field in schedule_dict and isinstance(
-                    schedule_dict[time_field], str
+            for time_field in ["available_time", "start_time", "end_time", "cutoff_time"]:
+                if time_field in time_window_dict and isinstance(
+                    time_window_dict[time_field], str
                 ):
-                    schedule_dict[time_field] = dt_time.fromisoformat(
-                        schedule_dict[time_field]
+                    time_window_dict[time_field] = dt_time.fromisoformat(
+                        time_window_dict[time_field]
                     )
-            data["schedule"] = value_objects.TaskSchedule(**schedule_dict)
+            data["time_window"] = value_objects.TimeWindow(**time_window_dict)
 
         if data.get("tags") and isinstance(data["tags"], list):
             # Tags are stored as strings, convert to TaskTag enums

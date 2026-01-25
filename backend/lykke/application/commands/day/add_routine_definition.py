@@ -68,6 +68,10 @@ class AddRoutineDefinitionToDayHandler(
                 task_definition = await uow.task_definition_ro_repo.get(
                     routine_definition_task.task_definition_id
                 )
+                task_time_window = (
+                    routine_definition_task.time_window
+                    or routine_definition.time_window
+                )
                 task = TaskEntity(
                     user_id=self.user_id,
                     scheduled_date=command.date,
@@ -80,7 +84,7 @@ class AddRoutineDefinitionToDayHandler(
                     description=task_definition.description,
                     category=routine_definition.category,
                     frequency=routine_definition.routine_definition_schedule.frequency,
-                    schedule=routine_definition_task.schedule,
+                    time_window=task_time_window,
                     routine_definition_id=routine_definition.id,
                 )
                 created = await uow.create(task)

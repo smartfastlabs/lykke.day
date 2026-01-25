@@ -21,7 +21,7 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
     category: value_objects.TaskCategory
     frequency: value_objects.TaskFrequency
     completed_at: datetime | None = None
-    schedule: value_objects.TaskSchedule | None = None
+    time_window: value_objects.TimeWindow | None = None
     routine_definition_id: UUID | None = None
     tags: list[value_objects.TaskTag] = field(default_factory=list)
     actions: list[value_objects.Action] = field(default_factory=list)
@@ -156,18 +156,18 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
         if self.completed_at:
             return False
 
-        # Exclude tasks without a schedule
-        if not self.schedule:
+        # Exclude tasks without a time_window
+        if not self.time_window:
             return False
 
         # Check available_time - task must be available
-        if self.schedule.available_time:
-            if self.schedule.available_time > now:
+        if self.time_window.available_time:
+            if self.time_window.available_time > now:
                 return False
 
         # Check start_time - task must start before cutoff
-        elif self.schedule.start_time and cutoff_time < self.schedule.start_time:
+        elif self.time_window.start_time and cutoff_time < self.time_window.start_time:
             return False
 
         # Check end_time - task must not have ended
-        return not (self.schedule.end_time and now > self.schedule.end_time)
+        return not (self.time_window.end_time and now > self.time_window.end_time)

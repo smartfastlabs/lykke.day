@@ -10,12 +10,11 @@ from lykke.domain.entities import RoutineDefinitionEntity
 from lykke.domain.value_objects.routine_definition import (
     RecurrenceSchedule,
     RoutineDefinitionTask,
+    TimeWindow,
 )
 from lykke.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
-    TaskSchedule,
-    TimingType,
 )
 from lykke.infrastructure.repositories import RoutineDefinitionRepository
 
@@ -133,8 +132,8 @@ async def test_user_isolation(
 
 
 @pytest.mark.asyncio
-async def test_put_with_task_schedule(routine_definition_repo, test_user):
-    """Ensure tasks with schedules are serialized/deserialized."""
+async def test_put_with_task_time_window(routine_definition_repo, test_user):
+    """Ensure tasks with time windows are serialized/deserialized."""
     routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
         user_id=test_user.id,
@@ -148,8 +147,7 @@ async def test_put_with_task_schedule(routine_definition_repo, test_user):
             RoutineDefinitionTask(
                 task_definition_id=uuid4(),
                 name="Test Task",
-                schedule=TaskSchedule(
-                    timing_type=TimingType.FIXED_TIME,
+                time_window=TimeWindow(
                     start_time=time(hour=9, minute=0),
                     end_time=time(hour=10, minute=0),
                 ),
@@ -162,6 +160,6 @@ async def test_put_with_task_schedule(routine_definition_repo, test_user):
 
     assert result.tasks
     first = result.tasks[0]
-    assert first.schedule is not None
-    assert first.schedule.start_time == time(hour=9, minute=0)
-    assert first.schedule.end_time == time(hour=10, minute=0)
+    assert first.time_window is not None
+    assert first.time_window.start_time == time(hour=9, minute=0)
+    assert first.time_window.end_time == time(hour=10, minute=0)

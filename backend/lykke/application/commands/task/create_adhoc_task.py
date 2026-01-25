@@ -16,7 +16,7 @@ class CreateAdhocTaskCommand(Command):
     name: str
     category: value_objects.TaskCategory
     description: str | None = None
-    schedule: value_objects.TaskSchedule | None = None
+    time_window: value_objects.TimeWindow | None = None
     tags: list[value_objects.TaskTag] = field(default_factory=list)
 
 
@@ -47,7 +47,7 @@ class CreateAdhocTaskHandler(BaseCommandHandler[CreateAdhocTaskCommand, TaskEnti
                 description=command.description,
                 category=command.category,
                 frequency=value_objects.TaskFrequency.ONCE,
-                schedule=command.schedule,
+                time_window=command.time_window,
                 routine_definition_id=None,
                 tags=command.tags,
             )
