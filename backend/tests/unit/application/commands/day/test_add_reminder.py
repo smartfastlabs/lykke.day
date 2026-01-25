@@ -129,9 +129,7 @@ async def test_add_reminder_emits_domain_event():
     handler = AddReminderToDayHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.handle(
-        AddReminderToDayCommand(date=task_date, reminder="Test Reminder")
-    )
+    await handler.handle(AddReminderToDayCommand(date=task_date, reminder="Test Reminder"))
 
     # Assert
     events = day.collect_events()

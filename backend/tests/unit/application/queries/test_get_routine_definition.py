@@ -60,17 +60,6 @@ async def test_get_routine_definition_raises_not_found_for_invalid_id():
     user_id = uuid4()
     invalid_id = uuid4()
 
-    routine_definition = RoutineDefinitionEntity(
-        id=uuid4(),  # Different ID
-        user_id=user_id,
-        name="Morning Routine Definition",
-        category=value_objects.TaskCategory.HEALTH,
-        routine_definition_schedule=value_objects.RecurrenceSchedule(
-            frequency=value_objects.TaskFrequency.DAILY,
-        ),
-        tasks=[],
-    )
-
     # Setup repository to raise NotFoundError
     routine_repo = create_routine_definition_repo_double()
     allow(routine_repo).get.with_args(invalid_id).and_raise(

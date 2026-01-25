@@ -95,7 +95,7 @@ async def test_update_reminder_status_emits_domain_event():
     handler = UpdateReminderStatusHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.handle(
+    await handler.handle(
         UpdateReminderStatusCommand(
             date=task_date,
             reminder_id=reminder.id,

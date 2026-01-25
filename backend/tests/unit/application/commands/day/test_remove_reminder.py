@@ -1,7 +1,6 @@
 """Unit tests for RemoveReminderHandler."""
 
-import datetime
-from datetime import UTC, date as dt_date
+from datetime import date as dt_date
 from uuid import uuid4
 
 import pytest
@@ -9,7 +8,6 @@ from dobles import allow
 
 from lykke.application.commands.day import RemoveReminderCommand, RemoveReminderHandler
 from lykke.core.exceptions import DomainError
-from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
 from lykke.domain.events.day_events import ReminderRemovedEvent
 from tests.support.dobles import (
@@ -91,9 +89,7 @@ async def test_remove_reminder_emits_domain_event():
     handler = RemoveReminderHandler(ro_repos, uow_factory, user_id)
 
     # Act
-    result = await handler.handle(
-        RemoveReminderCommand(date=task_date, reminder_id=reminder.id)
-    )
+    await handler.handle(RemoveReminderCommand(date=task_date, reminder_id=reminder.id))
 
     # Assert
     events = day.collect_events()

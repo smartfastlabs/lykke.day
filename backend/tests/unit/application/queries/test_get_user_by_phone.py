@@ -6,7 +6,6 @@ import pytest
 from dobles import allow
 
 from lykke.application.queries.user import GetUserByPhoneHandler, GetUserByPhoneQuery
-from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from tests.support.dobles import (
     create_read_only_repos_double,
@@ -36,11 +35,6 @@ async def test_get_user_by_phone_returns_user_when_found():
 
 @pytest.mark.asyncio
 async def test_get_user_by_phone_returns_none_when_missing():
-    user = UserEntity(
-        email="test@example.com",
-        hashed_password="hash",
-        phone_number="+15551234567",
-    )
     user_repo = create_user_repo_double()
     allow(user_repo).search_one_or_none.and_return(None)
 
