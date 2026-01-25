@@ -6,13 +6,13 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal
 
 from lykke.application.gateways.llm_protocol import LLMTool
-from lykke.application.queries.get_llm_prompt_context import (
-    GetLLMPromptContextHandler,
-    GetLLMPromptContextQuery,
-)
 from lykke.application.queries.compute_task_risk import (
     ComputeTaskRiskHandler,
     ComputeTaskRiskQuery,
+)
+from lykke.application.queries.get_llm_prompt_context import (
+    GetLLMPromptContextHandler,
+    GetLLMPromptContextQuery,
 )
 from lykke.domain import value_objects
 

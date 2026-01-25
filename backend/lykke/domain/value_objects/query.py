@@ -10,6 +10,7 @@ from uuid import UUID
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .day import BrainDumpItemStatus, BrainDumpItemType
 
+
 @dataclass(kw_only=True)
 class BaseQuery(BaseValueObject):
     """Base query class for building flexible queries with pagination, ordering, and filtering."""

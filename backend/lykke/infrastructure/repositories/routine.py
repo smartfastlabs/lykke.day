@@ -1,13 +1,14 @@
 from datetime import time
 from typing import Any
 
+from sqlalchemy.sql import Select
+
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import RoutineEntity
 from lykke.domain.value_objects.task import TaskCategory
 from lykke.infrastructure.database.tables import routines_tbl
 from lykke.infrastructure.repositories.base.utils import filter_init_false_fields
-from sqlalchemy.sql import Select
 
 from .base import UserScopedBaseRepository
 

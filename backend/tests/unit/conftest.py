@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import pytest
 
+from lykke.application.repositories import MessageRepositoryReadOnlyProtocol
 from tests.support.dobles import (
     create_auth_token_repo_double,
     create_brain_dump_repo_double,
@@ -26,7 +27,6 @@ from tests.support.dobles import (
     create_user_repo_double,
     create_web_push_gateway_double,
 )
-from lykke.application.repositories import MessageRepositoryReadOnlyProtocol
 
 
 # Mocked repository fixtures

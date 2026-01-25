@@ -13,7 +13,11 @@ if TYPE_CHECKING:
 
     from .day import DayStatus, DayTag, Reminder
     from .high_level_plan import HighLevelPlan
-    from .routine_definition import RecurrenceSchedule, RoutineDefinitionTask, TimeWindow
+    from .routine_definition import (
+        RecurrenceSchedule,
+        RoutineDefinitionTask,
+        TimeWindow,
+    )
     from .sync import SyncSubscription
     from .task import EventCategory, TaskCategory, TaskFrequency, TaskType
     from .time_block import (

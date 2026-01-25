@@ -7,7 +7,10 @@ from .update_brain_dump_item_status import (
     UpdateBrainDumpStatusCommand,
     UpdateBrainDumpStatusHandler,
 )
-from .update_brain_dump_item_type import UpdateBrainDumpTypeCommand, UpdateBrainDumpTypeHandler
+from .update_brain_dump_item_type import (
+    UpdateBrainDumpTypeCommand,
+    UpdateBrainDumpTypeHandler,
+)
 
 __all__ = [
     "CreateBrainDumpCommand",

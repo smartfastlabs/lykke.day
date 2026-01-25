@@ -19,8 +19,8 @@ from lykke.domain.entities import (
     MessageEntity,
     PushNotificationEntity,
     PushSubscriptionEntity,
-    RoutineEntity,
     RoutineDefinitionEntity,
+    RoutineEntity,
     TaskDefinitionEntity,
     TaskEntity,
     TimeBlockDefinitionEntity,
@@ -46,14 +46,14 @@ from lykke.presentation.api.schemas import (
     MessageSchema,
     PushSubscriptionSchema,
     ReminderSchema,
-    RoutineSchema,
     RoutineDefinitionSchema,
+    RoutineSchema,
     SyncSubscriptionSchema,
     TaskDefinitionSchema,
     TaskScheduleSchema,
     TaskSchema,
-    TimeWindowSchema,
     TimeBlockDefinitionSchema,
+    TimeWindowSchema,
     UseCaseConfigSchema,
     UserSchema,
     UserSettingsSchema,
@@ -356,7 +356,10 @@ def map_routine_definition_to_schema(
     routine_definition: RoutineDefinitionEntity,
 ) -> RoutineDefinitionSchema:
     """Convert RoutineDefinition entity to RoutineDefinition schema."""
-    from .routine_definition import RecurrenceScheduleSchema, RoutineDefinitionTaskSchema
+    from .routine_definition import (
+        RecurrenceScheduleSchema,
+        RoutineDefinitionTaskSchema,
+    )
 
     # Convert routine schedule
     routine_definition_schedule_schema = RecurrenceScheduleSchema(

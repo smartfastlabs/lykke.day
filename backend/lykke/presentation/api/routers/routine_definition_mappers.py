@@ -10,7 +10,6 @@ from lykke.domain.value_objects.routine_definition import (
     TimeWindow,
 )
 from lykke.domain.value_objects.task import TaskSchedule
-
 from lykke.presentation.api.schemas.routine_definition import (
     RecurrenceScheduleSchema,
     RoutineDefinitionCreateSchema,

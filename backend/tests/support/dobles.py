@@ -10,8 +10,6 @@ from uuid import UUID
 
 from dobles import InstanceDouble, allow
 
-from lykke.domain import value_objects
-
 from lykke.application.gateways import (
     GoogleCalendarGatewayProtocol,
     PubSubGatewayProtocol,
@@ -45,6 +43,7 @@ from lykke.application.unit_of_work import (
     UnitOfWorkFactory,
     UnitOfWorkProtocol,
 )
+from lykke.domain import value_objects
 
 
 class PreviewDayHandlerProtocol(Protocol):

@@ -3,17 +3,17 @@
 Query handlers execute read operations and return data without side effects.
 """
 
-from .compute_task_risk import (
-    ComputeTaskRiskHandler,
-    ComputeTaskRiskQuery,
-    TaskRiskResult,
-    TaskRiskScore,
-)
 from .brain_dump import (
     GetBrainDumpHandler,
     GetBrainDumpQuery,
     SearchBrainDumpsHandler,
     SearchBrainDumpsQuery,
+)
+from .compute_task_risk import (
+    ComputeTaskRiskHandler,
+    ComputeTaskRiskQuery,
+    TaskRiskResult,
+    TaskRiskScore,
 )
 from .generate_usecase_prompt import (
     GenerateUseCasePromptHandler,
@@ -38,10 +38,10 @@ __all__ = [
     "BasePersonalityInfo",
     "ComputeTaskRiskHandler",
     "ComputeTaskRiskQuery",
-    "GetBrainDumpHandler",
-    "GetBrainDumpQuery",
     "GenerateUseCasePromptHandler",
     "GenerateUseCasePromptQuery",
+    "GetBrainDumpHandler",
+    "GetBrainDumpQuery",
     "GetDayContextHandler",
     "GetDayContextQuery",
     "GetIncrementalChangesHandler",

@@ -8,7 +8,7 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
-from dobles import allow
+from dobles import InstanceDouble, allow
 
 from lykke.application.commands.brain_dump import (
     ProcessBrainDumpCommand,
@@ -25,7 +25,6 @@ from tests.support.dobles import (
     create_uow_double,
     create_uow_factory_double,
 )
-from dobles import InstanceDouble
 
 
 @dataclass
@@ -54,7 +53,7 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
     }
     runner = InstanceDouble("lykke.application.llm_usecases.runner.LLMUseCaseRunner")
     runner.calls: list[object] = []
-    
+
     async def run_side_effect(*, usecase: Any) -> LLMRunResult | None:
         runner.calls.append(usecase)
         return LLMRunResult(
@@ -75,7 +74,7 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
             ask_prompt="ask",
         )
     runner.run = run_side_effect
-    
+
     task_recorder = _Recorder(commands=[])
 
     brain_dump_repo = create_brain_dump_repo_double()
@@ -129,7 +128,7 @@ async def test_process_brain_dump_update_task_records_action() -> None:
     task_id = uuid4()
     runner = InstanceDouble("lykke.application.llm_usecases.runner.LLMUseCaseRunner")
     runner.calls: list[object] = []
-    
+
     async def run_side_effect(*, usecase: Any) -> LLMRunResult | None:
         runner.calls.append(usecase)
         return LLMRunResult(
@@ -150,7 +149,7 @@ async def test_process_brain_dump_update_task_records_action() -> None:
             ask_prompt="ask",
         )
     runner.run = run_side_effect
-    
+
     task_action_recorder = _Recorder(commands=[])
 
     brain_dump_repo = create_brain_dump_repo_double()
@@ -200,7 +199,7 @@ async def test_process_brain_dump_update_reminder_updates_status() -> None:
     reminder_id = uuid4()
     runner = InstanceDouble("lykke.application.llm_usecases.runner.LLMUseCaseRunner")
     runner.calls: list[object] = []
-    
+
     async def run_side_effect(*, usecase: Any) -> LLMRunResult | None:
         runner.calls.append(usecase)
         return LLMRunResult(
@@ -224,7 +223,7 @@ async def test_process_brain_dump_update_reminder_updates_status() -> None:
             ask_prompt="ask",
         )
     runner.run = run_side_effect
-    
+
     reminder_status_recorder = _Recorder(commands=[])
 
     brain_dump_repo = create_brain_dump_repo_double()
@@ -273,7 +272,7 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
 
     runner = InstanceDouble("lykke.application.llm_usecases.runner.LLMUseCaseRunner")
     runner.calls: list[object] = []
-    
+
     async def run_side_effect(*, usecase: Any) -> LLMRunResult | None:
         runner.calls.append(usecase)
         return LLMRunResult(

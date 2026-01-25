@@ -7,8 +7,8 @@ from typing import cast
 
 from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.repositories import (
-    CalendarEntryRepositoryReadOnlyProtocol,
     BrainDumpRepositoryReadOnlyProtocol,
+    CalendarEntryRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
     RoutineRepositoryReadOnlyProtocol,

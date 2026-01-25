@@ -5,18 +5,20 @@ Revises: 3ceb62b762f2
 Create Date: 2026-01-24 10:41:09.007501
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
+from typing import Union
+
+import fastapi_users_db_sqlalchemy
+import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 from alembic import op
-import sqlalchemy as sa
-import fastapi_users_db_sqlalchemy
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = 'abdf45926ebe'
-down_revision: Union[str, Sequence[str], None] = '3ceb62b762f2'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = '3ceb62b762f2'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

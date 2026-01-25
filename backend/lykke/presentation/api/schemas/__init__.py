@@ -52,8 +52,8 @@ from .routine_definition import (
     RoutineDefinitionSchema,
     RoutineDefinitionTaskCreateSchema,
     RoutineDefinitionTaskUpdateSchema,
-    TimeWindowSchema,
     RoutineDefinitionUpdateSchema,
+    TimeWindowSchema,
 )
 from .task import AdhocTaskCreateSchema, TaskScheduleSchema, TaskSchema
 from .task_definition import (
@@ -183,13 +183,12 @@ __all__ = [
     "PushSubscriptionUpdateSchema",
     "QuerySchema",
     "ReminderSchema",
-    "RoutineSchema",
     "RoutineDefinitionCreateSchema",
     "RoutineDefinitionSchema",
     "RoutineDefinitionTaskCreateSchema",
     "RoutineDefinitionTaskUpdateSchema",
-    "TimeWindowSchema",
     "RoutineDefinitionUpdateSchema",
+    "RoutineSchema",
     "SendMessageRequestSchema",
     "SendMessageResponseSchema",
     "StatusResponseSchema",
@@ -202,6 +201,7 @@ __all__ = [
     "TimeBlockDefinitionCreateSchema",
     "TimeBlockDefinitionSchema",
     "TimeBlockDefinitionUpdateSchema",
+    "TimeWindowSchema",
     "UseCaseConfigCreateSchema",
     "UseCaseConfigSchema",
     "UserSchema",

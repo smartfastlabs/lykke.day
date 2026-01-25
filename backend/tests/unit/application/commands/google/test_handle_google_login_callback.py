@@ -123,7 +123,7 @@ async def test_handle_google_login_callback_updates_auth_token_and_calendars(
         def __init__(self, items: list[dict[str, str]]) -> None:
             self._items = items
 
-        def list(self) -> "CalendarList":
+        def list(self) -> CalendarList:
             return self
 
         def execute(self) -> dict[str, list[dict[str, str]]]:

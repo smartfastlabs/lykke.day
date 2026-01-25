@@ -1,6 +1,7 @@
 """Integration tests for BrainDumpRepository."""
 
 from datetime import UTC, datetime
+
 import pytest
 
 from lykke.domain import value_objects

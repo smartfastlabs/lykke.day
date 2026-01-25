@@ -42,13 +42,6 @@ from lykke.presentation.api.schemas import (
     TaskSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_routine_definition_to_schema
-
-from .routine_definition_mappers import (
-    create_schema_to_entity,
-    task_create_schema_to_vo,
-    task_update_schema_to_partial_vo,
-    update_schema_to_update_object,
-)
 from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
     QueryHandlerFactory,
@@ -56,6 +49,12 @@ from lykke.presentation.handler_factory import (
 
 from .dependencies.factories import command_handler_factory, query_handler_factory
 from .dependencies.user import get_current_user
+from .routine_definition_mappers import (
+    create_schema_to_entity,
+    task_create_schema_to_vo,
+    task_update_schema_to_partial_vo,
+    update_schema_to_update_object,
+)
 from .utils import build_search_query, create_paged_response
 
 if TYPE_CHECKING:

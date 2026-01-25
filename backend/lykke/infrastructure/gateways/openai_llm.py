@@ -9,8 +9,8 @@ from langchain_openai import ChatOpenAI
 from loguru import logger
 from pydantic import SecretStr
 
-from lykke.core.config import settings
 from lykke.application.gateways.llm_protocol import LLMTool, LLMToolCallResult
+from lykke.core.config import settings
 from lykke.infrastructure.gateways.llm_tools import build_tool_spec_from_callable
 
 

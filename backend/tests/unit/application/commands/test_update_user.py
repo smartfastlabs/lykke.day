@@ -8,9 +8,9 @@ from lykke.domain.entities import UserEntity
 from lykke.domain.value_objects import UserSetting, UserStatus, UserUpdateObject
 from tests.support.dobles import (
     create_read_only_repos_double,
-    create_user_repo_double,
     create_uow_double,
     create_uow_factory_double,
+    create_user_repo_double,
 )
 
 

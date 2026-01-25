@@ -18,9 +18,9 @@ from tests.support.dobles import (
     create_day_repo_double,
     create_day_template_repo_double,
     create_read_only_repos_double,
-    create_user_repo_double,
     create_uow_double,
     create_uow_factory_double,
+    create_user_repo_double,
 )
 
 

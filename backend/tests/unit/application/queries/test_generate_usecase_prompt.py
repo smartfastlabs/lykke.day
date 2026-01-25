@@ -9,6 +9,7 @@ from lykke.application.queries.generate_usecase_prompt import (
     GenerateUseCasePromptHandler,
     GenerateUseCasePromptQuery,
 )
+from lykke.application.repositories import UseCaseConfigRepositoryReadOnlyProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from tests.support.dobles import (
@@ -16,7 +17,6 @@ from tests.support.dobles import (
     create_repo_double,
     create_user_repo_double,
 )
-from lykke.application.repositories import UseCaseConfigRepositoryReadOnlyProtocol
 
 
 @pytest.mark.asyncio

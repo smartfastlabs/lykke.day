@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class UseCasePromptInput:
     """Prompt input for an LLM use case."""
 
-    prompt_context: "value_objects.LLMPromptContext"
+    prompt_context: value_objects.LLMPromptContext
     extra_template_vars: dict[str, Any] | None = None
 
 
@@ -38,6 +38,6 @@ class BaseUseCase(ABC):
         self,
         *,
         current_time: datetime,
-        prompt_context: "value_objects.LLMPromptContext",
+        prompt_context: value_objects.LLMPromptContext,
     ) -> list[LLMTool]:
         """Build tool definitions for this use case."""

@@ -31,9 +31,9 @@ class LLMRunResult:
 
     tool_name: str
     result: object | None
-    prompt_context: "value_objects.LLMPromptContext"
+    prompt_context: value_objects.LLMPromptContext
     current_time: datetime
-    llm_provider: "value_objects.LLMProvider"
+    llm_provider: value_objects.LLMProvider
     system_prompt: str
     context_prompt: str
     ask_prompt: str

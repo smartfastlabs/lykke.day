@@ -3,10 +3,10 @@ from .auditable import AuditableEntity
 from .auth_token import AuthTokenEntity
 from .base import BaseEntityObject, BaseObject
 from .bot_personality import BotPersonalityEntity
+from .brain_dump import BrainDumpEntity
 from .calendar import CalendarEntity
 from .calendar_entry import CalendarEntryEntity
 from .calendar_entry_series import CalendarEntrySeriesEntity
-from .brain_dump import BrainDumpEntity
 from .conversation import ConversationEntity
 from .day import DayEntity
 from .day_template import DayTemplateEntity
@@ -40,8 +40,8 @@ __all__ = [
     "MessageEntity",
     "PushNotificationEntity",
     "PushSubscriptionEntity",
-    "RoutineEntity",
     "RoutineDefinitionEntity",
+    "RoutineEntity",
     "TaskDefinitionEntity",
     "TaskEntity",
     "TimeBlockDefinitionEntity",

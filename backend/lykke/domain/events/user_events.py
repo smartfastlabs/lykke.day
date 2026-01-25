@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 from lykke.domain.value_objects.update import UserUpdateObject
 
 from .base import DomainEvent, EntityUpdatedEvent
