@@ -309,7 +309,7 @@ export interface paths {
         patch: operations["update_brain_dump_item_status_me_today_brain_dump__item_id__patch"];
         trace?: never;
     };
-    "/me/today/routine-definitions": {
+    "/me/today/routines": {
         parameters: {
             query?: never;
             header?: never;
@@ -319,10 +319,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Add Routine Definition To Today
-         * @description Add a routine definition's tasks to today.
+         * Add Routine To Today
+         * @description Add a routine's tasks to today (creates today's routine if needed).
          */
-        post: operations["add_routine_definition_to_today_me_today_routine_definitions_post"];
+        post: operations["add_routine_to_today_me_today_routines_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -397,6 +397,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/factoids/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Factoid
+         * @description Get a single factoid by ID.
+         */
+        get: operations["get_factoid_factoids__uuid__get"];
+        /**
+         * Update Factoid
+         * @description Update a factoid.
+         */
+        put: operations["update_factoid_factoids__uuid__put"];
+        post?: never;
+        /**
+         * Delete Factoid
+         * @description Delete a factoid.
+         */
+        delete: operations["delete_factoid_factoids__uuid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/factoids/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Factoids
+         * @description Search factoids with pagination and optional filters.
+         */
+        post: operations["search_factoids_factoids__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/factoids/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Factoid
+         * @description Create a new factoid.
+         */
+        post: operations["create_factoid_factoids_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/calendar-entry-series/{uuid}": {
         parameters: {
             query?: never;
@@ -435,6 +503,46 @@ export interface paths {
          * @description Search calendar entry series with pagination and optional filters.
          */
         post: operations["search_calendar_entry_series_calendar_entry_series__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push-notifications/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Push Notifications
+         * @description Search push notifications with pagination and optional filters.
+         */
+        post: operations["search_push_notifications_push_notifications__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push-notifications/{notification_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Push Notification
+         * @description Get a specific push notification by ID.
+         */
+        get: operations["get_push_notification_push_notifications__notification_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -948,6 +1056,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/routines/{uuid}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Routine Action
+         * @description Record an action on all tasks in a routine for today.
+         */
+        post: operations["record_routine_action_routines__uuid__actions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/time-block-definitions/{uuid}": {
         parameters: {
             query?: never;
@@ -1198,6 +1326,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/usecase-configs/{usecase}/llm-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Llm Snapshot Preview
+         * @description Build a synthetic LLM snapshot preview for a usecase.
+         */
+        get: operations["get_llm_snapshot_preview_usecase_configs__usecase__llm_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/usecase-configs/{usecase_config_id}": {
         parameters: {
             query?: never;
@@ -1313,7 +1461,7 @@ export interface components {
             /** Description */
             description?: string | null;
             category: components["schemas"]["TaskCategory"];
-            schedule?: components["schemas"]["TaskScheduleSchema"] | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
             /** Tags */
             tags?: components["schemas"]["TaskTag"][];
         };
@@ -1402,6 +1550,10 @@ export interface components {
             type: components["schemas"]["BrainDumpItemType"];
             /** Created At */
             created_at?: string | null;
+            /** Llm Run Result */
+            llm_run_result?: {
+                [key: string]: unknown;
+            } | null;
         };
         /**
          * BrainDumpItemStatus
@@ -1887,6 +2039,131 @@ export interface components {
          * @enum {string}
          */
         EventCategory: "WORK" | "PERSONAL" | "FAMILY" | "SOCIAL" | "OTHER";
+        /**
+         * FactoidCreateSchema
+         * @description API schema for creating a Factoid entity.
+         */
+        FactoidCreateSchema: {
+            /** Content */
+            content: string;
+            /** @default semantic */
+            factoid_type: components["schemas"]["FactoidType"];
+            /** @default normal */
+            criticality: components["schemas"]["FactoidCriticality"];
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /**
+             * Ai Suggested
+             * @default false
+             */
+            ai_suggested: boolean;
+            /**
+             * User Confirmed
+             * @default true
+             */
+            user_confirmed: boolean;
+        };
+        /**
+         * FactoidCriticality
+         * @description Criticality level of a factoid.
+         * @enum {string}
+         */
+        FactoidCriticality: "normal" | "important" | "critical";
+        /** FactoidQuery */
+        FactoidQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Factoid Type */
+            factoid_type?: string | null;
+            /** Criticality */
+            criticality?: string | null;
+            /** Is Global */
+            is_global?: boolean | null;
+        };
+        /**
+         * FactoidSchema
+         * @description Schema for Factoid entity.
+         */
+        FactoidSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Factoid Type */
+            factoid_type: string;
+            /** Criticality */
+            criticality: string;
+            /** Content */
+            content: string;
+            /** Embedding */
+            embedding?: number[] | null;
+            /**
+             * Ai Suggested
+             * @default false
+             */
+            ai_suggested: boolean;
+            /**
+             * User Confirmed
+             * @default false
+             */
+            user_confirmed: boolean;
+            /**
+             * Last Accessed
+             * Format: date-time
+             */
+            last_accessed: string;
+            /**
+             * Access Count
+             * @default 0
+             */
+            access_count: number;
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * FactoidType
+         * @description Type of factoid/memory stored.
+         * @enum {string}
+         */
+        FactoidType: "episodic" | "semantic" | "procedural";
+        /**
+         * FactoidUpdateSchema
+         * @description API schema for Factoid update requests.
+         */
+        FactoidUpdateSchema: {
+            /** Content */
+            content?: string | null;
+            factoid_type?: components["schemas"]["FactoidType"] | null;
+            criticality?: components["schemas"]["FactoidCriticality"] | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** User Confirmed */
+            user_confirmed?: boolean | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1980,6 +2257,36 @@ export interface components {
             /** Has Previous */
             has_previous: boolean;
         };
+        /** PagedResponseSchema[FactoidSchema] */
+        PagedResponseSchema_FactoidSchema_: {
+            /** Items */
+            items: components["schemas"]["FactoidSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[PushNotificationSchema] */
+        PagedResponseSchema_PushNotificationSchema_: {
+            /** Items */
+            items: components["schemas"]["PushNotificationSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
         /** PagedResponseSchema[PushSubscriptionSchema] */
         PagedResponseSchema_PushSubscriptionSchema_: {
             /** Items */
@@ -2039,6 +2346,73 @@ export interface components {
             has_next: boolean;
             /** Has Previous */
             has_previous: boolean;
+        };
+        /** PushNotificationQuery */
+        PushNotificationQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Push Subscription Id */
+            push_subscription_id?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Sent After */
+            sent_after?: string | null;
+            /** Sent Before */
+            sent_before?: string | null;
+            /** Message Hash */
+            message_hash?: string | null;
+            /** Triggered By */
+            triggered_by?: string | null;
+            /** Priority */
+            priority?: string | null;
+        };
+        /**
+         * PushNotificationSchema
+         * @description API schema for PushNotification entity.
+         */
+        PushNotificationSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Push Subscription Ids */
+            push_subscription_ids?: string[];
+            /** Content */
+            content: string;
+            /** Status */
+            status: string;
+            /** Error Message */
+            error_message?: string | null;
+            /**
+             * Sent At
+             * Format: date-time
+             */
+            sent_at: string;
+            /** Message */
+            message?: string | null;
+            /** Priority */
+            priority?: string | null;
+            /** Message Hash */
+            message_hash?: string | null;
+            /** Triggered By */
+            triggered_by?: string | null;
+            /** Llm Snapshot */
+            llm_snapshot?: {
+                [key: string]: unknown;
+            } | null;
         };
         /**
          * PushSubscriptionCreateSchema
@@ -2165,6 +2539,34 @@ export interface components {
              */
             offset: number;
             filters?: components["schemas"]["DayTemplateQuery"] | null;
+        };
+        /** QuerySchema[FactoidQuery] */
+        QuerySchema_FactoidQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["FactoidQuery"] | null;
+        };
+        /** QuerySchema[PushNotificationQuery] */
+        QuerySchema_PushNotificationQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["PushNotificationQuery"] | null;
         };
         /** QuerySchema[PushSubscriptionQuery] */
         QuerySchema_PushSubscriptionQuery_: {
@@ -2322,7 +2724,6 @@ export interface components {
             task_definition_id: string;
             /** Name */
             name?: string | null;
-            schedule?: components["schemas"]["TaskScheduleSchema"] | null;
             task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
             time_window?: components["schemas"]["TimeWindowSchema"] | null;
         };
@@ -2340,7 +2741,6 @@ export interface components {
             task_definition_id: string;
             /** Name */
             name?: string | null;
-            schedule?: components["schemas"]["TaskScheduleSchema"] | null;
             task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
             time_window?: components["schemas"]["TimeWindowSchema"] | null;
         };
@@ -2358,7 +2758,6 @@ export interface components {
             task_definition_id: string;
             /** Name */
             name?: string | null;
-            schedule?: components["schemas"]["TaskScheduleSchema"] | null;
             task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
             time_window?: components["schemas"]["TimeWindowSchema"] | null;
         };
@@ -2369,7 +2768,6 @@ export interface components {
         RoutineDefinitionTaskUpdateSchema: {
             /** Name */
             name?: string | null;
-            schedule?: components["schemas"]["TaskScheduleSchema"] | null;
             task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
             time_window?: components["schemas"]["TimeWindowSchema"] | null;
         };
@@ -2517,19 +2915,6 @@ export interface components {
          */
         TaskFrequency: "DAILY" | "CUSTOM_WEEKLY" | "WEEKLY" | "ONCE" | "YEARLY" | "MONTHLY" | "BI_WEEKLY" | "WORK_DAYS" | "WEEKENDS";
         /**
-         * TaskScheduleSchema
-         * @description API schema for TaskSchedule value object.
-         */
-        TaskScheduleSchema: {
-            /** Available Time */
-            available_time?: string | null;
-            /** Start Time */
-            start_time?: string | null;
-            /** End Time */
-            end_time?: string | null;
-            timing_type: components["schemas"]["TimingType"];
-        };
-        /**
          * TaskSchema
          * @description API schema for Task entity.
          */
@@ -2556,7 +2941,7 @@ export interface components {
             frequency: components["schemas"]["TaskFrequency"];
             /** Completed At */
             completed_at?: string | null;
-            schedule?: components["schemas"]["TaskScheduleSchema"] | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
             /** Routine Definition Id */
             routine_definition_id?: string | null;
             /** Tags */
@@ -2661,11 +3046,6 @@ export interface components {
             /** Cutoff Time */
             cutoff_time?: string | null;
         };
-        /**
-         * TimingType
-         * @enum {string}
-         */
-        TimingType: "DEADLINE" | "FIXED_TIME" | "TIME_WINDOW" | "FLEXIBLE";
         /**
          * UserCreate
          * @description Schema for creating a new user.
@@ -3436,7 +3816,7 @@ export interface operations {
             };
         };
     };
-    add_routine_definition_to_today_me_today_routine_definitions_post: {
+    add_routine_to_today_me_today_routines_post: {
         parameters: {
             query: {
                 routine_definition_id: string;
@@ -3628,6 +4008,167 @@ export interface operations {
             };
         };
     };
+    get_factoid_factoids__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FactoidSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_factoid_factoids__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FactoidUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FactoidSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_factoid_factoids__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_factoids_factoids__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_FactoidQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_FactoidSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_factoid_factoids_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FactoidCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FactoidSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_calendar_entry_series_calendar_entry_series__uuid__get: {
         parameters: {
             query?: never;
@@ -3714,6 +4255,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PagedResponseSchema_CalendarEntrySeriesSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_push_notifications_push_notifications__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_PushNotificationQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_PushNotificationSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_push_notification_push_notifications__notification_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushNotificationSchema"];
                 };
             };
             /** @description Validation Error */
@@ -4793,6 +5398,41 @@ export interface operations {
             };
         };
     };
+    record_routine_action_routines__uuid__actions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Action"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSchema"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_time_block_definition_time_block_definitions__uuid__get: {
         parameters: {
             query?: never;
@@ -5303,6 +5943,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotificationUseCaseConfigSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_llm_snapshot_preview_usecase_configs__usecase__llm_preview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usecase: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    } | null;
                 };
             };
             /** @description Validation Error */

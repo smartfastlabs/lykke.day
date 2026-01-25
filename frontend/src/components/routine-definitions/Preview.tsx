@@ -9,7 +9,7 @@ import {
 } from "@/types/api";
 import { ALL_TASK_TYPES } from "@/types/api/constants";
 import { Icon } from "@/components/shared/Icon";
-import TaskScheduleForm from "@/components/tasks/ScheduleForm";
+import TimeWindowForm from "@/components/tasks/ScheduleForm";
 import RoutineScheduleForm from "@/components/routine-definitions/RoutineScheduleForm";
 import { Input, Button, Select, TextArea } from "@/components/forms";
 
@@ -29,7 +29,7 @@ interface RoutinePreviewProps {
   selectedAction?: () => "add" | "edit" | null;
   taskName?: Accessor<string>;
   setTaskName?: Setter<string>;
-  taskScheduleInitial?: () => RecurrenceSchedule | null;
+  taskRecurrenceInitial?: () => RecurrenceSchedule | null;
   timeWindowInitial?: () => TimeWindow | null;
   isEditMode?: boolean;
   isLoading?: boolean;
@@ -46,9 +46,8 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
   const availableDefinitions = createMemo(() => props.taskDefinitions ?? []);
   
   // Track schedule state for the form
-  const [currentTaskSchedule, setCurrentTaskSchedule] = createSignal<RecurrenceSchedule | null>(
-    null
-  );
+  const [currentRecurrenceSchedule, setCurrentRecurrenceSchedule] =
+    createSignal<RecurrenceSchedule | null>(null);
   const [currentTimeWindow, setCurrentTimeWindow] = createSignal<TimeWindow | null>(null);
   
   // State for creating new task definition
@@ -63,7 +62,7 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
   // Update schedule state when form opens
   createEffect(() => {
     if (props.selectedAction?.()) {
-      setCurrentTaskSchedule(props.taskScheduleInitial?.() ?? null);
+      setCurrentRecurrenceSchedule(props.taskRecurrenceInitial?.() ?? null);
       setCurrentTimeWindow(props.timeWindowInitial?.() ?? null);
     }
   });
@@ -100,9 +99,9 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
   };
 
   const handleTaskSubmit = () => {
-    const taskSchedule = currentTaskSchedule();
+    const taskRecurrence = currentRecurrenceSchedule();
     const timeWindow = currentTimeWindow();
-    void props.onTaskSubmit?.(taskSchedule, timeWindow);
+    void props.onTaskSubmit?.(taskRecurrence, timeWindow);
   };
 
   const getTaskDefinitionName = (taskDefinitionId: string) =>
@@ -441,7 +440,7 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                       <label class="text-sm font-medium text-neutral-700 mb-2 block">
                         Time Window (when during the day)
                       </label>
-                      <TaskScheduleForm
+                      <TimeWindowForm
                         initialSchedule={props.timeWindowInitial?.() ?? undefined}
                         onChange={(timeWindow: TimeWindow | null) => {
                           setCurrentTimeWindow(timeWindow);
@@ -458,9 +457,9 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                         Recurrence Schedule (which days)
                       </label>
                       <RoutineScheduleForm
-                        schedule={props.taskScheduleInitial?.() ?? null}
+                        schedule={props.taskRecurrenceInitial?.() ?? null}
                         onScheduleChange={(schedule: RecurrenceSchedule | null) => {
-                          setCurrentTaskSchedule(schedule);
+                          setCurrentRecurrenceSchedule(schedule);
                         }}
                         showOptionalToggle={true}
                         label="Task appears on specific days"

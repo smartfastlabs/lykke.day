@@ -9,7 +9,6 @@ import {
   TaskDefinition,
   RoutineDefinition,
   PushSubscription,
-  TaskSchedule,
   TimeWindow,
   RecurrenceSchedule,
   UseCaseConfig,
@@ -177,7 +176,7 @@ export const taskAPI = {
     name: string;
     category: Task["category"];
     description?: string | null;
-    schedule?: TaskSchedule | null;
+    time_window?: TimeWindow | null;
     tags?: Task["tags"];
   }): Promise<Task> =>
     fetchData<Task>("/api/tasks/adhoc", {
@@ -540,7 +539,6 @@ export const routineDefinitionAPI = {
     payload: {
       task_definition_id: string;
       name?: string | null;
-      schedule?: TaskSchedule | null;
       task_schedule?: RecurrenceSchedule | null;
       time_window?: TimeWindow | null;
     }
@@ -557,7 +555,6 @@ export const routineDefinitionAPI = {
     routineDefinitionTaskId: string,
     payload: {
       name?: string | null;
-      schedule?: TaskSchedule | null;
       task_schedule?: RecurrenceSchedule | null;
       time_window?: TimeWindow | null;
     }

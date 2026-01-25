@@ -24,17 +24,17 @@ from lykke.domain.value_objects.base import (
     BaseResponseObject,
     BaseValueObject,
 )
-from lykke.domain.value_objects.task import TimingType
+from lykke.domain.value_objects.routine_definition import TimeWindow
 
 
 @dataclass(kw_only=True)
-class TaskSchedule(BaseValueObject):
-    """Schedule information for a task."""
+class TimeWindow(BaseValueObject):
+    """Time window information for a task."""
 
     available_time: time | None = None
     start_time: time | None = None
     end_time: time | None = None
-    timing_type: TimingType
+    cutoff_time: time | None = None
 
 
 @dataclass(kw_only=True)
@@ -107,7 +107,7 @@ class TaskUpdateObject(BaseUpdateObject):
 
     name: str | None = None
     status: TaskStatus | None = None
-    schedule: TaskSchedule | None = None
+    time_window: TimeWindow | None = None
     tags: list[str] | None = None
 ```
 
@@ -241,8 +241,8 @@ def test_task_query_defaults():
     assert query.date is None
 
 def test_task_schedule_clone():
-    """Test TaskSchedule cloning."""
-    schedule = TaskSchedule(timing_type=TimingType.FLEXIBLE)
+    """Test TimeWindow cloning."""
+    time_window = TimeWindow(start_time=time(9, 0))
     updated = schedule.clone(start_time=time(9, 0))
     assert updated.start_time == time(9, 0)
     assert schedule.start_time is None

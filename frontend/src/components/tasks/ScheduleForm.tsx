@@ -2,7 +2,7 @@ import { Component, Show, createSignal } from "solid-js";
 import { FormError, Input, SubmitButton } from "@/components/forms";
 import { TimeWindow } from "@/types/api";
 
-interface TaskScheduleFormProps {
+interface TimeWindowFormProps {
   initialSchedule?: TimeWindow | null;
   onSubmit: (timeWindow: TimeWindow | null) => Promise<void>;
   onChange?: (timeWindow: TimeWindow | null) => void;
@@ -11,7 +11,7 @@ interface TaskScheduleFormProps {
   submitText?: string;
 }
 
-const TaskScheduleForm: Component<TaskScheduleFormProps> = (props) => {
+const TimeWindowForm: Component<TimeWindowFormProps> = (props) => {
   const [availableTime, setAvailableTime] = createSignal(
     props.initialSchedule?.available_time ?? ""
   );
@@ -122,5 +122,5 @@ const TaskScheduleForm: Component<TaskScheduleFormProps> = (props) => {
   );
 };
 
-export default TaskScheduleForm;
+export default TimeWindowForm;
 

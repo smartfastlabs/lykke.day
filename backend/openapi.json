@@ -922,15 +922,15 @@
         }
       }
     },
-    "/me/today/routine-definitions": {
+    "/me/today/routines": {
       "post": {
         "tags": [
           "auth",
           "user"
         ],
-        "summary": "Add Routine Definition To Today",
-        "description": "Add a routine definition's tasks to today.",
-        "operationId": "add_routine_definition_to_today_me_today_routine_definitions_post",
+        "summary": "Add Routine To Today",
+        "description": "Add a routine's tasks to today (creates today's routine if needed).",
+        "operationId": "add_routine_to_today_me_today_routines_post",
         "security": [
           {
             "APIKeyCookie": []
@@ -958,7 +958,7 @@
                   "items": {
                     "$ref": "#/components/schemas/TaskSchema"
                   },
-                  "title": "Response Add Routine Definition To Today Me Today Routine Definitions Post"
+                  "title": "Response Add Routine To Today Me Today Routines Post"
                 }
               }
             }
@@ -1216,6 +1216,246 @@
         ]
       }
     },
+    "/factoids/{uuid}": {
+      "get": {
+        "tags": [
+          "factoids"
+        ],
+        "summary": "Get Factoid",
+        "description": "Get a single factoid by ID.",
+        "operationId": "get_factoid_factoids__uuid__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactoidSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "factoids"
+        ],
+        "summary": "Update Factoid",
+        "description": "Update a factoid.",
+        "operationId": "update_factoid_factoids__uuid__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FactoidUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactoidSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "factoids"
+        ],
+        "summary": "Delete Factoid",
+        "description": "Delete a factoid.",
+        "operationId": "delete_factoid_factoids__uuid__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/factoids/": {
+      "post": {
+        "tags": [
+          "factoids"
+        ],
+        "summary": "Search Factoids",
+        "description": "Search factoids with pagination and optional filters.",
+        "operationId": "search_factoids_factoids__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_FactoidQuery_"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseSchema_FactoidSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/factoids/create": {
+      "post": {
+        "tags": [
+          "factoids"
+        ],
+        "summary": "Create Factoid",
+        "description": "Create a new factoid.",
+        "operationId": "create_factoid_factoids_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FactoidCreateSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactoidSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
     "/calendar-entry-series/{uuid}": {
       "get": {
         "tags": [
@@ -1367,6 +1607,102 @@
             "APIKeyCookie": []
           }
         ]
+      }
+    },
+    "/push-notifications/": {
+      "post": {
+        "tags": [
+          "push-notifications"
+        ],
+        "summary": "Search Push Notifications",
+        "description": "Search push notifications with pagination and optional filters.",
+        "operationId": "search_push_notifications_push_notifications__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuerySchema_PushNotificationQuery_"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseSchema_PushNotificationSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/push-notifications/{notification_id}": {
+      "get": {
+        "tags": [
+          "push-notifications"
+        ],
+        "summary": "Get Push Notification",
+        "description": "Get a specific push notification by ID.",
+        "operationId": "get_push_notification_push_notifications__notification_id__get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "notification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Notification Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushNotificationSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/push/subscriptions/": {
@@ -3058,6 +3394,69 @@
         }
       }
     },
+    "/routines/{uuid}/actions": {
+      "post": {
+        "tags": [
+          "routines"
+        ],
+        "summary": "Record Routine Action",
+        "description": "Record an action on all tasks in a routine for today.",
+        "operationId": "record_routine_action_routines__uuid__actions_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Action"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskSchema"
+                  },
+                  "title": "Response Record Routine Action Routines  Uuid  Actions Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/time-block-definitions/{uuid}": {
       "get": {
         "tags": [
@@ -3854,6 +4253,63 @@
         }
       }
     },
+    "/usecase-configs/{usecase}/llm-preview": {
+      "get": {
+        "tags": [
+          "usecase-configs"
+        ],
+        "summary": "Get Llm Snapshot Preview",
+        "description": "Build a synthetic LLM snapshot preview for a usecase.",
+        "operationId": "get_llm_snapshot_preview_usecase_configs__usecase__llm_preview_get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "usecase",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Usecase"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Llm Snapshot Preview Usecase Configs  Usecase  Llm Preview Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/usecase-configs/{usecase_config_id}": {
       "delete": {
         "tags": [
@@ -4048,10 +4504,10 @@
           "category": {
             "$ref": "#/components/schemas/TaskCategory"
           },
-          "schedule": {
+          "time_window": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/TaskScheduleSchema"
+                "$ref": "#/components/schemas/TimeWindowSchema"
               },
               {
                 "type": "null"
@@ -4250,6 +4706,18 @@
               }
             ],
             "title": "Created At"
+          },
+          "llm_run_result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Run Result"
           }
         },
         "type": "object",
@@ -5773,6 +6241,350 @@
         ],
         "title": "EventCategory"
       },
+      "FactoidCreateSchema": {
+        "properties": {
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "factoid_type": {
+            "$ref": "#/components/schemas/FactoidType",
+            "default": "semantic"
+          },
+          "criticality": {
+            "$ref": "#/components/schemas/FactoidCriticality",
+            "default": "normal"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "ai_suggested": {
+            "type": "boolean",
+            "title": "Ai Suggested",
+            "default": false
+          },
+          "user_confirmed": {
+            "type": "boolean",
+            "title": "User Confirmed",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "content"
+        ],
+        "title": "FactoidCreateSchema",
+        "description": "API schema for creating a Factoid entity."
+      },
+      "FactoidCriticality": {
+        "type": "string",
+        "enum": [
+          "normal",
+          "important",
+          "critical"
+        ],
+        "title": "FactoidCriticality",
+        "description": "Criticality level of a factoid."
+      },
+      "FactoidQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "factoid_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Factoid Type"
+          },
+          "criticality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Criticality"
+          },
+          "is_global": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Global"
+          }
+        },
+        "type": "object",
+        "title": "FactoidQuery"
+      },
+      "FactoidSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "factoid_type": {
+            "type": "string",
+            "title": "Factoid Type"
+          },
+          "criticality": {
+            "type": "string",
+            "title": "Criticality"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "embedding": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding"
+          },
+          "ai_suggested": {
+            "type": "boolean",
+            "title": "Ai Suggested",
+            "default": false
+          },
+          "user_confirmed": {
+            "type": "boolean",
+            "title": "User Confirmed",
+            "default": false
+          },
+          "last_accessed": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Accessed"
+          },
+          "access_count": {
+            "type": "integer",
+            "title": "Access Count",
+            "default": 0
+          },
+          "meta": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Meta"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "factoid_type",
+          "criticality",
+          "content",
+          "last_accessed",
+          "created_at"
+        ],
+        "title": "FactoidSchema",
+        "description": "Schema for Factoid entity."
+      },
+      "FactoidType": {
+        "type": "string",
+        "enum": [
+          "episodic",
+          "semantic",
+          "procedural"
+        ],
+        "title": "FactoidType",
+        "description": "Type of factoid/memory stored."
+      },
+      "FactoidUpdateSchema": {
+        "properties": {
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "factoid_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FactoidType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "criticality": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FactoidCriticality"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "user_confirmed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Confirmed"
+          }
+        },
+        "type": "object",
+        "title": "FactoidUpdateSchema",
+        "description": "API schema for Factoid update requests."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -6020,6 +6832,88 @@
         ],
         "title": "PagedResponseSchema[DayTemplateSchema]"
       },
+      "PagedResponseSchema_FactoidSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FactoidSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedResponseSchema[FactoidSchema]"
+      },
+      "PagedResponseSchema_PushNotificationSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PushNotificationSchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_next": {
+            "type": "boolean",
+            "title": "Has Next"
+          },
+          "has_previous": {
+            "type": "boolean",
+            "title": "Has Previous"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_next",
+          "has_previous"
+        ],
+        "title": "PagedResponseSchema[PushNotificationSchema]"
+      },
       "PagedResponseSchema_PushSubscriptionSchema_": {
         "properties": {
           "items": {
@@ -6183,6 +7077,278 @@
           "has_previous"
         ],
         "title": "PagedResponseSchema[TimeBlockDefinitionSchema]"
+      },
+      "PushNotificationQuery": {
+        "properties": {
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "order_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By"
+          },
+          "order_by_desc": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order By Desc"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created After"
+          },
+          "push_subscription_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Push Subscription Id"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "sent_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent After"
+          },
+          "sent_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent Before"
+          },
+          "message_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Hash"
+          },
+          "triggered_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Triggered By"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          }
+        },
+        "type": "object",
+        "title": "PushNotificationQuery"
+      },
+      "PushNotificationSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "push_subscription_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Push Subscription Ids"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Sent At"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "message_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Hash"
+          },
+          "triggered_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Triggered By"
+          },
+          "llm_snapshot": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Snapshot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "content",
+          "status",
+          "sent_at"
+        ],
+        "title": "PushNotificationSchema",
+        "description": "API schema for PushNotification entity."
       },
       "PushSubscriptionCreateSchema": {
         "properties": {
@@ -6492,6 +7658,64 @@
         },
         "type": "object",
         "title": "QuerySchema[DayTemplateQuery]"
+      },
+      "QuerySchema_FactoidQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FactoidQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[FactoidQuery]"
+      },
+      "QuerySchema_PushNotificationQuery_": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Offset",
+            "default": 0
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PushNotificationQuery"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "QuerySchema[PushNotificationQuery]"
       },
       "QuerySchema_PushSubscriptionQuery_": {
         "properties": {
@@ -6897,16 +8121,6 @@
             ],
             "title": "Name"
           },
-          "schedule": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/TaskScheduleSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "task_schedule": {
             "anyOf": [
               {
@@ -6964,16 +8178,6 @@
               }
             ],
             "title": "Name"
-          },
-          "schedule": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/TaskScheduleSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "task_schedule": {
             "anyOf": [
@@ -7033,16 +8237,6 @@
             ],
             "title": "Name"
           },
-          "schedule": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/TaskScheduleSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "task_schedule": {
             "anyOf": [
               {
@@ -7083,16 +8277,6 @@
               }
             ],
             "title": "Name"
-          },
-          "schedule": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/TaskScheduleSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "task_schedule": {
             "anyOf": [
@@ -7568,55 +8752,6 @@
         ],
         "title": "TaskFrequency"
       },
-      "TaskScheduleSchema": {
-        "properties": {
-          "available_time": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Available Time"
-          },
-          "start_time": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Start Time"
-          },
-          "end_time": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "End Time"
-          },
-          "timing_type": {
-            "$ref": "#/components/schemas/TimingType"
-          }
-        },
-        "type": "object",
-        "required": [
-          "timing_type"
-        ],
-        "title": "TaskScheduleSchema",
-        "description": "API schema for TaskSchedule value object."
-      },
       "TaskSchema": {
         "properties": {
           "id": {
@@ -7680,10 +8815,10 @@
             ],
             "title": "Completed At"
           },
-          "schedule": {
+          "time_window": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/TaskScheduleSchema"
+                "$ref": "#/components/schemas/TimeWindowSchema"
               },
               {
                 "type": "null"
@@ -8081,16 +9216,6 @@
         "type": "object",
         "title": "TimeWindowSchema",
         "description": "API schema for TimeWindow value object."
-      },
-      "TimingType": {
-        "type": "string",
-        "enum": [
-          "DEADLINE",
-          "FIXED_TIME",
-          "TIME_WINDOW",
-          "FLEXIBLE"
-        ],
-        "title": "TimingType"
       },
       "UserCreate": {
         "properties": {

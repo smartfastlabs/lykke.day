@@ -38,7 +38,8 @@ const RoutineDefinitionDetailPage: Component = () => {
     createSignal<string | null>(null);
   const [selectedAction, setSelectedAction] = createSignal<"add" | "edit" | null>(null);
   const [taskName, setTaskName] = createSignal("");
-  const [taskScheduleInitial, setTaskScheduleInitial] = createSignal<RecurrenceSchedule | null>(null);
+  const [taskRecurrenceInitial, setTaskRecurrenceInitial] =
+    createSignal<RecurrenceSchedule | null>(null);
   const [timeWindowInitial, setTimeWindowInitial] = createSignal<TimeWindow | null>(null);
   const [isTaskLoading, setIsTaskLoading] = createSignal(false);
   const [isDirty, setIsDirty] = createSignal(false);
@@ -128,7 +129,7 @@ const RoutineDefinitionDetailPage: Component = () => {
     setSelectedTaskDefinitionId(null);
     setSelectedRoutineDefinitionTaskId(null);
     setSelectedAction(null);
-    setTaskScheduleInitial(null);
+    setTaskRecurrenceInitial(null);
     setTimeWindowInitial(null);
     setTaskName("");
     setActionError("");
@@ -138,7 +139,7 @@ const RoutineDefinitionDetailPage: Component = () => {
     setSelectedTaskDefinitionId(taskDef.id!);
     setSelectedAction("add");
     setTaskName(taskDef.name);
-    setTaskScheduleInitial(null);
+    setTaskRecurrenceInitial(null);
     setTimeWindowInitial(null);
     setActionError("");
   };
@@ -148,7 +149,7 @@ const RoutineDefinitionDetailPage: Component = () => {
     setSelectedRoutineDefinitionTaskId(task.id!);
     setSelectedAction("edit");
     setTaskName(task.name ?? "");
-    setTaskScheduleInitial(task.task_schedule ?? null);
+    setTaskRecurrenceInitial(task.task_schedule ?? null);
     setTimeWindowInitial(task.time_window ?? null);
     setActionError("");
   };
@@ -343,7 +344,7 @@ const RoutineDefinitionDetailPage: Component = () => {
                 selectedAction={selectedAction}
                 taskName={taskName}
                 setTaskName={setTaskName}
-                taskScheduleInitial={taskScheduleInitial}
+                taskRecurrenceInitial={taskRecurrenceInitial}
                 timeWindowInitial={timeWindowInitial}
                 isEditMode={true}
                 isLoading={isTaskLoading()}

@@ -87,7 +87,7 @@ def test_should_send_notification_completed_task():
     """Test that completed tasks don't trigger notifications."""
     task = TaskEntity(
         status=TaskStatus.COMPLETE,
-        schedule=TaskSchedule(start_time=time(10, 0)),
+        time_window=TimeWindow(start_time=time(10, 0)),
         ...
     )
     current_time = datetime(2025, 1, 1, 10, 0)
@@ -100,7 +100,7 @@ def test_should_send_notification_at_scheduled_time():
     """Test notification at scheduled time."""
     task = TaskEntity(
         status=TaskStatus.PENDING,
-        schedule=TaskSchedule(start_time=time(10, 0)),
+        time_window=TimeWindow(start_time=time(10, 0)),
         ...
     )
     current_time = datetime(2025, 1, 1, 10, 0)

@@ -25,7 +25,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 def convert_schedule_to_time_window(schedule_dict: dict | None) -> dict | None:
-    """Convert TaskSchedule dict to TimeWindow dict, dropping timing_type."""
+    """Convert legacy schedule dict to TimeWindow dict, dropping timing_type."""
     if not schedule_dict:
         return None
 

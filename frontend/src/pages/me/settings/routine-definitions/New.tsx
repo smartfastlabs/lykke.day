@@ -9,7 +9,6 @@ import {
   RoutineDefinition,
   RoutineDefinitionTask,
   TaskDefinition,
-  TaskSchedule,
   TimeWindow,
 } from "@/types/api";
 
@@ -42,8 +41,8 @@ export default function NewRoutineDefinition() {
     createSignal<string | null>(null);
   const [selectedAction, setSelectedAction] = createSignal<"add" | "edit" | null>(null);
   const [taskName, setTaskName] = createSignal("");
-  const [scheduleInitial, setScheduleInitial] = createSignal<TaskSchedule | null>(null);
-  const [taskScheduleInitial, setTaskScheduleInitial] = createSignal<RecurrenceSchedule | null>(null);
+  const [taskRecurrenceInitial, setTaskRecurrenceInitial] =
+    createSignal<RecurrenceSchedule | null>(null);
   const [timeWindowInitial, setTimeWindowInitial] = createSignal<TimeWindow | null>(null);
 
   const handleSubmit = async (
@@ -90,8 +89,7 @@ export default function NewRoutineDefinition() {
     setSelectedTaskDefinitionId(null);
     setSelectedRoutineDefinitionTaskId(null);
     setSelectedAction(null);
-    setScheduleInitial(null);
-    setTaskScheduleInitial(null);
+    setTaskRecurrenceInitial(null);
     setTimeWindowInitial(null);
     setTaskName("");
     setActionError("");
@@ -102,8 +100,7 @@ export default function NewRoutineDefinition() {
     setSelectedTaskDefinitionId(taskDef.id);
     setSelectedAction("add");
     setTaskName(taskDef.name);
-    setScheduleInitial(null);
-    setTaskScheduleInitial(null);
+    setTaskRecurrenceInitial(null);
     setTimeWindowInitial(null);
     setActionError("");
   };
@@ -114,8 +111,7 @@ export default function NewRoutineDefinition() {
     setSelectedRoutineDefinitionTaskId(task.id);
     setSelectedAction("edit");
     setTaskName(task.name ?? "");
-    setScheduleInitial(task.schedule ?? null);
-    setTaskScheduleInitial(task.task_schedule ?? null);
+    setTaskRecurrenceInitial(task.task_schedule ?? null);
     setTimeWindowInitial(task.time_window ?? null);
     setActionError("");
   };
@@ -151,7 +147,6 @@ export default function NewRoutineDefinition() {
       : Math.random().toString(36).slice(2);
 
   const handleTaskSubmit = async (
-    schedule: TaskSchedule,
     taskSchedule: RecurrenceSchedule | null,
     timeWindow: TimeWindow | null
   ) => {
@@ -171,7 +166,6 @@ export default function NewRoutineDefinition() {
           id: generateTaskId(),
           task_definition_id: taskDefinitionId,
           name: nameValue ?? undefined,
-          schedule,
           task_schedule: taskSchedule ?? undefined,
           time_window: timeWindow ?? undefined,
         };
@@ -187,7 +181,6 @@ export default function NewRoutineDefinition() {
               ? {
                   ...task,
                   name: nameValue ?? undefined,
-                  schedule,
                   task_schedule: taskSchedule ?? undefined,
                   time_window: timeWindow ?? undefined,
                 }
@@ -240,8 +233,7 @@ export default function NewRoutineDefinition() {
                     selectedAction={selectedAction}
                     taskName={taskName}
                     setTaskName={setTaskName}
-                    scheduleInitial={scheduleInitial}
-                    taskScheduleInitial={taskScheduleInitial}
+                    taskRecurrenceInitial={taskRecurrenceInitial}
                     timeWindowInitial={timeWindowInitial}
                     isEditMode={true}
                     isLoading={isTaskLoading()}

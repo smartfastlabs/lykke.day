@@ -161,8 +161,8 @@ def row_to_entity(cls, row: dict[str, Any]) -> TaskEntity:
     if data.get("task_definition"):
         data["task_definition"] = TaskDefinitionEntity(**data["task_definition"])
 
-    if data.get("schedule"):
-        data["schedule"] = TaskSchedule(**data["schedule"])
+    if data.get("time_window"):
+        data["time_window"] = TimeWindow(**data["time_window"])
 
     return TaskEntity(**data)
 ```

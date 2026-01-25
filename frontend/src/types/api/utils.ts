@@ -68,7 +68,6 @@ export type RoutineDefinitionTask =
 export type PushSubscription = components["schemas"]["PushSubscriptionSchema"];
 
 // Value object types
-export type TaskSchedule = components["schemas"]["TaskScheduleSchema"];
 export type RecurrenceSchedule = components["schemas"]["RecurrenceScheduleSchema"];
 export type Action = components["schemas"]["ActionSchema"];
 

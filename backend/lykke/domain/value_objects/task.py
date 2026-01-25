@@ -118,5 +118,4 @@ class TaskStatus(str, Enum):
     PENDING = "PENDING"
 
 
-# TaskSchedule has been replaced by TimeWindow for consistency
-# See routine_definition.py for TimeWindow definition
+# TimeWindow defines task timing fields (see routine_definition.py)

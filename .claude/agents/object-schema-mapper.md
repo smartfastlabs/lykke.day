@@ -58,15 +58,15 @@ class CalendarEntrySeriesEntity(BaseEntityObject):
 
 **What:** Small domain types with no identity (dataclasses or enums)  
 **Purpose:** Encapsulate typed fields, embedded JSONB structures, and request/response shapes  
-**Examples:** `TaskSchedule`, `Action`, `LLMRunResultSnapshot`, `BaseQuery`
+**Examples:** `TimeWindow`, `Action`, `LLMRunResultSnapshot`, `BaseQuery`
 
 ```python
 @dataclass(kw_only=True)
-class TaskSchedule(BaseValueObject):
+class TimeWindow(BaseValueObject):
     available_time: time | None = None
     start_time: time | None = None
     end_time: time | None = None
-    timing_type: TimingType
+    cutoff_time: time | None = None
 ```
 
 **Used in:**
@@ -352,11 +352,11 @@ def row_to_entity(cls, row: dict[str, Any]) -> TaskEntity:
 ```python
 # In entity - embedding a Value Object
 class TaskEntity:
-    schedule: TaskSchedule  # ✅ Value object
+    time_window: TimeWindow  # ✅ Value object
 
 # In table - creating a separate table
-class TaskScheduleTable(Base):
-    __tablename__ = "task_schedules"  # ❌ Value objects should not have tables!
+class TimeWindowTable(Base):
+    __tablename__ = "time_windows"  # ❌ Value objects should not have tables!
 ```
 
 **Right:**
@@ -364,7 +364,7 @@ class TaskScheduleTable(Base):
 ```python
 # In table - store value object as JSONB on parent table
 class Task(Base):
-    schedule = Column(JSONB)  # ✅ Embedded value object
+    time_window = Column(JSONB)  # ✅ Embedded value object
 ```
 
 ---
@@ -401,7 +401,7 @@ class CreateTaskCommand:
 
 **Important:** Only **Value Objects** should be stored as JSONB.
 
-- ✅ **Value Objects** (e.g., `Action`, `Alarm`, `TaskSchedule`) → Embedded as JSONB
+- ✅ **Value Objects** (e.g., `Action`, `Alarm`, `TimeWindow`) → Embedded as JSONB
 - ❌ **Entities** (e.g., `TaskEntity`) → Have their own tables, referenced by ID
 
 When an entity contains embedded value objects (stored as JSONB in the parent's table):
@@ -411,7 +411,7 @@ When an entity contains embedded value objects (stored as JSONB in the parent's 
 ```python
 @dataclass(kw_only=True)
 class TaskEntity:
-    schedule: TaskSchedule | None  # Value object embedded as JSONB
+    time_window: TimeWindow | None  # Value object embedded as JSONB
     actions: list[Action]  # List of value objects as JSONB
 ```
 
@@ -420,8 +420,8 @@ class TaskEntity:
 ```python
 from lykke.core.utils.serialization import dataclass_to_json_dict
 
-if task.schedule:
-    row["schedule"] = dataclass_to_json_dict(task.schedule)
+if task.time_window:
+    row["time_window"] = dataclass_to_json_dict(task.time_window)
 
 if task.actions:
     row["actions"] = [dataclass_to_json_dict(action) for action in task.actions]
@@ -430,8 +430,8 @@ if task.actions:
 **In Repository `row_to_entity()`:**
 
 ```python
-if isinstance(data.get("schedule"), dict):
-    data["schedule"] = TaskSchedule(**data["schedule"])
+if isinstance(data.get("time_window"), dict):
+    data["time_window"] = TimeWindow(**data["time_window"])
 
 if data.get("actions"):
     data["actions"] = [
@@ -444,10 +444,12 @@ if data.get("actions"):
 
 ```python
 def map_task_to_schema(task: TaskEntity) -> TaskSchema:
-    schedule_schema = map_task_schedule_to_schema(task.schedule) if task.schedule else None
+    time_window_schema = (
+        map_time_window_to_schema(task.time_window) if task.time_window else None
+    )
     action_schemas = [map_action_to_schema(action) for action in task.actions]
     return TaskSchema(
-        schedule=schedule_schema,
+        time_window=time_window_schema,
         actions=action_schemas,
         # ...
     )
