@@ -4,21 +4,23 @@ from datetime import date as dt_date, time as dt_time
 from uuid import uuid4
 
 import pytest
+from dobles import allow
 
 from lykke.application.commands.task import (
     CreateAdhocTaskCommand,
     CreateAdhocTaskHandler,
 )
+from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
-from tests.unit.fakes import (
-    _FakeCalendarEntryReadOnlyRepo,
-    _FakeDayReadOnlyRepo,
-    _FakeDayTemplateReadOnlyRepo,
-    _FakeReadOnlyRepos,
-    _FakeTaskReadOnlyRepo,
-    _FakeUoW,
-    _FakeUoWFactory,
+from tests.support.dobles import (
+    create_calendar_entry_repo_double,
+    create_day_repo_double,
+    create_day_template_repo_double,
+    create_read_only_repos_double,
+    create_task_repo_double,
+    create_uow_double,
+    create_uow_factory_double,
 )
 
 
@@ -35,23 +37,33 @@ async def test_create_adhoc_task_sets_adhoc_fields():
     )
     day = DayEntity.create_for_date(task_date, user_id, template)
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    task_repo = _FakeTaskReadOnlyRepo([])
-    calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
-    ro_repos = _FakeReadOnlyRepos(
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    task_repo = create_task_repo_double()
+    allow(task_repo).search.and_return([])
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return([])
+
+    ro_repos = create_read_only_repos_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
     )
-    uow = _FakeUoW(
+    uow = create_uow_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
     )
-    uow_factory = _FakeUoWFactory(uow)
+    uow_factory = create_uow_factory_double(uow)
     handler = CreateAdhocTaskHandler(ro_repos, uow_factory, user_id)
 
     schedule = value_objects.TaskSchedule(

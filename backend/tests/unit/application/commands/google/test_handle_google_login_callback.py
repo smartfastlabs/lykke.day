@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 import pytest
+from dobles import allow
 
 import lykke.application.commands.google.handle_google_login_callback as handler_module
 from lykke.application.commands.google import (
@@ -16,129 +17,14 @@ from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import AuthTokenEntity, CalendarEntity
 from lykke.domain.value_objects.sync import SyncSubscription
-from tests.unit.fakes import _FakeReadOnlyRepos
-
-
-class _FakeCredentials:
-    def __init__(self) -> None:
-        self.client_id = "client-id"
-        self.client_secret = "client-secret"
-        self.expiry = datetime.now(UTC)
-        self.refresh_token = "refresh-token"
-        self.scopes = ["scope"]
-        self.token = "access-token"
-        self.token_uri = "token-uri"
-
-
-class _FakeFlow:
-    def __init__(self) -> None:
-        self.credentials = _FakeCredentials()
-        self.fetched_code: str | None = None
-
-    def fetch_token(self, *, code: str) -> None:
-        self.fetched_code = code
-
-
-class _FakeGoogleGateway:
-    def __init__(self, flow: _FakeFlow) -> None:
-        self._flow = flow
-
-    def get_flow(self, _flow_name: str) -> _FakeFlow:
-        return self._flow
-
-
-class _FakeCalendarList:
-    def __init__(self, items: list[dict[str, str]]) -> None:
-        self._items = items
-
-    def list(self) -> "_FakeCalendarList":
-        return self
-
-    def execute(self) -> dict[str, list[dict[str, str]]]:
-        return {"items": self._items}
-
-
-class _FakeCalendarService:
-    def __init__(self, items: list[dict[str, str]]) -> None:
-        self._items = items
-
-    def calendarList(self) -> _FakeCalendarList:
-        return _FakeCalendarList(self._items)
-
-
-class _FakeAuthTokenRepo:
-    def __init__(self, token: AuthTokenEntity | None = None) -> None:
-        self._token = token
-
-    async def get(self, token_id: UUID) -> AuthTokenEntity:
-        if self._token and self._token.id == token_id:
-            return self._token
-        raise NotFoundError("Auth token not found")
-
-
-class _FakeCalendarRepo:
-    def __init__(self, calendars: list[CalendarEntity]) -> None:
-        self._calendars = calendars
-
-    async def get(self, calendar_id: UUID) -> CalendarEntity:
-        for calendar in self._calendars:
-            if calendar.id == calendar_id:
-                return calendar
-        raise NotFoundError("Calendar not found")
-
-    async def search(
-        self, query: value_objects.CalendarQuery
-    ) -> list[CalendarEntity]:
-        if query.platform_id is None:
-            return list(self._calendars)
-        return [
-            calendar
-            for calendar in self._calendars
-            if calendar.platform_id == query.platform_id
-        ]
-
-    async def search_one_or_none(
-        self, query: value_objects.CalendarQuery
-    ) -> CalendarEntity | None:
-        results = await self.search(query)
-        return results[0] if results else None
-
-
-class _FakeUoW:
-    def __init__(
-        self,
-        *,
-        auth_token_repo: _FakeAuthTokenRepo,
-        calendar_repo: _FakeCalendarRepo,
-    ) -> None:
-        self.auth_token_ro_repo = auth_token_repo
-        self.calendar_ro_repo = calendar_repo
-        self.added: list[object] = []
-        self.created: list[object] = []
-
-    async def __aenter__(self) -> "_FakeUoW":
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb) -> None:
-        return None
-
-    def add(self, entity: object) -> object:
-        self.added.append(entity)
-        return entity
-
-    async def create(self, entity: object) -> object:
-        self.created.append(entity)
-        if hasattr(entity, "create"):
-            entity.create()
-        return entity
-
-
-class _FakeUoWFactory:
-    def __init__(self, uow: _FakeUoW) -> None:
-        self._uow = uow
-
-    def create(self, _user_id: UUID) -> _FakeUoW:
-        return self._uow
+from tests.support.dobles import (
+    create_auth_token_repo_double,
+    create_calendar_repo_double,
+    create_google_gateway_double,
+    create_read_only_repos_double,
+    create_uow_double,
+    create_uow_factory_double,
+)
 
 
 @pytest.mark.asyncio
@@ -175,26 +61,85 @@ async def test_handle_google_login_callback_updates_auth_token_and_calendars(
         platform_id="calendar-2",
     )
 
-    auth_token_repo = _FakeAuthTokenRepo(existing_auth_token)
-    calendar_repo = _FakeCalendarRepo([existing_calendar, other_calendar])
-    uow = _FakeUoW(auth_token_repo=auth_token_repo, calendar_repo=calendar_repo)
-    uow_factory = _FakeUoWFactory(uow)
-    ro_repos = _FakeReadOnlyRepos(
+    auth_token_repo = create_auth_token_repo_double()
+    allow(auth_token_repo).get.with_args(existing_auth_token.id).and_return(
+        existing_auth_token
+    )
+
+    calendar_repo = create_calendar_repo_double()
+    allow(calendar_repo).get.with_args(existing_calendar.id).and_return(
+        existing_calendar
+    )
+    # When searching all calendars (no platform_id filter)
+    allow(calendar_repo).search.and_return([existing_calendar, other_calendar])
+    # When searching for specific platform_id: return existing for "calendar-1", None for "calendar-3"
+    # We need to stub with_args for each case
+    from lykke.domain.value_objects import CalendarQuery
+    allow(calendar_repo).search_one_or_none.with_args(
+        CalendarQuery(platform_id="calendar-1")
+    ).and_return(existing_calendar)
+    allow(calendar_repo).search_one_or_none.with_args(
+        CalendarQuery(platform_id="calendar-3")
+    ).and_return(None)
+
+    uow = create_uow_double(
+        auth_token_repo=auth_token_repo, calendar_repo=calendar_repo
+    )
+    uow_factory = create_uow_factory_double(uow)
+    ro_repos = create_read_only_repos_double(
         auth_token_repo=auth_token_repo, calendar_repo=calendar_repo
     )
 
-    flow = _FakeFlow()
-    gateway = _FakeGoogleGateway(flow)
+    # Create fake credentials and flow objects
+    class Credentials:
+        def __init__(self) -> None:
+            self.client_id = "client-id"
+            self.client_secret = "client-secret"
+            self.expiry = datetime.now(UTC)
+            self.refresh_token = "refresh-token"
+            self.scopes = ["scope"]
+            self.token = "access-token"
+            self.token_uri = "token-uri"
+
+    class Flow:
+        def __init__(self) -> None:
+            self.credentials = Credentials()
+            self.fetched_code: str | None = None
+
+        def fetch_token(self, *, code: str) -> None:
+            self.fetched_code = code
+
+    flow = Flow()
+    gateway = create_google_gateway_double()
+    allow(gateway).get_flow.and_return(flow)
 
     google_items = [
         {"id": "calendar-1", "summary": "Updated Calendar"},
         {"id": "calendar-3", "summary": "New Calendar"},
     ]
 
+    # Create fake calendar service inline
+    class CalendarList:
+        def __init__(self, items: list[dict[str, str]]) -> None:
+            self._items = items
+
+        def list(self) -> "CalendarList":
+            return self
+
+        def execute(self) -> dict[str, list[dict[str, str]]]:
+            return {"items": self._items}
+
+    class CalendarService:
+        def __init__(self, items: list[dict[str, str]]) -> None:
+            self._items = items
+
+        def calendarList(self) -> CalendarList:
+            return CalendarList(self._items)
+
     monkeypatch.setattr(
         handler_module,
         "build",
-        lambda *args, **kwargs: _FakeCalendarService(google_items),
+        lambda *args, **kwargs: CalendarService(google_items),
     )
 
     handler = HandleGoogleLoginCallbackHandler(

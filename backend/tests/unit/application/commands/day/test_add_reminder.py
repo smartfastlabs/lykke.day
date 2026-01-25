@@ -4,6 +4,7 @@ from datetime import date as dt_date
 from uuid import uuid4
 
 import pytest
+from dobles import allow
 
 from lykke.application.commands.day import (
     AddReminderToDayCommand,
@@ -13,13 +14,13 @@ from lykke.core.exceptions import DomainError, NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity, UserEntity
 from lykke.domain.events.day_events import ReminderAddedEvent
-from tests.unit.fakes import (
-    _FakeDayReadOnlyRepo,
-    _FakeDayTemplateReadOnlyRepo,
-    _FakeReadOnlyRepos,
-    _FakeUoW,
-    _FakeUoWFactory,
-    _FakeUserReadOnlyRepo,
+from tests.support.dobles import (
+    create_day_repo_double,
+    create_day_template_repo_double,
+    create_read_only_repos_double,
+    create_user_repo_double,
+    create_uow_double,
+    create_uow_factory_double,
 )
 
 
@@ -38,27 +39,34 @@ async def test_add_reminder_adds_reminder_to_existing_day():
 
     day = DayEntity.create_for_date(task_date, user_id, template)
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
     user = UserEntity(
         id=user_id,
         email="test@example.com",
         hashed_password="hash",
         settings=value_objects.UserSetting(template_defaults=["default"] * 7),
     )
-    user_repo = _FakeUserReadOnlyRepo(user)
+    user_repo = create_user_repo_double()
+    allow(user_repo).get.with_args(user_id).and_return(user)
 
-    ro_repos = _FakeReadOnlyRepos(
+    ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
     )
-    uow = _FakeUoW(
+    uow = create_uow_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
     )
-    uow_factory = _FakeUoWFactory(uow)
+    uow_factory = create_uow_factory_double(uow)
     handler = AddReminderToDayHandler(ro_repos, uow_factory, user_id)
 
     # Act
@@ -69,8 +77,8 @@ async def test_add_reminder_adds_reminder_to_existing_day():
     # Assert
     assert result.name == "Test Reminder"
     assert result.status == value_objects.ReminderStatus.INCOMPLETE
-    assert len(uow_factory.uow.added) == 1
-    assert uow_factory.uow.added[0] == day
+    assert len(uow.added) == 1
+    assert uow.added[0] == day
     assert len(day.reminders) == 1
     assert day.reminders[0].id == result.id
 
@@ -90,27 +98,34 @@ async def test_add_reminder_emits_domain_event():
 
     day = DayEntity.create_for_date(task_date, user_id, template)
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
     user = UserEntity(
         id=user_id,
         email="test@example.com",
         hashed_password="hash",
         settings=value_objects.UserSetting(template_defaults=["default"] * 7),
     )
-    user_repo = _FakeUserReadOnlyRepo(user)
+    user_repo = create_user_repo_double()
+    allow(user_repo).get.with_args(user_id).and_return(user)
 
-    ro_repos = _FakeReadOnlyRepos(
+    ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
     )
-    uow = _FakeUoW(
+    uow = create_uow_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
     )
-    uow_factory = _FakeUoWFactory(uow)
+    uow_factory = create_uow_factory_double(uow)
     handler = AddReminderToDayHandler(ro_repos, uow_factory, user_id)
 
     # Act
@@ -139,27 +154,34 @@ async def test_add_reminder_raises_if_day_missing():
         time_blocks=[],
     )
 
-    day_repo = _FakeDayReadOnlyRepo(None)  # Day doesn't exist
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_raise(NotFoundError("Day not found"))
+
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
     user = UserEntity(
         id=user_id,
         email="test@example.com",
         hashed_password="hash",
         settings=value_objects.UserSetting(template_defaults=["default"] * 7),
     )
-    user_repo = _FakeUserReadOnlyRepo(user)
+    user_repo = create_user_repo_double()
+    allow(user_repo).get.with_args(user_id).and_return(user)
 
-    ro_repos = _FakeReadOnlyRepos(
+    ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
     )
-    uow = _FakeUoW(
+    uow = create_uow_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
     )
-    uow_factory = _FakeUoWFactory(uow)
+    uow_factory = create_uow_factory_double(uow)
     handler = AddReminderToDayHandler(ro_repos, uow_factory, user_id)
 
     # Act / Assert
@@ -189,27 +211,34 @@ async def test_add_reminder_enforces_max_five():
     day.add_reminder("Reminder 4")
     day.add_reminder("Reminder 5")
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
     user = UserEntity(
         id=user_id,
         email="test@example.com",
         hashed_password="hash",
         settings=value_objects.UserSetting(template_defaults=["default"] * 7),
     )
-    user_repo = _FakeUserReadOnlyRepo(user)
+    user_repo = create_user_repo_double()
+    allow(user_repo).get.with_args(user_id).and_return(user)
 
-    ro_repos = _FakeReadOnlyRepos(
+    ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
     )
-    uow = _FakeUoW(
+    uow = create_uow_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
     )
-    uow_factory = _FakeUoWFactory(uow)
+    uow_factory = create_uow_factory_double(uow)
     handler = AddReminderToDayHandler(ro_repos, uow_factory, user_id)
 
     # Act & Assert

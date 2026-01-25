@@ -4,6 +4,7 @@ from datetime import date as dt_date
 from uuid import uuid4
 
 import pytest
+from dobles import allow
 
 from lykke.application.commands.day import (
     UpdateReminderStatusCommand,
@@ -13,11 +14,11 @@ from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
 from lykke.domain.events.day_events import ReminderStatusChangedEvent
-from tests.unit.fakes import (
-    _FakeDayReadOnlyRepo,
-    _FakeReadOnlyRepos,
-    _FakeUoW,
-    _FakeUoWFactory,
+from tests.support.dobles import (
+    create_day_repo_double,
+    create_read_only_repos_double,
+    create_uow_double,
+    create_uow_factory_double,
 )
 
 
@@ -39,10 +40,13 @@ async def test_update_reminder_status_updates_status():
     # Clear events from add_reminder
     day.collect_events()
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
-    uow = _FakeUoW(day_repo=day_repo)
-    uow_factory = _FakeUoWFactory(uow)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(day_repo=day_repo)
+    uow = create_uow_double(day_repo=day_repo)
+    uow_factory = create_uow_factory_double(uow)
     handler = UpdateReminderStatusHandler(ro_repos, uow_factory, user_id)
 
     # Act
@@ -57,8 +61,8 @@ async def test_update_reminder_status_updates_status():
     # Assert
     assert result.id == reminder.id
     assert result.status == value_objects.ReminderStatus.COMPLETE
-    assert len(uow_factory.uow.added) == 1
-    assert uow_factory.uow.added[0] == day
+    assert len(uow.added) == 1
+    assert uow.added[0] == day
     updated_reminder = next(r for r in day.reminders if r.id == reminder.id)
     assert updated_reminder.status == value_objects.ReminderStatus.COMPLETE
 
@@ -81,10 +85,13 @@ async def test_update_reminder_status_emits_domain_event():
     # Clear events from add_reminder
     day.collect_events()
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
-    uow = _FakeUoW(day_repo=day_repo)
-    uow_factory = _FakeUoWFactory(uow)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(day_repo=day_repo)
+    uow = create_uow_double(day_repo=day_repo)
+    uow_factory = create_uow_factory_double(uow)
     handler = UpdateReminderStatusHandler(ro_repos, uow_factory, user_id)
 
     # Act
@@ -123,10 +130,13 @@ async def test_update_reminder_status_raises_error_if_reminder_not_found():
     day = DayEntity.create_for_date(task_date, user_id, template)
     fake_reminder_id = uuid4()
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
-    uow = _FakeUoW(day_repo=day_repo)
-    uow_factory = _FakeUoWFactory(uow)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(day_repo=day_repo)
+    uow = create_uow_double(day_repo=day_repo)
+    uow_factory = create_uow_factory_double(uow)
     handler = UpdateReminderStatusHandler(ro_repos, uow_factory, user_id)
 
     # Act & Assert
@@ -163,10 +173,13 @@ async def test_update_reminder_status_no_change_does_not_add_to_uow():
     # Clear events from update
     day.collect_events()
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
-    uow = _FakeUoW(day_repo=day_repo)
-    uow_factory = _FakeUoWFactory(uow)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(day_repo=day_repo)
+    uow = create_uow_double(day_repo=day_repo)
+    uow_factory = create_uow_factory_double(uow)
     handler = UpdateReminderStatusHandler(ro_repos, uow_factory, user_id)
 
     # Act - try to update to same status
@@ -179,7 +192,7 @@ async def test_update_reminder_status_no_change_does_not_add_to_uow():
     )
 
     # Assert - entity should not be added to UoW because status didn't change
-    assert len(uow_factory.uow.added) == 0
+    assert len(uow.added) == 0
     assert result.status == value_objects.ReminderStatus.COMPLETE
     # No events should be emitted
     events = day.collect_events()
@@ -202,10 +215,13 @@ async def test_update_reminder_status_all_status_transitions():
     day = DayEntity.create_for_date(task_date, user_id, template)
     reminder = day.add_reminder("Test Reminder")
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
-    uow = _FakeUoW(day_repo=day_repo)
-    uow_factory = _FakeUoWFactory(uow)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(day_repo=day_repo)
+    uow = create_uow_double(day_repo=day_repo)
+    uow_factory = create_uow_factory_double(uow)
     handler = UpdateReminderStatusHandler(ro_repos, uow_factory, user_id)
 
     # INCOMPLETE -> COMPLETE
@@ -217,7 +233,8 @@ async def test_update_reminder_status_all_status_transitions():
         )
     )
     assert result.status == value_objects.ReminderStatus.COMPLETE
-    day_repo._day = uow_factory.uow.added[-1]
+    updated_day = uow.added[-1]
+    allow(day_repo).get.with_args(day_id).and_return(updated_day)
 
     # COMPLETE -> PUNT
     result = await handler.handle(
@@ -229,8 +246,9 @@ async def test_update_reminder_status_all_status_transitions():
     )
     assert result.status == value_objects.ReminderStatus.PUNT
 
-    # Update the day in repo for next test
-    day_repo._day = uow_factory.uow.added[-1]
+    # Update the day in repo for next test - get the updated day from uow
+    updated_day = uow.added[-1]
+    allow(day_repo).get.with_args(day_id).and_return(updated_day)
 
     # PUNT -> INCOMPLETE
     result = await handler.handle(

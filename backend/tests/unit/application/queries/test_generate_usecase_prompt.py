@@ -3,6 +3,7 @@
 from uuid import uuid4
 
 import pytest
+from dobles import allow
 
 from lykke.application.queries.generate_usecase_prompt import (
     GenerateUseCasePromptHandler,
@@ -10,11 +11,12 @@ from lykke.application.queries.generate_usecase_prompt import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
-from tests.unit.fakes import (
-    _FakeReadOnlyRepos,
-    _FakeUseCaseConfigReadOnlyRepo,
-    _FakeUserReadOnlyRepo,
+from tests.support.dobles import (
+    create_read_only_repos_double,
+    create_repo_double,
+    create_user_repo_double,
 )
+from lykke.application.repositories import UseCaseConfigRepositoryReadOnlyProtocol
 
 
 @pytest.mark.asyncio
@@ -31,9 +33,15 @@ async def test_generate_usecase_prompt_uses_base_personality_slug() -> None:
         ),
     )
 
-    ro_repos = _FakeReadOnlyRepos(
-        usecase_config_repo=_FakeUseCaseConfigReadOnlyRepo(),
-        user_repo=_FakeUserReadOnlyRepo(user),
+    usecase_config_repo = create_repo_double(UseCaseConfigRepositoryReadOnlyProtocol)
+    allow(usecase_config_repo).search.and_return([])
+
+    user_repo = create_user_repo_double()
+    allow(user_repo).get.with_args(user_id).and_return(user)
+
+    ro_repos = create_read_only_repos_double(
+        usecase_config_repo=usecase_config_repo,
+        user_repo=user_repo,
     )
     handler = GenerateUseCasePromptHandler(ro_repos, user_id)
 

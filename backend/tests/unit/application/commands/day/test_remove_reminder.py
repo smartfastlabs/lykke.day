@@ -5,17 +5,18 @@ from datetime import UTC, date as dt_date
 from uuid import uuid4
 
 import pytest
+from dobles import allow
 
 from lykke.application.commands.day import RemoveReminderCommand, RemoveReminderHandler
 from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
 from lykke.domain.events.day_events import ReminderRemovedEvent
-from tests.unit.fakes import (
-    _FakeDayReadOnlyRepo,
-    _FakeReadOnlyRepos,
-    _FakeUoW,
-    _FakeUoWFactory,
+from tests.support.dobles import (
+    create_day_repo_double,
+    create_read_only_repos_double,
+    create_uow_double,
+    create_uow_factory_double,
 )
 
 
@@ -38,10 +39,13 @@ async def test_remove_reminder_removes_reminder_from_day():
     # Clear events from add_reminder
     day.collect_events()
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
-    uow = _FakeUoW(day_repo=day_repo)
-    uow_factory = _FakeUoWFactory(uow)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(day_repo=day_repo)
+    uow = create_uow_double(day_repo=day_repo)
+    uow_factory = create_uow_factory_double(uow)
     handler = RemoveReminderHandler(ro_repos, uow_factory, user_id)
 
     # Act
@@ -52,8 +56,8 @@ async def test_remove_reminder_removes_reminder_from_day():
     # Assert
     assert result.id == reminder1.id
     assert result.name == "Reminder 1"
-    assert len(uow_factory.uow.added) == 1
-    assert uow_factory.uow.added[0] == day
+    assert len(uow.added) == 1
+    assert uow.added[0] == day
     assert len(day.reminders) == 1
     assert day.reminders[0].id == reminder2.id
     assert day.reminders[0].name == "Reminder 2"
@@ -77,10 +81,13 @@ async def test_remove_reminder_emits_domain_event():
     # Clear events from add_reminder
     day.collect_events()
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
-    uow = _FakeUoW(day_repo=day_repo)
-    uow_factory = _FakeUoWFactory(uow)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(day_repo=day_repo)
+    uow = create_uow_double(day_repo=day_repo)
+    uow_factory = create_uow_factory_double(uow)
     handler = RemoveReminderHandler(ro_repos, uow_factory, user_id)
 
     # Act
@@ -114,10 +121,13 @@ async def test_remove_reminder_raises_error_if_reminder_not_found():
     day = DayEntity.create_for_date(task_date, user_id, template)
     fake_reminder_id = uuid4()
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
-    uow = _FakeUoW(day_repo=day_repo)
-    uow_factory = _FakeUoWFactory(uow)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(day_repo=day_repo)
+    uow = create_uow_double(day_repo=day_repo)
+    uow_factory = create_uow_factory_double(uow)
     handler = RemoveReminderHandler(ro_repos, uow_factory, user_id)
 
     # Act & Assert
@@ -145,10 +155,13 @@ async def test_remove_reminder_with_multiple_reminders():
     reminder2 = day.add_reminder("Reminder 2")
     reminder3 = day.add_reminder("Reminder 3")
 
-    day_repo = _FakeDayReadOnlyRepo(day)
-    ro_repos = _FakeReadOnlyRepos(day_repo=day_repo)
-    uow = _FakeUoW(day_repo=day_repo)
-    uow_factory = _FakeUoWFactory(uow)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(day_repo=day_repo)
+    uow = create_uow_double(day_repo=day_repo)
+    uow_factory = create_uow_factory_double(uow)
     handler = RemoveReminderHandler(ro_repos, uow_factory, user_id)
 
     # Remove middle reminder

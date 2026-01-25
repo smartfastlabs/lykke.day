@@ -8,13 +8,13 @@ from lykke.application.queries.list_base_personalities import (
     ListBasePersonalitiesHandler,
     ListBasePersonalitiesQuery,
 )
-from tests.unit.fakes import _FakeReadOnlyRepos
+from tests.support.dobles import create_read_only_repos_double
 
 
 @pytest.mark.asyncio
 async def test_list_base_personalities_includes_defaults() -> None:
     """Ensure base personalities list includes expected slugs."""
-    handler = ListBasePersonalitiesHandler(_FakeReadOnlyRepos(), uuid4())
+    handler = ListBasePersonalitiesHandler(create_read_only_repos_double(), uuid4())
 
     result = await handler.handle(ListBasePersonalitiesQuery())
 

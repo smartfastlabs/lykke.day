@@ -4,20 +4,21 @@ from datetime import date as dt_date
 from uuid import uuid4
 
 import pytest
+from dobles import allow
 
 from lykke.application.queries.preview_day import PreviewDayHandler, PreviewDayQuery
 from lykke.application.queries.preview_tasks import PreviewTasksHandler
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity, UserEntity
-from tests.unit.fakes import (
-    _FakeCalendarEntryReadOnlyRepo,
-    _FakeDayReadOnlyRepo,
-    _FakeDayTemplateReadOnlyRepo,
-    _FakeReadOnlyRepos,
-    _FakeRoutineDefinitionReadOnlyRepo,
-    _FakeTaskDefinitionReadOnlyRepo,
-    _FakeUserReadOnlyRepo,
+from tests.support.dobles import (
+    create_calendar_entry_repo_double,
+    create_day_repo_double,
+    create_day_template_repo_double,
+    create_read_only_repos_double,
+    create_routine_definition_repo_double,
+    create_task_definition_repo_double,
+    create_user_repo_double,
 )
 
 
@@ -42,18 +43,33 @@ async def test_preview_day_uses_provided_template():
     )
 
     # Setup repositories
-    day_repo = _FakeDayReadOnlyRepo(None)
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    user_repo = _FakeUserReadOnlyRepo(user)
-    calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_raise(NotFoundError("Day not found"))
 
-    ro_repos = _FakeReadOnlyRepos(
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.with_args(template.id).and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    user_repo = create_user_repo_double()
+    allow(user_repo).get.with_args(user_id).and_return(user)
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return([])
+
+    routine_definition_repo = create_routine_definition_repo_double()
+    allow(routine_definition_repo).all.and_return([])
+
+    task_definition_repo = create_task_definition_repo_double()
+    allow(task_definition_repo).search.and_return([])
+
+    ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
-        routine_definition_repo=_FakeRoutineDefinitionReadOnlyRepo(),
-        task_definition_repo=_FakeTaskDefinitionReadOnlyRepo(),
+        routine_definition_repo=routine_definition_repo,
+        task_definition_repo=task_definition_repo,
     )
     handler = PreviewDayHandler(ro_repos, user_id)
 
@@ -91,18 +107,33 @@ async def test_preview_day_falls_back_to_user_default_template():
     )
 
     # Setup repositories - no existing day
-    day_repo = _FakeDayReadOnlyRepo(None)
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    user_repo = _FakeUserReadOnlyRepo(user)
-    calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_raise(NotFoundError("Day not found"))
 
-    ro_repos = _FakeReadOnlyRepos(
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    user_repo = create_user_repo_double()
+    allow(user_repo).get.with_args(user_id).and_return(user)
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return([])
+
+    routine_definition_repo = create_routine_definition_repo_double()
+    allow(routine_definition_repo).all.and_return([])
+
+    task_definition_repo = create_task_definition_repo_double()
+    allow(task_definition_repo).search.and_return([])
+
+    ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
-        routine_definition_repo=_FakeRoutineDefinitionReadOnlyRepo(),
-        task_definition_repo=_FakeTaskDefinitionReadOnlyRepo(),
+        routine_definition_repo=routine_definition_repo,
+        task_definition_repo=task_definition_repo,
     )
     handler = PreviewDayHandler(ro_repos, user_id)
 
@@ -136,18 +167,33 @@ async def test_preview_day_uses_existing_day_template_if_available():
     )
 
     # Setup repositories with existing day
-    day_repo = _FakeDayReadOnlyRepo(existing_day)
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    user_repo = _FakeUserReadOnlyRepo(user)
-    calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(existing_day)
 
-    ro_repos = _FakeReadOnlyRepos(
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    user_repo = create_user_repo_double()
+    allow(user_repo).get.with_args(user_id).and_return(user)
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return([])
+
+    routine_definition_repo = create_routine_definition_repo_double()
+    allow(routine_definition_repo).all.and_return([])
+
+    task_definition_repo = create_task_definition_repo_double()
+    allow(task_definition_repo).search.and_return([])
+
+    ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
-        routine_definition_repo=_FakeRoutineDefinitionReadOnlyRepo(),
-        task_definition_repo=_FakeTaskDefinitionReadOnlyRepo(),
+        routine_definition_repo=routine_definition_repo,
+        task_definition_repo=task_definition_repo,
     )
     handler = PreviewDayHandler(ro_repos, user_id)
 
@@ -183,18 +229,33 @@ async def test_preview_day_returns_calendar_entries():
     mock_entries = [{"name": "Meeting 1"}, {"name": "Meeting 2"}]
 
     # Setup repositories
-    day_repo = _FakeDayReadOnlyRepo(None)
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    user_repo = _FakeUserReadOnlyRepo(user)
-    calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo(mock_entries)
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_raise(NotFoundError("Day not found"))
 
-    ro_repos = _FakeReadOnlyRepos(
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    user_repo = create_user_repo_double()
+    allow(user_repo).get.with_args(user_id).and_return(user)
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return(mock_entries)
+
+    routine_definition_repo = create_routine_definition_repo_double()
+    allow(routine_definition_repo).all.and_return([])
+
+    task_definition_repo = create_task_definition_repo_double()
+    allow(task_definition_repo).search.and_return([])
+
+    ro_repos = create_read_only_repos_double(
         day_repo=day_repo,
         day_template_repo=day_template_repo,
         user_repo=user_repo,
         calendar_entry_repo=calendar_entry_repo,
-        routine_definition_repo=_FakeRoutineDefinitionReadOnlyRepo(),
-        task_definition_repo=_FakeTaskDefinitionReadOnlyRepo(),
+        routine_definition_repo=routine_definition_repo,
+        task_definition_repo=task_definition_repo,
     )
     handler = PreviewDayHandler(ro_repos, user_id)
 

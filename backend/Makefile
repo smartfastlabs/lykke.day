@@ -1,4 +1,4 @@
-.PHONY: serve serve-prod serve-http test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db migrate-data-to-prod docker-build export-openapi generate-types migrate-data-to-prod worker scheduler check-mappers
+.PHONY: serve serve-prod serve-http test typecheck check test-target docker-up docker-down docker-restart migrate-dev migrate-test migrate-prod migrate-create init-db migrate-data-to-prod docker-build export-openapi generate-types migrate-data-to-prod worker scheduler check-mappers fix
 
 # Docker management
 docker-up:
@@ -119,6 +119,10 @@ typecheck:
 
 check-mappers:
 	poetry run python scripts/check_mappers.py
+
+fix:
+	poetry run ruff check --fix .
+	poetry run black .
 
 check:
 	make typecheck

@@ -8,6 +8,7 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
+from dobles import allow
 
 from lykke.application.commands.brain_dump import (
     ProcessBrainDumpCommand,
@@ -17,43 +18,14 @@ from lykke.application.llm_usecases import LLMRunResult
 from lykke.domain import value_objects
 from lykke.domain.entities import BrainDumpEntity, DayEntity, DayTemplateEntity
 from lykke.domain.events.day_events import BrainDumpItemTypeChangedEvent
-from tests.unit.fakes import (
-    _FakeBrainDumpReadOnlyRepo,
-    _FakeDayReadOnlyRepo,
-    _FakeReadOnlyRepos,
-    _FakeUoW,
-    _FakeUoWFactory,
+from tests.support.dobles import (
+    create_brain_dump_repo_double,
+    create_day_repo_double,
+    create_read_only_repos_double,
+    create_uow_double,
+    create_uow_factory_double,
 )
-
-
-class _FakeLLMRunner:
-    def __init__(
-        self, *, tool_name: str, result: dict[str, object], day: DayEntity
-    ) -> None:
-        self._tool_name = tool_name
-        self._result = result
-        self.calls: list[object] = []
-        self._day = day
-
-    async def run(self, *, usecase: Any) -> LLMRunResult | None:
-        self.calls.append(usecase)
-        return LLMRunResult(
-            tool_name=self._tool_name,
-            result=self._result,
-            prompt_context=value_objects.LLMPromptContext(
-                day=self._day,
-                tasks=[],
-                calendar_entries=[],
-                brain_dump_items=[],
-                messages=[],
-                push_notifications=[],
-            ),
-            current_time=datetime.now(UTC),
-            llm_provider=value_objects.LLMProvider.OPENAI,
-            system_prompt="system",
-            context_prompt="context",
-            ask_prompt="ask",
-        )
+from dobles import InstanceDouble
 
 
 @dataclass
@@ -80,22 +52,51 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
         "start_time": time(9, 0),
         "tags": [value_objects.TaskTag.IMPORTANT],
     }
-    runner = _FakeLLMRunner(tool_name="add_task", result=result, day=day)
+    runner = InstanceDouble("lykke.application.llm_usecases.runner.LLMUseCaseRunner")
+    runner.calls: list[object] = []
+    
+    async def run_side_effect(*, usecase: Any) -> LLMRunResult | None:
+        runner.calls.append(usecase)
+        return LLMRunResult(
+            tool_name="add_task",
+            result=result,
+            prompt_context=value_objects.LLMPromptContext(
+                day=day,
+                tasks=[],
+                calendar_entries=[],
+                brain_dump_items=[],
+                messages=[],
+                push_notifications=[],
+            ),
+            current_time=datetime.now(UTC),
+            llm_provider=value_objects.LLMProvider.OPENAI,
+            system_prompt="system",
+            context_prompt="context",
+            ask_prompt="ask",
+        )
+    runner.run = run_side_effect
+    
     task_recorder = _Recorder(commands=[])
 
-    brain_dump_repo = _FakeBrainDumpReadOnlyRepo(item)
-    ro_repos = _FakeReadOnlyRepos(
-        day_repo=_FakeDayReadOnlyRepo(day),
+    brain_dump_repo = create_brain_dump_repo_double()
+    allow(brain_dump_repo).get.with_args(item.id).and_return(item)
+
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(
+        day_repo=day_repo,
         brain_dump_repo=brain_dump_repo,
     )
-    uow = _FakeUoW(
-        day_repo=_FakeDayReadOnlyRepo(day),
+    uow = create_uow_double(
+        day_repo=day_repo,
         brain_dump_repo=brain_dump_repo,
     )
 
     handler = ProcessBrainDumpHandler(
         ro_repos,
-        _FakeUoWFactory(uow),
+        create_uow_factory_double(uow),
         user_id,
         runner,
         object(),
@@ -126,26 +127,51 @@ async def test_process_brain_dump_update_task_records_action() -> None:
     item = BrainDumpEntity(user_id=user_id, date=date, text="Finished the report")
 
     task_id = uuid4()
-    runner = _FakeLLMRunner(
-        tool_name="update_task",
-        result={"task_id": task_id, "action": "complete"},
-        day=day,
-    )
+    runner = InstanceDouble("lykke.application.llm_usecases.runner.LLMUseCaseRunner")
+    runner.calls: list[object] = []
+    
+    async def run_side_effect(*, usecase: Any) -> LLMRunResult | None:
+        runner.calls.append(usecase)
+        return LLMRunResult(
+            tool_name="update_task",
+            result={"task_id": task_id, "action": "complete"},
+            prompt_context=value_objects.LLMPromptContext(
+                day=day,
+                tasks=[],
+                calendar_entries=[],
+                brain_dump_items=[],
+                messages=[],
+                push_notifications=[],
+            ),
+            current_time=datetime.now(UTC),
+            llm_provider=value_objects.LLMProvider.OPENAI,
+            system_prompt="system",
+            context_prompt="context",
+            ask_prompt="ask",
+        )
+    runner.run = run_side_effect
+    
     task_action_recorder = _Recorder(commands=[])
 
-    brain_dump_repo = _FakeBrainDumpReadOnlyRepo(item)
-    ro_repos = _FakeReadOnlyRepos(
-        day_repo=_FakeDayReadOnlyRepo(day),
+    brain_dump_repo = create_brain_dump_repo_double()
+    allow(brain_dump_repo).get.with_args(item.id).and_return(item)
+
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(
+        day_repo=day_repo,
         brain_dump_repo=brain_dump_repo,
     )
-    uow = _FakeUoW(
-        day_repo=_FakeDayReadOnlyRepo(day),
+    uow = create_uow_double(
+        day_repo=day_repo,
         brain_dump_repo=brain_dump_repo,
     )
 
     handler = ProcessBrainDumpHandler(
         ro_repos,
-        _FakeUoWFactory(uow),
+        create_uow_factory_double(uow),
         user_id,
         runner,
         object(),
@@ -172,29 +198,54 @@ async def test_process_brain_dump_update_reminder_updates_status() -> None:
     item = BrainDumpEntity(user_id=user_id, date=date, text="Mark reminder complete")
 
     reminder_id = uuid4()
-    runner = _FakeLLMRunner(
-        tool_name="update_reminder",
-        result={
-            "reminder_id": reminder_id,
-            "status": value_objects.ReminderStatus.COMPLETE,
-        },
-        day=day,
-    )
+    runner = InstanceDouble("lykke.application.llm_usecases.runner.LLMUseCaseRunner")
+    runner.calls: list[object] = []
+    
+    async def run_side_effect(*, usecase: Any) -> LLMRunResult | None:
+        runner.calls.append(usecase)
+        return LLMRunResult(
+            tool_name="update_reminder",
+            result={
+                "reminder_id": reminder_id,
+                "status": value_objects.ReminderStatus.COMPLETE,
+            },
+            prompt_context=value_objects.LLMPromptContext(
+                day=day,
+                tasks=[],
+                calendar_entries=[],
+                brain_dump_items=[],
+                messages=[],
+                push_notifications=[],
+            ),
+            current_time=datetime.now(UTC),
+            llm_provider=value_objects.LLMProvider.OPENAI,
+            system_prompt="system",
+            context_prompt="context",
+            ask_prompt="ask",
+        )
+    runner.run = run_side_effect
+    
     reminder_status_recorder = _Recorder(commands=[])
 
-    brain_dump_repo = _FakeBrainDumpReadOnlyRepo(item)
-    ro_repos = _FakeReadOnlyRepos(
-        day_repo=_FakeDayReadOnlyRepo(day),
+    brain_dump_repo = create_brain_dump_repo_double()
+    allow(brain_dump_repo).get.with_args(item.id).and_return(item)
+
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(
+        day_repo=day_repo,
         brain_dump_repo=brain_dump_repo,
     )
-    uow = _FakeUoW(
-        day_repo=_FakeDayReadOnlyRepo(day),
+    uow = create_uow_double(
+        day_repo=day_repo,
         brain_dump_repo=brain_dump_repo,
     )
 
     handler = ProcessBrainDumpHandler(
         ro_repos,
-        _FakeUoWFactory(uow),
+        create_uow_factory_double(uow),
         user_id,
         runner,
         object(),
@@ -220,25 +271,52 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
     day = DayEntity.create_for_date(date, user_id=user_id, template=template)
     item = BrainDumpEntity(user_id=user_id, date=date, text="Follow up on invoice")
 
-    runner = _FakeLLMRunner(
-        tool_name="add_task",
-        result={
-            "name": "Follow up on invoice",
-            "category": value_objects.TaskCategory.WORK,
-        },
-        day=day,
+    runner = InstanceDouble("lykke.application.llm_usecases.runner.LLMUseCaseRunner")
+    runner.calls: list[object] = []
+    
+    async def run_side_effect(*, usecase: Any) -> LLMRunResult | None:
+        runner.calls.append(usecase)
+        return LLMRunResult(
+            tool_name="add_task",
+            result={
+                "name": "Follow up on invoice",
+                "category": value_objects.TaskCategory.WORK,
+            },
+            prompt_context=value_objects.LLMPromptContext(
+                day=day,
+                tasks=[],
+                calendar_entries=[],
+                brain_dump_items=[],
+                messages=[],
+                push_notifications=[],
+            ),
+            current_time=datetime.now(UTC),
+            llm_provider=value_objects.LLMProvider.OPENAI,
+            system_prompt="system",
+            context_prompt="context",
+            ask_prompt="ask",
+        )
+    runner.run = run_side_effect
+
+    brain_dump_repo = create_brain_dump_repo_double()
+    allow(brain_dump_repo).get.with_args(item.id).and_return(item)
+
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    ro_repos = create_read_only_repos_double(
+        day_repo=day_repo,
+        brain_dump_repo=brain_dump_repo,
     )
-    brain_dump_repo = _FakeBrainDumpReadOnlyRepo(item)
-    uow = _FakeUoW(
-        day_repo=_FakeDayReadOnlyRepo(day),
+    uow = create_uow_double(
+        day_repo=day_repo,
         brain_dump_repo=brain_dump_repo,
     )
 
     handler = ProcessBrainDumpHandler(
-        _FakeReadOnlyRepos(
-            day_repo=_FakeDayReadOnlyRepo(day), brain_dump_repo=brain_dump_repo
-        ),
-        _FakeUoWFactory(uow),
+        ro_repos,
+        create_uow_factory_double(uow),
         user_id,
         runner,
         object(),
