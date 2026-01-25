@@ -42,6 +42,8 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
   const timeBlocks = createMemo(() => day()?.template?.time_blocks ?? []);
   const dayDate = createMemo(() => day()?.date);
 
+  const dateLabel = createMemo(() => `${weekday()} ${monthDay()}`);
+
   return (
     <Page>
       <div class="min-h-screen relative overflow-hidden">
@@ -59,12 +61,14 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
                 <div>
                   <div class="flex items-center gap-3 text-stone-600 mb-2">
                     <span class="font-semibold text-lg text-amber-600/80">
-                      {planTitle() || "No plan yet"}
+                      {planTitle() || dateLabel()}
                     </span>
                   </div>
-                  <p class="text-sm uppercase tracking-[0.2em] text-amber-600/80">
-                    {weekday()} {monthDay()}
-                  </p>
+                  <Show when={planTitle()}>
+                    <p class="text-sm uppercase tracking-[0.2em] text-amber-600/80">
+                      {dateLabel()}
+                    </p>
+                  </Show>
                 </div>
                 <div class="flex items-center gap-2">
                   <a
