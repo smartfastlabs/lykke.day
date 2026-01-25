@@ -185,7 +185,7 @@ const BrainDumpButton: Component = () => {
 
   createEffect(() => {
     if (!isModalOpen()) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
         closeDictationModal();
