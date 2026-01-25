@@ -33,7 +33,7 @@ from .day_template import (
     DayTemplateUpdateSchema,
 )
 from .early_access import EarlyAccessRequestSchema, StatusResponseSchema
-from .factoid import FactoidSchema
+from .factoid import FactoidCreateSchema, FactoidSchema, FactoidUpdateSchema
 from .high_level_plan import HighLevelPlanSchema
 from .message import MessageSchema, SendMessageRequestSchema, SendMessageResponseSchema
 from .pagination import PagedResponseSchema
@@ -171,7 +171,9 @@ __all__ = [
     "DayUpdateSchema",
     "EarlyAccessRequestSchema",
     "EntityChangeSchema",
+    "FactoidCreateSchema",
     "FactoidSchema",
+    "FactoidUpdateSchema",
     "HighLevelPlanSchema",
     "MessageSchema",
     "NotificationUseCaseConfigSchema",

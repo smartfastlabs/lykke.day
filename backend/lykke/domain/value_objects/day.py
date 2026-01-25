@@ -11,6 +11,7 @@ if TYPE_CHECKING:
         BrainDumpEntity,
         CalendarEntryEntity,
         DayEntity,
+        FactoidEntity,
         MessageEntity,
         PushNotificationEntity,
         RoutineEntity,
@@ -84,5 +85,6 @@ class DayContext(BaseValueObject):
 class LLMPromptContext(DayContext):
     """Expanded context for LLM prompts."""
 
+    factoids: list["FactoidEntity"] = field(default_factory=list)
     messages: list["MessageEntity"] = field(default_factory=list)
     push_notifications: list["PushNotificationEntity"] = field(default_factory=list)

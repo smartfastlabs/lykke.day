@@ -18,6 +18,7 @@ import {
   Reminder,
   BrainDumpItem,
   PushNotification,
+  Factoid,
 } from "@/types/api";
 import type {
   BasePersonalityOption,
@@ -578,6 +579,10 @@ export const routineDefinitionAPI = {
         method: "DELETE",
       }
     ),
+};
+
+export const factoidAPI = {
+  ...createCrudMethods<Factoid>("factoids"),
 };
 
 export const notificationAPI = {

@@ -7,6 +7,7 @@ from . import (
     day_templates,
     days,
     early_access,
+    factoids,
     google,
     me,
     push_notifications,
@@ -45,6 +46,11 @@ router.include_router(
     brain_dump.router,
     prefix="/brain-dump",
     tags=["brain-dump"],
+)
+router.include_router(
+    factoids.router,
+    prefix="/factoids",
+    tags=["factoids"],
 )
 router.include_router(
     calendar_entry_series.router,

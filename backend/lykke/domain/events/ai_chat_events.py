@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from lykke.domain.value_objects.update import (
     BotPersonalityUpdateObject,
     ConversationUpdateObject,
+    FactoidUpdateObject,
 )
 
 from .base import AuditableDomainEvent, DomainEvent, EntityUpdatedEvent
@@ -21,6 +22,7 @@ __all__ = [
     "ConversationUpdatedEvent",
     "FactoidCreatedEvent",
     "FactoidCriticalityUpdatedEvent",
+    "FactoidUpdatedEvent",
     "MessageReceivedEvent",
     "MessageSentEvent",
 ]
@@ -88,6 +90,11 @@ class FactoidCriticalityUpdatedEvent(DomainEvent):
     old_criticality: str  # FactoidCriticality enum as string
     new_criticality: str  # FactoidCriticality enum as string
     user_confirmed: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class FactoidUpdatedEvent(EntityUpdatedEvent[FactoidUpdateObject]):
+    """Event raised when a factoid is updated via apply_update()."""
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -8,6 +8,7 @@ from lykke.domain.entities import (
     CalendarEntryEntity,
     DayEntity,
     DayTemplateEntity,
+    FactoidEntity,
     MessageEntity,
     PushNotificationEntity,
     TaskEntity,
@@ -83,6 +84,13 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
         created_at=current_time,
     )
 
+    factoid = FactoidEntity(
+        user_id=user_id,
+        factoid_type=value_objects.FactoidType.SEMANTIC,
+        content="Has a dog named Oakley",
+        criticality=value_objects.FactoidCriticality.IMPORTANT,
+    )
+
     llm_snapshot = value_objects.LLMRunResultSnapshot(
         tool_calls=[
             value_objects.LLMToolCallResultSnapshot(
@@ -123,6 +131,7 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
         tasks=[task],
         calendar_entries=[calendar_entry],
         brain_dump_items=[brain_dump_item],
+        factoids=[factoid],
         messages=[message],
         push_notifications=[push_notification],
     )
@@ -143,6 +152,9 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
 
     assert serialized["reminders"][0]["created_at"] == current_time.isoformat()
     assert serialized["brain_dump_items"][0]["created_at"] == current_time.isoformat()
+
+    assert serialized["factoids"][0]["content"] == "Has a dog named Oakley"
+    assert serialized["factoids"][0]["criticality"] == "important"
 
     assert serialized["messages"][0]["role"] == "user"
     assert serialized["messages"][0]["meta"]["source"] == "test"

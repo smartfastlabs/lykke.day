@@ -56,6 +56,9 @@ import TaskDefinitionDetailPage from "@/pages/me/settings/task-definitions/Detai
 import RoutineDefinitionsPage from "@/pages/me/settings/routine-definitions/Index";
 import NewRoutineDefinitionPage from "@/pages/me/settings/routine-definitions/New";
 import RoutineDefinitionDetailPage from "@/pages/me/settings/routine-definitions/Detail";
+import FactoidsPage from "@/pages/me/settings/factoids/Index";
+import NewFactoidPage from "@/pages/me/settings/factoids/New";
+import FactoidDetailPage from "@/pages/me/settings/factoids/Detail";
 import TimeBlocksPage from "@/pages/me/settings/time-blocks/Index";
 import NewTimeBlockPage from "@/pages/me/settings/time-blocks/New";
 import TimeBlockDetailPage from "@/pages/me/settings/time-blocks/Detail";
@@ -308,6 +311,9 @@ export default function App() {
                   path="/routine-definitions/:id"
                   component={RoutineDefinitionDetailPage}
                 />
+                <Route path="/factoids" component={FactoidsPage} />
+                <Route path="/factoids/new" component={NewFactoidPage} />
+                <Route path="/factoids/:id" component={FactoidDetailPage} />
                 <Route path="/time-blocks" component={TimeBlocksPage} />
                 <Route path="/time-blocks/new" component={NewTimeBlockPage} />
                 <Route

@@ -134,6 +134,24 @@ def serialize_day_context(
         }
 
     if isinstance(context, value_objects.LLMPromptContext):
+        result["factoids"] = [
+            {
+                "id": str(factoid.id),
+                "content": factoid.content,
+                "factoid_type": factoid.factoid_type.value,
+                "criticality": factoid.criticality.value,
+                "conversation_id": (
+                    str(factoid.conversation_id)
+                    if factoid.conversation_id is not None
+                    else None
+                ),
+                "ai_suggested": factoid.ai_suggested,
+                "user_confirmed": factoid.user_confirmed,
+                "created_at": factoid.created_at.isoformat(),
+            }
+            for factoid in context.factoids
+        ]
+
         result["messages"] = [
             {
                 "id": str(message.id),

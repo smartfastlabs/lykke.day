@@ -9,12 +9,13 @@ from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.queries.get_day_context import GetDayContextHandler
 from lykke.application.repositories import (
     ConversationRepositoryReadOnlyProtocol,
+    FactoidRepositoryReadOnlyProtocol,
     MessageRepositoryReadOnlyProtocol,
     PushNotificationRepositoryReadOnlyProtocol,
 )
 from lykke.application.unit_of_work import ReadOnlyRepositories
 from lykke.domain import value_objects
-from lykke.domain.entities import MessageEntity, PushNotificationEntity
+from lykke.domain.entities import FactoidEntity, MessageEntity, PushNotificationEntity
 
 _RECENT_MESSAGES_LIMIT = 20
 _RECENT_PUSH_NOTIFICATIONS_LIMIT = 20
@@ -33,6 +34,7 @@ class GetLLMPromptContextHandler(
     """Gets the complete context needed for LLM prompts."""
 
     conversation_ro_repo: ConversationRepositoryReadOnlyProtocol
+    factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
     message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
 
@@ -64,7 +66,8 @@ class GetLLMPromptContextHandler(
         """Load complete LLM prompt context for the given date."""
         day_context = await self._get_day_context_handler.get_day_context(date)
 
-        messages, push_notifications = await asyncio.gather(
+        factoids, messages, push_notifications = await asyncio.gather(
+            self._get_factoids(),
             self._get_recent_messages(),
             self._get_recent_push_notifications(),
         )
@@ -74,6 +77,7 @@ class GetLLMPromptContextHandler(
             tasks=day_context.tasks,
             calendar_entries=day_context.calendar_entries,
             brain_dump_items=day_context.brain_dump_items,
+            factoids=factoids,
             messages=messages,
             push_notifications=push_notifications,
         )
@@ -102,6 +106,10 @@ class GetLLMPromptContextHandler(
         )
 
         return list(reversed(messages))
+
+    async def _get_factoids(self) -> list[FactoidEntity]:
+        """Load all factoids for the user."""
+        return await self.factoid_ro_repo.all()
 
     async def _get_recent_push_notifications(
         self,

@@ -26,6 +26,7 @@ if TYPE_CHECKING:
         TimeBlockCategory,
         TimeBlockType,
     )
+    from .ai_chat import FactoidCriticality, FactoidType
     from .user import UserSetting, UserStatus
 
 
@@ -184,3 +185,14 @@ class ConversationUpdateObject(BaseUpdateObject):
 
     status: str | None = None  # ConversationStatus enum as string
     context: dict | None = None
+
+
+@dataclass(kw_only=True)
+class FactoidUpdateObject(BaseUpdateObject):
+    """Update object for Factoid entity."""
+
+    content: str | None = None
+    factoid_type: FactoidType | None = None
+    criticality: FactoidCriticality | None = None
+    conversation_id: UUID | None = None
+    user_confirmed: bool | None = None
