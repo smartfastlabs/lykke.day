@@ -205,75 +205,86 @@ const BrainDumpButton: Component = () => {
       </div>
 
       <Show when={isModalOpen()}>
-        <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div class="w-full max-w-md rounded-2xl bg-white px-5 py-4 shadow-2xl">
-            <div class="flex items-center justify-between">
-              <p class="text-sm font-semibold text-stone-700">Dictation</p>
-              <button
-                type="button"
-                onClick={closeDictationModal}
-                class="h-8 w-8 rounded-full flex items-center justify-center text-stone-500 hover:text-stone-700 hover:bg-stone-100"
-                aria-label="Close dictation"
-              >
-                <Icon icon={faXmark} class="h-4 w-4 fill-current" />
-              </button>
-            </div>
-
-            <textarea
-              value={displayText()}
-              onInput={(e) => {
-                setNewItemText(e.currentTarget.value);
-                setDictationInterim("");
-              }}
-              placeholder="Speak your thoughts..."
-              rows={5}
-              class="mt-3 w-full resize-none rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-400"
-              disabled={isSaving() || isLoading()}
-            />
-
-            <div class="mt-3 flex items-center justify-between">
-              <span class="text-xs text-stone-500">
-                {isDictating()
-                  ? "Listening…"
-                  : isSpeechSupported()
-                  ? "Paused"
-                  : "Speech not supported"}
-              </span>
-              <div class="flex items-center gap-2">
-                <Show when={isSpeechSupported()}>
-                  <button
-                    type="button"
-                    onClick={toggleDictation}
-                    class={`h-9 w-9 rounded-full flex items-center justify-center border transition-colors ${
-                      isDictating()
-                        ? "border-rose-200 bg-rose-50 text-rose-600"
-                        : "border-stone-200 bg-white text-stone-600 hover:bg-stone-50"
-                    }`}
-                    aria-label={isDictating() ? "Stop dictation" : "Start dictation"}
-                    disabled={isSaving() || isLoading()}
-                  >
-                    <Icon
-                      icon={isDictating() ? faStop : faMicrophone}
-                      class="h-4 w-4 fill-current"
-                    />
-                  </button>
-                </Show>
+        <div class="fixed inset-0 z-[60] flex items-center justify-center bg-stone-900/25 backdrop-blur-sm">
+          <div class="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/70 bg-white/75 p-6 shadow-xl shadow-amber-900/10 backdrop-blur-md">
+            <div class="absolute inset-0 bg-gradient-to-br from-amber-50/70 via-white/80 to-rose-50/60" />
+            <div class="absolute -top-10 -right-12 h-40 w-40 rounded-full bg-gradient-to-br from-amber-200/40 to-orange-200/20 blur-3xl" />
+            <div class="absolute -bottom-12 -left-10 h-36 w-36 rounded-full bg-gradient-to-tr from-rose-200/35 to-amber-200/20 blur-3xl" />
+            <div class="relative">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80 shadow-sm">
+                    <Icon icon={faMicrophone} class="h-4 w-4 fill-sky-600" />
+                  </div>
+                  <div>
+                    <p class="text-base font-semibold text-stone-800">Dictation</p>
+                    <p class="text-xs text-stone-500">
+                      {isDictating()
+                        ? "Listening…"
+                        : isSpeechSupported()
+                        ? "Paused"
+                        : "Speech not supported"}
+                    </p>
+                  </div>
+                </div>
                 <button
                   type="button"
-                  onClick={() => void handleSave()}
-                  disabled={isSaving() || isLoading() || !displayText().trim()}
-                  class="h-9 rounded-full bg-stone-900 px-4 text-xs font-semibold text-white transition-colors hover:bg-stone-800 disabled:opacity-50"
+                  onClick={closeDictationModal}
+                  class="flex h-9 w-9 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-white/80 hover:text-stone-700"
+                  aria-label="Close dictation"
                 >
-                  {isSaving() ? "Saving…" : "Save"}
+                  <Icon icon={faXmark} class="h-4 w-4 fill-current" />
                 </button>
               </div>
-            </div>
 
-            <Show when={dictationError()}>
-              <p class="mt-2 text-xs text-rose-600">
-                Dictation stopped: {dictationError()}
-              </p>
-            </Show>
+              <textarea
+                value={displayText()}
+                onInput={(e) => {
+                  setNewItemText(e.currentTarget.value);
+                  setDictationInterim("");
+                }}
+                placeholder="Speak your thoughts..."
+                rows={6}
+                class="mt-5 w-full resize-none rounded-2xl border border-stone-200 bg-white/80 px-4 py-3 text-sm text-stone-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                disabled={isSaving() || isLoading()}
+              />
+
+              <div class="mt-4 flex items-center justify-between">
+                <Show when={dictationError()}>
+                  <p class="text-xs text-rose-600">
+                    Dictation stopped: {dictationError()}
+                  </p>
+                </Show>
+                <div class="ml-auto flex items-center gap-2">
+                  <Show when={isSpeechSupported()}>
+                    <button
+                      type="button"
+                      onClick={toggleDictation}
+                      class={`h-10 w-10 rounded-2xl flex items-center justify-center border transition-colors ${
+                        isDictating()
+                          ? "border-rose-200 bg-rose-50 text-rose-600"
+                          : "border-stone-200 bg-white/80 text-stone-600 hover:bg-white"
+                      }`}
+                      aria-label={isDictating() ? "Stop dictation" : "Start dictation"}
+                      disabled={isSaving() || isLoading()}
+                    >
+                      <Icon
+                        icon={isDictating() ? faStop : faMicrophone}
+                        class="h-4 w-4 fill-current"
+                      />
+                    </button>
+                  </Show>
+                  <button
+                    type="button"
+                    onClick={() => void handleSave()}
+                    disabled={isSaving() || isLoading() || !displayText().trim()}
+                    class="h-10 rounded-2xl bg-sky-500 px-5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-sky-600 disabled:opacity-50 disabled:hover:bg-sky-500"
+                  >
+                    {isSaving() ? "Saving…" : "Save"}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </Show>
