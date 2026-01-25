@@ -21,7 +21,11 @@ from .day import (
     ReminderStatus,
 )
 from .high_level_plan import HighLevelPlan
-from .llm_run import LLMRunResultSnapshot, LLMToolCallResultSnapshot
+from .llm_run import (
+    LLMReferencedEntitySnapshot,
+    LLMRunResultSnapshot,
+    LLMToolCallResultSnapshot,
+)
 from .notification_decision import NotificationDecision
 from .push import NotificationAction, NotificationPayload
 from .query import (
@@ -135,6 +139,7 @@ __all__ = [
     "FactoidType",
     "HighLevelPlan",
     "LLMRunResultSnapshot",
+    "LLMReferencedEntitySnapshot",
     "LLMToolCallResultSnapshot",
     "LLMPromptContext",
     "LLMProvider",

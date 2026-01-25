@@ -2,7 +2,6 @@
 
 import json
 from dataclasses import dataclass
-from typing import Any
 from uuid import UUID
 
 from loguru import logger
@@ -23,11 +22,9 @@ class SendPushNotificationCommand(Command):
     content: str | dict | value_objects.NotificationPayload
     message: str | None = None
     priority: str | None = None
-    reason: str | None = None
-    day_context_snapshot: dict[str, Any] | None = None
     message_hash: str | None = None
     triggered_by: str | None = None
-    llm_provider: str | None = None
+    llm_snapshot: value_objects.LLMRunResultSnapshot | None = None
 
 
 class SendPushNotificationHandler(
@@ -131,11 +128,9 @@ class SendPushNotificationHandler(
                 error_message=error_message,
                 message=command.message,
                 priority=command.priority,
-                reason=command.reason,
-                day_context_snapshot=command.day_context_snapshot or {},
                 message_hash=command.message_hash,
                 triggered_by=command.triggered_by,
-                llm_provider=command.llm_provider,
+                llm_snapshot=command.llm_snapshot,
             )
             notification.create()
             await uow.create(notification)

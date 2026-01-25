@@ -2,8 +2,9 @@
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any
 from uuid import UUID
+
+from lykke.domain import value_objects
 
 from .base import BaseEntityObject
 
@@ -28,8 +29,7 @@ class PushNotificationEntity(BaseEntityObject):
     # Smart notification metadata (optional for non-LLM pushes)
     message: str | None = None
     priority: str | None = None  # "high", "medium", "low"
-    reason: str | None = None  # LLM's reasoning
-    day_context_snapshot: dict[str, Any] = field(default_factory=dict)
+    # LLM metadata is stored in llm_snapshot
     message_hash: str | None = None  # SHA256 hash for deduplication
     triggered_by: str | None = None  # "scheduled", "task_status_change", etc.
-    llm_provider: str | None = None  # "anthropic", "openai", etc.
+    llm_snapshot: value_objects.LLMRunResultSnapshot | None = None

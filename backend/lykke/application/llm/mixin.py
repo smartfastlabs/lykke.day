@@ -10,11 +10,7 @@ from typing import TYPE_CHECKING, Any
 from loguru import logger
 
 from lykke.application.gateways.llm_gateway_factory import LLMGatewayFactory
-from lykke.application.gateways.llm_protocol import (
-    LLMTool,
-    LLMToolCallResult,
-    LLMToolRunResult,
-)
+from lykke.application.gateways.llm_protocol import LLMTool, LLMToolCallResult
 from lykke.application.llm.prompt_rendering import (
     render_ask_prompt,
     render_context_prompt,
@@ -54,6 +50,20 @@ class LLMRunResult:
     system_prompt: str
     context_prompt: str
     ask_prompt: str
+    tools_prompt: str
+
+
+@dataclass(frozen=True)
+class LLMRunSnapshotContext:
+    """Context needed to build an LLM run snapshot."""
+
+    prompt_context: value_objects.LLMPromptContext
+    current_time: datetime
+    llm_provider: value_objects.LLMProvider
+    system_prompt: str
+    context_prompt: str
+    ask_prompt: str
+    tools_prompt: str
 
 
 class LLMHandlerMixin(ABC):
@@ -64,6 +74,7 @@ class LLMHandlerMixin(ABC):
     user_id: UUID
     user_ro_repo: UserRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
+    _llm_snapshot_context: LLMRunSnapshotContext | None = None
 
     @abstractmethod
     async def build_prompt_input(self, date: datetime_date) -> UseCasePromptInput:
@@ -146,6 +157,16 @@ class LLMHandlerMixin(ABC):
         logger.info(
             f"Running LLM handler {self.template_usecase} with tools {tool_names}"
         )
+        self._llm_snapshot_context = LLMRunSnapshotContext(
+            prompt_context=prompt_input.prompt_context,
+            current_time=current_time,
+            llm_provider=llm_provider,
+            system_prompt=system_prompt,
+            context_prompt=context_prompt,
+            ask_prompt=ask_prompt,
+            tools_prompt=tools_prompt,
+        )
+
         tool_result = await llm_gateway.run_usecase(
             system_prompt,
             context_prompt,
@@ -166,4 +187,5 @@ class LLMHandlerMixin(ABC):
             system_prompt=system_prompt,
             context_prompt=context_prompt,
             ask_prompt=ask_prompt,
+            tools_prompt=tools_prompt,
         )

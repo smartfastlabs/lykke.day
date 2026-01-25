@@ -108,7 +108,6 @@ class PushNotificationQuery(BaseQuery):
     sent_after: datetime | None = None
     sent_before: datetime | None = None
     message_hash: str | None = None
-    llm_provider: str | None = None
     triggered_by: str | None = None
     priority: str | None = None
 

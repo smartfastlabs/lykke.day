@@ -29,6 +29,7 @@ from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextQuery,
 )
 from lykke.core.utils.day_context_serialization import serialize_day_context
+from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
 
 if TYPE_CHECKING:
@@ -297,6 +298,7 @@ class ProcessBrainDumpHandler(
         prompt_context_snapshot = serialize_day_context(
             result.prompt_context, current_time=result.current_time
         )
+        referenced_entities = build_referenced_entities(result.prompt_context)
         tool_calls = [
             value_objects.LLMToolCallResultSnapshot(
                 tool_name=tool_result.tool_name,
@@ -313,6 +315,8 @@ class ProcessBrainDumpHandler(
             system_prompt=result.system_prompt,
             context_prompt=result.context_prompt,
             ask_prompt=result.ask_prompt,
+            tools_prompt=result.tools_prompt,
+            referenced_entities=referenced_entities,
         )
 
     async def _record_llm_run_result(

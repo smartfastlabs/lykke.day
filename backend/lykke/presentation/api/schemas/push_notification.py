@@ -20,8 +20,6 @@ class PushNotificationSchema(BaseEntitySchema):
     sent_at: datetime
     message: str | None = None
     priority: str | None = None
-    reason: str | None = None
-    day_context_snapshot: dict[str, Any] = Field(default_factory=dict)
     message_hash: str | None = None
     triggered_by: str | None = None
-    llm_provider: str | None = None
+    llm_snapshot: dict[str, Any] | None = None

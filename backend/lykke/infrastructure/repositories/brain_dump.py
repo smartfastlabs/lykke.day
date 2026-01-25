@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 from typing import Any
 
 from sqlalchemy.sql import Select
@@ -74,6 +75,25 @@ class BrainDumpRepository(
                 ]
             llm_run_result["tool_calls"] = tool_calls
             llm_run_result.pop("tool_results", None)
+
+            referenced_entities = llm_run_result.get("referenced_entities")
+            if isinstance(referenced_entities, list):
+                parsed_entities = []
+                for entity in referenced_entities:
+                    if isinstance(entity, dict):
+                        entity_id = entity.get("entity_id")
+                        if isinstance(entity_id, str):
+                            entity["entity_id"] = UUID(entity_id)
+                        parsed_entities.append(
+                            value_objects.LLMReferencedEntitySnapshot(
+                                **filter_init_false_fields(
+                                    entity, value_objects.LLMReferencedEntitySnapshot
+                                )
+                            )
+                        )
+                    else:
+                        parsed_entities.append(entity)
+                llm_run_result["referenced_entities"] = parsed_entities
 
             llm_provider = llm_run_result.get("llm_provider")
             if isinstance(llm_provider, str):

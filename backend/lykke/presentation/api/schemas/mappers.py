@@ -3,6 +3,7 @@
 from dataclasses import asdict
 
 from lykke.core.utils.dates import resolve_timezone
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import (
     AuditableEntity,
@@ -344,11 +345,13 @@ def map_push_notification_to_schema(
         sent_at=notification.sent_at,
         message=notification.message,
         priority=notification.priority,
-        reason=notification.reason,
-        day_context_snapshot=notification.day_context_snapshot,
         message_hash=notification.message_hash,
         triggered_by=notification.triggered_by,
-        llm_provider=notification.llm_provider,
+        llm_snapshot=(
+            dataclass_to_json_dict(notification.llm_snapshot)
+            if notification.llm_snapshot
+            else None
+        ),
     )
 
 

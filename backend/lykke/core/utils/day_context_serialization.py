@@ -4,6 +4,7 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 
 
@@ -169,12 +170,12 @@ def serialize_day_context(
                 notification_data["message"] = notification.message
             if notification.priority:
                 notification_data["priority"] = notification.priority
-            if notification.reason:
-                notification_data["reason"] = notification.reason
             if notification.triggered_by:
                 notification_data["triggered_by"] = notification.triggered_by
-            if notification.llm_provider:
-                notification_data["llm_provider"] = notification.llm_provider
+            if notification.llm_snapshot:
+                notification_data["llm_snapshot"] = dataclass_to_json_dict(
+                    notification.llm_snapshot
+                )
 
             push_notifications.append(notification_data)
 

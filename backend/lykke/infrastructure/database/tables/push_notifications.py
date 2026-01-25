@@ -23,13 +23,11 @@ class PushNotification(Base):
     # Smart notification metadata (optional for non-LLM pushes)
     message = Column(Text, nullable=True)
     priority = Column(String, nullable=True)  # "high", "medium", "low"
-    reason = Column(Text, nullable=True)  # LLM's reasoning
-    day_context_snapshot = Column(JSONB, nullable=True)
     message_hash = Column(String, nullable=True)  # SHA256 hash for deduplication
     triggered_by = Column(
         String, nullable=True
     )  # "scheduled", "task_status_change", etc.
-    llm_provider = Column(String, nullable=True)  # "anthropic", "openai", etc.
+    llm_snapshot = Column(JSONB, nullable=True)
 
     __table_args__ = (
         Index("idx_push_notifications_user_id", "user_id"),

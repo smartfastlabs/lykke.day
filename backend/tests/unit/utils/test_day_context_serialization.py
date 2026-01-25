@@ -83,6 +83,29 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
         created_at=current_time,
     )
 
+    llm_snapshot = value_objects.LLMRunResultSnapshot(
+        tool_calls=[
+            value_objects.LLMToolCallResultSnapshot(
+                tool_name="decide_notification",
+                arguments={"should_notify": True},
+                result=None,
+            )
+        ],
+        prompt_context={"day": {"id": str(day.id)}},
+        current_time=current_time,
+        llm_provider=value_objects.LLMProvider.ANTHROPIC,
+        system_prompt="system prompt",
+        context_prompt="context prompt",
+        ask_prompt="ask prompt",
+        tools_prompt="tools prompt",
+        referenced_entities=[
+            value_objects.LLMReferencedEntitySnapshot(
+                entity_type="day",
+                entity_id=day.id,
+            )
+        ],
+    )
+
     push_notification = PushNotificationEntity(
         user_id=user_id,
         push_subscription_ids=[uuid4()],
@@ -90,9 +113,8 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
         status="success",
         message="Summary",
         priority="high",
-        reason="Testing",
         triggered_by="scheduled",
-        llm_provider="anthropic",
+        llm_snapshot=llm_snapshot,
         sent_at=current_time,
     )
 
@@ -131,4 +153,5 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
         push_notification.push_subscription_ids[0]
     )
     assert notification["priority"] == "high"
-    assert notification["reason"] == "Testing"
+    assert notification["llm_snapshot"]["llm_provider"] == "anthropic"
+    assert notification["llm_snapshot"]["tools_prompt"] == "tools prompt"

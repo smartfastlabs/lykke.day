@@ -1,6 +1,7 @@
 """Command to evaluate and send smart notifications."""
 
 import hashlib
+import json
 from dataclasses import dataclass
 from datetime import date as dt_date, datetime
 from typing import Literal
@@ -26,7 +27,10 @@ from lykke.application.repositories import PushSubscriptionRepositoryReadOnlyPro
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.config import settings
 from lykke.core.utils.day_context_serialization import serialize_day_context
+from lykke.core.utils.llm_snapshot import build_referenced_entities
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
+from lykke.domain.entities import PushNotificationEntity
 
 
 @dataclass(frozen=True)
@@ -95,6 +99,37 @@ class SmartNotificationHandler(
         prompt_context: value_objects.LLMPromptContext,
         llm_provider: value_objects.LLMProvider,
     ) -> list[LLMTool]:
+        def build_llm_snapshot(
+            *,
+            tool_name: str,
+            tool_args: dict[str, object | None],
+        ) -> value_objects.LLMRunResultSnapshot | None:
+            snapshot_context = self._llm_snapshot_context
+            if snapshot_context is None:
+                return None
+            return value_objects.LLMRunResultSnapshot(
+                tool_calls=[
+                    value_objects.LLMToolCallResultSnapshot(
+                        tool_name=tool_name,
+                        arguments=tool_args,
+                        result=None,
+                    )
+                ],
+                prompt_context=serialize_day_context(
+                    snapshot_context.prompt_context,
+                    current_time=snapshot_context.current_time,
+                ),
+                current_time=snapshot_context.current_time,
+                llm_provider=snapshot_context.llm_provider,
+                system_prompt=snapshot_context.system_prompt,
+                context_prompt=snapshot_context.context_prompt,
+                ask_prompt=snapshot_context.ask_prompt,
+                tools_prompt=snapshot_context.tools_prompt,
+                referenced_entities=build_referenced_entities(
+                    snapshot_context.prompt_context
+                ),
+            )
+
         async def decide_notification(
             should_notify: bool,
             message: str | None = None,
@@ -121,9 +156,19 @@ class SmartNotificationHandler(
                 )
                 return None
 
-            day_context_snapshot = serialize_day_context(prompt_context, current_time)
+            llm_snapshot = build_llm_snapshot(
+                tool_name="decide_notification",
+                tool_args={
+                    "should_notify": should_notify,
+                    "message": message,
+                    "priority": priority,
+                    "reason": reason,
+                },
+            )
             message_hash = hashlib.sha256(decision.message.encode("utf-8")).hexdigest()
             payload = build_notification_payload_for_smart_notification(decision)
+            content_dict = dataclass_to_json_dict(payload)
+            filtered_content = {k: v for k, v in content_dict.items() if v is not None}
 
             try:
                 subscriptions = await self.push_subscription_ro_repo.all()
@@ -132,6 +177,23 @@ class SmartNotificationHandler(
                         "No push subscriptions found for user %s",
                         self.user_id,
                     )
+                    content_str = json.dumps(filtered_content)
+                    async with self._uow_factory.create(self.user_id) as uow:
+                        notification = PushNotificationEntity(
+                            user_id=self.user_id,
+                            push_subscription_ids=[],
+                            content=content_str,
+                            status="skipped",
+                            error_message="no_subscriptions",
+                            message=decision.message,
+                            priority=decision.priority,
+                            message_hash=message_hash,
+                            triggered_by=self._triggered_by,
+                            llm_snapshot=llm_snapshot,
+                        )
+                        notification.create()
+                        await uow.create(notification)
+                        await uow.commit()
                     return None
 
                 await self._send_push_notification_handler.handle(
@@ -140,11 +202,9 @@ class SmartNotificationHandler(
                         content=payload,
                         message=decision.message,
                         priority=decision.priority,
-                        reason=decision.reason,
-                        day_context_snapshot=day_context_snapshot,
                         message_hash=message_hash,
                         triggered_by=self._triggered_by,
-                        llm_provider=llm_provider.value,
+                        llm_snapshot=llm_snapshot,
                     )
                 )
                 logger.info(
