@@ -1,7 +1,5 @@
 import { Component } from "solid-js";
 import BrainDumpButton from "@/components/shared/BrainDumpButton";
-import NavButton from "@/components/shared/NavButton";
-import SettingsButton from "@/components/shared/SettingsButton";
 
 type FloatingActionButtonsProps =
   | {
@@ -13,18 +11,9 @@ type FloatingActionButtonsProps =
     };
 
 const FloatingActionButtons: Component<FloatingActionButtonsProps> = (
-  props
+  _props
 ) => {
-  return (
-    <>
-      <BrainDumpButton />
-      {props.rightButton === "settings" ? (
-        <SettingsButton onClick={props.onSettingsClick} />
-      ) : (
-        <NavButton />
-      )}
-    </>
-  );
+  return <BrainDumpButton />;
 };
 
 export default FloatingActionButtons;

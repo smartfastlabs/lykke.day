@@ -34,7 +34,6 @@ import ThatsAllPage from "@/pages/me/today/ThatsAll";
 import AddAdhocTaskPage from "@/pages/me/today/AddAdhocTask";
 import AddReminderPage from "@/pages/me/today/AddReminder";
 import BrainDumpPage from "@/pages/me/BrainDump";
-import BrainDumpDumpPage from "@/pages/me/BrainDumpDump";
 import NavigationLayout from "@/pages/me/navigation/Layout";
 import NavPage from "@/pages/me/navigation/Links";
 import CalendarPage from "@/pages/me/navigation/Calendar";
@@ -239,7 +238,6 @@ export default function App() {
                 <Route path="/edit" component={TodayEditPage} />
               </Route>
               <Route path="/brain-dump" component={BrainDumpPage} />
-              <Route path="/brain-dump/dump" component={BrainDumpDumpPage} />
               <Route path="/adhoc-task" component={AddAdhocTaskPage} />
               <Route path="/add-reminder" component={AddReminderPage} />
               <Route path="/thats-all-for-today" component={ThatsAllPage} />
