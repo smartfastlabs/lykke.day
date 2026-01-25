@@ -1,8 +1,7 @@
 """Calendars table definition."""
 
 from sqlalchemy import Column, DateTime, ForeignKey, Index, String
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
 
@@ -28,5 +27,4 @@ class Calendar(Base):
     __table_args__ = (
         Index("idx_calendars_user_id", "user_id"),
         Index("idx_calendars_sync_subscription_id", "sync_subscription_id"),
-    )
     )
