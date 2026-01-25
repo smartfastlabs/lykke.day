@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from datetime import date as datetime_date
+from datetime import UTC, date as datetime_date, datetime, timedelta
 from uuid import UUID
 
 from lykke.application.queries.base import BaseQueryHandler, Query
@@ -19,6 +19,7 @@ from lykke.domain.entities import FactoidEntity, MessageEntity, PushNotification
 
 _RECENT_MESSAGES_LIMIT = 20
 _RECENT_PUSH_NOTIFICATIONS_LIMIT = 20
+_RECENT_PUSH_NOTIFICATIONS_WINDOW = timedelta(hours=4)
 
 
 @dataclass(frozen=True)
@@ -115,10 +116,12 @@ class GetLLMPromptContextHandler(
         self,
     ) -> list[PushNotificationEntity]:
         """Load recent push notifications for the user."""
+        cutoff = datetime.now(UTC) - _RECENT_PUSH_NOTIFICATIONS_WINDOW
         return await self.push_notification_ro_repo.search(
             value_objects.PushNotificationQuery(
                 order_by="sent_at",
                 order_by_desc=True,
+                sent_after=cutoff,
                 limit=_RECENT_PUSH_NOTIFICATIONS_LIMIT,
             )
         )

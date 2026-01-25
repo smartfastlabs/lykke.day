@@ -1,6 +1,17 @@
 {% if context.brain_dump_items %}
-Brain dump items:
-{% for item in context.brain_dump_items %}
+Brain dump items by status (meaning in parentheses):
+{% set status_descriptions = {
+  "ACTIVE": "Open item; may need processing.",
+  "COMPLETE": "Already resolved.",
+  "PUNT": "Intentionally deferred; do not notify, included only as context."
+} %}
+{% for status in ["ACTIVE", "COMPLETE", "PUNT"] %}
+{% set items = context.brain_dump_items | selectattr("status.value", "equalto", status) | list %}
+{% if items %}
+{{ status }} ({{ status_descriptions[status] }}):
+{% for item in items %}
 {% include "components/brain_dumps/item.j2" %}
+{% endfor %}
+{% endif %}
 {% endfor %}
 {% endif %}
