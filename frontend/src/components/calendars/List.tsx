@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { Calendar } from "@/types/api";
-import { GenericList } from "@/components/shared/GenericList";
+import SettingsList from "@/components/shared/SettingsList";
 import CalendarListItem from "./ListItem";
 
 interface CalendarListProps {
@@ -10,10 +10,13 @@ interface CalendarListProps {
 
 const CalendarList: Component<CalendarListProps> = (props) => {
   return (
-    <GenericList
+    <SettingsList
       items={props.calendars}
+      getItemLabel={(calendar) => calendar.name}
       renderItem={(calendar) => <CalendarListItem calendar={calendar} />}
       onItemClick={props.onItemClick}
+      searchPlaceholder="Search calendars"
+      emptyStateLabel="No calendars connected yet."
     />
   );
 };

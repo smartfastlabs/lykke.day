@@ -15,16 +15,16 @@ const DayTemplateListItem: Component<ListItemProps> = (props) => {
       {/* Icon column */}
       <span class="w-4 flex-shrink-0 flex items-center justify-center">
         <Show when={icon()}>
-          <Icon key={props.template.icon!} />
+          <Icon key={props.template.icon!} class="w-4 h-4 fill-amber-500/80" />
         </Show>
       </span>
 
       {/* Template name and routine definition count */}
       <div class="flex-1 min-w-0">
-        <span class="text-sm text-gray-800 block truncate">
+        <span class="text-sm font-semibold text-stone-700 block truncate">
           {props.template.slug}
         </span>
-        <span class="text-xs text-gray-500">
+        <span class="text-xs text-stone-500">
           {props.template.routine_definition_ids?.length || 0} routine
           definition
           {props.template.routine_definition_ids?.length === 1 ? "" : "s"}

@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { DayTemplate } from "@/types/api";
-import { GenericList } from "@/components/shared/GenericList";
+import SettingsList from "@/components/shared/SettingsList";
 import DayTemplateListItem from "./ListItem";
 
 interface ListProps {
@@ -10,10 +10,13 @@ interface ListProps {
 
 const DayTemplateList: Component<ListProps> = (props) => {
   return (
-    <GenericList
+    <SettingsList
       items={props.templates}
+      getItemLabel={(template) => template.slug}
       renderItem={(template) => <DayTemplateListItem template={template} />}
       onItemClick={props.onItemClick}
+      searchPlaceholder="Search day templates"
+      emptyStateLabel="No day templates yet."
     />
   );
 };

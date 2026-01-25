@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { RoutineDefinition } from "@/types/api";
-import { GenericList } from "@/components/shared/GenericList";
+import SettingsList from "@/components/shared/SettingsList";
 import RoutineListItem from "./ListItem";
 
 interface ListProps {
@@ -10,12 +10,15 @@ interface ListProps {
 
 const RoutineList: Component<ListProps> = (props) => {
   return (
-    <GenericList
+    <SettingsList
       items={props.routineDefinitions}
+      getItemLabel={(routineDefinition) => routineDefinition.name}
       renderItem={(routineDefinition) => (
         <RoutineListItem routineDefinition={routineDefinition} />
       )}
       onItemClick={props.onItemClick}
+      searchPlaceholder="Search routine definitions"
+      emptyStateLabel="No routine definitions yet."
     />
   );
 };

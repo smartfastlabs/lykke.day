@@ -14,18 +14,20 @@ const RecurringEventSeriesListItem: Component<RecurringEventSeriesListItemProps>
   return (
     <div class="flex items-center gap-4">
       <div class="flex-1 min-w-0">
-        <span class="text-sm text-gray-800 block truncate">{props.series.name}</span>
-        <span class="text-xs text-gray-500">
+        <span class="text-sm font-semibold text-stone-700 block truncate">
+          {props.series.name}
+        </span>
+        <span class="text-xs text-stone-500">
           {props.series.platform}
           {occurrence() ? ` • ${occurrence()}` : ""}
         </span>
       </div>
-      <span class="text-[11px] px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+      <span class="text-[11px] px-2 py-1 rounded-full border border-amber-100/80 bg-amber-50 text-amber-700">
         {props.series.event_category ?? "Uncategorized"}
       </span>
       <Show when={props.series.frequency}>
         {(frequency) => (
-          <span class="text-[11px] text-gray-400 whitespace-nowrap">
+          <span class="text-[11px] text-stone-400 whitespace-nowrap">
             {frequency()}
           </span>
         )}

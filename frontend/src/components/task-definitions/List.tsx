@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { TaskDefinition } from "@/types/api";
-import { GenericList } from "@/components/shared/GenericList";
+import SettingsList from "@/components/shared/SettingsList";
 import TaskDefinitionListItem from "./ListItem";
 
 interface ListProps {
@@ -10,12 +10,15 @@ interface ListProps {
 
 const TaskDefinitionList: Component<ListProps> = (props) => {
   return (
-    <GenericList
+    <SettingsList
       items={props.taskDefinitions}
+      getItemLabel={(taskDefinition) => taskDefinition.name}
       renderItem={(taskDefinition) => (
         <TaskDefinitionListItem taskDefinition={taskDefinition} />
       )}
       onItemClick={props.onItemClick}
+      searchPlaceholder="Search task definitions"
+      emptyStateLabel="No task definitions yet."
     />
   );
 };

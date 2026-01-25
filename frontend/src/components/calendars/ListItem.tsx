@@ -12,8 +12,10 @@ const CalendarListItem: Component<CalendarListItemProps> = (props) => {
   return (
     <div class="flex items-center gap-4">
       <div class="flex-1 min-w-0">
-        <span class="text-sm text-gray-800 block truncate">{props.calendar.name}</span>
-        <span class="text-xs text-gray-500">
+        <span class="text-sm font-semibold text-stone-700 block truncate">
+          {props.calendar.name}
+        </span>
+        <span class="text-xs text-stone-500">
           {props.calendar.platform}
           {props.calendar.platform_id ? ` • ${props.calendar.platform_id}` : ""}
         </span>
@@ -21,15 +23,15 @@ const CalendarListItem: Component<CalendarListItemProps> = (props) => {
       <span
         class={`text-[11px] px-2 py-1 rounded-full ${
           isSynced()
-            ? "bg-emerald-100 text-emerald-700"
-            : "bg-gray-100 text-gray-500"
+            ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+            : "bg-stone-100 text-stone-500 border border-stone-200"
         }`}
       >
         {isSynced() ? "Sync On" : "Sync Off"}
       </span>
       <Show when={props.calendar.last_sync_at}>
         {(lastSync) => (
-          <span class="text-[11px] text-gray-400 whitespace-nowrap">
+          <span class="text-[11px] text-stone-400 whitespace-nowrap">
             Synced {new Date(lastSync()).toLocaleDateString()}
           </span>
         )}

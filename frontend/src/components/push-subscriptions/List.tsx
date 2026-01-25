@@ -1,6 +1,6 @@
 import { Component } from "solid-js";
 import { PushSubscription } from "@/types/api";
-import { GenericList } from "@/components/shared/GenericList";
+import SettingsList from "@/components/shared/SettingsList";
 import PushSubscriptionListItem from "./ListItem";
 
 interface ListProps {
@@ -10,12 +10,17 @@ interface ListProps {
 
 const PushSubscriptionList: Component<ListProps> = (props) => {
   return (
-    <GenericList
+    <SettingsList
       items={props.subscriptions}
+      getItemLabel={(subscription) =>
+        subscription.device_name || "Unnamed Device"
+      }
       renderItem={(subscription) => (
         <PushSubscriptionListItem subscription={subscription} />
       )}
       onItemClick={props.onItemClick}
+      searchPlaceholder="Search push subscriptions"
+      emptyStateLabel="No push subscriptions yet."
     />
   );
 };
