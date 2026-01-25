@@ -120,7 +120,10 @@ class AnthropicLLMGateway:
 
             for tool in tools:
                 tool_spec, model = build_tool_spec_from_callable(
-                    tool.callback, tool_name=tool.name, description=tool.description
+                    tool.callback,
+                    tool_name=tool.name,
+                    description=tool.description,
+                    args_model=tool.args_model,
                 )
                 tool_specs.append(tool_spec)
                 models_by_name[tool.name] = model

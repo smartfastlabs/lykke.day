@@ -1,20 +1,9 @@
-Choose exactly one tool:
-- add_task
-- add_reminder
-- update_task
-- update_reminder
-- no_action
+Rules:
+- Choose exactly one tool call.
+- If the brain dump is informational or doesn't need action, call no_action.
+- Only update tasks/reminders when the item clearly refers to an existing item.
+- Never invent task/reminder IDs; only use IDs shown in the context.
+- Be conservative: prefer no_action over incorrect changes.
 
-Guidelines:
-- Use add_task when the item is a to-do or action.
-- Use add_reminder for simple, quick reminders.
-- Use update_task/update_reminder only when the item refers to an existing item.
-- If unsure or no action needed, choose no_action.
-
-For add_task:
-- category must be one of the TaskCategory enum values (UPPERCASE).
-- timing_type must be one of the TimingType enum values (UPPERCASE) if provided.
-- time fields should be 24h format HH:MM.
-
-For update_task:
-- action must be "complete" or "punt".
+Tools:
+{{ tools_prompt }}

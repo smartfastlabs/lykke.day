@@ -1,8 +1,13 @@
 """Protocol for LLM gateway implementations."""
 
+from __future__ import annotations
+
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
-from typing import Any, Protocol, TypeVar
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar
+
+if TYPE_CHECKING:
+    from pydantic import BaseModel
 
 T = TypeVar("T")
 
@@ -14,6 +19,8 @@ class LLMTool:
     name: str
     callback: Callable[..., Awaitable[Any] | Any]
     description: str | None = None
+    prompt_notes: list[str] | None = None
+    args_model: type[BaseModel] | None = None
 
 
 @dataclass(frozen=True)

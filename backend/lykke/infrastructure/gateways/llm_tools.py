@@ -15,29 +15,33 @@ def build_tool_spec_from_callable(
     on_complete: Callable[..., Any],
     tool_name: str = "on_complete",
     description: str | None = None,
+    args_model: type[BaseModel] | None = None,
 ) -> tuple[dict[str, Any], type[BaseModel]]:
     """Build a tool spec + Pydantic model from a callable signature."""
-    signature = inspect.signature(on_complete)
-    hints = get_type_hints(on_complete)
-    fields: dict[str, tuple[Any, Any]] = {}
+    if args_model is None:
+        signature = inspect.signature(on_complete)
+        hints = get_type_hints(on_complete)
+        fields: dict[str, tuple[Any, Any]] = {}
 
-    for name, param in signature.parameters.items():
-        if name == "self":
-            continue
-        if param.kind in (
-            inspect.Parameter.VAR_POSITIONAL,
-            inspect.Parameter.VAR_KEYWORD,
-        ):
-            raise ValueError("on_complete must use explicit named parameters")
+        for name, param in signature.parameters.items():
+            if name == "self":
+                continue
+            if param.kind in (
+                inspect.Parameter.VAR_POSITIONAL,
+                inspect.Parameter.VAR_KEYWORD,
+            ):
+                raise ValueError("on_complete must use explicit named parameters")
 
-        annotation = hints.get(name, Any)
-        default_value: Any = (
-            ... if param.default is inspect.Parameter.empty else param.default
-        )
-        fields[name] = (annotation, Field(default=default_value))
+            annotation = hints.get(name, Any)
+            default_value: Any = (
+                ... if param.default is inspect.Parameter.empty else param.default
+            )
+            fields[name] = (annotation, Field(default=default_value))
 
-    model_name = "".join(part.title() for part in tool_name.split("_")) + "Args"
-    model = create_model(model_name, **cast("dict[str, Any]", fields))
+        model_name = "".join(part.title() for part in tool_name.split("_")) + "Args"
+        model = create_model(model_name, **cast("dict[str, Any]", fields))
+    else:
+        model = args_model
     schema = model.model_json_schema()
     tool_description = description or on_complete.__doc__ or "Finalize the use case."
     return {

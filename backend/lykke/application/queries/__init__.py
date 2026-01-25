@@ -15,10 +15,6 @@ from .compute_task_risk import (
     TaskRiskResult,
     TaskRiskScore,
 )
-from .generate_usecase_prompt import (
-    GenerateUseCasePromptHandler,
-    GenerateUseCasePromptQuery,
-)
 from .get_day_context import GetDayContextHandler, GetDayContextQuery
 from .get_incremental_changes import (
     GetIncrementalChangesHandler,
@@ -38,8 +34,6 @@ __all__ = [
     "BasePersonalityInfo",
     "ComputeTaskRiskHandler",
     "ComputeTaskRiskQuery",
-    "GenerateUseCasePromptHandler",
-    "GenerateUseCasePromptQuery",
     "GetBrainDumpHandler",
     "GetBrainDumpQuery",
     "GetDayContextHandler",

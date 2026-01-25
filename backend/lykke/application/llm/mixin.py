@@ -11,10 +11,12 @@ from loguru import logger
 
 from lykke.application.gateways.llm_gateway_factory import LLMGatewayFactory
 from lykke.application.gateways.llm_protocol import LLMTool, LLMToolCallResult
-from lykke.application.queries import (
-    GenerateUseCasePromptHandler,
-    GenerateUseCasePromptQuery,
+from lykke.application.llm.prompt_rendering import (
+    render_ask_prompt,
+    render_context_prompt,
+    render_system_prompt,
 )
+from lykke.application.llm.tools_prompt import render_tools_prompt
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 
@@ -22,7 +24,10 @@ if TYPE_CHECKING:
     from datetime import date as datetime_date
     from uuid import UUID
 
-    from lykke.application.repositories import UserRepositoryReadOnlyProtocol
+    from lykke.application.repositories import (
+        UseCaseConfigRepositoryReadOnlyProtocol,
+        UserRepositoryReadOnlyProtocol,
+    )
     from lykke.domain import value_objects
 
 
@@ -53,9 +58,9 @@ class LLMHandlerMixin(ABC):
 
     name: str
     template_usecase: str
-    _generate_usecase_prompt_handler: GenerateUseCasePromptHandler
     user_id: UUID
     user_ro_repo: UserRepositoryReadOnlyProtocol
+    usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
 
     @abstractmethod
     async def build_prompt_input(self, date: datetime_date) -> UseCasePromptInput:
@@ -97,27 +102,6 @@ class LLMHandlerMixin(ABC):
             )
             return None
 
-        prompt_result = await self._generate_usecase_prompt_handler.handle(
-            GenerateUseCasePromptQuery(
-                usecase=self.template_usecase,
-                prompt_context=prompt_input.prompt_context,
-                current_time=current_time,
-                include_context=True,
-                include_ask=True,
-                extra_template_vars=prompt_input.extra_template_vars,
-            )
-        )
-        if prompt_result.context_prompt is None or prompt_result.ask_prompt is None:
-            raise RuntimeError("Prompt generation did not include all prompt parts")
-
-        try:
-            llm_gateway = LLMGatewayFactory.create_gateway(llm_provider)
-        except DomainError as exc:
-            logger.error(
-                f"Failed to create LLM gateway for provider {llm_provider}: {exc}"
-            )
-            return None
-
         tools = self.build_tools(
             current_time=current_time,
             prompt_context=prompt_input.prompt_context,
@@ -129,14 +113,42 @@ class LLMHandlerMixin(ABC):
             )
             return None
 
+        tools_prompt = render_tools_prompt(tools)
+        extra_template_vars = dict(prompt_input.extra_template_vars or {})
+        extra_template_vars["tools_prompt"] = tools_prompt
+
+        system_prompt = await render_system_prompt(
+            usecase=self.template_usecase,
+            user=user,
+            usecase_config_ro_repo=self.usecase_config_ro_repo,
+        )
+        context_prompt = render_context_prompt(
+            usecase=self.template_usecase,
+            prompt_context=prompt_input.prompt_context,
+            current_time=current_time,
+            extra_template_vars=extra_template_vars,
+        )
+        ask_prompt = render_ask_prompt(
+            usecase=self.template_usecase,
+            extra_template_vars=extra_template_vars,
+        )
+
+        try:
+            llm_gateway = LLMGatewayFactory.create_gateway(llm_provider)
+        except DomainError as exc:
+            logger.error(
+                f"Failed to create LLM gateway for provider {llm_provider}: {exc}"
+            )
+            return None
+
         tool_names = [tool.name for tool in tools]
         logger.info(
             f"Running LLM handler {self.template_usecase} with tools {tool_names}"
         )
         tool_result: LLMToolCallResult | None = await llm_gateway.run_usecase(
-            prompt_result.system_prompt,
-            prompt_result.context_prompt,
-            prompt_result.ask_prompt,
+            system_prompt,
+            context_prompt,
+            ask_prompt,
             tools,
         )
         if tool_result is None:
@@ -151,7 +163,7 @@ class LLMHandlerMixin(ABC):
             prompt_context=prompt_input.prompt_context,
             current_time=current_time,
             llm_provider=llm_provider,
-            system_prompt=prompt_result.system_prompt,
-            context_prompt=prompt_result.context_prompt,
-            ask_prompt=prompt_result.ask_prompt,
+            system_prompt=system_prompt,
+            context_prompt=context_prompt,
+            ask_prompt=ask_prompt,
         )

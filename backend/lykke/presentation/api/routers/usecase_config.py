@@ -11,10 +11,7 @@ from lykke.application.commands.usecase_config import (
     DeleteUseCaseConfigCommand,
     DeleteUseCaseConfigHandler,
 )
-from lykke.application.queries.generate_usecase_prompt import (
-    GenerateUseCasePromptHandler,
-    GenerateUseCasePromptQuery,
-)
+from lykke.application.llm import render_system_prompt
 from lykke.application.queries.usecase_config import (
     GetUseCaseConfigHandler,
     GetUseCaseConfigQuery,
@@ -45,21 +42,17 @@ async def get_usecase_config(
 ) -> NotificationUseCaseConfigSchema:
     """Get usecase config by usecase key."""
     query_handler = query_factory.create(GetUseCaseConfigHandler)
-    prompt_handler = query_factory.create(GenerateUseCasePromptHandler)
     config = await query_handler.handle(GetUseCaseConfigQuery(usecase=usecase))
     if config:
         user_amendments = config.config.get("user_amendments", [])
         if not isinstance(user_amendments, list):
             user_amendments = []
 
-        prompt_result = await prompt_handler.handle(
-            GenerateUseCasePromptQuery(
-                usecase=usecase,
-                include_context=False,
-                include_ask=False,
-            )
+        rendered_prompt = await render_system_prompt(
+            usecase=usecase,
+            user=_user,
+            usecase_config_ro_repo=query_factory.ro_repos.usecase_config_ro_repo,
         )
-        rendered_prompt = prompt_result.system_prompt
 
         return NotificationUseCaseConfigSchema(
             user_amendments=user_amendments,
@@ -85,7 +78,6 @@ async def update_usecase_config(
     """Create or update usecase config."""
     create_handler = command_factory.create(CreateUseCaseConfigHandler)
     query_handler = query_factory.create(GetUseCaseConfigHandler)
-    prompt_handler = query_factory.create(GenerateUseCasePromptHandler)
     config_dict = {"user_amendments": config_data.user_amendments or []}
 
     await create_handler.handle(
@@ -103,14 +95,11 @@ async def update_usecase_config(
         if not isinstance(user_amendments, list):
             user_amendments = []
 
-        prompt_result = await prompt_handler.handle(
-            GenerateUseCasePromptQuery(
-                usecase=usecase,
-                include_context=False,
-                include_ask=False,
-            )
+        rendered_prompt = await render_system_prompt(
+            usecase=usecase,
+            user=user,
+            usecase_config_ro_repo=query_factory.ro_repos.usecase_config_ro_repo,
         )
-        rendered_prompt = prompt_result.system_prompt
 
         return NotificationUseCaseConfigSchema(
             user_amendments=user_amendments,

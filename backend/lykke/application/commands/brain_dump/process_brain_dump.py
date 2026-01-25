@@ -34,7 +34,6 @@ if TYPE_CHECKING:
     from datetime import date as dt_date, datetime, time
     from uuid import UUID
 
-    from lykke.application.queries import GenerateUseCasePromptHandler
     from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
     from lykke.domain.entities import BrainDumpEntity
 
@@ -60,7 +59,6 @@ class ProcessBrainDumpHandler(
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
-        generate_usecase_prompt_handler: GenerateUseCasePromptHandler,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
         create_adhoc_task_handler: CreateAdhocTaskHandler,
         add_reminder_handler: AddReminderToDayHandler,
@@ -68,7 +66,6 @@ class ProcessBrainDumpHandler(
         record_task_action_handler: RecordTaskActionHandler,
     ) -> None:
         super().__init__(ro_repos, uow_factory, user_id)
-        self._generate_usecase_prompt_handler = generate_usecase_prompt_handler
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
         self._create_adhoc_task_handler = create_adhoc_task_handler
         self._add_reminder_handler = add_reminder_handler
@@ -234,26 +231,42 @@ class ProcessBrainDumpHandler(
                 name="add_task",
                 callback=add_task,
                 description="Create a new task inferred from the brain dump.",
+                prompt_notes=[
+                    "Use when the item is a to-do or action.",
+                    "category must be one of the TaskCategory enum values (UPPERCASE).",
+                    "timing_type must be one of the TimingType enum values (UPPERCASE) if provided.",
+                    "Time fields should be 24h format HH:MM.",
+                ],
             ),
             LLMTool(
                 name="add_reminder",
                 callback=add_reminder,
                 description="Create a new reminder inferred from the brain dump.",
+                prompt_notes=["Use for simple, quick reminders."],
             ),
             LLMTool(
                 name="update_task",
                 callback=update_task,
                 description="Update an existing task's status if implied.",
+                prompt_notes=[
+                    "Use only when the item refers to an existing task.",
+                    'action must be "complete" or "punt".',
+                ],
             ),
             LLMTool(
                 name="update_reminder",
                 callback=update_reminder,
                 description="Update an existing reminder's status if implied.",
+                prompt_notes=[
+                    "Use only when the item refers to an existing reminder.",
+                    "status must be one of the ReminderStatus enum values (UPPERCASE).",
+                ],
             ),
             LLMTool(
                 name="no_action",
                 callback=no_action,
                 description="Use when no task or reminder should be created.",
+                prompt_notes=["If unsure or no action needed, choose this."],
             ),
         ]
 

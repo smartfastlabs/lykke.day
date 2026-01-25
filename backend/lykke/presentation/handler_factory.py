@@ -34,7 +34,6 @@ from lykke.application.commands.task import (
 )
 from lykke.application.queries import (
     ComputeTaskRiskHandler,
-    GenerateUseCasePromptHandler,
     GetDayContextHandler,
     GetLLMPromptContextHandler,
     PreviewDayHandler,
@@ -248,7 +247,6 @@ def _build_smart_notification_handler(
         factory.ro_repos,
         factory.uow_factory,
         factory.user_id,
-        factory.query_factory.create(GenerateUseCasePromptHandler),
         factory.query_factory.create(GetLLMPromptContextHandler),
         factory.create(SendPushNotificationHandler),
     )
@@ -261,7 +259,6 @@ def _build_morning_overview_handler(
         factory.ro_repos,
         factory.uow_factory,
         factory.user_id,
-        factory.query_factory.create(GenerateUseCasePromptHandler),
         factory.query_factory.create(GetLLMPromptContextHandler),
         factory.query_factory.create(ComputeTaskRiskHandler),
         factory.create(SendPushNotificationHandler),
@@ -275,7 +272,6 @@ def _build_process_brain_dump_handler(
         factory.ro_repos,
         factory.uow_factory,
         factory.user_id,
-        factory.query_factory.create(GenerateUseCasePromptHandler),
         factory.query_factory.create(GetLLMPromptContextHandler),
         factory.create(CreateAdhocTaskHandler),
         factory.create(AddReminderToDayHandler),

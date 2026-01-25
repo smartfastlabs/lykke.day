@@ -18,7 +18,6 @@ from lykke.application.llm import LLMHandlerMixin, UseCasePromptInput
 from lykke.application.notifications import (
     build_notification_payload_for_smart_notification,
 )
-from lykke.application.queries import GenerateUseCasePromptHandler
 from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextHandler,
     GetLLMPromptContextQuery,
@@ -52,7 +51,6 @@ class SmartNotificationHandler(
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
-        generate_usecase_prompt_handler: GenerateUseCasePromptHandler,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
         send_push_notification_handler: SendPushNotificationHandler,
     ) -> None:
@@ -66,7 +64,6 @@ class SmartNotificationHandler(
             send_push_notification_handler: Handler for sending push notifications
         """
         super().__init__(ro_repos, uow_factory, user_id)
-        self._generate_usecase_prompt_handler = generate_usecase_prompt_handler
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
         self._send_push_notification_handler = send_push_notification_handler
         self._triggered_by: str | None = None
