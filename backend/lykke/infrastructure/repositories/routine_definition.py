@@ -75,6 +75,14 @@ class RoutineDefinitionRepository(
         """Convert a database row dict to a RoutineDefinition entity."""
         data = filter_init_false_fields(dict(row), RoutineDefinitionEntity)
 
+        entity_id = data.get("id")
+        if entity_id and isinstance(entity_id, str):
+            data["id"] = UUID(entity_id)
+
+        user_id = data.get("user_id")
+        if user_id and isinstance(user_id, str):
+            data["user_id"] = UUID(user_id)
+
         category = data.get("category")
         if isinstance(category, str):
             data["category"] = TaskCategory(category)

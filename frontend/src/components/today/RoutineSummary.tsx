@@ -40,7 +40,12 @@ export const RoutineSummary: Component<RoutineSummaryProps> = (props) => {
           </button>
         </div>
       </div>
-      <RoutineGroupsList tasks={props.tasks} routines={props.routines} />
+      <RoutineGroupsList
+        tasks={props.tasks}
+        routines={props.routines}
+        filterByAvailability={true}
+        collapseOutsideWindow={true}
+      />
     </div>
   );
 };

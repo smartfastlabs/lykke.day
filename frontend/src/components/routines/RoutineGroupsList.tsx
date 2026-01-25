@@ -1,4 +1,13 @@
-import { Component, For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import {
+  Component,
+  For,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 import { Icon } from "@/components/shared/Icon";
 import {
   faChevronDown,
@@ -12,7 +21,8 @@ import {
 import { SwipeableItem } from "@/components/shared/SwipeableItem";
 import TaskList from "@/components/tasks/List";
 import { useStreamingData } from "@/providers/streamingData";
-import type { Routine, Task } from "@/types/api";
+import { getDateString, getTime } from "@/utils/dates";
+import type { Routine, Task, TimeWindow } from "@/types/api";
 
 export interface RoutineGroup {
   routineId: string | null;
@@ -23,6 +33,7 @@ export interface RoutineGroup {
   puntedCount: number;
   pendingCount: number;
   totalCount: number;
+  timeWindow?: TimeWindow | null;
 }
 
 export const buildRoutineGroups = (
@@ -56,6 +67,7 @@ export const buildRoutineGroups = (
       puntedCount,
       pendingCount,
       totalCount: routineTasks.length,
+      timeWindow: routine.time_window ?? null,
     });
   });
 
@@ -74,6 +86,7 @@ export const buildRoutineGroups = (
       puntedCount,
       pendingCount,
       totalCount: routineTasks.length,
+      timeWindow: null,
     });
   });
 
@@ -85,6 +98,8 @@ interface RoutineGroupsListProps {
   routines: Routine[];
   expandedByDefault?: boolean;
   isCollapsable?: boolean;
+  filterByAvailability?: boolean;
+  collapseOutsideWindow?: boolean;
 }
 
 const getRoutineIcon = (name: string) => {
@@ -98,17 +113,150 @@ const getRoutineIcon = (name: string) => {
 export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
   const { setRoutineAction } = useStreamingData();
   const isCollapsable = () => props.isCollapsable ?? true;
+  const shouldFilterByAvailability = () => props.filterByAvailability ?? false;
+  const shouldCollapseOutsideWindow = () =>
+    props.collapseOutsideWindow ?? false;
   const [expandedRoutines, setExpandedRoutines] = createSignal<Set<string>>(
     new Set()
   );
+  const [now, setNow] = createSignal(new Date());
+
+  onMount(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 30000);
+
+    onCleanup(() => {
+      clearInterval(interval);
+    });
+  });
 
   const routineGroups = createMemo(() =>
     buildRoutineGroups(props.tasks, props.routines)
   );
 
+  const getRoutineDate = (routine: RoutineGroup) =>
+    routine.tasks[0]?.scheduled_date ?? getDateString();
+
+  const getWindowTimes = (timeWindow: TimeWindow | null | undefined, date: string) => {
+    const availableTime = timeWindow?.available_time
+      ? getTime(date, timeWindow.available_time)
+      : null;
+    const startTime = timeWindow?.start_time
+      ? getTime(date, timeWindow.start_time)
+      : null;
+    const endTime = timeWindow?.end_time ? getTime(date, timeWindow.end_time) : null;
+    const cutoffTime = timeWindow?.cutoff_time
+      ? getTime(date, timeWindow.cutoff_time)
+      : null;
+
+    return {
+      availableTime,
+      startTime,
+      endTime,
+      cutoffTime,
+    };
+  };
+
+  const isTaskActiveNow = (task: Task, currentTime: Date) => {
+    if (task.status === "COMPLETE" || task.status === "PUNT") return false;
+    if (!task.schedule) return false;
+    const taskDate = task.scheduled_date;
+    if (!taskDate) return false;
+
+    const availableTime = task.schedule.available_time
+      ? getTime(taskDate, task.schedule.available_time)
+      : null;
+    const startTime = task.schedule.start_time
+      ? getTime(taskDate, task.schedule.start_time)
+      : null;
+    const endTime = task.schedule.end_time
+      ? getTime(taskDate, task.schedule.end_time)
+      : null;
+
+    const windowStart = startTime ?? availableTime;
+    if (windowStart && currentTime < windowStart) return false;
+    if (endTime && currentTime > endTime) return false;
+    return true;
+  };
+
+  const getHasScheduledTasks = (routine: RoutineGroup) =>
+    routine.tasks.some((task) => Boolean(task.schedule && task.scheduled_date));
+
+  const isRoutineActiveFromTasks = (routine: RoutineGroup, currentTime: Date) =>
+    routine.tasks.some((task) => isTaskActiveNow(task, currentTime));
+
+  const isRoutineAvailableFromTimeWindow = (
+    routine: RoutineGroup,
+    currentTime: Date
+  ) => {
+    const routineDate = getRoutineDate(routine);
+    const { availableTime, startTime, endTime, cutoffTime } = getWindowTimes(
+      routine.timeWindow,
+      routineDate
+    );
+
+    const availabilityStart = availableTime ?? startTime;
+    const availabilityEnd = cutoffTime ?? endTime;
+
+    if (availabilityStart && currentTime < availabilityStart) return false;
+    if (availabilityEnd && currentTime > availabilityEnd) return false;
+    return true;
+  };
+
+  const isRoutineInTimeWindow = (routine: RoutineGroup, currentTime: Date) => {
+    const routineDate = getRoutineDate(routine);
+    const { availableTime, startTime, endTime, cutoffTime } = getWindowTimes(
+      routine.timeWindow,
+      routineDate
+    );
+
+    const windowStart = startTime ?? availableTime;
+    const windowEnd = endTime ?? cutoffTime;
+
+    if (windowStart && currentTime < windowStart) return false;
+    if (windowEnd && currentTime > windowEnd) return false;
+    return true;
+  };
+
+  const isRoutineAvailable = (routine: RoutineGroup, currentTime: Date) => {
+    if (routine.timeWindow) {
+      return isRoutineAvailableFromTimeWindow(routine, currentTime);
+    }
+    if (!getHasScheduledTasks(routine)) {
+      return true;
+    }
+    return isRoutineActiveFromTasks(routine, currentTime);
+  };
+
+  const isRoutineActiveWindow = (routine: RoutineGroup, currentTime: Date) => {
+    if (routine.timeWindow) {
+      return isRoutineInTimeWindow(routine, currentTime);
+    }
+    if (!getHasScheduledTasks(routine)) {
+      return false;
+    }
+    return isRoutineActiveFromTasks(routine, currentTime);
+  };
+
+  const visibleRoutineGroups = createMemo(() => {
+    const groups = routineGroups();
+    if (!shouldFilterByAvailability()) return groups;
+    const currentTime = now();
+    return groups.filter((routine) => isRoutineAvailable(routine, currentTime));
+  });
+
   const routineDefinitionIds = createMemo(() =>
-    routineGroups().map((group) => group.routineDefinitionId)
+    visibleRoutineGroups().map((group) => group.routineDefinitionId)
   );
+
+  const routineDefinitionIdsInWindow = createMemo(() => {
+    if (!shouldCollapseOutsideWindow()) return routineDefinitionIds();
+    const currentTime = now();
+    return visibleRoutineGroups()
+      .filter((group) => isRoutineActiveWindow(group, currentTime))
+      .map((group) => group.routineDefinitionId);
+  });
 
   createEffect(() => {
     if (!isCollapsable() || props.expandedByDefault) {
@@ -118,7 +266,7 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
       return;
     }
     if (expandedRoutines().size > 0) return;
-    const ids = routineDefinitionIds();
+    const ids = routineDefinitionIdsInWindow();
     if (ids.length === 0) return;
     setExpandedRoutines(new Set(ids));
   });
@@ -140,10 +288,10 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
 
   return (
     <div class="space-y-4">
-      <Show when={routineGroups().length === 0}>
+      <Show when={visibleRoutineGroups().length === 0}>
         <div class="text-sm text-stone-500">No routines for today yet.</div>
       </Show>
-      <For each={routineGroups()}>
+      <For each={visibleRoutineGroups()}>
         {(routine) => {
           const completionPercentage = () =>
             routine.totalCount > 0

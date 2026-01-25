@@ -4,6 +4,7 @@ import SettingsPage from "@/components/shared/SettingsPage";
 import RoutineForm from "@/components/routine-definitions/Form";
 import RoutinePreview from "@/components/routine-definitions/Preview";
 import { routineDefinitionAPI, taskDefinitionAPI } from "@/utils/api";
+import { globalLoading } from "@/providers/loading";
 import {
   RecurrenceSchedule,
   RoutineDefinition,
@@ -170,6 +171,7 @@ const RoutineDefinitionDetailPage: Component = () => {
 
     setIsTaskLoading(true);
     setActionError("");
+    const stopLoading = globalLoading.start();
     try {
       const nameValue = taskName().trim() || null;
       let updated: RoutineDefinition;
@@ -208,6 +210,7 @@ const RoutineDefinitionDetailPage: Component = () => {
           : "Failed to save routine definition task";
       setActionError(message);
     } finally {
+      stopLoading();
       setIsTaskLoading(false);
     }
   };
@@ -220,6 +223,7 @@ const RoutineDefinitionDetailPage: Component = () => {
 
     setIsTaskLoading(true);
     setActionError("");
+    const stopLoading = globalLoading.start();
     try {
       const updated = await routineDefinitionAPI.removeTask(
         current.id,
@@ -230,12 +234,14 @@ const RoutineDefinitionDetailPage: Component = () => {
       const message = err instanceof Error ? err.message : "Failed to remove task";
       setActionError(message);
     } finally {
+      stopLoading();
       setIsTaskLoading(false);
     }
   };
 
   const handleCreateTaskDefinition = async (taskDef: TaskDefinition) => {
     setActionError("");
+    const stopLoading = globalLoading.start();
     try {
       const current = routineDefinition();
       if (!current?.user_id) {
@@ -259,6 +265,8 @@ const RoutineDefinitionDetailPage: Component = () => {
       const message = err instanceof Error ? err.message : "Failed to create task definition";
       setActionError(message);
       throw err;
+    } finally {
+      stopLoading();
     }
   };
 
