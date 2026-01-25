@@ -6,6 +6,7 @@ import { Component, JSX, Show } from "solid-js";
 interface PageProps {
   children: JSX.Element;
   hideFooter?: boolean;
+  hideFloatingButtons?: boolean;
   variant?: "default" | "app";
 }
 
@@ -31,7 +32,9 @@ const Page: Component<PageProps> = (props) => {
       <Show when={!props.hideFooter}>
         <Footer />
       </Show>
-      <FloatingActionButtons />
+      <Show when={!props.hideFloatingButtons}>
+        <FloatingActionButtons />
+      </Show>
     </div>
   );
 };

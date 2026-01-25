@@ -32,7 +32,9 @@ export default function NewRoutineDefinition() {
     },
   });
 
-  const [taskDefinitions] = createResource<TaskDefinition[]>(taskDefinitionAPI.getAll);
+  const [taskDefinitions, { refetch: refetchTaskDefinitions }] = createResource<TaskDefinition[]>(
+    taskDefinitionAPI.getAll
+  );
   const [selectedTaskDefinitionId, setSelectedTaskDefinitionId] = createSignal<string | null>(
     null
   );
@@ -124,6 +126,25 @@ export default function NewRoutineDefinition() {
     );
   };
 
+  const handleCreateTaskDefinition = async (taskDef: TaskDefinition) => {
+    setActionError("");
+    try {
+      const created = await taskDefinitionAPI.create({
+        name: taskDef.name,
+        description: taskDef.description,
+        type: taskDef.type,
+      });
+
+      await refetchTaskDefinitions();
+
+      openAddTask(created);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create task definition";
+      setActionError(message);
+      throw err;
+    }
+  };
+
   const generateTaskId = () =>
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID()
@@ -210,6 +231,7 @@ export default function NewRoutineDefinition() {
                     routineDefinition={routineDefinitionPreview()}
                     taskDefinitions={taskDefinitions()}
                     onAddTask={openAddTask}
+                    onCreateTaskDefinition={handleCreateTaskDefinition}
                     onEditTask={openEditTask}
                     onRemoveTask={handleRemoveTask}
                     onTaskSubmit={handleTaskSubmit}
