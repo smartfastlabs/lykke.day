@@ -3,6 +3,7 @@
 from uuid import uuid4
 
 import pytest
+from dobles import allow
 
 from lykke.application.queries.routine_definition import (
     GetRoutineDefinitionHandler,
@@ -11,9 +12,9 @@ from lykke.application.queries.routine_definition import (
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import RoutineDefinitionEntity
-from tests.unit.fakes import (
-    _FakeReadOnlyRepos,
-    _FakeRoutineDefinitionReadOnlyRepo,
+from tests.support.dobles import (
+    create_read_only_repos_double,
+    create_routine_definition_repo_double,
 )
 
 
@@ -35,8 +36,11 @@ async def test_get_routine_definition_returns_routine_definition_by_id():
     )
 
     # Setup repository
-    routine_repo = _FakeRoutineDefinitionReadOnlyRepo(routine_definition)
-    ro_repos = _FakeReadOnlyRepos(routine_definition_repo=routine_repo)
+    routine_repo = create_routine_definition_repo_double()
+    allow(routine_repo).get.with_args(routine_definition_id).and_return(
+        routine_definition
+    )
+    ro_repos = create_read_only_repos_double(routine_definition_repo=routine_repo)
     handler = GetRoutineDefinitionHandler(ro_repos, user_id)
 
     # Act
@@ -67,9 +71,12 @@ async def test_get_routine_definition_raises_not_found_for_invalid_id():
         tasks=[],
     )
 
-    # Setup repository
-    routine_repo = _FakeRoutineDefinitionReadOnlyRepo(routine_definition)
-    ro_repos = _FakeReadOnlyRepos(routine_definition_repo=routine_repo)
+    # Setup repository to raise NotFoundError
+    routine_repo = create_routine_definition_repo_double()
+    allow(routine_repo).get.with_args(invalid_id).and_raise(
+        NotFoundError("Routine definition not found")
+    )
+    ro_repos = create_read_only_repos_double(routine_definition_repo=routine_repo)
     handler = GetRoutineDefinitionHandler(ro_repos, user_id)
 
     # Act & Assert

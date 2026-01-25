@@ -4,6 +4,7 @@ from datetime import date as dt_date
 from uuid import uuid4
 
 import pytest
+from dobles import allow
 
 from lykke.application.commands.brain_dump import (
     DeleteBrainDumpCommand,
@@ -12,7 +13,12 @@ from lykke.application.commands.brain_dump import (
 from lykke.core.exceptions import DomainError
 from lykke.domain.entities import BrainDumpEntity
 from lykke.domain.events.day_events import BrainDumpItemRemovedEvent
-from tests.unit.fakes import _FakeBrainDumpReadOnlyRepo, _FakeReadOnlyRepos, _FakeUoW, _FakeUoWFactory
+from tests.support.dobles import (
+    create_brain_dump_repo_double,
+    create_read_only_repos_double,
+    create_uow_double,
+    create_uow_factory_double,
+)
 
 
 @pytest.mark.asyncio
@@ -25,10 +31,12 @@ async def test_delete_brain_dump_removes_item():
         text="Call mom",
     )
 
-    brain_dump_repo = _FakeBrainDumpReadOnlyRepo(item)
-    ro_repos = _FakeReadOnlyRepos(brain_dump_repo=brain_dump_repo)
-    uow = _FakeUoW(brain_dump_repo=brain_dump_repo)
-    uow_factory = _FakeUoWFactory(uow)
+    brain_dump_repo = create_brain_dump_repo_double()
+    allow(brain_dump_repo).get.and_return(item)
+
+    ro_repos = create_read_only_repos_double(brain_dump_repo=brain_dump_repo)
+    uow = create_uow_double(brain_dump_repo=brain_dump_repo)
+    uow_factory = create_uow_factory_double(uow)
     handler = DeleteBrainDumpHandler(ro_repos, uow_factory, user_id)
 
     await handler.handle(DeleteBrainDumpCommand(date=item_date, item_id=item.id))
@@ -47,10 +55,12 @@ async def test_delete_brain_dump_wrong_date():
         text="Call mom",
     )
 
-    brain_dump_repo = _FakeBrainDumpReadOnlyRepo(item)
-    ro_repos = _FakeReadOnlyRepos(brain_dump_repo=brain_dump_repo)
-    uow = _FakeUoW(brain_dump_repo=brain_dump_repo)
-    uow_factory = _FakeUoWFactory(uow)
+    brain_dump_repo = create_brain_dump_repo_double()
+    allow(brain_dump_repo).get.and_return(item)
+
+    ro_repos = create_read_only_repos_double(brain_dump_repo=brain_dump_repo)
+    uow = create_uow_double(brain_dump_repo=brain_dump_repo)
+    uow_factory = create_uow_factory_double(uow)
     handler = DeleteBrainDumpHandler(ro_repos, uow_factory, user_id)
 
     with pytest.raises(DomainError, match="not found"):

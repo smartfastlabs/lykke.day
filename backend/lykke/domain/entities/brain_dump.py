@@ -110,5 +110,3 @@ class BrainDumpEntity(BaseEntityObject):
         from .day import DayEntity
 
         return DayEntity.id_from_date_and_user(self.date, self.user_id)
-
-        return DayEntity.id_from_date_and_user(self.date, self.user_id)

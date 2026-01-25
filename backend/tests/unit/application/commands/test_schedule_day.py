@@ -4,8 +4,10 @@ from datetime import date as dt_date, time
 from uuid import UUID, uuid4
 
 import pytest
+from dobles import allow
 
 from lykke.application.commands.day import ScheduleDayCommand, ScheduleDayHandler
+from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import (
     DayEntity,
@@ -14,16 +16,18 @@ from lykke.domain.entities import (
     TimeBlockDefinitionEntity,
 )
 from lykke.domain.value_objects.time_block import TimeBlockCategory, TimeBlockType
-from tests.unit.fakes import (
-    _FakeCalendarEntryReadOnlyRepo,
-    _FakeDayReadOnlyRepo,
-    _FakeDayTemplateReadOnlyRepo,
-    _FakePreviewDayHandler,
-    _FakeReadOnlyRepos,
-    _FakeTaskReadOnlyRepo,
-    _FakeTimeBlockDefinitionReadOnlyRepo,
-    _FakeUoW,
-    _FakeUoWFactory,
+from tests.support.dobles import (
+    create_calendar_entry_repo_double,
+    create_day_repo_double,
+    create_day_template_repo_double,
+    create_preview_day_handler_double,
+    create_read_only_repos_double,
+    create_routine_definition_repo_double,
+    create_routine_repo_double,
+    create_task_repo_double,
+    create_time_block_definition_repo_double,
+    create_uow_double,
+    create_uow_factory_double,
 )
 
 
@@ -67,24 +71,42 @@ async def test_schedule_day_creates_day_and_tasks():
     ]
 
     # Setup repositories
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    day_repo = _FakeDayReadOnlyRepo(None)
-    task_repo = _FakeTaskReadOnlyRepo([])
-    calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
-    ro_repos = _FakeReadOnlyRepos(
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    day_repo = create_day_repo_double()
+    allow(day_repo).get.and_raise(NotFoundError("Day not found"))
+
+    task_repo = create_task_repo_double()
+    allow(task_repo).search.and_return([])
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return([])
+
+    routine_definition_repo = create_routine_definition_repo_double()
+    allow(routine_definition_repo).all.and_return([])
+
+    ro_repos = create_read_only_repos_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
     )
-    uow = _FakeUoW(
+    uow = create_uow_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
     )
-    uow_factory = _FakeUoWFactory(uow)
-    preview_handler = _FakePreviewDayHandler(day, tasks)
+    uow_factory = create_uow_factory_double(uow)
+    preview_handler = create_preview_day_handler_double()
+    day_context = value_objects.DayContext(
+        day=day, tasks=tasks, calendar_entries=[], routines=[]
+    )
+    allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
@@ -100,15 +122,15 @@ async def test_schedule_day_creates_day_and_tasks():
     assert len(result.tasks) == 2
 
     # Verify day was created
-    assert len(uow_factory.uow.created_entities) >= 1
+    assert len(uow.created) >= 1
     created_day = next(
-        e for e in uow_factory.uow.created_entities if isinstance(e, DayEntity)
+        e for e in uow.created if isinstance(e, DayEntity)
     )
     assert created_day.date == task_date
 
     # Verify tasks were created
     created_tasks = [
-        e for e in uow_factory.uow.created_entities if isinstance(e, TaskEntity)
+        e for e in uow.created if isinstance(e, TaskEntity)
     ]
     assert len(created_tasks) == 2
 
@@ -140,24 +162,48 @@ async def test_schedule_day_returns_existing_day_without_creating():
         )
     ]
 
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    day_repo = _FakeDayReadOnlyRepo(day)
-    task_repo = _FakeTaskReadOnlyRepo(tasks)
-    calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
-    ro_repos = _FakeReadOnlyRepos(
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    day_repo = create_day_repo_double()
+    day_id = DayEntity.id_from_date_and_user(task_date, user_id)
+    allow(day_repo).get.with_args(day_id).and_return(day)
+
+    task_repo = create_task_repo_double()
+    allow(task_repo).search.and_return(tasks)
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return([])
+
+    routine_definition_repo = create_routine_definition_repo_double()
+    allow(routine_definition_repo).all.and_return([])
+
+    routine_repo = create_routine_repo_double()
+    allow(routine_repo).search.and_return([])
+
+    ro_repos = create_read_only_repos_double(
+        routine_repo=routine_repo,
+        routine_definition_repo=routine_definition_repo,
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
     )
-    uow = _FakeUoW(
+    uow = create_uow_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
     )
-    uow_factory = _FakeUoWFactory(uow)
-    preview_handler = _FakePreviewDayHandler(day, [])
+    uow_factory = create_uow_factory_double(uow)
+    preview_handler = create_preview_day_handler_double()
+    day_context = value_objects.DayContext(
+        day=day, tasks=[], calendar_entries=[], routines=[]
+    )
+    allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
@@ -167,9 +213,9 @@ async def test_schedule_day_returns_existing_day_without_creating():
 
     assert result.day == day
     assert result.tasks == tasks
-    assert len(uow_factory.uow.created_entities) == 0
-    assert len(uow_factory.uow.bulk_deleted_tasks) == 0
-    assert len(uow_factory.uow.bulk_deleted_routines) == 0
+    assert len(uow.created) == 0
+    assert len(uow.bulk_deleted_tasks) == 0
+    assert len(uow.bulk_deleted_routines) == 0
 
 
 @pytest.mark.asyncio
@@ -188,24 +234,47 @@ async def test_schedule_day_deletes_existing_tasks():
     day = DayEntity.create_for_date(task_date, user_id, template)
 
     # Setup repositories
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    day_repo = _FakeDayReadOnlyRepo(None)
-    task_repo = _FakeTaskReadOnlyRepo([])
-    calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
-    ro_repos = _FakeReadOnlyRepos(
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    day_repo = create_day_repo_double()
+    allow(day_repo).get.and_raise(NotFoundError("Day not found"))
+
+    task_repo = create_task_repo_double()
+    allow(task_repo).search.and_return([])
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return([])
+
+    routine_definition_repo = create_routine_definition_repo_double()
+    allow(routine_definition_repo).all.and_return([])
+
+    routine_repo = create_routine_repo_double()
+    allow(routine_repo).search.and_return([])
+
+    ro_repos = create_read_only_repos_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
     )
-    uow = _FakeUoW(
+    uow = create_uow_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
     )
-    uow_factory = _FakeUoWFactory(uow)
-    preview_handler = _FakePreviewDayHandler(day, [])
+    uow_factory = create_uow_factory_double(uow)
+    preview_handler = create_preview_day_handler_double()
+    day_context = value_objects.DayContext(
+        day=day, tasks=[], calendar_entries=[], routines=[]
+    )
+    allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
@@ -213,12 +282,12 @@ async def test_schedule_day_deletes_existing_tasks():
     await handler.handle(ScheduleDayCommand(date=task_date, template_id=template.id))
 
     # Assert - bulk delete should have been called
-    assert len(uow_factory.uow.bulk_deleted_tasks) == 1
-    delete_query = uow_factory.uow.bulk_deleted_tasks[0]
+    assert len(uow.bulk_deleted_tasks) == 1
+    delete_query = uow.bulk_deleted_tasks[0]
     assert delete_query.date == task_date
     assert delete_query.is_adhoc is False
-    assert len(uow_factory.uow.bulk_deleted_routines) == 1
-    routine_delete_query = uow_factory.uow.bulk_deleted_routines[0]
+    assert len(uow.bulk_deleted_routines) == 1
+    routine_delete_query = uow.bulk_deleted_routines[0]
     assert routine_delete_query.date == task_date
 
 
@@ -239,24 +308,47 @@ async def test_schedule_day_raises_error_if_no_template():
     day = DayEntity.create_for_date(task_date, user_id, template)
     day.template = None  # Remove template
 
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    day_repo = _FakeDayReadOnlyRepo(None)
-    task_repo = _FakeTaskReadOnlyRepo([])
-    calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
-    ro_repos = _FakeReadOnlyRepos(
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    day_repo = create_day_repo_double()
+    allow(day_repo).get.and_raise(NotFoundError("Day not found"))
+
+    task_repo = create_task_repo_double()
+    allow(task_repo).search.and_return([])
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return([])
+
+    routine_definition_repo = create_routine_definition_repo_double()
+    allow(routine_definition_repo).all.and_return([])
+
+    routine_repo = create_routine_repo_double()
+    allow(routine_repo).search.and_return([])
+
+    ro_repos = create_read_only_repos_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
     )
-    uow = _FakeUoW(
+    uow = create_uow_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
     )
-    uow_factory = _FakeUoWFactory(uow)
-    preview_handler = _FakePreviewDayHandler(day, [])
+    uow_factory = create_uow_factory_double(uow)
+    preview_handler = create_preview_day_handler_double()
+    day_context = value_objects.DayContext(
+        day=day, tasks=[], calendar_entries=[], routines=[]
+    )
+    allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
@@ -282,24 +374,47 @@ async def test_schedule_day_uses_template_id_if_provided():
 
     day = DayEntity.create_for_date(task_date, user_id, template)
 
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    day_repo = _FakeDayReadOnlyRepo(None)
-    task_repo = _FakeTaskReadOnlyRepo([])
-    calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
-    ro_repos = _FakeReadOnlyRepos(
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    day_repo = create_day_repo_double()
+    allow(day_repo).get.and_raise(NotFoundError("Day not found"))
+
+    task_repo = create_task_repo_double()
+    allow(task_repo).search.and_return([])
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return([])
+
+    routine_definition_repo = create_routine_definition_repo_double()
+    allow(routine_definition_repo).all.and_return([])
+
+    routine_repo = create_routine_repo_double()
+    allow(routine_repo).search.and_return([])
+
+    ro_repos = create_read_only_repos_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
     )
-    uow = _FakeUoW(
+    uow = create_uow_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
     )
-    uow_factory = _FakeUoWFactory(uow)
-    preview_handler = _FakePreviewDayHandler(day, [])
+    uow_factory = create_uow_factory_double(uow)
+    preview_handler = create_preview_day_handler_double()
+    day_context = value_objects.DayContext(
+        day=day, tasks=[], calendar_entries=[], routines=[]
+    )
+    allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
@@ -353,29 +468,54 @@ async def test_schedule_day_copies_timeblocks_from_template():
     day = DayEntity.create_for_date(task_date, user_id, template)
 
     # Setup repositories
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    day_repo = _FakeDayReadOnlyRepo(None)
-    task_repo = _FakeTaskReadOnlyRepo([])
-    calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
-    time_block_def_repo = _FakeTimeBlockDefinitionReadOnlyRepo(
-        {time_block_def_id: time_block_def}
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    day_repo = create_day_repo_double()
+    allow(day_repo).get.and_raise(NotFoundError("Day not found"))
+
+    task_repo = create_task_repo_double()
+    allow(task_repo).search.and_return([])
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return([])
+
+    routine_definition_repo = create_routine_definition_repo_double()
+    allow(routine_definition_repo).all.and_return([])
+
+    routine_repo = create_routine_repo_double()
+    allow(routine_repo).search.and_return([])
+
+    time_block_def_repo = create_time_block_definition_repo_double()
+    allow(time_block_def_repo).get.with_args(time_block_def_id).and_return(
+        time_block_def
     )
-    ro_repos = _FakeReadOnlyRepos(
+
+    ro_repos = create_read_only_repos_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
         time_block_definition_repo=time_block_def_repo,
     )
-    uow = _FakeUoW(
+    uow = create_uow_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
         time_block_definition_repo=time_block_def_repo,
     )
-    uow_factory = _FakeUoWFactory(uow)
-    preview_handler = _FakePreviewDayHandler(day, [])
+    uow_factory = create_uow_factory_double(uow)
+    preview_handler = create_preview_day_handler_double()
+    day_context = value_objects.DayContext(
+        day=day, tasks=[], calendar_entries=[], routines=[]
+    )
+    allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
@@ -407,7 +547,7 @@ async def test_schedule_day_copies_timeblocks_from_template():
 
     # Verify the created day entity also has the timeblocks
     created_day = next(
-        e for e in uow_factory.uow.created_entities if isinstance(e, DayEntity)
+        e for e in uow.created if isinstance(e, DayEntity)
     )
     assert len(created_day.time_blocks) == 2, "Created day should have 2 timeblocks"
 
@@ -434,24 +574,47 @@ async def test_schedule_day_copies_high_level_plan_from_template():
     day = DayEntity.create_for_date(task_date, user_id, template)
 
     # Setup repositories
-    day_template_repo = _FakeDayTemplateReadOnlyRepo(template)
-    day_repo = _FakeDayReadOnlyRepo(None)
-    task_repo = _FakeTaskReadOnlyRepo([])
-    calendar_entry_repo = _FakeCalendarEntryReadOnlyRepo([])
-    ro_repos = _FakeReadOnlyRepos(
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    day_repo = create_day_repo_double()
+    allow(day_repo).get.and_raise(NotFoundError("Day not found"))
+
+    task_repo = create_task_repo_double()
+    allow(task_repo).search.and_return([])
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return([])
+
+    routine_definition_repo = create_routine_definition_repo_double()
+    allow(routine_definition_repo).all.and_return([])
+
+    routine_repo = create_routine_repo_double()
+    allow(routine_repo).search.and_return([])
+
+    ro_repos = create_read_only_repos_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
     )
-    uow = _FakeUoW(
+    uow = create_uow_double(
         day_template_repo=day_template_repo,
         day_repo=day_repo,
         task_repo=task_repo,
         calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
     )
-    uow_factory = _FakeUoWFactory(uow)
-    preview_handler = _FakePreviewDayHandler(day, [])
+    uow_factory = create_uow_factory_double(uow)
+    preview_handler = create_preview_day_handler_double()
+    day_context = value_objects.DayContext(
+        day=day, tasks=[], calendar_entries=[], routines=[]
+    )
+    allow(preview_handler).preview_day.and_return(day_context)
 
     handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
 
@@ -469,7 +632,7 @@ async def test_schedule_day_copies_high_level_plan_from_template():
 
     # Verify the created day entity also has the high_level_plan
     created_day = next(
-        e for e in uow_factory.uow.created_entities if isinstance(e, DayEntity)
+        e for e in uow.created if isinstance(e, DayEntity)
     )
     assert created_day.high_level_plan is not None
     assert created_day.high_level_plan.title == template.high_level_plan.title

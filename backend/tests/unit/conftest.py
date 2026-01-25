@@ -3,105 +3,140 @@
 from uuid import uuid4
 
 import pytest
-from dobles import InstanceDouble
+
+from tests.support.dobles import (
+    create_auth_token_repo_double,
+    create_brain_dump_repo_double,
+    create_calendar_entry_repo_double,
+    create_calendar_entry_series_repo_double,
+    create_calendar_repo_double,
+    create_day_repo_double,
+    create_day_template_repo_double,
+    create_google_gateway_double,
+    create_pubsub_gateway_double,
+    create_push_subscription_repo_double,
+    create_repo_double,
+    create_routine_definition_repo_double,
+    create_routine_repo_double,
+    create_task_definition_repo_double,
+    create_task_repo_double,
+    create_time_block_definition_repo_double,
+    create_uow_double,
+    create_uow_factory_double,
+    create_user_repo_double,
+    create_web_push_gateway_double,
+)
+from lykke.application.repositories import MessageRepositoryReadOnlyProtocol
 
 
 # Mocked repository fixtures
 @pytest.fixture
 def mock_user_repo():
     """Mocked UserRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble(
-        "lykke.application.repositories.UserRepositoryReadOnlyProtocol"
-    )
+    return create_user_repo_double()
 
 
 @pytest.fixture
 def mock_day_repo():
     """Mocked DayRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble(
-        "lykke.application.repositories.DayRepositoryReadOnlyProtocol"
-    )
+    return create_day_repo_double()
 
 
 @pytest.fixture
 def mock_day_template_repo():
     """Mocked DayTemplateRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble(
-        "lykke.application.repositories.DayTemplateRepositoryReadOnlyProtocol"
-    )
+    return create_day_template_repo_double()
 
 
 @pytest.fixture
 def mock_calendar_entry_repo():
     """Mocked CalendarEntryRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble(
-        "lykke.application.repositories.CalendarEntryRepositoryReadOnlyProtocol"
-    )
+    return create_calendar_entry_repo_double()
+
+
+@pytest.fixture
+def mock_calendar_entry_series_repo():
+    """Mocked CalendarEntrySeriesRepositoryReadOnlyProtocol for unit tests."""
+    return create_calendar_entry_series_repo_double()
 
 
 @pytest.fixture
 def mock_task_repo():
     """Mocked TaskRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble(
-        "lykke.application.repositories.TaskRepositoryReadOnlyProtocol"
-    )
+    return create_task_repo_double()
 
 
 @pytest.fixture
 def mock_calendar_repo():
     """Mocked CalendarRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble(
-        "lykke.application.repositories.CalendarRepositoryReadOnlyProtocol"
-    )
+    return create_calendar_repo_double()
 
 
 @pytest.fixture
 def mock_auth_token_repo():
     """Mocked AuthTokenRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble(
-        "lykke.application.repositories.AuthTokenRepositoryReadOnlyProtocol"
-    )
+    return create_auth_token_repo_double()
 
 
 @pytest.fixture
 def mock_push_subscription_repo():
     """Mocked PushSubscriptionRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble(
-        "lykke.application.repositories.PushSubscriptionRepositoryReadOnlyProtocol"
-    )
+    return create_push_subscription_repo_double()
 
 
 @pytest.fixture
 def mock_routine_definition_repo():
     """Mocked RoutineDefinitionRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble(
-        "lykke.application.repositories.RoutineDefinitionRepositoryReadOnlyProtocol"
-    )
+    return create_routine_definition_repo_double()
+
+
+@pytest.fixture
+def mock_routine_repo():
+    """Mocked RoutineRepositoryReadOnlyProtocol for unit tests."""
+    return create_routine_repo_double()
 
 
 @pytest.fixture
 def mock_task_definition_repo():
     """Mocked TaskDefinitionRepositoryReadOnlyProtocol for unit tests."""
-    return InstanceDouble(
-        "lykke.application.repositories.TaskDefinitionRepositoryReadOnlyProtocol"
-    )
+    return create_task_definition_repo_double()
+
+
+@pytest.fixture
+def mock_time_block_definition_repo():
+    """Mocked TimeBlockDefinitionRepositoryReadOnlyProtocol for unit tests."""
+    return create_time_block_definition_repo_double()
+
+
+@pytest.fixture
+def mock_brain_dump_repo():
+    """Mocked BrainDumpRepositoryReadOnlyProtocol for unit tests."""
+    return create_brain_dump_repo_double()
+
+
+@pytest.fixture
+def mock_message_repo():
+    """Mocked MessageRepositoryReadOnlyProtocol for unit tests."""
+    return create_repo_double(MessageRepositoryReadOnlyProtocol)
 
 
 # Mocked gateway fixtures
 @pytest.fixture
 def mock_google_gateway():
     """Mocked GoogleCalendarGatewayProtocol for unit tests."""
-    return InstanceDouble(
-        "lykke.application.gateways.google_protocol.GoogleCalendarGatewayProtocol"
-    )
+    return create_google_gateway_double()
 
 
 @pytest.fixture
 def mock_web_push_gateway():
     """Mocked WebPushGatewayProtocol for unit tests."""
-    return InstanceDouble(
-        "lykke.application.gateways.web_push_protocol.WebPushGatewayProtocol"
-    )
+    return create_web_push_gateway_double()
+
+
+@pytest.fixture
+def mock_pubsub_gateway():
+    """Mocked PubSubGatewayProtocol for unit tests."""
+    return create_pubsub_gateway_double()
 
 
 # Test user UUID fixture
@@ -128,50 +163,44 @@ def test_user(test_user_id):
 
 # UnitOfWork fixtures
 @pytest.fixture
-def mock_uow_factory(
+def mock_uow(
     mock_auth_token_repo,
     mock_calendar_entry_repo,
+    mock_calendar_entry_series_repo,
     mock_calendar_repo,
     mock_day_repo,
     mock_day_template_repo,
     mock_message_repo,
     mock_push_subscription_repo,
     mock_routine_definition_repo,
+    mock_routine_repo,
     mock_task_definition_repo,
     mock_task_repo,
     mock_user_repo,
+    mock_brain_dump_repo,
+    mock_time_block_definition_repo,
 ):
+    """Mock UnitOfWork for unit tests."""
+    return create_uow_double(
+        auth_token_repo=mock_auth_token_repo,
+        calendar_entry_repo=mock_calendar_entry_repo,
+        calendar_entry_series_repo=mock_calendar_entry_series_repo,
+        calendar_repo=mock_calendar_repo,
+        day_repo=mock_day_repo,
+        day_template_repo=mock_day_template_repo,
+        message_repo=mock_message_repo,
+        push_subscription_repo=mock_push_subscription_repo,
+        routine_definition_repo=mock_routine_definition_repo,
+        routine_repo=mock_routine_repo,
+        task_definition_repo=mock_task_definition_repo,
+        task_repo=mock_task_repo,
+        user_repo=mock_user_repo,
+        brain_dump_repo=mock_brain_dump_repo,
+        time_block_definition_repo=mock_time_block_definition_repo,
+    )
+
+
+@pytest.fixture
+def mock_uow_factory(mock_uow):
     """Mock UnitOfWorkFactory that returns a mock UnitOfWork with all repositories."""
-    from unittest.mock import MagicMock
-
-    class MockUnitOfWork:
-        def __init__(self):
-            self.auth_tokens = mock_auth_token_repo
-            self.calendar_entries = mock_calendar_entry_repo
-            self.calendars = mock_calendar_repo
-            self.days = mock_day_repo
-            self.day_templates = mock_day_template_repo
-            self.messages = mock_message_repo
-            self.push_subscriptions = mock_push_subscription_repo
-            self.routine_definition_ro_repo = mock_routine_definition_repo
-            self.task_definitions = mock_task_definition_repo
-            self.tasks = mock_task_repo
-            self.users = mock_user_repo
-
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, *args):
-            pass
-
-        async def commit(self):
-            pass
-
-        async def rollback(self):
-            pass
-
-    class MockUnitOfWorkFactory:
-        def create(self, user_id):
-            return MockUnitOfWork()
-
-    return MockUnitOfWorkFactory()
+    return create_uow_factory_double(mock_uow)

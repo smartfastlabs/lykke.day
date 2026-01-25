@@ -1,10 +1,10 @@
 """Unit tests for Google Calendar sync logic."""
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+from dobles import allow
 
 from lykke.application.commands.calendar.sync_calendar import SyncCalendarHandler
 from lykke.domain import value_objects
@@ -12,6 +12,16 @@ from lykke.domain.entities import AuthTokenEntity, CalendarEntity, CalendarEntry
 from lykke.domain.value_objects import TaskFrequency
 from lykke.domain.value_objects.sync import SyncSubscription
 from lykke.infrastructure.gateways.google import GoogleCalendarGateway
+from tests.support.dobles import (
+    create_auth_token_repo_double,
+    create_calendar_entry_repo_double,
+    create_calendar_entry_series_repo_double,
+    create_calendar_repo_double,
+    create_google_gateway_double,
+    create_read_only_repos_double,
+    create_uow_double,
+    create_uow_factory_double,
+)
 
 
 @pytest.fixture
@@ -68,41 +78,31 @@ def test_auth_token(test_user_id):
 @pytest.fixture
 def mock_calendar_entry_repo():
     """Mock calendar entry repository."""
-    repo = MagicMock()
-    repo.search_one_or_none = AsyncMock()
-    return repo
+    return create_calendar_entry_repo_double()
 
 
 @pytest.fixture
 def mock_calendar_entry_series_repo():
     """Mock calendar entry series repository."""
-    repo = MagicMock()
-    repo.get = AsyncMock()
-    return repo
+    return create_calendar_entry_series_repo_double()
 
 
 @pytest.fixture
 def mock_calendar_repo():
     """Mock calendar repository."""
-    repo = MagicMock()
-    repo.get = AsyncMock()
-    return repo
+    return create_calendar_repo_double()
 
 
 @pytest.fixture
 def mock_auth_token_repo():
     """Mock auth token repository."""
-    repo = MagicMock()
-    repo.get = AsyncMock()
-    return repo
+    return create_auth_token_repo_double()
 
 
 @pytest.fixture
 def mock_google_gateway():
     """Mock Google gateway."""
-    gateway = MagicMock()
-    gateway.load_calendar_events = AsyncMock()
-    return gateway
+    return create_google_gateway_double()
 
 
 @pytest.fixture
@@ -115,43 +115,16 @@ def mock_uow(
     mock_calendar_entry_series_repo,
 ):
     """Mock UnitOfWork for sync tests."""
-    mock_calendar_repo.get = AsyncMock(return_value=test_calendar)
-    mock_auth_token_repo.get = AsyncMock(return_value=test_auth_token)
-    mock_calendar_entry_repo.search_one_or_none = AsyncMock(return_value=None)
+    allow(mock_calendar_repo).get.and_return(test_calendar)
+    allow(mock_auth_token_repo).get.and_return(test_auth_token)
+    allow(mock_calendar_entry_repo).search_one_or_none.and_return(None)
 
-    class DummyUOW:
-        calendar_ro_repo = mock_calendar_repo
-        auth_token_ro_repo = mock_auth_token_repo
-        calendar_entry_ro_repo = mock_calendar_entry_repo
-        calendar_entry_series_ro_repo = mock_calendar_entry_series_repo
-        day_ro_repo = None
-        day_template_ro_repo = None
-        push_subscription_ro_repo = None
-        routine_definition_ro_repo = None
-        task_definition_ro_repo = None
-        task_ro_repo = None
-        time_block_definition_ro_repo = None
-        user_ro_repo = None
-
-        def __init__(self) -> None:
-            self.add = MagicMock()
-
-        async def __aenter__(self) -> "DummyUOW":
-            return self
-
-        async def __aexit__(self, *_: object) -> None:
-            return None
-
-        async def create(self, *_: object) -> None:
-            return None
-
-        async def delete(self, *_: object) -> None:
-            return None
-
-        async def rollback(self) -> None:
-            return None
-
-    return DummyUOW()
+    return create_uow_double(
+        calendar_repo=mock_calendar_repo,
+        auth_token_repo=mock_auth_token_repo,
+        calendar_entry_repo=mock_calendar_entry_repo,
+        calendar_entry_series_repo=mock_calendar_entry_series_repo,
+    )
 
 
 @pytest.fixture
@@ -162,44 +135,18 @@ def mock_ro_repos(
     mock_calendar_entry_series_repo,
 ):
     """Mock read-only repositories with required attributes."""
-
-    class DummyRORepos:
-        def __init__(self) -> None:
-            self.audit_log_ro_repo = None
-            self.auth_token_ro_repo = mock_auth_token_repo
-            self.bot_personality_ro_repo = None
-            self.brain_dump_ro_repo = None
-            self.calendar_entry_ro_repo = mock_calendar_entry_repo
-            self.calendar_entry_series_ro_repo = mock_calendar_entry_series_repo
-            self.calendar_ro_repo = mock_calendar_repo
-            self.conversation_ro_repo = None
-            self.day_ro_repo = None
-            self.day_template_ro_repo = None
-            self.factoid_ro_repo = None
-            self.message_ro_repo = None
-            self.notification_ro_repo = None
-            self.push_notification_ro_repo = None
-            self.push_subscription_ro_repo = None
-            self.routine_ro_repo = None
-            self.routine_definition_ro_repo = None
-            self.task_definition_ro_repo = None
-            self.task_ro_repo = None
-            self.time_block_definition_ro_repo = None
-            self.usecase_config_ro_repo = None
-            self.user_ro_repo = None
-
-    return DummyRORepos()
+    return create_read_only_repos_double(
+        calendar_repo=mock_calendar_repo,
+        auth_token_repo=mock_auth_token_repo,
+        calendar_entry_repo=mock_calendar_entry_repo,
+        calendar_entry_series_repo=mock_calendar_entry_series_repo,
+    )
 
 
 @pytest.fixture
 def mock_uow_factory(mock_uow):
     """Mock UnitOfWork factory."""
-
-    class DummyFactory:
-        def create(self, *_: object):
-            return mock_uow
-
-    return DummyFactory()
+    return create_uow_factory_double(mock_uow)
 
 
 def test_sync_calendar_changes_with_new_events(
@@ -226,13 +173,10 @@ def test_sync_calendar_changes_with_new_events(
         frequency=TaskFrequency.ONCE,
     )
 
-    mock_google_gateway.load_calendar_events.return_value = (
-        [new_event],
-        [],
-        [],
-        "new-sync-token",
+    allow(mock_google_gateway).load_calendar_events.and_return(
+        ([new_event], [], [], "new-sync-token")
     )
-    mock_calendar_entry_repo.search_one_or_none.return_value = None
+    allow(mock_calendar_entry_repo).search_one_or_none.and_return(None)
 
     # Create handler and sync
     SyncCalendarHandler(
@@ -284,13 +228,10 @@ def test_sync_calendar_changes_with_updated_events(
         frequency=TaskFrequency.ONCE,
     )
 
-    mock_google_gateway.load_calendar_events.return_value = (
-        [updated_event],
-        [],
-        [],
-        "new-sync-token",
+    allow(mock_google_gateway).load_calendar_events.and_return(
+        ([updated_event], [], [], "new-sync-token")
     )
-    mock_calendar_entry_repo.search_one_or_none.return_value = existing_event
+    allow(mock_calendar_entry_repo).search_one_or_none.and_return(existing_event)
 
 
 def test_sync_calendar_changes_with_deleted_events(
@@ -331,13 +272,10 @@ def test_sync_calendar_changes_with_deleted_events(
         frequency=TaskFrequency.ONCE,
     )
 
-    mock_google_gateway.load_calendar_events.return_value = (
-        [cancelled_event],
-        [],
-        [],
-        "new-sync-token",
+    allow(mock_google_gateway).load_calendar_events.and_return(
+        ([cancelled_event], [], [], "new-sync-token")
     )
-    mock_calendar_entry_repo.search_one_or_none.return_value = existing_event
+    allow(mock_calendar_entry_repo).search_one_or_none.and_return(existing_event)
 
 
 def test_sync_calendar_changes_filters_far_future_events(
@@ -364,11 +302,8 @@ def test_sync_calendar_changes_filters_far_future_events(
         frequency=TaskFrequency.ONCE,
     )
 
-    mock_google_gateway.load_calendar_events.return_value = (
-        [far_future_event],
-        [],
-        [],
-        "new-sync-token",
+    allow(mock_google_gateway).load_calendar_events.and_return(
+        ([far_future_event], [], [], "new-sync-token")
     )
 
 
@@ -396,13 +331,10 @@ def test_sync_calendar_changes_handles_missing_deleted_events(
         frequency=TaskFrequency.ONCE,
     )
 
-    mock_google_gateway.load_calendar_events.return_value = (
-        [cancelled_event],
-        [],
-        [],
-        "new-sync-token",
+    allow(mock_google_gateway).load_calendar_events.and_return(
+        ([cancelled_event], [], [], "new-sync-token")
     )
-    mock_calendar_entry_repo.search_one_or_none.return_value = None
+    allow(mock_calendar_entry_repo).search_one_or_none.and_return(None)
 
 
 def test_sync_calendar_changes_updates_sync_token(
@@ -415,11 +347,8 @@ def test_sync_calendar_changes_updates_sync_token(
     mock_calendar_entry_repo,
 ):
     """Test that sync updates the calendar's sync token."""
-    mock_google_gateway.load_calendar_events.return_value = (
-        [],
-        [],
-        [],
-        "brand-new-sync-token",
+    allow(mock_google_gateway).load_calendar_events.and_return(
+        ([], [], [], "brand-new-sync-token")
     )
 
 
@@ -451,7 +380,7 @@ def test_google_event_conversion_includes_series(test_user_id):
         calendar=calendar,
         event=event,
         frequency_cache={},
-        recurrence_lookup=MagicMock(),
+        recurrence_lookup=create_calendar_entry_series_repo_double(),
     )
 
     assert entry.calendar_entry_series_id is not None
