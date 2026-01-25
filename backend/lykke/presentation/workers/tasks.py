@@ -41,10 +41,7 @@ from lykke.core.utils.dates import (
     get_current_time,
 )
 from lykke.domain import value_objects
-from lykke.infrastructure.gateways import (
-    GoogleCalendarGateway,
-    RedisPubSubGateway,
-)
+from lykke.infrastructure.gateways import GoogleCalendarGateway, RedisPubSubGateway
 from lykke.infrastructure.repositories import UserRepository
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
@@ -360,7 +357,7 @@ async def schedule_user_day_task(
         await pubsub_gateway.close()
 
 
-@broker.task(schedule=[{"cron": "0,20,30,50 * * * *"}])  # type: ignore[untyped-decorator]
+@broker.task(schedule=[{"cron": "0,19,20,30,50 * * * *"}])  # type: ignore[untyped-decorator]
 async def evaluate_smart_notifications_for_all_users_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
 ) -> None:
@@ -577,9 +574,7 @@ async def process_brain_dump_item_task(
     item_id: UUID,
 ) -> None:
     """Process a brain dump item for a specific user."""
-    logger.info(
-        "Starting brain dump processing for user %s item %s", user_id, item_id
-    )
+    logger.info("Starting brain dump processing for user %s item %s", user_id, item_id)
 
     try:
         date = dt_date.fromisoformat(day_date)
@@ -601,9 +596,7 @@ async def process_brain_dump_item_task(
         )
 
         try:
-            await handler.handle(
-                ProcessBrainDumpCommand(date=date, item_id=item_id)
-            )
+            await handler.handle(ProcessBrainDumpCommand(date=date, item_id=item_id))
             logger.debug(
                 "Brain dump processing completed for user %s item %s",
                 user_id,

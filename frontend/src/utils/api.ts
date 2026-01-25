@@ -210,6 +210,32 @@ export const reminderAPI = {
 };
 
 export const brainDumpAPI = {
+  getToday: async (): Promise<BrainDumpItem[]> => {
+    const now = new Date();
+    const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}-${String(now.getDate()).padStart(2, "0")}`;
+
+    const data = await fetchData<PaginatedResponse<BrainDumpItem>>(
+      "/api/brain-dump/",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          limit: 1000,
+          offset: 0,
+          filters: {
+            date,
+            order_by: "created_at",
+            order_by_desc: true,
+          },
+        }),
+      }
+    );
+    return data.items;
+  },
+  get: (id: string): Promise<BrainDumpItem> =>
+    fetchData<BrainDumpItem>(`/api/brain-dump/${id}`),
   addItem: (text: string): Promise<BrainDumpItem> => {
     const params = new URLSearchParams({ text });
     return fetchData<BrainDumpItem>(`/api/me/today/brain-dump?${params.toString()}`, {

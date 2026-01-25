@@ -1,4 +1,9 @@
-import { faBell, faPenToSquare, faRotate } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBell,
+  faBrain,
+  faPenToSquare,
+  faRotate,
+} from "@fortawesome/free-solid-svg-icons";
 import { Show, Component, ParentProps, createMemo } from "solid-js";
 import Page from "@/components/shared/layout/Page";
 import { Icon } from "@/components/shared/Icon";
@@ -71,6 +76,14 @@ export const TodayPageLayout: Component<ParentProps> = (props) => {
                   </Show>
                 </div>
                 <div class="flex items-center gap-2">
+                  <a
+                    href="/me/today/brain-dumps"
+                    aria-label="Today's brain dumps"
+                    title="Today's brain dumps"
+                    class="p-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/70 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
+                  >
+                    <Icon icon={faBrain} class="w-4 h-4 fill-amber-600/70" />
+                  </a>
                   <a
                     href="/me/today/notifications"
                     aria-label="Today's notifications"

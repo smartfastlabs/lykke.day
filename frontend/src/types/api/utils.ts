@@ -4,6 +4,7 @@
  */
 
 import type { components } from './api.generated';
+import type { LLMRunResultSnapshot } from "./notification";
 
 // API Response wrapper type
 export interface ApiResponse<T> {
@@ -79,7 +80,9 @@ export interface Reminder {
   created_at?: string | null;
 }
 
-export type BrainDumpItem = components["schemas"]["BrainDumpItemSchema"];
+export type BrainDumpItem = components["schemas"]["BrainDumpItemSchema"] & {
+  llm_run_result?: LLMRunResultSnapshot | Record<string, unknown> | null;
+};
 
 // Enum types
 export type TaskStatus = components["schemas"]["TaskStatus"];

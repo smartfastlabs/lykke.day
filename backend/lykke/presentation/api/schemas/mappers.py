@@ -87,6 +87,11 @@ def map_brain_dump_item_to_schema(item: BrainDumpEntity) -> BrainDumpItemSchema:
         status=item.status,
         type=item.type,
         created_at=item.created_at,
+        llm_run_result=(
+            dataclass_to_json_dict(item.llm_run_result)
+            if item.llm_run_result
+            else None
+        ),
     )
 
 

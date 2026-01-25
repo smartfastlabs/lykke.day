@@ -1,6 +1,7 @@
 """Brain dump item schema."""
 
 from datetime import date, datetime
+from typing import Any
 from uuid import UUID
 
 from lykke.domain.value_objects.day import BrainDumpItemStatus, BrainDumpItemType
@@ -17,6 +18,7 @@ class BrainDumpItemSchema(BaseEntitySchema):
     status: BrainDumpItemStatus
     type: BrainDumpItemType
     created_at: datetime | None = None
+    llm_run_result: dict[str, Any] | None = None
 
 
 class BrainDumpItemCreateSchema(BaseSchema):

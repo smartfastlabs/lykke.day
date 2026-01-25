@@ -29,6 +29,7 @@ import {
   taskAPI,
 } from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
+import { globalNotifications } from "@/providers/notifications";
 
 interface StreamingDataContextValue {
   // The main data - provides loading/error states
@@ -119,6 +120,118 @@ interface EntityChange {
   entity_id: string;
   entity_data: Task | Event | Routine | null;
 }
+
+const isOnMeRoute = (): boolean =>
+  typeof window !== "undefined" && window.location.pathname.startsWith("/me");
+
+const getEntityLabel = (entityType: string): string => {
+  if (entityType === "calendar_entry" || entityType === "calendarentry") {
+    return "event";
+  }
+  if (entityType === "task") return "task";
+  if (entityType === "routine") return "routine";
+  if (entityType === "day") return "day";
+  return entityType.replace(/_/g, " ");
+};
+
+const getChangeVerb = (changeType: EntityChange["change_type"]): string => {
+  if (changeType === "created") return "added";
+  if (changeType === "updated") return "updated";
+  return "removed";
+};
+
+const pluralize = (count: number, noun: string): string =>
+  count === 1 ? noun : `${noun}s`;
+
+const stableStringify = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`;
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const keys = Object.keys(record).sort();
+    return `{${keys
+      .map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+};
+
+const areEntitiesEqual = (left: unknown, right: unknown): boolean =>
+  stableStringify(left) === stableStringify(right);
+
+const buildChangeNotification = (changes: EntityChange[]): string | null => {
+  if (changes.length === 0) return null;
+
+  const counts = new Map<string, number>();
+
+  for (const change of changes) {
+    const key = `${getEntityLabel(change.entity_type)}|${getChangeVerb(
+      change.change_type
+    )}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  const parts = Array.from(counts.entries()).map(([key, count]) => {
+    const [entityLabel, changeVerb] = key.split("|");
+    return `${count} ${pluralize(count, entityLabel)} ${changeVerb}`;
+  });
+
+  if (parts.length === 0) return null;
+
+  const maxParts = 3;
+  const shownParts = parts.slice(0, maxParts);
+  const remaining = parts.length - shownParts.length;
+  const suffix = remaining > 0 ? `, and ${remaining} more updates` : "";
+
+  return `Background update: ${shownParts.join(", ")}${suffix}.`;
+};
+
+const countCompletedTasksFromChanges = (
+  current: DayContextWithRoutines,
+  changes: EntityChange[]
+): number => {
+  const existingTasks = current.tasks ?? [];
+  let completedCount = 0;
+
+  for (const change of changes) {
+    if (change.entity_type !== "task") continue;
+    if (change.change_type !== "updated") continue;
+    const task = change.entity_data as Task | null;
+    if (!task || !task.id) continue;
+    const previous = existingTasks.find((existing) => existing.id === task.id);
+    if (previous?.status !== "COMPLETE" && task.status === "COMPLETE") {
+      completedCount += 1;
+    }
+  }
+
+  return completedCount;
+};
+
+const countCompletedTasksFromFullSync = (
+  previousTasks: Task[],
+  nextTasks: Task[]
+): number => {
+  const previousById = new Map(previousTasks.map((task) => [task.id, task]));
+  let completedCount = 0;
+
+  for (const task of nextTasks) {
+    const previous = task.id ? previousById.get(task.id) : undefined;
+    if (previous?.status !== "COMPLETE" && task.status === "COMPLETE") {
+      completedCount += 1;
+    }
+  }
+
+  return completedCount;
+};
+
+const buildTaskCompletedNotification = (count: number): string =>
+  count === 1
+    ? "Background update: 1 task completed."
+    : `Background update: ${count} tasks completed.`;
 
 export function StreamingDataProvider(props: ParentProps) {
   const [dayContextStore, setDayContextStore] = createStore<{
@@ -320,6 +433,7 @@ export function StreamingDataProvider(props: ParentProps) {
     setIsLoading(false);
 
     if (message.day_context) {
+      const previousContext = dayContextStore.data;
       // Full context - replace store
       setDayContextStore({ data: message.day_context });
 
@@ -340,17 +454,44 @@ export function StreamingDataProvider(props: ParentProps) {
           };
         });
       }
+
+      if (isOnMeRoute() && previousContext) {
+        const completedCount = countCompletedTasksFromFullSync(
+          previousContext.tasks ?? [],
+          message.day_context.tasks ?? []
+        );
+        if (completedCount > 0) {
+          globalNotifications.addInfo(buildTaskCompletedNotification(completedCount), {
+            duration: 4000,
+          });
+        }
+      }
     } else if (message.changes) {
+      const currentContext = dayContextStore.data;
       // Incremental changes - apply to existing store
-      applyChanges(message.changes);
+      const didApplyChanges = applyChanges(message.changes);
       if (message.last_audit_log_timestamp) {
         setLastProcessedTimestamp(message.last_audit_log_timestamp);
+      }
+      if (didApplyChanges && isOnMeRoute() && currentContext) {
+        const completedCount = countCompletedTasksFromChanges(
+          currentContext,
+          message.changes
+        );
+        const notification =
+          completedCount > 0
+            ? buildTaskCompletedNotification(completedCount)
+            : buildChangeNotification(message.changes);
+        if (notification) {
+          globalNotifications.addInfo(notification, { duration: 4000 });
+        }
       }
     }
   };
 
   // Apply incremental changes to store
-  const applyChanges = (changes: EntityChange[]) => {
+  const applyChanges = (changes: EntityChange[]): boolean => {
+    let didUpdate = false;
     setDayContextStore((current) => {
       if (!current.data) {
         // If no current context, we can't apply incremental changes
@@ -368,21 +509,32 @@ export function StreamingDataProvider(props: ParentProps) {
 
       for (const change of changes) {
         if (change.entity_type === "task") {
-          const task = change.entity_data as Task;
+          const task = change.entity_data as Task | null;
+          if (!task) {
+            continue;
+          }
           if (change.change_type === "created") {
             const index = updatedTasks.findIndex((t) => t.id === task.id);
             if (index >= 0) {
-              updatedTasks[index] = task;
+              if (!areEntitiesEqual(updatedTasks[index], task)) {
+                updatedTasks[index] = task;
+                didUpdate = true;
+              }
             } else {
               updatedTasks.push(task);
+              didUpdate = true;
             }
           } else if (change.change_type === "updated") {
             const index = updatedTasks.findIndex((t) => t.id === task.id);
             if (index >= 0) {
-              updatedTasks[index] = task;
+              if (!areEntitiesEqual(updatedTasks[index], task)) {
+                updatedTasks[index] = task;
+                didUpdate = true;
+              }
             } else {
               // Task not found, add it (might have been created before we loaded)
               updatedTasks.push(task);
+              didUpdate = true;
             }
           } else if (change.change_type === "deleted") {
             const index = updatedTasks.findIndex(
@@ -390,22 +542,39 @@ export function StreamingDataProvider(props: ParentProps) {
             );
             if (index >= 0) {
               updatedTasks.splice(index, 1);
+              didUpdate = true;
             }
           }
         } else if (
           change.entity_type === "calendar_entry" ||
           change.entity_type === "calendarentry"
         ) {
-          const event = change.entity_data as Event;
+          const event = change.entity_data as Event | null;
+          if (!event) {
+            continue;
+          }
           if (change.change_type === "created") {
-            updatedEvents.push(event);
+            const index = updatedEvents.findIndex((e) => e.id === event.id);
+            if (index >= 0) {
+              if (!areEntitiesEqual(updatedEvents[index], event)) {
+                updatedEvents[index] = event;
+                didUpdate = true;
+              }
+            } else {
+              updatedEvents.push(event);
+              didUpdate = true;
+            }
           } else if (change.change_type === "updated") {
             const index = updatedEvents.findIndex((e) => e.id === event.id);
             if (index >= 0) {
-              updatedEvents[index] = event;
+              if (!areEntitiesEqual(updatedEvents[index], event)) {
+                updatedEvents[index] = event;
+                didUpdate = true;
+              }
             } else {
               // Event not found, add it
               updatedEvents.push(event);
+              didUpdate = true;
             }
           } else if (change.change_type === "deleted") {
             const index = updatedEvents.findIndex(
@@ -413,18 +582,35 @@ export function StreamingDataProvider(props: ParentProps) {
             );
             if (index >= 0) {
               updatedEvents.splice(index, 1);
+              didUpdate = true;
             }
           }
         } else if (change.entity_type === "routine") {
-          const routine = change.entity_data as Routine;
+          const routine = change.entity_data as Routine | null;
+          if (!routine) {
+            continue;
+          }
           if (change.change_type === "created") {
-            updatedRoutines.push(routine);
+            const index = updatedRoutines.findIndex((item) => item.id === routine.id);
+            if (index >= 0) {
+              if (!areEntitiesEqual(updatedRoutines[index], routine)) {
+                updatedRoutines[index] = routine;
+                didUpdate = true;
+              }
+            } else {
+              updatedRoutines.push(routine);
+              didUpdate = true;
+            }
           } else if (change.change_type === "updated") {
             const index = updatedRoutines.findIndex((item) => item.id === routine.id);
             if (index >= 0) {
-              updatedRoutines[index] = routine;
+              if (!areEntitiesEqual(updatedRoutines[index], routine)) {
+                updatedRoutines[index] = routine;
+                didUpdate = true;
+              }
             } else {
               updatedRoutines.push(routine);
+              didUpdate = true;
             }
           } else if (change.change_type === "deleted") {
             const index = updatedRoutines.findIndex(
@@ -432,14 +618,25 @@ export function StreamingDataProvider(props: ParentProps) {
             );
             if (index >= 0) {
               updatedRoutines.splice(index, 1);
+              didUpdate = true;
             }
           }
         } else if (change.entity_type === "day") {
-          const updatedDay = change.entity_data as Day;
-          if (change.change_type === "updated" || change.change_type === "created") {
-            updated.day = updatedDay;
+          const updatedDay = change.entity_data as Day | null;
+          if (
+            updatedDay &&
+            (change.change_type === "updated" || change.change_type === "created")
+          ) {
+            if (!areEntitiesEqual(updated.day, updatedDay)) {
+              updated.day = updatedDay;
+              didUpdate = true;
+            }
           }
         }
+      }
+
+      if (!didUpdate) {
+        return current;
       }
 
       updated.tasks = updatedTasks;
@@ -448,6 +645,7 @@ export function StreamingDataProvider(props: ParentProps) {
 
       return { data: updated };
     });
+    return didUpdate;
   };
 
   // Handle real-time audit log events

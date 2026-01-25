@@ -154,7 +154,7 @@ class SmartNotificationHandler(
                     decision.priority,
                     self.user_id,
                 )
-                return None
+                return
 
             llm_snapshot = build_llm_snapshot(
                 tool_name="decide_notification",
