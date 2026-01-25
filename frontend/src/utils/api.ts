@@ -16,6 +16,7 @@ import {
   NotificationUseCaseConfig,
   Reminder,
   BrainDumpItem,
+  PushNotification,
 } from "@/types/api";
 import type {
   BasePersonalityOption,
@@ -539,6 +540,13 @@ export const routineDefinitionAPI = {
         method: "DELETE",
       }
     ),
+};
+
+export const notificationAPI = {
+  getToday: (): Promise<PushNotification[]> =>
+    fetchData<PushNotification[]>("/api/me/today/notifications"),
+  get: (id: string): Promise<PushNotification> =>
+    fetchData<PushNotification>(`/api/me/today/notifications/${id}`),
 };
 
 export const calendarAPI = {

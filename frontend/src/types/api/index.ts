@@ -8,6 +8,7 @@ export * from './utils';
 // Custom API-adjacent types
 export * from './user';
 export * from './routine';
+export * from './notification';
 
 // Type constants (arrays of all enum values)
 export * from './constants';
