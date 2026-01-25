@@ -38,6 +38,7 @@ class LLMToolCallResult:
     """Result for a tool call returned by the LLM."""
 
     tool_name: str
+    arguments: dict[str, Any]
     result: Any
 
 

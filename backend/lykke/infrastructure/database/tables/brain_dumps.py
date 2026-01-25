@@ -1,7 +1,7 @@
 """Brain dumps table definition."""
 
 from sqlalchemy import Column, Date, DateTime, Index, String, Text
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
 
@@ -17,6 +17,7 @@ class BrainDump(Base):
     text = Column(Text, nullable=False)
     status = Column(String, nullable=False)  # BrainDumpItemStatus enum as string
     type = Column(String, nullable=False)  # BrainDumpItemType enum as string
+    llm_run_result = Column(JSONB, nullable=True)
     created_at = Column(DateTime, nullable=False)
 
     __table_args__ = (

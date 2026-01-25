@@ -23,11 +23,12 @@ from lykke.application.commands.task import (
     RecordTaskActionHandler,
 )
 from lykke.application.gateways.llm_protocol import LLMTool
-from lykke.application.llm import LLMHandlerMixin, UseCasePromptInput
+from lykke.application.llm import LLMHandlerMixin, LLMRunResult, UseCasePromptInput
 from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextHandler,
     GetLLMPromptContextQuery,
 )
+from lykke.core.utils.day_context_serialization import serialize_day_context
 from lykke.domain import value_objects
 
 if TYPE_CHECKING:
@@ -95,7 +96,13 @@ class ProcessBrainDumpHandler(
 
         self._brain_dump_item = item
         self._brain_dump_date = command.date
-        await self.run_llm()
+        llm_run_result = await self.run_llm()
+        if llm_run_result is not None:
+            await self._record_llm_run_result(
+                date=command.date,
+                item_id=item.id,
+                result=llm_run_result,
+            )
 
     async def build_prompt_input(self, date: dt_date) -> UseCasePromptInput:
         if self._brain_dump_item is None or self._brain_dump_date is None:
@@ -283,3 +290,53 @@ class ProcessBrainDumpHandler(
             updated = item.update_type(value_objects.BrainDumpItemType.COMMAND)
             if updated.has_events():
                 uow.add(updated)
+
+    def _build_llm_run_result_snapshot(
+        self, result: LLMRunResult
+    ) -> value_objects.LLMRunResultSnapshot:
+        prompt_context_snapshot = serialize_day_context(
+            result.prompt_context, current_time=result.current_time
+        )
+        tool_calls = [
+            value_objects.LLMToolCallResultSnapshot(
+                tool_name=tool_result.tool_name,
+                arguments=tool_result.arguments,
+                result=tool_result.result,
+            )
+            for tool_result in result.tool_results
+        ]
+        return value_objects.LLMRunResultSnapshot(
+            tool_calls=tool_calls,
+            prompt_context=prompt_context_snapshot,
+            current_time=result.current_time,
+            llm_provider=result.llm_provider,
+            system_prompt=result.system_prompt,
+            context_prompt=result.context_prompt,
+            ask_prompt=result.ask_prompt,
+        )
+
+    async def _record_llm_run_result(
+        self, *, date: dt_date, item_id: UUID, result: LLMRunResult
+    ) -> None:
+        snapshot = self._build_llm_run_result_snapshot(result)
+        async with self.new_uow() as uow:
+            try:
+                item = await uow.brain_dump_ro_repo.get(item_id)
+            except Exception:
+                logger.debug(
+                    "Brain dump item %s not found for day %s",
+                    item_id,
+                    date,
+                )
+                return
+            if item.date != date:
+                logger.debug(
+                    "Brain dump item %s not found for day %s",
+                    item_id,
+                    date,
+                )
+                return
+            updated = item.update_llm_run_result(snapshot)
+            if updated is item:
+                return
+            uow.add(updated)

@@ -370,7 +370,12 @@ export function StreamingDataProvider(props: ParentProps) {
         if (change.entity_type === "task") {
           const task = change.entity_data as Task;
           if (change.change_type === "created") {
-            updatedTasks.push(task);
+            const index = updatedTasks.findIndex((t) => t.id === task.id);
+            if (index >= 0) {
+              updatedTasks[index] = task;
+            } else {
+              updatedTasks.push(task);
+            }
           } else if (change.change_type === "updated") {
             const index = updatedTasks.findIndex((t) => t.id === task.id);
             if (index >= 0) {
@@ -568,6 +573,9 @@ export function StreamingDataProvider(props: ParentProps) {
   const addTaskLocally = (task: Task) => {
     setDayContextStore((current) => {
       if (!current.data) return current;
+      if (current.data.tasks?.some((existing) => existing.id === task.id)) {
+        return current;
+      }
       const updated = {
         data: {
           ...current.data,

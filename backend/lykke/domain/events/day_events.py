@@ -125,6 +125,16 @@ class BrainDumpItemTypeChangedEvent(DomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
+class BrainDumpItemLLMRunRecordedEvent(DomainEvent):
+    """Event raised when an LLM run result is stored for a brain dump item."""
+
+    user_id: UUID
+    day_id: UUID
+    date: dt_date
+    item_id: UUID
+
+
+@dataclass(frozen=True, kw_only=True)
 class BrainDumpItemRemovedEvent(DomainEvent, AuditableDomainEvent):
     """Event raised when a brain dump item is removed.
 
@@ -140,6 +150,7 @@ class BrainDumpItemRemovedEvent(DomainEvent, AuditableDomainEvent):
 
 __all__ = [
     "BrainDumpItemAddedEvent",
+    "BrainDumpItemLLMRunRecordedEvent",
     "BrainDumpItemRemovedEvent",
     "BrainDumpItemStatusChangedEvent",
     "BrainDumpItemTypeChangedEvent",

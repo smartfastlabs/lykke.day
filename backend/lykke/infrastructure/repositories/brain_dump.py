@@ -1,8 +1,10 @@
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy.sql import Select
 
 from lykke.core.utils.encryption import decrypt_text, encrypt_text
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import BrainDumpEntity
 from lykke.infrastructure.database.tables import brain_dumps_tbl
@@ -31,6 +33,9 @@ class BrainDumpRepository(
             "text": encrypt_text(item.text),
             "status": item.status.value,
             "type": item.type.value,
+            "llm_run_result": dataclass_to_json_dict(item.llm_run_result)
+            if item.llm_run_result
+            else None,
             "created_at": item.created_at,
         }
 
@@ -50,6 +55,39 @@ class BrainDumpRepository(
         text = data.get("text")
         if isinstance(text, str):
             data["text"] = decrypt_text(text)
+
+        llm_run_result = data.get("llm_run_result")
+        if isinstance(llm_run_result, dict):
+            tool_calls = llm_run_result.get("tool_calls")
+            if tool_calls is None:
+                tool_calls = llm_run_result.get("tool_results", [])
+            if isinstance(tool_calls, list):
+                tool_calls = [
+                    value_objects.LLMToolCallResultSnapshot(
+                        **filter_init_false_fields(
+                            result, value_objects.LLMToolCallResultSnapshot
+                        )
+                    )
+                    if isinstance(result, dict)
+                    else result
+                    for result in tool_calls
+                ]
+            llm_run_result["tool_calls"] = tool_calls
+            llm_run_result.pop("tool_results", None)
+
+            llm_provider = llm_run_result.get("llm_provider")
+            if isinstance(llm_provider, str):
+                llm_run_result["llm_provider"] = value_objects.LLMProvider(llm_provider)
+
+            current_time = llm_run_result.get("current_time")
+            if isinstance(current_time, str):
+                llm_run_result["current_time"] = datetime.fromisoformat(current_time)
+
+            data["llm_run_result"] = value_objects.LLMRunResultSnapshot(
+                **filter_init_false_fields(
+                    llm_run_result, value_objects.LLMRunResultSnapshot
+                )
+            )
 
         data = ensure_datetimes_utc(data, keys=("created_at",))
         return BrainDumpEntity(**data)

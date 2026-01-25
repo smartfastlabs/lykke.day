@@ -9,6 +9,7 @@ from uuid import UUID
 from lykke.domain import value_objects
 from lykke.domain.events.day_events import (
     BrainDumpItemAddedEvent,
+    BrainDumpItemLLMRunRecordedEvent,
     BrainDumpItemRemovedEvent,
     BrainDumpItemStatusChangedEvent,
     BrainDumpItemTypeChangedEvent,
@@ -27,6 +28,7 @@ class BrainDumpEntity(BaseEntityObject):
     status: value_objects.BrainDumpItemStatus = value_objects.BrainDumpItemStatus.ACTIVE
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     type: value_objects.BrainDumpItemType = value_objects.BrainDumpItemType.GENERAL
+    llm_run_result: value_objects.LLMRunResultSnapshot | None = None
 
     def mark_added(self) -> None:
         """Record a brain dump item creation event."""
@@ -105,6 +107,26 @@ class BrainDumpEntity(BaseEntityObject):
                 entity_date=self.date,
             )
         )
+
+    def update_llm_run_result(
+        self, result: value_objects.LLMRunResultSnapshot
+    ) -> BrainDumpEntity:
+        """Store the LLM run result snapshot for this item."""
+        if self.llm_run_result == result:
+            return self
+        updated = self.clone(llm_run_result=result)
+        updated._add_event(
+            BrainDumpItemLLMRunRecordedEvent(
+                user_id=self.user_id,
+                day_id=self._get_day_id(),
+                date=self.date,
+                item_id=self.id,
+                entity_id=self.id,
+                entity_type="brain_dump",
+                entity_date=self.date,
+            )
+        )
+        return updated
 
     def _get_day_id(self) -> UUID:
         from .day import DayEntity

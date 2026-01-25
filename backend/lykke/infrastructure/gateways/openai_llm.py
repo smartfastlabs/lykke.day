@@ -233,7 +233,11 @@ class OpenAILLMGateway:
                 if inspect.isawaitable(result):
                     result = await result
                 tool_results.append(
-                    LLMToolCallResult(tool_name=tool_name, result=result)
+                    LLMToolCallResult(
+                        tool_name=tool_name,
+                        arguments=validated.model_dump(),
+                        result=result,
+                    )
                 )
             if not tool_results:
                 return None

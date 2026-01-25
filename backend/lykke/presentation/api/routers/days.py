@@ -30,6 +30,7 @@ from lykke.core.exceptions import NotFoundError
 from lykke.core.utils.dates import get_current_date
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
+from lykke.domain.events.base import AuditableDomainEvent
 from lykke.domain.value_objects import DayUpdateObject
 from lykke.presentation.api.schemas import DayContextSchema, DaySchema, DayUpdateSchema
 from lykke.presentation.api.schemas.mappers import (
@@ -419,6 +420,13 @@ async def _handle_realtime_events(
                     logger.debug(
                         f"Deserialized domain event: {domain_event.__class__.__name__}"
                     )
+
+                    if not isinstance(domain_event, AuditableDomainEvent):
+                        logger.debug(
+                            "Filtered out non-auditable domain event %s",
+                            domain_event.__class__.__name__,
+                        )
+                        continue
 
                     # Only process events that identify an entity
                     if not domain_event.entity_id or not domain_event.entity_type:
