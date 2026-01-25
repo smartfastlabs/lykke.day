@@ -1,6 +1,6 @@
 """Integration tests for DayRepository."""
 
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
@@ -8,6 +8,8 @@ from lykke.core.exceptions import NotFoundError
 from lykke.core.utils.dates import get_current_datetime
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
+from lykke.domain.entities.day_template import DayTemplateEntity
+from lykke.infrastructure.database.tables import days_tbl
 
 
 @pytest.mark.asyncio
@@ -298,3 +300,36 @@ async def test_remove_all_reminders_clears_field_in_database(
     final_retrieved = await day_repo.get(day.id)
     assert final_retrieved.reminders == []
     assert len(final_retrieved.reminders) == 0
+
+
+@pytest.mark.asyncio
+async def test_get_handles_legacy_routine_ids_in_template(
+    day_repo, test_user, test_date
+):
+    """Regression test: handle legacy routine_ids in stored day templates."""
+    routine_definition_id = uuid4()
+    template_id = DayTemplateEntity.id_from_slug_and_user("default", test_user.id)
+    day_id = DayEntity.id_from_date_and_user(test_date, test_user.id)
+
+    template_payload = {
+        "id": str(template_id),
+        "user_id": str(test_user.id),
+        "slug": "default",
+        "routine_ids": [str(routine_definition_id)],
+    }
+
+    async with day_repo._get_connection(for_write=True) as conn:
+        await conn.execute(
+            days_tbl.insert().values(
+                id=day_id,
+                user_id=test_user.id,
+                date=test_date,
+                status=value_objects.DayStatus.UNSCHEDULED.value,
+                template=template_payload,
+            )
+        )
+
+    retrieved = await day_repo.get(day_id)
+
+    assert retrieved.template is not None
+    assert retrieved.template.routine_definition_ids == [routine_definition_id]
