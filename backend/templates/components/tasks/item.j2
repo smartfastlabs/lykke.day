@@ -2,11 +2,11 @@
   status: {{ task.status.value }}
   type: {{ task.type.value }}
   category: {{ task.category.value }}
-  scheduled_date: {{ task.scheduled_date.isoformat() }}
-  {{- kv_line("  ", "description", task.description) -}}
+  scheduled_date: {{ task.scheduled_date.isoformat() }}{% if task.description %}
+  description: {{ task.description }}{% endif %}
   frequency: {{ task.frequency.value }}
-  {% if task.tags %}tags: {{ task.tags | map(attribute='value') | list }}{% endif %}
-  {{- kv_line("  ", "completed_at", task.completed_at and fmt_datetime(task.completed_at)) -}}
+  {% if task.tags %}tags: {{ task.tags | map(attribute='value') | list }}{% endif %}{% if task.completed_at %}
+  completed_at: {{ fmt_datetime(task.completed_at) }}{% endif %}
   schedule:
     {{- kv_line("    ", "timing_type", task.schedule and task.schedule.timing_type.value) -}}
     {{- kv_line("    ", "available_time", task.schedule and task.schedule.available_time and fmt_time(task.schedule.available_time)) -}}
