@@ -1,12 +1,18 @@
 import { useNavigate } from "@solidjs/router";
-import { Component, Show, createMemo, createSignal, onCleanup } from "solid-js";
+import {
+  Component,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+} from "solid-js";
 import { Icon } from "@/components/shared/Icon";
 import { useStreamingData } from "@/providers/streamingData";
 import {
   faHouse,
   faMicrophone,
   faStop,
-  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 type SpeechRecognitionResultLike = {
@@ -41,6 +47,7 @@ const BrainDumpButton: Component = () => {
   const [isSaving, setIsSaving] = createSignal(false);
   const [dictationError, setDictationError] = createSignal<string | null>(null);
   const [manualStop, setManualStop] = createSignal(false);
+  const [hasTranscript, setHasTranscript] = createSignal(false);
 
   const speechRecognitionCtor = createMemo(() => {
     const windowTyped = window as unknown as {
@@ -53,10 +60,10 @@ const BrainDumpButton: Component = () => {
   });
 
   let recognition: SpeechRecognitionLike | null = null;
-
   const appendTranscript = (transcript: string) => {
     const cleaned = transcript.trim();
     if (!cleaned) return;
+    setHasTranscript(true);
     setNewItemText((prev) => {
       const spacer = prev && !prev.endsWith(" ") ? " " : "";
       return `${prev}${spacer}${cleaned}`;
@@ -70,13 +77,15 @@ const BrainDumpButton: Component = () => {
     appendTranscript(interim);
   };
 
-  const stopDictation = (isManual = false) => {
+  const stopDictation = (isManual = false, clearInterim = true) => {
     if (isManual) {
       setManualStop(true);
     }
     recognition?.stop();
     setIsDictating(false);
-    setDictationInterim("");
+    if (clearInterim) {
+      setDictationInterim("");
+    }
   };
 
   const startDictation = () => {
@@ -101,6 +110,9 @@ const BrainDumpButton: Component = () => {
         }
         interimText = `${interimText} ${result[0].transcript}`.trim();
       }
+      if (interimText) {
+        setHasTranscript(true);
+      }
       setDictationInterim(interimText);
     };
     recognition.onerror = (event) => {
@@ -113,9 +125,6 @@ const BrainDumpButton: Component = () => {
       if (manualStop()) {
         setManualStop(false);
         return;
-      }
-      if (isModalOpen() && !isSaving()) {
-        void handleSave(true);
       }
     };
     recognition.start();
@@ -136,6 +145,7 @@ const BrainDumpButton: Component = () => {
     setDictationError(null);
     setIsSaving(false);
     setManualStop(false);
+    setHasTranscript(false);
     setIsModalOpen(true);
     startDictation();
   };
@@ -146,16 +156,14 @@ const BrainDumpButton: Component = () => {
     setNewItemText("");
     setDictationInterim("");
     setDictationError(null);
+    setHasTranscript(false);
   };
 
-  const handleSave = async (isAutoSave = false) => {
+  const handleSave = async () => {
     if (isSaving() || isLoading()) return;
     finalizeInterim();
     const text = newItemText().trim();
     if (!text) {
-      if (isAutoSave) {
-        closeDictationModal();
-      }
       return;
     }
 
@@ -173,6 +181,20 @@ const BrainDumpButton: Component = () => {
     recognition?.stop();
   });
 
+  createEffect(() => {
+    if (!isModalOpen()) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeDictationModal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    onCleanup(() => {
+      window.removeEventListener("keydown", handleKeyDown);
+    });
+  });
+
   const displayText = createMemo(() => {
     const base = newItemText();
     const interim = dictationInterim();
@@ -182,109 +204,97 @@ const BrainDumpButton: Component = () => {
   });
 
   const isSpeechSupported = createMemo(() => Boolean(speechRecognitionCtor()));
+  const handleSaveAndStop = async () => {
+    stopDictation(true, false);
+    await handleSave();
+  };
+
+  const handlePrimaryMicClick = async () => {
+    if (hasTranscript()) {
+      await handleSaveAndStop();
+      return;
+    }
+    toggleDictation();
+  };
 
   return (
     <>
       <div class="fixed bottom-6 left-6 z-50 print:hidden">
-        <div class="flex items-center gap-2 text-white">
+        <div class="flex items-center gap-2">
           <button
             onClick={() => navigate("/me")}
-            class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-600 shadow-lg transition-transform duration-150 ease-in-out hover:bg-gray-700 active:scale-95"
+            class="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 bg-white/80 text-stone-600 shadow-lg shadow-stone-900/5 transition hover:bg-white active:scale-95"
             aria-label="Go to home"
           >
-            <Icon icon={faHouse} class="h-5 w-5 fill-white" />
+            <Icon icon={faHouse} class="h-5 w-5 fill-current" />
           </button>
           <button
             onClick={openDictationModal}
-            class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-600 shadow-lg transition-transform duration-150 ease-in-out hover:bg-gray-700 active:scale-95"
+            class="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 bg-white/80 text-stone-600 shadow-lg shadow-stone-900/5 transition hover:bg-white active:scale-95"
             aria-label="Start dictation"
           >
-            <Icon icon={faMicrophone} class="h-5 w-5 fill-white" />
+            <Icon icon={faMicrophone} class="h-5 w-5 fill-current" />
           </button>
         </div>
       </div>
 
       <Show when={isModalOpen()}>
-        <div class="fixed inset-0 z-[60] flex items-center justify-center bg-stone-900/25 backdrop-blur-sm">
-          <div class="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/70 bg-white/75 p-6 shadow-xl shadow-amber-900/10 backdrop-blur-md">
-            <div class="absolute inset-0 bg-gradient-to-br from-amber-50/70 via-white/80 to-rose-50/60" />
-            <div class="absolute -top-10 -right-12 h-40 w-40 rounded-full bg-gradient-to-br from-amber-200/40 to-orange-200/20 blur-3xl" />
-            <div class="absolute -bottom-12 -left-10 h-36 w-36 rounded-full bg-gradient-to-tr from-rose-200/35 to-amber-200/20 blur-3xl" />
-            <div class="relative">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80 shadow-sm">
-                    <Icon icon={faMicrophone} class="h-4 w-4 fill-sky-600" />
-                  </div>
-                  <div>
-                    <p class="text-base font-semibold text-stone-800">Dictation</p>
-                    <p class="text-xs text-stone-500">
-                      {isDictating()
-                        ? "Listening…"
-                        : isSpeechSupported()
-                        ? "Paused"
-                        : "Speech not supported"}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={closeDictationModal}
-                  class="flex h-9 w-9 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-white/80 hover:text-stone-700"
-                  aria-label="Close dictation"
-                >
-                  <Icon icon={faXmark} class="h-4 w-4 fill-current" />
-                </button>
+        <div
+          class="fixed inset-0 z-[60] flex items-center justify-center"
+          onClick={closeDictationModal}
+        >
+          <div class="absolute inset-0 bg-stone-900/45 backdrop-blur-[1px]" />
+          <div
+            class="relative flex flex-col items-center justify-center"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Show when={hasTranscript()}>
+              <div class="mb-6 max-w-[320px] rounded-3xl bg-amber-100 px-5 py-4 text-sm text-stone-800 shadow-md shadow-stone-900/10">
+                <span class="text-left leading-relaxed">{displayText()}</span>
               </div>
-
-              <textarea
-                value={displayText()}
-                onInput={(e) => {
-                  setNewItemText(e.currentTarget.value);
-                  setDictationInterim("");
-                }}
-                placeholder="Speak your thoughts..."
-                rows={6}
-                class="mt-5 w-full resize-none rounded-2xl border border-stone-200 bg-white/80 px-4 py-3 text-sm text-stone-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-                disabled={isSaving() || isLoading()}
+            </Show>
+            <button
+              type="button"
+              onClick={() => void handlePrimaryMicClick()}
+              class={`flex h-20 w-20 items-center justify-center rounded-full border shadow-lg transition-colors ${
+                hasTranscript()
+                  ? "border-amber-200 bg-amber-500 text-white hover:bg-amber-400"
+                  : "border-stone-200 bg-stone-100 text-stone-700 hover:bg-stone-50"
+              }`}
+              aria-label={
+                hasTranscript()
+                  ? "Stop dictation and save brain dump"
+                  : isDictating()
+                  ? "Stop dictation"
+                  : "Start dictation"
+              }
+              disabled={isSaving() || isLoading() || !isSpeechSupported()}
+            >
+              <Icon
+                icon={hasTranscript() ? faStop : faMicrophone}
+                class={`h-7 w-7 fill-current ${isDictating() ? "animate-pulse" : ""}`}
               />
-
-              <div class="mt-4 flex items-center justify-between">
-                <Show when={dictationError()}>
-                  <p class="text-xs text-rose-600">
-                    Dictation stopped: {dictationError()}
-                  </p>
-                </Show>
-                <div class="ml-auto flex items-center gap-2">
-                  <Show when={isSpeechSupported()}>
-                    <button
-                      type="button"
-                      onClick={toggleDictation}
-                      class={`h-10 w-10 rounded-2xl flex items-center justify-center border transition-colors ${
-                        isDictating()
-                          ? "border-rose-200 bg-rose-50 text-rose-600"
-                          : "border-stone-200 bg-white/80 text-stone-600 hover:bg-white"
-                      }`}
-                      aria-label={isDictating() ? "Stop dictation" : "Start dictation"}
-                      disabled={isSaving() || isLoading()}
-                    >
-                      <Icon
-                        icon={isDictating() ? faStop : faMicrophone}
-                        class="h-4 w-4 fill-current"
-                      />
-                    </button>
-                  </Show>
-                  <button
-                    type="button"
-                    onClick={() => void handleSave()}
-                    disabled={isSaving() || isLoading() || !displayText().trim()}
-                    class="h-10 rounded-2xl bg-sky-500 px-5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-sky-600 disabled:opacity-50 disabled:hover:bg-sky-500"
-                  >
-                    {isSaving() ? "Saving…" : "Save"}
-                  </button>
-                </div>
-              </div>
-            </div>
+            </button>
+            <Show when={dictationError()}>
+              <p class="mt-6 text-xs text-rose-100">
+                Dictation stopped: {dictationError()}
+              </p>
+            </Show>
+            <Show when={!isSpeechSupported()}>
+              <p class="mt-6 text-xs text-stone-200">
+                Speech recognition is not supported.
+              </p>
+            </Show>
+            <Show when={!hasTranscript()}>
+              <button
+                type="button"
+                onClick={closeDictationModal}
+                class="mt-6 text-xs text-stone-200/80 underline-offset-2 transition hover:text-white hover:underline"
+                aria-label="Cancel dictation"
+              >
+                Cancel
+              </button>
+            </Show>
           </div>
         </div>
       </Show>
