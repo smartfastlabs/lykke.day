@@ -45,7 +45,7 @@ class BrainDumpEntity(BaseEntityObject):
 
     def update_status(
         self, status: value_objects.BrainDumpItemStatus
-    ) -> "BrainDumpEntity":
+    ) -> BrainDumpEntity:
         """Update the status of a brain dump item."""
         if status == self.status:
             return self
@@ -69,7 +69,7 @@ class BrainDumpEntity(BaseEntityObject):
 
     def update_type(
         self, item_type: value_objects.BrainDumpItemType
-    ) -> "BrainDumpEntity":
+    ) -> BrainDumpEntity:
         """Update the type of a brain dump item."""
         if item_type == self.type:
             return self
@@ -108,5 +108,7 @@ class BrainDumpEntity(BaseEntityObject):
 
     def _get_day_id(self) -> UUID:
         from .day import DayEntity
+
+        return DayEntity.id_from_date_and_user(self.date, self.user_id)
 
         return DayEntity.id_from_date_and_user(self.date, self.user_id)

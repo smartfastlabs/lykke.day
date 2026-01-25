@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy.sql import Select
 
+from lykke.core.utils.encryption import decrypt_text, encrypt_text
 from lykke.domain import value_objects
 from lykke.domain.entities import BrainDumpEntity
 from lykke.infrastructure.database.tables import brain_dumps_tbl
@@ -27,7 +28,7 @@ class BrainDumpRepository(
             "id": item.id,
             "user_id": item.user_id,
             "date": item.date,
-            "text": item.text,
+            "text": encrypt_text(item.text),
             "status": item.status.value,
             "type": item.type.value,
             "created_at": item.created_at,
@@ -45,6 +46,10 @@ class BrainDumpRepository(
         item_type = data.get("type")
         if isinstance(item_type, str):
             data["type"] = value_objects.BrainDumpItemType(item_type)
+
+        text = data.get("text")
+        if isinstance(text, str):
+            data["text"] = decrypt_text(text)
 
         data = ensure_datetimes_utc(data, keys=("created_at",))
         return BrainDumpEntity(**data)

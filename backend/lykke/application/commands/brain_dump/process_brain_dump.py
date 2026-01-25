@@ -141,7 +141,6 @@ class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None])
                     date,
                 )
                 return
-
             updated = item.update_type(value_objects.BrainDumpItemType.COMMAND)
             if updated.has_events():
                 uow.add(updated)

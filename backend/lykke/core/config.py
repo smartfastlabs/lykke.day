@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     SMART_NOTIFICATIONS_ENABLED: bool = True  # Feature flag
     SMART_NOTIFICATION_RATE_LIMIT_MINUTES: int = 10  # Prevent spam
     SENTRY_DSN: str = ""
+    BRAIN_DUMP_ENCRYPTION_KEY: str = ""
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod

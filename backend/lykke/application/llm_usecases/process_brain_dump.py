@@ -89,7 +89,8 @@ class ProcessBrainDumpUseCase(BaseUseCase):
             return {"task_id": task_id, "action": action}
 
         def update_reminder(
-            reminder_id: UUID, status: value_objects.ReminderStatus
+            reminder_id: UUID,
+            status: value_objects.ReminderStatus,
         ) -> dict[str, Any]:
             """Update an existing reminder's status."""
             return {"reminder_id": reminder_id, "status": status}
