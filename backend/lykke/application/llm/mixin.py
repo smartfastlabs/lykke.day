@@ -10,7 +10,11 @@ from typing import TYPE_CHECKING, Any
 from loguru import logger
 
 from lykke.application.gateways.llm_gateway_factory import LLMGatewayFactory
-from lykke.application.gateways.llm_protocol import LLMTool, LLMToolCallResult
+from lykke.application.gateways.llm_protocol import (
+    LLMTool,
+    LLMToolCallResult,
+    LLMToolRunResult,
+)
 from lykke.application.llm.prompt_rendering import (
     render_ask_prompt,
     render_context_prompt,
@@ -43,8 +47,7 @@ class UseCasePromptInput:
 class LLMRunResult:
     """Result returned by the LLM handler runner."""
 
-    tool_name: str
-    result: object | None
+    tool_results: list[LLMToolCallResult]
     prompt_context: value_objects.LLMPromptContext
     current_time: datetime
     llm_provider: value_objects.LLMProvider
@@ -143,7 +146,7 @@ class LLMHandlerMixin(ABC):
         logger.info(
             f"Running LLM handler {self.template_usecase} with tools {tool_names}"
         )
-        tool_result: LLMToolCallResult | None = await llm_gateway.run_usecase(
+        tool_result = await llm_gateway.run_usecase(
             system_prompt,
             context_prompt,
             ask_prompt,
@@ -156,8 +159,7 @@ class LLMHandlerMixin(ABC):
             return None
 
         return LLMRunResult(
-            tool_name=tool_result.tool_name,
-            result=tool_result.result,
+            tool_results=tool_result.tool_results,
             prompt_context=prompt_input.prompt_context,
             current_time=current_time,
             llm_provider=llm_provider,

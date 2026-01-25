@@ -17,8 +17,8 @@ T = TypeVar("T")
 class LLMTool:
     """Tool definition for LLM calls."""
 
-    name: str | None = None
     callback: Callable[..., Awaitable[Any] | Any]
+    name: str | None = None
     description: str | None = None
     prompt_notes: list[str] | None = None
     args_model: type[BaseModel] | None = None
@@ -41,6 +41,13 @@ class LLMToolCallResult:
     result: Any
 
 
+@dataclass(frozen=True)
+class LLMToolRunResult:
+    """Result for an LLM run that may include multiple tool calls."""
+
+    tool_results: list[LLMToolCallResult]
+
+
 class LLMGatewayProtocol(Protocol):
     """Protocol defining the interface for LLM gateway implementations.
 
@@ -54,7 +61,7 @@ class LLMGatewayProtocol(Protocol):
         context_prompt: str,
         ask_prompt: str,
         tools: Sequence[LLMTool],
-    ) -> LLMToolCallResult | None:
+    ) -> LLMToolRunResult | None:
         """Run an LLM use case and return the tool call result.
 
         Args:
@@ -64,6 +71,6 @@ class LLMGatewayProtocol(Protocol):
             tools: Tools available for the LLM to call
 
         Returns:
-            The tool call result or None if no completion was returned
+            The tool call results or None if no completion was returned
         """
         raise NotImplementedError

@@ -10,7 +10,11 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 from pydantic import SecretStr
 
-from lykke.application.gateways.llm_protocol import LLMTool, LLMToolCallResult
+from lykke.application.gateways.llm_protocol import (
+    LLMTool,
+    LLMToolCallResult,
+    LLMToolRunResult,
+)
 from lykke.core.config import settings
 from lykke.infrastructure.gateways.llm_tools import build_tool_spec_from_callable
 
@@ -69,14 +73,67 @@ def _extract_tool_call_args(response: Any, tool_name: str) -> dict[str, Any] | N
     return None
 
 
-def _extract_tool_call(
+def _extract_tool_calls_from_response(
     response: Any, tool_names: Sequence[str]
-) -> tuple[str, dict[str, Any]] | None:
-    for tool_name in tool_names:
-        tool_args = _extract_tool_call_args(response, tool_name)
-        if tool_args is not None:
-            return tool_name, tool_args
-    return None
+) -> list[tuple[str, dict[str, Any]]]:
+    tool_calls: list[Any] = []
+    if getattr(response, "tool_calls", None):
+        tool_calls = list(response.tool_calls)
+    if not tool_calls:
+        additional_kwargs = getattr(response, "additional_kwargs", {}) or {}
+        raw_calls = additional_kwargs.get("tool_calls") or additional_kwargs.get(
+            "tool_call"
+        )
+        if raw_calls:
+            tool_calls = raw_calls if isinstance(raw_calls, list) else [raw_calls]
+
+    extracted: list[tuple[str, dict[str, Any]]] = []
+    for call in tool_calls:
+        name: str | None = None
+        args: Any = None
+        if isinstance(call, dict):
+            name = call.get("name") or call.get("function", {}).get("name")
+            args = call.get("args") or call.get("arguments")
+            if args is None:
+                args = call.get("function", {}).get("arguments")
+        else:
+            name = getattr(call, "name", None)
+            args = getattr(call, "args", None)
+
+        if not isinstance(name, str) or name not in tool_names:
+            continue
+        if isinstance(args, str):
+            try:
+                args = json.loads(args)
+            except json.JSONDecodeError:
+                continue
+        if isinstance(args, dict):
+            extracted.append((name, args))
+    return extracted
+
+
+def _extract_tool_calls_from_content(
+    response_text: str, tool_names: Sequence[str]
+) -> list[tuple[str, dict[str, Any]]]:
+    parsed_data: Any = json.loads(response_text)
+    extracted: list[tuple[str, dict[str, Any]]] = []
+    if isinstance(parsed_data, dict):
+        tool_name = parsed_data.get("tool_name") or parsed_data.get("name")
+        tool_args = parsed_data.get("args")
+        if tool_name and isinstance(tool_args, dict):
+            extracted.append((tool_name, tool_args))
+        elif len(tool_names) == 1:
+            only_tool = next(iter(tool_names))
+            extracted.append((only_tool, parsed_data))
+    elif isinstance(parsed_data, list):
+        for item in parsed_data:
+            if not isinstance(item, dict):
+                continue
+            tool_name = item.get("tool_name") or item.get("name")
+            tool_args = item.get("args")
+            if tool_name and isinstance(tool_args, dict):
+                extracted.append((tool_name, tool_args))
+    return extracted
 
 
 class AnthropicLLMGateway:
@@ -98,7 +155,7 @@ class AnthropicLLMGateway:
         context_prompt: str,
         ask_prompt: str,
         tools: Sequence[LLMTool],
-    ) -> LLMToolCallResult | None:
+    ) -> LLMToolRunResult | None:
         """Run an LLM use case and return the on_complete result.
 
         Args:
@@ -119,15 +176,18 @@ class AnthropicLLMGateway:
             callbacks_by_name: dict[str, Callable[..., Any]] = {}
 
             for tool in tools:
+                if tool.name is None:
+                    raise ValueError("LLM tool name cannot be None")
+                tool_name = tool.name
                 tool_spec, model = build_tool_spec_from_callable(
                     tool.callback,
-                    tool_name=tool.name,
+                    tool_name=tool_name,
                     description=tool.description,
                     args_model=tool.args_model,
                 )
                 tool_specs.append(tool_spec)
-                models_by_name[tool.name] = model
-                callbacks_by_name[tool.name] = tool.callback
+                models_by_name[tool_name] = model
+                callbacks_by_name[tool_name] = tool.callback
             # Call LLM with provided prompts
             messages = [
                 SystemMessage(content=system_prompt),
@@ -137,13 +197,15 @@ class AnthropicLLMGateway:
             llm = self._llm.bind_tools(tool_specs)
             response = await llm.ainvoke(messages)
 
-            tool_call = _extract_tool_call(response, list(models_by_name.keys()))
-            if tool_call is None:
+            tool_calls = _extract_tool_calls_from_response(
+                response, list(models_by_name.keys())
+            )
+            if not tool_calls:
                 logger.debug(
                     "LLM response missing tool call, falling back to content parsing"
                 )
 
-            if tool_call is None:
+            if not tool_calls:
                 # Parse response content as a fallback
                 response_text = _normalize_response_content(response.content).strip()
 
@@ -157,30 +219,27 @@ class AnthropicLLMGateway:
                     json_end = response_text.find("```", json_start)
                     response_text = response_text[json_start:json_end].strip()
 
-                parsed_data: Any = json.loads(response_text)
-                tool_name: str | None = None
-                tool_args: dict[str, Any] | None = None
-                if isinstance(parsed_data, dict):
-                    tool_name = parsed_data.get("tool_name") or parsed_data.get("name")
-                    tool_args = parsed_data.get("args")
-                    if tool_name and isinstance(tool_args, dict):
-                        tool_call = (tool_name, tool_args)
-                    elif len(models_by_name) == 1:
-                        only_tool = next(iter(models_by_name.keys()))
-                        tool_call = (only_tool, parsed_data)
+                tool_calls = _extract_tool_calls_from_content(
+                    response_text, list(models_by_name.keys())
+                )
 
-            if tool_call is None:
+            if not tool_calls:
                 return None
-            tool_name, tool_args = tool_call
-            if tool_name not in models_by_name:
-                logger.error(f"LLM selected unknown tool '{tool_name}'")
+            tool_results: list[LLMToolCallResult] = []
+            for tool_name, tool_args in tool_calls:
+                if tool_name not in models_by_name:
+                    logger.error(f"LLM selected unknown tool '{tool_name}'")
+                    continue
+                validated = models_by_name[tool_name](**tool_args)
+                result = callbacks_by_name[tool_name](**validated.model_dump())
+                if inspect.isawaitable(result):
+                    result = await result
+                tool_results.append(
+                    LLMToolCallResult(tool_name=tool_name, result=result)
+                )
+            if not tool_results:
                 return None
-
-            validated = models_by_name[tool_name](**tool_args)
-            result = callbacks_by_name[tool_name](**validated.model_dump())
-            if inspect.isawaitable(result):
-                result = await result
-            return LLMToolCallResult(tool_name=tool_name, result=result)
+            return LLMToolRunResult(tool_results=tool_results)
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM response as JSON: {e}")

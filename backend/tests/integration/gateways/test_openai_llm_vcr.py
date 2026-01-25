@@ -36,6 +36,8 @@ async def test_anthropic_llm_gateway_with_vcr() -> None:
     )
 
     assert result is not None
-    assert result.tool_name == "echo_message"
-    assert isinstance(result.result, dict)
-    assert result.result.get("message") == "hello"
+    assert len(result.tool_results) == 1
+    tool_result = result.tool_results[0]
+    assert tool_result.tool_name == "echo_message"
+    assert isinstance(tool_result.result, dict)
+    assert tool_result.result.get("message") == "hello"
