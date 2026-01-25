@@ -8,13 +8,12 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
-from dobles import InstanceDouble, allow
+from dobles import allow
 
 from lykke.application.commands.brain_dump import (
     ProcessBrainDumpCommand,
     ProcessBrainDumpHandler,
 )
-from lykke.application.llm_usecases import LLMRunResult
 from lykke.domain import value_objects
 from lykke.domain.entities import BrainDumpEntity, DayEntity, DayTemplateEntity
 from lykke.domain.events.day_events import BrainDumpItemTypeChangedEvent
@@ -51,29 +50,14 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
         "start_time": time(9, 0),
         "tags": [value_objects.TaskTag.IMPORTANT],
     }
-    runner = InstanceDouble("lykke.application.llm_usecases.runner.LLMUseCaseRunner")
-    runner.calls: list[object] = []
-
-    async def run_side_effect(*, usecase: Any) -> LLMRunResult | None:
-        runner.calls.append(usecase)
-        return LLMRunResult(
-            tool_name="add_task",
-            result=result,
-            prompt_context=value_objects.LLMPromptContext(
-                day=day,
-                tasks=[],
-                calendar_entries=[],
-                brain_dump_items=[],
-                messages=[],
-                push_notifications=[],
-            ),
-            current_time=datetime.now(UTC),
-            llm_provider=value_objects.LLMProvider.OPENAI,
-            system_prompt="system",
-            context_prompt="context",
-            ask_prompt="ask",
-        )
-    runner.run = run_side_effect
+    prompt_context = value_objects.LLMPromptContext(
+        day=day,
+        tasks=[],
+        calendar_entries=[],
+        brain_dump_items=[],
+        messages=[],
+        push_notifications=[],
+    )
 
     task_recorder = _Recorder(commands=[])
 
@@ -97,13 +81,22 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
         ro_repos,
         create_uow_factory_double(uow),
         user_id,
-        runner,
+        object(),
         object(),
         task_recorder,
         _Recorder(commands=[]),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
     )
+    async def run_llm_side_effect() -> None:
+        tools = handler.build_tools(
+            current_time=datetime.now(UTC),
+            prompt_context=prompt_context,
+            llm_provider=value_objects.LLMProvider.OPENAI,
+        )
+        tool = next(tool for tool in tools if tool.name == "add_task")
+        await tool.callback(**result)
+    handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
 
     await handler.handle(ProcessBrainDumpCommand(date=date, item_id=item.id))
 
@@ -126,29 +119,14 @@ async def test_process_brain_dump_update_task_records_action() -> None:
     item = BrainDumpEntity(user_id=user_id, date=date, text="Finished the report")
 
     task_id = uuid4()
-    runner = InstanceDouble("lykke.application.llm_usecases.runner.LLMUseCaseRunner")
-    runner.calls: list[object] = []
-
-    async def run_side_effect(*, usecase: Any) -> LLMRunResult | None:
-        runner.calls.append(usecase)
-        return LLMRunResult(
-            tool_name="update_task",
-            result={"task_id": task_id, "action": "complete"},
-            prompt_context=value_objects.LLMPromptContext(
-                day=day,
-                tasks=[],
-                calendar_entries=[],
-                brain_dump_items=[],
-                messages=[],
-                push_notifications=[],
-            ),
-            current_time=datetime.now(UTC),
-            llm_provider=value_objects.LLMProvider.OPENAI,
-            system_prompt="system",
-            context_prompt="context",
-            ask_prompt="ask",
-        )
-    runner.run = run_side_effect
+    prompt_context = value_objects.LLMPromptContext(
+        day=day,
+        tasks=[],
+        calendar_entries=[],
+        brain_dump_items=[],
+        messages=[],
+        push_notifications=[],
+    )
 
     task_action_recorder = _Recorder(commands=[])
 
@@ -172,13 +150,22 @@ async def test_process_brain_dump_update_task_records_action() -> None:
         ro_repos,
         create_uow_factory_double(uow),
         user_id,
-        runner,
+        object(),
         object(),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
         task_action_recorder,
     )
+    async def run_llm_side_effect() -> None:
+        tools = handler.build_tools(
+            current_time=datetime.now(UTC),
+            prompt_context=prompt_context,
+            llm_provider=value_objects.LLMProvider.OPENAI,
+        )
+        tool = next(tool for tool in tools if tool.name == "update_task")
+        await tool.callback(task_id=task_id, action="complete")
+    handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
 
     await handler.handle(ProcessBrainDumpCommand(date=date, item_id=item.id))
 
@@ -197,32 +184,14 @@ async def test_process_brain_dump_update_reminder_updates_status() -> None:
     item = BrainDumpEntity(user_id=user_id, date=date, text="Mark reminder complete")
 
     reminder_id = uuid4()
-    runner = InstanceDouble("lykke.application.llm_usecases.runner.LLMUseCaseRunner")
-    runner.calls: list[object] = []
-
-    async def run_side_effect(*, usecase: Any) -> LLMRunResult | None:
-        runner.calls.append(usecase)
-        return LLMRunResult(
-            tool_name="update_reminder",
-            result={
-                "reminder_id": reminder_id,
-                "status": value_objects.ReminderStatus.COMPLETE,
-            },
-            prompt_context=value_objects.LLMPromptContext(
-                day=day,
-                tasks=[],
-                calendar_entries=[],
-                brain_dump_items=[],
-                messages=[],
-                push_notifications=[],
-            ),
-            current_time=datetime.now(UTC),
-            llm_provider=value_objects.LLMProvider.OPENAI,
-            system_prompt="system",
-            context_prompt="context",
-            ask_prompt="ask",
-        )
-    runner.run = run_side_effect
+    prompt_context = value_objects.LLMPromptContext(
+        day=day,
+        tasks=[],
+        calendar_entries=[],
+        brain_dump_items=[],
+        messages=[],
+        push_notifications=[],
+    )
 
     reminder_status_recorder = _Recorder(commands=[])
 
@@ -246,13 +215,25 @@ async def test_process_brain_dump_update_reminder_updates_status() -> None:
         ro_repos,
         create_uow_factory_double(uow),
         user_id,
-        runner,
+        object(),
         object(),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
         reminder_status_recorder,
         _Recorder(commands=[]),
     )
+    async def run_llm_side_effect() -> None:
+        tools = handler.build_tools(
+            current_time=datetime.now(UTC),
+            prompt_context=prompt_context,
+            llm_provider=value_objects.LLMProvider.OPENAI,
+        )
+        tool = next(tool for tool in tools if tool.name == "update_reminder")
+        await tool.callback(
+            reminder_id=reminder_id,
+            status=value_objects.ReminderStatus.COMPLETE,
+        )
+    handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
 
     await handler.handle(ProcessBrainDumpCommand(date=date, item_id=item.id))
 
@@ -270,32 +251,14 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
     day = DayEntity.create_for_date(date, user_id=user_id, template=template)
     item = BrainDumpEntity(user_id=user_id, date=date, text="Follow up on invoice")
 
-    runner = InstanceDouble("lykke.application.llm_usecases.runner.LLMUseCaseRunner")
-    runner.calls: list[object] = []
-
-    async def run_side_effect(*, usecase: Any) -> LLMRunResult | None:
-        runner.calls.append(usecase)
-        return LLMRunResult(
-            tool_name="add_task",
-            result={
-                "name": "Follow up on invoice",
-                "category": value_objects.TaskCategory.WORK,
-            },
-            prompt_context=value_objects.LLMPromptContext(
-                day=day,
-                tasks=[],
-                calendar_entries=[],
-                brain_dump_items=[],
-                messages=[],
-                push_notifications=[],
-            ),
-            current_time=datetime.now(UTC),
-            llm_provider=value_objects.LLMProvider.OPENAI,
-            system_prompt="system",
-            context_prompt="context",
-            ask_prompt="ask",
-        )
-    runner.run = run_side_effect
+    prompt_context = value_objects.LLMPromptContext(
+        day=day,
+        tasks=[],
+        calendar_entries=[],
+        brain_dump_items=[],
+        messages=[],
+        push_notifications=[],
+    )
 
     brain_dump_repo = create_brain_dump_repo_double()
     allow(brain_dump_repo).get.with_args(item.id).and_return(item)
@@ -317,13 +280,25 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
         ro_repos,
         create_uow_factory_double(uow),
         user_id,
-        runner,
+        object(),
         object(),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
     )
+    async def run_llm_side_effect() -> None:
+        tools = handler.build_tools(
+            current_time=datetime.now(UTC),
+            prompt_context=prompt_context,
+            llm_provider=value_objects.LLMProvider.OPENAI,
+        )
+        tool = next(tool for tool in tools if tool.name == "add_task")
+        await tool.callback(
+            name="Follow up on invoice",
+            category=value_objects.TaskCategory.WORK,
+        )
+    handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
 
     await handler.handle(ProcessBrainDumpCommand(date=date, item_id=item.id))
 

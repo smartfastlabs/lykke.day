@@ -123,6 +123,8 @@ class ProcessBrainDumpHandler(
     ) -> list[LLMTool]:
         if self._brain_dump_item is None or self._brain_dump_date is None:
             raise RuntimeError("Brain dump context was not initialized")
+        brain_dump_item = self._brain_dump_item
+        brain_dump_date = self._brain_dump_date
         _ = current_time
         _ = prompt_context
         _ = llm_provider
@@ -139,8 +141,8 @@ class ProcessBrainDumpHandler(
         ) -> None:
             """Create a new task based on the brain dump item."""
             await self._mark_brain_dump_item_as_command(
-                date=self._brain_dump_date,
-                item_id=self._brain_dump_item.id,
+                date=brain_dump_date,
+                item_id=brain_dump_item.id,
             )
 
             has_times = any([available_time, start_time, end_time])
@@ -159,7 +161,7 @@ class ProcessBrainDumpHandler(
             task_tags = tags or []
             await self._create_adhoc_task_handler.handle(
                 CreateAdhocTaskCommand(
-                    scheduled_date=self._brain_dump_date,
+                    scheduled_date=brain_dump_date,
                     name=name,
                     category=category,
                     description=description,
@@ -171,11 +173,11 @@ class ProcessBrainDumpHandler(
         async def add_reminder(reminder: str) -> None:
             """Create a new reminder based on the brain dump item."""
             await self._mark_brain_dump_item_as_command(
-                date=self._brain_dump_date,
-                item_id=self._brain_dump_item.id,
+                date=brain_dump_date,
+                item_id=brain_dump_item.id,
             )
             await self._add_reminder_handler.handle(
-                AddReminderToDayCommand(date=self._brain_dump_date, reminder=reminder)
+                AddReminderToDayCommand(date=brain_dump_date, reminder=reminder)
             )
 
         async def update_task(
@@ -184,8 +186,8 @@ class ProcessBrainDumpHandler(
         ) -> None:
             """Update an existing task when the brain dump implies a status change."""
             await self._mark_brain_dump_item_as_command(
-                date=self._brain_dump_date,
-                item_id=self._brain_dump_item.id,
+                date=brain_dump_date,
+                item_id=brain_dump_item.id,
             )
             if action == "complete":
                 action_type = value_objects.ActionType.COMPLETE
@@ -207,12 +209,12 @@ class ProcessBrainDumpHandler(
         ) -> None:
             """Update an existing reminder's status."""
             await self._mark_brain_dump_item_as_command(
-                date=self._brain_dump_date,
-                item_id=self._brain_dump_item.id,
+                date=brain_dump_date,
+                item_id=brain_dump_item.id,
             )
             await self._update_reminder_status_handler.handle(
                 UpdateReminderStatusCommand(
-                    date=self._brain_dump_date,
+                    date=brain_dump_date,
                     reminder_id=reminder_id,
                     status=status,
                 )
@@ -223,7 +225,7 @@ class ProcessBrainDumpHandler(
             if reason:
                 logger.debug(
                     "Brain dump item %s has no action: %s",
-                    self._brain_dump_item.id,
+                    brain_dump_item.id,
                     reason,
                 )
 
