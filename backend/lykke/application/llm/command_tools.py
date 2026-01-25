@@ -38,7 +38,7 @@ def build_args_model_from_command(command_type: type[CommandT]) -> type[BaseMode
 
 def make_command_tool(
     *,
-    name: str,
+    name: str | None = None,
     handler: CommandHandler[CommandT, Any],
     command_type: type[CommandT],
     description: str | None = None,
@@ -50,6 +50,13 @@ def make_command_tool(
     async def _call(**kwargs: Any) -> Any:
         command = command_type(**kwargs)
         return await handler.handle(command)
+
+    if name is None:
+        _call.__name__ = command_type.__name__
+    else:
+        _call.__name__ = name
+    if description is None and handler.handle.__doc__:
+        _call.__doc__ = handler.handle.__doc__
 
     return LLMTool(
         name=name,

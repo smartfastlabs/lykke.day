@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar
@@ -16,11 +17,20 @@ T = TypeVar("T")
 class LLMTool:
     """Tool definition for LLM calls."""
 
-    name: str
+    name: str | None = None
     callback: Callable[..., Awaitable[Any] | Any]
     description: str | None = None
     prompt_notes: list[str] | None = None
     args_model: type[BaseModel] | None = None
+
+    def __post_init__(self) -> None:
+        if self.name is None:
+            inferred_name = getattr(self.callback, "__name__", None) or "tool"
+            object.__setattr__(self, "name", inferred_name)
+        if self.description is None:
+            inferred_description = inspect.getdoc(self.callback)
+            if inferred_description:
+                object.__setattr__(self, "description", inferred_description)
 
 
 @dataclass(frozen=True)

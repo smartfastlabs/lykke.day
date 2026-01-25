@@ -108,9 +108,7 @@ class LLMHandlerMixin(ABC):
             llm_provider=llm_provider,
         )
         if not tools:
-            logger.error(
-                f"Handler '{self.template_usecase}' returned no tools to call"
-            )
+            logger.error(f"Handler '{self.template_usecase}' returned no tools to call")
             return None
 
         tools_prompt = render_tools_prompt(tools)
