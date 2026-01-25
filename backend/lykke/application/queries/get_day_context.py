@@ -174,14 +174,8 @@ class GetDayContextHandler(
         for routine_definition in routine_definitions:
             if routine_definition.id in routine_definition_ids:
                 routines.append(
-                    RoutineEntity(
-                        user_id=self.user_id,
-                        date=date,
-                        routine_definition_id=routine_definition.id,
-                        name=routine_definition.name,
-                        category=routine_definition.category,
-                        description=routine_definition.description,
-                        time_window=routine_definition.time_window,
+                    RoutineEntity.from_definition(
+                        routine_definition, date, self.user_id
                     )
                 )
         return routines

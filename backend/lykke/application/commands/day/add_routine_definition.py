@@ -49,14 +49,8 @@ class AddRoutineDefinitionToDayHandler(
                 )
             )
             if not existing_routines:
-                routine = RoutineEntity(
-                    user_id=self.user_id,
-                    date=command.date,
-                    routine_definition_id=routine_definition.id,
-                    name=routine_definition.name,
-                    category=routine_definition.category,
-                    description=routine_definition.description,
-                    time_window=routine_definition.time_window,
+                routine = RoutineEntity.from_definition(
+                    routine_definition, command.date, self.user_id
                 )
                 await uow.create(routine)
 

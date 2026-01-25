@@ -30,13 +30,7 @@ from lykke.application.queries.routine_definition import (
     SearchRoutineDefinitionsQuery,
 )
 from lykke.domain import value_objects
-from lykke.domain.entities import RoutineDefinitionEntity, UserEntity
-from lykke.domain.value_objects import RoutineDefinitionUpdateObject
-from lykke.domain.value_objects.routine_definition import (
-    RecurrenceSchedule,
-    RoutineDefinitionTask,
-    TimeWindow,
-)
+from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas import (
     PagedResponseSchema,
     QuerySchema,
@@ -48,6 +42,13 @@ from lykke.presentation.api.schemas import (
     TaskSchema,
 )
 from lykke.presentation.api.schemas.mappers import map_routine_definition_to_schema
+
+from .routine_definition_mappers import (
+    create_schema_to_entity,
+    task_create_schema_to_vo,
+    task_update_schema_to_partial_vo,
+    update_schema_to_update_object,
+)
 from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
     QueryHandlerFactory,
@@ -108,79 +109,8 @@ async def create_routine_definition(
     create_routine_definition_handler = command_factory.create(
         CreateRoutineDefinitionHandler
     )
-    # Convert schema to domain dataclasses
-    from lykke.domain.value_objects.task import TaskSchedule
-
-    routine_definition_schedule = RecurrenceSchedule(
-        frequency=routine_definition_data.routine_definition_schedule.frequency,
-        weekdays=routine_definition_data.routine_definition_schedule.weekdays,
-        day_number=routine_definition_data.routine_definition_schedule.day_number,
-    )
-
-    routine_time_window = None
-    if routine_definition_data.time_window:
-        routine_time_window = TimeWindow(
-            available_time=routine_definition_data.time_window.available_time,
-            start_time=routine_definition_data.time_window.start_time,
-            end_time=routine_definition_data.time_window.end_time,
-            cutoff_time=routine_definition_data.time_window.cutoff_time,
-        )
-
-    tasks = []
-    for task_schema in routine_definition_data.tasks or []:
-        task_schedule = None
-        if task_schema.schedule:
-            task_schedule = TaskSchedule(
-                available_time=task_schema.schedule.available_time,
-                start_time=task_schema.schedule.start_time,
-                end_time=task_schema.schedule.end_time,
-                timing_type=task_schema.schedule.timing_type,
-            )
-
-        task_recurrence_schedule = None
-        if task_schema.task_schedule:
-            task_recurrence_schedule = RecurrenceSchedule(
-                frequency=task_schema.task_schedule.frequency,
-                weekdays=task_schema.task_schedule.weekdays,
-                day_number=task_schema.task_schedule.day_number,
-            )
-
-        time_window = None
-        if task_schema.time_window:
-            time_window = TimeWindow(
-                available_time=task_schema.time_window.available_time,
-                start_time=task_schema.time_window.start_time,
-                end_time=task_schema.time_window.end_time,
-                cutoff_time=task_schema.time_window.cutoff_time,
-            )
-
-        if task_schema.id:
-            routine_task = RoutineDefinitionTask(
-                id=task_schema.id,
-                task_definition_id=task_schema.task_definition_id,
-                name=task_schema.name,
-                schedule=task_schedule,
-                task_schedule=task_recurrence_schedule,
-                time_window=time_window,
-            )
-        else:
-            routine_task = RoutineDefinitionTask(
-                task_definition_id=task_schema.task_definition_id,
-                name=task_schema.name,
-                schedule=task_schedule,
-                task_schedule=task_recurrence_schedule,
-                time_window=time_window,
-            )
-        tasks.append(routine_task)
-
-    routine_definition = RoutineDefinitionEntity(
-        user_id=user.id,
-        name=routine_definition_data.name,
-        category=routine_definition_data.category,
-        routine_definition_schedule=routine_definition_schedule,
-        description=routine_definition_data.description,
-        time_window=routine_time_window,
-        tasks=tasks,
+    routine_definition = create_schema_to_entity(
+        routine_definition_data, user.id
     )
     created = await create_routine_definition_handler.handle(
         CreateRoutineDefinitionCommand(routine_definition=routine_definition)
@@ -198,83 +128,7 @@ async def update_routine_definition(
     update_routine_definition_handler = command_factory.create(
         UpdateRoutineDefinitionHandler
     )
-    # Convert schema to domain dataclasses
-    from lykke.domain.value_objects.task import TaskSchedule
-
-    routine_definition_schedule = None
-    if update_data.routine_definition_schedule:
-        routine_definition_schedule = RecurrenceSchedule(
-            frequency=update_data.routine_definition_schedule.frequency,
-            weekdays=update_data.routine_definition_schedule.weekdays,
-            day_number=update_data.routine_definition_schedule.day_number,
-        )
-
-    routine_time_window = None
-    if update_data.time_window:
-        routine_time_window = TimeWindow(
-            available_time=update_data.time_window.available_time,
-            start_time=update_data.time_window.start_time,
-            end_time=update_data.time_window.end_time,
-            cutoff_time=update_data.time_window.cutoff_time,
-        )
-
-    tasks = None
-    if update_data.tasks is not None:
-        tasks = []
-        for task_schema in update_data.tasks:
-            task_schedule = None
-            if task_schema.schedule:
-                task_schedule = TaskSchedule(
-                    available_time=task_schema.schedule.available_time,
-                    start_time=task_schema.schedule.start_time,
-                    end_time=task_schema.schedule.end_time,
-                    timing_type=task_schema.schedule.timing_type,
-                )
-
-            task_recurrence_schedule = None
-            if task_schema.task_schedule:
-                task_recurrence_schedule = RecurrenceSchedule(
-                    frequency=task_schema.task_schedule.frequency,
-                    weekdays=task_schema.task_schedule.weekdays,
-                    day_number=task_schema.task_schedule.day_number,
-                )
-
-            time_window = None
-            if task_schema.time_window:
-                time_window = TimeWindow(
-                    available_time=task_schema.time_window.available_time,
-                    start_time=task_schema.time_window.start_time,
-                    end_time=task_schema.time_window.end_time,
-                    cutoff_time=task_schema.time_window.cutoff_time,
-                )
-
-            if task_schema.id:
-                routine_task = RoutineDefinitionTask(
-                    id=task_schema.id,
-                    task_definition_id=task_schema.task_definition_id,
-                    name=task_schema.name,
-                    schedule=task_schedule,
-                    task_schedule=task_recurrence_schedule,
-                    time_window=time_window,
-                )
-            else:
-                routine_task = RoutineDefinitionTask(
-                    task_definition_id=task_schema.task_definition_id,
-                    name=task_schema.name,
-                    schedule=task_schedule,
-                    task_schedule=task_recurrence_schedule,
-                    time_window=time_window,
-                )
-            tasks.append(routine_task)
-
-    update_object = RoutineDefinitionUpdateObject(
-        name=update_data.name,
-        category=update_data.category,
-        routine_definition_schedule=routine_definition_schedule,
-        description=update_data.description,
-        time_window=routine_time_window,
-        tasks=tasks,
-    )
+    update_object = update_schema_to_update_object(update_data)
     updated = await update_routine_definition_handler.handle(
         UpdateRoutineDefinitionCommand(
             routine_definition_id=uuid,
@@ -312,44 +166,10 @@ async def add_routine_definition_task(
     add_routine_definition_task_handler = command_factory.create(
         AddRoutineDefinitionTaskHandler
     )
-    from lykke.domain.value_objects.task import TaskSchedule
-
-    task_schedule = None
-    if routine_task.schedule:
-        task_schedule = TaskSchedule(
-            available_time=routine_task.schedule.available_time,
-            start_time=routine_task.schedule.start_time,
-            end_time=routine_task.schedule.end_time,
-            timing_type=routine_task.schedule.timing_type,
-        )
-
-    task_recurrence_schedule = None
-    if routine_task.task_schedule:
-        task_recurrence_schedule = RecurrenceSchedule(
-            frequency=routine_task.task_schedule.frequency,
-            weekdays=routine_task.task_schedule.weekdays,
-            day_number=routine_task.task_schedule.day_number,
-        )
-
-    time_window = None
-    if routine_task.time_window:
-        time_window = TimeWindow(
-            available_time=routine_task.time_window.available_time,
-            start_time=routine_task.time_window.start_time,
-            end_time=routine_task.time_window.end_time,
-            cutoff_time=routine_task.time_window.cutoff_time,
-        )
-
     updated = await add_routine_definition_task_handler.handle(
         AddRoutineDefinitionTaskCommand(
             routine_definition_id=uuid,
-            routine_definition_task=RoutineDefinitionTask(
-                task_definition_id=routine_task.task_definition_id,
-                name=routine_task.name,
-                schedule=task_schedule,
-                task_schedule=task_recurrence_schedule,
-                time_window=time_window,
-            ),
+            routine_definition_task=task_create_schema_to_vo(routine_task),
         )
     )
     return map_routine_definition_to_schema(updated)
@@ -369,47 +189,12 @@ async def update_routine_definition_task(
     update_routine_definition_task_handler = command_factory.create(
         UpdateRoutineDefinitionTaskHandler
     )
-    from lykke.domain.value_objects.task import TaskSchedule
-
-    task_schedule = None
-    if routine_task_update.schedule:
-        task_schedule = TaskSchedule(
-            available_time=routine_task_update.schedule.available_time,
-            start_time=routine_task_update.schedule.start_time,
-            end_time=routine_task_update.schedule.end_time,
-            timing_type=routine_task_update.schedule.timing_type,
-        )
-
-    task_recurrence_schedule = None
-    if routine_task_update.task_schedule:
-        task_recurrence_schedule = RecurrenceSchedule(
-            frequency=routine_task_update.task_schedule.frequency,
-            weekdays=routine_task_update.task_schedule.weekdays,
-            day_number=routine_task_update.task_schedule.day_number,
-        )
-
-    time_window = None
-    if routine_task_update.time_window:
-        time_window = TimeWindow(
-            available_time=routine_task_update.time_window.available_time,
-            start_time=routine_task_update.time_window.start_time,
-            end_time=routine_task_update.time_window.end_time,
-            cutoff_time=routine_task_update.time_window.cutoff_time,
-        )
-
     updated = await update_routine_definition_task_handler.handle(
         UpdateRoutineDefinitionTaskCommand(
             routine_definition_id=uuid,
             routine_definition_task_id=routine_definition_task_id,
-            routine_definition_task=RoutineDefinitionTask(
-                id=routine_definition_task_id,
-                task_definition_id=UUID(
-                    "00000000-0000-0000-0000-000000000000"
-                ),  # Will be preserved from existing task
-                name=routine_task_update.name,
-                schedule=task_schedule,
-                task_schedule=task_recurrence_schedule,
-                time_window=time_window,
+            routine_definition_task=task_update_schema_to_partial_vo(
+                routine_task_update, routine_definition_task_id
             ),
         )
     )

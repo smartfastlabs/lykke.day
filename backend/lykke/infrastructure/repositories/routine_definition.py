@@ -1,43 +1,23 @@
-from dataclasses import asdict
-from datetime import datetime, time
+from datetime import time
 from typing import Any
-from uuid import UUID
 
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import RoutineDefinitionEntity
+from lykke.domain.value_objects.query import RoutineDefinitionQuery
 from lykke.domain.value_objects.task import TaskCategory
 from lykke.infrastructure.database.tables import routine_definitions_tbl
 from lykke.infrastructure.repositories.base.utils import filter_init_false_fields
 
-from .base import BaseQuery, UserScopedBaseRepository
-
-
-def dataclass_to_json_dict(obj: Any) -> dict[str, Any]:
-    """Convert a dataclass to a JSON-serializable dict, handling UUIDs, enums, datetime, and time."""
-    result = asdict(obj)
-
-    def convert_value(value: Any) -> Any:
-        if isinstance(value, UUID):
-            return str(value)
-        elif isinstance(value, (datetime, time)):
-            return value.isoformat()
-        elif isinstance(value, dict):
-            return {k: convert_value(v) for k, v in value.items()}
-        elif isinstance(value, list):
-            return [convert_value(item) for item in value]
-        elif hasattr(value, "value"):  # Enum
-            return value.value
-        return value
-
-    return {k: convert_value(v) for k, v in result.items()}
+from .base import UserScopedBaseRepository
 
 
 class RoutineDefinitionRepository(
-    UserScopedBaseRepository[RoutineDefinitionEntity, BaseQuery]
+    UserScopedBaseRepository[RoutineDefinitionEntity, RoutineDefinitionQuery]
 ):
     Object = RoutineDefinitionEntity
     table = routine_definitions_tbl
-    QueryClass = BaseQuery
+    QueryClass = RoutineDefinitionQuery
 
     @staticmethod
     def entity_to_row(routine_definition: RoutineDefinitionEntity) -> dict[str, Any]:
