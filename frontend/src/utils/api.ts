@@ -543,10 +543,33 @@ export const routineDefinitionAPI = {
 };
 
 export const notificationAPI = {
-  getToday: (): Promise<PushNotification[]> =>
-    fetchData<PushNotification[]>("/api/me/today/notifications"),
+  getToday: async (): Promise<PushNotification[]> => {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setDate(startOfDay.getDate() + 1);
+    const startInclusive = new Date(startOfDay.getTime() - 1);
+
+    const data = await fetchData<PaginatedResponse<PushNotification>>(
+      "/api/push-notifications/",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          limit: 1000,
+          offset: 0,
+          filters: {
+            sent_after: startInclusive.toISOString(),
+            sent_before: endOfDay.toISOString(),
+            order_by: "sent_at",
+            order_by_desc: true,
+          },
+        }),
+      }
+    );
+    return data.items;
+  },
   get: (id: string): Promise<PushNotification> =>
-    fetchData<PushNotification>(`/api/me/today/notifications/${id}`),
+    fetchData<PushNotification>(`/api/push-notifications/${id}`),
 };
 
 export const calendarAPI = {

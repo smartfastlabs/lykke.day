@@ -9,6 +9,7 @@ from . import (
     early_access,
     google,
     me,
+    push_notifications,
     push_subscriptions,
     routine_definitions,
     routines,
@@ -49,6 +50,11 @@ router.include_router(
     calendar_entry_series.router,
     prefix="/calendar-entry-series",
     tags=["calendar-entry-series"],
+)
+router.include_router(
+    push_notifications.router,
+    prefix="/push-notifications",
+    tags=["push-notifications"],
 )
 router.include_router(
     push_subscriptions.router,
