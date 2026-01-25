@@ -1,33 +1,42 @@
-"""Runner for LLM use cases."""
+"""LLM handler mixin for commands and queries."""
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
 from lykke.application.gateways.llm_gateway_factory import LLMGatewayFactory
-from lykke.application.gateways.llm_protocol import LLMToolCallResult
+from lykke.application.gateways.llm_protocol import LLMTool, LLMToolCallResult
 from lykke.application.queries import (
     GenerateUseCasePromptHandler,
     GenerateUseCasePromptQuery,
 )
-from lykke.application.repositories import UserRepositoryReadOnlyProtocol
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 
-from .base import BaseUseCase
-
 if TYPE_CHECKING:
+    from datetime import date as datetime_date
+    from uuid import UUID
+
+    from lykke.application.repositories import UserRepositoryReadOnlyProtocol
     from lykke.domain import value_objects
 
 
 @dataclass(frozen=True)
+class UseCasePromptInput:
+    """Prompt input for an LLM handler."""
+
+    prompt_context: value_objects.LLMPromptContext
+    extra_template_vars: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True)
 class LLMRunResult:
-    """Result returned by the LLM use case runner."""
+    """Result returned by the LLM handler runner."""
 
     tool_name: str
     result: object | None
@@ -39,33 +48,40 @@ class LLMRunResult:
     ask_prompt: str
 
 
-class LLMUseCaseRunner:
-    """Shared runner for LLM use cases."""
+class LLMHandlerMixin(ABC):
+    """Mixin for handlers that run LLM tool calls."""
 
+    name: str
+    template_usecase: str
+    _generate_usecase_prompt_handler: GenerateUseCasePromptHandler
+    user_id: UUID
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
-    def __init__(
+    @abstractmethod
+    async def build_prompt_input(self, date: datetime_date) -> UseCasePromptInput:
+        """Build the prompt inputs for this handler."""
+
+    @abstractmethod
+    def build_tools(
         self,
         *,
-        user_id: UUID,
-        user_ro_repo: UserRepositoryReadOnlyProtocol,
-        generate_usecase_prompt_handler: GenerateUseCasePromptHandler,
-    ) -> None:
-        self._user_id = user_id
-        self._user_ro_repo = user_ro_repo
-        self._generate_usecase_prompt_handler = generate_usecase_prompt_handler
+        current_time: datetime,
+        prompt_context: value_objects.LLMPromptContext,
+        llm_provider: value_objects.LLMProvider,
+    ) -> list[LLMTool]:
+        """Build tool definitions for this handler."""
 
-    async def run(self, *, usecase: BaseUseCase) -> LLMRunResult | None:
-        """Run an LLM use case and return the tool result."""
+    async def run_llm(self) -> LLMRunResult | None:
+        """Run the LLM flow for this handler."""
         try:
-            user = await self._user_ro_repo.get(self._user_id)
+            user = await self.user_ro_repo.get(self.user_id)
         except Exception as exc:  # pylint: disable=broad-except
-            logger.error(f"Failed to load user {self._user_id}: {exc}")
+            logger.error(f"Failed to load user {self.user_id}: {exc}")
             return None
 
         if not user.settings or not user.settings.llm_provider:
             logger.debug(
-                f"User {self._user_id} has no LLM provider configured, skipping"
+                f"User {self.user_id} has no LLM provider configured, skipping"
             )
             return None
 
@@ -74,16 +90,16 @@ class LLMUseCaseRunner:
         current_date = get_current_date(user.settings.timezone)
 
         try:
-            prompt_input = await usecase.build_prompt_input(current_date)
+            prompt_input = await self.build_prompt_input(current_date)
         except Exception as exc:  # pylint: disable=broad-except
             logger.error(
-                f"Failed to load LLM prompt context for user {self._user_id}: {exc}"
+                f"Failed to load LLM prompt context for user {self.user_id}: {exc}"
             )
             return None
 
         prompt_result = await self._generate_usecase_prompt_handler.handle(
             GenerateUseCasePromptQuery(
-                usecase=usecase.template_usecase,
+                usecase=self.template_usecase,
                 prompt_context=prompt_input.prompt_context,
                 current_time=current_time,
                 include_context=True,
@@ -102,18 +118,20 @@ class LLMUseCaseRunner:
             )
             return None
 
-        tools = usecase.build_tools(
-            current_time=current_time, prompt_context=prompt_input.prompt_context
+        tools = self.build_tools(
+            current_time=current_time,
+            prompt_context=prompt_input.prompt_context,
+            llm_provider=llm_provider,
         )
         if not tools:
             logger.error(
-                f"Usecase '{usecase.template_usecase}' returned no tools to call"
+                f"Handler '{self.template_usecase}' returned no tools to call"
             )
             return None
 
         tool_names = [tool.name for tool in tools]
         logger.info(
-            f"Running LLM usecase {usecase.template_usecase} with tools {tool_names}"
+            f"Running LLM handler {self.template_usecase} with tools {tool_names}"
         )
         tool_result: LLMToolCallResult | None = await llm_gateway.run_usecase(
             prompt_result.system_prompt,
@@ -123,7 +141,7 @@ class LLMUseCaseRunner:
         )
         if tool_result is None:
             logger.debug(
-                f"LLM returned no tool call for usecase {usecase.template_usecase}"
+                f"LLM returned no tool call for handler {self.template_usecase}"
             )
             return None
 

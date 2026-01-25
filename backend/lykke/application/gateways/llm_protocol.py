@@ -1,6 +1,6 @@
 """Protocol for LLM gateway implementations."""
 
-from collections.abc import Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol, TypeVar
 
@@ -12,7 +12,7 @@ class LLMTool:
     """Tool definition for LLM calls."""
 
     name: str
-    callback: Callable[..., Any]
+    callback: Callable[..., Awaitable[Any] | Any]
     description: str | None = None
 
 

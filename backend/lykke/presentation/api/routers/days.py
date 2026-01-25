@@ -478,6 +478,7 @@ async def _handle_realtime_events(
                         or activity_type == "TaskPuntedEvent"
                         or activity_type == "BrainDumpItemAddedEvent"
                         or activity_type == "BrainDumpItemStatusChangedEvent"
+                        or activity_type == "BrainDumpItemTypeChangedEvent"
                         or activity_type == "BrainDumpItemRemovedEvent"
                     ):
                         change_type = "updated"

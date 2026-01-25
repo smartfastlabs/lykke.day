@@ -1,5 +1,6 @@
 """Anthropic (Claude) LLM gateway implementation."""
 
+import inspect
 import json
 from collections.abc import Callable, Sequence
 from typing import Any
@@ -174,6 +175,8 @@ class AnthropicLLMGateway:
 
             validated = models_by_name[tool_name](**tool_args)
             result = callbacks_by_name[tool_name](**validated.model_dump())
+            if inspect.isawaitable(result):
+                result = await result
             return LLMToolCallResult(tool_name=tool_name, result=result)
 
         except json.JSONDecodeError as e:

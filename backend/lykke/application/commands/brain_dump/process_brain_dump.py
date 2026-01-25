@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date as dt_date
-from typing import Any
+from datetime import time
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from loguru import logger
@@ -22,10 +22,21 @@ from lykke.application.commands.task import (
     RecordTaskActionCommand,
     RecordTaskActionHandler,
 )
-from lykke.application.llm_usecases import LLMUseCaseRunner, ProcessBrainDumpUseCase
-from lykke.application.queries.get_llm_prompt_context import GetLLMPromptContextHandler
-from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
+from lykke.application.gateways.llm_protocol import LLMTool
+from lykke.application.llm import LLMHandlerMixin, UseCasePromptInput
+from lykke.application.queries.get_llm_prompt_context import (
+    GetLLMPromptContextHandler,
+    GetLLMPromptContextQuery,
+)
 from lykke.domain import value_objects
+
+if TYPE_CHECKING:
+    from datetime import date as dt_date, datetime, time
+    from uuid import UUID
+
+    from lykke.application.queries import GenerateUseCasePromptHandler
+    from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
+    from lykke.domain.entities import BrainDumpEntity
 
 
 @dataclass(frozen=True)
@@ -36,15 +47,20 @@ class ProcessBrainDumpCommand(Command):
     item_id: UUID
 
 
-class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None]):
+class ProcessBrainDumpHandler(
+    LLMHandlerMixin, BaseCommandHandler[ProcessBrainDumpCommand, None]
+):
     """Process brain dump items into follow-up actions."""
+
+    name = "process_brain_dump"
+    template_usecase = "process_brain_dump"
 
     def __init__(
         self,
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
-        llm_usecase_runner: LLMUseCaseRunner,
+        generate_usecase_prompt_handler: GenerateUseCasePromptHandler,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
         create_adhoc_task_handler: CreateAdhocTaskHandler,
         add_reminder_handler: AddReminderToDayHandler,
@@ -52,12 +68,14 @@ class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None])
         record_task_action_handler: RecordTaskActionHandler,
     ) -> None:
         super().__init__(ro_repos, uow_factory, user_id)
-        self._llm_usecase_runner = llm_usecase_runner
+        self._generate_usecase_prompt_handler = generate_usecase_prompt_handler
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
         self._create_adhoc_task_handler = create_adhoc_task_handler
         self._add_reminder_handler = add_reminder_handler
         self._update_reminder_status_handler = update_reminder_status_handler
         self._record_task_action_handler = record_task_action_handler
+        self._brain_dump_item: BrainDumpEntity | None = None
+        self._brain_dump_date: dt_date | None = None
 
     async def handle(self, command: ProcessBrainDumpCommand) -> None:
         """Run LLM processing for a brain dump item and apply actions."""
@@ -78,48 +96,164 @@ class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None])
             )
             return
 
-        usecase = ProcessBrainDumpUseCase(
-            get_llm_prompt_context_handler=self._get_llm_prompt_context_handler,
-            brain_dump_item=item,
-            brain_dump_date=command.date,
+        self._brain_dump_item = item
+        self._brain_dump_date = command.date
+        await self.run_llm()
+
+    async def build_prompt_input(self, date: dt_date) -> UseCasePromptInput:
+        if self._brain_dump_item is None or self._brain_dump_date is None:
+            raise RuntimeError("Brain dump context was not initialized")
+        prompt_context = await self._get_llm_prompt_context_handler.handle(
+            GetLLMPromptContextQuery(date=self._brain_dump_date)
         )
-        usecase_result = await self._llm_usecase_runner.run(usecase=usecase)
-        if usecase_result is None:
-            return
-
-        tool_name = usecase_result.tool_name
-        result = usecase_result.result
-        if tool_name == "no_action":
-            logger.debug(
-                "No action for brain dump item %s (user %s)",
-                command.item_id,
-                self.user_id,
-            )
-            return
-        await self._mark_brain_dump_item_as_command(
-            date=command.date,
-            item_id=command.item_id,
+        return UseCasePromptInput(
+            prompt_context=prompt_context,
+            extra_template_vars={
+                "brain_dump_item": self._brain_dump_item,
+                "brain_dump_date": self._brain_dump_date,
+            },
         )
-        if not isinstance(result, dict):
-            logger.error(
-                "Unexpected result for brain dump tool %s: %s", tool_name, result
+
+    def build_tools(
+        self,
+        *,
+        current_time: datetime,
+        prompt_context: value_objects.LLMPromptContext,
+        llm_provider: value_objects.LLMProvider,
+    ) -> list[LLMTool]:
+        if self._brain_dump_item is None or self._brain_dump_date is None:
+            raise RuntimeError("Brain dump context was not initialized")
+        _ = current_time
+        _ = prompt_context
+        _ = llm_provider
+
+        async def add_task(
+            name: str,
+            category: value_objects.TaskCategory,
+            description: str | None = None,
+            timing_type: value_objects.TimingType | None = None,
+            available_time: time | None = None,
+            start_time: time | None = None,
+            end_time: time | None = None,
+            tags: list[value_objects.TaskTag] | None = None,
+        ) -> None:
+            """Create a new task based on the brain dump item."""
+            await self._mark_brain_dump_item_as_command(
+                date=self._brain_dump_date,
+                item_id=self._brain_dump_item.id,
             )
-            return
 
-        if tool_name == "add_task":
-            await self._handle_add_task(command.date, result)
-            return
-        if tool_name == "add_reminder":
-            await self._handle_add_reminder(command.date, result)
-            return
-        if tool_name == "update_task":
-            await self._handle_update_task(result)
-            return
-        if tool_name == "update_reminder":
-            await self._handle_update_reminder(command.date, result)
-            return
+            has_times = any([available_time, start_time, end_time])
+            if timing_type is None and has_times:
+                timing_type = value_objects.TimingType.FLEXIBLE
 
-        logger.error("Unknown brain dump tool: %s", tool_name)
+            schedule = None
+            if timing_type is not None:
+                schedule = value_objects.TaskSchedule(
+                    timing_type=timing_type,
+                    available_time=available_time,
+                    start_time=start_time,
+                    end_time=end_time,
+                )
+
+            task_tags = tags or []
+            await self._create_adhoc_task_handler.handle(
+                CreateAdhocTaskCommand(
+                    scheduled_date=self._brain_dump_date,
+                    name=name,
+                    category=category,
+                    description=description,
+                    schedule=schedule,
+                    tags=task_tags,
+                )
+            )
+
+        async def add_reminder(reminder: str) -> None:
+            """Create a new reminder based on the brain dump item."""
+            await self._mark_brain_dump_item_as_command(
+                date=self._brain_dump_date,
+                item_id=self._brain_dump_item.id,
+            )
+            await self._add_reminder_handler.handle(
+                AddReminderToDayCommand(date=self._brain_dump_date, reminder=reminder)
+            )
+
+        async def update_task(
+            task_id: UUID,
+            action: Literal["complete", "punt"],
+        ) -> None:
+            """Update an existing task when the brain dump implies a status change."""
+            await self._mark_brain_dump_item_as_command(
+                date=self._brain_dump_date,
+                item_id=self._brain_dump_item.id,
+            )
+            if action == "complete":
+                action_type = value_objects.ActionType.COMPLETE
+            else:
+                action_type = value_objects.ActionType.PUNT
+
+            await self._record_task_action_handler.handle(
+                RecordTaskActionCommand(
+                    task_id=task_id,
+                    action=value_objects.Action(
+                        type=action_type, data={"source": "llm"}
+                    ),
+                )
+            )
+
+        async def update_reminder(
+            reminder_id: UUID,
+            status: value_objects.ReminderStatus,
+        ) -> None:
+            """Update an existing reminder's status."""
+            await self._mark_brain_dump_item_as_command(
+                date=self._brain_dump_date,
+                item_id=self._brain_dump_item.id,
+            )
+            await self._update_reminder_status_handler.handle(
+                UpdateReminderStatusCommand(
+                    date=self._brain_dump_date,
+                    reminder_id=reminder_id,
+                    status=status,
+                )
+            )
+
+        async def no_action(reason: str | None = None) -> None:
+            """Take no action if the brain dump is informational only."""
+            if reason:
+                logger.debug(
+                    "Brain dump item %s has no action: %s",
+                    self._brain_dump_item.id,
+                    reason,
+                )
+
+        return [
+            LLMTool(
+                name="add_task",
+                callback=add_task,
+                description="Create a new task inferred from the brain dump.",
+            ),
+            LLMTool(
+                name="add_reminder",
+                callback=add_reminder,
+                description="Create a new reminder inferred from the brain dump.",
+            ),
+            LLMTool(
+                name="update_task",
+                callback=update_task,
+                description="Update an existing task's status if implied.",
+            ),
+            LLMTool(
+                name="update_reminder",
+                callback=update_reminder,
+                description="Update an existing reminder's status if implied.",
+            ),
+            LLMTool(
+                name="no_action",
+                callback=no_action,
+                description="Use when no task or reminder should be created.",
+            ),
+        ]
 
     async def _mark_brain_dump_item_as_command(
         self, *, date: dt_date, item_id: UUID
@@ -144,94 +278,3 @@ class ProcessBrainDumpHandler(BaseCommandHandler[ProcessBrainDumpCommand, None])
             updated = item.update_type(value_objects.BrainDumpItemType.COMMAND)
             if updated.has_events():
                 uow.add(updated)
-
-    async def _handle_add_task(self, date: dt_date, result: dict[str, Any]) -> None:
-        name = result.get("name")
-        category = result.get("category")
-        if not isinstance(name, str) or not isinstance(
-            category, value_objects.TaskCategory
-        ):
-            logger.error("Invalid add_task result: %s", result)
-            return
-
-        timing_type = result.get("timing_type")
-        available_time = result.get("available_time")
-        start_time = result.get("start_time")
-        end_time = result.get("end_time")
-        has_times = any([available_time, start_time, end_time])
-
-        if timing_type is None and has_times:
-            timing_type = value_objects.TimingType.FLEXIBLE
-
-        schedule = None
-        if isinstance(timing_type, value_objects.TimingType):
-            schedule = value_objects.TaskSchedule(
-                timing_type=timing_type,
-                available_time=available_time,
-                start_time=start_time,
-                end_time=end_time,
-            )
-
-        tags = result.get("tags") or []
-        if not isinstance(tags, list):
-            tags = []
-        tags = [tag for tag in tags if isinstance(tag, value_objects.TaskTag)]
-
-        await self._create_adhoc_task_handler.handle(
-            CreateAdhocTaskCommand(
-                scheduled_date=date,
-                name=name,
-                category=category,
-                description=result.get("description"),
-                schedule=schedule,
-                tags=tags,
-            )
-        )
-
-    async def _handle_add_reminder(self, date: dt_date, result: dict[str, Any]) -> None:
-        reminder = result.get("reminder")
-        if not isinstance(reminder, str):
-            logger.error("Invalid add_reminder result: %s", result)
-            return
-        await self._add_reminder_handler.handle(
-            AddReminderToDayCommand(date=date, reminder=reminder)
-        )
-
-    async def _handle_update_task(self, result: dict[str, Any]) -> None:
-        task_id = result.get("task_id")
-        action = result.get("action")
-        if not isinstance(task_id, UUID) or not isinstance(action, str):
-            logger.error("Invalid update_task result: %s", result)
-            return
-        if action == "complete":
-            action_type = value_objects.ActionType.COMPLETE
-        elif action == "punt":
-            action_type = value_objects.ActionType.PUNT
-        else:
-            logger.error("Unsupported update_task action: %s", action)
-            return
-
-        await self._record_task_action_handler.handle(
-            RecordTaskActionCommand(
-                task_id=task_id,
-                action=value_objects.Action(type=action_type, data={"source": "llm"}),
-            )
-        )
-
-    async def _handle_update_reminder(
-        self, date: dt_date, result: dict[str, Any]
-    ) -> None:
-        reminder_id = result.get("reminder_id")
-        status = result.get("status")
-        if not isinstance(reminder_id, UUID) or not isinstance(
-            status, value_objects.ReminderStatus
-        ):
-            logger.error("Invalid update_reminder result: %s", result)
-            return
-        await self._update_reminder_status_handler.handle(
-            UpdateReminderStatusCommand(
-                date=date,
-                reminder_id=reminder_id,
-                status=status,
-            )
-        )
