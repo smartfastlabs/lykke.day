@@ -38,6 +38,7 @@ interface RoutinePreviewProps {
   isLoading?: boolean;
   error?: string;
   showBasicInfo?: boolean;
+  layout?: "standalone" | "embedded";
 }
 
 const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
@@ -52,10 +53,6 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
   const [currentTaskSchedule, setCurrentTaskSchedule] = createSignal<RecurrenceSchedule | null>(
     null
   );
-  const [timeWindowAvailable, setTimeWindowAvailable] = createSignal("");
-  const [timeWindowStart, setTimeWindowStart] = createSignal("");
-  const [timeWindowEnd, setTimeWindowEnd] = createSignal("");
-  const [timeWindowCutoff, setTimeWindowCutoff] = createSignal("");
   
   // State for creating new task definition
   const [showCreateTaskDef, setShowCreateTaskDef] = createSignal(false);
@@ -63,6 +60,8 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
   const [newTaskDefDescription, setNewTaskDefDescription] = createSignal("");
   const [newTaskDefType, setNewTaskDefType] = createSignal<TaskType>("CHORE");
   const [isCreatingTaskDef, setIsCreatingTaskDef] = createSignal(false);
+  const [isModalOpen, setIsModalOpen] = createSignal(false);
+  const [isPickingTask, setIsPickingTask] = createSignal(false);
   
   // Update schedule state when form opens
   createEffect(() => {
@@ -80,11 +79,15 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
         });
       }
       setCurrentTaskSchedule(props.taskScheduleInitial?.() ?? null);
-      const initialWindow = props.timeWindowInitial?.() ?? null;
-      setTimeWindowAvailable(initialWindow?.available_time ?? "");
-      setTimeWindowStart(initialWindow?.start_time ?? "");
-      setTimeWindowEnd(initialWindow?.end_time ?? "");
-      setTimeWindowCutoff(initialWindow?.cutoff_time ?? "");
+    }
+  });
+
+  createEffect(() => {
+    if (props.selectedAction?.()) {
+      setIsModalOpen(true);
+      setIsPickingTask(false);
+    } else if (!isPickingTask()) {
+      setIsModalOpen(false);
     }
   });
 
@@ -110,16 +113,6 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
     }
   };
 
-  const buildTimeWindow = (): TimeWindow | null => {
-    const timeWindow: TimeWindow = {
-      available_time: timeWindowAvailable() || null,
-      start_time: timeWindowStart() || null,
-      end_time: timeWindowEnd() || null,
-      cutoff_time: timeWindowCutoff() || null,
-    };
-    return Object.values(timeWindow).some((value) => value) ? timeWindow : null;
-  };
-
   const handleTaskSubmit = () => {
     const schedule = currentSchedule() ?? {
       timing_type: "FLEXIBLE" as const,
@@ -128,19 +121,35 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
       end_time: null,
     };
     const taskSchedule = currentTaskSchedule();
-    const timeWindow = buildTimeWindow();
-    void props.onTaskSubmit?.(schedule, taskSchedule, timeWindow);
+    void props.onTaskSubmit?.(schedule, taskSchedule, null);
   };
 
   const getTaskDefinitionName = (taskDefinitionId: string) =>
     props.taskDefinitions?.find((def) => def.id === taskDefinitionId)?.name ?? taskDefinitionId;
 
+  const handleOpenAddTask = () => {
+    setIsModalOpen(true);
+    setIsPickingTask(true);
+    setShowCreateTaskDef(false);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setIsPickingTask(false);
+    props.onTaskCancel?.();
+  };
+
+  const layoutClass = () =>
+    props.layout === "embedded"
+      ? "space-y-6"
+      : "flex flex-col items-center justify-center px-0 py-8";
+
   return (
-    <div class="flex flex-col items-center justify-center px-0 py-8">
-      <div class="w-full max-w-3xl space-y-8">
+    <div class={layoutClass()}>
+      <div class={props.layout === "embedded" ? "space-y-6" : "w-full max-w-3xl space-y-8"}>
         <Show when={props.showBasicInfo ?? true}>
-          <div class="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm space-y-4">
-            <h2 class="text-lg font-medium text-neutral-900">Basic Information</h2>
+          <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm space-y-4">
+            <h2 class="text-lg font-semibold text-stone-800">Basic Information</h2>
             <div class="space-y-3">
               <div>
                 <label class="text-sm font-medium text-neutral-500">Name</label>
@@ -192,21 +201,24 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
         </Show>
 
         {/* Routine Definition Tasks */}
-        <div class="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm space-y-4">
+        <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-medium text-neutral-900">
-                Routine Definition Tasks
-              </h2>
+              <h2 class="text-lg font-semibold text-stone-800">Tasks in this routine</h2>
               <p class="text-sm text-neutral-500">
                 Tasks attached to this routine definition.
               </p>
             </div>
             <Show when={props.isEditMode}>
-              <div class="flex items-center gap-2 text-sm text-neutral-500">
-                <Icon key="info" class="w-4 h-4" />
-                <span>Click a task to edit or remove</span>
-              </div>
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={handleOpenAddTask}
+                disabled={props.isLoading}
+              >
+                <Icon key="plus" class="h-4 w-4 text-white" />
+                Add task
+              </button>
             </Show>
           </div>
 
@@ -238,22 +250,7 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                             )}
                           </div>
                         )}
-                        {task.time_window && (
-                          <div>
-                            Window:
-                            {task.time_window.available_time
-                              ? ` ${task.time_window.available_time}`
-                              : ""}
-                            {task.time_window.start_time
-                              ? ` • ${task.time_window.start_time}`
-                              : ""}
-                            {task.time_window.end_time ? ` - ${task.time_window.end_time}` : ""}
-                            {task.time_window.cutoff_time
-                              ? ` • Cutoff ${task.time_window.cutoff_time}`
-                              : ""}
-                          </div>
-                        )}
-                        {!task.schedule && !task.task_schedule && !task.time_window && (
+                        {!task.schedule && !task.task_schedule && (
                           <div>No schedule set</div>
                         )}
                       </div>
@@ -262,7 +259,7 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
                       <div class="flex items-center gap-2">
                         <Show when={props.onEditTask}>
                           <button
-                            class="text-sm text-blue-600 hover:text-blue-700"
+                            class="text-sm text-amber-700 hover:text-amber-800"
                             onClick={() => props.onEditTask?.(task)}
                             disabled={props.isLoading}
                           >
@@ -286,255 +283,240 @@ const RoutinePreview: Component<RoutinePreviewProps> = (props) => {
             </div>
           </Show>
 
-          <Show when={props.isEditMode && props.onAddTask}>
-            <div class="space-y-3">
-              <div class="flex items-center justify-between">
-                <div class="text-sm font-medium text-neutral-900">Add task</div>
-                <Show when={!showCreateTaskDef()}>
-                  <button
-                    type="button"
-                    class="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                    onClick={() => setShowCreateTaskDef(true)}
-                    disabled={props.isLoading}
-                  >
-                    <Icon key="plus" class="w-4 h-4" />
-                    Create New
-                  </button>
-                </Show>
-              </div>
-              
-              <Show when={showCreateTaskDef()}>
-                <div class="rounded-md border border-neutral-200 bg-neutral-50 p-4 space-y-3">
-                  <div class="flex items-center justify-between">
-                    <div class="text-sm font-medium text-neutral-900">Create Task Definition</div>
-                    <button
-                      type="button"
-                      class="text-xs text-neutral-500 hover:text-neutral-700"
-                      onClick={() => {
-                        setShowCreateTaskDef(false);
-                        setNewTaskDefName("");
-                        setNewTaskDefDescription("");
-                        setNewTaskDefType("CHORE");
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                  
-                  <Input
-                    id="new_task_def_name"
-                    placeholder="Task name"
-                    value={newTaskDefName}
-                    onChange={setNewTaskDefName}
-                    required
-                  />
-                  
-                  <TextArea
-                    id="new_task_def_description"
-                    placeholder="Description"
-                    value={newTaskDefDescription}
-                    onChange={setNewTaskDefDescription}
-                    rows={2}
-                    required
-                  />
-                  
-                  <Select
-                    id="new_task_def_type"
-                    placeholder="Task Type"
-                    value={newTaskDefType}
-                    onChange={(val) => setNewTaskDefType(val as TaskType)}
-                    options={ALL_TASK_TYPES}
-                    required
-                  />
-                  
-                  <div class="flex gap-2">
-                    <Button
-                      type="button"
-                      disabled={isCreatingTaskDef() || !newTaskDefName().trim() || !newTaskDefDescription().trim()}
-                      onClick={() => void handleCreateTaskDefinition()}
-                    >
-                      {isCreatingTaskDef() ? "Creating..." : "Create & Add"}
-                    </Button>
-                  </div>
-                </div>
-              </Show>
-              
-              <Show when={!showCreateTaskDef()}>
-                <Show
-                  when={availableDefinitions().length > 0}
-                  fallback={<div class="text-sm text-neutral-500">No task definitions available.</div>}
-                >
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <For each={availableDefinitions()}>
-                      {(def) => (
-                        <button
-                          class="flex items-center justify-between rounded-md border border-neutral-200 px-3 py-2 text-left hover:border-neutral-300 hover:bg-neutral-50"
-                          onClick={() => props.onAddTask?.(def)}
-                          disabled={props.isLoading}
-                        >
-                          <span class="text-sm text-neutral-800">{def.name}</span>
-                          <Icon key="plus" class="w-4 h-4 text-neutral-500" />
-                        </button>
-                      )}
-                    </For>
-                  </div>
-                </Show>
-              </Show>
-            </div>
-          </Show>
-
           <Show when={props.error}>
             <div class="text-sm text-red-600">{props.error}</div>
           </Show>
+        </div>
+      </div>
 
-          <Show
-            when={
-              props.selectedAction?.() && props.onTaskSubmit && props.onTaskCancel
-            }
-          >
-            <div class="mt-4 rounded-md border border-neutral-200 bg-neutral-50 p-4 space-y-3">
-              <div class="flex items-center justify-between">
-                <div>
-                  <div class="text-sm font-medium text-neutral-900">
-                    {props.selectedAction?.() === "add" ? "Add Task" : "Edit Task"}
+      <Show when={isModalOpen()}>
+        <div class="fixed inset-0 z-40">
+          <button
+            type="button"
+            class="absolute inset-0 bg-black/40"
+            onClick={handleCloseModal}
+            aria-label="Close task configurator"
+          />
+          <div class="relative z-50 flex min-h-screen items-center justify-center px-4 py-8">
+            <div class="w-full max-w-3xl rounded-2xl border border-amber-100/80 bg-white/95 shadow-xl">
+              <div class="flex items-center justify-between border-b border-amber-100/80 px-6 py-4">
+                <div class="space-y-1">
+                  <div class="text-xs uppercase tracking-wide text-stone-400">
+                    Task configurator
                   </div>
-                  <div class="text-xs text-neutral-500">
-                    {getTaskDefinitionName(props.selectedTaskDefinitionId?.() ?? "")}
+                  <div class="text-lg font-semibold text-stone-800">
+                    {props.selectedAction?.() === "edit"
+                      ? "Edit task"
+                      : "Add a task"}
                   </div>
                 </div>
                 <button
                   type="button"
-                  class="text-xs text-neutral-500 hover:text-neutral-700"
-                  onClick={() => props.onTaskCancel?.()}
+                  class="rounded-full border border-stone-200 px-3 py-1 text-sm font-medium text-stone-500 hover:text-stone-700"
+                  onClick={handleCloseModal}
                 >
-                  Cancel
+                  Close
                 </button>
               </div>
 
-              <Show when={props.setTaskName && props.taskName}>
-                <Input
-                  id="routine_task_name"
-                  placeholder="Task name (optional)"
-                  value={props.taskName!}
-                  onChange={props.setTaskName!}
-                />
-              </Show>
+              <div class="px-6 py-5 space-y-5">
+                <Show when={isPickingTask() || !props.selectedAction?.()}>
+                  <div class="space-y-4">
+                    <div class="text-sm text-stone-500">
+                      Choose a task definition to add to this routine.
+                    </div>
+                    <Show when={!showCreateTaskDef()}>
+                      <button
+                        type="button"
+                        class="text-sm text-amber-700 hover:text-amber-800 flex items-center gap-1"
+                        onClick={() => setShowCreateTaskDef(true)}
+                        disabled={props.isLoading}
+                      >
+                        <Icon key="plus" class="w-4 h-4" />
+                        Create new task definition
+                      </button>
+                    </Show>
 
-              <Show when={props.onTaskSubmit}>
-                <div class="space-y-4">
-                  <div>
-                    <label class="text-sm font-medium text-neutral-700 mb-2 block">
-                      Time Schedule (when during the day)
-                    </label>
-                    <TaskScheduleForm
-                      initialSchedule={props.scheduleInitial?.() ?? undefined}
-                      onChange={(schedule: TaskSchedule) => {
-                        setCurrentSchedule(schedule);
-                      }}
-                      onSubmit={() => Promise.resolve()}
-                      onCancel={() => {}}
-                      isLoading={false}
-                      submitText=""
-                    />
-                  </div>
-                  
-                  <div>
-                    <label class="text-sm font-medium text-neutral-700 mb-2 block">
-                      Recurrence Schedule (which days)
-                    </label>
-                    <RoutineScheduleForm
-                      schedule={props.taskScheduleInitial?.() ?? null}
-                      onScheduleChange={(schedule: RecurrenceSchedule | null) => {
-                        setCurrentTaskSchedule(schedule);
-                      }}
-                      showOptionalToggle={true}
-                      label="Task appears on specific days"
-                    />
-                  </div>
+                    <Show when={showCreateTaskDef()}>
+                      <div class="rounded-xl border border-amber-100/80 bg-amber-50/40 p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                          <div class="text-sm font-medium text-neutral-900">
+                            Create task definition
+                          </div>
+                          <button
+                            type="button"
+                            class="text-xs text-neutral-500 hover:text-neutral-700"
+                            onClick={() => {
+                              setShowCreateTaskDef(false);
+                              setNewTaskDefName("");
+                              setNewTaskDefDescription("");
+                              setNewTaskDefType("CHORE");
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
 
-                  <div>
-                    <label class="text-sm font-medium text-neutral-700 mb-2 block">
-                      Time Window (optional)
-                    </label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <div class="space-y-1">
-                        <label class="text-xs font-medium text-neutral-600" for="time_window_available">
-                          Preferred time
-                        </label>
                         <Input
-                          id="time_window_available"
-                          type="time"
-                          placeholder="Preferred time"
-                          value={timeWindowAvailable}
-                          onChange={setTimeWindowAvailable}
+                          id="new_task_def_name"
+                          placeholder="Task name"
+                          value={newTaskDefName}
+                          onChange={setNewTaskDefName}
+                          required
                         />
+
+                        <TextArea
+                          id="new_task_def_description"
+                          placeholder="Description"
+                          value={newTaskDefDescription}
+                          onChange={setNewTaskDefDescription}
+                          rows={2}
+                          required
+                        />
+
+                        <Select
+                          id="new_task_def_type"
+                          placeholder="Task Type"
+                          value={newTaskDefType}
+                          onChange={(val) => setNewTaskDefType(val as TaskType)}
+                          options={ALL_TASK_TYPES}
+                          required
+                        />
+
+                        <div class="flex gap-2">
+                          <Button
+                            type="button"
+                            disabled={
+                              isCreatingTaskDef() ||
+                              !newTaskDefName().trim() ||
+                              !newTaskDefDescription().trim()
+                            }
+                            onClick={() => void handleCreateTaskDefinition()}
+                          >
+                            {isCreatingTaskDef() ? "Creating..." : "Create & Add"}
+                          </Button>
+                        </div>
                       </div>
-                      <div class="space-y-1">
-                        <label class="text-xs font-medium text-neutral-600" for="time_window_start">
-                          Start time
-                        </label>
-                        <Input
-                          id="time_window_start"
-                          type="time"
-                          placeholder="Start time"
-                          value={timeWindowStart}
-                          onChange={setTimeWindowStart}
-                        />
+                    </Show>
+
+                    <Show when={!showCreateTaskDef()}>
+                      <Show
+                        when={availableDefinitions().length > 0}
+                        fallback={
+                          <div class="text-sm text-neutral-500">
+                            No task definitions available.
+                          </div>
+                        }
+                      >
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <For each={availableDefinitions()}>
+                            {(def) => (
+                              <button
+                                class="flex items-center justify-between rounded-md border border-neutral-200 px-3 py-2 text-left hover:border-neutral-300 hover:bg-neutral-50"
+                                onClick={() => props.onAddTask?.(def)}
+                                disabled={props.isLoading}
+                              >
+                                <span class="text-sm text-neutral-800">{def.name}</span>
+                                <Icon key="plus" class="w-4 h-4 text-neutral-500" />
+                              </button>
+                            )}
+                          </For>
+                        </div>
+                      </Show>
+                    </Show>
+                  </div>
+                </Show>
+
+                <Show
+                  when={
+                    props.selectedAction?.() &&
+                    props.onTaskSubmit &&
+                    props.onTaskCancel
+                  }
+                >
+                  <div class="space-y-4">
+                    <div>
+                      <div class="text-sm font-medium text-neutral-900">
+                        {props.selectedAction?.() === "add"
+                          ? "Configure task"
+                          : "Update task"}
                       </div>
-                      <div class="space-y-1">
-                        <label class="text-xs font-medium text-neutral-600" for="time_window_end">
-                          End time
-                        </label>
-                        <Input
-                          id="time_window_end"
-                          type="time"
-                          placeholder="End time"
-                          value={timeWindowEnd}
-                          onChange={setTimeWindowEnd}
-                        />
-                      </div>
-                      <div class="space-y-1">
-                        <label class="text-xs font-medium text-neutral-600" for="time_window_cutoff">
-                          Cutoff time
-                        </label>
-                        <Input
-                          id="time_window_cutoff"
-                          type="time"
-                          placeholder="Cutoff time"
-                          value={timeWindowCutoff}
-                          onChange={setTimeWindowCutoff}
-                        />
+                      <div class="text-xs text-neutral-500">
+                        {getTaskDefinitionName(props.selectedTaskDefinitionId?.() ?? "")}
                       </div>
                     </div>
-                  </div>
-                  
-                  <div class="flex gap-2 pt-2">
-                    <Button
-                      type="button"
-                      disabled={props.isLoading}
-                      onClick={handleTaskSubmit}
-                    >
-                      {props.isLoading ? "Saving..." : (props.selectedAction?.() === "add" ? "Attach Task" : "Save")}
-                    </Button>
-                    <button
-                      type="button"
-                      class="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50"
-                      onClick={() => props.onTaskCancel?.()}
-                      disabled={props.isLoading}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </Show>
 
-              <Show when={props.error}>
-                <div class="text-sm text-red-600">{props.error}</div>
-              </Show>
+                    <Show when={props.setTaskName && props.taskName}>
+                      <Input
+                        id="routine_task_name"
+                        placeholder="Task name (optional)"
+                        value={props.taskName!}
+                        onChange={props.setTaskName!}
+                      />
+                    </Show>
+
+                    <div>
+                      <label class="text-sm font-medium text-neutral-700 mb-2 block">
+                        Time Schedule (when during the day)
+                      </label>
+                      <TaskScheduleForm
+                        initialSchedule={props.scheduleInitial?.() ?? undefined}
+                        onChange={(schedule: TaskSchedule) => {
+                          setCurrentSchedule(schedule);
+                        }}
+                        onSubmit={() => Promise.resolve()}
+                        onCancel={() => {}}
+                        isLoading={false}
+                        submitText=""
+                      />
+                    </div>
+
+                    <div>
+                      <label class="text-sm font-medium text-neutral-700 mb-2 block">
+                        Recurrence Schedule (which days)
+                      </label>
+                      <RoutineScheduleForm
+                        schedule={props.taskScheduleInitial?.() ?? null}
+                        onScheduleChange={(schedule: RecurrenceSchedule | null) => {
+                          setCurrentTaskSchedule(schedule);
+                        }}
+                        showOptionalToggle={true}
+                        label="Task appears on specific days"
+                      />
+                    </div>
+
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <Button
+                        type="button"
+                        disabled={props.isLoading}
+                        onClick={handleTaskSubmit}
+                      >
+                        {props.isLoading
+                          ? "Saving..."
+                          : props.selectedAction?.() === "add"
+                          ? "Attach task"
+                          : "Save changes"}
+                      </Button>
+                      <button
+                        type="button"
+                        class="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50"
+                        onClick={handleCloseModal}
+                        disabled={props.isLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </Show>
+
+                <Show when={props.error}>
+                  <div class="text-sm text-red-600">{props.error}</div>
+                </Show>
+              </div>
             </div>
-          </Show>
+          </div>
         </div>
-      </div>
+      </Show>
     </div>
   );
 };

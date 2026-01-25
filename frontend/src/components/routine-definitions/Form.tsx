@@ -24,6 +24,10 @@ interface FormProps {
   initialData?: RoutineDefinition;
   tasks?: RoutineDefinitionTask[];
   beforeSubmit?: JSX.Element;
+  showSubmitButton?: boolean;
+  formId?: string;
+  submitText?: string;
+  loadingText?: string;
 }
 
 const RoutineForm: Component<FormProps> = (props) => {
@@ -84,43 +88,68 @@ const RoutineForm: Component<FormProps> = (props) => {
   };
 
   const isUpdate = !!props.initialData;
+  const shouldShowSubmit = () => props.showSubmitButton ?? true;
+  const submitText = () =>
+    props.submitText ??
+    (isUpdate ? "Update Routine Definition" : "Create Routine Definition");
+  const loadingText = () =>
+    props.loadingText ?? (isUpdate ? "Updating..." : "Creating...");
 
   return (
-    <form onSubmit={handleSubmit} class="space-y-6">
-      <Input
-        id="name"
-        placeholder="Name"
-        value={name}
-        onChange={setName}
-        required
-      />
+    <form id={props.formId} onSubmit={handleSubmit} class="space-y-6">
+      <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm space-y-4">
+        <div>
+          <h2 class="text-lg font-semibold text-stone-800">Basics</h2>
+          <p class="text-sm text-stone-500">Name, description, and category.</p>
+        </div>
+        <div class="space-y-4">
+          <Input
+            id="name"
+            placeholder="Name"
+            value={name}
+            onChange={setName}
+            required
+          />
 
-      <TextArea
-        id="description"
-        placeholder="Description (Optional)"
-        value={description}
-        onChange={setDescription}
-        rows={3}
-      />
+          <TextArea
+            id="description"
+            placeholder="Description (Optional)"
+            value={description}
+            onChange={setDescription}
+            rows={3}
+          />
 
-      <Select
-        id="category"
-        placeholder="Category"
-        value={category}
-        onChange={setCategory}
-        options={ALL_TASK_CATEGORIES}
-        required
-      />
+          <Select
+            id="category"
+            placeholder="Category"
+            value={category}
+            onChange={setCategory}
+            options={ALL_TASK_CATEGORIES}
+            required
+          />
+        </div>
+      </div>
 
-      <RoutineScheduleForm
-        schedule={routineDefinitionSchedule()}
-        onScheduleChange={setRoutineDefinitionSchedule}
-      />
+      <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm space-y-4">
+        <div>
+          <h2 class="text-lg font-semibold text-stone-800">Schedule</h2>
+          <p class="text-sm text-stone-500">
+            Choose which days this routine should appear.
+          </p>
+        </div>
+        <RoutineScheduleForm
+          schedule={routineDefinitionSchedule()}
+          onScheduleChange={setRoutineDefinitionSchedule}
+        />
+      </div>
 
-      <div class="space-y-2">
-        <label class="text-sm font-medium text-neutral-700 block">
-          Time Window (optional)
-        </label>
+      <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm space-y-4">
+        <div>
+          <h2 class="text-lg font-semibold text-stone-800">Time Window</h2>
+          <p class="text-sm text-stone-500">
+            Optional preferred times for this routine.
+          </p>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div class="space-y-1">
             <label
@@ -189,13 +218,13 @@ const RoutineForm: Component<FormProps> = (props) => {
 
       <Show when={props.beforeSubmit}>{props.beforeSubmit}</Show>
 
-      <SubmitButton
-        isLoading={props.isLoading}
-        loadingText={isUpdate ? "Updating..." : "Creating..."}
-        text={
-          isUpdate ? "Update Routine Definition" : "Create Routine Definition"
-        }
-      />
+      <Show when={shouldShowSubmit()}>
+        <SubmitButton
+          isLoading={props.isLoading}
+          loadingText={loadingText()}
+          text={submitText()}
+        />
+      </Show>
     </form>
   );
 };
