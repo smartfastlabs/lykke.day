@@ -21,6 +21,7 @@ type SpeechRecognitionResultLike = {
 };
 
 type SpeechRecognitionEventLike = {
+  resultIndex?: number;
   results: ArrayLike<SpeechRecognitionResultLike>;
 };
 
@@ -102,7 +103,8 @@ const BrainDumpButton: Component = () => {
     recognition.continuous = true;
     recognition.onresult = (event) => {
       let interimText = "";
-      for (let i = 0; i < event.results.length; i += 1) {
+      const startIndex = event.resultIndex ?? 0;
+      for (let i = startIndex; i < event.results.length; i += 1) {
         const result = event.results[i];
         if (result.isFinal) {
           appendTranscript(result[0].transcript);
