@@ -185,7 +185,7 @@ const BrainDumpButton: Component = () => {
 
   return (
     <>
-      <div class="fixed bottom-6 right-6 z-50 print:hidden">
+      <div class="fixed bottom-6 left-6 z-50 print:hidden">
         <div class="flex items-center gap-2 text-white">
           <button
             onClick={() => navigate("/me")}
@@ -199,7 +199,7 @@ const BrainDumpButton: Component = () => {
             class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-600 shadow-lg transition-transform duration-150 ease-in-out hover:bg-gray-700 active:scale-95"
             aria-label="Start dictation"
           >
-            <Icon icon={faMicrophone} class="h-4 w-4 fill-white" />
+            <Icon icon={faMicrophone} class="h-5 w-5 fill-white" />
           </button>
         </div>
       </div>

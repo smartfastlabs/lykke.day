@@ -87,10 +87,7 @@ const AddAdhocTaskPage: Component = () => {
           </div>
         </form>
       </ModalPage>
-      <FloatingActionButtons
-        rightButton="settings"
-        onSettingsClick={() => navigate("/me/settings")}
-      />
+      <FloatingActionButtons />
     </>
   );
 };
