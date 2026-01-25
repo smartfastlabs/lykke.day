@@ -89,6 +89,12 @@ class DayTemplateRepository(
         # Filter out fields with init=False (e.g., _domain_events)
         data = filter_init_false_fields(data, DayTemplateEntity)
 
+        # Backward compatibility: rename routine_ids -> routine_definition_ids
+        if "routine_ids" in data and "routine_definition_ids" not in data:
+            data["routine_definition_ids"] = data.pop("routine_ids")
+        else:
+            data.pop("routine_ids", None)
+
         # Convert string UUIDs back to UUID objects for routine_definition_ids
         if data.get("routine_definition_ids"):
             data["routine_definition_ids"] = [
