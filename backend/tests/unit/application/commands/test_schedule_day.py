@@ -169,6 +169,7 @@ async def test_schedule_day_returns_existing_day_without_creating():
     assert result.tasks == tasks
     assert len(uow_factory.uow.created_entities) == 0
     assert len(uow_factory.uow.bulk_deleted_tasks) == 0
+    assert len(uow_factory.uow.bulk_deleted_routines) == 0
 
 
 @pytest.mark.asyncio
@@ -216,6 +217,9 @@ async def test_schedule_day_deletes_existing_tasks():
     delete_query = uow_factory.uow.bulk_deleted_tasks[0]
     assert delete_query.date == task_date
     assert delete_query.is_adhoc is False
+    assert len(uow_factory.uow.bulk_deleted_routines) == 1
+    routine_delete_query = uow_factory.uow.bulk_deleted_routines[0]
+    assert routine_delete_query.date == task_date
 
 
 @pytest.mark.asyncio

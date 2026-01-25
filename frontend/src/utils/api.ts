@@ -477,29 +477,23 @@ export const usecaseConfigAPI = {
     }),
 };
 
-export const routineDefinitionAPI = {
-  setRoutineDefinitionAction: (
-    routineDefinitionId: string,
-    action: string
-  ): Promise<Task[]> =>
-    fetchData<Task[]>(
-      `/api/routine-definitions/${routineDefinitionId}/actions`,
-      {
-        method: "POST",
-        body: JSON.stringify({ type: action }),
-      }
-    ),
+export const routineAPI = {
+  setRoutineAction: (routineId: string, action: string): Promise<Task[]> =>
+    fetchData<Task[]>(`/api/routines/${routineId}/actions`, {
+      method: "POST",
+      body: JSON.stringify({ type: action }),
+    }),
   addToToday: (routineDefinitionId: string): Promise<Task[]> => {
     const params = new URLSearchParams({
       routine_definition_id: routineDefinitionId,
     });
-    return fetchData<Task[]>(
-      `/api/me/today/routine-definitions?${params.toString()}`,
-      {
-        method: "POST",
-      }
-    );
+    return fetchData<Task[]>(`/api/me/today/routines?${params.toString()}`, {
+      method: "POST",
+    });
   },
+};
+
+export const routineDefinitionAPI = {
   ...createCrudMethods<RoutineDefinition>("routine-definitions"),
   addTask: (
     routineDefinitionId: string,

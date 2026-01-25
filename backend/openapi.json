@@ -5080,6 +5080,13 @@
             },
             "type": "array",
             "title": "Tasks"
+          },
+          "routines": {
+            "items": {
+              "$ref": "#/components/schemas/RoutineSchema"
+            },
+            "type": "array",
+            "title": "Routines"
           }
         },
         "type": "object",
@@ -7184,6 +7191,69 @@
         "type": "object",
         "title": "RoutineDefinitionUpdateSchema",
         "description": "API schema for RoutineDefinition update requests."
+      },
+      "RoutineSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "routine_definition_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Routine Definition Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category": {
+            "$ref": "#/components/schemas/TaskCategory"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "time_window": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeWindowSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "user_id",
+          "routine_definition_id",
+          "name",
+          "category",
+          "description"
+        ],
+        "title": "RoutineSchema",
+        "description": "API schema for Routine entity."
       },
       "StatusResponseSchema": {
         "properties": {

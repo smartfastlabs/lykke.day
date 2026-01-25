@@ -19,6 +19,7 @@ from lykke.domain.entities import (
     MessageEntity,
     PushNotificationEntity,
     PushSubscriptionEntity,
+    RoutineEntity,
     RoutineDefinitionEntity,
     TaskDefinitionEntity,
     TaskEntity,
@@ -45,6 +46,7 @@ from lykke.presentation.api.schemas import (
     MessageSchema,
     PushSubscriptionSchema,
     ReminderSchema,
+    RoutineSchema,
     RoutineDefinitionSchema,
     SyncSubscriptionSchema,
     TaskDefinitionSchema,
@@ -282,11 +284,13 @@ def map_day_context_to_schema(
         for entry in context.calendar_entries
     ]
     task_schemas = [map_task_to_schema(task) for task in context.tasks]
+    routine_schemas = [map_routine_to_schema(routine) for routine in context.routines]
 
     return DayContextSchema(
         day=day_schema,
         calendar_entries=calendar_entry_schemas,
         tasks=task_schemas,
+        routines=routine_schemas,
     )
 
 
@@ -397,6 +401,20 @@ def map_routine_definition_to_schema(
         description=routine_definition.description,
         time_window=map_time_window_to_schema(routine_definition.time_window),
         tasks=task_schemas,
+    )
+
+
+def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
+    """Convert Routine entity to Routine schema."""
+    return RoutineSchema(
+        id=routine.id,
+        user_id=routine.user_id,
+        date=routine.date,
+        routine_definition_id=routine.routine_definition_id,
+        name=routine.name,
+        category=routine.category,
+        description=routine.description,
+        time_window=map_time_window_to_schema(routine.time_window),
     )
 
 

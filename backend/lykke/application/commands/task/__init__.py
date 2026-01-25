@@ -5,6 +5,7 @@ from .record_routine_definition_action import (
     RecordRoutineDefinitionActionCommand,
     RecordRoutineDefinitionActionHandler,
 )
+from .record_routine_action import RecordRoutineActionCommand, RecordRoutineActionHandler
 from .record_task_action import RecordTaskActionCommand, RecordTaskActionHandler
 
 __all__ = [
@@ -12,6 +13,8 @@ __all__ = [
     "CreateAdhocTaskHandler",
     "RecordRoutineDefinitionActionCommand",
     "RecordRoutineDefinitionActionHandler",
+    "RecordRoutineActionCommand",
+    "RecordRoutineActionHandler",
     "RecordTaskActionCommand",
     "RecordTaskActionHandler",
 ]

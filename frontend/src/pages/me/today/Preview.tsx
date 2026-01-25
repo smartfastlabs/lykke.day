@@ -12,7 +12,7 @@ import { useStreamingData } from "@/providers/streamingData";
 import {
   TasksSection,
   EventsSection,
-  RoutineDefinitionsSummary,
+  RoutineSummary,
   RemindersSummary,
   UpcomingSection,
   RightNowSection,
@@ -60,7 +60,7 @@ const isAllDayEvent = (event: Event): boolean => {
 export const TodayPage: Component = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { tasks, events, reminders } = useStreamingData();
+  const { tasks, events, reminders, routines } = useStreamingData();
   const [now, setNow] = createSignal(new Date());
 
   // Update time every 30 seconds to keep sections aligned
@@ -77,6 +77,7 @@ export const TodayPage: Component = () => {
   const allTasks = createMemo(() => tasks() ?? []);
   const allEvents = createMemo(() => events() ?? []);
   const allReminders = createMemo(() => reminders() ?? []);
+  const allRoutines = createMemo(() => routines() ?? []);
 
   // Check if all reminders are complete or punted
   const allRemindersDone = createMemo(() => {
@@ -243,7 +244,7 @@ export const TodayPage: Component = () => {
       </div>
 
       <div class="mb-6">
-        <RoutineDefinitionsSummary tasks={allTasks()} />
+        <RoutineSummary tasks={allTasks()} routines={allRoutines()} />
       </div>
     </>
   );

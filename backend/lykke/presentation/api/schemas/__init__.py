@@ -46,6 +46,7 @@ from .push_subscription import (
 )
 from .query import QuerySchema
 from .reminder import ReminderSchema
+from .routine import RoutineSchema
 from .routine_definition import (
     RoutineDefinitionCreateSchema,
     RoutineDefinitionSchema,
@@ -115,6 +116,7 @@ RoutineDefinitionTaskCreateSchema.model_rebuild()
 RoutineDefinitionTaskUpdateSchema.model_rebuild()
 TimeWindowSchema.model_rebuild()
 RoutineDefinitionUpdateSchema.model_rebuild()
+RoutineSchema.model_rebuild()
 UserSchema.model_rebuild()
 UserSettingsSchema.model_rebuild()
 UserSettingsUpdateSchema.model_rebuild()
@@ -181,6 +183,7 @@ __all__ = [
     "PushSubscriptionUpdateSchema",
     "QuerySchema",
     "ReminderSchema",
+    "RoutineSchema",
     "RoutineDefinitionCreateSchema",
     "RoutineDefinitionSchema",
     "RoutineDefinitionTaskCreateSchema",

@@ -6,7 +6,7 @@ from uuid import UUID
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity, TaskEntity
+from lykke.domain.entities import DayEntity, RoutineEntity, TaskEntity
 
 
 @dataclass(frozen=True)
@@ -41,6 +41,24 @@ class AddRoutineDefinitionToDayHandler(
             routine_definition = await uow.routine_definition_ro_repo.get(
                 command.routine_definition_id
             )
+
+            existing_routines = await uow.routine_ro_repo.search(
+                value_objects.RoutineQuery(
+                    date=command.date,
+                    routine_definition_ids=[command.routine_definition_id],
+                )
+            )
+            if not existing_routines:
+                routine = RoutineEntity(
+                    user_id=self.user_id,
+                    date=command.date,
+                    routine_definition_id=routine_definition.id,
+                    name=routine_definition.name,
+                    category=routine_definition.category,
+                    description=routine_definition.description,
+                    time_window=routine_definition.time_window,
+                )
+                await uow.create(routine)
 
             existing_tasks = await uow.task_ro_repo.search(
                 value_objects.TaskQuery(

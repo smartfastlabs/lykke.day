@@ -47,6 +47,8 @@ from .task import (
     CreateAdhocTaskHandler,
     RecordRoutineDefinitionActionCommand,
     RecordRoutineDefinitionActionHandler,
+    RecordRoutineActionCommand,
+    RecordRoutineActionHandler,
     RecordTaskActionCommand,
     RecordTaskActionHandler,
 )
@@ -67,6 +69,8 @@ __all__ = [
     "HandleGoogleLoginCallbackResult",
     "RecordRoutineDefinitionActionCommand",
     "RecordRoutineDefinitionActionHandler",
+    "RecordRoutineActionCommand",
+    "RecordRoutineActionHandler",
     "RecordTaskActionCommand",
     "RecordTaskActionHandler",
     "RescheduleDayCommand",

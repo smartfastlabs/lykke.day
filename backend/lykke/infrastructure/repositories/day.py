@@ -91,6 +91,17 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
             if "user_id" in template_data and isinstance(template_data["user_id"], str):
                 template_data["user_id"] = UUID(template_data["user_id"])
 
+            # Backward compatibility: rename routine_ids -> routine_definition_ids
+            if (
+                "routine_ids" in template_data
+                and "routine_definition_ids" not in template_data
+            ):
+                template_data["routine_definition_ids"] = template_data.pop(
+                    "routine_ids"
+                )
+            else:
+                template_data.pop("routine_ids", None)
+
             # Convert routine_definition_ids from strings to UUIDs
             if template_data.get("routine_definition_ids"):
                 template_data["routine_definition_ids"] = [

@@ -10,6 +10,7 @@ from . import (
     google,
     me,
     push_subscriptions,
+    routines,
     routine_definitions,
     task_definitions,
     tasks,
@@ -82,6 +83,11 @@ router.include_router(
     routine_definitions.router,
     prefix="/routine-definitions",
     tags=["routine-definitions"],
+)
+router.include_router(
+    routines.router,
+    prefix="/routines",
+    tags=["routines"],
 )
 router.include_router(
     time_block_definitions.router,

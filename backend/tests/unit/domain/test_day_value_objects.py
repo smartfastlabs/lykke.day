@@ -69,6 +69,7 @@ def test_day_context_creation(test_user_id: str) -> None:
     assert context.day == day
     assert context.calendar_entries == []
     assert context.tasks == []
+    assert context.routines == []
     assert context.brain_dump_items == []
 
 
@@ -87,6 +88,7 @@ def test_day_context_defaults() -> None:
     context = DayContext(day=day)
     assert context.calendar_entries == []
     assert context.tasks == []
+    assert context.routines == []
     assert context.brain_dump_items == []
 
 

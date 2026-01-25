@@ -274,7 +274,7 @@ class TestIsAuditLogForTodayRoutineFiltering:
 
     @pytest.mark.asyncio
     async def test_routine_always_returns_true(self):
-        """Test routine definition entities are always considered relevant."""
+        """Routine definition entities are not part of day context."""
         today = dt_date(2025, 1, 15)
         audit_log = _make_audit_log(
             entity_type="routine_definition",
@@ -284,7 +284,7 @@ class TestIsAuditLogForTodayRoutineFiltering:
         result = await is_audit_log_for_today(
             audit_log, today, user_timezone=USER_TIMEZONE
         )
-        assert result is True
+        assert result is False
 
 
 class TestIsAuditLogForTodayEdgeCases:
