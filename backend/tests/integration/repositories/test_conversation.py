@@ -144,9 +144,14 @@ async def test_search_by_status(conversation_repo, test_user, bot_personality):
 
 
 @pytest.mark.asyncio
-async def test_search_by_bot_personality(conversation_repo, test_user, bot_personality):
+async def test_search_by_bot_personality(
+    conversation_repo, test_user, bot_personality, create_bot_personality
+):
     """Test searching conversations by bot personality."""
-    other_personality_id = uuid4()
+    other_personality = await create_bot_personality(
+        name="Other Personality",
+        system_prompt="Other prompt",
+    )
     conversation1 = ConversationEntity(
         id=uuid4(),
         user_id=test_user.id,
@@ -156,7 +161,7 @@ async def test_search_by_bot_personality(conversation_repo, test_user, bot_perso
     conversation2 = ConversationEntity(
         id=uuid4(),
         user_id=test_user.id,
-        bot_personality_id=other_personality_id,
+        bot_personality_id=other_personality.id,
         channel=value_objects.ConversationChannel.IN_APP,
     )
     await conversation_repo.put(conversation1)

@@ -1,6 +1,6 @@
 """Brain dumps table definition."""
 
-from sqlalchemy import Column, Date, DateTime, Index, String, Text
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
@@ -12,7 +12,7 @@ class BrainDump(Base):
     __tablename__ = "brain_dumps"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     date = Column(Date, nullable=False)
     text = Column(Text, nullable=False)
     status = Column(String, nullable=False)  # BrainDumpItemStatus enum as string

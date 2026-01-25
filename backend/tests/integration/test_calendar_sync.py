@@ -1,14 +1,13 @@
 """Integration tests for Google Calendar sync with real database."""
 
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 
 from lykke.domain import value_objects
-from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
+from lykke.domain.entities import CalendarEntryEntity
 from lykke.domain.value_objects import TaskFrequency
-from lykke.domain.value_objects.sync import SyncSubscription
 from lykke.infrastructure.gateways import GoogleCalendarGateway, StubPubSubGateway
 from lykke.infrastructure.repositories import CalendarEntryRepository
 from lykke.infrastructure.unit_of_work import (
@@ -17,62 +16,29 @@ from lykke.infrastructure.unit_of_work import (
 )
 
 
-@pytest.fixture
-def test_user_id():
-    """Test user ID."""
-    return uuid4()
-
-
-@pytest.fixture
-def test_calendar_id():
-    """Test calendar ID."""
-    return uuid4()
-
-
-@pytest.fixture
-def test_auth_token_id():
-    """Test auth token ID."""
-    return uuid4()
-
-
-@pytest.fixture
-def test_calendar(test_user_id, test_calendar_id, test_auth_token_id):
+@pytest_asyncio.fixture
+async def test_calendar(test_user, create_calendar):
     """Create a test calendar in the database."""
-    calendar = CalendarEntity(
-        id=test_calendar_id,
-        user_id=test_user_id,
+    return await create_calendar(
+        user_id=test_user.id,
         name="Test Calendar",
         platform="google",
         platform_id="test@calendar.google.com",
-        auth_token_id=test_auth_token_id,
-        last_sync_at=datetime.now(UTC) - timedelta(days=1),
-        sync_subscription=SyncSubscription(
-            subscription_id="test-channel",
-            resource_id="test-resource",
-            expiration=datetime.now(UTC) + timedelta(days=7),
-            provider="google",
-            sync_token="test-sync-token",
-            client_state="test-secret",
-            webhook_url="https://example.com/webhook/test",
-        ),
     )
-    return calendar
 
 
 @pytest.fixture
-def calendar_entry_repo(test_user_id):
+def calendar_entry_repo(test_user):
     """Create a calendar entry repository."""
-    return CalendarEntryRepository(user_id=test_user_id)
+    return CalendarEntryRepository(user_id=test_user.id)
 
 
 @pytest.mark.asyncio
-async def test_sync_creates_new_events(
-    test_user_id, test_calendar, calendar_entry_repo
-):
+async def test_sync_creates_new_events(test_user, test_calendar, calendar_entry_repo):
     """Test that sync creates new events in the database."""
     # Create a test event
     event = CalendarEntryEntity(
-        user_id=test_user_id,
+        user_id=test_user.id,
         calendar_id=test_calendar.id,
         platform_id="test-event-1",
         platform="google",
@@ -85,7 +51,7 @@ async def test_sync_creates_new_events(
 
     # Save the event using repository
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    uow = uow_factory.create(test_user_id)
+    uow = uow_factory.create(test_user.id)
 
     async with uow:
         event.create()
@@ -104,13 +70,11 @@ async def test_sync_creates_new_events(
 
 
 @pytest.mark.asyncio
-async def test_sync_updates_existing_events(
-    test_user_id, test_calendar, calendar_entry_repo
-):
+async def test_sync_updates_existing_events(test_user, test_calendar, calendar_entry_repo):
     """Test that sync updates existing events in the database."""
     # Create initial event
     event = CalendarEntryEntity(
-        user_id=test_user_id,
+        user_id=test_user.id,
         calendar_id=test_calendar.id,
         platform_id="test-event-2",
         platform="google",
@@ -122,7 +86,7 @@ async def test_sync_updates_existing_events(
     )
 
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    uow = uow_factory.create(test_user_id)
+    uow = uow_factory.create(test_user.id)
 
     # Create initial event
     async with uow:
@@ -132,7 +96,7 @@ async def test_sync_updates_existing_events(
     # Update the event
     updated_event = CalendarEntryEntity(
         id=event.id,  # Same ID for upsert
-        user_id=test_user_id,
+        user_id=test_user.id,
         calendar_id=test_calendar.id,
         platform_id="test-event-2",  # Same platform_id
         platform="google",
@@ -160,13 +124,11 @@ async def test_sync_updates_existing_events(
 
 
 @pytest.mark.asyncio
-async def test_sync_deletes_cancelled_events(
-    test_user_id, test_calendar, calendar_entry_repo
-):
+async def test_sync_deletes_cancelled_events(test_user, test_calendar, calendar_entry_repo):
     """Test that sync deletes cancelled events from the database."""
     # Create event
     event = CalendarEntryEntity(
-        user_id=test_user_id,
+        user_id=test_user.id,
         calendar_id=test_calendar.id,
         platform_id="test-event-3",
         platform="google",
@@ -178,7 +140,7 @@ async def test_sync_deletes_cancelled_events(
     )
 
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    uow = uow_factory.create(test_user_id)
+    uow = uow_factory.create(test_user.id)
 
     # Create event
     async with uow:
@@ -203,7 +165,7 @@ async def test_sync_deletes_cancelled_events(
 
 @pytest.mark.asyncio
 async def test_search_one_or_none_returns_none_for_nonexistent(
-    test_user_id, calendar_entry_repo
+    test_user, calendar_entry_repo
 ):
     """Test that search_one_or_none returns None for nonexistent events."""
     result = await calendar_entry_repo.search_one_or_none(
@@ -214,12 +176,12 @@ async def test_search_one_or_none_returns_none_for_nonexistent(
 
 @pytest.mark.asyncio
 async def test_upsert_with_same_platform_id(
-    test_user_id, test_calendar, calendar_entry_repo
+    test_user, test_calendar, calendar_entry_repo
 ):
     """Test that upserting with the same platform_id updates the event."""
     # Create first version
     event1 = CalendarEntryEntity(
-        user_id=test_user_id,
+        user_id=test_user.id,
         calendar_id=test_calendar.id,
         platform_id="test-event-upsert",
         platform="google",
@@ -231,7 +193,7 @@ async def test_upsert_with_same_platform_id(
     )
 
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
-    uow = uow_factory.create(test_user_id)
+    uow = uow_factory.create(test_user.id)
 
     # Create first version
     async with uow:
@@ -248,7 +210,7 @@ async def test_upsert_with_same_platform_id(
     # Create second version with same platform_id but same ID (for upsert)
     event2 = CalendarEntryEntity(
         id=original_id,  # Use same ID for proper upsert
-        user_id=test_user_id,
+        user_id=test_user.id,
         calendar_id=test_calendar.id,
         platform_id="test-event-upsert",  # Same platform_id
         platform="google",

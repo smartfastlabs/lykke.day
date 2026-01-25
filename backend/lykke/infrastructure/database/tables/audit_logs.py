@@ -1,6 +1,6 @@
 """Audit logs table definition."""
 
-from sqlalchemy import Column, Date, DateTime, Index, String
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
@@ -12,7 +12,7 @@ class AuditLog(Base):
     __tablename__ = "audit_logs"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     activity_type = Column(String, nullable=False)
     occurred_at = Column(DateTime, nullable=False)
     date = Column(Date, nullable=False)

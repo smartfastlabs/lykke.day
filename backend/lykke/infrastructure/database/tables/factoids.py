@@ -1,6 +1,6 @@
 """Factoids table definition."""
 
-from sqlalchemy import Column, DateTime, Index, Integer, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID as PGUUID
 from sqlalchemy.types import Float
 
@@ -13,8 +13,10 @@ class Factoid(Base):
     __tablename__ = "factoids"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
-    conversation_id = Column(PGUUID, nullable=True)  # None for global factoids
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
+    conversation_id = Column(
+        PGUUID, ForeignKey("conversations.id"), nullable=True
+    )  # None for global factoids
     factoid_type = Column(String, nullable=False)  # FactoidType enum as string
     criticality = Column(String, nullable=False)  # FactoidCriticality enum as string
     content = Column(Text, nullable=False)  # Factoid content

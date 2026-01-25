@@ -1,21 +1,48 @@
 """E2E tests for calendar entry series router endpoints."""
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
-from lykke.domain.entities import CalendarEntrySeriesEntity
+from lykke.domain.entities import AuthTokenEntity, CalendarEntity, CalendarEntrySeriesEntity
 from lykke.domain.value_objects.task import EventCategory, TaskFrequency
-from lykke.infrastructure.repositories import CalendarEntrySeriesRepository
+from lykke.infrastructure.repositories import (
+    AuthTokenRepository,
+    CalendarEntrySeriesRepository,
+    CalendarRepository,
+)
+
+
+async def create_calendar_for_user(user_id: UUID, calendar_id: UUID) -> CalendarEntity:
+    auth_token_repo = AuthTokenRepository()
+    auth_token = AuthTokenEntity(
+        user_id=user_id,
+        platform="google",
+        token="test-token",
+    )
+    auth_token = await auth_token_repo.put(auth_token)
+
+    calendar_repo = CalendarRepository(user_id=user_id)
+    calendar = CalendarEntity(
+        id=calendar_id,
+        user_id=user_id,
+        name="Test Calendar",
+        auth_token_id=auth_token.id,
+        platform_id=f"calendar-{calendar_id}",
+        platform="google",
+    )
+    return await calendar_repo.put(calendar)
 
 
 @pytest.mark.asyncio
 async def test_list_calendar_entry_series(authenticated_client):
     client, user = await authenticated_client()
     repo = CalendarEntrySeriesRepository(user_id=user.id)
+    calendar_id = uuid4()
+    await create_calendar_for_user(user.id, calendar_id)
     series = CalendarEntrySeriesEntity(
         user_id=user.id,
-        calendar_id=uuid4(),
+        calendar_id=calendar_id,
         name="Morning Standup",
         platform_id="series-1",
         platform="google",
@@ -36,9 +63,11 @@ async def test_list_calendar_entry_series(authenticated_client):
 async def test_get_and_update_calendar_entry_series(authenticated_client):
     client, user = await authenticated_client()
     repo = CalendarEntrySeriesRepository(user_id=user.id)
+    calendar_id = uuid4()
+    await create_calendar_for_user(user.id, calendar_id)
     series = CalendarEntrySeriesEntity(
         user_id=user.id,
-        calendar_id=uuid4(),
+        calendar_id=calendar_id,
         name="Weekly Planning",
         platform_id="series-2",
         platform="google",
@@ -71,6 +100,10 @@ async def test_search_calendar_entry_series_by_calendar(authenticated_client):
     client, user = await authenticated_client()
     repo = CalendarEntrySeriesRepository(user_id=user.id)
     target_calendar_id = uuid4()
+    other_calendar_id = uuid4()
+
+    await create_calendar_for_user(user.id, target_calendar_id)
+    await create_calendar_for_user(user.id, other_calendar_id)
 
     matching_series = CalendarEntrySeriesEntity(
         user_id=user.id,
@@ -83,7 +116,7 @@ async def test_search_calendar_entry_series_by_calendar(authenticated_client):
     )
     other_series = CalendarEntrySeriesEntity(
         user_id=user.id,
-        calendar_id=uuid4(),
+        calendar_id=other_calendar_id,
         name="Non Matching",
         platform_id="series-4",
         platform="google",

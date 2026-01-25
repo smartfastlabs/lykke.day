@@ -9,14 +9,29 @@ import pytest_asyncio
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 from lykke.domain.value_objects.query import CalendarEntryQuery
 from lykke.domain.value_objects.task import TaskFrequency
-from lykke.infrastructure.repositories import CalendarEntryRepository, UserRepository
+from lykke.infrastructure.repositories import (
+    CalendarEntryRepository,
+    CalendarRepository,
+    UserRepository,
+)
 
 USER_TIMEZONE = "America/Chicago"
 
 
 @pytest_asyncio.fixture
-async def calendar_entry_repo(test_date, test_user):
+async def calendar_entry_repo(test_date, test_user, test_calendar):
     repo = CalendarEntryRepository(user_id=test_user.id)
+
+    calendar_repo = CalendarRepository(user_id=test_user.id)
+    other_calendar = CalendarEntity(
+        user_id=test_user.id,
+        name="Other Calendar",
+        auth_token_id=test_calendar.auth_token_id,
+        platform="testing",
+        platform_id="test-calendar-2",
+        id=uuid5(NAMESPACE_DNS, "test-calendar-2"),
+    )
+    other_calendar = await calendar_repo.put(other_calendar)
 
     # Create calendar entry on test_date (convert to UTC)
     starts_at_today = datetime.datetime.combine(
@@ -28,7 +43,7 @@ async def calendar_entry_repo(test_date, test_user):
         user_id=test_user.id,
         name="Test Calendar Entry",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-id",
         platform="testing",
         status="status",
@@ -48,7 +63,7 @@ async def calendar_entry_repo(test_date, test_user):
         user_id=test_user.id,
         name="Test Calendar Entry",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar-2"),
+        calendar_id=other_calendar.id,
         platform_id="test-id-2",
         platform="testing",
         status="status",

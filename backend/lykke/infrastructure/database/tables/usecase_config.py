@@ -1,6 +1,6 @@
 """UseCase configs table definition."""
 
-from sqlalchemy import Column, DateTime, Index, String
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
@@ -12,7 +12,7 @@ class UseCaseConfig(Base):
     __tablename__ = "usecase_configs"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     usecase = Column(String, nullable=False)
     config = Column(JSONB, nullable=False)
     created_at = Column(DateTime, nullable=False)

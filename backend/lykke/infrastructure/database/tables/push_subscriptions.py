@@ -1,6 +1,6 @@
 """Push subscriptions table definition."""
 
-from sqlalchemy import Column, DateTime, Index, String
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 from .base import Base
@@ -12,7 +12,7 @@ class PushSubscription(Base):
     __tablename__ = "push_subscriptions"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     device_name = Column(String)
     endpoint = Column(String, nullable=False)
     p256dh = Column(String, nullable=False)

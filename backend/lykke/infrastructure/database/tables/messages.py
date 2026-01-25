@@ -1,6 +1,6 @@
 """Messages table definition."""
 
-from sqlalchemy import Column, DateTime, Index, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
@@ -12,7 +12,7 @@ class Message(Base):
     __tablename__ = "messages"
 
     id = Column(PGUUID, primary_key=True)
-    conversation_id = Column(PGUUID, nullable=False)
+    conversation_id = Column(PGUUID, ForeignKey("conversations.id"), nullable=False)
     role = Column(String, nullable=False)  # MessageRole enum as string
     content = Column(Text, nullable=False)  # Message text
     meta = Column(JSONB)  # Provider-specific data

@@ -57,9 +57,13 @@ async def test_put(message_repo, conversation):
 
 
 @pytest.mark.asyncio
-async def test_search_by_conversation(message_repo, conversation):
+async def test_search_by_conversation(message_repo, conversation, create_conversation):
     """Test searching messages by conversation_id."""
-    other_conversation_id = uuid4()
+    other_conversation = await create_conversation(
+        channel=value_objects.ConversationChannel.IN_APP,
+        status=value_objects.ConversationStatus.ACTIVE,
+        llm_provider=value_objects.LLMProvider.ANTHROPIC,
+    )
     message1 = MessageEntity(
         id=uuid4(),
         conversation_id=conversation.id,
@@ -74,7 +78,7 @@ async def test_search_by_conversation(message_repo, conversation):
     )
     message3 = MessageEntity(
         id=uuid4(),
-        conversation_id=other_conversation_id,
+        conversation_id=other_conversation.id,
         role=value_objects.MessageRole.USER,
         content="Message 3",
     )

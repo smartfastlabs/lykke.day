@@ -1,6 +1,6 @@
 """Time block definitions table definition."""
 
-from sqlalchemy import Column, Index, String
+from sqlalchemy import Column, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 from .base import Base
@@ -12,7 +12,7 @@ class TimeBlockDefinition(Base):
     __tablename__ = "time_block_definitions"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     name = Column(String, nullable=False)
     description = Column(String, nullable=False)
     type = Column(String, nullable=False)  # TimeBlockType enum as string

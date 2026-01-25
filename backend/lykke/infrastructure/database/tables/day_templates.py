@@ -1,6 +1,6 @@
 """Day templates table definition."""
 
-from sqlalchemy import Column, Index, String, Text, Time
+from sqlalchemy import Column, ForeignKey, Index, String, Text, Time
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
@@ -12,7 +12,7 @@ class DayTemplate(Base):
     __tablename__ = "day_templates"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     slug = Column(String, nullable=False)
     start_time = Column(Time)
     end_time = Column(Time)

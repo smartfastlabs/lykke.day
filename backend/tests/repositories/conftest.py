@@ -7,10 +7,19 @@ from zoneinfo import ZoneInfo
 
 import pytest_asyncio
 
-from lykke.domain.entities import CalendarEntity, CalendarEntryEntity, UserEntity
+from lykke.domain.entities import (
+    AuthTokenEntity,
+    CalendarEntity,
+    CalendarEntryEntity,
+    UserEntity,
+)
 from lykke.domain.value_objects.task import TaskFrequency
 from lykke.domain.value_objects.user import UserSetting
-from lykke.infrastructure.repositories import UserRepository
+from lykke.infrastructure.repositories import (
+    AuthTokenRepository,
+    CalendarRepository,
+    UserRepository,
+)
 
 USER_TIMEZONE = "America/Chicago"
 
@@ -29,7 +38,33 @@ async def test_user():
 
 
 @pytest_asyncio.fixture
-async def test_calendar_entry(test_user, test_date):
+async def test_auth_token(test_user):
+    """Create an auth token for the test user."""
+    auth_token_repo = AuthTokenRepository()
+    auth_token = AuthTokenEntity(
+        user_id=test_user.id,
+        platform="google",
+        token="test_token",
+    )
+    return await auth_token_repo.put(auth_token)
+
+
+@pytest_asyncio.fixture
+async def test_calendar(test_user, test_auth_token):
+    """Create a calendar for the test user."""
+    calendar_repo = CalendarRepository(user_id=test_user.id)
+    calendar = CalendarEntity(
+        user_id=test_user.id,
+        name="Test Calendar",
+        auth_token_id=test_auth_token.id,
+        platform="google",
+        platform_id="test-calendar",
+    )
+    return await calendar_repo.put(calendar)
+
+
+@pytest_asyncio.fixture
+async def test_calendar_entry(test_user, test_date, test_calendar):
     """Create a test calendar entry."""
     # Create datetime in user timezone, then convert to UTC
     starts_at = datetime.datetime.combine(
@@ -41,7 +76,7 @@ async def test_calendar_entry(test_user, test_date):
         user_id=test_user.id,
         name="Test Calendar Entry",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-id",
         platform="testing",
         status="status",

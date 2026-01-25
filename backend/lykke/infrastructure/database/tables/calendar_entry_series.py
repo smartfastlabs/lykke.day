@@ -1,6 +1,6 @@
 """Calendar entry series table definition."""
 
-from sqlalchemy import Column, DateTime, Index, String
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
@@ -12,8 +12,8 @@ class CalendarEntrySeries(Base):
     __tablename__ = "calendar_entry_series"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
-    calendar_id = Column(PGUUID, nullable=False)
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
+    calendar_id = Column(PGUUID, ForeignKey("calendars.id"), nullable=False)
     name = Column(String, nullable=False)
     platform_id = Column(String, nullable=False)
     platform = Column(String, nullable=False)

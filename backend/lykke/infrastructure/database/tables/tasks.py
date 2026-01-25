@@ -1,6 +1,6 @@
 """Tasks table definition."""
 
-from sqlalchemy import Column, Date, DateTime, Index, String
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
@@ -12,7 +12,7 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     date = Column(Date, nullable=False)  # extracted from scheduled_date for querying
     scheduled_date = Column(Date, nullable=False)
     name = Column(String, nullable=False)
@@ -23,7 +23,7 @@ class Task(Base):
     frequency = Column(String, nullable=False)  # TaskFrequency enum as string
     completed_at = Column(DateTime)
     time_window = Column(JSONB)  # TimeWindow | None
-    routine_definition_id = Column(PGUUID)
+    routine_definition_id = Column(PGUUID, ForeignKey("routine_definitions.id"))
     tags = Column(JSONB)  # list[TaskTag]
     actions = Column(JSONB)  # list[Action]
 

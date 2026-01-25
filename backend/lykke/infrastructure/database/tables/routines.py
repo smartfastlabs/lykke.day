@@ -1,6 +1,6 @@
 """Routines table definition."""
 
-from sqlalchemy import Column, Date, Index, String
+from sqlalchemy import Column, Date, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
@@ -12,9 +12,11 @@ class Routine(Base):
     __tablename__ = "routines"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     date = Column(Date, nullable=False)
-    routine_definition_id = Column(PGUUID, nullable=False)
+    routine_definition_id = Column(
+        PGUUID, ForeignKey("routine_definitions.id"), nullable=False
+    )
     name = Column(String, nullable=False)
     category = Column(String, nullable=False)  # TaskCategory enum as string
     description = Column(String, nullable=False)

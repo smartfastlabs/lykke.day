@@ -11,12 +11,12 @@ from lykke.domain.entities import FactoidEntity
 
 
 @pytest.mark.asyncio
-async def test_get(factoid_repo, test_user):
+async def test_get(factoid_repo, test_user, conversation):
     """Test getting a factoid by ID."""
     factoid = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=uuid4(),
+        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.EPISODIC,
         criticality=value_objects.FactoidCriticality.NORMAL,
         content="User prefers morning workouts.",
@@ -123,9 +123,15 @@ async def test_access_tracking(factoid_repo, test_user, conversation):
 
 
 @pytest.mark.asyncio
-async def test_search_by_conversation(factoid_repo, test_user, conversation):
+async def test_search_by_conversation(
+    factoid_repo, test_user, conversation, create_conversation
+):
     """Test searching factoids by conversation_id."""
-    other_conversation_id = uuid4()
+    other_conversation = await create_conversation(
+        channel=value_objects.ConversationChannel.IN_APP,
+        status=value_objects.ConversationStatus.ACTIVE,
+        llm_provider=value_objects.LLMProvider.ANTHROPIC,
+    )
     factoid1 = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
@@ -143,7 +149,7 @@ async def test_search_by_conversation(factoid_repo, test_user, conversation):
     factoid3 = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=other_conversation_id,
+        conversation_id=other_conversation.id,
         factoid_type=value_objects.FactoidType.EPISODIC,
         content="Factoid 3",
     )

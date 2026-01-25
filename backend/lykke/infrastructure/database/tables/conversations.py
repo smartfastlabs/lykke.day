@@ -1,6 +1,6 @@
 """Conversations table definition."""
 
-from sqlalchemy import Column, DateTime, Index, String
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
@@ -12,8 +12,10 @@ class Conversation(Base):
     __tablename__ = "conversations"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
-    bot_personality_id = Column(PGUUID, nullable=False)
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
+    bot_personality_id = Column(
+        PGUUID, ForeignKey("bot_personalities.id"), nullable=False
+    )
     channel = Column(String, nullable=False)  # ConversationChannel enum as string
     status = Column(String, nullable=False)  # ConversationStatus enum as string
     llm_provider = Column(String, nullable=False)  # LLMProvider enum as string

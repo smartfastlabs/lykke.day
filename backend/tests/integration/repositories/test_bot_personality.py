@@ -140,6 +140,13 @@ async def test_personality_inheritance(bot_personality_repo, test_user):
 async def test_search_by_base_personality(bot_personality_repo, test_user):
     """Test searching personalities by base_bot_personality_id."""
     base_id = uuid4()
+    base_personality = BotPersonalityEntity(
+        id=base_id,
+        user_id=test_user.id,
+        name="Base Personality",
+        system_prompt="Base prompt",
+    )
+    await bot_personality_repo.put(base_personality)
     personality1 = BotPersonalityEntity(
         id=uuid4(),
         user_id=test_user.id,

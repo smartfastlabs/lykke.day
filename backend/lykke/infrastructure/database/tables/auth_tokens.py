@@ -1,6 +1,6 @@
 """Auth tokens table definition."""
 
-from sqlalchemy import Column, DateTime, Index, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
@@ -12,7 +12,7 @@ class AuthToken(Base):
     __tablename__ = "auth_tokens"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     platform = Column(String, nullable=False)
     token = Column(Text, nullable=False)
     refresh_token = Column(Text)

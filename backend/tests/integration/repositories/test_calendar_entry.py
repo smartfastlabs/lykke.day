@@ -1,11 +1,14 @@
 """Integration tests for CalendarEntryRepository."""
 
+# pylint: disable=redefined-outer-name
+
 import datetime
 from datetime import UTC
-from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
+from uuid import NAMESPACE_DNS, uuid4, uuid5
 from zoneinfo import ZoneInfo
 
 import pytest
+import pytest_asyncio
 
 from lykke.core.exceptions import NotFoundError
 from lykke.domain.entities import CalendarEntryEntity
@@ -16,8 +19,17 @@ from lykke.infrastructure.repositories import CalendarEntryRepository
 USER_TIMEZONE = "America/Chicago"
 
 
+@pytest_asyncio.fixture
+async def test_calendar(create_calendar, test_user):
+    return await create_calendar(
+        user_id=test_user.id,
+        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        platform_id="test-calendar",
+    )
+
+
 @pytest.mark.asyncio
-async def test_get(calendar_entry_repo, test_user, test_date):
+async def test_get(calendar_entry_repo, test_user, test_date, test_calendar):
     """Test getting a calendar entry by ID."""
     starts_at = datetime.datetime.combine(
         test_date,
@@ -29,7 +41,7 @@ async def test_get(calendar_entry_repo, test_user, test_date):
         user_id=test_user.id,
         name="Test Calendar Entry",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -53,7 +65,7 @@ async def test_get_not_found(calendar_entry_repo):
 
 
 @pytest.mark.asyncio
-async def test_put(calendar_entry_repo, test_user, test_date):
+async def test_put(calendar_entry_repo, test_user, test_date, test_calendar):
     """Test creating a new calendar entry."""
     starts_at = datetime.datetime.combine(
         test_date,
@@ -65,7 +77,7 @@ async def test_put(calendar_entry_repo, test_user, test_date):
         user_id=test_user.id,
         name="New Calendar Entry",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -81,7 +93,7 @@ async def test_put(calendar_entry_repo, test_user, test_date):
 
 
 @pytest.mark.asyncio
-async def test_put_update(calendar_entry_repo, test_user, test_date):
+async def test_put_update(calendar_entry_repo, test_user, test_date, test_calendar):
     """Test updating an existing calendar entry."""
     starts_at = datetime.datetime.combine(
         test_date,
@@ -93,7 +105,7 @@ async def test_put_update(calendar_entry_repo, test_user, test_date):
         user_id=test_user.id,
         name="Original Calendar Entry",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -114,7 +126,9 @@ async def test_put_update(calendar_entry_repo, test_user, test_date):
 
 
 @pytest.mark.asyncio
-async def test_all(calendar_entry_repo, test_user, test_date, test_date_tomorrow):
+async def test_all(
+    calendar_entry_repo, test_user, test_date, test_date_tomorrow, test_calendar
+):
     """Test getting all calendar entries."""
     starts_at1 = datetime.datetime.combine(
         test_date,
@@ -132,7 +146,7 @@ async def test_all(calendar_entry_repo, test_user, test_date, test_date_tomorrow
         user_id=test_user.id,
         name="Calendar Entry 1",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-platform-id-1",
         platform="testing",
         status="confirmed",
@@ -144,7 +158,7 @@ async def test_all(calendar_entry_repo, test_user, test_date, test_date_tomorrow
         user_id=test_user.id,
         name="Calendar Entry 2",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-platform-id-2",
         platform="testing",
         status="confirmed",
@@ -163,7 +177,7 @@ async def test_all(calendar_entry_repo, test_user, test_date, test_date_tomorrow
 
 @pytest.mark.asyncio
 async def test_search_query(
-    calendar_entry_repo, test_user, test_date, test_date_tomorrow
+    calendar_entry_repo, test_user, test_date, test_date_tomorrow, test_calendar
 ):
     """Test searching calendar entries with DateQuery."""
     starts_at1 = datetime.datetime.combine(
@@ -182,7 +196,7 @@ async def test_search_query(
         user_id=test_user.id,
         name="Calendar Entry Today",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-platform-id-1",
         platform="testing",
         status="confirmed",
@@ -194,7 +208,7 @@ async def test_search_query(
         user_id=test_user.id,
         name="Calendar Entry Tomorrow",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-platform-id-2",
         platform="testing",
         status="confirmed",
@@ -213,7 +227,7 @@ async def test_search_query(
 
 
 @pytest.mark.asyncio
-async def test_delete(calendar_entry_repo, test_user, test_date):
+async def test_delete(calendar_entry_repo, test_user, test_date, test_calendar):
     """Test deleting a calendar entry."""
     starts_at = datetime.datetime.combine(
         test_date,
@@ -225,7 +239,7 @@ async def test_delete(calendar_entry_repo, test_user, test_date):
         user_id=test_user.id,
         name="Calendar Entry to Delete",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",
@@ -244,7 +258,7 @@ async def test_delete(calendar_entry_repo, test_user, test_date):
 
 @pytest.mark.asyncio
 async def test_delete_many(
-    calendar_entry_repo, test_user, test_date, test_date_tomorrow
+    calendar_entry_repo, test_user, test_date, test_date_tomorrow, test_calendar
 ):
     """Test deleting multiple calendar entries by date."""
     starts_at1 = datetime.datetime.combine(
@@ -268,7 +282,7 @@ async def test_delete_many(
         user_id=test_user.id,
         name="Calendar Entry 1",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-platform-id-1",
         platform="testing",
         status="confirmed",
@@ -280,7 +294,7 @@ async def test_delete_many(
         user_id=test_user.id,
         name="Calendar Entry 2",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-platform-id-2",
         platform="testing",
         status="confirmed",
@@ -292,7 +306,7 @@ async def test_delete_many(
         user_id=test_user.id,
         name="Calendar Entry 3",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-platform-id-3",
         platform="testing",
         status="confirmed",
@@ -320,7 +334,7 @@ async def test_delete_many(
 
 @pytest.mark.asyncio
 async def test_user_isolation(
-    calendar_entry_repo, test_user, create_test_user, test_date
+    calendar_entry_repo, test_user, create_test_user, test_date, test_calendar
 ):
     """Test that different users' calendar entries are properly isolated."""
     starts_at = datetime.datetime.combine(
@@ -335,7 +349,7 @@ async def test_user_isolation(
         user_id=test_user.id,
         name="User1 Calendar Entry",
         frequency=TaskFrequency.ONCE,
-        calendar_id=uuid5(NAMESPACE_DNS, "test-calendar"),
+        calendar_id=test_calendar.id,
         platform_id="test-platform-id",
         platform="testing",
         status="confirmed",

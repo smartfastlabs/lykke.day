@@ -1,12 +1,18 @@
 """Fixtures for integration tests - uses real database with per-test user isolation."""
 
 from datetime import time
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 import pytest_asyncio
 
-from lykke.domain.entities import BotPersonalityEntity, ConversationEntity, UserEntity
+from lykke.domain.entities import (
+    AuthTokenEntity,
+    BotPersonalityEntity,
+    CalendarEntity,
+    ConversationEntity,
+    UserEntity,
+)
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.value_objects.ai_chat import ConversationChannel, LLMProvider
 from lykke.domain.value_objects.user import UserSetting
@@ -139,9 +145,62 @@ async def calendar_repo(test_user):
 
 
 @pytest_asyncio.fixture
+async def create_calendar(calendar_repo, create_auth_token):
+    """Factory to create calendars with valid auth tokens."""
+
+    async def _create_calendar(
+        *,
+        user_id: UUID,
+        auth_token_id: UUID | None = None,
+        calendar_id: UUID | None = None,
+        name: str = "Test Calendar",
+        platform: str = "google",
+        platform_id: str | None = None,
+    ) -> CalendarEntity:
+        if auth_token_id is None:
+            auth_token = await create_auth_token(user_id=user_id, platform=platform)
+            auth_token_id = auth_token.id
+
+        if platform_id is None:
+            platform_id = f"calendar-{uuid4()}"
+
+        calendar = CalendarEntity(
+            id=calendar_id,
+            user_id=user_id,
+            name=name,
+            auth_token_id=auth_token_id,
+            platform=platform,
+            platform_id=platform_id,
+        )
+        return await calendar_repo.put(calendar)
+
+    return _create_calendar
+
+
+@pytest_asyncio.fixture
 async def auth_token_repo(test_user):
     """AuthTokenRepository (not user-scoped)."""
     return AuthTokenRepository()
+
+
+@pytest_asyncio.fixture
+async def create_auth_token(auth_token_repo):
+    """Factory to create auth tokens for a user."""
+
+    async def _create_auth_token(
+        *,
+        user_id: UUID,
+        platform: str = "google",
+        token: str = "test_token",
+    ) -> AuthTokenEntity:
+        auth_token = AuthTokenEntity(
+            user_id=user_id,
+            platform=platform,
+            token=token,
+        )
+        return await auth_token_repo.put(auth_token)
+
+    return _create_auth_token
 
 
 @pytest_asyncio.fixture
@@ -213,6 +272,21 @@ async def bot_personality(bot_personality_repo, test_user):
 
 
 @pytest_asyncio.fixture
+async def create_bot_personality(bot_personality_repo, test_user):
+    """Factory to create bot personalities for a user."""
+
+    async def _create_bot_personality(
+        *, user_id: UUID | None = None, **kwargs
+    ) -> BotPersonalityEntity:
+        if user_id is None:
+            user_id = test_user.id
+        personality = BotPersonalityEntity(user_id=user_id, **kwargs)
+        return await bot_personality_repo.put(personality)
+
+    return _create_bot_personality
+
+
+@pytest_asyncio.fixture
 async def conversation(conversation_repo, test_user, bot_personality):
     """Create a test conversation."""
     conv = ConversationEntity(
@@ -223,3 +297,27 @@ async def conversation(conversation_repo, test_user, bot_personality):
         llm_provider=LLMProvider.ANTHROPIC,
     )
     return await conversation_repo.put(conv)
+
+
+@pytest_asyncio.fixture
+async def create_conversation(conversation_repo, test_user, bot_personality):
+    """Factory to create conversations for a user."""
+
+    async def _create_conversation(
+        *,
+        user_id: UUID | None = None,
+        bot_personality_id: UUID | None = None,
+        **kwargs,
+    ) -> ConversationEntity:
+        if user_id is None:
+            user_id = test_user.id
+        if bot_personality_id is None:
+            bot_personality_id = bot_personality.id
+        conv = ConversationEntity(
+            user_id=user_id,
+            bot_personality_id=bot_personality_id,
+            **kwargs,
+        )
+        return await conversation_repo.put(conv)
+
+    return _create_conversation

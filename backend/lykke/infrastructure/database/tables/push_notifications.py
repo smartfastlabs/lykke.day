@@ -1,6 +1,6 @@
 """Push notifications table definition."""
 
-from sqlalchemy import Column, DateTime, Index, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID as PGUUID
 
 from .base import Base
@@ -12,7 +12,7 @@ class PushNotification(Base):
     __tablename__ = "push_notifications"
 
     id = Column(PGUUID, primary_key=True)
-    user_id = Column(PGUUID, nullable=False)
+    user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     push_subscription_ids: Column[list[PGUUID]] = Column(ARRAY(PGUUID), nullable=False)
     content = Column(Text, nullable=False)  # JSON string of the notification payload
     status = Column(
