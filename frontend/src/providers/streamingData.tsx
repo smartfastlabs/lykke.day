@@ -158,12 +158,7 @@ export function StreamingDataProvider(props: ParentProps) {
   // Derived values from the store
   const dayContext = createMemo(() => dayContextStore.data);
   const tasks = createMemo(() => dayContextStore.data?.tasks ?? []);
-  const events = createMemo(
-    () =>
-      dayContextStore.data?.calendar_entries ??
-      dayContextStore.data?.events ??
-      []
-  );
+  const events = createMemo(() => dayContextStore.data?.calendar_entries ?? []);
   const reminders = createMemo(() => {
     // Reminders are stored on the day entity within day_context
     // Note: reminders may not be in the generated types yet, but they exist at runtime
@@ -362,9 +357,7 @@ export function StreamingDataProvider(props: ParentProps) {
 
       const updated = { ...current.data };
       const updatedTasks = [...(updated.tasks ?? [])];
-      const updatedEvents = [
-        ...(updated.calendar_entries ?? updated.events ?? []),
-      ];
+      const updatedEvents = [...(updated.calendar_entries ?? [])];
       const updatedRoutines = [
         ...((updated as DayContextWithRoutines).routines ?? []),
       ];
@@ -442,7 +435,6 @@ export function StreamingDataProvider(props: ParentProps) {
 
       updated.tasks = updatedTasks;
       updated.calendar_entries = updatedEvents;
-      updated.events = updatedEvents;
       (updated as DayContextWithRoutines).routines = updatedRoutines;
 
       return { data: updated };
@@ -541,7 +533,6 @@ export function StreamingDataProvider(props: ParentProps) {
           updated.calendar_entries = (updated.calendar_entries ?? []).filter(
             (e) => e.id !== auditLog.entity_id
           );
-          updated.events = updated.calendar_entries;
         } else if (auditLog.entity_type === "routine") {
           const routinesList = (updated as DayContextWithRoutines).routines ?? [];
           (updated as DayContextWithRoutines).routines = routinesList.filter(
@@ -580,21 +571,6 @@ export function StreamingDataProvider(props: ParentProps) {
         },
       };
       return updated;
-    });
-  };
-
-  const upsertTasksLocally = (incomingTasks: Task[]) => {
-    setDayContextStore((current) => {
-      if (!current.data) return current;
-      const existingTasks = current.data.tasks ?? [];
-      const taskMap = new Map(existingTasks.map((task) => [task.id, task]));
-      incomingTasks.forEach((task) => taskMap.set(task.id, task));
-      return {
-        data: {
-          ...current.data,
-          tasks: Array.from(taskMap.values()),
-        },
-      };
     });
   };
 
