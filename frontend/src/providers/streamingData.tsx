@@ -25,7 +25,7 @@ import {
 import {
   brainDumpAPI,
   reminderAPI,
-  routineDefinitionAPI,
+  routineAPI,
   taskAPI,
 } from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
@@ -49,7 +49,11 @@ interface StreamingDataContextValue {
   sync: () => void;
   syncIncremental: (sinceTimestamp: string) => void;
   setTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
-  setRoutineAction: (routineDefinitionId: string, status: TaskStatus) => Promise<void>;
+  setRoutineAction: (
+    routineId: string,
+    routineDefinitionId: string,
+    status: TaskStatus
+  ) => Promise<void>;
   addAdhocTask: (name: string, category: TaskCategory) => Promise<void>;
   addReminder: (name: string) => Promise<void>;
   updateReminderStatus: (reminder: Reminder, status: ReminderStatus) => Promise<void>;
@@ -593,6 +597,7 @@ export function StreamingDataProvider(props: ParentProps) {
   };
 
   const setRoutineAction = async (
+    routineId: string,
     routineDefinitionId: string,
     status: TaskStatus
   ): Promise<void> => {
@@ -607,11 +612,10 @@ export function StreamingDataProvider(props: ParentProps) {
     updatedTasks.forEach((task) => updateTaskLocally(task));
 
     try {
-      const updatedTasksFromAPI =
-        await routineDefinitionAPI.setRoutineDefinitionAction(
-          routineDefinitionId,
-          status
-        );
+      const updatedTasksFromAPI = await routineAPI.setRoutineAction(
+        routineId,
+        status
+      );
       // Update each task with the API response
       updatedTasksFromAPI.forEach((task) => updateTaskLocally(task));
     } catch (error) {

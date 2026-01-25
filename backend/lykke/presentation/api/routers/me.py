@@ -247,17 +247,17 @@ async def remove_brain_dump_item_from_today(
 
 
 # ============================================================================
-# Today's Routine Definitions
+# Today's Routines
 # ============================================================================
 
 
-@router.post("/today/routine-definitions", response_model=list[TaskSchema])
-async def add_routine_definition_to_today(
+@router.post("/today/routines", response_model=list[TaskSchema])
+async def add_routine_to_today(
     routine_definition_id: UUID,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
 ) -> list[TaskSchema]:
-    """Add a routine definition's tasks to today."""
+    """Add a routine's tasks to today (creates today's routine if needed)."""
     date = get_current_date(user.settings.timezone)
     handler = command_factory.create(AddRoutineDefinitionToDayHandler)
     tasks = await handler.handle(

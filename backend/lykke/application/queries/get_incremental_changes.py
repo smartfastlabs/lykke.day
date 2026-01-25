@@ -190,22 +190,6 @@ class GetIncrementalChangesHandler(
                 )
                 return entry_schema.model_dump(mode="json")
 
-            elif entity_type == "routine_definition":
-                routine_definition = await self.routine_definition_ro_repo.get(
-                    entity_id
-                )
-                if not routine_definition:
-                    return None
-                # Convert routine definition to dict using schema mapper
-                from lykke.presentation.api.schemas.mappers import (
-                    map_routine_definition_to_schema,
-                )
-
-                routine_definition_schema = map_routine_definition_to_schema(
-                    routine_definition
-                )
-                return routine_definition_schema.model_dump(mode="json")
-
             elif entity_type == "routine":
                 routine = await self.routine_ro_repo.get(entity_id)
                 if not routine:

@@ -226,7 +226,7 @@ class TestLoadEntityData:
 
     @pytest.mark.asyncio
     async def test_load_routine_definition_entity_data(self, handler_with_mocks):
-        """Test loading routine definition entity data."""
+        """Routine definition entity data is not loaded for day context."""
         from lykke.domain import value_objects
         from lykke.domain.entities import RoutineDefinitionEntity
 
@@ -251,11 +251,8 @@ class TestLoadEntityData:
             user_timezone="America/Chicago",
         )
 
-        assert result is not None
-        assert result["name"] == "Morning Routine Definition"
-        handler_with_mocks.routine_definition_ro_repo.get.assert_called_once_with(
-            routine_definition_id
-        )
+        assert result is None
+        handler_with_mocks.routine_definition_ro_repo.get.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_load_unknown_entity_type_returns_none(self, handler_with_mocks):

@@ -47,9 +47,8 @@ async def is_audit_log_for_today(
         return starts_at.astimezone(resolved_timezone).date() == target_date
 
     if entity_type == "routine_definition":
-        # Routine definitions are always relevant - they're not date-specific
-        # but are part of DayContext for today view
-        return True
+        # Routine definitions are settings-level entities, not part of DayContext
+        return False
 
     if entity_type == "day":
         # Day entities have a date field - check if it matches target date

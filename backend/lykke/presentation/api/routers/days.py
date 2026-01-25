@@ -427,6 +427,12 @@ async def _handle_realtime_events(
                         )
                         continue
 
+                    if domain_event.entity_type == "routine_definition":
+                        logger.debug(
+                            "Filtered out routine_definition event from day context stream"
+                        )
+                        continue
+
                     logger.debug(
                         f"Processing {domain_event.__class__.__name__} for {domain_event.entity_type} {domain_event.entity_id} on date {domain_event.entity_date}"
                     )

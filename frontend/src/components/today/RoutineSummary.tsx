@@ -20,6 +20,7 @@ export interface RoutineSummaryProps {
 }
 
 interface RoutineGroup {
+  routineId: string | null;
   routineDefinitionId: string;
   routineName: string;
   tasks: Task[];
@@ -81,10 +82,11 @@ export const RoutineSummary: Component<RoutineSummaryProps> = (props) => {
         const pendingCount = tasks.filter(
           (t) => t.status !== "COMPLETE" && t.status !== "PUNT"
         ).length;
-        const routineName =
-          routinesByDefinition.get(routineDefinitionId)?.name ?? "Routine";
+        const routineForDefinition = routinesByDefinition.get(routineDefinitionId);
+        const routineName = routineForDefinition?.name ?? "Routine";
 
         return {
+          routineId: routineForDefinition?.id ?? null,
           routineDefinitionId,
           routineName,
           tasks,
@@ -176,12 +178,22 @@ export const RoutineSummary: Component<RoutineSummaryProps> = (props) => {
               >
                 <div class="-mx-4 -mt-4 mb-1">
                   <SwipeableItem
-                    onSwipeRight={() =>
-                      setRoutineAction(routine.routineDefinitionId, "COMPLETE")
-                    }
-                    onSwipeLeft={() =>
-                      setRoutineAction(routine.routineDefinitionId, "PUNT")
-                    }
+                    onSwipeRight={() => {
+                      if (!routine.routineId) return;
+                      setRoutineAction(
+                        routine.routineId,
+                        routine.routineDefinitionId,
+                        "COMPLETE"
+                      );
+                    }}
+                    onSwipeLeft={() => {
+                      if (!routine.routineId) return;
+                      setRoutineAction(
+                        routine.routineId,
+                        routine.routineDefinitionId,
+                        "PUNT"
+                      );
+                    }}
                     rightLabel="✅ Complete All Tasks"
                     leftLabel="🗑 Punt All Tasks"
                     statusClass={getSwipeableStatusClass()}
