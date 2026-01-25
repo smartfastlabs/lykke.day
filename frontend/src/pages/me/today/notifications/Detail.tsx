@@ -1,6 +1,7 @@
 import { useParams } from "@solidjs/router";
 import { Component, Show, createMemo, createResource } from "solid-js";
 import SettingsPage from "@/components/shared/SettingsPage";
+import LLMSnapshotDetails from "@/components/llm/LLMSnapshotDetails";
 import { notificationAPI } from "@/utils/api";
 import type { LLMRunResultSnapshot, PushNotification } from "@/types/api";
 
@@ -101,9 +102,14 @@ const TodayNotificationDetailPage: Component = () => {
               <h2 class="text-sm font-semibold text-stone-700">
                 Notification Payload
               </h2>
-              <pre class="rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
-                {safeStringify(contentPayload() ?? current().content)}
-              </pre>
+              <details class="rounded-xl border border-stone-200/80 bg-white/70 p-4">
+                <summary class="cursor-pointer text-xs font-semibold text-stone-600">
+                  View payload JSON
+                </summary>
+                <pre class="mt-3 rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
+                  {safeStringify(contentPayload() ?? current().content)}
+                </pre>
+              </details>
             </div>
 
             <div class="rounded-2xl border border-amber-100/80 bg-white/80 p-5 shadow-sm shadow-amber-900/5 space-y-4">
@@ -118,81 +124,7 @@ const TodayNotificationDetailPage: Component = () => {
                   </div>
                 }
               >
-                {(snapshot) => (
-                  <div class="space-y-4">
-                    <div>
-                      <div class="text-xs font-semibold text-stone-600 mb-2">
-                        Prompt Context
-                      </div>
-                      <pre class="rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
-                        {safeStringify(snapshot().prompt_context ?? {})}
-                      </pre>
-                    </div>
-
-                    <div>
-                      <div class="text-xs font-semibold text-stone-600 mb-2">
-                        Tool Calls
-                      </div>
-                      <pre class="rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
-                        {safeStringify(snapshot().tool_calls ?? [])}
-                      </pre>
-                    </div>
-
-                    <div>
-                      <div class="text-xs font-semibold text-stone-600 mb-2">
-                        System Prompt
-                      </div>
-                      <pre class="rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
-                        {snapshot().system_prompt ?? ""}
-                      </pre>
-                    </div>
-
-                    <div>
-                      <div class="text-xs font-semibold text-stone-600 mb-2">
-                        Context Prompt
-                      </div>
-                      <pre class="rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
-                        {snapshot().context_prompt ?? ""}
-                      </pre>
-                    </div>
-
-                    <div>
-                      <div class="text-xs font-semibold text-stone-600 mb-2">
-                        Ask Prompt
-                      </div>
-                      <pre class="rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
-                        {snapshot().ask_prompt ?? ""}
-                      </pre>
-                    </div>
-
-                    <div>
-                      <div class="text-xs font-semibold text-stone-600 mb-2">
-                        Tools Prompt
-                      </div>
-                      <pre class="rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
-                        {snapshot().tools_prompt ?? ""}
-                      </pre>
-                    </div>
-
-                    <div>
-                      <div class="text-xs font-semibold text-stone-600 mb-2">
-                        Referenced Entities
-                      </div>
-                      <pre class="rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
-                        {safeStringify(snapshot().referenced_entities ?? [])}
-                      </pre>
-                    </div>
-
-                    <div>
-                      <div class="text-xs font-semibold text-stone-600 mb-2">
-                        Raw Snapshot
-                      </div>
-                      <pre class="rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
-                        {safeStringify(snapshot())}
-                      </pre>
-                    </div>
-                  </div>
-                )}
+                {(snapshot) => <LLMSnapshotDetails snapshot={snapshot()} />}
               </Show>
             </div>
           </div>
