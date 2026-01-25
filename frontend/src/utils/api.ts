@@ -7,6 +7,7 @@ import {
   Calendar,
   CalendarEntrySeries,
   TaskDefinition,
+  TaskDefinitionCreate,
   RoutineDefinition,
   PushSubscription,
   TimeWindow,
@@ -464,6 +465,11 @@ export const dayTemplateAPI = {
 
 export const taskDefinitionAPI = {
   ...createCrudMethods<TaskDefinition>("task-definitions"),
+  create: (item: TaskDefinitionCreate): Promise<TaskDefinition> =>
+    fetchData<TaskDefinition>("/api/task-definitions/create", {
+      method: "POST",
+      body: JSON.stringify(item),
+    }),
 };
 
 export const timeBlockDefinitionAPI = {

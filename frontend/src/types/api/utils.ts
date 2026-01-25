@@ -52,6 +52,7 @@ export type TimeBlockDefinition = components["schemas"]["TimeBlockDefinitionSche
 export type Calendar = components["schemas"]["CalendarSchema"];
 export type CalendarEntrySeries = components["schemas"]["CalendarEntrySeriesSchema"];
 export type TaskDefinition = components["schemas"]["TaskDefinitionSchema"];
+export type TaskDefinitionCreate = components["schemas"]["TaskDefinitionCreateSchema"];
 export type RoutineDefinition = components["schemas"]["RoutineDefinitionSchema"] & {
   time_window?: TimeWindow | null;
 };
@@ -89,7 +90,6 @@ export type TaskType = components["schemas"]["TaskType"];
 export type TaskFrequency = components["schemas"]["TaskFrequency"];
 export type TaskCategory = components["schemas"]["TaskCategory"];
 export type DayOfWeek = components["schemas"]["DayOfWeek"];
-export type TimingType = components["schemas"]["TimingType"];
 export type TimeBlockType = components["schemas"]["TimeBlockType"];
 export type TimeBlockCategory = components["schemas"]["TimeBlockCategory"];
 export type ActionType = components["schemas"]["ActionType"];

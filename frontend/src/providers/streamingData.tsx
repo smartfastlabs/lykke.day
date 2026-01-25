@@ -509,6 +509,16 @@ export function StreamingDataProvider(props: ParentProps) {
 
       for (const change of changes) {
         if (change.entity_type === "task") {
+          if (change.change_type === "deleted") {
+            const index = updatedTasks.findIndex(
+              (t) => t.id === change.entity_id
+            );
+            if (index >= 0) {
+              updatedTasks.splice(index, 1);
+              didUpdate = true;
+            }
+            continue;
+          }
           const task = change.entity_data as Task | null;
           if (!task) {
             continue;
@@ -536,19 +546,21 @@ export function StreamingDataProvider(props: ParentProps) {
               updatedTasks.push(task);
               didUpdate = true;
             }
-          } else if (change.change_type === "deleted") {
-            const index = updatedTasks.findIndex(
-              (t) => t.id === change.entity_id
-            );
-            if (index >= 0) {
-              updatedTasks.splice(index, 1);
-              didUpdate = true;
-            }
           }
         } else if (
           change.entity_type === "calendar_entry" ||
           change.entity_type === "calendarentry"
         ) {
+          if (change.change_type === "deleted") {
+            const index = updatedEvents.findIndex(
+              (e) => e.id === change.entity_id
+            );
+            if (index >= 0) {
+              updatedEvents.splice(index, 1);
+              didUpdate = true;
+            }
+            continue;
+          }
           const event = change.entity_data as Event | null;
           if (!event) {
             continue;
@@ -576,16 +588,18 @@ export function StreamingDataProvider(props: ParentProps) {
               updatedEvents.push(event);
               didUpdate = true;
             }
-          } else if (change.change_type === "deleted") {
-            const index = updatedEvents.findIndex(
-              (e) => e.id === change.entity_id
-            );
-            if (index >= 0) {
-              updatedEvents.splice(index, 1);
-              didUpdate = true;
-            }
           }
         } else if (change.entity_type === "routine") {
+          if (change.change_type === "deleted") {
+            const index = updatedRoutines.findIndex(
+              (item) => item.id === change.entity_id
+            );
+            if (index >= 0) {
+              updatedRoutines.splice(index, 1);
+              didUpdate = true;
+            }
+            continue;
+          }
           const routine = change.entity_data as Routine | null;
           if (!routine) {
             continue;
@@ -610,14 +624,6 @@ export function StreamingDataProvider(props: ParentProps) {
               }
             } else {
               updatedRoutines.push(routine);
-              didUpdate = true;
-            }
-          } else if (change.change_type === "deleted") {
-            const index = updatedRoutines.findIndex(
-              (item) => item.id === change.entity_id
-            );
-            if (index >= 0) {
-              updatedRoutines.splice(index, 1);
               didUpdate = true;
             }
           }

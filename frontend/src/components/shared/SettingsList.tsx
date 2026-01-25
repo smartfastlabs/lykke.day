@@ -1,4 +1,4 @@
-import { Component, type JSX, Show, createMemo, createSignal } from "solid-js";
+import { type JSX, Show, createMemo, createSignal } from "solid-js";
 import { GenericList } from "@/components/shared/GenericList";
 import { fuzzyMatch } from "@/utils/search";
 

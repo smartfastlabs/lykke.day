@@ -9,7 +9,7 @@ interface GenericListProps<T> {
 }
 
 export function GenericList<T>(props: GenericListProps<T>) {
-  const itemClass =
+  const itemClass = () =>
     props.itemClass ??
     "px-5 py-3.5 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer";
 
@@ -18,7 +18,7 @@ export function GenericList<T>(props: GenericListProps<T>) {
       <For each={props.items}>
         {(item) => (
           <div
-            class={itemClass}
+            class={itemClass()}
             onClick={() => props.onItemClick?.(item)}
           >
             {props.renderItem(item)}

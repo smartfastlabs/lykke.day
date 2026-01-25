@@ -89,56 +89,52 @@ const formatWindow = (window: TimeWindow | null | undefined): string | null => {
 
 const getTaskTime = (task: Task): Date | null => {
   const taskDate = task.scheduled_date;
-  if (!taskDate || !task.schedule) return null;
+  const timeWindow = task.time_window;
+  if (!taskDate || !timeWindow) return null;
 
-  const schedule = task.schedule;
-
-  if (schedule.timing_type === "FIXED_TIME" && schedule.start_time) {
-    return getTime(taskDate, schedule.start_time);
+  if (timeWindow.start_time) {
+    return getTime(taskDate, timeWindow.start_time);
   }
 
-  if (schedule.timing_type === "DEADLINE" && schedule.end_time) {
-    return getTime(taskDate, schedule.end_time);
+  if (timeWindow.available_time) {
+    return getTime(taskDate, timeWindow.available_time);
   }
 
-  if (schedule.available_time) {
-    return getTime(taskDate, schedule.available_time);
+  if (timeWindow.end_time) {
+    return getTime(taskDate, timeWindow.end_time);
   }
 
-  if (schedule.start_time) {
-    return getTime(taskDate, schedule.start_time);
+  if (timeWindow.cutoff_time) {
+    return getTime(taskDate, timeWindow.cutoff_time);
   }
 
   return null;
 };
 
 const getTaskTimeLabel = (task: Task): string | null => {
-  const schedule = task.schedule;
-  if (!schedule) return null;
+  const timeWindow = task.time_window;
+  if (!timeWindow) return null;
 
-  if (schedule.timing_type === "TIME_WINDOW" && schedule.start_time) {
-    return schedule.end_time
-      ? `${formatTimeString(schedule.start_time)}-${formatTimeString(
-          schedule.end_time
-        )}`
-      : formatTimeString(schedule.start_time);
+  if (timeWindow.start_time && timeWindow.end_time) {
+    return `${formatTimeString(timeWindow.start_time)}-${formatTimeString(
+      timeWindow.end_time
+    )}`;
   }
 
-  if (schedule.timing_type === "FIXED_TIME" && schedule.start_time) {
-    return formatTimeString(schedule.start_time);
+  if (timeWindow.start_time) {
+    return formatTimeString(timeWindow.start_time);
   }
 
-  if (schedule.timing_type === "DEADLINE" && schedule.end_time) {
-    return `by ${formatTimeString(schedule.end_time)}`;
+  if (timeWindow.available_time) {
+    return `after ${formatTimeString(timeWindow.available_time)}`;
   }
 
-  if (schedule.timing_type === "FLEXIBLE") {
-    if (schedule.available_time) {
-      return `after ${formatTimeString(schedule.available_time)}`;
-    }
-    if (schedule.end_time) {
-      return `before ${formatTimeString(schedule.end_time)}`;
-    }
+  if (timeWindow.end_time) {
+    return `by ${formatTimeString(timeWindow.end_time)}`;
+  }
+
+  if (timeWindow.cutoff_time) {
+    return `before ${formatTimeString(timeWindow.cutoff_time)}`;
   }
 
   return null;
@@ -227,7 +223,7 @@ const KioskPage: Component = () => {
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          const url = new URL("https://api.open-meteo.com/v1/forecast");
+          const url = new window.URL("https://api.open-meteo.com/v1/forecast");
           url.searchParams.set("latitude", latitude.toString());
           url.searchParams.set("longitude", longitude.toString());
           url.searchParams.set("current_weather", "true");

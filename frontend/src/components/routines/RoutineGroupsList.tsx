@@ -160,28 +160,32 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
 
   const isTaskActiveNow = (task: Task, currentTime: Date) => {
     if (task.status === "COMPLETE" || task.status === "PUNT") return false;
-    if (!task.schedule) return false;
+    if (!task.time_window) return false;
     const taskDate = task.scheduled_date;
     if (!taskDate) return false;
 
-    const availableTime = task.schedule.available_time
-      ? getTime(taskDate, task.schedule.available_time)
+    const availableTime = task.time_window.available_time
+      ? getTime(taskDate, task.time_window.available_time)
       : null;
-    const startTime = task.schedule.start_time
-      ? getTime(taskDate, task.schedule.start_time)
+    const startTime = task.time_window.start_time
+      ? getTime(taskDate, task.time_window.start_time)
       : null;
-    const endTime = task.schedule.end_time
-      ? getTime(taskDate, task.schedule.end_time)
+    const endTime = task.time_window.end_time
+      ? getTime(taskDate, task.time_window.end_time)
+      : null;
+    const cutoffTime = task.time_window.cutoff_time
+      ? getTime(taskDate, task.time_window.cutoff_time)
       : null;
 
     const windowStart = startTime ?? availableTime;
+    const windowEnd = endTime ?? cutoffTime;
     if (windowStart && currentTime < windowStart) return false;
-    if (endTime && currentTime > endTime) return false;
+    if (windowEnd && currentTime > windowEnd) return false;
     return true;
   };
 
   const getHasScheduledTasks = (routine: RoutineGroup) =>
-    routine.tasks.some((task) => Boolean(task.schedule && task.scheduled_date));
+    routine.tasks.some((task) => Boolean(task.time_window && task.scheduled_date));
 
   const isRoutineActiveFromTasks = (routine: RoutineGroup, currentTime: Date) =>
     routine.tasks.some((task) => isTaskActiveNow(task, currentTime));

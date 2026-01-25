@@ -23,27 +23,23 @@ import type { Event, Task } from "@/types/api";
 
 const getTaskTime = (task: Task): Date | null => {
   const taskDate = task.scheduled_date;
-  if (!taskDate || !task.schedule) return null;
+  const timeWindow = task.time_window;
+  if (!taskDate || !timeWindow) return null;
 
-  const schedule = task.schedule;
-
-  // For FIXED_TIME, use start_time
-  if (schedule.timing_type === "FIXED_TIME" && schedule.start_time) {
-    return getTime(taskDate, schedule.start_time);
+  if (timeWindow.start_time) {
+    return getTime(taskDate, timeWindow.start_time);
   }
 
-  // For DEADLINE, use end_time
-  if (schedule.timing_type === "DEADLINE" && schedule.end_time) {
-    return getTime(taskDate, schedule.end_time);
+  if (timeWindow.available_time) {
+    return getTime(taskDate, timeWindow.available_time);
   }
 
-  // For others, use available_time or start_time as fallback
-  if (schedule.available_time) {
-    return getTime(taskDate, schedule.available_time);
+  if (timeWindow.end_time) {
+    return getTime(taskDate, timeWindow.end_time);
   }
 
-  if (schedule.start_time) {
-    return getTime(taskDate, schedule.start_time);
+  if (timeWindow.cutoff_time) {
+    return getTime(taskDate, timeWindow.cutoff_time);
   }
 
   return null;

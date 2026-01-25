@@ -236,17 +236,11 @@ const RoutineDefinitionDetailPage: Component = () => {
     setActionError("");
     const stopLoading = globalLoading.start();
     try {
-      const current = routineDefinition();
-      if (!current?.user_id) {
-        setActionError("Unable to determine user for task definition");
-        return;
-      }
       // Create the task definition
       const created = await taskDefinitionAPI.create({
         name: taskDef.name,
         description: taskDef.description,
         type: taskDef.type,
-        user_id: current.user_id,
       });
       
       // Refresh the task definitions list
