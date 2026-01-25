@@ -2,7 +2,10 @@
 
 ## Overview
 
-This codebase has **FOUR distinct types of objects** that represent data at different layers. Understanding when to use each type and how to map between them is critical to maintaining clean architecture.
+This codebase has **FOUR distinct types of objects** that represent data at
+different layers: **Domain Entities**, **Domain Value Objects**, **SQLAlchemy
+Tables**, and **API Schemas**. Understanding when to use each type and how to map
+between them is critical to maintaining clean architecture.
 
 ---
 
@@ -41,42 +44,35 @@ class CalendarEntrySeriesEntity(BaseEntityObject):
 
 ---
 
-### 2. **Data Objects** (`lykke/domain/data_objects/`)
+### 2. **Domain Value Objects** (`lykke/domain/value_objects/`)
 
-**What:** "Anemic Domain Entities" - dataclasses that need database persistence but lack business logic  
-**Purpose:** Store data in the database for things that don't warrant full entity treatment  
-**Example:** `TaskDefinition`, `TimeBlockDefinition`, `PushSubscription`, `AuthToken`
+**What:** Small domain types with no identity (dataclasses or enums)  
+**Purpose:** Encapsulate typed fields, embedded JSONB structures, and request/response shapes  
+**Examples:** `TaskSchedule`, `Action`, `LLMRunResultSnapshot`, `BaseQuery`
 
 ```python
 @dataclass(kw_only=True)
-class TaskDefinition(BaseEntityObject):
-    user_id: UUID
-    name: str
-    description: str
-    type: TaskType
+class TaskSchedule(BaseValueObject):
+    available_time: time | None = None
+    start_time: time | None = None
+    end_time: time | None = None
+    timing_type: TimingType
 ```
 
 **Used in:**
 
-- Database persistence (have their own dedicated tables)
-- Referenced by entities (e.g., `TaskEntity` has a `task_definition_id` foreign key)
-- Application and domain layers for simple data management
+- Entity fields (stored as JSONB)
+- Query/update request objects
+- Application logic (typed enums, structured snapshots)
 
-**Key Difference from Entities:**
+**DO NOT:**
 
-- No business methods or complex business logic
-- Just data storage with basic validation
-- Always have their own database table (not embedded as JSONB)
-- Simpler than full entities but still need persistence
-
-**Key Difference from Value Objects:**
-
-- **Data Objects** have their own database tables and IDs
-- **Value Objects** are embedded as JSONB within other entities' tables
-- Data Objects are referenced by ID, Value Objects are embedded by value
+- ❌ Give value objects their own database tables
+- ❌ Treat them as entities with identity
 
 > **💡 Value Objects Note:**  
-> Value Objects (in `lykke/domain/value_objects/`) like `Action`, `Alarm`, `TaskSchedule`, `RoutineSchedule` are immutable dataclasses that are ONLY stored as JSONB within entity tables. They don't have their own tables or IDs. If something needs its own table, it should be a Data Object or Entity, not a Value Object.
+> Value objects are **not frozen** in this codebase. Treat them as immutable and
+> create new instances (via `clone()` or constructors) instead of mutating.
 
 ---
 
@@ -164,7 +160,7 @@ class CalendarEntrySeriesSchema(BaseEntitySchema):
 └──────┬───────────┘
        │
        ↓
-  JSON Response
+ JSON Response
 ```
 
 ### Writing Data (API → Database)
@@ -201,7 +197,7 @@ class CalendarEntrySeriesSchema(BaseEntitySchema):
 
 When adding or modifying an object, you MUST update ALL of these:
 
-### ✅ Checklist for New Object Type
+### ✅ Checklist for New Entity
 
 - [ ] **Domain Entity** - Create in `domain/entities/*.py`
 - [ ] **SQLAlchemy Table** - Create in `infrastructure/database/tables/*.py`
@@ -214,7 +210,18 @@ When adding or modifying an object, you MUST update ALL of these:
 - [ ] **Migration** - Create Alembic migration for database changes
 - [ ] **Tests** - Add tests for all mappers
 
-### ✅ Checklist for Adding Field to Existing Object
+### ✅ Checklist for New Embedded Value Object Field
+
+- [ ] **Value Object** - Create in `domain/value_objects/*.py`
+- [ ] **Entity Field** - Add to `domain/entities/*.py`
+- [ ] **Database Column** - Add JSONB column to table
+- [ ] **Repository `entity_to_row()`** - Serialize with `dataclass_to_json_dict`
+- [ ] **Repository `row_to_entity()`** - Rehydrate into value object
+- [ ] **Schema/Mapper** - Add schema field + map in `mappers.py`
+- [ ] **Migration** - Create Alembic migration for database column
+- [ ] **Tests** - Add round-trip tests for serialization
+
+### ✅ Checklist for Adding Field to Existing Entity
 
 - [ ] **Domain Entity** - Add field to `domain/entities/*.py`
 - [ ] **SQLAlchemy Table** - Add column to `infrastructure/database/tables/*.py`
@@ -328,42 +335,27 @@ def row_to_entity(cls, row: dict[str, Any]) -> TaskEntity:
 
 ---
 
-### ❌ Mistake 4: Storing Data Objects as JSONB Instead of Their Own Table
+### ❌ Mistake 4: Giving Value Objects Their Own Tables
 
 **Wrong:**
 
 ```python
-# In entity - embedding a Data Object
+# In entity - embedding a Value Object
 class TaskEntity:
-    task_definition: TaskDefinition  # ❌ Data Object should be referenced by ID!
+    schedule: TaskSchedule  # ✅ Value object
 
-# In table - storing Data Object as JSONB
-class Task(Base):
-    task_definition = Column(JSONB)  # ❌ Should have task_definition_id instead!
+# In table - creating a separate table
+class TaskScheduleTable(Base):
+    __tablename__ = "task_schedules"  # ❌ Value objects should not have tables!
 ```
 
 **Right:**
 
 ```python
-# In entity - reference Data Object by ID
-class TaskEntity:
-    task_definition_id: UUID  # ✅ Reference by ID
-    task_definition: TaskDefinition  # ✅ Loaded from repository, not embedded
-
-# In table - foreign key to Data Object's table
+# In table - store value object as JSONB on parent table
 class Task(Base):
-    task_definition_id = Column(PGUUID, nullable=False)  # ✅ Foreign key!
-
-# TaskDefinition has its own table
-class TaskDefinition(Base):
-    __tablename__ = "task_definitions"
-    id = Column(PGUUID, primary_key=True)  # ✅ Own table with ID
+    schedule = Column(JSONB)  # ✅ Embedded value object
 ```
-
-**Remember:**
-
-- **Data Objects** → Own table, referenced by ID
-- **Value Objects** → Embedded as JSONB
 
 ---
 
@@ -397,10 +389,10 @@ class CreateTaskCommand:
 
 ### JSONB Fields (Embedded Value Objects)
 
-**Important:** Only **Value Objects** should be stored as JSONB, never Data Objects!
+**Important:** Only **Value Objects** should be stored as JSONB.
 
 - ✅ **Value Objects** (e.g., `Action`, `Alarm`, `TaskSchedule`) → Embedded as JSONB
-- ❌ **Data Objects** (e.g., `TaskDefinition`) → Have their own tables, referenced by ID
+- ❌ **Entities** (e.g., `TaskEntity`) → Have their own tables, referenced by ID
 
 When an entity contains embedded value objects (stored as JSONB in the parent's table):
 
@@ -501,15 +493,13 @@ def row_to_entity(cls, row: dict[str, Any]) -> TaskEntity:
 
 ## Quick Reference: Object Type by Layer
 
-| Layer          | Object Type           | Example                        |
-| -------------- | --------------------- | ------------------------------ |
-| Presentation   | Schema (Pydantic)     | `TaskSchema`                   |
-| Application    | Entity or Data Object | `TaskEntity`, `TaskDefinition` |
-| Domain         | Entity or Data Object | `TaskEntity`, `TaskDefinition` |
-| Infrastructure | Table (SQLAlchemy)    | `tasks_tbl`                    |
-| Mappers        | Functions             | `map_task_to_schema()`         |
-
-**Note:** Data Objects are "anemic entities" - they have database tables but no business logic.
+| Layer          | Object Type               | Example                |
+| -------------- | ------------------------- | ---------------------- |
+| Presentation   | Schema (Pydantic)         | `TaskSchema`           |
+| Application    | Entity or Value Object    | `TaskEntity`, `Action` |
+| Domain         | Entity or Value Object    | `TaskEntity`, `Action` |
+| Infrastructure | Table (SQLAlchemy)        | `tasks_tbl`            |
+| Mappers        | Functions                 | `map_task_to_schema()` |
 
 ---
 
@@ -581,26 +571,23 @@ class MyRepository(UserScopedBaseRepository):
 **Golden Rules:**
 
 1. **Entities** for business logic (application & domain layers)
-2. **Data Objects** for things that need persistence but not business logic ("anemic entities")
-3. **Value Objects** for immutable data embedded as JSONB (no own table)
-4. **Schemas** for API contracts (presentation layer only)
-5. **Tables** for database access (infrastructure layer only)
-6. **Mappers** for entity → schema conversion (in `mappers.py`)
-7. **Repository methods** for entity ↔ table conversion
-8. **ALWAYS** update all layers when adding/changing objects
-9. **NEVER** skip mappers or use wrong object type in a layer
-10. **NEVER** store Data Objects as JSONB - they get their own tables!
+2. **Value Objects** for typed fields and embedded JSONB (no own table)
+3. **Schemas** for API contracts (presentation layer only)
+4. **Tables** for database access (infrastructure layer only)
+5. **Mappers** for entity → schema conversion (in `mappers.py`)
+6. **Repository methods** for entity ↔ table conversion
+7. **ALWAYS** update all layers when adding/changing objects
+8. **NEVER** skip mappers or use wrong object type in a layer
+9. **NEVER** give value objects their own tables
 
 ---
 
 **Decision Tree: Which Type Should I Use?**
 
 ```
-Does it need business logic?
+Does it need identity and lifecycle?
 ├─ YES → Entity (domain/entities/)
-└─ NO → Does it need its own database table?
-    ├─ YES → Data Object (domain/data_objects/)
-    └─ NO → Value Object (domain/value_objects/, stored as JSONB)
+└─ NO → Value Object (domain/value_objects/)
 
 Is it for the API?
 └─ YES → Schema (presentation/api/schemas/)

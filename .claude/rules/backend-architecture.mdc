@@ -235,7 +235,7 @@ The codebase is organized into five layers, with strict dependency rules:
 ## Adding a New Feature
 
 > **⚠️ CRITICAL: Object & Mapper Management**  
-> This codebase has FOUR distinct object types (Entities, Data Objects, SQLAlchemy Tables, API Schemas) that must be kept in sync.  
+> This codebase has FOUR distinct object types (Entities, Value Objects, SQLAlchemy Tables, API Schemas) that must be kept in sync.  
 > **Before adding/modifying features, read:** `.cursor/commands/object-schema-mapper-guide.md`  
 > Missing mappers or using wrong object types are common errors that break the build.
 

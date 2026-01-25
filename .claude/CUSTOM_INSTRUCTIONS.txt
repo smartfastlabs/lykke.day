@@ -30,11 +30,11 @@ For comprehensive architectural understanding, read: .claude/rules/backend-archi
 - @add-feature - Interactive feature development workflow with approval checkpoints
 - @run-tests - Run make test and analyze errors
 - @run-typecheck - Run make typecheck and analyze errors
-- @object-schema-mapper - Guide for the 4-object architecture (Entities, Data Objects, Tables, Schemas)
+- @object-schema-mapper - Guide for the 4-object architecture (Entities, Value Objects, Tables, Schemas)
 
 ## Core Principles
 1. Never violate layer boundaries
-2. Always use proper object types for each layer (Entity/Data Object/Table/Schema)
+2. Always use proper object types for each layer (Entity/Value Object/Table/Schema)
 3. Always create mappers between layers
 4. Events are only Auditable if user-facing
 5. Use Poetry for all Python commands

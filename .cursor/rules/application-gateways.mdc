@@ -16,8 +16,11 @@ Gateway protocols use Python `Protocol`:
 ```python
 from typing import Protocol
 
-from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
-from lykke.infrastructure import data_objects
+from lykke.domain.entities import (
+    AuthTokenEntity,
+    CalendarEntity,
+    CalendarEntryEntity,
+)
 
 
 class GoogleCalendarGatewayProtocol(Protocol):
@@ -27,7 +30,7 @@ class GoogleCalendarGatewayProtocol(Protocol):
         self,
         calendar: CalendarEntity,
         lookback: datetime,
-        token: data_objects.AuthToken,
+        token: AuthTokenEntity,
     ) -> list[CalendarEntryEntity]:
         """Load calendar entries from Google Calendar."""
         ...
@@ -45,7 +48,7 @@ class GoogleCalendarGatewayProtocol(Protocol):
 2. **Return domain objects** - Methods return domain entities or value objects
 3. **Accept domain objects** - Methods accept domain entities or value objects
 4. **No implementation** - Protocols define interface only
-5. **Can use infrastructure types** - Can use data objects for external APIs (e.g., `AuthToken`)
+5. **Keep protocols in the domain/application** - Do not import infrastructure types
 
 ---
 

@@ -5,38 +5,54 @@ alwaysApply: false
 
 # Domain Value Objects Rules
 
-Value objects are immutable types with no identity. They represent concepts in the domain.
+Value objects are small domain types with no identity. Treat them as immutable
+even though they are not frozen dataclasses in this codebase.
 
 ---
 
 ## Base Classes
 
-Value objects extend `BaseValueObject`:
+Value objects extend `BaseValueObject`, with request/response wrappers for API
+shapes:
 
 ```python
 from dataclasses import dataclass
+from datetime import time
 
-from lykke.domain.value_objects.base import BaseValueObject
+from lykke.domain.value_objects.base import (
+    BaseRequestObject,
+    BaseResponseObject,
+    BaseValueObject,
+)
+from lykke.domain.value_objects.task import TimingType
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(kw_only=True)
 class TaskSchedule(BaseValueObject):
     """Schedule information for a task."""
-    
+
+    available_time: time | None = None
     start_time: time | None = None
     end_time: time | None = None
-    duration_minutes: int | None = None
+    timing_type: TimingType
+
+
+@dataclass(kw_only=True)
+class PagedQueryRequest(BaseRequestObject):
+    limit: int = 50
+    offset: int = 0
 ```
 
 ---
 
 ## Key Rules
 
-1. **Use `@dataclass(frozen=True, kw_only=True)`** - Value objects are immutable
-2. **Prefer Enums for fixed sets** - Use Python enums for status types, categories, etc.
-3. **Query objects extend `BaseQuery`** - Used for filtering/searching
-4. **Update objects extend `BaseUpdateObject`** - Used for partial updates
-5. **No identity** - Value objects are compared by value, not by ID
+1. **Use `@dataclass(kw_only=True)`** - keyword-only fields everywhere
+2. **Treat as immutable** - create new instances instead of mutating
+3. **Prefer Enums for fixed sets** - statuses, categories, types
+4. **Query objects extend `BaseQuery`** - filtering/search objects
+5. **Update objects extend `BaseUpdateObject`** - partial updates
+6. **No identity** - compare by value, not by ID
 
 ---
 
@@ -49,19 +65,12 @@ from enum import Enum
 
 
 class TaskStatus(str, Enum):
-    NOT_STARTED = "not_started"
-    PENDING = "pending"
-    READY = "ready"
-    COMPLETE = "complete"
-    PUNT = "punt"
-
-
-class TaskCategory(str, Enum):
-    WORK = "work"
-    HEALTH = "health"
-    HOUSE = "house"
-    LIFE = "life"
-    OTHER = "other"
+    COMPLETE = "COMPLETE"
+    NOT_READY = "NOT_READY"
+    READY = "READY"
+    PUNT = "PUNT"
+    NOT_STARTED = "NOT_STARTED"
+    PENDING = "PENDING"
 ```
 
 ### Query Objects
@@ -69,18 +78,19 @@ class TaskCategory(str, Enum):
 ```python
 from dataclasses import dataclass
 from datetime import date as dt_date
+from uuid import UUID
 
-from lykke.domain.value_objects.query import BaseQuery
+from lykke.domain.value_objects.query import DateQuery
 
 
-@dataclass(frozen=True, kw_only=True)
-class TaskQuery(BaseQuery):
+@dataclass(kw_only=True)
+class TaskQuery(DateQuery):
     """Query object for searching tasks."""
-    
+
     date: dt_date | None = None
-    status: TaskStatus | None = None
-    category: TaskCategory | None = None
-    routine_id: UUID | None = None
+    ids: list[UUID] | None = None
+    routine_definition_ids: list[UUID] | None = None
+    is_adhoc: bool | None = None
 ```
 
 ### Update Objects
@@ -91,36 +101,77 @@ from dataclasses import dataclass
 from lykke.domain.value_objects.update import BaseUpdateObject
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(kw_only=True)
 class TaskUpdateObject(BaseUpdateObject):
     """Update object for partial task updates."""
-    
+
     name: str | None = None
     status: TaskStatus | None = None
     schedule: TaskSchedule | None = None
     tags: list[str] | None = None
 ```
 
-### Composite Value Objects
+### LLM Run Snapshots
 
 ```python
-@dataclass(frozen=True, kw_only=True)
-class DayContext:
-    """Complete context for a day, combining multiple entities."""
-    
-    day: DayEntity
-    tasks: list[TaskEntity] = field(default_factory=list)
-    calendar_entries: list[CalendarEntryEntity] = field(default_factory=list)
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
+from uuid import UUID
+
+from lykke.domain.value_objects.ai_chat import LLMProvider
+from lykke.domain.value_objects.base import BaseValueObject
+
+
+@dataclass(kw_only=True)
+class LLMReferencedEntitySnapshot(BaseValueObject):
+    entity_type: str
+    entity_id: UUID
+
+
+@dataclass(kw_only=True)
+class LLMToolCallResultSnapshot(BaseValueObject):
+    tool_name: str
+    arguments: dict[str, Any] = field(default_factory=dict)
+    result: Any
+
+
+@dataclass(kw_only=True)
+class LLMRunResultSnapshot(BaseValueObject):
+    tool_calls: list[LLMToolCallResultSnapshot] = field(default_factory=list)
+    prompt_context: dict[str, Any]
+    current_time: datetime
+    llm_provider: LLMProvider
+    system_prompt: str
+    context_prompt: str
+    ask_prompt: str
+    tools_prompt: str
+    referenced_entities: list[LLMReferencedEntitySnapshot] = field(default_factory=list)
 ```
 
-### Paged Response
+### Paged Request/Response
 
 ```python
-@dataclass(frozen=True, kw_only=True)
-class PagedQueryResponse(Generic[T]):
-    """Response with pagination metadata."""
-    
-    items: list[T]
+from dataclasses import dataclass
+from typing import Generic, TypeVar
+
+from lykke.domain.value_objects.base import BaseRequestObject, BaseResponseObject
+from lykke.domain.value_objects.query import BaseQuery
+
+T = TypeVar("T", bound=BaseQuery)
+EntityType = TypeVar("EntityType")
+
+
+@dataclass(kw_only=True)
+class PagedQueryRequest(BaseRequestObject, Generic[T]):
+    limit: int = 50
+    offset: int = 0
+    query: T | None = None
+
+
+@dataclass(kw_only=True)
+class PagedQueryResponse(BaseResponseObject, Generic[EntityType]):
+    items: list[EntityType]
     total: int
     limit: int
     offset: int
@@ -132,31 +183,29 @@ class PagedQueryResponse(Generic[T]):
 
 ## Gotchas
 
-### 1. Frozen Value Objects
+### 1. Value Objects Are Not Frozen
 
-**Issue:** Value objects are frozen (`frozen=True`), so you cannot modify them. Create new instances instead.
+**Issue:** Dataclasses are not frozen, so mutation is possible but discouraged.
 
 ```python
-# Wrong
-status.value = "new_value"  # Raises FrozenInstanceError
+# Wrong: mutating an instance
+schedule.start_time = time(10, 0)
 
-# Right
-new_status = TaskStatus.COMPLETE  # Use enum value
+# Right: create a new instance
+updated = schedule.clone(start_time=time(10, 0))
 ```
 
 ### 2. Query Object Defaults
 
-**Issue:** Query objects should have sensible defaults for pagination.
+**Issue:** Defaults should mirror the actual `BaseQuery` fields.
 
 ```python
-@dataclass(frozen=True, kw_only=True)
+@dataclass(kw_only=True)
 class BaseQuery:
-    """Base class for query objects."""
-    
     limit: int | None = None
     offset: int | None = None
     order_by: str | None = None
-    order_by_desc: bool = False
+    order_by_desc: bool | None = None
     created_before: datetime | None = None
     created_after: datetime | None = None
 ```
@@ -168,9 +217,6 @@ class BaseQuery:
 ```python
 # Only update name, leave other fields unchanged
 update = TaskUpdateObject(name="New Name")  # status=None means don't change
-
-# Explicitly set to None (if the field supports it)
-# You'd need a sentinel value like UNSET for this
 ```
 
 ---
@@ -184,8 +230,8 @@ Test value object behavior:
 ```python
 def test_task_status_enum():
     """Test TaskStatus enum values."""
-    assert TaskStatus.COMPLETE.value == "complete"
-    assert TaskStatus.NOT_STARTED.value == "not_started"
+    assert TaskStatus.COMPLETE.value == "COMPLETE"
+    assert TaskStatus.NOT_STARTED.value == "NOT_STARTED"
 
 def test_task_query_defaults():
     """Test TaskQuery has sensible defaults."""
@@ -194,11 +240,12 @@ def test_task_query_defaults():
     assert query.offset is None
     assert query.date is None
 
-def test_task_schedule_immutable():
-    """Test TaskSchedule is immutable."""
-    schedule = TaskSchedule(start_time=time(9, 0))
-    with pytest.raises(FrozenInstanceError):
-        schedule.start_time = time(10, 0)
+def test_task_schedule_clone():
+    """Test TaskSchedule cloning."""
+    schedule = TaskSchedule(timing_type=TimingType.FLEXIBLE)
+    updated = schedule.clone(start_time=time(9, 0))
+    assert updated.start_time == time(9, 0)
+    assert schedule.start_time is None
 ```
 
 ### Test Location

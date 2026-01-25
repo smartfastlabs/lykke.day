@@ -14,7 +14,7 @@ The Domain layer contains pure business logic with **zero external dependencies*
 ```
 domain/
 ├── entities/          # Business objects (aggregate roots)
-├── value_objects/     # Immutable value types
+├── value_objects/     # Value types (treat as immutable)
 ├── events/            # Domain events
 └── services/          # Pure domain services (no I/O)
 ```
@@ -69,7 +69,7 @@ domain/
 
 ### Value Objects (`domain/value_objects/`)
 
-**Purpose:** Immutable value types with no identity. Represent concepts in the domain.
+**Purpose:** Value types with no identity. Treat them as immutable in practice.
 
 **Location:** `backend/lykke/domain/value_objects/`
 
@@ -82,7 +82,7 @@ domain/
 
 **What It Does:**
 
-- Represents immutable values
+- Represents domain values (treat as immutable)
 - Provides type safety for domain concepts
 - Used for filtering, searching, and updates
 - No business logic, just data structures
@@ -161,7 +161,7 @@ When adding a new feature in the domain layer:
 
 ### Value Object Pattern
 
-- Value objects are immutable (`frozen=True`)
+- Value objects are treated as immutable (not frozen)
 - Use enums for fixed sets (TaskStatus, TaskCategory, etc.)
 - Query objects extend `BaseQuery`
 - Update objects extend `BaseUpdateObject`
