@@ -4,7 +4,7 @@ from sqlalchemy.sql import Select
 
 from lykke.domain import value_objects
 from lykke.domain.entities import BrainDumpEntity
-from lykke.infrastructure.database.tables import brain_dump_items_tbl
+from lykke.infrastructure.database.tables import brain_dumps_tbl
 from lykke.infrastructure.repositories.base.utils import (
     ensure_datetimes_utc,
     filter_init_false_fields,
@@ -17,7 +17,7 @@ class BrainDumpRepository(
     UserScopedBaseRepository[BrainDumpEntity, value_objects.BrainDumpQuery]
 ):
     Object = BrainDumpEntity
-    table = brain_dump_items_tbl
+    table = brain_dumps_tbl
     QueryClass = value_objects.BrainDumpQuery
 
     @staticmethod

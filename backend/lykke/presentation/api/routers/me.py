@@ -6,12 +6,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from lykke.application.commands.brain_dump import (
-    CreateBrainDumpItemCommand,
-    CreateBrainDumpItemHandler,
-    DeleteBrainDumpItemCommand,
-    DeleteBrainDumpItemHandler,
-    UpdateBrainDumpItemStatusCommand,
-    UpdateBrainDumpItemStatusHandler,
+    CreateBrainDumpCommand,
+    CreateBrainDumpHandler,
+    DeleteBrainDumpCommand,
+    DeleteBrainDumpHandler,
+    UpdateBrainDumpStatusCommand,
+    UpdateBrainDumpStatusHandler,
 )
 from lykke.application.commands.day import (
     AddReminderToDayCommand,
@@ -212,8 +212,8 @@ async def add_brain_dump_item_to_today(
 ) -> BrainDumpItemSchema:
     """Add a brain dump item to today."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(CreateBrainDumpItemHandler)
-    item = await handler.handle(CreateBrainDumpItemCommand(date=date, text=text))
+    handler = command_factory.create(CreateBrainDumpHandler)
+    item = await handler.handle(CreateBrainDumpCommand(date=date, text=text))
     return map_brain_dump_item_to_schema(item)
 
 
@@ -226,9 +226,9 @@ async def update_brain_dump_item_status(
 ) -> BrainDumpItemSchema:
     """Update a brain dump item's status for today."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(UpdateBrainDumpItemStatusHandler)
+    handler = command_factory.create(UpdateBrainDumpStatusHandler)
     item = await handler.handle(
-        UpdateBrainDumpItemStatusCommand(date=date, item_id=item_id, status=status)
+        UpdateBrainDumpStatusCommand(date=date, item_id=item_id, status=status)
     )
     return map_brain_dump_item_to_schema(item)
 
@@ -241,8 +241,8 @@ async def remove_brain_dump_item_from_today(
 ) -> BrainDumpItemSchema:
     """Remove a brain dump item from today."""
     date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(DeleteBrainDumpItemHandler)
-    item = await handler.handle(DeleteBrainDumpItemCommand(date=date, item_id=item_id))
+    handler = command_factory.create(DeleteBrainDumpHandler)
+    item = await handler.handle(DeleteBrainDumpCommand(date=date, item_id=item_id))
     return map_brain_dump_item_to_schema(item)
 
 

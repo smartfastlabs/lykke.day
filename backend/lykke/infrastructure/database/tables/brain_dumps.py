@@ -1,4 +1,4 @@
-"""Brain dump items table definition."""
+"""Brain dumps table definition."""
 
 from sqlalchemy import Column, Date, DateTime, Index, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -6,10 +6,10 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from .base import Base
 
 
-class BrainDumpItem(Base):
-    """Brain dump item table for storing captured entries."""
+class BrainDump(Base):
+    """Brain dump table for storing captured entries."""
 
-    __tablename__ = "brain_dump_items"
+    __tablename__ = "brain_dumps"
 
     id = Column(PGUUID, primary_key=True)
     user_id = Column(PGUUID, nullable=False)
@@ -20,6 +20,6 @@ class BrainDumpItem(Base):
     created_at = Column(DateTime, nullable=False)
 
     __table_args__ = (
-        Index("idx_brain_dump_items_date", "date"),
-        Index("idx_brain_dump_items_user_id", "user_id"),
+        Index("idx_brain_dumps_date", "date"),
+        Index("idx_brain_dumps_user_id", "user_id"),
     )

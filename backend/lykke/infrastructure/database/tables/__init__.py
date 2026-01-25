@@ -4,7 +4,7 @@ from .audit_logs import AuditLog
 from .auth_tokens import AuthToken
 from .base import Base, metadata
 from .bot_personalities import BotPersonality
-from .brain_dump_items import BrainDumpItem
+from .brain_dumps import BrainDump
 from .calendar_entries import CalendarEntry
 from .calendar_entry_series import CalendarEntrySeries
 from .calendars import Calendar
@@ -27,7 +27,7 @@ from .users import User
 audit_logs_tbl = AuditLog.__table__
 auth_tokens_tbl = AuthToken.__table__
 bot_personalities_tbl = BotPersonality.__table__
-brain_dump_items_tbl = BrainDumpItem.__table__
+brain_dumps_tbl = BrainDump.__table__
 calendar_entries_tbl = CalendarEntry.__table__
 calendar_entry_series_tbl = CalendarEntrySeries.__table__
 calendars_tbl = Calendar.__table__
@@ -53,7 +53,7 @@ __all__ = [
     # Base and metadata
     "Base",
     "BotPersonality",
-    "BrainDumpItem",
+    "BrainDump",
     "Calendar",
     "CalendarEntry",
     "CalendarEntrySeries",
@@ -75,7 +75,7 @@ __all__ = [
     "audit_logs_tbl",
     "auth_tokens_tbl",
     "bot_personalities_tbl",
-    "brain_dump_items_tbl",
+    "brain_dumps_tbl",
     "calendar_entries_tbl",
     "calendar_entry_series_tbl",
     "calendars_tbl",

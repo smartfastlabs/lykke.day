@@ -1,4 +1,4 @@
-"""Unit tests for CreateBrainDumpItemHandler."""
+"""Unit tests for CreateBrainDumpHandler."""
 
 from datetime import date as dt_date
 from uuid import uuid4
@@ -6,8 +6,8 @@ from uuid import uuid4
 import pytest
 
 from lykke.application.commands.brain_dump import (
-    CreateBrainDumpItemCommand,
-    CreateBrainDumpItemHandler,
+    CreateBrainDumpCommand,
+    CreateBrainDumpHandler,
 )
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
@@ -24,7 +24,7 @@ from tests.unit.fakes import (
 
 
 @pytest.mark.asyncio
-async def test_create_brain_dump_item_creates_item():
+async def test_create_brain_dump_creates_item():
     user_id = uuid4()
     task_date = dt_date(2025, 11, 27)
 
@@ -57,10 +57,10 @@ async def test_create_brain_dump_item_creates_item():
         user_repo=user_repo,
     )
     uow_factory = _FakeUoWFactory(uow)
-    handler = CreateBrainDumpItemHandler(ro_repos, uow_factory, user_id)
+    handler = CreateBrainDumpHandler(ro_repos, uow_factory, user_id)
 
     result = await handler.handle(
-        CreateBrainDumpItemCommand(date=task_date, text="Test brain dump")
+        CreateBrainDumpCommand(date=task_date, text="Test brain dump")
     )
 
     assert result.text == "Test brain dump"
@@ -70,7 +70,7 @@ async def test_create_brain_dump_item_creates_item():
 
 
 @pytest.mark.asyncio
-async def test_create_brain_dump_item_day_not_found():
+async def test_create_brain_dump_day_not_found():
     user_id = uuid4()
     task_date = dt_date(2025, 11, 27)
 
@@ -102,9 +102,9 @@ async def test_create_brain_dump_item_day_not_found():
         user_repo=user_repo,
     )
     uow_factory = _FakeUoWFactory(uow)
-    handler = CreateBrainDumpItemHandler(ro_repos, uow_factory, user_id)
+    handler = CreateBrainDumpHandler(ro_repos, uow_factory, user_id)
 
     with pytest.raises(NotFoundError, match="Day"):
         await handler.handle(
-            CreateBrainDumpItemCommand(date=task_date, text="Test brain dump")
+            CreateBrainDumpCommand(date=task_date, text="Test brain dump")
         )

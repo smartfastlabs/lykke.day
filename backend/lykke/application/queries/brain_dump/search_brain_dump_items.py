@@ -1,4 +1,4 @@
-"""Query to search brain dump items with pagination."""
+"""Query to search brain dumps with pagination."""
 
 from dataclasses import dataclass
 
@@ -9,25 +9,25 @@ from lykke.domain.entities import BrainDumpEntity
 
 
 @dataclass(frozen=True)
-class SearchBrainDumpItemsQuery(Query):
-    """Query to search brain dump items."""
+class SearchBrainDumpsQuery(Query):
+    """Query to search brain dumps."""
 
     search_query: value_objects.BrainDumpQuery | None = None
 
 
-class SearchBrainDumpItemsHandler(
+class SearchBrainDumpsHandler(
     BaseQueryHandler[
-        SearchBrainDumpItemsQuery, value_objects.PagedQueryResponse[BrainDumpEntity]
+        SearchBrainDumpsQuery, value_objects.PagedQueryResponse[BrainDumpEntity]
     ]
 ):
-    """Searches brain dump items with pagination."""
+    """Searches brain dumps with pagination."""
 
     brain_dump_ro_repo: BrainDumpRepositoryReadOnlyProtocol
 
     async def handle(
-        self, query: SearchBrainDumpItemsQuery
+        self, query: SearchBrainDumpsQuery
     ) -> value_objects.PagedQueryResponse[BrainDumpEntity]:
-        """Search brain dump items with pagination."""
+        """Search brain dumps with pagination."""
         if query.search_query is not None:
             return await self.brain_dump_ro_repo.paged_search(query.search_query)
 

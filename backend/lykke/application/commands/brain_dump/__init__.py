@@ -1,29 +1,23 @@
 """Brain dump command handlers."""
 
-from .create_brain_dump_item import (
-    CreateBrainDumpItemCommand,
-    CreateBrainDumpItemHandler,
-)
-from .delete_brain_dump_item import DeleteBrainDumpItemCommand, DeleteBrainDumpItemHandler
+from .create_brain_dump_item import CreateBrainDumpCommand, CreateBrainDumpHandler
+from .delete_brain_dump_item import DeleteBrainDumpCommand, DeleteBrainDumpHandler
 from .process_brain_dump import ProcessBrainDumpCommand, ProcessBrainDumpHandler
 from .update_brain_dump_item_status import (
-    UpdateBrainDumpItemStatusCommand,
-    UpdateBrainDumpItemStatusHandler,
+    UpdateBrainDumpStatusCommand,
+    UpdateBrainDumpStatusHandler,
 )
-from .update_brain_dump_item_type import (
-    UpdateBrainDumpItemTypeCommand,
-    UpdateBrainDumpItemTypeHandler,
-)
+from .update_brain_dump_item_type import UpdateBrainDumpTypeCommand, UpdateBrainDumpTypeHandler
 
 __all__ = [
-    "CreateBrainDumpItemCommand",
-    "CreateBrainDumpItemHandler",
-    "DeleteBrainDumpItemCommand",
-    "DeleteBrainDumpItemHandler",
+    "CreateBrainDumpCommand",
+    "CreateBrainDumpHandler",
+    "DeleteBrainDumpCommand",
+    "DeleteBrainDumpHandler",
     "ProcessBrainDumpCommand",
     "ProcessBrainDumpHandler",
-    "UpdateBrainDumpItemStatusCommand",
-    "UpdateBrainDumpItemStatusHandler",
-    "UpdateBrainDumpItemTypeCommand",
-    "UpdateBrainDumpItemTypeHandler",
+    "UpdateBrainDumpStatusCommand",
+    "UpdateBrainDumpStatusHandler",
+    "UpdateBrainDumpTypeCommand",
+    "UpdateBrainDumpTypeHandler",
 ]

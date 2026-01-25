@@ -1,4 +1,4 @@
-"""Unit tests for UpdateBrainDumpItemStatusHandler."""
+"""Unit tests for UpdateBrainDumpStatusHandler."""
 
 from datetime import date as dt_date
 from uuid import uuid4
@@ -6,8 +6,8 @@ from uuid import uuid4
 import pytest
 
 from lykke.application.commands.brain_dump import (
-    UpdateBrainDumpItemStatusCommand,
-    UpdateBrainDumpItemStatusHandler,
+    UpdateBrainDumpStatusCommand,
+    UpdateBrainDumpStatusHandler,
 )
 from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
@@ -17,7 +17,7 @@ from tests.unit.fakes import _FakeBrainDumpReadOnlyRepo, _FakeReadOnlyRepos, _Fa
 
 
 @pytest.mark.asyncio
-async def test_update_brain_dump_item_status_updates_item():
+async def test_update_brain_dump_status_updates_item():
     user_id = uuid4()
     item_date = dt_date(2025, 11, 27)
     item = BrainDumpEntity(
@@ -30,10 +30,10 @@ async def test_update_brain_dump_item_status_updates_item():
     ro_repos = _FakeReadOnlyRepos(brain_dump_repo=brain_dump_repo)
     uow = _FakeUoW(brain_dump_repo=brain_dump_repo)
     uow_factory = _FakeUoWFactory(uow)
-    handler = UpdateBrainDumpItemStatusHandler(ro_repos, uow_factory, user_id)
+    handler = UpdateBrainDumpStatusHandler(ro_repos, uow_factory, user_id)
 
     await handler.handle(
-        UpdateBrainDumpItemStatusCommand(
+        UpdateBrainDumpStatusCommand(
             date=item_date,
             item_id=item.id,
             status=value_objects.BrainDumpItemStatus.COMPLETE,
@@ -48,7 +48,7 @@ async def test_update_brain_dump_item_status_updates_item():
 
 
 @pytest.mark.asyncio
-async def test_update_brain_dump_item_status_wrong_date():
+async def test_update_brain_dump_status_wrong_date():
     user_id = uuid4()
     item = BrainDumpEntity(
         user_id=user_id,
@@ -60,11 +60,11 @@ async def test_update_brain_dump_item_status_wrong_date():
     ro_repos = _FakeReadOnlyRepos(brain_dump_repo=brain_dump_repo)
     uow = _FakeUoW(brain_dump_repo=brain_dump_repo)
     uow_factory = _FakeUoWFactory(uow)
-    handler = UpdateBrainDumpItemStatusHandler(ro_repos, uow_factory, user_id)
+    handler = UpdateBrainDumpStatusHandler(ro_repos, uow_factory, user_id)
 
     with pytest.raises(DomainError, match="not found"):
         await handler.handle(
-            UpdateBrainDumpItemStatusCommand(
+            UpdateBrainDumpStatusCommand(
                 date=dt_date(2025, 11, 28),
                 item_id=item.id,
                 status=value_objects.BrainDumpItemStatus.PUNT,
