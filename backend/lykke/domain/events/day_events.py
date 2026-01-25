@@ -51,7 +51,7 @@ class DayUpdatedEvent(EntityUpdatedEvent[DayUpdateObject]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ReminderAddedEvent(DomainEvent):
+class ReminderAddedEvent(DomainEvent, AuditableDomainEvent):
     """Event raised when a reminder is added to a day."""
 
     day_id: UUID
@@ -61,7 +61,7 @@ class ReminderAddedEvent(DomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ReminderStatusChangedEvent(DomainEvent):
+class ReminderStatusChangedEvent(DomainEvent, AuditableDomainEvent):
     """Event raised when a reminder status changes."""
 
     day_id: UUID
@@ -73,7 +73,7 @@ class ReminderStatusChangedEvent(DomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ReminderRemovedEvent(DomainEvent):
+class ReminderRemovedEvent(DomainEvent, AuditableDomainEvent):
     """Event raised when a reminder is removed from a day."""
 
     day_id: UUID

@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
-from datetime import UTC, date as dt_date, datetime, time, timedelta
+from datetime import UTC, date as dt_date, datetime, time
 from uuid import UUID
 
 from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
-from lykke.domain.events.task_events import TaskStateUpdatedEvent
+from lykke.domain.events.task_events import TaskCreatedEvent, TaskStateUpdatedEvent
 
 from .auditable import AuditableEntity
 from .base import BaseEntityObject
@@ -25,6 +25,21 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
     routine_definition_id: UUID | None = None
     tags: list[value_objects.TaskTag] = field(default_factory=list)
     actions: list[value_objects.Action] = field(default_factory=list)
+
+    def create(self) -> "TaskEntity":
+        """Mark this task as created and emit a user-facing event."""
+        super().create()
+        self._add_event(
+            TaskCreatedEvent(
+                user_id=self.user_id,
+                task_id=self.id,
+                name=self.name,
+                entity_id=self.id,
+                entity_type="task",
+                entity_date=self.scheduled_date,
+            )
+        )
+        return self
 
     def record_action(self, action: value_objects.Action) -> value_objects.TaskStatus:
         """Record an action on this task.

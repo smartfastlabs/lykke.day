@@ -27,8 +27,12 @@ __all__ = [
 
 
 @dataclass(frozen=True, kw_only=True)
-class TaskCreatedEvent(DomainEvent):
-    """Event raised when a task is created."""
+class TaskCreatedEvent(DomainEvent, AuditableDomainEvent):
+    """Event raised when a task is created.
+
+    Uses AuditableDomainEvent: creating a task is a user-facing action that should
+    appear in activity history and trigger real-time updates.
+    """
 
     task_id: UUID
     name: str
@@ -203,6 +207,4 @@ class TaskStateUpdatedEvent(DomainEvent):
 
 @dataclass(frozen=True, kw_only=True)
 class TaskDefinitionUpdatedEvent(EntityUpdatedEvent[TaskDefinitionUpdateObject]):
-    """Event raised when a task definition is updated via apply_update()."""
-
     """Event raised when a task definition is updated via apply_update()."""
