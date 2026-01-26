@@ -1,5 +1,5 @@
 import { useParams } from "@solidjs/router";
-import { Component, Show, createMemo } from "solid-js";
+import { Component, Show, createMemo, onMount } from "solid-js";
 import SettingsPage from "@/components/shared/SettingsPage";
 import LLMSnapshotDetails from "@/components/llm/LLMSnapshotDetails";
 import { useStreamingData } from "@/providers/streamingData";
@@ -39,7 +39,11 @@ const formatDateTime = (value: string): string => {
 
 const TodayNotificationDetailPage: Component = () => {
   const params = useParams();
-  const { notifications, notificationsLoading } = useStreamingData();
+  const { notifications, notificationsLoading, loadNotifications } = useStreamingData();
+
+  onMount(() => {
+    void loadNotifications();
+  });
   const notification = createMemo<PushNotification | undefined>(() => {
     if (!params.id) return undefined;
     return notifications().find((item) => item.id === params.id);

@@ -71,6 +71,7 @@ interface StreamingDataContextValue {
     status: BrainDumpItemStatus
   ) => Promise<void>;
   removeBrainDumpItem: (itemId: string) => Promise<void>;
+  loadNotifications: () => Promise<void>;
 }
 
 const StreamingDataContext = createContext<StreamingDataContextValue>();
@@ -248,7 +249,7 @@ export function StreamingDataProvider(props: ParentProps) {
   const [isConnected, setIsConnected] = createSignal(false);
   const [isOutOfSync, setIsOutOfSync] = createSignal(false);
   const [notifications, setNotifications] = createSignal<PushNotification[]>([]);
-  const [notificationsLoading, setNotificationsLoading] = createSignal(true);
+  const [notificationsLoading, setNotificationsLoading] = createSignal(false);
   const [lastProcessedTimestamp, setLastProcessedTimestamp] = createSignal<
     string | null
   >(null);
@@ -1032,6 +1033,9 @@ export function StreamingDataProvider(props: ParentProps) {
   };
 
   const loadNotifications = async () => {
+    if (notificationsLoading()) {
+      return;
+    }
     setNotificationsLoading(true);
     try {
       const items = await notificationAPI.getToday();
@@ -1047,7 +1051,6 @@ export function StreamingDataProvider(props: ParentProps) {
   onMount(() => {
     isMounted = true;
     connectWebSocket();
-    void loadNotifications();
   });
 
   // Cleanup on unmount
@@ -1092,6 +1095,7 @@ export function StreamingDataProvider(props: ParentProps) {
     addBrainDumpItem,
     updateBrainDumpItemStatus,
     removeBrainDumpItem,
+    loadNotifications,
   };
 
   return (

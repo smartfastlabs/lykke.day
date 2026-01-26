@@ -139,6 +139,22 @@ class TaskDefinitionQuery(BaseQuery):
 
 
 @dataclass(kw_only=True)
+class TriggerQuery(BaseQuery):
+    """Query class for Trigger entities."""
+
+    ids: list[UUID] | None = None
+    name: str | None = None
+
+
+@dataclass(kw_only=True)
+class TacticQuery(BaseQuery):
+    """Query class for Tactic entities."""
+
+    ids: list[UUID] | None = None
+    name: str | None = None
+
+
+@dataclass(kw_only=True)
 class UseCaseConfigQuery(BaseQuery):
     """Query class for UseCaseConfig entities."""
 

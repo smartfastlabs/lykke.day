@@ -24,7 +24,9 @@ from lykke.domain.entities import (
     RoutineEntity,
     TaskDefinitionEntity,
     TaskEntity,
+    TacticEntity,
     TimeBlockDefinitionEntity,
+    TriggerEntity,
     UseCaseConfigEntity,
     UserEntity,
 )
@@ -52,8 +54,10 @@ from lykke.presentation.api.schemas import (
     SyncSubscriptionSchema,
     TaskDefinitionSchema,
     TaskSchema,
+    TacticSchema,
     TimeBlockDefinitionSchema,
     TimeWindowSchema,
+    TriggerSchema,
     UseCaseConfigSchema,
     UserSchema,
     UserSettingsSchema,
@@ -104,6 +108,26 @@ def map_task_definition_to_schema(
         name=task_definition.name,
         description=task_definition.description,
         type=task_definition.type,
+    )
+
+
+def map_trigger_to_schema(trigger: TriggerEntity) -> TriggerSchema:
+    """Convert Trigger entity to Trigger schema."""
+    return TriggerSchema(
+        id=trigger.id,
+        user_id=trigger.user_id,
+        name=trigger.name,
+        description=trigger.description,
+    )
+
+
+def map_tactic_to_schema(tactic: TacticEntity) -> TacticSchema:
+    """Convert Tactic entity to Tactic schema."""
+    return TacticSchema(
+        id=tactic.id,
+        user_id=tactic.user_id,
+        name=tactic.name,
+        description=tactic.description,
     )
 
 

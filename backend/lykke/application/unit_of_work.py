@@ -28,9 +28,11 @@ from lykke.application.repositories import (
     PushSubscriptionRepositoryReadOnlyProtocol,
     RoutineDefinitionRepositoryReadOnlyProtocol,
     RoutineRepositoryReadOnlyProtocol,
+    TacticRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
+    TriggerRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
 )
@@ -77,9 +79,11 @@ class UnitOfWorkProtocol(Protocol):
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
+    tactic_ro_repo: TacticRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
+    trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
@@ -186,6 +190,12 @@ class UnitOfWorkProtocol(Protocol):
         """Bulk delete audit logs matching query filters."""
         ...
 
+    async def set_trigger_tactics(
+        self, trigger_id: UUID, tactic_ids: list[UUID]
+    ) -> None:
+        """Replace all tactics linked to a trigger."""
+        ...
+
 
 class UnitOfWorkFactory(Protocol):
     """Factory protocol for creating UnitOfWork instances.
@@ -231,9 +241,11 @@ class ReadOnlyRepositories(Protocol):
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
+    tactic_ro_repo: TacticRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
+    trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 

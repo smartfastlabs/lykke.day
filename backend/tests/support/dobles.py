@@ -32,9 +32,11 @@ from lykke.application.repositories import (
     PushSubscriptionRepositoryReadOnlyProtocol,
     RoutineDefinitionRepositoryReadOnlyProtocol,
     RoutineRepositoryReadOnlyProtocol,
+    TacticRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
+    TriggerRepositoryReadOnlyProtocol,
     UseCaseConfigRepositoryReadOnlyProtocol,
     UserRepositoryReadOnlyProtocol,
 )
@@ -150,6 +152,16 @@ def create_time_block_definition_repo_double() -> InstanceDouble:
     return create_repo_double(TimeBlockDefinitionRepositoryReadOnlyProtocol)
 
 
+def create_tactic_repo_double() -> InstanceDouble:
+    """Create a dobles double for TacticRepositoryReadOnlyProtocol."""
+    return create_repo_double(TacticRepositoryReadOnlyProtocol)
+
+
+def create_trigger_repo_double() -> InstanceDouble:
+    """Create a dobles double for TriggerRepositoryReadOnlyProtocol."""
+    return create_repo_double(TriggerRepositoryReadOnlyProtocol)
+
+
 def create_push_subscription_repo_double() -> InstanceDouble:
     """Create a dobles double for PushSubscriptionRepositoryReadOnlyProtocol."""
     return create_repo_double(PushSubscriptionRepositoryReadOnlyProtocol)
@@ -195,9 +207,11 @@ def create_read_only_repos_double(
     push_subscription_repo: InstanceDouble | None = None,
     routine_repo: InstanceDouble | None = None,
     routine_definition_repo: InstanceDouble | None = None,
+    tactic_repo: InstanceDouble | None = None,
     task_definition_repo: InstanceDouble | None = None,
     task_repo: InstanceDouble | None = None,
     time_block_definition_repo: InstanceDouble | None = None,
+    trigger_repo: InstanceDouble | None = None,
     usecase_config_repo: InstanceDouble | None = None,
     user_repo: InstanceDouble | None = None,
 ) -> InstanceDouble:
@@ -267,6 +281,9 @@ def create_read_only_repos_double(
         routine_definition_repo
         or create_repo_double(RoutineDefinitionRepositoryReadOnlyProtocol)
     )
+    repos_double.tactic_ro_repo = (
+        tactic_repo or create_repo_double(TacticRepositoryReadOnlyProtocol)
+    )
     repos_double.task_definition_ro_repo = (
         task_definition_repo
         or create_repo_double(TaskDefinitionRepositoryReadOnlyProtocol)
@@ -277,6 +294,9 @@ def create_read_only_repos_double(
     repos_double.time_block_definition_ro_repo = (
         time_block_definition_repo
         or create_repo_double(TimeBlockDefinitionRepositoryReadOnlyProtocol)
+    )
+    repos_double.trigger_ro_repo = (
+        trigger_repo or create_repo_double(TriggerRepositoryReadOnlyProtocol)
     )
     repos_double.usecase_config_ro_repo = (
         usecase_config_repo
@@ -307,9 +327,11 @@ def create_uow_double(
     push_subscription_repo: InstanceDouble | None = None,
     routine_repo: InstanceDouble | None = None,
     routine_definition_repo: InstanceDouble | None = None,
+    tactic_repo: InstanceDouble | None = None,
     task_definition_repo: InstanceDouble | None = None,
     task_repo: InstanceDouble | None = None,
     time_block_definition_repo: InstanceDouble | None = None,
+    trigger_repo: InstanceDouble | None = None,
     usecase_config_repo: InstanceDouble | None = None,
     user_repo: InstanceDouble | None = None,
 ) -> InstanceDouble:
@@ -379,6 +401,9 @@ def create_uow_double(
         routine_definition_repo
         or create_repo_double(RoutineDefinitionRepositoryReadOnlyProtocol)
     )
+    uow_double.tactic_ro_repo = (
+        tactic_repo or create_repo_double(TacticRepositoryReadOnlyProtocol)
+    )
     uow_double.task_definition_ro_repo = (
         task_definition_repo
         or create_repo_double(TaskDefinitionRepositoryReadOnlyProtocol)
@@ -389,6 +414,9 @@ def create_uow_double(
     uow_double.time_block_definition_ro_repo = (
         time_block_definition_repo
         or create_repo_double(TimeBlockDefinitionRepositoryReadOnlyProtocol)
+    )
+    uow_double.trigger_ro_repo = (
+        trigger_repo or create_repo_double(TriggerRepositoryReadOnlyProtocol)
     )
     uow_double.usecase_config_ro_repo = (
         usecase_config_repo
@@ -411,6 +439,7 @@ def create_uow_double(
     allow(uow_double).bulk_delete_routines.and_return(None)
     allow(uow_double).bulk_delete_calendar_entries.and_return(None)
     allow(uow_double).bulk_delete_audit_logs.and_return(None)
+    allow(uow_double).set_trigger_tactics.and_return(None)
 
     # Stub add method (synchronous)
     allow(uow_double).add.and_return(None)

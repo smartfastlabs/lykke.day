@@ -17,6 +17,8 @@ from .routine_definition import RoutineDefinitionRepository
 from .task import TaskRepository
 from .task_definition import TaskDefinitionRepository
 from .time_block_definition import TimeBlockDefinitionRepository
+from .tactic import TacticRepository
+from .trigger import TriggerRepository
 from .usecase_config import UseCaseConfigRepository
 from .user import UserRepository
 
@@ -39,7 +41,9 @@ __all__ = [
     "RoutineRepository",
     "TaskDefinitionRepository",
     "TaskRepository",
+    "TacticRepository",
     "TimeBlockDefinitionRepository",
+    "TriggerRepository",
     "UseCaseConfigRepository",
     "UserRepository",
 ]

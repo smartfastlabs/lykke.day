@@ -73,9 +73,17 @@ from .task_repository import (
     TaskRepositoryReadOnlyProtocol,
     TaskRepositoryReadWriteProtocol,
 )
+from .tactic_repository import (
+    TacticRepositoryReadOnlyProtocol,
+    TacticRepositoryReadWriteProtocol,
+)
 from .time_block_definition_repository import (
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
     TimeBlockDefinitionRepositoryReadWriteProtocol,
+)
+from .trigger_repository import (
+    TriggerRepositoryReadOnlyProtocol,
+    TriggerRepositoryReadWriteProtocol,
 )
 from .usecase_config_repository import (
     UseCaseConfigRepositoryReadOnlyProtocol,
@@ -123,8 +131,12 @@ __all__ = [
     "TaskDefinitionRepositoryReadWriteProtocol",
     "TaskRepositoryReadOnlyProtocol",
     "TaskRepositoryReadWriteProtocol",
+    "TacticRepositoryReadOnlyProtocol",
+    "TacticRepositoryReadWriteProtocol",
     "TimeBlockDefinitionRepositoryReadOnlyProtocol",
     "TimeBlockDefinitionRepositoryReadWriteProtocol",
+    "TriggerRepositoryReadOnlyProtocol",
+    "TriggerRepositoryReadWriteProtocol",
     "UseCaseConfigRepositoryReadOnlyProtocol",
     "UseCaseConfigRepositoryReadWriteProtocol",
     "UserRepositoryReadOnlyProtocol",

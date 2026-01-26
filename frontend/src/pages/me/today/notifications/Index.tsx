@@ -1,5 +1,5 @@
 import { useNavigate } from "@solidjs/router";
-import { Component, Show } from "solid-js";
+import { Component, Show, onMount } from "solid-js";
 import SettingsPage from "@/components/shared/SettingsPage";
 import SettingsList from "@/components/shared/SettingsList";
 import TodayNotificationListItem from "@/components/notifications/TodayNotificationListItem";
@@ -22,7 +22,11 @@ const getNotificationLabel = (notification: PushNotification): string => {
 
 const TodayNotificationsPage: Component = () => {
   const navigate = useNavigate();
-  const { notifications, notificationsLoading } = useStreamingData();
+  const { notifications, notificationsLoading, loadNotifications } = useStreamingData();
+
+  onMount(() => {
+    void loadNotifications();
+  });
 
   const handleNavigate = (id?: string | null) => {
     if (!id) return;

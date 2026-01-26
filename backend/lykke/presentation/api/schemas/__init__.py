@@ -61,10 +61,17 @@ from .task_definition import (
     TaskDefinitionSchema,
     TaskDefinitionUpdateSchema,
 )
+from .tactic import TacticCreateSchema, TacticSchema, TacticUpdateSchema
 from .time_block_definition import (
     TimeBlockDefinitionCreateSchema,
     TimeBlockDefinitionSchema,
     TimeBlockDefinitionUpdateSchema,
+)
+from .trigger import (
+    TriggerCreateSchema,
+    TriggerSchema,
+    TriggerTacticsUpdateSchema,
+    TriggerUpdateSchema,
 )
 from .usecase_config import (
     NotificationUseCaseConfigSchema,
@@ -106,6 +113,7 @@ HighLevelPlanSchema.model_rebuild()
 TaskSchema.model_rebuild()
 AdhocTaskCreateSchema.model_rebuild()
 TaskDefinitionUpdateSchema.model_rebuild()
+TacticSchema.model_rebuild()
 DayContextSchema.model_rebuild()
 ReminderSchema.model_rebuild()
 BrainDumpItemSchema.model_rebuild()
@@ -129,6 +137,8 @@ PushNotificationSchema.model_rebuild()
 TimeBlockDefinitionCreateSchema.model_rebuild()
 TimeBlockDefinitionSchema.model_rebuild()
 TimeBlockDefinitionUpdateSchema.model_rebuild()
+TriggerSchema.model_rebuild()
+TriggerTacticsUpdateSchema.model_rebuild()
 ConversationSchema.model_rebuild()
 MessageSchema.model_rebuild()
 SendMessageRequestSchema.model_rebuild()
@@ -199,10 +209,17 @@ __all__ = [
     "TaskDefinitionSchema",
     "TaskDefinitionUpdateSchema",
     "TaskSchema",
+    "TacticCreateSchema",
+    "TacticSchema",
+    "TacticUpdateSchema",
     "TimeBlockDefinitionCreateSchema",
     "TimeBlockDefinitionSchema",
     "TimeBlockDefinitionUpdateSchema",
     "TimeWindowSchema",
+    "TriggerCreateSchema",
+    "TriggerSchema",
+    "TriggerTacticsUpdateSchema",
+    "TriggerUpdateSchema",
     "UseCaseConfigCreateSchema",
     "UseCaseConfigSchema",
     "UserSchema",

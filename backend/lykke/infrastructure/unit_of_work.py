@@ -30,9 +30,11 @@ from lykke.domain.entities import (
     PushSubscriptionEntity,
     RoutineDefinitionEntity,
     RoutineEntity,
+    TacticEntity,
     TaskDefinitionEntity,
     TaskEntity,
     TimeBlockDefinitionEntity,
+    TriggerEntity,
     UseCaseConfigEntity,
     UserEntity,
 )
@@ -67,9 +69,11 @@ from lykke.infrastructure.repositories import (
     PushSubscriptionRepository,
     RoutineDefinitionRepository,
     RoutineRepository,
+    TacticRepository,
     TaskDefinitionRepository,
     TaskRepository,
     TimeBlockDefinitionRepository,
+    TriggerRepository,
     UseCaseConfigRepository,
     UserRepository,
 )
@@ -114,12 +118,16 @@ if TYPE_CHECKING:
         RoutineDefinitionRepositoryReadWriteProtocol,
         RoutineRepositoryReadOnlyProtocol,
         RoutineRepositoryReadWriteProtocol,
+        TacticRepositoryReadOnlyProtocol,
+        TacticRepositoryReadWriteProtocol,
         TaskDefinitionRepositoryReadOnlyProtocol,
         TaskDefinitionRepositoryReadWriteProtocol,
         TaskRepositoryReadOnlyProtocol,
         TaskRepositoryReadWriteProtocol,
         TimeBlockDefinitionRepositoryReadOnlyProtocol,
         TimeBlockDefinitionRepositoryReadWriteProtocol,
+        TriggerRepositoryReadOnlyProtocol,
+        TriggerRepositoryReadWriteProtocol,
         UseCaseConfigRepositoryReadOnlyProtocol,
         UseCaseConfigRepositoryReadWriteProtocol,
         UserRepositoryReadOnlyProtocol,
@@ -166,9 +174,11 @@ class SqlAlchemyUnitOfWork:
     push_subscription_ro_repo: PushSubscriptionRepositoryReadOnlyProtocol
     routine_ro_repo: RoutineRepositoryReadOnlyProtocol
     routine_definition_ro_repo: RoutineDefinitionRepositoryReadOnlyProtocol
+    tactic_ro_repo: TacticRepositoryReadOnlyProtocol
     task_definition_ro_repo: TaskDefinitionRepositoryReadOnlyProtocol
     task_ro_repo: TaskRepositoryReadOnlyProtocol
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
+    trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
 
     # Entity type to repository attribute name mapping
@@ -201,6 +211,7 @@ class SqlAlchemyUnitOfWork:
             "routine_definition_ro_repo",
             "_routine_definition_rw_repo",
         ),
+        TacticEntity: ("tactic_ro_repo", "_tactic_rw_repo"),
         TaskDefinitionEntity: (
             "task_definition_ro_repo",
             "_task_definition_rw_repo",
@@ -209,6 +220,7 @@ class SqlAlchemyUnitOfWork:
             "time_block_definition_ro_repo",
             "_time_block_definition_rw_repo",
         ),
+        TriggerEntity: ("trigger_ro_repo", "_trigger_rw_repo"),
         UserEntity: ("user_ro_repo", "_user_rw_repo"),
         PushSubscriptionEntity: (
             "push_subscription_ro_repo",
@@ -265,6 +277,7 @@ class SqlAlchemyUnitOfWork:
             RoutineDefinitionRepositoryReadWriteProtocol | None
         ) = None
         self._routine_rw_repo: RoutineRepositoryReadWriteProtocol | None = None
+        self._tactic_rw_repo: TacticRepositoryReadWriteProtocol | None = None
         self._task_definition_rw_repo: (
             TaskDefinitionRepositoryReadWriteProtocol | None
         ) = None
@@ -272,6 +285,7 @@ class SqlAlchemyUnitOfWork:
         self._time_block_definition_rw_repo: (
             TimeBlockDefinitionRepositoryReadWriteProtocol | None
         ) = None
+        self._trigger_rw_repo: TriggerRepositoryReadWriteProtocol | None = None
         self._user_rw_repo: UserRepositoryReadWriteProtocol | None = None
 
     async def __aenter__(self) -> Self:
@@ -382,6 +396,13 @@ class SqlAlchemyUnitOfWork:
         self.routine_ro_repo = cast("RoutineRepositoryReadOnlyProtocol", routine_repo)
         self._routine_rw_repo = routine_repo
 
+        tactic_repo = cast(
+            "TacticRepositoryReadWriteProtocol",
+            TacticRepository(user_id=self.user_id),
+        )
+        self.tactic_ro_repo = cast("TacticRepositoryReadOnlyProtocol", tactic_repo)
+        self._tactic_rw_repo = tactic_repo
+
         task_definition_repo = cast(
             "TaskDefinitionRepositoryReadWriteProtocol",
             TaskDefinitionRepository(user_id=self.user_id),
@@ -406,6 +427,13 @@ class SqlAlchemyUnitOfWork:
             "TimeBlockDefinitionRepositoryReadOnlyProtocol", time_block_definition_repo
         )
         self._time_block_definition_rw_repo = time_block_definition_repo
+
+        trigger_repo = cast(
+            "TriggerRepositoryReadWriteProtocol",
+            TriggerRepository(user_id=self.user_id),
+        )
+        self.trigger_ro_repo = cast("TriggerRepositoryReadOnlyProtocol", trigger_repo)
+        self._trigger_rw_repo = trigger_repo
 
         usecase_config_repo = cast(
             "UseCaseConfigRepositoryReadWriteProtocol",
@@ -663,6 +691,15 @@ class SqlAlchemyUnitOfWork:
             raise RuntimeError("Audit log repository not initialized")
 
         await self._audit_log_rw_repo.bulk_delete(query)
+
+    async def set_trigger_tactics(
+        self, trigger_id: UUID, tactic_ids: list[UUID]
+    ) -> None:
+        """Replace all tactics linked to a trigger."""
+        if self._trigger_rw_repo is None:
+            raise RuntimeError("Trigger repository not initialized")
+
+        await self._trigger_rw_repo.set_tactics_for_trigger(trigger_id, tactic_ids)
 
     def _get_repository_for_entity(self, entity: BaseEntityObject) -> Any:
         """Get the appropriate read-write repository for an entity type.
@@ -1143,6 +1180,12 @@ class SqlAlchemyReadOnlyRepositories:
         )
         self.routine_ro_repo = routine_repo
 
+        tactic_repo = cast(
+            "TacticRepositoryReadOnlyProtocol",
+            TacticRepository(user_id=self.user_id),
+        )
+        self.tactic_ro_repo = tactic_repo
+
         task_definition_repo = cast(
             "TaskDefinitionRepositoryReadOnlyProtocol",
             TaskDefinitionRepository(user_id=self.user_id),
@@ -1159,6 +1202,12 @@ class SqlAlchemyReadOnlyRepositories:
             TimeBlockDefinitionRepository(user_id=self.user_id),
         )
         self.time_block_definition_ro_repo = time_block_definition_repo
+
+        trigger_repo = cast(
+            "TriggerRepositoryReadOnlyProtocol",
+            TriggerRepository(user_id=self.user_id),
+        )
+        self.trigger_ro_repo = trigger_repo
 
         usecase_config_repo = cast(
             "UseCaseConfigRepositoryReadOnlyProtocol",

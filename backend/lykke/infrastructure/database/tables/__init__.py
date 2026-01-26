@@ -20,6 +20,9 @@ from .routines import Routine
 from .task_definitions import TaskDefinition
 from .tasks import Task
 from .time_block_definitions import TimeBlockDefinition
+from .tactics import Tactic
+from .trigger_tactics import TriggerTactic
+from .triggers import Trigger
 from .usecase_config import UseCaseConfig
 from .users import User
 
@@ -41,6 +44,9 @@ push_subscriptions_tbl = PushSubscription.__table__
 routines_tbl = Routine.__table__
 routine_definitions_tbl = RoutineDefinition.__table__
 task_definitions_tbl = TaskDefinition.__table__
+tactics_tbl = Tactic.__table__
+trigger_tactics_tbl = TriggerTactic.__table__
+triggers_tbl = Trigger.__table__
 tasks_tbl = Task.__table__
 time_block_definitions_tbl = TimeBlockDefinition.__table__
 usecase_configs_tbl = UseCaseConfig.__table__
@@ -67,7 +73,10 @@ __all__ = [
     "Routine",
     "RoutineDefinition",
     "Task",
+    "Tactic",
     "TaskDefinition",
+    "Trigger",
+    "TriggerTactic",
     "TimeBlockDefinition",
     "UseCaseConfig",
     "User",
@@ -90,6 +99,9 @@ __all__ = [
     "routines_tbl",
     "routine_definitions_tbl",
     "task_definitions_tbl",
+    "tactics_tbl",
+    "trigger_tactics_tbl",
+    "triggers_tbl",
     "tasks_tbl",
     "time_block_definitions_tbl",
     "usecase_configs_tbl",

@@ -50,6 +50,22 @@ class TaskDefinitionUpdateObject(BaseUpdateObject):
 
 
 @dataclass(kw_only=True)
+class TriggerUpdateObject(BaseUpdateObject):
+    """Update object for Trigger entity."""
+
+    name: str | None = None
+    description: str | None = None
+
+
+@dataclass(kw_only=True)
+class TacticUpdateObject(BaseUpdateObject):
+    """Update object for Tactic entity."""
+
+    name: str | None = None
+    description: str | None = None
+
+
+@dataclass(kw_only=True)
 class TimeBlockDefinitionUpdateObject(BaseUpdateObject):
     """Update object for TimeBlockDefinition entity."""
 

@@ -32,7 +32,9 @@ from lykke.infrastructure.repositories import (
     RoutineDefinitionRepository,
     TaskDefinitionRepository,
     TaskRepository,
+    TacticRepository,
     TimeBlockDefinitionRepository,
+    TriggerRepository,
     UserRepository,
 )
 
@@ -225,6 +227,18 @@ async def task_definition_repo(test_user):
 async def time_block_definition_repo(test_user):
     """TimeBlockDefinitionRepository scoped to test_user."""
     return TimeBlockDefinitionRepository(user_id=test_user.id)
+
+
+@pytest_asyncio.fixture
+async def tactic_repo(test_user):
+    """TacticRepository scoped to test_user."""
+    return TacticRepository(user_id=test_user.id)
+
+
+@pytest_asyncio.fixture
+async def trigger_repo(test_user):
+    """TriggerRepository scoped to test_user."""
+    return TriggerRepository(user_id=test_user.id)
 
 
 # AI Chatbot repository fixtures

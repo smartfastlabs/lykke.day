@@ -16,7 +16,9 @@ from . import (
     routines,
     task_definitions,
     tasks,
+    tactics,
     time_block_definitions,
+    triggers,
     twilio,
     usecase_config,
 )
@@ -105,6 +107,16 @@ router.include_router(
     time_block_definitions.router,
     prefix="/time-block-definitions",
     tags=["time-block-definitions"],
+)
+router.include_router(
+    triggers.router,
+    prefix="/triggers",
+    tags=["triggers"],
+)
+router.include_router(
+    tactics.router,
+    prefix="/tactics",
+    tags=["tactics"],
 )
 router.include_router(
     calendars.router,
