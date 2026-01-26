@@ -1,4 +1,4 @@
-import { Component, For, createMemo, createResource, createSignal } from "solid-js";
+import { Component, For, createEffect, createMemo, createResource, createSignal } from "solid-js";
 import { FormError, Input, Select, SubmitButton } from "@/components/forms";
 import { dayTemplateAPI } from "@/utils/api";
 import type { DayTemplate } from "@/types/api";
@@ -23,6 +23,11 @@ interface ProfileFormProps {
   onSubmit: (payload: UserProfileUpdate) => Promise<void>;
   isLoading?: boolean;
   error?: string;
+  onChange?: (payload: UserProfileUpdate) => void;
+  showSubmitButton?: boolean;
+  formId?: string;
+  submitText?: string;
+  loadingText?: string;
 }
 
 const ProfileForm: Component<ProfileFormProps> = (props) => {
@@ -61,117 +66,137 @@ const ProfileForm: Component<ProfileFormProps> = (props) => {
     });
   };
 
+  const buildPayload = (): UserProfileUpdate => ({
+    phone_number: phoneNumber().trim() || null,
+    status: status(),
+    is_active: isActive(),
+    is_superuser: isSuperuser(),
+    is_verified: isVerified(),
+    settings: {
+      template_defaults: templateDefaults().map((value) => value.trim() || "default"),
+      timezone: timezone().trim() || null,
+    },
+  });
+
+  createEffect(() => {
+    props.onChange?.(buildPayload());
+  });
+
   const handleSubmit = async (event: Event) => {
     event.preventDefault();
-
-    const payload: UserProfileUpdate = {
-      phone_number: phoneNumber().trim() || null,
-      status: status(),
-      is_active: isActive(),
-      is_superuser: isSuperuser(),
-      is_verified: isVerified(),
-      settings: {
-        template_defaults: templateDefaults().map((value) => value.trim() || "default"),
-        timezone: timezone().trim() || null,
-      },
-    };
-
-    await props.onSubmit(payload);
+    await props.onSubmit(buildPayload());
   };
 
+  const shouldShowSubmit = () => props.showSubmitButton ?? true;
+  const submitText = () => props.submitText ?? "Update Profile";
+  const loadingText = () => props.loadingText ?? "Updating...";
+
   return (
-    <form class="space-y-8" onSubmit={handleSubmit}>
-      <div class="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm space-y-4">
+    <form id={props.formId} class="space-y-8" onSubmit={handleSubmit}>
+      <div class="rounded-xl border border-amber-100/80 bg-white/90 p-6 shadow-sm space-y-4">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-medium text-neutral-900">Profile</h2>
-            <p class="text-sm text-neutral-500">Update your account information.</p>
+            <h2 class="text-lg font-semibold text-stone-800">Profile</h2>
+            <p class="text-sm text-stone-500">Update your account information.</p>
           </div>
-          <div class="text-xs text-neutral-500">Email cannot be changed</div>
+          <div class="text-xs text-stone-400">Email cannot be changed</div>
         </div>
 
         <div class="space-y-4">
-          <div>
-            <label class="text-sm font-medium text-neutral-500">Email</label>
-            <div class="mt-1 w-full rounded-lg border border-dashed border-neutral-200 bg-neutral-50 px-4 py-3 text-neutral-700">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600">Email</label>
+            <div class="w-full rounded-lg border border-dashed border-amber-100/80 bg-amber-50/40 px-4 py-3 text-neutral-700">
               {props.initialData.email}
             </div>
           </div>
 
-          <Input
-            id="phone"
-            placeholder="Phone number"
-            value={phoneNumber}
-            onChange={setPhoneNumber}
-          />
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="profile-phone">
+              Phone number
+            </label>
+            <Input
+              id="profile-phone"
+              placeholder="Phone number"
+              value={phoneNumber}
+              onChange={setPhoneNumber}
+            />
+          </div>
 
-          <Input
-            id="timezone"
-            placeholder="Timezone (e.g. America/Chicago)"
-            value={timezone}
-            onChange={setTimezone}
-          />
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="profile-timezone">
+              Timezone
+            </label>
+            <Input
+              id="profile-timezone"
+              placeholder="e.g. America/Chicago"
+              value={timezone}
+              onChange={setTimezone}
+            />
+          </div>
 
-          <Select<UserStatus>
-            id="status"
-            value={status}
-            onChange={setStatus}
-            options={["active", "new-lead"]}
-            placeholder="Status"
-          />
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="profile-status">
+              Status
+            </label>
+            <Select<UserStatus>
+              id="profile-status"
+              value={status}
+              onChange={setStatus}
+              options={["active", "new-lead"]}
+              placeholder="Status"
+            />
+          </div>
         </div>
       </div>
 
-      <div class="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm space-y-4">
-        <h2 class="text-lg font-medium text-neutral-900">Access flags</h2>
+      <div class="rounded-xl border border-amber-100/80 bg-white/90 p-6 shadow-sm space-y-4">
+        <h2 class="text-lg font-semibold text-stone-800">Access flags</h2>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <label class="flex items-center gap-3 rounded-md border border-neutral-200 px-3 py-2">
+          <label class="flex items-center gap-3 rounded-md border border-amber-100/80 px-3 py-2">
             <input
               type="checkbox"
               checked={isActive()}
               onChange={(event) => setIsActive(event.currentTarget.checked)}
-              class="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+              class="h-4 w-4 rounded border-neutral-300 text-stone-900 focus:ring-amber-300"
             />
             <span class="text-sm text-neutral-800">Active</span>
           </label>
 
-          <label class="flex items-center gap-3 rounded-md border border-neutral-200 px-3 py-2">
+          <label class="flex items-center gap-3 rounded-md border border-amber-100/80 px-3 py-2">
             <input
               type="checkbox"
               checked={isSuperuser()}
               onChange={(event) => setIsSuperuser(event.currentTarget.checked)}
-              class="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+              class="h-4 w-4 rounded border-neutral-300 text-stone-900 focus:ring-amber-300"
             />
             <span class="text-sm text-neutral-800">Superuser</span>
           </label>
 
-          <label class="flex items-center gap-3 rounded-md border border-neutral-200 px-3 py-2">
+          <label class="flex items-center gap-3 rounded-md border border-amber-100/80 px-3 py-2">
             <input
               type="checkbox"
               checked={isVerified()}
               onChange={(event) => setIsVerified(event.currentTarget.checked)}
-              class="h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+              class="h-4 w-4 rounded border-neutral-300 text-stone-900 focus:ring-amber-300"
             />
             <span class="text-sm text-neutral-800">Verified</span>
           </label>
         </div>
       </div>
 
-      <div class="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-lg font-medium text-neutral-900">Template defaults</h2>
-            <p class="text-sm text-neutral-500">
-              Pick which day template to apply by default for each weekday.
-            </p>
-          </div>
+      <div class="rounded-xl border border-amber-100/80 bg-white/90 p-6 shadow-sm space-y-4">
+        <div>
+          <h2 class="text-lg font-semibold text-stone-800">Template defaults</h2>
+          <p class="text-sm text-stone-500">
+            Pick which day template to apply by default for each weekday.
+          </p>
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <For each={WEEKDAY_LABELS}>
             {(label, index) => (
-              <div>
-                <label class="text-sm font-medium text-neutral-500">{label}</label>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-600">{label}</label>
                 <Select<string>
                   id={`template-default-${index()}`}
                   placeholder={`${label} template`}
@@ -187,11 +212,13 @@ const ProfileForm: Component<ProfileFormProps> = (props) => {
 
       <FormError error={props.error} />
 
-      <SubmitButton
-        isLoading={props.isLoading}
-        loadingText="Updating..."
-        text="Update Profile"
-      />
+      {shouldShowSubmit() && (
+        <SubmitButton
+          isLoading={props.isLoading}
+          loadingText={loadingText()}
+          text={submitText()}
+        />
+      )}
     </form>
   );
 };

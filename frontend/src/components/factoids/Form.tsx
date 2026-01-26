@@ -1,4 +1,4 @@
-import { Component, createSignal } from "solid-js";
+import { Component, createEffect, createSignal } from "solid-js";
 import {
   Factoid,
   FactoidCriticality,
@@ -8,9 +8,14 @@ import { TextArea, Select, SubmitButton, FormError } from "@/components/forms";
 
 interface FormProps {
   onSubmit: (factoid: Partial<Factoid>) => Promise<void>;
+  onChange?: (factoid: Partial<Factoid>) => void;
   isLoading?: boolean;
   error?: string;
   initialData?: Factoid;
+  showSubmitButton?: boolean;
+  formId?: string;
+  submitText?: string;
+  loadingText?: string;
 }
 
 const FACTOID_TYPE_OPTIONS: { value: FactoidType; label: string }[] = [
@@ -34,58 +39,100 @@ const FactoidForm: Component<FormProps> = (props) => {
     props.initialData?.criticality ?? "normal"
   );
 
+  const buildFactoid = (): Partial<Factoid> => ({
+    content: content().trim(),
+    factoid_type: factoidType(),
+    criticality: criticality(),
+    user_confirmed: true,
+  });
+
+  createEffect(() => {
+    props.onChange?.(buildFactoid());
+  });
+
   const handleSubmit = async (event: Event) => {
     event.preventDefault();
-    const factoid: Partial<Factoid> = {
-      content: content().trim(),
-      factoid_type: factoidType(),
-      criticality: criticality(),
-      user_confirmed: true,
-    };
-    await props.onSubmit(factoid);
+    await props.onSubmit(buildFactoid());
   };
 
   const isUpdate = !!props.initialData;
+  const shouldShowSubmit = () => props.showSubmitButton ?? true;
+  const submitText = () => props.submitText ?? (isUpdate ? "Update Factoid" : "Create Factoid");
+  const loadingText = () => props.loadingText ?? (isUpdate ? "Updating..." : "Creating...");
 
   return (
-    <form onSubmit={handleSubmit} class="space-y-6">
-      <TextArea
-        id="content"
-        placeholder="Factoid"
-        value={content}
-        onChange={setContent}
-        rows={4}
-        required
-      />
-
-      <div class="rounded-lg border border-neutral-200 bg-white/80 px-4 py-3 text-xs text-neutral-600">
-        <div class="font-semibold text-neutral-700">Factoid types</div>
-        <div>Semantic: general facts. Episodic: specific events. Procedural: how-to habits.</div>
+    <form id={props.formId} onSubmit={handleSubmit} class="space-y-6">
+      <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm space-y-4">
+        <div>
+          <h2 class="text-lg font-semibold text-stone-800">Factoid</h2>
+          <p class="text-sm text-stone-500">Capture a memory, insight, or instruction.</p>
+        </div>
+        <div class="space-y-4">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="factoid-content">
+              Content
+            </label>
+            <TextArea
+              id="factoid-content"
+              placeholder="Add the factoid text"
+              value={content}
+              onChange={setContent}
+              rows={4}
+              required
+            />
+          </div>
+        </div>
       </div>
 
-      <Select
-        id="factoid-type"
-        value={factoidType}
-        onChange={setFactoidType}
-        options={FACTOID_TYPE_OPTIONS}
-        required
-      />
+      <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm space-y-4">
+        <div>
+          <h2 class="text-lg font-semibold text-stone-800">Classification</h2>
+          <p class="text-sm text-stone-500">
+            Set the type and importance so it shows up in the right places.
+          </p>
+        </div>
+        <div class="rounded-lg border border-amber-100/80 bg-amber-50/60 px-4 py-3 text-xs text-amber-900/80">
+          <div class="font-semibold">Factoid types</div>
+          <div>Semantic: general facts. Episodic: specific events. Procedural: how-to habits.</div>
+        </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="factoid-type">
+              Type
+            </label>
+            <Select
+              id="factoid-type"
+              value={factoidType}
+              onChange={setFactoidType}
+              options={FACTOID_TYPE_OPTIONS}
+              required
+            />
+          </div>
 
-      <Select
-        id="criticality"
-        value={criticality}
-        onChange={setCriticality}
-        options={FACTOID_CRITICALITY_OPTIONS}
-        required
-      />
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="factoid-criticality">
+              Criticality
+            </label>
+            <Select
+              id="factoid-criticality"
+              value={criticality}
+              onChange={setCriticality}
+              options={FACTOID_CRITICALITY_OPTIONS}
+              required
+            />
+          </div>
+        </div>
+      </div>
 
       <FormError error={props.error} />
 
-      <SubmitButton
-        isLoading={props.isLoading}
-        loadingText={isUpdate ? "Updating..." : "Creating..."}
-        text={isUpdate ? "Update Factoid" : "Create Factoid"}
-      />
+      {shouldShowSubmit() && (
+        <SubmitButton
+          isLoading={props.isLoading}
+          loadingText={loadingText()}
+          text={submitText()}
+        />
+      )}
     </form>
   );
 };

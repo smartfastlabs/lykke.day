@@ -61,6 +61,10 @@ interface FormProps {
   isLoading?: boolean;
   error?: string;
   initialData?: TimeBlockDefinition;
+  showSubmitButton?: boolean;
+  formId?: string;
+  submitText?: string;
+  loadingText?: string;
 }
 
 const TimeBlockDefinitionForm: Component<FormProps> = (props) => {
@@ -92,50 +96,108 @@ const TimeBlockDefinitionForm: Component<FormProps> = (props) => {
   };
 
   const isUpdate = !!props.initialData;
+  const shouldShowSubmit = () => props.showSubmitButton ?? true;
+  const submitText = () =>
+    props.submitText ?? (isUpdate ? "Update Time Block" : "Create Time Block");
+  const loadingText = () =>
+    props.loadingText ?? (isUpdate ? "Updating..." : "Creating...");
+  const formatOptionLabel = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
 
   return (
-    <form onSubmit={handleSubmit} class="space-y-6">
-      <Input
-        id="name"
-        placeholder="Name"
-        value={name}
-        onChange={setName}
-        required
-      />
+    <form id={props.formId} onSubmit={handleSubmit} class="space-y-6">
+      <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm space-y-4">
+        <div>
+          <h2 class="text-lg font-semibold text-stone-800">Basics</h2>
+          <p class="text-sm text-stone-500">
+            Name and description so you can spot this quickly.
+          </p>
+        </div>
+        <div class="space-y-4">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="time_block_name">
+              Name
+            </label>
+            <Input
+              id="time_block_name"
+              placeholder="Time block name"
+              value={name}
+              onChange={setName}
+              required
+            />
+          </div>
 
-      <TextArea
-        id="description"
-        placeholder="Description (Optional)"
-        value={description}
-        onChange={setDescription}
-        rows={3}
-      />
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="time_block_description">
+              Description
+            </label>
+            <TextArea
+              id="time_block_description"
+              placeholder="Optional notes for this time block"
+              value={description}
+              onChange={setDescription}
+              rows={3}
+            />
+          </div>
+        </div>
+      </div>
 
-      <Select
-        id="type"
-        placeholder="Type"
-        value={type}
-        onChange={setType}
-        options={ALL_TIME_BLOCK_TYPES}
-        required
-      />
+      <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm space-y-4">
+        <div>
+          <h2 class="text-lg font-semibold text-stone-800">Classification</h2>
+          <p class="text-sm text-stone-500">
+            Choose a type and category for reporting and grouping.
+          </p>
+        </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="time_block_type">
+              Type
+            </label>
+            <Select
+              id="time_block_type"
+              placeholder="Select type"
+              value={type}
+              onChange={setType}
+              options={ALL_TIME_BLOCK_TYPES.map((option) => ({
+                value: option,
+                label: formatOptionLabel(option),
+              }))}
+              required
+            />
+          </div>
 
-      <Select
-        id="category"
-        placeholder="Category"
-        value={category}
-        onChange={setCategory}
-        options={ALL_TIME_BLOCK_CATEGORIES}
-        required
-      />
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="time_block_category">
+              Category
+            </label>
+            <Select
+              id="time_block_category"
+              placeholder="Select category"
+              value={category}
+              onChange={setCategory}
+              options={ALL_TIME_BLOCK_CATEGORIES.map((option) => ({
+                value: option,
+                label: formatOptionLabel(option),
+              }))}
+              required
+            />
+          </div>
+        </div>
+      </div>
 
       <FormError error={props.error} />
 
-      <SubmitButton
-        isLoading={props.isLoading}
-        loadingText={isUpdate ? "Updating..." : "Creating..."}
-        text={isUpdate ? "Update Time Block" : "Create Time Block"}
-      />
+      {shouldShowSubmit() && (
+        <SubmitButton
+          isLoading={props.isLoading}
+          loadingText={loadingText()}
+          text={submitText()}
+        />
+      )}
     </form>
   );
 };

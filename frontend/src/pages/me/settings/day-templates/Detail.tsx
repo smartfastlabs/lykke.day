@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "@solidjs/router";
-import { Component, Show, createResource, createSignal } from "solid-js";
-import DetailPage from "@/components/shared/DetailPage";
+import { Component, Show, createMemo, createResource, createSignal } from "solid-js";
+import SettingsPage from "@/components/shared/SettingsPage";
 import DayTemplateForm from "@/components/day-templates/Form";
 import DayTemplatePreview from "@/components/day-templates/Preview";
 import { dayTemplateAPI, routineDefinitionAPI } from "@/utils/api";
@@ -13,6 +13,7 @@ const DayTemplateDetailPage: Component = () => {
   const [isLoading, setIsLoading] = createSignal(false);
   const [actionError, setActionError] = createSignal("");
   const [isRoutineLoading, setIsRoutineLoading] = createSignal(false);
+  const [isDirty, setIsDirty] = createSignal(false);
 
   const [dayTemplate, { mutate: mutateDayTemplate }] = createResource<
     DayTemplate | undefined,
@@ -25,6 +26,33 @@ const DayTemplateDetailPage: Component = () => {
   const [routineDefinitions] = createResource<RoutineDefinition[]>(
     routineDefinitionAPI.getAll
   );
+
+  const serializeDayTemplate = (value: Partial<DayTemplate>) =>
+    JSON.stringify({
+      slug: (value.slug ?? "").trim(),
+      icon: (value.icon ?? "").trim(),
+      start_time: value.start_time ?? null,
+      end_time: value.end_time ?? null,
+      high_level_plan: value.high_level_plan
+        ? {
+            title: (value.high_level_plan.title ?? "").trim(),
+            text: (value.high_level_plan.text ?? "").trim(),
+            intentions: value.high_level_plan.intentions ?? [],
+          }
+        : null,
+    });
+
+  const initialSignature = createMemo(() => {
+    const current = dayTemplate();
+    if (!current) return null;
+    return serializeDayTemplate(current);
+  });
+
+  const handleFormChange = (value: Partial<DayTemplate>) => {
+    const baseline = initialSignature();
+    if (!baseline) return;
+    setIsDirty(serializeDayTemplate(value) !== baseline);
+  };
 
   const handleUpdate = async (partialTemplate: Partial<DayTemplate>) => {
     const current = dayTemplate();
@@ -174,54 +202,78 @@ const DayTemplateDetailPage: Component = () => {
       fallback={<div class="text-center text-gray-500 py-8">Loading...</div>}
     >
       {(current) => (
-        <DetailPage
-          heading="Day Template"
+        <SettingsPage
+          heading="Edit Day Template"
           bottomLink={{
             label: "Back to Day Templates",
             url: "/me/settings/day-templates",
           }}
-          preview={
-            <div class="flex flex-col items-center justify-center px-6 py-8">
-              <div class="w-full max-w-3xl">
-                <DayTemplatePreview
-                  dayTemplate={current()}
-                  routineDefinitions={routineDefinitions()}
-                  onAddRoutineDefinition={handleAddRoutineDefinition}
-                  onRemoveRoutineDefinition={handleRemoveRoutineDefinition}
-                  onAddTimeBlock={handleAddTimeBlock}
-                  onRemoveTimeBlock={handleRemoveTimeBlock}
-                  isEditMode={false}
-                  isLoading={isRoutineLoading()}
-                  error={actionError()}
-                />
+        >
+          <div class="space-y-6">
+            <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm">
+              <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="space-y-1">
+                  <div class="text-xs uppercase tracking-wide text-stone-400">
+                    Day Template
+                  </div>
+                  <div class="text-lg font-semibold text-stone-800">
+                    {current().slug}
+                  </div>
+                  <Show
+                    when={isDirty()}
+                    fallback={<div class="text-xs text-stone-400">All changes saved</div>}
+                  >
+                    <div class="inline-flex items-center gap-2 text-xs font-medium text-amber-700">
+                      <span class="h-2 w-2 rounded-full bg-amber-500" />
+                      Unsaved changes
+                    </div>
+                  </Show>
+                </div>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <button
+                    type="submit"
+                    form="day-template-form"
+                    disabled={isLoading()}
+                    class="w-full sm:w-auto rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isLoading() ? "Saving..." : "Save changes"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={isLoading()}
+                    class="w-full sm:w-auto rounded-full border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-600 shadow-sm transition hover:border-stone-300 hover:text-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Delete template
+                  </button>
+                </div>
               </div>
             </div>
-          }
-          edit={
-            <div class="flex flex-col items-center justify-center px-6 py-8">
-              <div class="w-full max-w-3xl space-y-8">
-                <DayTemplateForm
-                  initialData={current()}
-                  onSubmit={handleUpdate}
-                  isLoading={isLoading()}
-                  error={error()}
-                />
-                <DayTemplatePreview
-                  dayTemplate={current()}
-                  routineDefinitions={routineDefinitions()}
-                  onAddRoutineDefinition={handleAddRoutineDefinition}
-                  onRemoveRoutineDefinition={handleRemoveRoutineDefinition}
-                  onAddTimeBlock={handleAddTimeBlock}
-                  onRemoveTimeBlock={handleRemoveTimeBlock}
-                  isEditMode={true}
-                  isLoading={isRoutineLoading()}
-                  error={actionError()}
-                />
-              </div>
+
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+              <DayTemplateForm
+                formId="day-template-form"
+                initialData={current()}
+                onSubmit={handleUpdate}
+                onChange={handleFormChange}
+                isLoading={isLoading()}
+                error={error()}
+                showSubmitButton={false}
+              />
+              <DayTemplatePreview
+                dayTemplate={current()}
+                routineDefinitions={routineDefinitions()}
+                onAddRoutineDefinition={handleAddRoutineDefinition}
+                onRemoveRoutineDefinition={handleRemoveRoutineDefinition}
+                onAddTimeBlock={handleAddTimeBlock}
+                onRemoveTimeBlock={handleRemoveTimeBlock}
+                isEditMode={true}
+                isLoading={isRoutineLoading()}
+                error={actionError()}
+              />
             </div>
-          }
-          onDelete={handleDelete}
-        />
+          </div>
+        </SettingsPage>
       )}
     </Show>
   );
