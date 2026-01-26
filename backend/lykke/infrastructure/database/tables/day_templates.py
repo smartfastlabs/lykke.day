@@ -19,6 +19,7 @@ class DayTemplate(Base):
     icon = Column(String)
     routine_definition_ids = Column(JSONB)  # list[UUID]
     time_blocks = Column(JSONB)  # list[DayTemplateTimeBlock]
+    alarms = Column(JSONB)  # list[Alarm]
     high_level_plan = Column(JSONB)  # HighLevelPlan | None
 
     __table_args__ = (

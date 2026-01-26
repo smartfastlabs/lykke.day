@@ -1,5 +1,6 @@
 """Integration tests for DayRepository."""
 
+from datetime import UTC, datetime, time
 from uuid import uuid4
 
 import pytest
@@ -300,6 +301,96 @@ async def test_remove_all_reminders_clears_field_in_database(
     final_retrieved = await day_repo.get(day.id)
     assert final_retrieved.reminders == []
     assert len(final_retrieved.reminders) == 0
+
+
+@pytest.mark.asyncio
+async def test_put_with_alarms_persists_to_database(
+    day_repo, day_template_repo, test_user, test_date, setup_day_templates
+):
+    """Test that creating a day with alarms persists them to the database."""
+    await setup_day_templates
+    templates = await day_template_repo.all()
+    default_template = templates[0] if templates else None
+    if not default_template:
+        pytest.skip("No templates available")
+
+    alarm_time = time(8, 15, 0)
+    alarm_dt = datetime(2025, 11, 27, 8, 15, tzinfo=UTC)
+    day = DayEntity(
+        user_id=test_user.id,
+        date=test_date,
+        status=value_objects.DayStatus.SCHEDULED,
+        scheduled_at=get_current_datetime(),
+        template=default_template,
+        alarms=[
+            value_objects.Alarm(
+                name="Wake up",
+                time=alarm_time,
+                datetime=alarm_dt,
+                type=value_objects.AlarmType.GENERIC,
+                url="",
+            )
+        ],
+    )
+
+    result = await day_repo.put(day)
+
+    assert len(result.alarms) == 1
+    assert result.alarms[0].name == "Wake up"
+    assert result.alarms[0].time == alarm_time
+    assert result.alarms[0].datetime == alarm_dt
+    assert result.alarms[0].type == value_objects.AlarmType.GENERIC
+    assert result.alarms[0].url == ""
+
+    fetched = await day_repo.get(day.id)
+    assert len(fetched.alarms) == 1
+    assert fetched.alarms[0].name == "Wake up"
+    assert fetched.alarms[0].time == alarm_time
+    assert fetched.alarms[0].datetime == alarm_dt
+    assert fetched.alarms[0].type == value_objects.AlarmType.GENERIC
+    assert fetched.alarms[0].url == ""
+
+
+@pytest.mark.asyncio
+async def test_remove_all_alarms_clears_field_in_database(
+    day_repo, day_template_repo, test_user, test_date, setup_day_templates
+):
+    """Test that removing all alarms clears the alarms field in the database."""
+    await setup_day_templates
+    templates = await day_template_repo.all()
+    default_template = templates[0] if templates else None
+    if not default_template:
+        pytest.skip("No templates available")
+
+    alarm_time = time(8, 15, 0)
+    alarm_dt = datetime(2025, 11, 27, 8, 15, tzinfo=UTC)
+    day = DayEntity(
+        user_id=test_user.id,
+        date=test_date,
+        status=value_objects.DayStatus.SCHEDULED,
+        scheduled_at=get_current_datetime(),
+        template=default_template,
+        alarms=[
+            value_objects.Alarm(
+                name="Wake up",
+                time=alarm_time,
+                datetime=alarm_dt,
+                type=value_objects.AlarmType.GENERIC,
+                url="",
+            )
+        ],
+    )
+
+    await day_repo.put(day)
+    retrieved = await day_repo.get(day.id)
+    assert len(retrieved.alarms) == 1
+
+    retrieved.alarms = []
+    await day_repo.put(retrieved)
+
+    final_retrieved = await day_repo.get(day.id)
+    assert final_retrieved.alarms == []
+    assert len(final_retrieved.alarms) == 0
 
 
 @pytest.mark.asyncio

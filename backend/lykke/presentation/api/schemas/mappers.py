@@ -32,6 +32,7 @@ from lykke.domain.entities import (
 )
 from lykke.presentation.api.schemas import (
     ActionSchema,
+    AlarmSchema,
     AuditableSchema,
     AuditLogSchema,
     BotPersonalitySchema,
@@ -77,6 +78,17 @@ def map_reminder_to_schema(reminder: value_objects.Reminder) -> ReminderSchema:
         name=reminder.name,
         status=reminder.status,
         created_at=reminder.created_at,
+    )
+
+
+def map_alarm_to_schema(alarm: value_objects.Alarm) -> AlarmSchema:
+    """Convert Alarm value object to Alarm schema."""
+    return AlarmSchema(
+        name=alarm.name,
+        time=alarm.time,
+        datetime=alarm.datetime,
+        type=alarm.type,
+        url=alarm.url,
     )
 
 
@@ -197,6 +209,7 @@ def map_day_template_to_schema(
         )
         for tb in template.time_blocks
     ]
+    alarm_schemas = [map_alarm_to_schema(alarm) for alarm in template.alarms]
 
     return DayTemplateSchema(
         id=template.id,
@@ -207,6 +220,7 @@ def map_day_template_to_schema(
         icon=template.icon,
         routine_definition_ids=template.routine_definition_ids,
         time_blocks=time_blocks_schema,
+        alarms=alarm_schemas,
         high_level_plan=(
             HighLevelPlanSchema(
                 title=template.high_level_plan.title,
@@ -228,6 +242,7 @@ def map_day_to_schema(
     template_schema = map_day_template_to_schema(day.template) if day.template else None
 
     reminder_schemas = [map_reminder_to_schema(reminder) for reminder in day.reminders]
+    alarm_schemas = [map_alarm_to_schema(alarm) for alarm in day.alarms]
     brain_dump_item_schemas = [
         map_brain_dump_item_to_schema(item) for item in (brain_dump_items or [])
     ]
@@ -243,6 +258,7 @@ def map_day_to_schema(
         tags=day.tags,
         template=template_schema,
         reminders=reminder_schemas,
+        alarms=alarm_schemas,
         brain_dump_items=brain_dump_item_schemas,
         high_level_plan=(
             HighLevelPlanSchema(

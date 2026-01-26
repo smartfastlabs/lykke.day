@@ -1,5 +1,5 @@
 import { Component, For, Show, createEffect, createSignal } from "solid-js";
-import { DayTemplate } from "@/types/api";
+import { Alarm, AlarmType, DayTemplate } from "@/types/api";
 import { Input, SubmitButton, FormError, TextArea } from "@/components/forms";
 import { Icon } from "@/components/shared/Icon";
 
@@ -43,6 +43,13 @@ const DayTemplateForm: Component<FormProps> = (props) => {
     props.initialData?.high_level_plan?.intentions ?? []
   );
   const [newIntention, setNewIntention] = createSignal("");
+  const [alarms, setAlarms] = createSignal<Alarm[]>(
+    props.initialData?.alarms ?? []
+  );
+  const [alarmName, setAlarmName] = createSignal("");
+  const [alarmTime, setAlarmTime] = createSignal("");
+  const [alarmType, setAlarmType] = createSignal<AlarmType>("URL");
+  const [alarmUrl, setAlarmUrl] = createSignal("");
 
   const buildTemplate = (): Partial<DayTemplate> => {
     const title = highLevelPlanTitle().trim();
@@ -54,6 +61,7 @@ const DayTemplateForm: Component<FormProps> = (props) => {
       icon: icon().trim() || null,
       start_time: startTimeValue || null,
       end_time: endTimeValue || null,
+      alarms: alarms(),
       high_level_plan:
         title || text || intentions().length > 0
           ? {
@@ -72,6 +80,27 @@ const DayTemplateForm: Component<FormProps> = (props) => {
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     await props.onSubmit(buildTemplate());
+  };
+
+  const handleAddAlarm = () => {
+    const name = alarmName().trim();
+    const time = alarmTime().trim();
+    if (!name || !time) return;
+
+    setAlarms([
+      ...alarms(),
+      {
+        name,
+        time: time.length === 5 ? `${time}:00` : time,
+        datetime: null,
+        type: alarmType(),
+        url: alarmUrl().trim(),
+      },
+    ]);
+    setAlarmName("");
+    setAlarmTime("");
+    setAlarmType("URL");
+    setAlarmUrl("");
   };
 
   const isUpdate = !!props.initialData;
@@ -249,6 +278,114 @@ const DayTemplateForm: Component<FormProps> = (props) => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm space-y-4">
+        <div>
+          <h2 class="text-lg font-semibold text-stone-800">Alarms</h2>
+          <p class="text-sm text-stone-500">
+            Add alarm cues that will carry into scheduled days.
+          </p>
+        </div>
+
+        <Show when={alarms().length > 0}>
+          <div class="space-y-2">
+            <For each={alarms()}>
+              {(alarm, index) => (
+                <div class="flex items-center gap-3 rounded-lg border border-amber-100/70 bg-amber-50/40 px-3 py-2">
+                  <div class="flex-1">
+                    <div class="text-sm font-medium text-stone-800">
+                      {alarm.name}
+                    </div>
+                    <div class="text-xs text-stone-500">
+                      {alarm.time?.slice(0, 5)} · {alarm.type}
+                    </div>
+                  </div>
+                  <Show when={alarm.url}>
+                    <div class="text-xs text-stone-500 truncate max-w-[180px]">
+                      {alarm.url}
+                    </div>
+                  </Show>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAlarms(alarms().filter((_, i) => i !== index()))
+                    }
+                    class="text-stone-600 hover:text-stone-700"
+                    aria-label="Remove alarm"
+                  >
+                    <Icon key="xMark" class="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
+
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="alarm-name">
+              Alarm name
+            </label>
+            <Input
+              id="alarm-name"
+              placeholder="Alarm name"
+              value={alarmName}
+              onChange={setAlarmName}
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="alarm-time">
+              Time
+            </label>
+            <Input
+              id="alarm-time"
+              type="time"
+              placeholder="Alarm time"
+              value={alarmTime}
+              onChange={setAlarmTime}
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="alarm-type">
+              Type
+            </label>
+            <select
+              id="alarm-type"
+              class="w-full rounded-lg border border-amber-100/80 bg-white px-3 py-2 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-200"
+              value={alarmType()}
+              onChange={(e) => setAlarmType(e.currentTarget.value as AlarmType)}
+            >
+              <option value="URL">URL</option>
+              <option value="GENERIC">Generic</option>
+            </select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-neutral-600" for="alarm-url">
+              URL
+            </label>
+            <Input
+              id="alarm-url"
+              placeholder="https://"
+              value={alarmUrl}
+              onChange={setAlarmUrl}
+            />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleAddAlarm}
+          disabled={!alarmName().trim() || !alarmTime().trim()}
+          class="w-full rounded-lg border border-amber-100/80 bg-amber-50/70 text-amber-700 hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium py-2"
+        >
+          Add alarm
+        </button>
       </div>
 
       <FormError error={props.error} />

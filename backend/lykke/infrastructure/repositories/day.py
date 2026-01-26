@@ -50,6 +50,14 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
             else []
         )
 
+        # Always include alarms, even if empty, so that removing all alarms
+        # clears the field in the database
+        row["alarms"] = (
+            [dataclass_to_json_dict(alarm) for alarm in day.alarms]
+            if day.alarms
+            else []
+        )
+
         return row
 
     @classmethod
@@ -157,6 +165,13 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                     for tb in template_data["time_blocks"]
                 ]
 
+            if template_data.get("alarms"):
+                template_data["alarms"] = [
+                    value_objects.Alarm.from_dict(alarm)
+                    for alarm in template_data["alarms"]
+                    if isinstance(alarm, dict)
+                ]
+
             if template_data.get("high_level_plan"):
                 high_level_plan = template_data.get("high_level_plan")
                 if isinstance(high_level_plan, dict):
@@ -202,6 +217,14 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                         )
                     reminders_list.append(value_objects.Reminder(**reminder_data))
             data["reminders"] = reminders_list
+
+        # Handle alarms - it comes as a list of dicts from JSONB, need to convert to Alarm value objects
+        if data.get("alarms") and isinstance(data["alarms"], list):
+            data["alarms"] = [
+                value_objects.Alarm.from_dict(alarm)
+                for alarm in data["alarms"]
+                if isinstance(alarm, dict)
+            ]
 
         from lykke.infrastructure.repositories.base.utils import (
             filter_init_false_fields,

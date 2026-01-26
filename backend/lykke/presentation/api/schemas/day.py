@@ -14,6 +14,7 @@ from .high_level_plan import HighLevelPlanSchema
 if TYPE_CHECKING:
     from .brain_dump import BrainDumpItemSchema
     from .day_template import DayTemplateSchema
+    from .alarm import AlarmSchema
     from .reminder import ReminderSchema
 
 
@@ -29,6 +30,7 @@ class DaySchema(BaseEntitySchema):
     tags: list[DayTag] = Field(default_factory=list)
     template: Optional["DayTemplateSchema"] = None
     reminders: list["ReminderSchema"] = Field(default_factory=list)
+    alarms: list["AlarmSchema"] = Field(default_factory=list)
     brain_dump_items: list["BrainDumpItemSchema"] = Field(default_factory=list)
     high_level_plan: HighLevelPlanSchema | None = None
 
@@ -40,4 +42,5 @@ class DayUpdateSchema(BaseSchema):
     scheduled_at: datetime | None = None
     tags: list[DayTag] | None = None
     template_id: UUID | None = None
+    alarms: list["AlarmSchema"] | None = None
     high_level_plan: HighLevelPlanSchema | None = None

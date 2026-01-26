@@ -14,6 +14,7 @@ import {
   EventsSection,
   RoutineSummary,
   RemindersSummary,
+  AlarmsSummary,
   UpcomingSection,
   RightNowSection,
 } from "@/components/today";
@@ -32,7 +33,7 @@ const isAllDayEvent = (event: Event): boolean => {
 export const TodayPage: Component = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { tasks, events, reminders, routines } = useStreamingData();
+  const { tasks, events, reminders, alarms, routines } = useStreamingData();
   const [now, setNow] = createSignal(new Date());
 
   // Update time every 30 seconds to keep sections aligned
@@ -49,6 +50,7 @@ export const TodayPage: Component = () => {
   const allTasks = createMemo(() => tasks() ?? []);
   const allEvents = createMemo(() => events() ?? []);
   const allReminders = createMemo(() => reminders() ?? []);
+  const allAlarms = createMemo(() => alarms() ?? []);
   const allRoutines = createMemo(() => routines() ?? []);
 
   // Check if all reminders are complete or punted
@@ -209,6 +211,9 @@ export const TodayPage: Component = () => {
           reminders={allReminders()}
           href="/me/today/reminders"
         />
+      </div>
+      <div class="mb-6">
+        <AlarmsSummary alarms={allAlarms()} href="/me/today/alarms" />
       </div>
       <div class="mb-6 flex flex-col md:flex-row gap-4">
         <Show when={hasUpcomingEvents()}>

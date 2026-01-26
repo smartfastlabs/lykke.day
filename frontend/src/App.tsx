@@ -28,6 +28,7 @@ import HomeLayout from "@/pages/me/today/Layout";
 import PreviewView from "@/pages/me/today/Preview";
 import TasksView from "@/pages/me/today/Tasks";
 import EventsView from "@/pages/me/today/Events";
+import AlarmsView from "@/pages/me/today/Alarms";
 import RemindersView from "@/pages/me/today/Reminders";
 import RoutinesView from "@/pages/me/today/Routines";
 import TodayNotificationsPage from "@/pages/me/today/notifications/Index";
@@ -271,6 +272,7 @@ export default function App() {
                   <Route path="/" component={PreviewView} />
                   <Route path="/tasks" component={TasksView} />
                   <Route path="/events" component={EventsView} />
+                  <Route path="/alarms" component={AlarmsView} />
                   <Route path="/reminders" component={RemindersView} />
                   <Route path="/routines" component={RoutinesView} />
                   <Route path="/brain-dumps" component={TodayBrainDumpsPage} />

@@ -35,6 +35,7 @@ export type Task = components["schemas"]["TaskSchema"];
 export type Event = components["schemas"]["CalendarEntrySchema"];
 export type Day = components["schemas"]["DaySchema"] & {
   reminders?: Reminder[];
+  alarms?: Alarm[];
   brain_dump_items?: BrainDumpItem[];
 };
 
@@ -45,9 +46,12 @@ export type DayContext = Omit<BaseDayContext, "calendar_entries"> & {
   calendar_entries?: Event[];
   tasks?: Task[];
   reminders?: Reminder[];
+  alarms?: Alarm[];
 };
 
-export type DayTemplate = components["schemas"]["DayTemplateSchema"];
+export type DayTemplate = components["schemas"]["DayTemplateSchema"] & {
+  alarms?: Alarm[];
+};
 export type TimeBlockDefinition = components["schemas"]["TimeBlockDefinitionSchema"];
 export type Calendar = components["schemas"]["CalendarSchema"];
 export type CalendarEntrySeries = components["schemas"]["CalendarEntrySeriesSchema"];
@@ -80,6 +84,14 @@ export interface Reminder {
   created_at?: string | null;
 }
 
+export interface Alarm {
+  name: string;
+  time: string;
+  datetime?: string | null;
+  type: AlarmType;
+  url: string;
+}
+
 export type BrainDumpItem = components["schemas"]["BrainDumpItemSchema"] & {
   llm_run_result?: LLMRunResultSnapshot | Record<string, unknown> | null;
 };
@@ -96,6 +108,8 @@ export type ActionType = components["schemas"]["ActionType"];
 
 // ReminderStatus enum - manually defined as it may not be in generated types yet
 export type ReminderStatus = "INCOMPLETE" | "COMPLETE" | "PUNT";
+
+export type AlarmType = "URL" | "GENERIC";
 
 export type BrainDumpItemStatus = "ACTIVE" | "COMPLETE" | "PUNT";
 export type BrainDumpItemType = components["schemas"]["BrainDumpItemType"];

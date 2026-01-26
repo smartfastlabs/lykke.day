@@ -17,6 +17,7 @@ import {
   TaskStatus,
   Reminder,
   ReminderStatus,
+  Alarm,
   BrainDumpItem,
   BrainDumpItemStatus,
   PushNotification,
@@ -40,6 +41,7 @@ interface StreamingDataContextValue {
   tasks: Accessor<Task[]>;
   events: Accessor<Event[]>;
   reminders: Accessor<Reminder[]>;
+  alarms: Accessor<Alarm[]>;
   brainDumps: Accessor<BrainDumpItem[]>;
   notifications: Accessor<PushNotification[]>;
   day: Accessor<Day | undefined>;
@@ -309,6 +311,11 @@ export function StreamingDataProvider(props: ParentProps) {
     if (!day) return [];
     return normalizeReminders((day as { reminders?: ReminderWithOptionalId[] }).reminders);
   });
+  const alarms = createMemo(() => {
+    const day = dayContextStore.data?.day;
+    if (!day) return [];
+    return (day as { alarms?: Alarm[] }).alarms ?? [];
+  });
   const brainDumps = createMemo(() => {
     const day = dayContextStore.data?.day;
     if (!day) return [];
@@ -323,6 +330,7 @@ export function StreamingDataProvider(props: ParentProps) {
     return {
       ...currentDay,
       reminders: reminders(),
+      alarms: alarms(),
       brain_dump_items: brainDumps(),
     };
   });
@@ -1091,6 +1099,7 @@ export function StreamingDataProvider(props: ParentProps) {
     tasks,
     events,
     reminders,
+    alarms,
     brainDumps,
     notifications,
     day,

@@ -1,7 +1,7 @@
 """Unit tests for ScheduleDayHandler."""
 
-from datetime import date as dt_date, time
-from uuid import UUID, uuid4
+from datetime import UTC, date as dt_date, datetime, time
+from uuid import uuid4
 
 import pytest
 from dobles import allow
@@ -638,3 +638,89 @@ async def test_schedule_day_copies_high_level_plan_from_template():
     assert created_day.high_level_plan.title == template.high_level_plan.title
     assert created_day.high_level_plan.text == template.high_level_plan.text
     assert created_day.high_level_plan.intentions == template.high_level_plan.intentions
+
+
+@pytest.mark.asyncio
+async def test_schedule_day_copies_alarms_from_template():
+    """Verify schedule_day copies alarms from the day template to the day."""
+    user_id = uuid4()
+    task_date = dt_date(2025, 11, 27)
+
+    template = DayTemplateEntity(
+        user_id=user_id,
+        slug="default",
+        routine_definition_ids=[],
+        time_blocks=[],
+        alarms=[
+            value_objects.Alarm(
+                name="Wake up",
+                time=time(8, 0, 0),
+                datetime=None,
+                type=value_objects.AlarmType.GENERIC,
+                url="https://example.com",
+            )
+        ],
+    )
+
+    day = DayEntity.create_for_date(task_date, user_id, template)
+
+    day_template_repo = create_day_template_repo_double()
+    allow(day_template_repo).get.and_return(template)
+    allow(day_template_repo).search_one.and_return(template)
+
+    day_repo = create_day_repo_double()
+    allow(day_repo).get.and_raise(NotFoundError("Day not found"))
+
+    task_repo = create_task_repo_double()
+    allow(task_repo).search.and_return([])
+
+    calendar_entry_repo = create_calendar_entry_repo_double()
+    allow(calendar_entry_repo).search.and_return([])
+
+    routine_definition_repo = create_routine_definition_repo_double()
+    allow(routine_definition_repo).all.and_return([])
+
+    routine_repo = create_routine_repo_double()
+    allow(routine_repo).search.and_return([])
+
+    ro_repos = create_read_only_repos_double(
+        day_template_repo=day_template_repo,
+        day_repo=day_repo,
+        task_repo=task_repo,
+        calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
+    )
+    uow = create_uow_double(
+        day_template_repo=day_template_repo,
+        day_repo=day_repo,
+        task_repo=task_repo,
+        calendar_entry_repo=calendar_entry_repo,
+        routine_definition_repo=routine_definition_repo,
+        routine_repo=routine_repo,
+    )
+    uow_factory = create_uow_factory_double(uow)
+    preview_handler = create_preview_day_handler_double()
+    day_context = value_objects.DayContext(
+        day=day, tasks=[], calendar_entries=[], routines=[]
+    )
+    allow(preview_handler).preview_day.and_return(day_context)
+
+    handler = ScheduleDayHandler(ro_repos, uow_factory, user_id, preview_handler)
+
+    result = await handler.handle(
+        ScheduleDayCommand(date=task_date, template_id=template.id)
+    )
+
+    assert len(result.day.alarms) == 1
+    alarm = result.day.alarms[0]
+    assert alarm.name == "Wake up"
+    assert alarm.time == time(8, 0, 0)
+    assert alarm.type == value_objects.AlarmType.GENERIC
+    assert alarm.url == "https://example.com"
+    assert alarm.datetime == datetime(2025, 11, 27, 8, 0, tzinfo=UTC)
+
+    created_day = next(
+        e for e in uow.created if isinstance(e, DayEntity)
+    )
+    assert len(created_day.alarms) == 1

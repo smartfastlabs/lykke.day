@@ -29,6 +29,7 @@ class DayTemplateEntity(
     icon: str | None = None
     routine_definition_ids: list[UUID] = field(default_factory=list)
     time_blocks: list[value_objects.DayTemplateTimeBlock] = field(default_factory=list)
+    alarms: list[value_objects.Alarm] = field(default_factory=list)
     high_level_plan: value_objects.HighLevelPlan | None = None
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
@@ -59,6 +60,7 @@ class DayTemplateEntity(
             icon=self.icon,
             routine_definition_ids=routine_definition_ids,
             time_blocks=self.time_blocks,
+            alarms=self.alarms,
             high_level_plan=self.high_level_plan,
         )
 
@@ -121,6 +123,7 @@ class DayTemplateEntity(
             icon=self.icon,
             routine_definition_ids=self.routine_definition_ids,
             time_blocks=time_blocks,
+            alarms=self.alarms,
             high_level_plan=self.high_level_plan,
         )
 

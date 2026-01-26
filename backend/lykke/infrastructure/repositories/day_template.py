@@ -76,6 +76,12 @@ class DayTemplateRepository(
         else:
             row["time_blocks"] = []
 
+        # Handle alarms - serialize to JSON
+        if template.alarms:
+            row["alarms"] = [dataclass_to_json_dict(alarm) for alarm in template.alarms]
+        else:
+            row["alarms"] = []
+
         return row
 
     @classmethod
@@ -135,6 +141,14 @@ class DayTemplateRepository(
                     name=tb["name"],
                 )
                 for tb in data["time_blocks"]
+            ]
+
+        # Handle alarms - deserialize from JSON
+        if data.get("alarms"):
+            data["alarms"] = [
+                value_objects.Alarm.from_dict(alarm)
+                for alarm in data["alarms"]
+                if isinstance(alarm, dict)
             ]
 
         return DayTemplateEntity(**data)

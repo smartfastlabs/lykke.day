@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from .base import BaseEntitySchema, BaseSchema
+from .alarm import AlarmSchema
 from .high_level_plan import HighLevelPlanSchema
 
 
@@ -27,6 +28,7 @@ class DayTemplateCreateSchema(BaseSchema):
     icon: str | None = None
     routine_definition_ids: list[UUID] = Field(default_factory=list)
     time_blocks: list[DayTemplateTimeBlockSchema] = Field(default_factory=list)
+    alarms: list[AlarmSchema] = Field(default_factory=list)
     high_level_plan: HighLevelPlanSchema | None = None
 
 
@@ -45,6 +47,7 @@ class DayTemplateUpdateSchema(BaseSchema):
     icon: str | None = None
     routine_definition_ids: list[UUID] | None = None
     time_blocks: list[DayTemplateTimeBlockSchema] | None = None
+    alarms: list[AlarmSchema] | None = None
     high_level_plan: HighLevelPlanSchema | None = None
 
 

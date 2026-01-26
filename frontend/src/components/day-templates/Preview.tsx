@@ -343,6 +343,47 @@ const DayTemplatePreview: Component<DayTemplatePreviewProps> = (props) => {
             <div class="text-sm text-red-600">{props.error}</div>
           </Show>
         </div>
+
+        {/* Alarms */}
+        <div class="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm space-y-4">
+          <div>
+            <h2 class="text-lg font-medium text-neutral-900">Alarms</h2>
+            <p class="text-sm text-neutral-500">
+              Alarm cues that will appear on scheduled days.
+            </p>
+          </div>
+          <Show
+            when={(props.dayTemplate.alarms ?? []).length > 0}
+            fallback={<div class="text-sm text-neutral-500">No alarms added yet.</div>}
+          >
+            <div class="space-y-3">
+              <For each={props.dayTemplate.alarms ?? []}>
+                {(alarm) => (
+                  <div class="flex items-center justify-between rounded-md border border-neutral-200 px-3 py-2">
+                    <div class="space-y-1">
+                      <div class="text-sm font-medium text-neutral-900">
+                        {alarm.name}
+                      </div>
+                      <div class="text-xs text-neutral-500">
+                        {formatTime(alarm.time)} · {alarm.type}
+                      </div>
+                    </div>
+                    <Show when={alarm.url}>
+                      <a
+                        class="text-xs text-neutral-500 hover:text-neutral-700"
+                        href={alarm.url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Link
+                      </a>
+                    </Show>
+                  </div>
+                )}
+              </For>
+            </div>
+          </Show>
+        </div>
     </div>
   );
 };

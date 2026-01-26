@@ -10,6 +10,8 @@ from .ai_chat import (
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .calendar_subscription import CalendarSubscription
 from .day import (
+    Alarm,
+    AlarmType,
     BrainDumpItemStatus,
     BrainDumpItemType,
     DayContext,
@@ -101,6 +103,8 @@ from .user import UserSetting, UserStatus
 __all__ = [
     "Action",
     "ActionType",
+    "Alarm",
+    "AlarmType",
     "AuditLogQuery",
     "AuthTokenQuery",
     "BaseQuery",

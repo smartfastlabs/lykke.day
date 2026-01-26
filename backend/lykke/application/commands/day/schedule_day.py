@@ -283,6 +283,31 @@ class ScheduleDayHandler(
             timezone=timezone,
         )
 
+        template_start = template.start_time
+        template_end = template.end_time
+        template_crosses_midnight = bool(
+            template_start and template_end and template_end < template_start
+        )
+
+        day_alarms: list[value_objects.Alarm] = []
+        for alarm in template.alarms:
+            alarm_local_dt = self._time_to_local_datetime(
+                command.date,
+                alarm.time,
+                timezone=timezone,
+                template_start=template_start,
+                template_crosses_midnight=template_crosses_midnight,
+            )
+            day_alarms.append(
+                value_objects.Alarm(
+                    name=alarm.name,
+                    time=alarm.time,
+                    datetime=alarm_local_dt.astimezone(UTC),
+                    type=alarm.type,
+                    url=alarm.url,
+                )
+            )
+
         # Convert template timeblocks to day timeblocks
         day_time_blocks: list[value_objects.DayTimeBlock] = []
         if template.time_blocks:
@@ -324,6 +349,7 @@ class ScheduleDayHandler(
             day.high_level_plan = template.high_level_plan
             day.starts_at = starts_at
             day.ends_at = ends_at
+            day.alarms = day_alarms
             # Set timeblocks before scheduling
             day.time_blocks = day_time_blocks
             day.schedule(template)
@@ -334,6 +360,7 @@ class ScheduleDayHandler(
             day.time_blocks = day_time_blocks
             day.starts_at = starts_at
             day.ends_at = ends_at
+            day.alarms = day_alarms
             if day.high_level_plan is None and template.high_level_plan is not None:
                 day.high_level_plan = template.high_level_plan
             if day.status == value_objects.DayStatus.UNSCHEDULED:

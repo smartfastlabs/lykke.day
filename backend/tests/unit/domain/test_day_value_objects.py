@@ -6,6 +6,8 @@ from datetime import UTC
 import pytest
 
 from lykke.domain.value_objects.day import (
+    Alarm,
+    AlarmType,
     DayContext,
     DayMode,
     DayStatus,
@@ -146,3 +148,45 @@ def test_reminder_creation_with_all_fields() -> None:
     assert reminder.name == "Test Reminder"
     assert reminder.status == ReminderStatus.COMPLETE
     assert reminder.created_at == created_at
+
+
+@pytest.mark.parametrize(
+    ("alarm_type", "expected_value"),
+    [
+        (AlarmType.URL, "URL"),
+        (AlarmType.GENERIC, "GENERIC"),
+    ],
+)
+def test_alarm_type_values(alarm_type: AlarmType, expected_value: str) -> None:
+    """Test AlarmType enum values."""
+    assert alarm_type.value == expected_value
+
+
+def test_alarm_creation_with_defaults() -> None:
+    """Test Alarm uses default values when not specified."""
+    alarm = Alarm(
+        name="Morning alarm",
+        time=datetime.time(8, 30),
+    )
+    assert alarm.name == "Morning alarm"
+    assert alarm.time == datetime.time(8, 30)
+    assert alarm.datetime is None
+    assert alarm.type == AlarmType.URL
+    assert alarm.url == ""
+
+
+def test_alarm_creation_with_all_fields() -> None:
+    """Test Alarm can be created with all fields."""
+    alarm_dt = datetime.datetime(2025, 11, 27, 8, 30, tzinfo=UTC)
+    alarm = Alarm(
+        name="Start work",
+        time=datetime.time(8, 30),
+        datetime=alarm_dt,
+        type=AlarmType.GENERIC,
+        url="https://example.com",
+    )
+    assert alarm.name == "Start work"
+    assert alarm.time == datetime.time(8, 30)
+    assert alarm.datetime == alarm_dt
+    assert alarm.type == AlarmType.GENERIC
+    assert alarm.url == "https://example.com"

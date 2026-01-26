@@ -1,6 +1,7 @@
 """API response schemas (DTOs) for decoupling domain entities from presentation layer."""
 
 from .action import ActionSchema
+from .alarm import AlarmSchema
 from .audit_log import AuditLogSchema
 from .auditable import AuditableSchema
 from .base_personality import BasePersonalitySchema
@@ -115,6 +116,7 @@ AdhocTaskCreateSchema.model_rebuild()
 TaskDefinitionUpdateSchema.model_rebuild()
 TacticSchema.model_rebuild()
 DayContextSchema.model_rebuild()
+AlarmSchema.model_rebuild()
 ReminderSchema.model_rebuild()
 BrainDumpItemSchema.model_rebuild()
 BrainDumpItemCreateSchema.model_rebuild()
@@ -155,6 +157,7 @@ WebSocketSyncResponseSchema.model_rebuild()
 
 __all__ = [
     "ActionSchema",
+    "AlarmSchema",
     "AdhocTaskCreateSchema",
     "AuditLogSchema",
     "AuditableSchema",

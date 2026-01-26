@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC
-from datetime import date as dt_date
-from datetime import datetime
+from datetime import UTC, date as dt_date, datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
@@ -49,6 +47,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
     time_blocks: list[value_objects.DayTimeBlock] = field(default_factory=list)
     active_time_block_id: UUID | None = None
     reminders: list[value_objects.Reminder] = field(default_factory=list)
+    alarms: list[value_objects.Alarm] = field(default_factory=list)
     high_level_plan: value_objects.HighLevelPlan | None = None
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
 
@@ -399,6 +398,4 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
                 entity_date=self.date,
             )
         )
-        return reminder_to_remove
-
         return reminder_to_remove

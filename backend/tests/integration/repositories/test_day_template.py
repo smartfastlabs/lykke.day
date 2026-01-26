@@ -1,6 +1,6 @@
 """Integration tests for DayTemplateRepository."""
 
-from datetime import time
+from datetime import UTC, datetime, time
 
 import pytest
 
@@ -122,3 +122,40 @@ async def test_put_with_time_blocks_persists_to_database(day_template_repo, test
     assert fetched.time_blocks[1].time_block_definition_id == time_block_def_id
     assert fetched.time_blocks[1].start_time == time(14, 0, 0)
     assert fetched.time_blocks[1].end_time == time(17, 0, 0)
+
+
+@pytest.mark.asyncio
+async def test_put_with_alarms_persists_to_database(day_template_repo, test_user):
+    """Test that creating a day template with alarms persists them to the database."""
+    alarm_time = time(7, 45, 0)
+    alarm_dt = datetime(2025, 11, 27, 7, 45, tzinfo=UTC)
+    template = DayTemplateEntity(
+        user_id=test_user.id,
+        slug="alarm-test",
+        alarms=[
+            value_objects.Alarm(
+                name="Morning alarm",
+                time=alarm_time,
+                datetime=alarm_dt,
+                type=value_objects.AlarmType.URL,
+                url="https://example.com",
+            )
+        ],
+    )
+
+    result = await day_template_repo.put(template)
+
+    assert len(result.alarms) == 1
+    assert result.alarms[0].name == "Morning alarm"
+    assert result.alarms[0].time == alarm_time
+    assert result.alarms[0].datetime == alarm_dt
+    assert result.alarms[0].type == value_objects.AlarmType.URL
+    assert result.alarms[0].url == "https://example.com"
+
+    fetched = await day_template_repo.get(result.id)
+    assert len(fetched.alarms) == 1
+    assert fetched.alarms[0].name == "Morning alarm"
+    assert fetched.alarms[0].time == alarm_time
+    assert fetched.alarms[0].datetime == alarm_dt
+    assert fetched.alarms[0].type == value_objects.AlarmType.URL
+    assert fetched.alarms[0].url == "https://example.com"

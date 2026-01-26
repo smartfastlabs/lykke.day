@@ -33,6 +33,7 @@ const DayTemplateDetailPage: Component = () => {
       icon: (value.icon ?? "").trim(),
       start_time: value.start_time ?? null,
       end_time: value.end_time ?? null,
+      alarms: value.alarms ?? [],
       high_level_plan: value.high_level_plan
         ? {
             title: (value.high_level_plan.title ?? "").trim(),

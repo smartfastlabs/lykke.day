@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from datetime import datetime, time
     from uuid import UUID
 
-    from .day import DayStatus, DayTag, Reminder
+    from .day import Alarm, DayStatus, DayTag, Reminder
     from .high_level_plan import HighLevelPlan
     from .routine_definition import (
         RecurrenceSchedule,
@@ -126,6 +126,7 @@ class DayTemplateUpdateObject(BaseUpdateObject):
     icon: str | None = None
     routine_definition_ids: list[UUID] | None = None
     time_blocks: list[DayTemplateTimeBlock] | None = None
+    alarms: list[Alarm] | None = None
     high_level_plan: HighLevelPlan | None = None
 
 
@@ -177,6 +178,7 @@ class DayUpdateObject(BaseUpdateObject):
     time_blocks: list[DayTimeBlock] | None = None
     active_time_block_id: UUID | None = None
     reminders: list[Reminder] | None = None
+    alarms: list[Alarm] | None = None
     high_level_plan: HighLevelPlan | None = None
 
 

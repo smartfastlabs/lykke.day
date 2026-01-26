@@ -7,6 +7,7 @@ export {
   RemindersSummary,
   type RemindersSummaryProps,
 } from "./RemindersSummary";
+export { AlarmsSummary, type AlarmsSummaryProps } from "./AlarmsSummary";
 export { BrainDumpSummary } from "@/components/brain-dump/Summary";
 export { TasksSection, type TasksSectionProps } from "./TasksSection";
 export { EventsSection, type EventsSectionProps } from "./EventsSection";

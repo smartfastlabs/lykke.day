@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime as dt_datetime, time
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from .base import BaseValueObject
@@ -54,7 +54,50 @@ class Reminder(BaseValueObject):
     id: UUID = field(default_factory=uuid4)
     name: str
     status: ReminderStatus = ReminderStatus.INCOMPLETE
-    created_at: datetime | None = field(default=None)
+    created_at: dt_datetime | None = field(default=None)
+
+
+class AlarmType(str, Enum):
+    """Type of alarm behavior."""
+
+    URL = "URL"
+    GENERIC = "GENERIC"
+
+
+@dataclass(kw_only=True)
+class Alarm(BaseValueObject):
+    """Alarm value object representing a day or template alarm."""
+
+    name: str
+    time: time
+    datetime: dt_datetime | None = None
+    type: AlarmType = AlarmType.URL
+    url: str = ""
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Alarm":
+        """Create an Alarm from a JSON-style dict."""
+        alarm_time = data["time"]
+        if isinstance(alarm_time, str):
+            alarm_time = time.fromisoformat(alarm_time)
+
+        alarm_datetime = data.get("datetime")
+        if isinstance(alarm_datetime, str):
+            alarm_datetime = dt_datetime.fromisoformat(
+                alarm_datetime.replace("Z", "+00:00")
+            )
+
+        alarm_type = data["type"]
+        if isinstance(alarm_type, str):
+            alarm_type = AlarmType(alarm_type)
+
+        return cls(
+            name=data["name"],
+            time=alarm_time,
+            datetime=alarm_datetime,
+            type=alarm_type,
+            url=data.get("url", ""),
+        )
 
 
 class BrainDumpItemStatus(str, Enum):
