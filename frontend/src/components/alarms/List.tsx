@@ -3,38 +3,63 @@ import type { Accessor } from "solid-js";
 import { Alarm } from "@/types/api";
 import { Icon } from "@/components/shared/Icon";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
+import { SwipeableItem } from "@/components/shared/SwipeableItem";
+import { useStreamingData } from "@/providers/streamingData";
 
-const formatTime = (timeValue: string): string => timeValue.slice(0, 5);
+const formatTime = (timeValue: string): string => {
+  const trimmed = timeValue.trim();
+  const [rawHours, rawMinutes] = trimmed.split(":");
+  const hours = Number.parseInt(rawHours ?? "", 10);
+  const minutes = Number.parseInt(rawMinutes ?? "", 10);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return trimmed;
+  }
+  const period = hours >= 12 ? "pm" : "am";
+  const hour12 = hours % 12 || 12;
+  return `${hour12}:${String(minutes).padStart(2, "0")}${period}`;
+};
 
-const AlarmItem: Component<{ alarm: Alarm }> = (props) => (
-  <div class="flex items-center gap-4 rounded-xl border border-amber-100/80 bg-white/80 px-4 py-3">
-    <span class="w-4 flex-shrink-0 flex items-center justify-center text-amber-600">
-      <span class="text-lg">⏰</span>
-    </span>
+const AlarmItem: Component<{ alarm: Alarm }> = (props) => {
+  const { removeAlarm } = useStreamingData();
 
-    <div class="flex-1 min-w-0">
-      <span class="text-sm font-semibold text-stone-800 block truncate">
-        {props.alarm.name}
-      </span>
-      <span class="text-xs text-stone-500">
-        {formatTime(props.alarm.time)}
-      </span>
-    </div>
+  return (
+    <SwipeableItem
+      onSwipeRight={() => {}}
+      onSwipeLeft={() => removeAlarm(props.alarm)}
+      rightLabel=" "
+      leftLabel="🗑 Remove"
+      compact={true}
+    >
+      <div class="flex items-center gap-4">
+        <span class="w-4 flex-shrink-0 flex items-center justify-center text-amber-600">
+          <span class="text-lg">⏰</span>
+        </span>
 
-    <Show when={props.alarm.url}>
-      <a
-        class="flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-800"
-        href={props.alarm.url}
-        target="_blank"
-        rel="noreferrer"
-        aria-label="Open alarm link"
-      >
-        <span>Open</span>
-        <Icon icon={faArrowUpRightFromSquare} class="w-3 h-3 fill-amber-700" />
-      </a>
-    </Show>
-  </div>
-);
+        <div class="flex-1 min-w-0">
+          <span class="text-sm font-semibold text-stone-800 block truncate">
+            {props.alarm.name}
+          </span>
+          <span class="text-xs text-stone-500">
+            {formatTime(props.alarm.time)}
+          </span>
+        </div>
+
+        <Show when={props.alarm.url}>
+          <a
+            class="flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-800"
+            href={props.alarm.url}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open alarm link"
+          >
+            <span>Open</span>
+            <Icon icon={faArrowUpRightFromSquare} class="w-3 h-3 fill-amber-700" />
+          </a>
+        </Show>
+      </div>
+    </SwipeableItem>
+  );
+};
 
 interface AlarmListProps {
   alarms: Accessor<Alarm[]>;

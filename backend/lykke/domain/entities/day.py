@@ -2,15 +2,17 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC, date as dt_date, datetime
+from datetime import UTC, date as dt_date, datetime, time as dt_time
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
 from lykke.domain.entities.auditable import AuditableEntity
-from lykke.domain.entities.day_template import DayTemplateEntity
+from lykke.domain.entities.day_template import DayTemplateEntity  # noqa: TC001
 from lykke.domain.events.day_events import (
+    AlarmAddedEvent,
+    AlarmRemovedEvent,
     DayCompletedEvent,
     DayScheduledEvent,
     DayUnscheduledEvent,
@@ -306,6 +308,93 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
         )
 
         return reminder
+
+    def add_alarm(self, alarm: value_objects.Alarm) -> value_objects.Alarm:
+        """Add an alarm to this day.
+
+        Args:
+            alarm: The alarm to add
+
+        Returns:
+            The created Alarm value object
+        """
+        # Create a new list with the new alarm (alarms list is immutable)
+        self.alarms = [*list(self.alarms), alarm]
+
+        self._add_event(
+            AlarmAddedEvent(
+                user_id=self.user_id,
+                day_id=self.id,
+                date=self.date,
+                alarm_name=alarm.name,
+                alarm_time=alarm.time,
+                alarm_type=alarm.type,
+                alarm_url=alarm.url,
+                entity_id=self.id,
+                entity_type="day",
+                entity_date=self.date,
+            )
+        )
+
+        return alarm
+
+    def remove_alarm(
+        self,
+        name: str,
+        time_value: dt_time,
+        *,
+        alarm_type: value_objects.AlarmType | None = None,
+        url: str | None = None,
+    ) -> value_objects.Alarm:
+        """Remove an alarm from this day.
+
+        Args:
+            name: The name of the alarm to remove
+            time_value: The time of the alarm to remove
+            alarm_type: Optional alarm type to disambiguate
+            url: Optional alarm url to disambiguate
+
+        Raises:
+            DomainError: If the alarm is not found
+        """
+        match_index = None
+        removed_alarm = None
+        for i, alarm in enumerate(self.alarms):
+            if alarm.name != name or alarm.time != time_value:
+                continue
+            if alarm_type is not None and alarm.type != alarm_type:
+                continue
+            if url is not None and alarm.url != url:
+                continue
+            match_index = i
+            removed_alarm = alarm
+            break
+
+        if match_index is None or removed_alarm is None:
+            raise DomainError(
+                f"Alarm with name {name} and time {time_value} not found in this day"
+            )
+
+        self.alarms = [
+            alarm for i, alarm in enumerate(self.alarms) if i != match_index
+        ]
+
+        self._add_event(
+            AlarmRemovedEvent(
+                user_id=self.user_id,
+                day_id=self.id,
+                date=self.date,
+                alarm_name=removed_alarm.name,
+                alarm_time=removed_alarm.time,
+                alarm_type=removed_alarm.type,
+                alarm_url=removed_alarm.url,
+                entity_id=self.id,
+                entity_type="day",
+                entity_date=self.date,
+            )
+        )
+
+        return removed_alarm
 
     def update_reminder_status(
         self, reminder_id: UUID, status: value_objects.ReminderStatus

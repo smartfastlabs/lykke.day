@@ -1,7 +1,7 @@
 import { Component, Show, createMemo } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { Icon } from "@/components/shared/Icon";
-import { faBell } from "@fortawesome/free-solid-svg-icons";
+import { faBell, faPlus } from "@fortawesome/free-solid-svg-icons";
 import type { Alarm } from "@/types/api";
 import AlarmList from "@/components/alarms/List";
 
@@ -36,6 +36,17 @@ export const AlarmsSummary: Component<AlarmsSummaryProps> = (props) => {
             <p class="text-xs uppercase tracking-wide text-amber-700">Alarms</p>
           </button>
         </Show>
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate("/me/add-alarm")}
+            class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-600/80 transition hover:bg-amber-100/80 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Add alarm"
+            title="Add alarm"
+          >
+            <Icon icon={faPlus} class="w-4 h-4 fill-amber-600/80" />
+          </button>
+        </div>
       </div>
       <Show when={props.alarms.length > 0}>
         <div class="space-y-1">

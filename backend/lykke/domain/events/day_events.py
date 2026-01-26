@@ -10,10 +10,11 @@ from lykke.domain.value_objects.update import DayUpdateObject
 from .base import AuditableDomainEvent, DomainEvent, EntityUpdatedEvent
 
 if TYPE_CHECKING:
-    from datetime import date as dt_date
+    from datetime import date as dt_date, time
     from uuid import UUID
 
     from lykke.domain.value_objects.day import (
+        AlarmType,
         BrainDumpItemStatus,
         BrainDumpItemType,
         ReminderStatus,
@@ -80,6 +81,30 @@ class ReminderRemovedEvent(DomainEvent, AuditableDomainEvent):
     date: dt_date
     reminder_id: UUID
     reminder_name: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class AlarmAddedEvent(DomainEvent, AuditableDomainEvent):
+    """Event raised when an alarm is added to a day."""
+
+    day_id: UUID
+    date: dt_date
+    alarm_name: str
+    alarm_time: time
+    alarm_type: AlarmType
+    alarm_url: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class AlarmRemovedEvent(DomainEvent, AuditableDomainEvent):
+    """Event raised when an alarm is removed from a day."""
+
+    day_id: UUID
+    date: dt_date
+    alarm_name: str
+    alarm_time: time
+    alarm_type: AlarmType
+    alarm_url: str
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -158,6 +183,8 @@ __all__ = [
     "DayScheduledEvent",
     "DayUnscheduledEvent",
     "DayUpdatedEvent",
+    "AlarmAddedEvent",
+    "AlarmRemovedEvent",
     "ReminderAddedEvent",
     "ReminderRemovedEvent",
     "ReminderStatusChangedEvent",

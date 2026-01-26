@@ -39,6 +39,7 @@ import TodayEditPage from "@/pages/me/today/Edit";
 import ThatsAllPage from "@/pages/me/today/ThatsAll";
 import AddAdhocTaskPage from "@/pages/me/today/AddAdhocTask";
 import AddReminderPage from "@/pages/me/today/AddReminder";
+import AddAlarmPage from "@/pages/me/today/AddAlarm";
 import BrainDumpPage from "@/pages/me/BrainDump";
 import KioskPage from "@/pages/me/kiosk/Index";
 import NavigationLayout from "@/pages/me/navigation/Layout";
@@ -258,6 +259,7 @@ export default function App() {
                 <Route path="/today/kiosk" component={KioskPage} />
                 <Route path="/brain-dump" component={BrainDumpPage} />
                 <Route path="/adhoc-task" component={AddAdhocTaskPage} />
+                <Route path="/add-alarm" component={AddAlarmPage} />
                 <Route path="/add-reminder" component={AddReminderPage} />
                 <Route path="/thats-all-for-today" component={ThatsAllPage} />
                 <Route

@@ -18,6 +18,7 @@ import {
   Reminder,
   ReminderStatus,
   Alarm,
+  AlarmType,
   BrainDumpItem,
   BrainDumpItemStatus,
   PushNotification,
@@ -27,6 +28,7 @@ import {
 import {
   brainDumpAPI,
   notificationAPI,
+  alarmAPI,
   reminderAPI,
   routineAPI,
   TaskActionPayload,
@@ -67,6 +69,13 @@ interface StreamingDataContextValue {
   addReminder: (name: string) => Promise<void>;
   updateReminderStatus: (reminder: Reminder, status: ReminderStatus) => Promise<void>;
   removeReminder: (reminderId: string) => Promise<void>;
+  addAlarm: (payload: {
+    name: string;
+    time: string;
+    alarmType?: AlarmType;
+    url?: string;
+  }) => Promise<void>;
+  removeAlarm: (alarm: Alarm) => Promise<void>;
   addBrainDumpItem: (text: string) => Promise<void>;
   updateBrainDumpItemStatus: (
     item: BrainDumpItem,
@@ -299,6 +308,12 @@ export function StreamingDataProvider(props: ParentProps) {
   const normalizeBrainDumpItems = (
     items?: BrainDumpItemWithOptionalId[]
   ): BrainDumpItem[] => (items ?? []).filter(hasNonEmptyId);
+
+  const isSameAlarm = (left: Alarm, right: Alarm): boolean =>
+    left.name === right.name &&
+    left.time === right.time &&
+    left.type === right.type &&
+    left.url === right.url;
 
   // Derived values from the store
   const dayContext = createMemo(() => dayContextStore.data);
@@ -937,6 +952,22 @@ export function StreamingDataProvider(props: ParentProps) {
     });
   };
 
+  const updateAlarmsLocally = (updatedAlarms: Alarm[]) => {
+    setDayContextStore((current) => {
+      if (!current.data || !current.data.day) return current;
+      const updated = {
+        data: {
+          ...current.data,
+          day: {
+            ...current.data.day,
+            alarms: updatedAlarms,
+          },
+        },
+      };
+      return updated;
+    });
+  };
+
   const updateBrainDumpsLocally = (updatedItems: BrainDumpItem[]) => {
     setDayContextStore((current) => {
       if (!current.data || !current.data.day) return current;
@@ -1000,6 +1031,45 @@ export function StreamingDataProvider(props: ParentProps) {
     } catch (error) {
       // Rollback on error
       updateRemindersLocally(previousReminders);
+      throw error;
+    }
+  };
+
+  const addAlarm = async (payload: {
+    name: string;
+    time: string;
+    alarmType?: AlarmType;
+    url?: string;
+  }): Promise<void> => {
+    const created = await alarmAPI.addAlarm({
+      name: payload.name,
+      time: payload.time,
+      alarm_type: payload.alarmType,
+      url: payload.url,
+    });
+    updateAlarmsLocally([...(alarms() ?? []), created]);
+  };
+
+  const removeAlarm = async (alarm: Alarm): Promise<void> => {
+    const previousAlarms = alarms();
+    const updatedAlarms = previousAlarms.filter(
+      (existing) => !isSameAlarm(existing, alarm)
+    );
+    updateAlarmsLocally(updatedAlarms);
+
+    try {
+      const removedAlarm = await alarmAPI.removeAlarm({
+        name: alarm.name,
+        time: alarm.time,
+        alarm_type: alarm.type,
+        url: alarm.url,
+      });
+      const nextAlarms = previousAlarms.filter(
+        (existing) => !isSameAlarm(existing, removedAlarm)
+      );
+      updateAlarmsLocally(nextAlarms);
+    } catch (error) {
+      updateAlarmsLocally(previousAlarms);
       throw error;
     }
   };
@@ -1118,6 +1188,8 @@ export function StreamingDataProvider(props: ParentProps) {
     addReminder,
     updateReminderStatus,
     removeReminder,
+    addAlarm,
+    removeAlarm,
     addBrainDumpItem,
     updateBrainDumpItemStatus,
     removeBrainDumpItem,

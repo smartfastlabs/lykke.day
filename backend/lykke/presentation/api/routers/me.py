@@ -1,5 +1,6 @@
 """Endpoints for retrieving the current authenticated user."""
 
+from datetime import time as dt_time
 from typing import Annotated
 from uuid import UUID
 
@@ -14,10 +15,14 @@ from lykke.application.commands.brain_dump import (
     UpdateBrainDumpStatusHandler,
 )
 from lykke.application.commands.day import (
+    AddAlarmToDayCommand,
+    AddAlarmToDayHandler,
     AddReminderToDayCommand,
     AddReminderToDayHandler,
     AddRoutineDefinitionToDayCommand,
     AddRoutineDefinitionToDayHandler,
+    RemoveAlarmFromDayCommand,
+    RemoveAlarmFromDayHandler,
     RemoveReminderCommand,
     RemoveReminderHandler,
     UpdateReminderStatusCommand,
@@ -33,6 +38,7 @@ from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.value_objects import UserSetting, UserUpdateObject
 from lykke.presentation.api.schemas import (
+    AlarmSchema,
     BasePersonalitySchema,
     BrainDumpItemSchema,
     ReminderSchema,
@@ -41,6 +47,7 @@ from lykke.presentation.api.schemas import (
     UserUpdateSchema,
 )
 from lykke.presentation.api.schemas.mappers import (
+    map_alarm_to_schema,
     map_brain_dump_item_to_schema,
     map_reminder_to_schema,
     map_task_to_schema,
@@ -200,6 +207,59 @@ async def remove_reminder_from_today(
 
 
 # ============================================================================
+# Today's Alarms
+# ============================================================================
+
+
+@router.post("/today/alarms", response_model=AlarmSchema)
+async def add_alarm_to_today(
+    name: str,
+    time: dt_time,
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    alarm_type: value_objects.AlarmType = value_objects.AlarmType.URL,
+    url: str = "",
+) -> AlarmSchema:
+    """Add an alarm to today."""
+    date = get_current_date(user.settings.timezone)
+    handler = command_factory.create(AddAlarmToDayHandler)
+    alarm = await handler.handle(
+        AddAlarmToDayCommand(
+            date=date,
+            name=name,
+            time=time,
+            alarm_type=alarm_type,
+            url=url,
+        )
+    )
+    return map_alarm_to_schema(alarm)
+
+
+@router.delete("/today/alarms", response_model=AlarmSchema)
+async def remove_alarm_from_today(
+    name: str,
+    time: dt_time,
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    alarm_type: value_objects.AlarmType | None = None,
+    url: str | None = None,
+) -> AlarmSchema:
+    """Remove an alarm from today."""
+    date = get_current_date(user.settings.timezone)
+    handler = command_factory.create(RemoveAlarmFromDayHandler)
+    alarm = await handler.handle(
+        RemoveAlarmFromDayCommand(
+            date=date,
+            name=name,
+            time=time,
+            alarm_type=alarm_type,
+            url=url,
+        )
+    )
+    return map_alarm_to_schema(alarm)
+
+
+# ============================================================================
 # Today's Brain Dump
 # ============================================================================
 
@@ -267,5 +327,3 @@ async def add_routine_to_today(
         )
     )
     return [map_task_to_schema(task) for task in tasks]
-
-

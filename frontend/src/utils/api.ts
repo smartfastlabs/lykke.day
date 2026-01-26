@@ -17,6 +17,7 @@ import {
   UseCaseConfig,
   NotificationUseCaseConfig,
   LLMRunResultSnapshot,
+  Alarm,
   Reminder,
   BrainDumpItem,
   PushNotification,
@@ -222,6 +223,49 @@ export const reminderAPI = {
     fetchData<Reminder>(`/api/me/today/reminders/${reminderId}`, {
       method: "DELETE",
     }),
+};
+
+export const alarmAPI = {
+  addAlarm: (payload: {
+    name: string;
+    time: string;
+    alarm_type?: string;
+    url?: string;
+  }): Promise<Alarm> => {
+    const params = new URLSearchParams({
+      name: payload.name,
+      time: payload.time,
+    });
+    if (payload.alarm_type) {
+      params.set("alarm_type", payload.alarm_type);
+    }
+    if (payload.url) {
+      params.set("url", payload.url);
+    }
+    return fetchData<Alarm>(`/api/me/today/alarms?${params.toString()}`, {
+      method: "POST",
+    });
+  },
+  removeAlarm: (payload: {
+    name: string;
+    time: string;
+    alarm_type?: string;
+    url?: string;
+  }): Promise<Alarm> => {
+    const params = new URLSearchParams({
+      name: payload.name,
+      time: payload.time,
+    });
+    if (payload.alarm_type) {
+      params.set("alarm_type", payload.alarm_type);
+    }
+    if (payload.url) {
+      params.set("url", payload.url);
+    }
+    return fetchData<Alarm>(`/api/me/today/alarms?${params.toString()}`, {
+      method: "DELETE",
+    });
+  },
 };
 
 export const brainDumpAPI = {
