@@ -64,6 +64,12 @@ import FactoidDetailPage from "@/pages/me/settings/factoids/Detail";
 import TimeBlocksPage from "@/pages/me/settings/time-blocks/Index";
 import NewTimeBlockPage from "@/pages/me/settings/time-blocks/New";
 import TimeBlockDetailPage from "@/pages/me/settings/time-blocks/Detail";
+import TacticsPage from "@/pages/me/settings/tactics/Index";
+import NewTacticPage from "@/pages/me/settings/tactics/New";
+import TacticDetailPage from "@/pages/me/settings/tactics/Detail";
+import TriggersPage from "@/pages/me/settings/triggers/Index";
+import NewTriggerPage from "@/pages/me/settings/triggers/New";
+import TriggerDetailPage from "@/pages/me/settings/triggers/Detail";
 import CalendarsPage from "@/pages/me/settings/calendars/Index";
 import CalendarDetailPage from "@/pages/me/settings/calendars/Detail";
 import RecurringEventsPage from "@/pages/me/settings/recurring-events/Index";
@@ -319,6 +325,12 @@ export default function App() {
                   <Route path="/factoids" component={FactoidsPage} />
                   <Route path="/factoids/new" component={NewFactoidPage} />
                   <Route path="/factoids/:id" component={FactoidDetailPage} />
+                  <Route path="/triggers" component={TriggersPage} />
+                  <Route path="/triggers/new" component={NewTriggerPage} />
+                  <Route path="/triggers/:id" component={TriggerDetailPage} />
+                  <Route path="/tactics" component={TacticsPage} />
+                  <Route path="/tactics/new" component={NewTacticPage} />
+                  <Route path="/tactics/:id" component={TacticDetailPage} />
                   <Route path="/time-blocks" component={TimeBlocksPage} />
                   <Route path="/time-blocks/new" component={NewTimeBlockPage} />
                   <Route

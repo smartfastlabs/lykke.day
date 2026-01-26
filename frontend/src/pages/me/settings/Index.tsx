@@ -10,6 +10,8 @@ import {
   faClock,
   faBrain,
   faLightbulb,
+  faBolt,
+  faBullseye,
 } from "@fortawesome/free-solid-svg-icons";
 
 import LinkGrid, { LinkItem } from "@/components/shared/LinkGrid";
@@ -26,6 +28,8 @@ const settingsItems: LinkItem[] = [
     icon: faRepeat,
     url: "/me/settings/routine-definitions",
   },
+  { label: "Triggers", icon: faBolt, url: "/me/settings/triggers" },
+  { label: "Tactics", icon: faBullseye, url: "/me/settings/tactics" },
   { label: "Factoids", icon: faLightbulb, url: "/me/settings/factoids" },
   { label: "Time Blocks", icon: faClock, url: "/me/settings/time-blocks" },
   { label: "Notifications", icon: faBell, url: "/me/settings/notifications" },

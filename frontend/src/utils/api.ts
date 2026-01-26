@@ -21,6 +21,8 @@ import {
   BrainDumpItem,
   PushNotification,
   Factoid,
+  Tactic,
+  Trigger,
 } from "@/types/api";
 import type {
   BasePersonalityOption,
@@ -597,6 +599,29 @@ export const routineDefinitionAPI = {
 
 export const factoidAPI = {
   ...createCrudMethods<Factoid>("factoids"),
+};
+
+export const tacticAPI = {
+  ...createCrudMethods<Tactic>("tactics"),
+  listDefaults: (): Promise<Omit<Tactic, "id">[]> =>
+    fetchData<Omit<Tactic, "id">[]>("/api/tactics/defaults"),
+  importDefaults: (): Promise<Tactic[]> =>
+    fetchData<Tactic[]>("/api/tactics/import-defaults", { method: "POST" }),
+};
+
+export const triggerAPI = {
+  ...createCrudMethods<Trigger>("triggers"),
+  listDefaults: (): Promise<Omit<Trigger, "id">[]> =>
+    fetchData<Omit<Trigger, "id">[]>("/api/triggers/defaults"),
+  importDefaults: (): Promise<Trigger[]> =>
+    fetchData<Trigger[]>("/api/triggers/import-defaults", { method: "POST" }),
+  getTactics: (triggerId: string): Promise<Tactic[]> =>
+    fetchData<Tactic[]>(`/api/triggers/${triggerId}/tactics`),
+  updateTactics: (triggerId: string, tacticIds: string[]): Promise<Tactic[]> =>
+    fetchData<Tactic[]>(`/api/triggers/${triggerId}/tactics`, {
+      method: "PUT",
+      body: JSON.stringify({ tactic_ids: tacticIds }),
+    }),
 };
 
 export const notificationAPI = {

@@ -10,6 +10,8 @@ export * from './user';
 export * from './routine';
 export * from './notification';
 export * from './factoid';
+export * from './tactic';
+export * from './trigger';
 
 // Type constants (arrays of all enum values)
 export * from './constants';
