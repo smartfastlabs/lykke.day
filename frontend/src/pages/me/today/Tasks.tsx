@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal } from "solid-js";
+import { Component, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { useStreamingData } from "@/providers/streamingData";
 import TaskList from "@/components/tasks/List";
 import { Task, TaskCategory } from "@/types/api";
@@ -8,6 +8,7 @@ import { SectionCard } from "@/components/shared/SectionCard";
 import { MotivationalQuote } from "@/components/shared/MotivationalQuote";
 import { FormError, Input, Select, SubmitButton } from "@/components/forms";
 import { ALL_TASK_CATEGORIES } from "@/types/api/constants";
+import { filterVisibleTasks } from "@/utils/tasks";
 
 const getTaskStats = (tasks: Task[]) => {
   const total = tasks.length;
@@ -23,8 +24,20 @@ export const TodaysTasksView: Component = () => {
   const [taskCategory, setTaskCategory] = createSignal<TaskCategory>("WORK");
   const [isSaving, setIsSaving] = createSignal(false);
   const [formError, setFormError] = createSignal("");
+  const [now, setNow] = createSignal(new Date());
 
-  const stats = createMemo(() => getTaskStats(tasks()));
+  onMount(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 30000);
+
+    onCleanup(() => {
+      clearInterval(interval);
+    });
+  });
+
+  const visibleTasks = createMemo(() => filterVisibleTasks(tasks(), now()));
+  const stats = createMemo(() => getTaskStats(visibleTasks()));
   const completionPercentage = createMemo(() => {
     const s = stats();
     return s.total > 0 ? Math.round((s.completed / s.total) * 100) : 0;
@@ -92,8 +105,8 @@ export const TodaysTasksView: Component = () => {
       <AnimatedSection delay="300ms">
         <SectionCard
           title="Your Tasks"
-          description="Swipe right to complete, left to punt"
-          hasItems={tasks().length > 0}
+          description="Swipe right to complete, left to punt or snooze"
+          hasItems={visibleTasks().length > 0}
           emptyState={emptyState}
         >
           <form class="mb-6 space-y-3" onSubmit={handleAddTask}>
@@ -123,7 +136,7 @@ export const TodaysTasksView: Component = () => {
             </div>
             <FormError error={formError()} />
           </form>
-          <TaskList tasks={tasks} />
+          <TaskList tasks={visibleTasks} />
         </SectionCard>
       </AnimatedSection>
 

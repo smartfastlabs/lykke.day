@@ -152,6 +152,7 @@ def map_task_to_schema(task: TaskEntity) -> TaskSchema:
         category=task.category,
         frequency=task.frequency,
         completed_at=task.completed_at,
+        snoozed_until=task.snoozed_until,
         time_window=time_window_schema,
         routine_definition_id=task.routine_definition_id,
         tags=task.tags,
@@ -404,6 +405,8 @@ def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
         name=routine.name,
         category=routine.category,
         description=routine.description,
+        status=routine.status,
+        snoozed_until=routine.snoozed_until,
         time_window=map_time_window_to_schema(routine.time_window),
     )
 

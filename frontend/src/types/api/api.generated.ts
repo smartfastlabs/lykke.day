@@ -1445,7 +1445,7 @@ export interface components {
          * ActionType
          * @enum {string}
          */
-        ActionType: "COMPLETE" | "DELETE" | "EDIT" | "NOTIFY" | "PAUSE" | "PUNT" | "RESUME" | "START" | "VIEW";
+        ActionType: "COMPLETE" | "DELETE" | "EDIT" | "NOTIFY" | "PAUSE" | "PUNT" | "RESUME" | "START" | "VIEW" | "SNOOZE";
         /**
          * AdhocTaskCreateSchema
          * @description API schema for creating adhoc tasks.
@@ -2813,6 +2813,9 @@ export interface components {
             category: components["schemas"]["TaskCategory"];
             /** Description */
             description: string;
+            status: components["schemas"]["TaskStatus"];
+            /** Snoozed Until */
+            snoozed_until?: string | null;
             time_window?: components["schemas"]["TimeWindowSchema"] | null;
         };
         /**
@@ -2941,6 +2944,8 @@ export interface components {
             frequency: components["schemas"]["TaskFrequency"];
             /** Completed At */
             completed_at?: string | null;
+            /** Snoozed Until */
+            snoozed_until?: string | null;
             time_window?: components["schemas"]["TimeWindowSchema"] | null;
             /** Routine Definition Id */
             routine_definition_id?: string | null;
@@ -2953,7 +2958,7 @@ export interface components {
          * TaskStatus
          * @enum {string}
          */
-        TaskStatus: "COMPLETE" | "NOT_READY" | "READY" | "PUNT" | "NOT_STARTED" | "PENDING";
+        TaskStatus: "COMPLETE" | "NOT_READY" | "READY" | "PUNT" | "NOT_STARTED" | "PENDING" | "SNOOZE";
         /**
          * TaskTag
          * @enum {string}

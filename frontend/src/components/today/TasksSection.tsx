@@ -1,9 +1,10 @@
-import { Component, Show, createMemo } from "solid-js";
+import { Component, Show, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { Icon } from "@/components/shared/Icon";
 import { faListCheck, faPlus } from "@fortawesome/free-solid-svg-icons";
 import type { Task } from "@/types/api";
 import TaskList from "@/components/tasks/List";
+import { filterVisibleTasks } from "@/utils/tasks";
 
 export interface TasksSectionProps {
   tasks: Task[];
@@ -13,8 +14,21 @@ export interface TasksSectionProps {
 
 export const TasksSection: Component<TasksSectionProps> = (props) => {
   const navigate = useNavigate();
+  const [now, setNow] = createSignal(new Date());
+
+  onMount(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 30000);
+
+    onCleanup(() => {
+      clearInterval(interval);
+    });
+  });
+
+  const visibleTasks = createMemo(() => filterVisibleTasks(props.tasks, now()));
   const activeTasks = createMemo(() =>
-    props.tasks.filter((t) => t.status !== "COMPLETE" && t.status !== "PUNT")
+    visibleTasks().filter((t) => t.status !== "COMPLETE" && t.status !== "PUNT")
   );
 
   const importantTasks = createMemo(() =>

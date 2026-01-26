@@ -33,6 +33,7 @@ class TaskSchema(BaseEntitySchema):
     category: TaskCategory
     frequency: TaskFrequency
     completed_at: datetime | None = None
+    snoozed_until: datetime | None = None
     time_window: TimeWindowSchema | None = None
     routine_definition_id: UUID | None = None
     tags: list[TaskTag] = Field(default_factory=list)

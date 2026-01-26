@@ -10,6 +10,8 @@ import {
   TaskDefinitionCreate,
   RoutineDefinition,
   PushSubscription,
+  ActionType,
+  TaskStatus,
   TimeWindow,
   RecurrenceSchedule,
   UseCaseConfig,
@@ -166,12 +168,21 @@ function createCrudMethods<T extends EntityWithId>(type: string) {
 
 // --- API Modules ---
 
+export type TaskActionPayload = {
+  type: ActionType;
+  data?: Record<string, string>;
+};
+
 export const taskAPI = {
-  setTaskStatus: (task: Task, status: string): Promise<Task> =>
-    fetchData<Task>(`/api/tasks/${task.id}/actions`, {
+  recordTaskAction: (taskId: string, action: TaskActionPayload): Promise<Task> =>
+    fetchData<Task>(`/api/tasks/${taskId}/actions`, {
       method: "POST",
-      body: JSON.stringify({ type: status }),
+      body: JSON.stringify(action),
     }),
+  setTaskStatus: (task: Task, status: ActionType | TaskStatus): Promise<Task> =>
+    task.id
+      ? taskAPI.recordTaskAction(task.id, { type: status as ActionType })
+      : Promise.reject(new Error("Task id is missing")),
   createAdhocTask: (payload: {
     scheduled_date: string;
     name: string;
@@ -523,10 +534,10 @@ export const usecaseConfigAPI = {
 };
 
 export const routineAPI = {
-  setRoutineAction: (routineId: string, action: string): Promise<Task[]> =>
+  setRoutineAction: (routineId: string, action: TaskActionPayload): Promise<Task[]> =>
     fetchData<Task[]>(`/api/routines/${routineId}/actions`, {
       method: "POST",
-      body: JSON.stringify({ type: action }),
+      body: JSON.stringify(action),
     }),
   addToToday: (routineDefinitionId: string): Promise<Task[]> => {
     const params = new URLSearchParams({

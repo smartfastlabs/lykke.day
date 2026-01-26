@@ -1,11 +1,11 @@
 """Unit tests for Task entity methods."""
 
 import datetime
-from datetime import UTC
 
 import pytest
 
 from lykke.core.exceptions import DomainError
+from lykke.core.utils.dates import ensure_utc
 from lykke.domain import value_objects
 from lykke.domain.entities import TaskEntity
 
@@ -90,6 +90,22 @@ def test_record_action_complete_already_complete(test_task: TaskEntity) -> None:
 
     with pytest.raises(DomainError, match="already complete"):
         test_task.record_action(action)
+
+
+def test_record_action_snooze_sets_snoozed_until(test_task: TaskEntity) -> None:
+    """Test record_action sets snooze status and timestamp."""
+    snoozed_until = "2026-01-26T02:35:55.881Z"
+    action = value_objects.Action(
+        type=value_objects.ActionType.SNOOZE,
+        data={"snoozed_until": snoozed_until},
+    )
+
+    old_status = test_task.record_action(action)
+
+    assert old_status == value_objects.TaskStatus.NOT_STARTED
+    assert test_task.status == value_objects.TaskStatus.SNOOZE
+    assert test_task.snoozed_until == ensure_utc(snoozed_until)
+    assert test_task.completed_at is None
 
 
 def test_record_action_punt_already_punted(test_task: TaskEntity) -> None:

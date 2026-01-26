@@ -11,6 +11,7 @@ import {
 import Page from "@/components/shared/layout/Page";
 import { useStreamingData } from "@/providers/streamingData";
 import { getDateString, getTime } from "@/utils/dates";
+import { filterVisibleTasks, isTaskSnoozed } from "@/utils/tasks";
 import { buildRoutineGroups } from "@/components/routines/RoutineGroupsList";
 import type {
   DayTemplate,
@@ -325,7 +326,13 @@ const KioskPage: Component = () => {
   const activeReminders = createMemo(() =>
     allReminders().filter((reminder) => reminder.status === "INCOMPLETE")
   );
+  const visibleTasks = createMemo(() => filterVisibleTasks(allTasks(), now()));
   const activeTasks = createMemo(() =>
+    visibleTasks().filter(
+      (task) => task.status !== "COMPLETE" && task.status !== "PUNT"
+    )
+  );
+  const upcomingTaskCandidates = createMemo(() =>
     allTasks().filter((task) => task.status !== "COMPLETE" && task.status !== "PUNT")
   );
 
@@ -366,11 +373,8 @@ const KioskPage: Component = () => {
   const rightNowTaskIds = createMemo(() => {
     const currentTime = now();
     return new Set(
-      allTasks()
+      activeTasks()
         .filter((task) => {
-          if (task.status === "COMPLETE" || task.status === "PUNT") {
-            return false;
-          }
           const taskTime = getTaskTime(task);
           if (!taskTime) return false;
           return taskTime < currentTime;
@@ -384,11 +388,8 @@ const KioskPage: Component = () => {
     const currentTime = now();
     const windowEnd = new Date(currentTime.getTime() + 1000 * 30 * 60);
     return new Set(
-      allTasks()
+      upcomingTaskCandidates()
         .filter((task) => {
-          if (task.status === "COMPLETE" || task.status === "PUNT") {
-            return false;
-          }
           const taskTime = getTaskTime(task);
           if (!taskTime) return false;
           if (taskTime < currentTime) return false;
@@ -417,7 +418,8 @@ const KioskPage: Component = () => {
     return allTasks().filter((task) => {
       const taskId = task.id;
       if (!taskId) return true;
-      return !ids.has(taskId);
+      if (ids.has(taskId)) return false;
+      return !isTaskSnoozed(task, now());
     });
   });
 
@@ -479,7 +481,7 @@ const KioskPage: Component = () => {
         });
       });
 
-    activeTasks()
+    upcomingTaskCandidates()
       .filter((task) => {
         const taskTime = getTaskTime(task);
         if (!taskTime) return false;

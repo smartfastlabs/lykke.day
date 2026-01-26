@@ -8,7 +8,10 @@ from lykke.domain import value_objects
 from lykke.domain.entities import RoutineEntity
 from lykke.domain.value_objects.task import TaskCategory
 from lykke.infrastructure.database.tables import routines_tbl
-from lykke.infrastructure.repositories.base.utils import filter_init_false_fields
+from lykke.infrastructure.repositories.base.utils import (
+    ensure_datetimes_utc,
+    filter_init_false_fields,
+)
 
 from .base import UserScopedBaseRepository
 
@@ -47,6 +50,10 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, value_objects.Ro
             if hasattr(routine.category, "value")
             else routine.category,
             "description": routine.description,
+            "status": routine.status.value
+            if hasattr(routine.status, "value")
+            else routine.status,
+            "snoozed_until": routine.snoozed_until,
         }
 
         if routine.time_window:
@@ -62,6 +69,10 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, value_objects.Ro
         category = data.get("category")
         if isinstance(category, str):
             data["category"] = TaskCategory(category)
+
+        status = data.get("status")
+        if isinstance(status, str):
+            data["status"] = value_objects.TaskStatus(status)
 
         time_window = data.get("time_window")
         if time_window:
@@ -79,4 +90,5 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, value_objects.Ro
                     )
             data["time_window"] = value_objects.TimeWindow(**time_window)
 
+        data = ensure_datetimes_utc(data, keys=("snoozed_until",))
         return RoutineEntity(**data)

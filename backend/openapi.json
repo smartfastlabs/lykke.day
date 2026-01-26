@@ -8416,6 +8416,21 @@
             "type": "string",
             "title": "Description"
           },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
+          },
           "time_window": {
             "anyOf": [
               {
@@ -8434,7 +8449,8 @@
           "routine_definition_id",
           "name",
           "category",
-          "description"
+          "description",
+          "status"
         ],
         "title": "RoutineSchema",
         "description": "API schema for Routine entity."
@@ -8815,6 +8831,18 @@
             ],
             "title": "Completed At"
           },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
+          },
           "time_window": {
             "anyOf": [
               {
@@ -8873,7 +8901,8 @@
           "READY",
           "PUNT",
           "NOT_STARTED",
-          "PENDING"
+          "PENDING",
+          "SNOOZE"
         ],
         "title": "TaskStatus"
       },

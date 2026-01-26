@@ -14,6 +14,7 @@ class ActionType(str, Enum):
     PAUSE = "PAUSE"
     PUNT = "PUNT"
     RESUME = "RESUME"
+    SNOOZE = "SNOOZE"
     START = "START"
     VIEW = "VIEW"
 

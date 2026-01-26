@@ -3,6 +3,7 @@ from datetime import UTC, date as dt_date, datetime, time
 from uuid import UUID
 
 from lykke.core.exceptions import DomainError
+from lykke.core.utils.dates import ensure_utc
 from lykke.domain import value_objects
 from lykke.domain.events.task_events import TaskCreatedEvent, TaskStateUpdatedEvent
 
@@ -21,6 +22,7 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
     category: value_objects.TaskCategory
     frequency: value_objects.TaskFrequency
     completed_at: datetime | None = None
+    snoozed_until: datetime | None = None
     time_window: value_objects.TimeWindow | None = None
     routine_definition_id: UUID | None = None
     tags: list[value_objects.TaskTag] = field(default_factory=list)
@@ -74,6 +76,14 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
             if self.status == value_objects.TaskStatus.PUNT:
                 raise DomainError("Task is already punted")
             self.status = value_objects.TaskStatus.PUNT
+        elif action.type == value_objects.ActionType.SNOOZE:
+            snoozed_until = ensure_utc(action.data.get("snoozed_until"))
+            if snoozed_until is None:
+                raise DomainError("Snooze action requires snoozed_until")
+            if self.status == value_objects.TaskStatus.COMPLETE:
+                raise DomainError("Cannot snooze a completed task")
+            self.status = value_objects.TaskStatus.SNOOZE
+            self.snoozed_until = snoozed_until
         elif action.type == value_objects.ActionType.NOTIFY:
             # Notification doesn't change status, just records the action
             pass

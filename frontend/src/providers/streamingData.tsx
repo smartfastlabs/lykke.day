@@ -28,6 +28,7 @@ import {
   notificationAPI,
   reminderAPI,
   routineAPI,
+  TaskActionPayload,
   taskAPI,
 } from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
@@ -54,10 +55,11 @@ interface StreamingDataContextValue {
   sync: () => void;
   syncIncremental: (sinceTimestamp: string) => void;
   setTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
+  snoozeTask: (task: Task, snoozedUntil: string) => Promise<void>;
   setRoutineAction: (
     routineId: string,
     routineDefinitionId: string,
-    status: TaskStatus
+    action: TaskActionPayload
   ) => Promise<void>;
   addAdhocTask: (name: string, category: TaskCategory) => Promise<void>;
   addReminder: (name: string) => Promise<void>;
@@ -814,16 +816,48 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
+  const snoozeTask = async (
+    task: Task,
+    snoozedUntil: string
+  ): Promise<void> => {
+    if (!task.id) {
+      throw new Error("Task id is missing");
+    }
+    const previousTask = task;
+    updateTaskLocally({
+      ...task,
+      status: "SNOOZE",
+      snoozed_until: snoozedUntil,
+    });
+
+    try {
+      const updatedTask = await taskAPI.recordTaskAction(task.id, {
+        type: "SNOOZE",
+        data: { snoozed_until: snoozedUntil },
+      });
+      updateTaskLocally(updatedTask);
+    } catch (error) {
+      updateTaskLocally(previousTask);
+      throw error;
+    }
+  };
+
   const setRoutineAction = async (
     routineId: string,
     routineDefinitionId: string,
-    status: TaskStatus
+    action: TaskActionPayload
   ): Promise<void> => {
     // Optimistic update: update all tasks with this routine_definition_id
     const previousTasks = tasks();
+    const snoozedUntil =
+      action.type === "SNOOZE" ? action.data?.snoozed_until : undefined;
     const updatedTasks = previousTasks.map((t: Task) =>
       t.routine_definition_id === routineDefinitionId
-        ? { ...t, status }
+        ? {
+            ...t,
+            status: action.type as TaskStatus,
+            snoozed_until: snoozedUntil ?? t.snoozed_until,
+          }
         : t
     );
     // Update all tasks locally
@@ -832,7 +866,7 @@ export function StreamingDataProvider(props: ParentProps) {
     try {
       const updatedTasksFromAPI = await routineAPI.setRoutineAction(
         routineId,
-        status
+        action
       );
       // Update each task with the API response
       updatedTasksFromAPI.forEach((task) => updateTaskLocally(task));
@@ -1049,6 +1083,7 @@ export function StreamingDataProvider(props: ParentProps) {
     sync,
     syncIncremental,
     setTaskStatus,
+    snoozeTask,
     setRoutineAction,
     addAdhocTask,
     addReminder,

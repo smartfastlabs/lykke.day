@@ -22,7 +22,9 @@ import { SwipeableItem } from "@/components/shared/SwipeableItem";
 import TaskList from "@/components/tasks/List";
 import { useStreamingData } from "@/providers/streamingData";
 import { getDateString, getTime } from "@/utils/dates";
+import { filterVisibleTasks } from "@/utils/tasks";
 import type { Routine, Task, TimeWindow } from "@/types/api";
+import SnoozeActionModal from "@/components/shared/SnoozeActionModal";
 
 export interface RoutineGroup {
   routineId: string | null;
@@ -37,6 +39,16 @@ export interface RoutineGroup {
 }
 
 type RoutineStatus = "hidden" | "inactive" | "available" | "active" | "past-due";
+type TaskWindowStatus = {
+  isActive: boolean;
+  isAvailable: boolean;
+  isPastDue: boolean;
+  nextAvailableTime: Date | null;
+};
+type RoutineStatusInfo = {
+  status: RoutineStatus;
+  nextAvailableTime: Date | null;
+};
 
 const UPCOMING_WINDOW_MS = 1000 * 60 * 120;
 
@@ -124,6 +136,9 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
     new Set()
   );
   const [now, setNow] = createSignal(new Date());
+  const [pendingRoutine, setPendingRoutine] = createSignal<RoutineGroup | null>(
+    null
+  );
 
   onMount(() => {
     const interval = setInterval(() => {
@@ -135,12 +150,35 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
     });
   });
 
+  const visibleTasks = createMemo(() => filterVisibleTasks(props.tasks, now()));
   const routineGroups = createMemo(() =>
-    buildRoutineGroups(props.tasks, props.routines)
+    buildRoutineGroups(visibleTasks(), props.routines)
   );
 
   const getRoutineDate = (routine: RoutineGroup) =>
     routine.tasks[0]?.scheduled_date ?? getDateString();
+
+  const handleCloseModal = () => setPendingRoutine(null);
+  const handlePuntRoutine = async () => {
+    const routine = pendingRoutine();
+    if (!routine?.routineId) return;
+    handleCloseModal();
+    await setRoutineAction(routine.routineId, routine.routineDefinitionId, {
+      type: "PUNT",
+    });
+  };
+  const handleSnoozeRoutine = async (minutes: number) => {
+    const routine = pendingRoutine();
+    if (!routine?.routineId) return;
+    handleCloseModal();
+    const snoozedUntil = new Date(
+      Date.now() + minutes * 60 * 1000
+    ).toISOString();
+    await setRoutineAction(routine.routineId, routine.routineDefinitionId, {
+      type: "SNOOZE",
+      data: { snoozed_until: snoozedUntil },
+    });
+  };
 
   const getWindowTimes = (timeWindow: TimeWindow | null | undefined, date: string) => {
     const availableTime = timeWindow?.available_time
@@ -237,7 +275,7 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
     routine: RoutineGroup,
     task: Task,
     currentTime: Date
-  ) => {
+  ): TaskWindowStatus => {
     if (task.status === "COMPLETE" || task.status === "PUNT") {
       return {
         isActive: false,
@@ -296,7 +334,7 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
   const getRoutineStatusInfo = (
     routine: RoutineGroup,
     currentTime: Date
-  ) => {
+  ): RoutineStatusInfo => {
     let hasActive = false;
     let hasAvailable = false;
     let hasPastDue = false;
@@ -325,7 +363,7 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
     }
 
     if (nextAvailable) {
-      const diff = nextAvailable.getTime() - currentTime.getTime();
+      const diff = (nextAvailable as Date).getTime() - currentTime.getTime();
       if (diff <= UPCOMING_WINDOW_MS && diff > 0) {
         return { status: "inactive" as RoutineStatus, nextAvailableTime: nextAvailable };
       }
@@ -494,19 +532,15 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
                     setRoutineAction(
                       routine.routineId,
                       routine.routineDefinitionId,
-                      "COMPLETE"
+                      { type: "COMPLETE" }
                     );
                   }}
                   onSwipeLeft={() => {
                     if (!routine.routineId) return;
-                    setRoutineAction(
-                      routine.routineId,
-                      routine.routineDefinitionId,
-                      "PUNT"
-                    );
+                    setPendingRoutine(routine);
                   }}
                   rightLabel="✅ Complete All Tasks"
-                  leftLabel="🗑 Punt All Tasks"
+                  leftLabel="⏸ Punt or Snooze"
                   statusClass={getSwipeableStatusClass()}
                 >
                   <div
@@ -603,6 +637,13 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
           );
         }}
       </For>
+      <SnoozeActionModal
+        isOpen={Boolean(pendingRoutine())}
+        title="Punt or Snooze"
+        onClose={handleCloseModal}
+        onPunt={() => void handlePuntRoutine()}
+        onSnooze={(minutes) => void handleSnoozeRoutine(minutes)}
+      />
     </div>
   );
 };

@@ -67,6 +67,7 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
             "category": get_enum_value(task.category),
             "frequency": get_enum_value(task.frequency),
             "completed_at": task.completed_at,
+            "snoozed_until": task.snoozed_until,
             "routine_definition_id": task.routine_definition_id,
         }
 
@@ -144,5 +145,5 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
             ]
 
         data = filter_init_false_fields(data, TaskEntity)
-        data = ensure_datetimes_utc(data, keys=("completed_at",))
+        data = ensure_datetimes_utc(data, keys=("completed_at", "snoozed_until"))
         return TaskEntity(**data)

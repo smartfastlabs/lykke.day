@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date as dt_date
 from typing import TYPE_CHECKING
-from uuid import UUID
 
 from lykke.domain import value_objects
 from lykke.domain.entities.auditable import AuditableEntity
 from lykke.domain.entities.base import BaseEntityObject
 
 if TYPE_CHECKING:
+    from datetime import date as dt_date, datetime
+    from uuid import UUID
+
     from lykke.domain.entities.routine_definition import RoutineDefinitionEntity
 
 
@@ -21,6 +22,8 @@ class RoutineEntity(BaseEntityObject, AuditableEntity):
     name: str
     category: value_objects.TaskCategory
     description: str = ""
+    status: value_objects.TaskStatus = value_objects.TaskStatus.NOT_STARTED
+    snoozed_until: datetime | None = None
     time_window: value_objects.TimeWindow | None = None
 
     @classmethod

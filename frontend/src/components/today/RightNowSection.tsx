@@ -11,6 +11,7 @@ import { Icon } from "@/components/shared/Icon";
 import { faCircle } from "@fortawesome/free-solid-svg-icons";
 import type { Event, Task } from "@/types/api";
 import { getTime } from "@/utils/dates";
+import { isTaskSnoozed } from "@/utils/tasks";
 import TaskList from "@/components/tasks/List";
 import { EventItem } from "@/components/events/EventItem";
 
@@ -98,6 +99,9 @@ export const RightNowSection: Component<RightNowSectionProps> = (props) => {
       .filter((task) => {
         // Skip completed or punted tasks
         if (task.status === "COMPLETE" || task.status === "PUNT") {
+          return false;
+        }
+        if (isTaskSnoozed(task, currentTime)) {
           return false;
         }
 

@@ -19,6 +19,7 @@ import {
 } from "@/components/today";
 import { getShowTodayCookie } from "@/utils/cookies";
 import { getTime } from "@/utils/dates";
+import { isTaskSnoozed } from "@/utils/tasks";
 import type { Event, Task } from "@/types/api";
 
 const getTaskTime = (task: Task): Date | null => {
@@ -166,6 +167,9 @@ export const TodayPage: Component = () => {
           if (task.status === "COMPLETE" || task.status === "PUNT") {
             return false;
           }
+          if (isTaskSnoozed(task, currentTime)) {
+            return false;
+          }
           const taskTime = getTaskTime(task);
           if (!taskTime) return false;
           return taskTime < currentTime;
@@ -212,7 +216,8 @@ export const TodayPage: Component = () => {
     return allTasks().filter((task) => {
       const taskId = task.id;
       if (!taskId) return true;
-      return !ids.has(taskId);
+      if (ids.has(taskId)) return false;
+      return !isTaskSnoozed(task, new Date());
     });
   });
 

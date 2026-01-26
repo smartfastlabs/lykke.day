@@ -8,6 +8,19 @@ interface GroupedTasks {
   completed: Task[];
 }
 
+export function isTaskSnoozed(task: Task, now: Date = new Date()): boolean {
+  if (!task.snoozed_until) return false;
+  const snoozedUntil = new Date(task.snoozed_until);
+  return snoozedUntil > now;
+}
+
+export function filterVisibleTasks(
+  tasks: Task[],
+  now: Date = new Date()
+): Task[] {
+  return tasks.filter((task) => !isTaskSnoozed(task, now));
+}
+
 export function groupTasks(tasks: Task[]): GroupedTasks {
   // remove all items with availableTime in the future
   const result: GroupedTasks = {
@@ -16,8 +29,12 @@ export function groupTasks(tasks: Task[]): GroupedTasks {
     missed: [],
     completed: [],
   };
+  const now = new Date();
 
   for (const task of tasks) {
+    if (isTaskSnoozed(task, now)) {
+      continue;
+    }
     const taskDate = task.scheduled_date;
     if (!taskDate) {
       // If no date is available, treat as pending and skip time-based logic

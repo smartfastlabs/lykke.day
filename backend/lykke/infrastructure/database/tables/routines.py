@@ -1,6 +1,6 @@
 """Routines table definition."""
 
-from sqlalchemy import Column, Date, ForeignKey, Index, String
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 
 from .base import Base
@@ -20,6 +20,8 @@ class Routine(Base):
     name = Column(String, nullable=False)
     category = Column(String, nullable=False)  # TaskCategory enum as string
     description = Column(String, nullable=False)
+    status = Column(String, nullable=False)  # TaskStatus enum as string
+    snoozed_until = Column(DateTime)
     time_window = Column(JSONB)  # TimeWindow | None
 
     __table_args__ = (

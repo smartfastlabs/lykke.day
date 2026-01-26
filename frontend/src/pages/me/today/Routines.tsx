@@ -1,4 +1,13 @@
-import { Component, For, Show, createMemo, createResource, createSignal } from "solid-js";
+import {
+  Component,
+  For,
+  Show,
+  createMemo,
+  createResource,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 import { AnimatedSection } from "@/components/shared/AnimatedSection";
 import { SectionCard } from "@/components/shared/SectionCard";
 import { StatsCard } from "@/components/shared/StatsCard";
@@ -9,18 +18,31 @@ import type { RoutineDefinition } from "@/types/api";
 import RoutineGroupsList, {
   buildRoutineGroups,
 } from "@/components/routines/RoutineGroupsList";
+import { filterVisibleTasks } from "@/utils/tasks";
 
 export const TodaysRoutinesView: Component = () => {
   const { tasks, routines, sync } = useStreamingData();
   const [addError, setAddError] = createSignal("");
   const [addingId, setAddingId] = createSignal<string | null>(null);
+  const [now, setNow] = createSignal(new Date());
+
+  onMount(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 30000);
+
+    onCleanup(() => {
+      clearInterval(interval);
+    });
+  });
 
   const [routineDefinitions] = createResource<RoutineDefinition[]>(
     routineDefinitionAPI.getAll
   );
 
+  const visibleTasks = createMemo(() => filterVisibleTasks(tasks(), now()));
   const routineGroups = createMemo(() =>
-    buildRoutineGroups(tasks(), routines())
+    buildRoutineGroups(visibleTasks(), routines())
   );
 
   const routineDefinitionIdsForToday = createMemo(() => {
@@ -142,12 +164,12 @@ export const TodaysRoutinesView: Component = () => {
       <AnimatedSection delay="400ms">
         <SectionCard
           title="Your Routines"
-          description="Swipe tasks to complete or punt"
+          description="Swipe tasks to complete, punt, or snooze"
           hasItems={routineGroups().length > 0}
           emptyState={<div class="text-sm text-neutral-500">No routines yet.</div>}
         >
           <RoutineGroupsList
-            tasks={tasks()}
+            tasks={visibleTasks()}
             routines={routines()}
             expandedByDefault={true}
             isCollapsable={false}

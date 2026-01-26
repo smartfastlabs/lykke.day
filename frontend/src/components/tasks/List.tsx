@@ -1,11 +1,12 @@
-import { Component, For, Show } from "solid-js";
+import { Component, For, Show, createSignal } from "solid-js";
 import type { Accessor } from "solid-js";
 import { getCategoryIcon, getTypeIcon } from "@/utils/icons";
 import { TaskStatus, Task, TimeWindow } from "@/types/api";
 import { Icon } from "@/components/shared/Icon";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faClock, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useStreamingData } from "@/providers/streamingData";
 import { SwipeableItem } from "@/components/shared/SwipeableItem";
+import SnoozeActionModal from "@/components/shared/SnoozeActionModal";
 
 export const formatTimeString = (timeStr: string): string => {
   const [h, m] = timeStr.split(":");
@@ -66,6 +67,8 @@ const getStatusClasses = (status: TaskStatus): string => {
       return "bg-amber-50/30";
     case "NOT_READY":
       return "opacity-40";
+    case "SNOOZE":
+      return "bg-sky-50/50";
     default:
       return "";
   }
@@ -76,68 +79,102 @@ const TaskItem: Component<{ task: Task }> = (props) => {
   const icon = () =>
     getCategoryIcon(props.task.category) || getTypeIcon(props.task.type);
 
-  const { setTaskStatus } = useStreamingData();
+  const { setTaskStatus, snoozeTask } = useStreamingData();
+  const [pendingTask, setPendingTask] = createSignal<Task | null>(null);
+
+  const handleClose = () => setPendingTask(null);
+  const handlePunt = async () => {
+    const task = pendingTask();
+    if (!task) return;
+    handleClose();
+    await setTaskStatus(task, "PUNT");
+  };
+  const handleSnooze = async (minutes: number) => {
+    const task = pendingTask();
+    if (!task) return;
+    handleClose();
+    const snoozedUntil = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+    await snoozeTask(task, snoozedUntil);
+  };
 
   return (
-    <SwipeableItem
-      onSwipeRight={() => setTaskStatus(props.task, "COMPLETE")}
-      onSwipeLeft={() => setTaskStatus(props.task, "PUNT")}
-      rightLabel="✅ Complete Task"
-      leftLabel="🗑 Punt Task"
-      statusClass={getStatusClasses(props.task.status)}
-      compact={true}
-    >
-      <div class="flex items-center justify-start gap-2">
-        {/* Time column - only show if there's a time */}
-        <Show when={time()?.primary}>
-          <div class="flex-shrink-0 text-right">
+    <>
+      <SwipeableItem
+        onSwipeRight={() => setTaskStatus(props.task, "COMPLETE")}
+        onSwipeLeft={() => setPendingTask(props.task)}
+        rightLabel="✅ Complete Task"
+        leftLabel="⏸ Punt or Snooze"
+        statusClass={getStatusClasses(props.task.status)}
+        compact={true}
+      >
+        <div class="flex items-center justify-start gap-2">
+          {/* Time column - only show if there's a time */}
+          <Show when={time()?.primary}>
+            <div class="flex-shrink-0 text-right">
+              <span
+                class={`text-[10px] tabular-nums whitespace-nowrap ${
+                  time()?.primary === "flexible"
+                    ? "text-stone-400 italic"
+                    : "text-stone-500"
+                }`}
+              >
+                {time()?.primary}
+              </span>
+            </div>
+          </Show>
+
+          {/* Category/Type icon */}
+          <span class="flex-shrink-0 flex items-center justify-center text-amber-600">
+            <Show when={icon()}>
+              <Icon icon={icon()!} class="w-3 h-3" />
+            </Show>
+          </span>
+
+          {/* Task name */}
+          <div class="flex-1 min-w-0 text-left">
             <span
-              class={`text-[10px] tabular-nums whitespace-nowrap ${
-                time()?.primary === "flexible"
-                  ? "text-stone-400 italic"
-                  : "text-stone-500"
-              }`}
+              class="text-xs truncate block text-left"
+              classList={{
+                "line-through text-stone-400": props.task.status === "COMPLETE",
+                "text-orange-700 italic": props.task.status === "PUNT",
+                "text-sky-700 italic": props.task.status === "SNOOZE",
+                "text-stone-800":
+                  props.task.status !== "COMPLETE" &&
+                  props.task.status !== "PUNT" &&
+                  props.task.status !== "SNOOZE",
+              }}
             >
-              {time()?.primary}
+              {props.task.name
+                .replace("ROUTINE DEFINITION: ", "")
+                .replace("Routine Definition: ", "")}
             </span>
           </div>
-        </Show>
 
-        {/* Category/Type icon */}
-        <span class="flex-shrink-0 flex items-center justify-center text-amber-600">
-          <Show when={icon()}>
-            <Icon icon={icon()!} class="w-3 h-3" />
+          <Show when={props.task.status === "COMPLETE"}>
+            <div class="flex-shrink-0 w-4 text-amber-600">
+              <Icon key="checkMark" class="w-3 h-3" />
+            </div>
           </Show>
-        </span>
-
-        {/* Task name */}
-        <div class="flex-1 min-w-0 text-left">
-          <span
-            class="text-xs truncate block text-left"
-            classList={{
-              "line-through text-stone-400": props.task.status === "COMPLETE",
-              "text-stone-800": props.task.status !== "COMPLETE",
-              "text-orange-700 italic": props.task.status === "PUNT",
-            }}
-          >
-            {props.task.name
-              .replace("ROUTINE DEFINITION: ", "")
-              .replace("Routine Definition: ", "")}
-          </span>
+          <Show when={props.task.status === "PUNT"}>
+            <div class="flex-shrink-0 w-4 text-red-500">
+              <Icon icon={faXmark} class="w-3 h-3" />
+            </div>
+          </Show>
+          <Show when={props.task.status === "SNOOZE"}>
+            <div class="flex-shrink-0 w-4 text-sky-600">
+              <Icon icon={faClock} class="w-3 h-3" />
+            </div>
+          </Show>
         </div>
-
-        <Show when={props.task.status === "COMPLETE"}>
-          <div class="flex-shrink-0 w-4 text-amber-600">
-            <Icon key="checkMark" class="w-3 h-3" />
-          </div>
-        </Show>
-        <Show when={props.task.status === "PUNT"}>
-          <div class="flex-shrink-0 w-4 text-red-500">
-            <Icon icon={faXmark} class="w-3 h-3" />
-          </div>
-        </Show>
-      </div>
-    </SwipeableItem>
+      </SwipeableItem>
+      <SnoozeActionModal
+        isOpen={Boolean(pendingTask())}
+        title="Punt or Snooze"
+        onClose={handleClose}
+        onPunt={() => void handlePunt()}
+        onSnooze={(minutes) => void handleSnooze(minutes)}
+      />
+    </>
   );
 };
 

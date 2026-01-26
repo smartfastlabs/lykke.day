@@ -116,6 +116,7 @@ class TaskStatus(str, Enum):
     PUNT = "PUNT"
     NOT_STARTED = "NOT_STARTED"
     PENDING = "PENDING"
+    SNOOZE = "SNOOZE"
 
 
 # TimeWindow defines task timing fields (see routine_definition.py)
