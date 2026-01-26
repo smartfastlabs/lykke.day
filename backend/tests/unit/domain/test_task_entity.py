@@ -108,13 +108,16 @@ def test_record_action_snooze_sets_snoozed_until(test_task: TaskEntity) -> None:
     assert test_task.completed_at is None
 
 
-def test_record_action_punt_already_punted(test_task: TaskEntity) -> None:
-    """Test record_action raises error when punting already punted task."""
+def test_record_action_punt_already_punted_noop(test_task: TaskEntity) -> None:
+    """Test record_action is a no-op when task is already punted."""
     test_task.status = value_objects.TaskStatus.PUNT
     action = value_objects.Action(type=value_objects.ActionType.PUNT)
 
-    with pytest.raises(DomainError, match="already punted"):
-        test_task.record_action(action)
+    old_status = test_task.record_action(action)
+
+    assert old_status == value_objects.TaskStatus.PUNT
+    assert test_task.status == value_objects.TaskStatus.PUNT
+    assert test_task.actions == []
 
 
 def test_mark_pending(test_task: TaskEntity) -> None:

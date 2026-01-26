@@ -45,8 +45,9 @@ class RecordTaskActionHandler(BaseCommandHandler[RecordTaskActionCommand, TaskEn
             # Audit logs are automatically created by the UOW for audited events
             updated_task = day.record_task_action(task, command.action)
 
-            # Add both Day (for events) and Task (for state changes) to UoW
+            # Add Day for events; add Task only if it emitted domain events
             uow.add(day)
-            uow.add(updated_task)
+            if updated_task.has_events():
+                uow.add(updated_task)
 
             return updated_task

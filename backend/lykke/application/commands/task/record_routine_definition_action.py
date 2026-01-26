@@ -56,9 +56,10 @@ class RecordRoutineDefinitionActionHandler(
                 updated_task = day.record_task_action(task, command.action)
                 updated_tasks.append(updated_task)
 
-            # Add both Day (for events) and Tasks (for state changes) to UoW
+            # Add Day for events; add Tasks only if they emitted domain events
             uow.add(day)
             for task in updated_tasks:
-                uow.add(task)
+                if task.has_events():
+                    uow.add(task)
 
             return updated_tasks

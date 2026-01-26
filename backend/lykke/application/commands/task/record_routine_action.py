@@ -55,6 +55,7 @@ class RecordRoutineActionHandler(
 
             uow.add(day)
             for task in updated_tasks:
-                uow.add(task)
+                if task.has_events():
+                    uow.add(task)
 
             return updated_tasks

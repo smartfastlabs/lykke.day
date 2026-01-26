@@ -62,19 +62,23 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
         Raises:
             DomainError: If the action is invalid for the current state
         """
+        # Handle status transitions based on action type
+        old_status = self.status
+        if (
+            action.type == value_objects.ActionType.PUNT
+            and self.status == value_objects.TaskStatus.PUNT
+        ):
+            return old_status
+
         # Add the action
         self.actions.append(action)
 
-        # Handle status transitions based on action type
-        old_status = self.status
         if action.type == value_objects.ActionType.COMPLETE:
             if self.status == value_objects.TaskStatus.COMPLETE:
                 raise DomainError("Task is already complete")
             self.status = value_objects.TaskStatus.COMPLETE
             self.completed_at = datetime.now(UTC)
         elif action.type == value_objects.ActionType.PUNT:
-            if self.status == value_objects.TaskStatus.PUNT:
-                raise DomainError("Task is already punted")
             self.status = value_objects.TaskStatus.PUNT
         elif action.type == value_objects.ActionType.SNOOZE:
             snoozed_until = ensure_utc(action.data.get("snoozed_until"))
