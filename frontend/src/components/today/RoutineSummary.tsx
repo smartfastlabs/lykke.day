@@ -17,8 +17,8 @@ export const RoutineSummary: Component<RoutineSummaryProps> = (props) => {
   const navigate = useNavigate();
 
   return (
-    <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-6 backdrop-blur-sm">
-      <div class="flex items-center justify-between gap-3 mb-5">
+    <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-4 backdrop-blur-sm">
+      <div class="flex items-center justify-between gap-3 mb-3">
         <button
           type="button"
           onClick={() => navigate("/me/today/routines")}

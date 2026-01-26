@@ -36,6 +36,10 @@ export interface RoutineGroup {
   timeWindow?: TimeWindow | null;
 }
 
+type RoutineStatus = "hidden" | "inactive" | "available" | "active" | "past-due";
+
+const UPCOMING_WINDOW_MS = 1000 * 60 * 120;
+
 export const buildRoutineGroups = (
   tasks: Task[],
   routines: Routine[]
@@ -158,96 +162,185 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
     };
   };
 
-  const isTaskActiveNow = (task: Task, currentTime: Date) => {
-    if (task.status === "COMPLETE" || task.status === "PUNT") return false;
-    if (!task.time_window) return false;
-    const taskDate = task.scheduled_date;
-    if (!taskDate) return false;
+  const getAvailabilityStart = (times: ReturnType<typeof getWindowTimes>) =>
+    times.availableTime ?? times.startTime ?? null;
+  const getAvailabilityEnd = (times: ReturnType<typeof getWindowTimes>) =>
+    times.cutoffTime ?? times.endTime ?? null;
+  const getActiveStart = (times: ReturnType<typeof getWindowTimes>) =>
+    times.startTime ?? null;
+  const getActiveEnd = (times: ReturnType<typeof getWindowTimes>) =>
+    times.endTime ?? times.cutoffTime ?? null;
 
-    const availableTime = task.time_window.available_time
-      ? getTime(taskDate, task.time_window.available_time)
-      : null;
-    const startTime = task.time_window.start_time
-      ? getTime(taskDate, task.time_window.start_time)
-      : null;
-    const endTime = task.time_window.end_time
-      ? getTime(taskDate, task.time_window.end_time)
-      : null;
-    const cutoffTime = task.time_window.cutoff_time
-      ? getTime(taskDate, task.time_window.cutoff_time)
-      : null;
-
-    const windowStart = startTime ?? availableTime;
-    const windowEnd = endTime ?? cutoffTime;
-    if (windowStart && currentTime < windowStart) return false;
-    if (windowEnd && currentTime > windowEnd) return false;
-    return true;
+  const getLatestTime = (left: Date | null, right: Date | null) => {
+    if (!left) return right;
+    if (!right) return left;
+    return left > right ? left : right;
   };
 
-  const getHasScheduledTasks = (routine: RoutineGroup) =>
-    routine.tasks.some((task) => Boolean(task.time_window && task.scheduled_date));
+  const getEarliestTime = (left: Date | null, right: Date | null) => {
+    if (!left) return right;
+    if (!right) return left;
+    return left < right ? left : right;
+  };
 
-  const isRoutineActiveFromTasks = (routine: RoutineGroup, currentTime: Date) =>
-    routine.tasks.some((task) => isTaskActiveNow(task, currentTime));
+  const getEffectiveWindow = (
+    routine: RoutineGroup,
+    task: Task,
+    date: string
+  ) => {
+    const routineTimes = getWindowTimes(routine.timeWindow, date);
+    const taskTimes = getWindowTimes(task.time_window ?? null, date);
 
-  const isRoutineAvailableFromTimeWindow = (
+    const availabilityStart = getLatestTime(
+      getAvailabilityStart(taskTimes),
+      getAvailabilityStart(routineTimes)
+    );
+    const availabilityEnd = getEarliestTime(
+      getAvailabilityEnd(taskTimes),
+      getAvailabilityEnd(routineTimes)
+    );
+    const activeStart = getLatestTime(
+      getActiveStart(taskTimes),
+      getActiveStart(routineTimes)
+    );
+    const activeEnd = getEarliestTime(
+      getActiveEnd(taskTimes),
+      getActiveEnd(routineTimes)
+    );
+
+    if (
+      availabilityStart &&
+      availabilityEnd &&
+      availabilityEnd < availabilityStart
+    ) {
+      return null;
+    }
+
+    if (activeStart && activeEnd && activeEnd < activeStart) {
+      return {
+        availabilityStart,
+        availabilityEnd,
+        activeStart: null,
+        activeEnd: null,
+      };
+    }
+
+    return {
+      availabilityStart,
+      availabilityEnd,
+      activeStart,
+      activeEnd,
+    };
+  };
+
+  const getTaskWindowStatus = (
+    routine: RoutineGroup,
+    task: Task,
+    currentTime: Date
+  ) => {
+    if (task.status === "COMPLETE" || task.status === "PUNT") {
+      return {
+        isActive: false,
+        isAvailable: false,
+        isPastDue: false,
+        nextAvailableTime: null as Date | null,
+      };
+    }
+
+    const taskDate = task.scheduled_date ?? getRoutineDate(routine);
+    const effectiveWindow = getEffectiveWindow(routine, task, taskDate);
+
+    if (!effectiveWindow) {
+      return {
+        isActive: false,
+        isAvailable: false,
+        isPastDue: false,
+        nextAvailableTime: null,
+      };
+    }
+
+    const { availabilityStart, availabilityEnd, activeStart, activeEnd } =
+      effectiveWindow;
+
+    if (!availabilityStart && !availabilityEnd && !activeStart && !activeEnd) {
+      return {
+        isActive: false,
+        isAvailable: true,
+        isPastDue: false,
+        nextAvailableTime: null,
+      };
+    }
+
+    const isActive =
+      Boolean(activeStart) &&
+      currentTime >= (activeStart as Date) &&
+      (!activeEnd || currentTime <= activeEnd);
+    const isAvailable =
+      !isActive &&
+      (!availabilityStart || currentTime >= availabilityStart) &&
+      (!availabilityEnd || currentTime <= availabilityEnd);
+    const isPastDue = Boolean(availabilityEnd && currentTime > availabilityEnd);
+    const nextAvailableTime =
+      availabilityStart && currentTime < availabilityStart
+        ? availabilityStart
+        : null;
+
+    return {
+      isActive,
+      isAvailable,
+      isPastDue,
+      nextAvailableTime,
+    };
+  };
+
+  const getRoutineStatusInfo = (
     routine: RoutineGroup,
     currentTime: Date
   ) => {
-    const routineDate = getRoutineDate(routine);
-    const { availableTime, startTime, endTime, cutoffTime } = getWindowTimes(
-      routine.timeWindow,
-      routineDate
-    );
+    let hasActive = false;
+    let hasAvailable = false;
+    let hasPastDue = false;
+    let nextAvailable: Date | null = null;
 
-    const availabilityStart = availableTime ?? startTime;
-    const availabilityEnd = cutoffTime ?? endTime;
+    routine.tasks.forEach((task) => {
+      const status = getTaskWindowStatus(routine, task, currentTime);
+      hasActive = hasActive || status.isActive;
+      hasAvailable = hasAvailable || status.isAvailable;
+      hasPastDue = hasPastDue || status.isPastDue;
+      if (status.nextAvailableTime) {
+        if (!nextAvailable || status.nextAvailableTime < nextAvailable) {
+          nextAvailable = status.nextAvailableTime;
+        }
+      }
+    });
 
-    if (availabilityStart && currentTime < availabilityStart) return false;
-    if (availabilityEnd && currentTime > availabilityEnd) return false;
-    return true;
-  };
-
-  const isRoutineInTimeWindow = (routine: RoutineGroup, currentTime: Date) => {
-    const routineDate = getRoutineDate(routine);
-    const { availableTime, startTime, endTime, cutoffTime } = getWindowTimes(
-      routine.timeWindow,
-      routineDate
-    );
-
-    const windowStart = startTime ?? availableTime;
-    const windowEnd = endTime ?? cutoffTime;
-
-    if (windowStart && currentTime < windowStart) return false;
-    if (windowEnd && currentTime > windowEnd) return false;
-    return true;
-  };
-
-  const isRoutineAvailable = (routine: RoutineGroup, currentTime: Date) => {
-    if (routine.timeWindow) {
-      return isRoutineAvailableFromTimeWindow(routine, currentTime);
+    if (hasPastDue) {
+      return { status: "past-due" as RoutineStatus, nextAvailableTime: null };
     }
-    if (!getHasScheduledTasks(routine)) {
-      return true;
+    if (hasActive) {
+      return { status: "active" as RoutineStatus, nextAvailableTime: null };
     }
-    return isRoutineActiveFromTasks(routine, currentTime);
-  };
+    if (hasAvailable) {
+      return { status: "available" as RoutineStatus, nextAvailableTime: null };
+    }
 
-  const isRoutineActiveWindow = (routine: RoutineGroup, currentTime: Date) => {
-    if (routine.timeWindow) {
-      return isRoutineInTimeWindow(routine, currentTime);
+    if (nextAvailable) {
+      const diff = nextAvailable.getTime() - currentTime.getTime();
+      if (diff <= UPCOMING_WINDOW_MS && diff > 0) {
+        return { status: "inactive" as RoutineStatus, nextAvailableTime: nextAvailable };
+      }
     }
-    if (!getHasScheduledTasks(routine)) {
-      return false;
-    }
-    return isRoutineActiveFromTasks(routine, currentTime);
+
+    return { status: "hidden" as RoutineStatus, nextAvailableTime: nextAvailable };
   };
 
   const visibleRoutineGroups = createMemo(() => {
     const groups = routineGroups();
     if (!shouldFilterByAvailability()) return groups;
     const currentTime = now();
-    return groups.filter((routine) => isRoutineAvailable(routine, currentTime));
+    return groups.filter(
+      (routine) => getRoutineStatusInfo(routine, currentTime).status !== "hidden"
+    );
   });
 
   const routineDefinitionIds = createMemo(() =>
@@ -258,7 +351,9 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
     if (!shouldCollapseOutsideWindow()) return routineDefinitionIds();
     const currentTime = now();
     return visibleRoutineGroups()
-      .filter((group) => isRoutineActiveWindow(group, currentTime))
+      .filter(
+        (group) => getRoutineStatusInfo(group, currentTime).status === "active"
+      )
       .map((group) => group.routineDefinitionId);
   });
 
@@ -291,9 +386,13 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
     !isCollapsable() || expandedRoutines().has(routineDefinitionId);
 
   return (
-    <div class="space-y-4">
+    <div class="space-y-2.5">
       <Show when={visibleRoutineGroups().length === 0}>
-        <div class="text-sm text-stone-500">No routines for today yet.</div>
+        <div class="text-sm text-stone-500">
+          {routineGroups().length === 0
+            ? "No routines for today yet."
+            : "Nothing coming up right now."}
+        </div>
       </Show>
       <For each={visibleRoutineGroups()}>
         {(routine) => {
@@ -319,12 +418,51 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
           const isPunted = () =>
             routine.puntedCount === routine.totalCount && routine.puntedCount > 0;
           const isExpanded = () => isRoutineExpanded(routine.routineDefinitionId);
+          const statusInfo = createMemo(() =>
+            getRoutineStatusInfo(routine, now())
+          );
+
+          const getStatusLabel = () => {
+            const status = statusInfo().status;
+            if (status === "active") return "Active";
+            if (status === "available") return "Available";
+            if (status === "past-due") return "Past due";
+            if (status === "inactive") {
+              const nextTime = statusInfo().nextAvailableTime;
+              if (nextTime) {
+                return `Starts ${nextTime.toLocaleTimeString([], {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}`;
+              }
+              return "Soon";
+            }
+            return "Hidden";
+          };
+
+          const getStatusPillClass = () => {
+            const status = statusInfo().status;
+            if (status === "active") return "bg-emerald-100/70 text-emerald-700";
+            if (status === "available") return "bg-amber-100/80 text-amber-700";
+            if (status === "past-due") return "bg-rose-100/80 text-rose-700";
+            if (status === "inactive") return "bg-stone-100 text-stone-600";
+            return "bg-stone-100 text-stone-600";
+          };
 
           const getStatusClass = () => {
             if (isComplete())
               return "bg-gradient-to-br from-green-50 to-emerald-50";
             if (isPunted())
               return "bg-gradient-to-br from-red-50 to-rose-50";
+            if (statusInfo().status === "past-due") {
+              return "bg-rose-50/70 border border-rose-100/70";
+            }
+            if (statusInfo().status === "active") {
+              return "bg-emerald-50/70 border border-emerald-100/70";
+            }
+            if (statusInfo().status === "inactive") {
+              return "bg-stone-50/70 border border-stone-200/70";
+            }
             return "bg-amber-50/60 border border-amber-50/60";
           };
 
@@ -333,14 +471,23 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
               return "!bg-gradient-to-br !from-green-50 !to-emerald-50";
             if (isPunted())
               return "!bg-gradient-to-br !from-red-50 !to-rose-50";
+            if (statusInfo().status === "past-due") {
+              return "!bg-rose-50/70 !border !border-rose-100/70";
+            }
+            if (statusInfo().status === "active") {
+              return "!bg-emerald-50/70 !border !border-emerald-100/70";
+            }
+            if (statusInfo().status === "inactive") {
+              return "!bg-stone-50/70 !border !border-stone-200/70";
+            }
             return "!bg-amber-50/60 !border !border-amber-50/60";
           };
 
           return (
             <div
-              class={`rounded-xl p-4 transition-all duration-300 ${getStatusClass()}`}
+              class={`rounded-xl p-3 transition-all duration-300 ${getStatusClass()}`}
             >
-              <div class="-mx-4 -mt-4 mb-1">
+              <div class="-mx-3 -mt-3 mb-1">
                 <SwipeableItem
                   onSwipeRight={() => {
                     if (!routine.routineId) return;
@@ -363,7 +510,7 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
                   statusClass={getSwipeableStatusClass()}
                 >
                   <div
-                    class="w-full flex items-start justify-between mb-3 text-left"
+                    class="w-full flex items-start justify-between mb-2 text-left"
                     onClick={() => {
                       if (!isCollapsable()) return;
                       toggleRoutineExpanded(routine.routineDefinitionId);
@@ -392,6 +539,13 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
                       </span>
                     </div>
                     <div class="flex items-center gap-2">
+                      <Show when={statusInfo().status !== "hidden"}>
+                        <span
+                          class={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${getStatusPillClass()}`}
+                        >
+                          {getStatusLabel()}
+                        </span>
+                      </Show>
                       <span
                         class="text-xs font-semibold"
                         classList={{
