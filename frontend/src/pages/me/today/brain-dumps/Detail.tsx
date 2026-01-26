@@ -1,8 +1,8 @@
 import { useParams } from "@solidjs/router";
-import { Component, Show, createMemo, createResource } from "solid-js";
+import { Component, Show, createMemo } from "solid-js";
 import SettingsPage from "@/components/shared/SettingsPage";
 import LLMSnapshotDetails from "@/components/llm/LLMSnapshotDetails";
-import { brainDumpAPI } from "@/utils/api";
+import { useStreamingData } from "@/providers/streamingData";
 import type { BrainDumpItem, LLMRunResultSnapshot } from "@/types/api";
 
 const safeStringify = (value: unknown): string => {
@@ -28,10 +28,11 @@ const formatDateTime = (value?: string | null): string | null => {
 
 const TodayBrainDumpDetailPage: Component = () => {
   const params = useParams();
-  const [brainDump] = createResource<BrainDumpItem | undefined, string>(
-    () => params.id,
-    (id) => brainDumpAPI.get(id)
-  );
+  const { brainDumps, isLoading } = useStreamingData();
+  const brainDump = createMemo<BrainDumpItem | undefined>(() => {
+    if (!params.id) return undefined;
+    return brainDumps().find((item) => item.id === params.id);
+  });
 
   const llmSnapshot = createMemo(() => {
     const current = brainDump();
@@ -49,7 +50,11 @@ const TodayBrainDumpDetailPage: Component = () => {
     >
       <Show
         when={brainDump()}
-        fallback={<div class="text-center text-gray-500 py-8">Loading...</div>}
+        fallback={
+          <div class="text-center text-gray-500 py-8">
+            {isLoading() ? "Loading..." : "Brain dump not found."}
+          </div>
+        }
       >
         {(current) => (
           <div class="space-y-6">

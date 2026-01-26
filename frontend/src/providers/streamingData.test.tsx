@@ -8,6 +8,9 @@ vi.mock("@/utils/api", () => ({
   taskAPI: {
     setTaskStatus: vi.fn(),
   },
+  notificationAPI: {
+    getToday: vi.fn().mockResolvedValue([]),
+  },
 }));
 
 vi.mock("@/utils/config", () => ({

@@ -6,11 +6,11 @@ import { Icon } from "@/components/shared/Icon";
 import { faBrain } from "@fortawesome/free-solid-svg-icons";
 
 const BrainDumpPage: Component = () => {
-  const { brainDumpItems, addBrainDumpItem, isLoading } = useStreamingData();
+  const { brainDumps, addBrainDumpItem, isLoading } = useStreamingData();
   const [newItemText, setNewItemText] = createSignal("");
   const [isAdding, setIsAdding] = createSignal(false);
 
-  const items = createMemo(() => brainDumpItems() ?? []);
+  const items = createMemo(() => brainDumps() ?? []);
   const hasItems = createMemo(() => items().length > 0);
 
   const handleAddItem = async () => {

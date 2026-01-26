@@ -1,8 +1,8 @@
 import { useParams } from "@solidjs/router";
-import { Component, Show, createMemo, createResource } from "solid-js";
+import { Component, Show, createMemo } from "solid-js";
 import SettingsPage from "@/components/shared/SettingsPage";
 import LLMSnapshotDetails from "@/components/llm/LLMSnapshotDetails";
-import { notificationAPI } from "@/utils/api";
+import { useStreamingData } from "@/providers/streamingData";
 import type { LLMRunResultSnapshot, PushNotification } from "@/types/api";
 
 const safeStringify = (value: unknown): string => {
@@ -39,10 +39,11 @@ const formatDateTime = (value: string): string => {
 
 const TodayNotificationDetailPage: Component = () => {
   const params = useParams();
-  const [notification] = createResource<PushNotification | undefined, string>(
-    () => params.id,
-    (id) => notificationAPI.get(id)
-  );
+  const { notifications, notificationsLoading } = useStreamingData();
+  const notification = createMemo<PushNotification | undefined>(() => {
+    if (!params.id) return undefined;
+    return notifications().find((item) => item.id === params.id);
+  });
 
   const contentPayload = createMemo(() => {
     const current = notification();
@@ -66,7 +67,11 @@ const TodayNotificationDetailPage: Component = () => {
     >
       <Show
         when={notification()}
-        fallback={<div class="text-center text-gray-500 py-8">Loading...</div>}
+        fallback={
+          <div class="text-center text-gray-500 py-8">
+            {notificationsLoading() ? "Loading..." : "Notification not found."}
+          </div>
+        }
       >
         {(current) => (
           <div class="space-y-6">

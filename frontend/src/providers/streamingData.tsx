@@ -19,11 +19,13 @@ import {
   ReminderStatus,
   BrainDumpItem,
   BrainDumpItemStatus,
+  PushNotification,
   DayContextWithRoutines,
   Routine,
 } from "@/types/api";
 import {
   brainDumpAPI,
+  notificationAPI,
   reminderAPI,
   routineAPI,
   taskAPI,
@@ -37,11 +39,13 @@ interface StreamingDataContextValue {
   tasks: Accessor<Task[]>;
   events: Accessor<Event[]>;
   reminders: Accessor<Reminder[]>;
-  brainDumpItems: Accessor<BrainDumpItem[]>;
+  brainDumps: Accessor<BrainDumpItem[]>;
+  notifications: Accessor<PushNotification[]>;
   day: Accessor<Day | undefined>;
   routines: Accessor<Routine[]>;
   // Loading and error states
   isLoading: Accessor<boolean>;
+  notificationsLoading: Accessor<boolean>;
   error: Accessor<Error | undefined>;
   // Connection state
   isConnected: Accessor<boolean>;
@@ -241,6 +245,8 @@ export function StreamingDataProvider(props: ParentProps) {
   const [error, setError] = createSignal<Error | undefined>(undefined);
   const [isConnected, setIsConnected] = createSignal(false);
   const [isOutOfSync, setIsOutOfSync] = createSignal(false);
+  const [notifications, setNotifications] = createSignal<PushNotification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = createSignal(true);
   const [lastProcessedTimestamp, setLastProcessedTimestamp] = createSignal<
     string | null
   >(null);
@@ -283,7 +289,7 @@ export function StreamingDataProvider(props: ParentProps) {
     if (!day) return [];
     return normalizeReminders((day as { reminders?: ReminderWithOptionalId[] }).reminders);
   });
-  const brainDumpItems = createMemo(() => {
+  const brainDumps = createMemo(() => {
     const day = dayContextStore.data?.day;
     if (!day) return [];
     return normalizeBrainDumpItems(
@@ -297,7 +303,7 @@ export function StreamingDataProvider(props: ParentProps) {
     return {
       ...currentDay,
       reminders: reminders(),
-      brain_dump_items: brainDumpItems(),
+      brain_dump_items: brainDumps(),
     };
   });
 
@@ -871,7 +877,7 @@ export function StreamingDataProvider(props: ParentProps) {
     });
   };
 
-  const updateBrainDumpItemsLocally = (updatedItems: BrainDumpItem[]) => {
+  const updateBrainDumpsLocally = (updatedItems: BrainDumpItem[]) => {
     setDayContextStore((current) => {
       if (!current.data || !current.data.day) return current;
       const updated = {
@@ -940,7 +946,7 @@ export function StreamingDataProvider(props: ParentProps) {
 
   const addBrainDumpItem = async (text: string): Promise<void> => {
     const item = await brainDumpAPI.addItem(text);
-    updateBrainDumpItemsLocally([...(brainDumpItems() ?? []), item]);
+    updateBrainDumpsLocally([...(brainDumps() ?? []), item]);
   };
 
   const updateBrainDumpItemStatus = async (
@@ -950,35 +956,35 @@ export function StreamingDataProvider(props: ParentProps) {
     if (!item.id) {
       return;
     }
-    const previousItems = brainDumpItems();
+    const previousItems = brainDumps();
     const updatedItems = previousItems.map((i) =>
       i.id === item.id ? { ...i, status } : i
     );
-    updateBrainDumpItemsLocally(updatedItems);
+    updateBrainDumpsLocally(updatedItems);
 
     try {
       const updatedItem = await brainDumpAPI.updateItemStatus(item.id, status);
       const nextItems = previousItems.map((existing) =>
         existing.id === updatedItem.id ? updatedItem : existing
       );
-      updateBrainDumpItemsLocally(nextItems);
+      updateBrainDumpsLocally(nextItems);
     } catch (error) {
-      updateBrainDumpItemsLocally(previousItems);
+      updateBrainDumpsLocally(previousItems);
       throw error;
     }
   };
 
   const removeBrainDumpItem = async (itemId: string): Promise<void> => {
-    const previousItems = brainDumpItems();
+    const previousItems = brainDumps();
     const updatedItems = previousItems.filter((i) => i.id !== itemId);
-    updateBrainDumpItemsLocally(updatedItems);
+    updateBrainDumpsLocally(updatedItems);
 
     try {
       const removedItem = await brainDumpAPI.removeItem(itemId);
       const nextItems = previousItems.filter((item) => item.id !== removedItem.id);
-      updateBrainDumpItemsLocally(nextItems);
+      updateBrainDumpsLocally(nextItems);
     } catch (error) {
-      updateBrainDumpItemsLocally(previousItems);
+      updateBrainDumpsLocally(previousItems);
       throw error;
     }
   };
@@ -991,10 +997,23 @@ export function StreamingDataProvider(props: ParentProps) {
     requestIncrementalSync(sinceTimestamp);
   };
 
+  const loadNotifications = async () => {
+    setNotificationsLoading(true);
+    try {
+      const items = await notificationAPI.getToday();
+      setNotifications(items);
+    } catch (err) {
+      console.error("StreamingDataProvider: Failed to load notifications", err);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
+
   // Connect on mount
   onMount(() => {
     isMounted = true;
     connectWebSocket();
+    void loadNotifications();
   });
 
   // Cleanup on unmount
@@ -1018,10 +1037,12 @@ export function StreamingDataProvider(props: ParentProps) {
     tasks,
     events,
     reminders,
-    brainDumpItems,
+    brainDumps,
+    notifications,
     day,
     routines,
     isLoading,
+    notificationsLoading,
     error,
     isConnected,
     isOutOfSync,

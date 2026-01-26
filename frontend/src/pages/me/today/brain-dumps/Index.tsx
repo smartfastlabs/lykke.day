@@ -1,9 +1,9 @@
 import { useNavigate } from "@solidjs/router";
-import { Component, Show, createResource } from "solid-js";
+import { Component, Show } from "solid-js";
 import SettingsPage from "@/components/shared/SettingsPage";
 import SettingsList from "@/components/shared/SettingsList";
 import TodayBrainDumpListItem from "@/components/brain-dump/TodayBrainDumpListItem";
-import { brainDumpAPI } from "@/utils/api";
+import { useStreamingData } from "@/providers/streamingData";
 import type { BrainDumpItem } from "@/types/api";
 
 const getBrainDumpLabel = (item: BrainDumpItem): string =>
@@ -11,7 +11,7 @@ const getBrainDumpLabel = (item: BrainDumpItem): string =>
 
 const TodayBrainDumpsPage: Component = () => {
   const navigate = useNavigate();
-  const [brainDumps] = createResource(brainDumpAPI.getToday);
+  const { brainDumps, isLoading } = useStreamingData();
 
   const handleNavigate = (id?: string | null) => {
     if (!id) return;
@@ -21,11 +21,11 @@ const TodayBrainDumpsPage: Component = () => {
   return (
     <SettingsPage heading="Today's Brain Dumps">
       <Show
-        when={brainDumps()}
+        when={!isLoading() || brainDumps().length > 0}
         fallback={<div class="text-center text-gray-500 py-8">Loading...</div>}
       >
         <SettingsList
-          items={brainDumps()!}
+          items={brainDumps()}
           getItemLabel={getBrainDumpLabel}
           renderItem={(item) => <TodayBrainDumpListItem item={item} />}
           onItemClick={(item) => handleNavigate(item.id)}
