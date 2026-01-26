@@ -16,11 +16,10 @@ import {
   RemindersSummary,
   UpcomingSection,
   RightNowSection,
-  AvailableSection,
 } from "@/components/today";
 import { getShowTodayCookie } from "@/utils/cookies";
 import { getTaskUpcomingTime, isTaskSnoozed } from "@/utils/tasks";
-import type { Event, Task } from "@/types/api";
+import type { Event } from "@/types/api";
 
 const isAllDayEvent = (event: Event): boolean => {
   const start = new Date(event.starts_at);
@@ -211,10 +210,6 @@ export const TodayPage: Component = () => {
           href="/me/today/reminders"
         />
       </div>
-      <div class="mb-3">
-        <AvailableSection tasks={allTasks()} />
-      </div>
-
       <div class="mb-6 flex flex-col md:flex-row gap-4">
         <Show when={hasUpcomingEvents()}>
           <div class="w-full md:w-1/2">
