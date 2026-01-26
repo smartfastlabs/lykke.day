@@ -16,18 +16,20 @@ const ProfileSettingsPage: Component = () => {
   const [isResettingCalendars, setIsResettingCalendars] = createSignal(false);
   const [isDirty, setIsDirty] = createSignal(false);
 
-  const serializeProfile = (payload: UserProfileUpdate) =>
-    JSON.stringify({
+  const serializeProfile = (payload: UserProfileUpdate) => {
+    const settings = payload.settings;
+    return JSON.stringify({
       phone_number: payload.phone_number ?? null,
       status: payload.status,
       is_active: payload.is_active,
       is_superuser: payload.is_superuser,
       is_verified: payload.is_verified,
       settings: {
-        timezone: payload.settings.timezone ?? null,
-        template_defaults: payload.settings.template_defaults ?? [],
+        timezone: settings?.timezone ?? null,
+        template_defaults: settings?.template_defaults ?? [],
       },
     });
+  };
 
   const initialSignature = createMemo(() => {
     const current = user();
