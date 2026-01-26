@@ -10,8 +10,7 @@ import {
 import { Icon } from "@/components/shared/Icon";
 import { faCircle } from "@fortawesome/free-solid-svg-icons";
 import type { Event, Task } from "@/types/api";
-import { getTime } from "@/utils/dates";
-import { isTaskSnoozed } from "@/utils/tasks";
+import { getTaskUpcomingTime, isTaskSnoozed } from "@/utils/tasks";
 import TaskList from "@/components/tasks/List";
 import { EventItem } from "@/components/events/EventItem";
 
@@ -19,35 +18,6 @@ export interface RightNowSectionProps {
   events: Event[];
   tasks: Task[];
 }
-
-const getTaskTime = (task: Task): Date | null => {
-  const taskDate = task.scheduled_date;
-  if (!taskDate || !task.time_window) return null;
-
-  const timeWindow = task.time_window;
-
-  // Prefer start_time for fixed time tasks
-  if (timeWindow.start_time && !timeWindow.end_time) {
-    return getTime(taskDate, timeWindow.start_time);
-  }
-
-  // Use end_time for deadline tasks
-  if (timeWindow.end_time && !timeWindow.start_time) {
-    return getTime(taskDate, timeWindow.end_time);
-  }
-
-  // For time windows, use start_time
-  if (timeWindow.start_time) {
-    return getTime(taskDate, timeWindow.start_time);
-  }
-
-  // Fallback to available_time
-  if (timeWindow.available_time) {
-    return getTime(taskDate, timeWindow.available_time);
-  }
-
-  return null;
-};
 
 const isAllDayEvent = (event: Event): boolean => {
   const start = new Date(event.starts_at);
@@ -105,22 +75,22 @@ export const RightNowSection: Component<RightNowSectionProps> = (props) => {
           return false;
         }
 
-        const taskTime = getTaskTime(task);
+        const taskTime = getTaskUpcomingTime(task, currentTime);
         if (!taskTime) return false;
 
         // Only include if past due (past start time or end time)
         return taskTime < currentTime;
       })
       .sort((a, b) => {
-        const aTime = getTaskTime(a);
-        const bTime = getTaskTime(b);
+        const aTime = getTaskUpcomingTime(a, currentTime);
+        const bTime = getTaskUpcomingTime(b, currentTime);
         if (!aTime || !bTime) return 0;
         return aTime.getTime() - bTime.getTime();
       });
   });
 
   const hasRightNowItems = createMemo(
-    () => ongoingEvents().length > 0 || pastDueTasks().length > 0
+    () => ongoingEvents().length > 0 || pastDueTasks().length > 0,
   );
   return (
     <Show when={hasRightNowItems()}>

@@ -7,7 +7,7 @@
 
 A daily wellness companion built with Clean Architecture and Domain-Driven Design. Try it at [lykke.day](https://lykke.day).
 
-*Lykke* (Danish for "happiness") reflects our belief that sustainable productivity emerges from intentional living, not hustle culture. This is open-source software you can trust with your most personal data—your daily habits, thoughts, and goals.
+_Lykke_ (Danish for "happiness") reflects our belief that sustainable productivity emerges from intentional living, not hustle culture. This is open-source software you can trust with your most personal data—your daily habits, thoughts, and goals.
 
 ## Why Lykke?
 
@@ -65,10 +65,12 @@ Brain Dump reduces cognitive load by giving fleeting thoughts a place to live. R
 Lykke is beginning to integrate large language models to provide intelligent assistance. This is foundational work—expect the capabilities to grow significantly.
 
 **Current capabilities:**
+
 - **Smart notifications** — LLM-powered contextual nudges that understand your day's progress, upcoming tasks, and reminders to send timely, relevant push notifications
 - **Pluggable providers** — Support for OpenAI and Anthropic APIs (bring your own key)
 
 **Architecture:**
+
 - **UseCases** — Modular LLM use cases in `application/llm_usecases/` define specific AI-assisted behaviors
 - **Jinja2 templates** — Prompts are templated for consistency and customization
 - **Context injection** — Day state, tasks, reminders, and calendar events provide grounded context
@@ -111,7 +113,7 @@ The backend follows a strict **Clean Architecture** with **CQRS**; the codebase 
 **Layer dependency rules:**
 
 | Layer          | Can Import From                           |
-|----------------|-------------------------------------------|
+| -------------- | ----------------------------------------- |
 | Domain         | Core only                                 |
 | Application    | Domain, Core                              |
 | Infrastructure | Application, Domain, Core                 |
@@ -136,6 +138,7 @@ class TaskCompletedEvent(DomainEvent, AuditableDomainEvent):
 **3. Real-time Notifications** — Domain events are published to Redis after commit, then forwarded to WebSocket clients for instant UI updates.
 
 This architecture ensures:
+
 - **Transactional consistency** — Handlers run before commit, failures rollback
 - **Observable state** — All significant changes are tracked
 - **Real-time sync** — Clients stay in sync without polling
@@ -146,6 +149,7 @@ This architecture ensures:
 Lykke uses [Taskiq](https://taskiq-python.github.io/) for distributed background processing:
 
 **Why Taskiq:**
+
 - Native async/await support
 - Redis-backed queue for reliability
 - Cron-like scheduling via labels
@@ -163,14 +167,16 @@ async def schedule_all_users_day_task():
 ### Day (Aggregate Root)
 
 The central domain entity. A `Day` represents a single day's schedule for a user with:
+
 - **Status lifecycle**: `UNSCHEDULED` → `SCHEDULED` → `COMPLETE`
 - **Time blocks**: Scheduled periods derived from templates
-- **Reminders**: Up to 3 active reminders per day
+- **Reminders**: No active reminder limit per day
 - **Tasks**: Scheduled via routines or ad-hoc
 
 ### Routine
 
 Reusable task collections with scheduling rules:
+
 - **Category**: Wellness, work, personal, etc.
 - **Schedule**: Days of week, frequency patterns
 - **Tasks**: Attached `RoutineTask` items with individual schedules
@@ -178,6 +184,7 @@ Reusable task collections with scheduling rules:
 ### Task
 
 Individual work items with:
+
 - **Status**: `PENDING` → `READY` → `COMPLETE` | `PUNT`
 - **Actions**: Immutable action log (complete, punt, notify)
 - **Scheduling**: Time-based or triggered by routine
@@ -185,6 +192,7 @@ Individual work items with:
 ### Calendar
 
 External calendar integration:
+
 - **Subscriptions**: Google Calendar sync via webhooks
 - **Entry Series**: Recurring event patterns
 - **Entries**: Individual calendar events
@@ -192,6 +200,7 @@ External calendar integration:
 ### Day Template
 
 Predefined day structures:
+
 - **Time blocks**: Named periods (Morning Routine, Focus Time, etc.)
 - **Routines**: Associated routine assignments
 - **Reusable**: Applied when scheduling days
@@ -243,17 +252,20 @@ lykke.day/
 ## Tech Stack
 
 **Backend:**
+
 - Python 3.12+, FastAPI, SQLAlchemy, PostgreSQL, Redis
 - Taskiq for background job processing
 - Poetry for dependency management
 - Strict mypy type checking
 
 **Frontend:**
+
 - SolidJS, TypeScript, Vite, TailwindCSS
 - Workbox for PWA/service worker
 - Web Push API for notifications
 
 **Integrations:**
+
 - Google Calendar API
 - Twilio (SMS)
 - OpenAI / Anthropic (LLM)
@@ -296,6 +308,7 @@ poetry run taskiq worker lykke.infrastructure.workers.config:broker
 ```
 
 For scheduled tasks (cron-like):
+
 ```bash
 poetry run taskiq scheduler lykke.infrastructure.workers.config:scheduler
 ```
@@ -338,6 +351,7 @@ npm run lint
 ## AI-Assisted Development
 
 This project uses LLMs for ~90% of implementation. The DDD architecture was chosen specifically to work well with AI assistance:
+
 - Clear layer boundaries reduce context needed
 - Explicit protocols make contracts unambiguous
 - Event-driven patterns enable isolated changes

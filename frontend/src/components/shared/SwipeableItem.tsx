@@ -28,7 +28,7 @@ export const SwipeableItem: Component<SwipeableItemProps> = (props) => {
       onSwipeRight: props.onSwipeRight,
       onSwipeLeft: props.onSwipeLeft,
       threshold: props.threshold,
-    }))
+    })),
   );
 
   // Attach global mouse listeners when dragging starts
@@ -69,10 +69,12 @@ export const SwipeableItem: Component<SwipeableItemProps> = (props) => {
         }}
         role="button"
       >
-        <div
-          class={`group px-5 ${props.compact ? "py-1" : "py-3.5"} bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white/80 hover:shadow-lg hover:shadow-amber-900/5 transition-all duration-300 cursor-pointer ${props.statusClass ?? ""}`}
-        >
-          {props.children}
+        <div class="group bg-white rounded-xl hover:shadow-lg hover:shadow-amber-900/5 transition-all duration-300 cursor-pointer">
+          <div
+            class={`px-5 ${props.compact ? "py-1" : "py-3.5"} ${props.statusClass ?? ""}`}
+          >
+            {props.children}
+          </div>
         </div>
       </div>
     </div>

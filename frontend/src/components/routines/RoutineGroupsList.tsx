@@ -499,7 +499,7 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
               return "bg-emerald-50/70 border border-emerald-100/70";
             }
             if (statusInfo().status === "inactive") {
-              return "bg-stone-50/70 border border-stone-200/70";
+              return "bg-stone-50/70";
             }
             return "bg-amber-50/60 border border-amber-50/60";
           };
@@ -516,7 +516,7 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
               return "!bg-emerald-50/70 !border !border-emerald-100/70";
             }
             if (statusInfo().status === "inactive") {
-              return "!bg-stone-50/70 !border !border-stone-200/70";
+              return "!bg-stone-50/70";
             }
             return "!bg-amber-50/60 !border !border-amber-50/60";
           };

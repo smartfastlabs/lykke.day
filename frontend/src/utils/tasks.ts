@@ -14,9 +14,98 @@ export function isTaskSnoozed(task: Task, now: Date = new Date()): boolean {
   return snoozedUntil > now;
 }
 
+export function getTaskAvailableTime(task: Task): Date | null {
+  const taskDate = task.scheduled_date;
+  const timeWindow = task.time_window;
+  if (!taskDate || !timeWindow?.available_time) return null;
+  return getTime(taskDate, timeWindow.available_time);
+}
+
+export function getTaskDueByTime(task: Task): Date | null {
+  const taskDate = task.scheduled_date;
+  const timeWindow = task.time_window;
+  if (!taskDate || !timeWindow) return null;
+  const dueBy = timeWindow.cutoff_time ?? timeWindow.end_time;
+  if (!dueBy) return null;
+  return getTime(taskDate, dueBy);
+}
+
+export function getTaskUpcomingTime(
+  task: Task,
+  now: Date = new Date(),
+): Date | null {
+  const taskDate = task.scheduled_date;
+  const timeWindow = task.time_window;
+  if (!taskDate || !timeWindow) return null;
+
+  const availableTime = getTaskAvailableTime(task);
+  const dueByTime = getTaskDueByTime(task);
+
+  if (availableTime && availableTime <= now && dueByTime) {
+    return dueByTime;
+  }
+
+  // Prefer start_time for fixed time tasks
+  if (timeWindow.start_time && !timeWindow.end_time) {
+    return getTime(taskDate, timeWindow.start_time);
+  }
+
+  // Use end_time for deadline tasks
+  if (timeWindow.end_time && !timeWindow.start_time) {
+    return getTime(taskDate, timeWindow.end_time);
+  }
+
+  // For time windows, use start_time
+  if (timeWindow.start_time) {
+    return getTime(taskDate, timeWindow.start_time);
+  }
+
+  // Fallback to available_time
+  if (timeWindow.available_time) {
+    return getTime(taskDate, timeWindow.available_time);
+  }
+
+  // Final fallback to cutoff/end time
+  if (timeWindow.cutoff_time) {
+    return getTime(taskDate, timeWindow.cutoff_time);
+  }
+
+  return null;
+}
+
+export function isTaskAvailable(
+  task: Task,
+  now: Date = new Date(),
+  windowMinutes: number = 30,
+): boolean {
+  if (task.status === "COMPLETE" || task.status === "PUNT") {
+    return false;
+  }
+  if (isTaskSnoozed(task, now)) {
+    return false;
+  }
+
+  const availableTime = getTaskAvailableTime(task);
+  if (!availableTime || availableTime > now) {
+    return false;
+  }
+
+  const dueByTime = getTaskDueByTime(task);
+  if (!dueByTime) {
+    return true;
+  }
+
+  const windowEnd = new Date(now.getTime() + 1000 * 60 * windowMinutes);
+  if (dueByTime <= now) {
+    return false;
+  }
+
+  return dueByTime > windowEnd;
+}
+
 export function filterVisibleTasks(
   tasks: Task[],
-  now: Date = new Date()
+  now: Date = new Date(),
 ): Task[] {
   return tasks.filter((task) => !isTaskSnoozed(task, now));
 }

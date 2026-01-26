@@ -274,8 +274,25 @@ export function StreamingDataProvider(props: ParentProps) {
   ): item is T & { id: string } =>
     typeof item.id === "string" && item.id.length > 0;
 
+  const dedupeById = <T extends { id?: string | null }>(items: T[]): T[] => {
+    const seen = new Set<string>();
+    const deduped: T[] = [];
+    for (const item of items) {
+      if (!item.id) {
+        deduped.push(item);
+        continue;
+      }
+      if (seen.has(item.id)) {
+        continue;
+      }
+      seen.add(item.id);
+      deduped.push(item);
+    }
+    return deduped;
+  };
+
   const normalizeReminders = (items?: ReminderWithOptionalId[]): Reminder[] =>
-    (items ?? []).filter(hasNonEmptyId);
+    dedupeById((items ?? []).filter(hasNonEmptyId));
 
   const normalizeBrainDumpItems = (
     items?: BrainDumpItemWithOptionalId[]
@@ -904,7 +921,7 @@ export function StreamingDataProvider(props: ParentProps) {
           ...current.data,
           day: {
             ...current.data.day,
-            reminders: updatedReminders,
+            reminders: dedupeById(updatedReminders),
           },
         },
       };

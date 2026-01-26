@@ -5,7 +5,6 @@ from datetime import UTC
 from uuid import uuid4
 
 import pytest
-
 from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
@@ -54,20 +53,6 @@ def test_add_reminder_emits_domain_event(test_day: DayEntity) -> None:
     assert events[0].reminder_name == "Test Reminder"
     assert events[0].day_id == test_day.id
     assert events[0].date == test_day.date
-
-
-def test_add_reminder_enforces_max_five_reminders(test_day: DayEntity) -> None:
-    """Test add_reminder enforces maximum of 5 reminders."""
-    test_day.add_reminder("Reminder 1")
-    test_day.add_reminder("Reminder 2")
-    test_day.add_reminder("Reminder 3")
-    test_day.add_reminder("Reminder 4")
-    test_day.add_reminder("Reminder 5")
-
-    assert len(test_day.reminders) == 5
-
-    with pytest.raises(DomainError, match="at most 5 active reminders"):
-        test_day.add_reminder("Reminder 6")
 
 
 def test_add_reminder_sets_created_at(test_day: DayEntity) -> None:

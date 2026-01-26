@@ -10,7 +10,7 @@ import {
 import { Icon } from "@/components/shared/Icon";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import type { Event, Task } from "@/types/api";
-import { getTime } from "@/utils/dates";
+import { getTaskUpcomingTime } from "@/utils/tasks";
 import TaskList from "@/components/tasks/List";
 import { EventItem } from "@/components/events/EventItem";
 
@@ -18,36 +18,6 @@ export interface UpcomingSectionProps {
   events: Event[];
   tasks: Task[];
 }
-
-
-const getTaskTime = (task: Task): Date | null => {
-  const taskDate = task.scheduled_date;
-  if (!taskDate || !task.time_window) return null;
-
-  const timeWindow = task.time_window;
-
-  // Prefer start_time for fixed time tasks
-  if (timeWindow.start_time && !timeWindow.end_time) {
-    return getTime(taskDate, timeWindow.start_time);
-  }
-
-  // Use end_time for deadline tasks
-  if (timeWindow.end_time && !timeWindow.start_time) {
-    return getTime(taskDate, timeWindow.end_time);
-  }
-
-  // For time windows, use start_time
-  if (timeWindow.start_time) {
-    return getTime(taskDate, timeWindow.start_time);
-  }
-
-  // Fallback to available_time
-  if (timeWindow.available_time) {
-    return getTime(taskDate, timeWindow.available_time);
-  }
-
-  return null;
-};
 
 const isAllDayEvent = (event: Event): boolean => {
   const start = new Date(event.starts_at);
@@ -79,17 +49,20 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
         if (isAllDayEvent(event)) {
           return false;
         }
-        
+
         const start = new Date(event.starts_at);
         const end = event.ends_at ? new Date(event.ends_at) : null;
-        
+
         // Exclude if currently occurring (those go in Right Now section)
         if (start <= currentTime && (!end || end >= currentTime)) {
           return false;
         }
-        
+
         // Include if upcoming
-        return start >= currentTime && start <= new Date(currentTime.getTime() + 1000 * 30 * 60); // 30 minutes
+        return (
+          start >= currentTime &&
+          start <= new Date(currentTime.getTime() + 1000 * 30 * 60)
+        ); // 30 minutes
       })
       .sort((a, b) => {
         const aTime = new Date(a.starts_at).getTime();
@@ -107,7 +80,7 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
           return false;
         }
 
-        const taskTime = getTaskTime(task);
+        const taskTime = getTaskUpcomingTime(task, currentTime);
         if (!taskTime) return false;
 
         // Exclude if past due (those go in Right Now section)
@@ -116,18 +89,21 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
         }
 
         // Include if upcoming
-        return taskTime >= currentTime && taskTime <= new Date(currentTime.getTime() + 1000 * 30 * 60); // 30 minutes
+        return (
+          taskTime >= currentTime &&
+          taskTime <= new Date(currentTime.getTime() + 1000 * 30 * 60)
+        ); // 30 minutes
       })
       .sort((a, b) => {
-        const aTime = getTaskTime(a);
-        const bTime = getTaskTime(b);
+        const aTime = getTaskUpcomingTime(a, currentTime);
+        const bTime = getTaskUpcomingTime(b, currentTime);
         if (!aTime || !bTime) return 0;
         return aTime.getTime() - bTime.getTime();
       });
   });
 
-  const hasUpcomingItems = createMemo(() => 
-    upcomingEvents().length > 0 || upcomingTasks().length > 0
+  const hasUpcomingItems = createMemo(
+    () => upcomingEvents().length > 0 || upcomingTasks().length > 0,
   );
   return (
     <Show when={hasUpcomingItems()}>

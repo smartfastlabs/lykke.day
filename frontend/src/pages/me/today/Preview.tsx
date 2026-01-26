@@ -16,35 +16,11 @@ import {
   RemindersSummary,
   UpcomingSection,
   RightNowSection,
+  AvailableSection,
 } from "@/components/today";
 import { getShowTodayCookie } from "@/utils/cookies";
-import { getTime } from "@/utils/dates";
-import { isTaskSnoozed } from "@/utils/tasks";
+import { getTaskUpcomingTime, isTaskSnoozed } from "@/utils/tasks";
 import type { Event, Task } from "@/types/api";
-
-const getTaskTime = (task: Task): Date | null => {
-  const taskDate = task.scheduled_date;
-  const timeWindow = task.time_window;
-  if (!taskDate || !timeWindow) return null;
-
-  if (timeWindow.start_time) {
-    return getTime(taskDate, timeWindow.start_time);
-  }
-
-  if (timeWindow.available_time) {
-    return getTime(taskDate, timeWindow.available_time);
-  }
-
-  if (timeWindow.end_time) {
-    return getTime(taskDate, timeWindow.end_time);
-  }
-
-  if (timeWindow.cutoff_time) {
-    return getTime(taskDate, timeWindow.cutoff_time);
-  }
-
-  return null;
-};
 
 const isAllDayEvent = (event: Event): boolean => {
   const start = new Date(event.starts_at);
@@ -81,7 +57,7 @@ export const TodayPage: Component = () => {
     const remindersList = allReminders();
     if (remindersList.length === 0) return true; // No reminders means "done"
     return remindersList.every(
-      (r) => r.status === "COMPLETE" || r.status === "PUNT"
+      (r) => r.status === "COMPLETE" || r.status === "PUNT",
     );
   });
 
@@ -90,7 +66,7 @@ export const TodayPage: Component = () => {
     const tasksList = allTasks();
     if (tasksList.length === 0) return true; // No tasks means "done"
     return tasksList.every(
-      (t) => t.status === "COMPLETE" || t.status === "PUNT"
+      (t) => t.status === "COMPLETE" || t.status === "PUNT",
     );
   });
 
@@ -107,7 +83,7 @@ export const TodayPage: Component = () => {
 
   // Check if it's end of day
   const isEndOfDay = createMemo(
-    () => allRemindersDone() && allTasksDone() && noMoreEvents()
+    () => allRemindersDone() && allTasksDone() && noMoreEvents(),
   );
 
   // Redirect to /me/thats-all-for-today if it's end of day, unless user
@@ -122,7 +98,7 @@ export const TodayPage: Component = () => {
   });
 
   const hasUpcomingEvents = createMemo(() =>
-    allEvents().some((event) => new Date(event.starts_at) >= new Date())
+    allEvents().some((event) => new Date(event.starts_at) >= new Date()),
   );
 
   const rightNowEventIds = createMemo(() => {
@@ -136,7 +112,7 @@ export const TodayPage: Component = () => {
           return start <= currentTime && (!end || end >= currentTime);
         })
         .map((event) => event.id)
-        .filter((id): id is string => Boolean(id))
+        .filter((id): id is string => Boolean(id)),
     );
   });
 
@@ -155,7 +131,7 @@ export const TodayPage: Component = () => {
           return start >= currentTime && start <= windowEnd;
         })
         .map((event) => event.id)
-        .filter((id): id is string => Boolean(id))
+        .filter((id): id is string => Boolean(id)),
     );
   });
 
@@ -170,12 +146,12 @@ export const TodayPage: Component = () => {
           if (isTaskSnoozed(task, currentTime)) {
             return false;
           }
-          const taskTime = getTaskTime(task);
+          const taskTime = getTaskUpcomingTime(task, currentTime);
           if (!taskTime) return false;
           return taskTime < currentTime;
         })
         .map((task) => task.id)
-        .filter((id): id is string => Boolean(id))
+        .filter((id): id is string => Boolean(id)),
     );
   });
 
@@ -188,13 +164,13 @@ export const TodayPage: Component = () => {
           if (task.status === "COMPLETE" || task.status === "PUNT") {
             return false;
           }
-          const taskTime = getTaskTime(task);
+          const taskTime = getTaskUpcomingTime(task, currentTime);
           if (!taskTime) return false;
           if (taskTime < currentTime) return false;
           return taskTime <= windowEnd;
         })
         .map((task) => task.id)
-        .filter((id): id is string => Boolean(id))
+        .filter((id): id is string => Boolean(id)),
     );
   });
 
@@ -230,13 +206,22 @@ export const TodayPage: Component = () => {
         <UpcomingSection events={allEvents()} tasks={allTasks()} />
       </div>
       <div class="mb-6">
-        <RemindersSummary reminders={allReminders()} href="/me/today/reminders" />
+        <RemindersSummary
+          reminders={allReminders()}
+          href="/me/today/reminders"
+        />
+      </div>
+      <div class="mb-3">
+        <AvailableSection tasks={allTasks()} />
       </div>
 
       <div class="mb-6 flex flex-col md:flex-row gap-4">
         <Show when={hasUpcomingEvents()}>
           <div class="w-full md:w-1/2">
-            <EventsSection events={eventsForSections()} href="/me/today/events" />
+            <EventsSection
+              events={eventsForSections()}
+              href="/me/today/events"
+            />
           </div>
         </Show>
         <div class={hasUpcomingEvents() ? "w-full md:w-1/2" : "w-full"}>

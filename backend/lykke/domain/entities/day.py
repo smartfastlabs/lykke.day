@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC, date as dt_date, datetime
+from datetime import UTC
+from datetime import date as dt_date
+from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
@@ -275,29 +277,12 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
     def add_reminder(self, name: str) -> value_objects.Reminder:
         """Add a reminder to this day.
 
-        This method enforces the business rule that a day can have at most 5 active reminders.
-        Active reminders are those with status INCOMPLETE (completed and punted reminders don't count).
-
         Args:
             name: The name of the reminder to add
 
         Returns:
             The created Reminder value object
-
-        Raises:
-            DomainError: If the day already has 5 active reminders
         """
-        active_reminders = [
-            reminder
-            for reminder in self.reminders
-            if reminder.status == value_objects.ReminderStatus.INCOMPLETE
-        ]
-        if len(active_reminders) >= 5:
-            raise DomainError(
-                "Cannot add reminder: a day can have at most 5 active reminders. "
-                f"Current active reminder count: {len(active_reminders)}"
-            )
-
         reminder = value_objects.Reminder(
             id=uuid4(),
             name=name,
@@ -416,3 +401,4 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
         )
         return reminder_to_remove
 
+        return reminder_to_remove
