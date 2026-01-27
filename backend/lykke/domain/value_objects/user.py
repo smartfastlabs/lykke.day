@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, cast
 
 from .ai_chat import LLMProvider
 from .base import BaseValueObject
@@ -19,9 +20,10 @@ class UserSetting(BaseValueObject):
     def __post_init__(self) -> None:
         if isinstance(self.llm_provider, str):
             self.llm_provider = LLMProvider(self.llm_provider)
-        if self.alarm_presets:
+        raw_presets = cast(list[Any], self.alarm_presets)
+        if raw_presets:
             normalized: list[AlarmPreset] = []
-            for preset in self.alarm_presets:
+            for preset in raw_presets:
                 if isinstance(preset, AlarmPreset):
                     normalized.append(preset)
                 elif hasattr(preset, "model_dump"):

@@ -1,3 +1,4 @@
+/* global URL, HTMLDivElement */
 import {
   Component,
   For,
@@ -685,7 +686,7 @@ const KioskPage: Component = () => {
                 src={alarmVideoUrl() ?? ""}
                 title={activeAlarm()?.name ?? "Alarm Video"}
                 allow="autoplay; fullscreen"
-                allowFullScreen
+                allowfullscreen
               />
             </div>
           </Portal>

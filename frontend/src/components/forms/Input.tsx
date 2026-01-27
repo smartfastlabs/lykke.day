@@ -1,4 +1,4 @@
-import { Component, type Accessor, type Setter } from "solid-js";
+import { Component, type Accessor } from "solid-js";
 
 // Shared input styles
 const inputClass = "w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow";
@@ -8,7 +8,7 @@ interface InputProps {
   type?: "text" | "email" | "password" | "number" | "time";
   placeholder: string;
   value: Accessor<string>;
-  onChange: Setter<string>;
+  onChange: (value: string) => void;
   required?: boolean;
   autocomplete?: string;
   min?: string;
@@ -39,7 +39,7 @@ interface TextAreaProps {
   id: string;
   placeholder: string;
   value: Accessor<string>;
-  onChange: Setter<string>;
+  onChange: (value: string) => void;
   rows?: number;
   required?: boolean;
 }

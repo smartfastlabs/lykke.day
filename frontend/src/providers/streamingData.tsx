@@ -1298,18 +1298,18 @@ export function StreamingDataProvider(props: ParentProps) {
       <AlarmTriggeredOverlay
         alarm={triggeredAlarm()}
         isOpen={Boolean(triggeredAlarm())}
-        onCancel={async () => {
+        onCancel={() => {
           const alarm = triggeredAlarm();
           if (!alarm) return;
-          await cancelAlarm(alarm);
+          void cancelAlarm(alarm);
         }}
-        onSnooze={async (minutes) => {
+        onSnooze={(minutes) => {
           const alarm = triggeredAlarm();
           if (!alarm) return;
           const snoozedUntil = new Date(
             Date.now() + minutes * 60 * 1000,
           ).toISOString();
-          await snoozeAlarm(alarm, snoozedUntil);
+          void snoozeAlarm(alarm, snoozedUntil);
         }}
       />
     </StreamingDataContext.Provider>

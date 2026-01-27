@@ -219,4 +219,3 @@ class GetIncrementalChangesHandler(
             # If we can't load the entity, return None
             # The change will still be sent but without entity_data
             return None
-            return None

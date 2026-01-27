@@ -118,7 +118,10 @@ async def update_current_user_profile(
             else current_settings.llm_personality_amendments
         )
         alarm_presets = (
-            update_data.settings.alarm_presets
+            [
+                value_objects.AlarmPreset.from_dict(preset.model_dump())
+                for preset in update_data.settings.alarm_presets
+            ]
             if "alarm_presets" in settings_fields
             and update_data.settings.alarm_presets is not None
             else current_settings.alarm_presets
