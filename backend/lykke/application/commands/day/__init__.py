@@ -10,6 +10,7 @@ from .remove_alarm import RemoveAlarmFromDayCommand, RemoveAlarmFromDayHandler
 from .remove_reminder import RemoveReminderCommand, RemoveReminderHandler
 from .reschedule_day import RescheduleDayCommand, RescheduleDayHandler
 from .schedule_day import ScheduleDayCommand, ScheduleDayHandler
+from .update_alarm_status import UpdateAlarmStatusCommand, UpdateAlarmStatusHandler
 from .update_day import UpdateDayCommand, UpdateDayHandler
 from .update_reminder_status import (
     UpdateReminderStatusCommand,
@@ -31,6 +32,8 @@ __all__ = [
     "RescheduleDayHandler",
     "ScheduleDayCommand",
     "ScheduleDayHandler",
+    "UpdateAlarmStatusCommand",
+    "UpdateAlarmStatusHandler",
     "UpdateDayCommand",
     "UpdateDayHandler",
     "UpdateReminderStatusCommand",

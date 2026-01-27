@@ -22,9 +22,9 @@ from lykke.domain.entities import (
     PushSubscriptionEntity,
     RoutineDefinitionEntity,
     RoutineEntity,
+    TacticEntity,
     TaskDefinitionEntity,
     TaskEntity,
-    TacticEntity,
     TimeBlockDefinitionEntity,
     TriggerEntity,
     UseCaseConfigEntity,
@@ -53,9 +53,9 @@ from lykke.presentation.api.schemas import (
     RoutineDefinitionSchema,
     RoutineSchema,
     SyncSubscriptionSchema,
+    TacticSchema,
     TaskDefinitionSchema,
     TaskSchema,
-    TacticSchema,
     TimeBlockDefinitionSchema,
     TimeWindowSchema,
     TriggerSchema,
@@ -84,11 +84,14 @@ def map_reminder_to_schema(reminder: value_objects.Reminder) -> ReminderSchema:
 def map_alarm_to_schema(alarm: value_objects.Alarm) -> AlarmSchema:
     """Convert Alarm value object to Alarm schema."""
     return AlarmSchema(
+        id=alarm.id,
         name=alarm.name,
         time=alarm.time,
         datetime=alarm.datetime,
         type=alarm.type,
         url=alarm.url,
+        status=alarm.status,
+        snoozed_until=alarm.snoozed_until,
     )
 
 
@@ -103,9 +106,7 @@ def map_brain_dump_item_to_schema(item: BrainDumpEntity) -> BrainDumpItemSchema:
         type=item.type,
         created_at=item.created_at,
         llm_run_result=(
-            dataclass_to_json_dict(item.llm_run_result)
-            if item.llm_run_result
-            else None
+            dataclass_to_json_dict(item.llm_run_result) if item.llm_run_result else None
         ),
     )
 

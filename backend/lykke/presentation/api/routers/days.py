@@ -476,6 +476,7 @@ async def _handle_realtime_events(
                         "Updated" in activity_type
                         or "Added" in activity_type
                         or "Removed" in activity_type
+                        or "Triggered" in activity_type
                         or "StatusChanged" in activity_type
                         or "Completed" in activity_type
                         or "Scheduled" in activity_type

@@ -100,6 +100,8 @@ class GetIncrementalChangesHandler(
                 change_type = "deleted"
             elif (
                 "Updated" in audit_log.activity_type
+                or "Triggered" in audit_log.activity_type
+                or "StatusChanged" in audit_log.activity_type
                 or audit_log.activity_type == "EntityUpdatedEvent"
                 or audit_log.activity_type == "TaskCompletedEvent"
                 or audit_log.activity_type == "TaskPuntedEvent"
@@ -209,13 +211,12 @@ class GetIncrementalChangesHandler(
                 brain_dump_items = await self.brain_dump_ro_repo.search(
                     value_objects.BrainDumpQuery(date=day.date)
                 )
-                day_schema = map_day_to_schema(
-                    day, brain_dump_items=brain_dump_items
-                )
+                day_schema = map_day_to_schema(day, brain_dump_items=brain_dump_items)
                 return day_schema.model_dump(mode="json")
 
             return None
         except Exception:
             # If we can't load the entity, return None
             # The change will still be sent but without entity_data
+            return None
             return None

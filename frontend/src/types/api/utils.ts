@@ -3,7 +3,7 @@
  * These types work with the OpenAPI-generated types.
  */
 
-import type { components } from './api.generated';
+import type { components } from "./api.generated";
 import type { LLMRunResultSnapshot } from "./notification";
 
 // API Response wrapper type
@@ -52,14 +52,18 @@ export type DayContext = Omit<BaseDayContext, "calendar_entries"> & {
 export type DayTemplate = components["schemas"]["DayTemplateSchema"] & {
   alarms?: Alarm[];
 };
-export type TimeBlockDefinition = components["schemas"]["TimeBlockDefinitionSchema"];
+export type TimeBlockDefinition =
+  components["schemas"]["TimeBlockDefinitionSchema"];
 export type Calendar = components["schemas"]["CalendarSchema"];
-export type CalendarEntrySeries = components["schemas"]["CalendarEntrySeriesSchema"];
+export type CalendarEntrySeries =
+  components["schemas"]["CalendarEntrySeriesSchema"];
 export type TaskDefinition = components["schemas"]["TaskDefinitionSchema"];
-export type TaskDefinitionCreate = components["schemas"]["TaskDefinitionCreateSchema"];
-export type RoutineDefinition = components["schemas"]["RoutineDefinitionSchema"] & {
-  time_window?: TimeWindow | null;
-};
+export type TaskDefinitionCreate =
+  components["schemas"]["TaskDefinitionCreateSchema"];
+export type RoutineDefinition =
+  components["schemas"]["RoutineDefinitionSchema"] & {
+    time_window?: TimeWindow | null;
+  };
 export type TimeWindow = {
   available_time?: string | null;
   start_time?: string | null;
@@ -68,12 +72,13 @@ export type TimeWindow = {
 };
 export type RoutineDefinitionTask =
   components["schemas"]["RoutineDefinitionTaskSchema-Output"] & {
-  time_window?: TimeWindow | null;
-};
+    time_window?: TimeWindow | null;
+  };
 export type PushSubscription = components["schemas"]["PushSubscriptionSchema"];
 
 // Value object types
-export type RecurrenceSchedule = components["schemas"]["RecurrenceScheduleSchema"];
+export type RecurrenceSchedule =
+  components["schemas"]["RecurrenceScheduleSchema"];
 export type Action = components["schemas"]["ActionSchema"];
 
 // Reminder types - manually defined as they may not be in generated types yet
@@ -85,11 +90,14 @@ export interface Reminder {
 }
 
 export interface Alarm {
+  id?: string | null;
   name: string;
   time: string;
   datetime?: string | null;
   type: AlarmType;
   url: string;
+  status?: AlarmStatus;
+  snoozed_until?: string | null;
 }
 
 export type BrainDumpItem = components["schemas"]["BrainDumpItemSchema"] & {
@@ -110,6 +118,7 @@ export type ActionType = components["schemas"]["ActionType"];
 export type ReminderStatus = "INCOMPLETE" | "COMPLETE" | "PUNT";
 
 export type AlarmType = "URL" | "GENERIC";
+export type AlarmStatus = "ACTIVE" | "TRIGGERED" | "SNOOZED" | "CANCELLED";
 
 export type BrainDumpItemStatus = "ACTIVE" | "COMPLETE" | "PUNT";
 export type BrainDumpItemType = components["schemas"]["BrainDumpItemType"];
@@ -128,4 +137,3 @@ export interface NotificationUseCaseConfig {
   user_amendments: string[];
   rendered_prompt?: string;
 }
-

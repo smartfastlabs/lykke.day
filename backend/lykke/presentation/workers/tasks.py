@@ -37,10 +37,12 @@ from lykke.application.repositories import (
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.core.utils.dates import (
     get_current_date,
+    get_current_datetime,
     get_current_datetime_in_timezone,
     get_current_time,
 )
 from lykke.domain import value_objects
+from lykke.domain.entities import DayEntity
 from lykke.infrastructure.gateways import GoogleCalendarGateway, RedisPubSubGateway
 from lykke.infrastructure.repositories import UserRepository
 from lykke.infrastructure.unit_of_work import (
@@ -429,6 +431,83 @@ async def evaluate_smart_notification_task(
 # =============================================================================
 # Example Tasks
 # =============================================================================
+
+
+@broker.task(schedule=[{"cron": "* * * * *"}])  # type: ignore[untyped-decorator]
+async def trigger_alarms_for_all_users_task(
+    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+) -> None:
+    """Trigger alarms for all users every minute."""
+    logger.info("Starting alarm trigger evaluation for all users")
+
+    users = await user_repo.all()
+    logger.info(f"Found {len(users)} users to evaluate alarms")
+
+    for user in users:
+        await trigger_alarms_for_user_task.kiq(user_id=user.id)
+
+    logger.info("Enqueued alarm trigger tasks for all users")
+
+
+@broker.task  # type: ignore[untyped-decorator]
+async def trigger_alarms_for_user_task(
+    user_id: UUID,
+    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+) -> None:
+    """Trigger alarms for a specific user."""
+    logger.info(f"Evaluating alarms for user {user_id}")
+
+    pubsub_gateway = RedisPubSubGateway()
+    try:
+        uow_factory = get_unit_of_work_factory(pubsub_gateway)
+
+        try:
+            user = await user_repo.get(user_id)
+            timezone = user.settings.timezone if user.settings else None
+        except Exception:
+            timezone = None
+
+        target_date = get_current_date(timezone)
+        now = get_current_datetime()
+
+        async with uow_factory.create(user_id) as uow:
+            try:
+                day_id = DayEntity.id_from_date_and_user(target_date, user_id)
+                day = await uow.day_ro_repo.get(day_id)
+            except Exception as exc:
+                logger.debug(
+                    "No day found for user %s on %s (%s)",
+                    user_id,
+                    target_date,
+                    exc,
+                )
+                return
+
+            if not day.alarms:
+                return
+
+            for alarm in day.alarms:
+                if alarm.status in (
+                    value_objects.AlarmStatus.CANCELLED,
+                    value_objects.AlarmStatus.TRIGGERED,
+                ):
+                    continue
+                if alarm.status == value_objects.AlarmStatus.SNOOZED:
+                    if alarm.snoozed_until is None or alarm.snoozed_until > now:
+                        continue
+                if alarm.datetime is None or alarm.datetime > now:
+                    continue
+                day.update_alarm_status(
+                    alarm.id,
+                    value_objects.AlarmStatus.TRIGGERED,
+                )
+
+            if day.has_events():
+                uow.add(day)
+
+        logger.info("Alarm evaluation completed for user %s", user_id)
+    finally:
+        await pubsub_gateway.close()
 
 
 @broker.task(schedule=[{"cron": "* * * * *"}])  # type: ignore[untyped-decorator]

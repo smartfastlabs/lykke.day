@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime as dt_datetime, time
 from enum import Enum
 from typing import TYPE_CHECKING, Any
-from uuid import UUID, uuid4
+from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
 
 from .base import BaseValueObject
 
@@ -64,15 +64,27 @@ class AlarmType(str, Enum):
     GENERIC = "GENERIC"
 
 
+class AlarmStatus(str, Enum):
+    """Status of an alarm."""
+
+    ACTIVE = "ACTIVE"
+    TRIGGERED = "TRIGGERED"
+    SNOOZED = "SNOOZED"
+    CANCELLED = "CANCELLED"
+
+
 @dataclass(kw_only=True)
 class Alarm(BaseValueObject):
     """Alarm value object representing a day or template alarm."""
 
+    id: UUID = field(default_factory=uuid4)
     name: str
     time: time
     datetime: dt_datetime | None = None
     type: AlarmType = AlarmType.URL
     url: str = ""
+    status: AlarmStatus = AlarmStatus.ACTIVE
+    snoozed_until: dt_datetime | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Alarm":
@@ -91,12 +103,32 @@ class Alarm(BaseValueObject):
         if isinstance(alarm_type, str):
             alarm_type = AlarmType(alarm_type)
 
+        alarm_id = data.get("id")
+        if isinstance(alarm_id, str):
+            alarm_id = UUID(alarm_id)
+        if alarm_id is None:
+            alarm_key = f"alarm:{data['name']}:{alarm_time.isoformat()}:{alarm_type.value}:{data.get('url', '')}"
+            alarm_id = uuid5(NAMESPACE_DNS, alarm_key)
+
+        alarm_status = data.get("status", AlarmStatus.ACTIVE)
+        if isinstance(alarm_status, str):
+            alarm_status = AlarmStatus(alarm_status)
+
+        snoozed_until = data.get("snoozed_until")
+        if isinstance(snoozed_until, str):
+            snoozed_until = dt_datetime.fromisoformat(
+                snoozed_until.replace("Z", "+00:00")
+            )
+
         return cls(
+            id=alarm_id or uuid4(),
             name=data["name"],
             time=alarm_time,
             datetime=alarm_datetime,
             type=alarm_type,
             url=data.get("url", ""),
+            status=alarm_status,
+            snoozed_until=snoozed_until,
         )
 
 
@@ -130,4 +162,5 @@ class LLMPromptContext(DayContext):
 
     factoids: list["FactoidEntity"] = field(default_factory=list)
     messages: list["MessageEntity"] = field(default_factory=list)
+    push_notifications: list["PushNotificationEntity"] = field(default_factory=list)
     push_notifications: list["PushNotificationEntity"] = field(default_factory=list)

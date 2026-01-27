@@ -40,12 +40,8 @@ import type {
 export class ApiRequestError extends Error {
   public status: number;
   public detail?: string;
-  
-  constructor(
-    message: string,
-    status: number,
-    detail?: string
-  ) {
+
+  constructor(message: string, status: number, detail?: string) {
     super(message);
     this.name = "ApiRequestError";
     this.status = status;
@@ -65,7 +61,7 @@ const DEFAULT_HEADERS: Record<string, string> = {
 
 async function fetchJSON<T>(
   url: string,
-  options: FetchOptions = {}
+  options: FetchOptions = {},
 ): Promise<ApiResponse<T>> {
   const {
     suppressError = false,
@@ -128,7 +124,7 @@ async function fetchJSON<T>(
 // Helper to extract data from response (throws on error)
 async function fetchData<T>(
   url: string,
-  options: FetchOptions = {}
+  options: FetchOptions = {},
 ): Promise<T> {
   const response = await fetchJSON<T>(url, options);
   return response.data;
@@ -177,12 +173,18 @@ export type TaskActionPayload = {
 };
 
 export const taskAPI = {
-  recordTaskAction: (taskId: string, action: TaskActionPayload): Promise<Task> =>
+  recordTaskAction: (
+    taskId: string,
+    action: TaskActionPayload,
+  ): Promise<Task> =>
     fetchData<Task>(`/api/tasks/${taskId}/actions`, {
       method: "POST",
       body: JSON.stringify(action),
     }),
-  setTaskStatus: (task: Task, status: ActionType | TaskStatus): Promise<Task> =>
+  setTaskStatus: (
+    task: Task,
+    status: ActionType | TaskStatus,
+  ): Promise<Task> =>
     task.id
       ? taskAPI.recordTaskAction(task.id, { type: status as ActionType })
       : Promise.reject(new Error("Task id is missing")),
@@ -209,13 +211,16 @@ export const reminderAPI = {
     });
   },
 
-  updateReminderStatus: (reminderId: string, status: string): Promise<Reminder> => {
+  updateReminderStatus: (
+    reminderId: string,
+    status: string,
+  ): Promise<Reminder> => {
     const params = new URLSearchParams({ status });
     return fetchData<Reminder>(
       `/api/me/today/reminders/${reminderId}?${params.toString()}`,
       {
         method: "PATCH",
-      }
+      },
     );
   },
 
@@ -266,6 +271,22 @@ export const alarmAPI = {
       method: "DELETE",
     });
   },
+  updateAlarmStatus: (payload: {
+    alarm_id: string;
+    status: string;
+    snoozed_until?: string | null;
+  }): Promise<Alarm> => {
+    const params = new URLSearchParams({ status: payload.status });
+    if (payload.snoozed_until) {
+      params.set("snoozed_until", payload.snoozed_until);
+    }
+    return fetchData<Alarm>(
+      `/api/me/today/alarms/${payload.alarm_id}?${params.toString()}`,
+      {
+        method: "PATCH",
+      },
+    );
+  },
 };
 
 export const brainDumpAPI = {
@@ -273,7 +294,7 @@ export const brainDumpAPI = {
     const now = new Date();
     const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
       2,
-      "0"
+      "0",
     )}-${String(now.getDate()).padStart(2, "0")}`;
 
     const data = await fetchData<PaginatedResponse<BrainDumpItem>>(
@@ -289,7 +310,7 @@ export const brainDumpAPI = {
             order_by_desc: true,
           },
         }),
-      }
+      },
     );
     return data.items;
   },
@@ -297,18 +318,24 @@ export const brainDumpAPI = {
     fetchData<BrainDumpItem>(`/api/brain-dump/${id}`),
   addItem: (text: string): Promise<BrainDumpItem> => {
     const params = new URLSearchParams({ text });
-    return fetchData<BrainDumpItem>(`/api/me/today/brain-dump?${params.toString()}`, {
-      method: "POST",
-    });
+    return fetchData<BrainDumpItem>(
+      `/api/me/today/brain-dump?${params.toString()}`,
+      {
+        method: "POST",
+      },
+    );
   },
 
-  updateItemStatus: (itemId: string, status: string): Promise<BrainDumpItem> => {
+  updateItemStatus: (
+    itemId: string,
+    status: string,
+  ): Promise<BrainDumpItem> => {
     const params = new URLSearchParams({ status });
     return fetchData<BrainDumpItem>(
       `/api/me/today/brain-dump/${itemId}?${params.toString()}`,
       {
         method: "PATCH",
-      }
+      },
     );
   },
 
@@ -329,7 +356,7 @@ export const dayAPI = {
         text?: string | null;
         intentions?: string[];
       } | null;
-    }
+    },
   ): Promise<Day> =>
     fetchData<Day>(`/api/days/${dayId}`, {
       method: "PATCH",
@@ -369,7 +396,7 @@ export const authAPI = {
       throw new ApiRequestError(
         errorData.detail || "Login failed",
         response.status,
-        errorData.detail
+        errorData.detail,
       );
     }
   },
@@ -406,7 +433,7 @@ export const authAPI = {
       throw new ApiRequestError(
         (errorData as ApiError).detail || "Unable to request password reset",
         response.status,
-        (errorData as ApiError).detail
+        (errorData as ApiError).detail,
       );
     }
   },
@@ -424,7 +451,7 @@ export const authAPI = {
       throw new ApiRequestError(
         (errorData as ApiError).detail || "Unable to reset password",
         response.status,
-        (errorData as ApiError).detail
+        (errorData as ApiError).detail,
       );
     }
   },
@@ -449,7 +476,7 @@ export const pushAPI = {
       {
         method: "POST",
         body: JSON.stringify({ limit: 1000, offset: 0 }),
-      }
+      },
     );
     return data.items;
   },
@@ -471,7 +498,7 @@ export const dayTemplateAPI = {
   ...createCrudMethods<DayTemplate>("day-templates"),
   addRoutineDefinition: (
     dayTemplateId: string,
-    routineDefinitionId: string
+    routineDefinitionId: string,
   ): Promise<DayTemplate> =>
     fetchData<DayTemplate>(
       `/api/day-templates/${dayTemplateId}/routine-definitions`,
@@ -480,23 +507,23 @@ export const dayTemplateAPI = {
         body: JSON.stringify({
           routine_definition_id: routineDefinitionId,
         }),
-      }
+      },
     ),
   removeRoutineDefinition: (
     dayTemplateId: string,
-    routineDefinitionId: string
+    routineDefinitionId: string,
   ): Promise<DayTemplate> =>
     fetchData<DayTemplate>(
       `/api/day-templates/${dayTemplateId}/routine-definitions/${routineDefinitionId}`,
       {
         method: "DELETE",
-      }
+      },
     ),
   addTimeBlock: (
     dayTemplateId: string,
     timeBlockDefinitionId: string,
     startTime: string,
-    endTime: string
+    endTime: string,
   ): Promise<DayTemplate> =>
     fetchData<DayTemplate>(`/api/day-templates/${dayTemplateId}/time-blocks`, {
       method: "POST",
@@ -509,16 +536,15 @@ export const dayTemplateAPI = {
   removeTimeBlock: (
     dayTemplateId: string,
     timeBlockDefinitionId: string,
-    startTime: string
+    startTime: string,
   ): Promise<DayTemplate> =>
     fetchData<DayTemplate>(
       `/api/day-templates/${dayTemplateId}/time-blocks/${timeBlockDefinitionId}/${startTime}`,
       {
         method: "DELETE",
-      }
+      },
     ),
 };
-
 
 export const taskDefinitionAPI = {
   ...createCrudMethods<TaskDefinition>("task-definitions"),
@@ -535,8 +561,10 @@ export const timeBlockDefinitionAPI = {
 
 export const usecaseConfigAPI = {
   get: (usecase: string): Promise<UseCaseConfig | null> =>
-    fetchData<UseCaseConfig | null>(`/api/usecase-configs/${encodeURIComponent(usecase)}`),
-  
+    fetchData<UseCaseConfig | null>(
+      `/api/usecase-configs/${encodeURIComponent(usecase)}`,
+    ),
+
   createOrUpdate: (payload: {
     usecase: string;
     config: Record<string, unknown>;
@@ -545,10 +573,10 @@ export const usecaseConfigAPI = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  
+
   delete: (id: string): Promise<void> =>
     fetchData<void>(`/api/usecase-configs/${id}`, { method: "DELETE" }),
-  
+
   // Typed methods for notification usecase
   getNotificationConfig: (): Promise<NotificationUseCaseConfig> =>
     fetchData<NotificationUseCaseConfig>("/api/usecase-configs/notification", {
@@ -560,8 +588,10 @@ export const usecaseConfigAPI = {
       }
       throw err;
     }),
-  
-  updateNotificationConfig: (config: NotificationUseCaseConfig): Promise<NotificationUseCaseConfig> =>
+
+  updateNotificationConfig: (
+    config: NotificationUseCaseConfig,
+  ): Promise<NotificationUseCaseConfig> =>
     fetchData<NotificationUseCaseConfig>("/api/usecase-configs/notification", {
       method: "PUT",
       body: JSON.stringify(config),
@@ -570,7 +600,7 @@ export const usecaseConfigAPI = {
   getNotificationLLMSnapshotPreview: (): Promise<LLMRunResultSnapshot | null> =>
     fetchData<LLMRunResultSnapshot | null>(
       "/api/usecase-configs/notification/llm-preview",
-      { suppressError: true }
+      { suppressError: true },
     ).catch((err) => {
       if (err instanceof ApiRequestError && err.status === 404) {
         return null;
@@ -580,7 +610,10 @@ export const usecaseConfigAPI = {
 };
 
 export const routineAPI = {
-  setRoutineAction: (routineId: string, action: TaskActionPayload): Promise<Task[]> =>
+  setRoutineAction: (
+    routineId: string,
+    action: TaskActionPayload,
+  ): Promise<Task[]> =>
     fetchData<Task[]>(`/api/routines/${routineId}/actions`, {
       method: "POST",
       body: JSON.stringify(action),
@@ -604,14 +637,14 @@ export const routineDefinitionAPI = {
       name?: string | null;
       task_schedule?: RecurrenceSchedule | null;
       time_window?: TimeWindow | null;
-    }
+    },
   ): Promise<RoutineDefinition> =>
     fetchData<RoutineDefinition>(
       `/api/routine-definitions/${routineDefinitionId}/tasks`,
       {
         method: "POST",
         body: JSON.stringify(payload),
-      }
+      },
     ),
   updateTask: (
     routineDefinitionId: string,
@@ -620,24 +653,24 @@ export const routineDefinitionAPI = {
       name?: string | null;
       task_schedule?: RecurrenceSchedule | null;
       time_window?: TimeWindow | null;
-    }
+    },
   ): Promise<RoutineDefinition> =>
     fetchData<RoutineDefinition>(
       `/api/routine-definitions/${routineDefinitionId}/tasks/${routineDefinitionTaskId}`,
       {
         method: "PUT",
         body: JSON.stringify(payload),
-      }
+      },
     ),
   removeTask: (
     routineDefinitionId: string,
-    routineDefinitionTaskId: string
+    routineDefinitionTaskId: string,
   ): Promise<RoutineDefinition> =>
     fetchData<RoutineDefinition>(
       `/api/routine-definitions/${routineDefinitionId}/tasks/${routineDefinitionTaskId}`,
       {
         method: "DELETE",
-      }
+      },
     ),
 };
 
@@ -671,7 +704,11 @@ export const triggerAPI = {
 export const notificationAPI = {
   getToday: async (): Promise<PushNotification[]> => {
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
     const endOfDay = new Date(startOfDay);
     endOfDay.setDate(startOfDay.getDate() + 1);
     const startInclusive = new Date(startOfDay.getTime() - 1);
@@ -690,7 +727,7 @@ export const notificationAPI = {
             order_by_desc: true,
           },
         }),
-      }
+      },
     );
     return data.items;
   },
@@ -699,7 +736,8 @@ export const notificationAPI = {
 };
 
 export const calendarAPI = {
-  get: (id: string): Promise<Calendar> => fetchData<Calendar>(`/api/calendars/${id}`),
+  get: (id: string): Promise<Calendar> =>
+    fetchData<Calendar>(`/api/calendars/${id}`),
 
   getAll: async (): Promise<Calendar[]> => {
     const data = await fetchData<PaginatedResponse<Calendar>>(
@@ -707,7 +745,7 @@ export const calendarAPI = {
       {
         method: "POST",
         body: JSON.stringify({ limit: 1000, offset: 0 }),
-      }
+      },
     );
     return data.items;
   },
@@ -743,7 +781,7 @@ export const calendarEntrySeriesAPI = {
       {
         method: "POST",
         body: JSON.stringify({ limit: 1000, offset: 0 }),
-      }
+      },
     );
     return data.items;
   },
@@ -754,17 +792,19 @@ export const calendarEntrySeriesAPI = {
       body: JSON.stringify(item),
     }),
 
-  searchByCalendar: async (calendarId: string): Promise<CalendarEntrySeries[]> => {
+  searchByCalendar: async (
+    calendarId: string,
+  ): Promise<CalendarEntrySeries[]> => {
     const data = await fetchData<PaginatedResponse<CalendarEntrySeries>>(
       "/api/calendar-entry-series/",
       {
         method: "POST",
-        body: JSON.stringify({ 
-          limit: 1000, 
+        body: JSON.stringify({
+          limit: 1000,
           offset: 0,
-          filters: { calendar_id: calendarId }
+          filters: { calendar_id: calendarId },
         }),
-      }
+      },
     );
     return data.items;
   },

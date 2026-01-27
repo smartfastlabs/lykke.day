@@ -19,6 +19,7 @@ import {
   ReminderStatus,
   Alarm,
   AlarmType,
+  AlarmStatus,
   BrainDumpItem,
   BrainDumpItemStatus,
   PushNotification,
@@ -36,6 +37,7 @@ import {
 } from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 import { globalNotifications } from "@/providers/notifications";
+import AlarmTriggeredOverlay from "@/components/alarms/TriggeredOverlay";
 
 interface StreamingDataContextValue {
   // The main data - provides loading/error states
@@ -63,11 +65,14 @@ interface StreamingDataContextValue {
   setRoutineAction: (
     routineId: string,
     routineDefinitionId: string,
-    action: TaskActionPayload
+    action: TaskActionPayload,
   ) => Promise<void>;
   addAdhocTask: (name: string, category: TaskCategory) => Promise<void>;
   addReminder: (name: string) => Promise<void>;
-  updateReminderStatus: (reminder: Reminder, status: ReminderStatus) => Promise<void>;
+  updateReminderStatus: (
+    reminder: Reminder,
+    status: ReminderStatus,
+  ) => Promise<void>;
   removeReminder: (reminderId: string) => Promise<void>;
   addAlarm: (payload: {
     name: string;
@@ -75,11 +80,13 @@ interface StreamingDataContextValue {
     alarmType?: AlarmType;
     url?: string;
   }) => Promise<void>;
+  snoozeAlarm: (alarm: Alarm, snoozedUntil: string) => Promise<void>;
+  cancelAlarm: (alarm: Alarm) => Promise<void>;
   removeAlarm: (alarm: Alarm) => Promise<void>;
   addBrainDumpItem: (text: string) => Promise<void>;
   updateBrainDumpItemStatus: (
     item: BrainDumpItem,
-    status: BrainDumpItemStatus
+    status: BrainDumpItemStatus,
   ) => Promise<void>;
   removeBrainDumpItem: (itemId: string) => Promise<void>;
   loadNotifications: () => Promise<void>;
@@ -188,7 +195,7 @@ const buildChangeNotification = (changes: EntityChange[]): string | null => {
 
   for (const change of changes) {
     const key = `${getEntityLabel(change.entity_type)}|${getChangeVerb(
-      change.change_type
+      change.change_type,
     )}`;
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
@@ -210,7 +217,7 @@ const buildChangeNotification = (changes: EntityChange[]): string | null => {
 
 const countCompletedTasksFromChanges = (
   current: DayContextWithRoutines,
-  changes: EntityChange[]
+  changes: EntityChange[],
 ): number => {
   const existingTasks = current.tasks ?? [];
   let completedCount = 0;
@@ -231,7 +238,7 @@ const countCompletedTasksFromChanges = (
 
 const countCompletedTasksFromFullSync = (
   previousTasks: Task[],
-  nextTasks: Task[]
+  nextTasks: Task[],
 ): number => {
   const previousById = new Map(previousTasks.map((task) => [task.id, task]));
   let completedCount = 0;
@@ -259,7 +266,9 @@ export function StreamingDataProvider(props: ParentProps) {
   const [error, setError] = createSignal<Error | undefined>(undefined);
   const [isConnected, setIsConnected] = createSignal(false);
   const [isOutOfSync, setIsOutOfSync] = createSignal(false);
-  const [notifications, setNotifications] = createSignal<PushNotification[]>([]);
+  const [notifications, setNotifications] = createSignal<PushNotification[]>(
+    [],
+  );
   const [notificationsLoading, setNotificationsLoading] = createSignal(false);
   const [lastProcessedTimestamp, setLastProcessedTimestamp] = createSignal<
     string | null
@@ -281,7 +290,7 @@ export function StreamingDataProvider(props: ParentProps) {
   };
 
   const hasNonEmptyId = <T extends { id?: string | null }>(
-    item: T
+    item: T,
   ): item is T & { id: string } =>
     typeof item.id === "string" && item.id.length > 0;
 
@@ -306,14 +315,20 @@ export function StreamingDataProvider(props: ParentProps) {
     dedupeById((items ?? []).filter(hasNonEmptyId));
 
   const normalizeBrainDumpItems = (
-    items?: BrainDumpItemWithOptionalId[]
+    items?: BrainDumpItemWithOptionalId[],
   ): BrainDumpItem[] => (items ?? []).filter(hasNonEmptyId);
 
-  const isSameAlarm = (left: Alarm, right: Alarm): boolean =>
-    left.name === right.name &&
-    left.time === right.time &&
-    left.type === right.type &&
-    left.url === right.url;
+  const isSameAlarm = (left: Alarm, right: Alarm): boolean => {
+    if (left.id && right.id) {
+      return left.id === right.id;
+    }
+    return (
+      left.name === right.name &&
+      left.time === right.time &&
+      left.type === right.type &&
+      left.url === right.url
+    );
+  };
 
   // Derived values from the store
   const dayContext = createMemo(() => dayContextStore.data);
@@ -324,19 +339,39 @@ export function StreamingDataProvider(props: ParentProps) {
     // Note: reminders may not be in the generated types yet, but they exist at runtime
     const day = dayContextStore.data?.day;
     if (!day) return [];
-    return normalizeReminders((day as { reminders?: ReminderWithOptionalId[] }).reminders);
+    return normalizeReminders(
+      (day as { reminders?: ReminderWithOptionalId[] }).reminders,
+    );
   });
   const alarms = createMemo(() => {
     const day = dayContextStore.data?.day;
     if (!day) return [];
-    return (day as { alarms?: Alarm[] }).alarms ?? [];
+    const allAlarms = (day as { alarms?: Alarm[] }).alarms ?? [];
+    return allAlarms.filter(
+      (alarm) => (alarm.status ?? "ACTIVE") !== "CANCELLED",
+    );
+  });
+  const triggeredAlarm = createMemo<Alarm | undefined>(() => {
+    const active = (alarms() ?? []).filter(
+      (alarm) => (alarm.status ?? "ACTIVE") === "TRIGGERED",
+    );
+    if (active.length === 0) return undefined;
+    return [...active].sort((a, b) => {
+      const aTime = a.datetime
+        ? new Date(a.datetime).getTime()
+        : Number.MAX_SAFE_INTEGER;
+      const bTime = b.datetime
+        ? new Date(b.datetime).getTime()
+        : Number.MAX_SAFE_INTEGER;
+      return aTime - bTime;
+    })[0];
   });
   const brainDumps = createMemo(() => {
     const day = dayContextStore.data?.day;
     if (!day) return [];
     return normalizeBrainDumpItems(
       (day as { brain_dump_items?: BrainDumpItemWithOptionalId[] })
-        .brain_dump_items
+        .brain_dump_items,
     );
   });
   const day = createMemo<Day | undefined>(() => {
@@ -392,7 +427,7 @@ export function StreamingDataProvider(props: ParentProps) {
             const ack = message as ConnectionAckMessage;
             console.log(
               "StreamingDataProvider: Connection acknowledged for user:",
-              ack.user_id
+              ack.user_id,
             );
             // Sync request is now handled in onopen to ensure WebSocket is ready
             // This prevents race conditions
@@ -408,13 +443,13 @@ export function StreamingDataProvider(props: ParentProps) {
             console.error(
               "StreamingDataProvider: WebSocket error:",
               errorMsg.code,
-              errorMsg.message
+              errorMsg.message,
             );
           }
         } catch (err) {
           console.error(
             "StreamingDataProvider: Error parsing WebSocket message:",
-            err
+            err,
           );
         }
       };
@@ -507,12 +542,15 @@ export function StreamingDataProvider(props: ParentProps) {
       if (isOnMeRoute() && previousContext) {
         const completedCount = countCompletedTasksFromFullSync(
           previousContext.tasks ?? [],
-          message.day_context.tasks ?? []
+          message.day_context.tasks ?? [],
         );
         if (completedCount > 0) {
-          globalNotifications.addInfo(buildTaskCompletedNotification(completedCount), {
-            duration: 4000,
-          });
+          globalNotifications.addInfo(
+            buildTaskCompletedNotification(completedCount),
+            {
+              duration: 4000,
+            },
+          );
         }
       }
     } else if (message.changes) {
@@ -525,7 +563,7 @@ export function StreamingDataProvider(props: ParentProps) {
       if (didApplyChanges && isOnMeRoute() && currentContext) {
         const completedCount = countCompletedTasksFromChanges(
           currentContext,
-          message.changes
+          message.changes,
         );
         const notification =
           completedCount > 0
@@ -560,7 +598,7 @@ export function StreamingDataProvider(props: ParentProps) {
         if (change.entity_type === "task") {
           if (change.change_type === "deleted") {
             const index = updatedTasks.findIndex(
-              (t) => t.id === change.entity_id
+              (t) => t.id === change.entity_id,
             );
             if (index >= 0) {
               updatedTasks.splice(index, 1);
@@ -602,7 +640,7 @@ export function StreamingDataProvider(props: ParentProps) {
         ) {
           if (change.change_type === "deleted") {
             const index = updatedEvents.findIndex(
-              (e) => e.id === change.entity_id
+              (e) => e.id === change.entity_id,
             );
             if (index >= 0) {
               updatedEvents.splice(index, 1);
@@ -641,7 +679,7 @@ export function StreamingDataProvider(props: ParentProps) {
         } else if (change.entity_type === "routine") {
           if (change.change_type === "deleted") {
             const index = updatedRoutines.findIndex(
-              (item) => item.id === change.entity_id
+              (item) => item.id === change.entity_id,
             );
             if (index >= 0) {
               updatedRoutines.splice(index, 1);
@@ -654,7 +692,9 @@ export function StreamingDataProvider(props: ParentProps) {
             continue;
           }
           if (change.change_type === "created") {
-            const index = updatedRoutines.findIndex((item) => item.id === routine.id);
+            const index = updatedRoutines.findIndex(
+              (item) => item.id === routine.id,
+            );
             if (index >= 0) {
               if (!areEntitiesEqual(updatedRoutines[index], routine)) {
                 updatedRoutines[index] = routine;
@@ -665,7 +705,9 @@ export function StreamingDataProvider(props: ParentProps) {
               didUpdate = true;
             }
           } else if (change.change_type === "updated") {
-            const index = updatedRoutines.findIndex((item) => item.id === routine.id);
+            const index = updatedRoutines.findIndex(
+              (item) => item.id === routine.id,
+            );
             if (index >= 0) {
               if (!areEntitiesEqual(updatedRoutines[index], routine)) {
                 updatedRoutines[index] = routine;
@@ -680,7 +722,8 @@ export function StreamingDataProvider(props: ParentProps) {
           const updatedDay = change.entity_data as Day | null;
           if (
             updatedDay &&
-            (change.change_type === "updated" || change.change_type === "created")
+            (change.change_type === "updated" ||
+              change.change_type === "created")
           ) {
             if (!areEntitiesEqual(updated.day, updatedDay)) {
               updated.day = updatedDay;
@@ -725,7 +768,7 @@ export function StreamingDataProvider(props: ParentProps) {
       // Received older event than what we've already processed
       setIsOutOfSync(true);
       console.warn(
-        "StreamingDataProvider: Out of sync detected - received older event"
+        "StreamingDataProvider: Out of sync detected - received older event",
       );
     }
 
@@ -786,19 +829,20 @@ export function StreamingDataProvider(props: ParentProps) {
         const updated = { ...current.data };
         if (auditLog.entity_type === "task") {
           updated.tasks = (updated.tasks ?? []).filter(
-            (t) => t.id !== auditLog.entity_id
+            (t) => t.id !== auditLog.entity_id,
           );
         } else if (
           auditLog.entity_type === "calendar_entry" ||
           auditLog.entity_type === "calendarentry"
         ) {
           updated.calendar_entries = (updated.calendar_entries ?? []).filter(
-            (e) => e.id !== auditLog.entity_id
+            (e) => e.id !== auditLog.entity_id,
           );
         } else if (auditLog.entity_type === "routine") {
-          const routinesList = (updated as DayContextWithRoutines).routines ?? [];
+          const routinesList =
+            (updated as DayContextWithRoutines).routines ?? [];
           (updated as DayContextWithRoutines).routines = routinesList.filter(
-            (routine) => routine.id !== auditLog.entity_id
+            (routine) => routine.id !== auditLog.entity_id,
           );
         }
 
@@ -815,7 +859,7 @@ export function StreamingDataProvider(props: ParentProps) {
         data: {
           ...current.data,
           tasks: (current.data.tasks ?? []).map((t) =>
-            t.id === updatedTask.id ? updatedTask : t
+            t.id === updatedTask.id ? updatedTask : t,
           ),
         },
       };
@@ -841,7 +885,7 @@ export function StreamingDataProvider(props: ParentProps) {
 
   const setTaskStatus = async (
     task: Task,
-    status: TaskStatus
+    status: TaskStatus,
   ): Promise<void> => {
     // Optimistic update
     const previousTask = task;
@@ -859,7 +903,7 @@ export function StreamingDataProvider(props: ParentProps) {
 
   const snoozeTask = async (
     task: Task,
-    snoozedUntil: string
+    snoozedUntil: string,
   ): Promise<void> => {
     if (!task.id) {
       throw new Error("Task id is missing");
@@ -886,7 +930,7 @@ export function StreamingDataProvider(props: ParentProps) {
   const setRoutineAction = async (
     routineId: string,
     routineDefinitionId: string,
-    action: TaskActionPayload
+    action: TaskActionPayload,
   ): Promise<void> => {
     // Optimistic update: update all tasks with this routine_definition_id
     const previousTasks = tasks();
@@ -899,7 +943,7 @@ export function StreamingDataProvider(props: ParentProps) {
             status: action.type as TaskStatus,
             snoozed_until: snoozedUntil ?? t.snoozed_until,
           }
-        : t
+        : t,
     );
     // Update all tasks locally
     updatedTasks.forEach((task) => updateTaskLocally(task));
@@ -907,7 +951,7 @@ export function StreamingDataProvider(props: ParentProps) {
     try {
       const updatedTasksFromAPI = await routineAPI.setRoutineAction(
         routineId,
-        action
+        action,
       );
       // Update each task with the API response
       updatedTasksFromAPI.forEach((task) => updateTaskLocally(task));
@@ -918,10 +962,9 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
-
   const addAdhocTask = async (
     name: string,
-    category: TaskCategory
+    category: TaskCategory,
   ): Promise<void> => {
     const currentDay = day();
     if (!currentDay) {
@@ -968,6 +1011,13 @@ export function StreamingDataProvider(props: ParentProps) {
     });
   };
 
+  const updateAlarmLocally = (updatedAlarm: Alarm) => {
+    const next = (alarms() ?? []).map((existing) =>
+      isSameAlarm(existing, updatedAlarm) ? updatedAlarm : existing,
+    );
+    updateAlarmsLocally(next);
+  };
+
   const updateBrainDumpsLocally = (updatedItems: BrainDumpItem[]) => {
     setDayContextStore((current) => {
       if (!current.data || !current.data.day) return current;
@@ -991,22 +1041,22 @@ export function StreamingDataProvider(props: ParentProps) {
 
   const updateReminderStatus = async (
     reminder: Reminder,
-    status: ReminderStatus
+    status: ReminderStatus,
   ): Promise<void> => {
     // Optimistic update
     const previousReminders = reminders();
     const updatedReminders = previousReminders.map((r: Reminder) =>
-      r.id === reminder.id ? { ...r, status } : r
+      r.id === reminder.id ? { ...r, status } : r,
     );
     updateRemindersLocally(updatedReminders);
 
     try {
       const updatedReminder = await reminderAPI.updateReminderStatus(
         reminder.id,
-        status
+        status,
       );
       const nextReminders = previousReminders.map((r: Reminder) =>
-        r.id === updatedReminder.id ? updatedReminder : r
+        r.id === updatedReminder.id ? updatedReminder : r,
       );
       updateRemindersLocally(nextReminders);
     } catch (error) {
@@ -1019,13 +1069,15 @@ export function StreamingDataProvider(props: ParentProps) {
   const removeReminder = async (reminderId: string): Promise<void> => {
     // Optimistic update
     const previousReminders = reminders();
-    const updatedReminders = previousReminders.filter((r: Reminder) => r.id !== reminderId);
+    const updatedReminders = previousReminders.filter(
+      (r: Reminder) => r.id !== reminderId,
+    );
     updateRemindersLocally(updatedReminders);
 
     try {
       const removedReminder = await reminderAPI.removeReminder(reminderId);
       const nextReminders = previousReminders.filter(
-        (r) => r.id !== removedReminder.id
+        (r) => r.id !== removedReminder.id,
       );
       updateRemindersLocally(nextReminders);
     } catch (error) {
@@ -1050,10 +1102,50 @@ export function StreamingDataProvider(props: ParentProps) {
     updateAlarmsLocally([...(alarms() ?? []), created]);
   };
 
+  const setAlarmStatus = async (
+    alarm: Alarm,
+    status: AlarmStatus,
+    snoozedUntil?: string | null,
+  ): Promise<void> => {
+    if (!alarm.id) {
+      throw new Error("Alarm id is missing");
+    }
+    const previousAlarms = alarms();
+    const optimisticAlarm: Alarm = {
+      ...alarm,
+      status,
+      snoozed_until: snoozedUntil ?? null,
+    };
+    updateAlarmLocally(optimisticAlarm);
+
+    try {
+      const updatedAlarm = await alarmAPI.updateAlarmStatus({
+        alarm_id: alarm.id,
+        status,
+        snoozed_until: snoozedUntil ?? undefined,
+      });
+      updateAlarmLocally(updatedAlarm);
+    } catch (error) {
+      updateAlarmsLocally(previousAlarms);
+      throw error;
+    }
+  };
+
+  const snoozeAlarm = async (
+    alarm: Alarm,
+    snoozedUntil: string,
+  ): Promise<void> => {
+    await setAlarmStatus(alarm, "SNOOZED", snoozedUntil);
+  };
+
+  const cancelAlarm = async (alarm: Alarm): Promise<void> => {
+    await setAlarmStatus(alarm, "CANCELLED", null);
+  };
+
   const removeAlarm = async (alarm: Alarm): Promise<void> => {
     const previousAlarms = alarms();
     const updatedAlarms = previousAlarms.filter(
-      (existing) => !isSameAlarm(existing, alarm)
+      (existing) => !isSameAlarm(existing, alarm),
     );
     updateAlarmsLocally(updatedAlarms);
 
@@ -1065,7 +1157,7 @@ export function StreamingDataProvider(props: ParentProps) {
         url: alarm.url,
       });
       const nextAlarms = previousAlarms.filter(
-        (existing) => !isSameAlarm(existing, removedAlarm)
+        (existing) => !isSameAlarm(existing, removedAlarm),
       );
       updateAlarmsLocally(nextAlarms);
     } catch (error) {
@@ -1081,21 +1173,21 @@ export function StreamingDataProvider(props: ParentProps) {
 
   const updateBrainDumpItemStatus = async (
     item: BrainDumpItem,
-    status: BrainDumpItemStatus
+    status: BrainDumpItemStatus,
   ): Promise<void> => {
     if (!item.id) {
       return;
     }
     const previousItems = brainDumps();
     const updatedItems = previousItems.map((i) =>
-      i.id === item.id ? { ...i, status } : i
+      i.id === item.id ? { ...i, status } : i,
     );
     updateBrainDumpsLocally(updatedItems);
 
     try {
       const updatedItem = await brainDumpAPI.updateItemStatus(item.id, status);
       const nextItems = previousItems.map((existing) =>
-        existing.id === updatedItem.id ? updatedItem : existing
+        existing.id === updatedItem.id ? updatedItem : existing,
       );
       updateBrainDumpsLocally(nextItems);
     } catch (error) {
@@ -1111,7 +1203,9 @@ export function StreamingDataProvider(props: ParentProps) {
 
     try {
       const removedItem = await brainDumpAPI.removeItem(itemId);
-      const nextItems = previousItems.filter((item) => item.id !== removedItem.id);
+      const nextItems = previousItems.filter(
+        (item) => item.id !== removedItem.id,
+      );
       updateBrainDumpsLocally(nextItems);
     } catch (error) {
       updateBrainDumpsLocally(previousItems);
@@ -1189,6 +1283,8 @@ export function StreamingDataProvider(props: ParentProps) {
     updateReminderStatus,
     removeReminder,
     addAlarm,
+    snoozeAlarm,
+    cancelAlarm,
     removeAlarm,
     addBrainDumpItem,
     updateBrainDumpItemStatus,
@@ -1199,6 +1295,23 @@ export function StreamingDataProvider(props: ParentProps) {
   return (
     <StreamingDataContext.Provider value={value}>
       {props.children}
+      <AlarmTriggeredOverlay
+        alarm={triggeredAlarm()}
+        isOpen={Boolean(triggeredAlarm())}
+        onCancel={async () => {
+          const alarm = triggeredAlarm();
+          if (!alarm) return;
+          await cancelAlarm(alarm);
+        }}
+        onSnooze={async (minutes) => {
+          const alarm = triggeredAlarm();
+          if (!alarm) return;
+          const snoozedUntil = new Date(
+            Date.now() + minutes * 60 * 1000,
+          ).toISOString();
+          await snoozeAlarm(alarm, snoozedUntil);
+        }}
+      />
     </StreamingDataContext.Provider>
   );
 }
@@ -1207,7 +1320,7 @@ export function useStreamingData(): StreamingDataContextValue {
   const context = useContext(StreamingDataContext);
   if (!context) {
     throw new Error(
-      "useStreamingData must be used within a StreamingDataProvider"
+      "useStreamingData must be used within a StreamingDataProvider",
     );
   }
   return context;

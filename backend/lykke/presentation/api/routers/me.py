@@ -1,6 +1,6 @@
 """Endpoints for retrieving the current authenticated user."""
 
-from datetime import time as dt_time
+from datetime import datetime as dt_datetime, time as dt_time
 from typing import Annotated
 from uuid import UUID
 
@@ -25,6 +25,8 @@ from lykke.application.commands.day import (
     RemoveAlarmFromDayHandler,
     RemoveReminderCommand,
     RemoveReminderHandler,
+    UpdateAlarmStatusCommand,
+    UpdateAlarmStatusHandler,
     UpdateReminderStatusCommand,
     UpdateReminderStatusHandler,
 )
@@ -254,6 +256,28 @@ async def remove_alarm_from_today(
             time=time,
             alarm_type=alarm_type,
             url=url,
+        )
+    )
+    return map_alarm_to_schema(alarm)
+
+
+@router.patch("/today/alarms/{alarm_id}", response_model=AlarmSchema)
+async def update_alarm_status_for_today(
+    alarm_id: UUID,
+    status: value_objects.AlarmStatus,
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    snoozed_until: dt_datetime | None = None,
+) -> AlarmSchema:
+    """Update an alarm's status for today."""
+    date = get_current_date(user.settings.timezone)
+    handler = command_factory.create(UpdateAlarmStatusHandler)
+    alarm = await handler.handle(
+        UpdateAlarmStatusCommand(
+            date=date,
+            alarm_id=alarm_id,
+            status=status,
+            snoozed_until=snoozed_until,
         )
     )
     return map_alarm_to_schema(alarm)

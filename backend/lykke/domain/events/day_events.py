@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from lykke.domain.value_objects.day import AlarmStatus, AlarmType
 from lykke.domain.value_objects.update import DayUpdateObject
 
 from .base import AuditableDomainEvent, DomainEvent, EntityUpdatedEvent
@@ -13,8 +14,8 @@ if TYPE_CHECKING:
     from datetime import date as dt_date, time
     from uuid import UUID
 
+    from lykke.domain.entities.audit_log import AuditLogEntity
     from lykke.domain.value_objects.day import (
-        AlarmType,
         BrainDumpItemStatus,
         BrainDumpItemType,
         ReminderStatus,
@@ -108,6 +109,96 @@ class AlarmRemovedEvent(DomainEvent, AuditableDomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
+class AlarmTriggeredEvent(DomainEvent, AuditableDomainEvent):
+    """Event raised when an alarm is triggered."""
+
+    day_id: UUID
+    date: dt_date
+    alarm_id: UUID
+    alarm_name: str
+    alarm_time: time
+    alarm_type: AlarmType
+    alarm_url: str
+    alarm_status: AlarmStatus = AlarmStatus.TRIGGERED
+
+    def to_audit_log(self, user_id: UUID) -> AuditLogEntity:
+        """Create audit log with day context for alarm trigger."""
+        from lykke.domain.entities.audit_log import AuditLogEntity
+
+        entity_data: dict[str, Any] = {
+            "id": str(self.day_id),
+            "date": self.date.isoformat(),
+        }
+
+        meta: dict[str, Any] = {
+            "day_id": str(self.day_id),
+            "date": self.date.isoformat(),
+            "alarm_id": str(self.alarm_id),
+            "alarm_name": self.alarm_name,
+            "alarm_time": self.alarm_time.isoformat(),
+            "alarm_type": self.alarm_type.value,
+            "alarm_url": self.alarm_url,
+            "alarm_status": self.alarm_status.value,
+            "entity_data": entity_data,
+        }
+
+        return AuditLogEntity(
+            user_id=user_id,
+            activity_type=self.__class__.__name__,
+            entity_id=self.day_id,
+            entity_type="day",
+            date=self.date,
+            meta=meta,
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class AlarmStatusChangedEvent(DomainEvent, AuditableDomainEvent):
+    """Event raised when an alarm's status changes."""
+
+    day_id: UUID
+    date: dt_date
+    alarm_id: UUID
+    alarm_name: str
+    alarm_time: time
+    alarm_type: AlarmType
+    alarm_url: str
+    old_status: AlarmStatus
+    new_status: AlarmStatus
+
+    def to_audit_log(self, user_id: UUID) -> AuditLogEntity:
+        """Create audit log with day context for alarm status change."""
+        from lykke.domain.entities.audit_log import AuditLogEntity
+
+        entity_data: dict[str, Any] = {
+            "id": str(self.day_id),
+            "date": self.date.isoformat(),
+        }
+
+        meta: dict[str, Any] = {
+            "day_id": str(self.day_id),
+            "date": self.date.isoformat(),
+            "alarm_id": str(self.alarm_id),
+            "alarm_name": self.alarm_name,
+            "alarm_time": self.alarm_time.isoformat(),
+            "alarm_type": self.alarm_type.value,
+            "alarm_url": self.alarm_url,
+            "old_status": self.old_status.value,
+            "new_status": self.new_status.value,
+            "entity_data": entity_data,
+        }
+
+        return AuditLogEntity(
+            user_id=user_id,
+            activity_type=self.__class__.__name__,
+            entity_id=self.day_id,
+            entity_type="day",
+            date=self.date,
+            meta=meta,
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
 class BrainDumpItemAddedEvent(DomainEvent, AuditableDomainEvent):
     """Event raised when a brain dump item is added.
 
@@ -174,6 +265,10 @@ class BrainDumpItemRemovedEvent(DomainEvent, AuditableDomainEvent):
 
 
 __all__ = [
+    "AlarmAddedEvent",
+    "AlarmRemovedEvent",
+    "AlarmStatusChangedEvent",
+    "AlarmTriggeredEvent",
     "BrainDumpItemAddedEvent",
     "BrainDumpItemLLMRunRecordedEvent",
     "BrainDumpItemRemovedEvent",
@@ -183,8 +278,6 @@ __all__ = [
     "DayScheduledEvent",
     "DayUnscheduledEvent",
     "DayUpdatedEvent",
-    "AlarmAddedEvent",
-    "AlarmRemovedEvent",
     "ReminderAddedEvent",
     "ReminderRemovedEvent",
     "ReminderStatusChangedEvent",

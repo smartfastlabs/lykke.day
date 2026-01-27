@@ -3,17 +3,20 @@ import {
   For,
   JSX,
   Show,
+  createEffect,
   createMemo,
   createSignal,
   onCleanup,
   onMount,
 } from "solid-js";
+import { Portal } from "solid-js/web";
 import Page from "@/components/shared/layout/Page";
 import { useStreamingData } from "@/providers/streamingData";
 import { getDateString, getTime } from "@/utils/dates";
 import { filterVisibleTasks, isTaskSnoozed } from "@/utils/tasks";
 import { buildRoutineGroups } from "@/components/routines/RoutineGroupsList";
 import type {
+  Alarm,
   DayTemplate,
   Event,
   Reminder,
@@ -112,6 +115,48 @@ const getTaskTime = (task: Task): Date | null => {
   return null;
 };
 
+const buildAlarmKey = (alarm: Alarm): string =>
+  alarm.id?.trim() ||
+  [alarm.name, alarm.time, alarm.type, alarm.url].filter(Boolean).join("|");
+
+const buildYouTubeEmbedUrl = (rawUrl: string): string | null => {
+  try {
+    const url = new URL(rawUrl);
+    const host = url.hostname.replace(/^www\./, "");
+    let videoId: string | null = null;
+
+    if (host === "youtu.be") {
+      videoId = url.pathname.replace("/", "") || null;
+    } else if (host === "youtube.com" || host === "m.youtube.com") {
+      if (url.pathname.startsWith("/watch")) {
+        videoId = url.searchParams.get("v");
+      } else if (url.pathname.startsWith("/embed/")) {
+        videoId = url.pathname.split("/embed/")[1] || null;
+      } else if (url.pathname.startsWith("/shorts/")) {
+        videoId = url.pathname.split("/shorts/")[1] || null;
+      }
+    } else if (host === "youtube-nocookie.com") {
+      videoId = url.pathname.split("/embed/")[1] || null;
+    }
+
+    if (!videoId) return null;
+
+    const params = new URLSearchParams({
+      autoplay: "1",
+      playsinline: "1",
+      controls: "1",
+      rel: "0",
+      modestbranding: "1",
+      fs: "1",
+    });
+
+    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+  } catch (error) {
+    console.warn("Invalid alarm URL:", rawUrl, error);
+    return null;
+  }
+};
+
 const getTaskTimeLabel = (task: Task): string | null => {
   const timeWindow = task.time_window;
   if (!timeWindow) return null;
@@ -198,11 +243,24 @@ const KioskList: Component<{
 );
 
 const KioskPage: Component = () => {
-  const { dayContext, isLoading, day, tasks, events, reminders, routines } =
-    useStreamingData();
+  const {
+    dayContext,
+    isLoading,
+    day,
+    tasks,
+    events,
+    reminders,
+    routines,
+    alarms,
+  } = useStreamingData();
   const [now, setNow] = createSignal(new Date());
   const [weather, setWeather] = createSignal<WeatherSnapshot | null>(null);
   const [weatherError, setWeatherError] = createSignal(false);
+  const [activeAlarm, setActiveAlarm] = createSignal<Alarm | null>(null);
+  const [alarmVideoUrl, setAlarmVideoUrl] = createSignal<string | null>(null);
+  const [lastAlarmKey, setLastAlarmKey] = createSignal<string | null>(null);
+  const [fullscreenRequested, setFullscreenRequested] = createSignal(false);
+  let fullscreenContainer: HTMLDivElement | undefined;
 
   onMount(() => {
     const interval = setInterval(() => {
@@ -545,9 +603,93 @@ const KioskPage: Component = () => {
 
   const timeLabel = createMemo(() => formatClock(now()));
 
+  const triggeredAlarm = createMemo<Alarm | null>(() => {
+    const active = (alarms() ?? []).filter(
+      (alarm) => (alarm.status ?? "ACTIVE") === "TRIGGERED"
+    );
+    if (active.length === 0) return null;
+    return [...active].sort((a, b) => {
+      const aTime = a.datetime
+        ? new Date(a.datetime).getTime()
+        : Number.MAX_SAFE_INTEGER;
+      const bTime = b.datetime
+        ? new Date(b.datetime).getTime()
+        : Number.MAX_SAFE_INTEGER;
+      return aTime - bTime;
+    })[0];
+  });
+
+  createEffect(() => {
+    const alarm = triggeredAlarm();
+    if (!alarm) {
+      setActiveAlarm(null);
+      setAlarmVideoUrl(null);
+      setLastAlarmKey(null);
+      setFullscreenRequested(false);
+      return;
+    }
+
+    const alarmKey = buildAlarmKey(alarm);
+    if (alarmKey === lastAlarmKey()) {
+      return;
+    }
+
+    setLastAlarmKey(alarmKey);
+
+    if (alarm.type === "URL" && alarm.url) {
+      const embedUrl = buildYouTubeEmbedUrl(alarm.url);
+      if (embedUrl) {
+        setActiveAlarm(alarm);
+        setAlarmVideoUrl(embedUrl);
+      } else {
+        window.location.assign(alarm.url);
+      }
+      return;
+    }
+
+    setActiveAlarm(alarm);
+    setAlarmVideoUrl(null);
+  });
+
+  createEffect(() => {
+    if (!alarmVideoUrl() || !fullscreenContainer || fullscreenRequested()) {
+      return;
+    }
+    if (fullscreenContainer.requestFullscreen) {
+      const request = fullscreenContainer.requestFullscreen();
+      if (request && typeof request.then === "function") {
+        request.catch((error: unknown) => {
+          console.warn("Unable to enter fullscreen:", error);
+        });
+      }
+    } else {
+      const legacy = fullscreenContainer as HTMLDivElement & {
+        webkitRequestFullscreen?: () => void;
+      };
+      legacy.webkitRequestFullscreen?.();
+    }
+    setFullscreenRequested(true);
+  });
+
   return (
     <Page variant="app" hideFooter hideFloatingButtons>
       <div class="min-h-[100dvh] h-[100dvh] box-border relative overflow-hidden">
+        <Show when={activeAlarm() && alarmVideoUrl()}>
+          <Portal>
+            <div
+              ref={fullscreenContainer}
+              class="fixed inset-0 z-[90] bg-black"
+            >
+              <iframe
+                class="h-full w-full"
+                src={alarmVideoUrl() ?? ""}
+                title={activeAlarm()?.name ?? "Alarm Video"}
+                allow="autoplay; fullscreen"
+                allowFullScreen
+              />
+            </div>
+          </Portal>
+        </Show>
         <Show
           when={!isLoading() && dayContext()}
           fallback={

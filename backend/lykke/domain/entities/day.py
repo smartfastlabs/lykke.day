@@ -13,6 +13,8 @@ from lykke.domain.entities.day_template import DayTemplateEntity  # noqa: TC001
 from lykke.domain.events.day_events import (
     AlarmAddedEvent,
     AlarmRemovedEvent,
+    AlarmStatusChangedEvent,
+    AlarmTriggeredEvent,
     DayCompletedEvent,
     DayScheduledEvent,
     DayUnscheduledEvent,
@@ -375,9 +377,7 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
                 f"Alarm with name {name} and time {time_value} not found in this day"
             )
 
-        self.alarms = [
-            alarm for i, alarm in enumerate(self.alarms) if i != match_index
-        ]
+        self.alarms = [alarm for i, alarm in enumerate(self.alarms) if i != match_index]
 
         self._add_event(
             AlarmRemovedEvent(
@@ -395,6 +395,96 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
         )
 
         return removed_alarm
+
+    def update_alarm_status(
+        self,
+        alarm_id: UUID,
+        status: value_objects.AlarmStatus,
+        *,
+        snoozed_until: datetime | None = None,
+    ) -> value_objects.Alarm:
+        """Update the status of an alarm.
+
+        Args:
+            alarm_id: The ID of the alarm to update
+            status: The new status for the alarm
+            snoozed_until: Optional snoozed-until timestamp for snoozed alarms
+
+        Raises:
+            DomainError: If the alarm is not found or snoozed_until is missing
+        """
+        alarm_index = None
+        old_alarm = None
+        for i, alarm in enumerate(self.alarms):
+            if alarm.id == alarm_id:
+                alarm_index = i
+                old_alarm = alarm
+                break
+
+        if alarm_index is None or old_alarm is None:
+            raise DomainError(f"Alarm with id {alarm_id} not found in this day")
+
+        if status == value_objects.AlarmStatus.SNOOZED and snoozed_until is None:
+            raise DomainError("Snoozed alarms require snoozed_until")
+
+        next_snoozed_until = (
+            snoozed_until if status == value_objects.AlarmStatus.SNOOZED else None
+        )
+
+        if old_alarm.status == status and old_alarm.snoozed_until == next_snoozed_until:
+            return old_alarm
+
+        updated_alarm = value_objects.Alarm(
+            id=old_alarm.id,
+            name=old_alarm.name,
+            time=old_alarm.time,
+            datetime=old_alarm.datetime,
+            type=old_alarm.type,
+            url=old_alarm.url,
+            status=status,
+            snoozed_until=next_snoozed_until,
+        )
+
+        new_alarms = list(self.alarms)
+        new_alarms[alarm_index] = updated_alarm
+        self.alarms = new_alarms
+
+        if status == value_objects.AlarmStatus.TRIGGERED:
+            self._add_event(
+                AlarmTriggeredEvent(
+                    user_id=self.user_id,
+                    day_id=self.id,
+                    date=self.date,
+                    alarm_id=updated_alarm.id,
+                    alarm_name=updated_alarm.name,
+                    alarm_time=updated_alarm.time,
+                    alarm_type=updated_alarm.type,
+                    alarm_url=updated_alarm.url,
+                    entity_id=self.id,
+                    entity_type="day",
+                    entity_date=self.date,
+                )
+            )
+        else:
+            self._add_event(
+                AlarmStatusChangedEvent(
+                    user_id=self.user_id,
+                    day_id=self.id,
+                    date=self.date,
+                    alarm_id=updated_alarm.id,
+                    alarm_name=updated_alarm.name,
+                    alarm_time=updated_alarm.time,
+                    alarm_type=updated_alarm.type,
+                    alarm_url=updated_alarm.url,
+                    old_status=old_alarm.status,
+                    new_status=status,
+                    entity_id=self.id,
+                    entity_type="day",
+                    entity_date=self.date,
+                )
+            )
+
+        return updated_alarm
 
     def update_reminder_status(
         self, reminder_id: UUID, status: value_objects.ReminderStatus

@@ -28,23 +28,23 @@ const DayTemplateForm: Component<FormProps> = (props) => {
   const [slug, setSlug] = createSignal(props.initialData?.slug ?? "");
   const [icon, setIcon] = createSignal(props.initialData?.icon ?? "");
   const [startTime, setStartTime] = createSignal(
-    normalizeTime(props.initialData?.start_time)
+    normalizeTime(props.initialData?.start_time),
   );
   const [endTime, setEndTime] = createSignal(
-    normalizeTime(props.initialData?.end_time)
+    normalizeTime(props.initialData?.end_time),
   );
   const [highLevelPlanTitle, setHighLevelPlanTitle] = createSignal(
-    props.initialData?.high_level_plan?.title ?? ""
+    props.initialData?.high_level_plan?.title ?? "",
   );
   const [highLevelPlanText, setHighLevelPlanText] = createSignal(
-    props.initialData?.high_level_plan?.text ?? ""
+    props.initialData?.high_level_plan?.text ?? "",
   );
   const [intentions, setIntentions] = createSignal<string[]>(
-    props.initialData?.high_level_plan?.intentions ?? []
+    props.initialData?.high_level_plan?.intentions ?? [],
   );
   const [newIntention, setNewIntention] = createSignal("");
   const [alarms, setAlarms] = createSignal<Alarm[]>(
-    props.initialData?.alarms ?? []
+    props.initialData?.alarms ?? [],
   );
   const [alarmName, setAlarmName] = createSignal("");
   const [alarmTime, setAlarmTime] = createSignal("");
@@ -95,6 +95,8 @@ const DayTemplateForm: Component<FormProps> = (props) => {
         datetime: null,
         type: alarmType(),
         url: alarmUrl().trim(),
+        status: "ACTIVE",
+        snoozed_until: null,
       },
     ]);
     setAlarmName("");
@@ -105,19 +107,27 @@ const DayTemplateForm: Component<FormProps> = (props) => {
 
   const isUpdate = !!props.initialData;
   const shouldShowSubmit = () => props.showSubmitButton ?? true;
-  const submitText = () => props.submitText ?? (isUpdate ? "Update Day Template" : "Create Day Template");
-  const loadingText = () => props.loadingText ?? (isUpdate ? "Updating..." : "Creating...");
+  const submitText = () =>
+    props.submitText ??
+    (isUpdate ? "Update Day Template" : "Create Day Template");
+  const loadingText = () =>
+    props.loadingText ?? (isUpdate ? "Updating..." : "Creating...");
 
   return (
     <form id={props.formId} onSubmit={handleSubmit} class="space-y-6">
       <div class="rounded-xl border border-amber-100/80 bg-white/90 p-5 shadow-sm space-y-4">
         <div>
           <h2 class="text-lg font-semibold text-stone-800">Basics</h2>
-          <p class="text-sm text-stone-500">Name the template and choose an icon.</p>
+          <p class="text-sm text-stone-500">
+            Name the template and choose an icon.
+          </p>
         </div>
         <div class="space-y-4">
           <div class="space-y-1">
-            <label class="text-xs font-medium text-neutral-600" for="day-template-slug">
+            <label
+              class="text-xs font-medium text-neutral-600"
+              for="day-template-slug"
+            >
               Slug
             </label>
             <Input
@@ -130,7 +140,10 @@ const DayTemplateForm: Component<FormProps> = (props) => {
           </div>
 
           <div class="space-y-1">
-            <label class="text-xs font-medium text-neutral-600" for="day-template-icon">
+            <label
+              class="text-xs font-medium text-neutral-600"
+              for="day-template-icon"
+            >
               Icon
             </label>
             <Input
@@ -152,7 +165,10 @@ const DayTemplateForm: Component<FormProps> = (props) => {
         </div>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div class="space-y-1">
-            <label class="text-xs font-medium text-neutral-600" for="day-template-start">
+            <label
+              class="text-xs font-medium text-neutral-600"
+              for="day-template-start"
+            >
               Start time
             </label>
             <Input
@@ -165,7 +181,10 @@ const DayTemplateForm: Component<FormProps> = (props) => {
           </div>
 
           <div class="space-y-1">
-            <label class="text-xs font-medium text-neutral-600" for="day-template-end">
+            <label
+              class="text-xs font-medium text-neutral-600"
+              for="day-template-end"
+            >
               End time
             </label>
             <Input
@@ -220,7 +239,9 @@ const DayTemplateForm: Component<FormProps> = (props) => {
           </div>
 
           <div class="space-y-2">
-            <label class="block text-xs font-medium text-neutral-700">Intentions</label>
+            <label class="block text-xs font-medium text-neutral-700">
+              Intentions
+            </label>
             <Show when={intentions().length > 0}>
               <ul class="space-y-1 mb-2">
                 <For each={intentions()}>
@@ -230,7 +251,9 @@ const DayTemplateForm: Component<FormProps> = (props) => {
                       <button
                         type="button"
                         onClick={() =>
-                          setIntentions(intentions().filter((_, i) => i !== index()))
+                          setIntentions(
+                            intentions().filter((_, i) => i !== index()),
+                          )
                         }
                         class="text-neutral-600 hover:text-neutral-700"
                         aria-label="Remove intention"
@@ -324,7 +347,10 @@ const DayTemplateForm: Component<FormProps> = (props) => {
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div class="space-y-1">
-            <label class="text-xs font-medium text-neutral-600" for="alarm-name">
+            <label
+              class="text-xs font-medium text-neutral-600"
+              for="alarm-name"
+            >
               Alarm name
             </label>
             <Input
@@ -336,7 +362,10 @@ const DayTemplateForm: Component<FormProps> = (props) => {
           </div>
 
           <div class="space-y-1">
-            <label class="text-xs font-medium text-neutral-600" for="alarm-time">
+            <label
+              class="text-xs font-medium text-neutral-600"
+              for="alarm-time"
+            >
               Time
             </label>
             <Input
@@ -351,7 +380,10 @@ const DayTemplateForm: Component<FormProps> = (props) => {
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div class="space-y-1">
-            <label class="text-xs font-medium text-neutral-600" for="alarm-type">
+            <label
+              class="text-xs font-medium text-neutral-600"
+              for="alarm-type"
+            >
               Type
             </label>
             <select

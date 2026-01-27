@@ -2,11 +2,13 @@
 
 import datetime
 from datetime import UTC
+from uuid import uuid4
 
 import pytest
 
 from lykke.domain.value_objects.day import (
     Alarm,
+    AlarmStatus,
     AlarmType,
     DayContext,
     DayMode,
@@ -168,25 +170,34 @@ def test_alarm_creation_with_defaults() -> None:
         name="Morning alarm",
         time=datetime.time(8, 30),
     )
+    assert alarm.id is not None
     assert alarm.name == "Morning alarm"
     assert alarm.time == datetime.time(8, 30)
     assert alarm.datetime is None
     assert alarm.type == AlarmType.URL
     assert alarm.url == ""
+    assert alarm.status == AlarmStatus.ACTIVE
+    assert alarm.snoozed_until is None
 
 
 def test_alarm_creation_with_all_fields() -> None:
     """Test Alarm can be created with all fields."""
     alarm_dt = datetime.datetime(2025, 11, 27, 8, 30, tzinfo=UTC)
     alarm = Alarm(
+        id=uuid4(),
         name="Start work",
         time=datetime.time(8, 30),
         datetime=alarm_dt,
         type=AlarmType.GENERIC,
         url="https://example.com",
+        status=AlarmStatus.SNOOZED,
+        snoozed_until=alarm_dt,
     )
+    assert alarm.id is not None
     assert alarm.name == "Start work"
     assert alarm.time == datetime.time(8, 30)
     assert alarm.datetime == alarm_dt
     assert alarm.type == AlarmType.GENERIC
     assert alarm.url == "https://example.com"
+    assert alarm.status == AlarmStatus.SNOOZED
+    assert alarm.snoozed_until == alarm_dt
