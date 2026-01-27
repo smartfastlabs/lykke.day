@@ -117,6 +117,12 @@ async def update_current_user_profile(
             and update_data.settings.llm_personality_amendments is not None
             else current_settings.llm_personality_amendments
         )
+        alarm_presets = (
+            update_data.settings.alarm_presets
+            if "alarm_presets" in settings_fields
+            and update_data.settings.alarm_presets is not None
+            else current_settings.alarm_presets
+        )
         # Handle morning_overview_time - check if it was explicitly set (even if None)
         # Pydantic's model_fields_set includes fields that were explicitly provided
         if "morning_overview_time" in settings_fields:
@@ -130,6 +136,7 @@ async def update_current_user_profile(
             base_personality_slug=base_personality_slug,
             llm_personality_amendments=llm_personality_amendments,
             morning_overview_time=morning_overview_time,
+            alarm_presets=alarm_presets,
         )
 
     update_object = UserUpdateObject(
@@ -215,10 +222,10 @@ async def remove_reminder_from_today(
 
 @router.post("/today/alarms", response_model=AlarmSchema)
 async def add_alarm_to_today(
-    name: str,
     time: dt_time,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
+    name: str | None = None,
     alarm_type: value_objects.AlarmType = value_objects.AlarmType.URL,
     url: str = "",
 ) -> AlarmSchema:

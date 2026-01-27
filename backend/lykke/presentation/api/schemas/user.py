@@ -7,6 +7,7 @@ from pydantic import Field
 
 from lykke.domain.value_objects import LLMProvider, UserStatus
 
+from .alarm import AlarmPresetSchema
 from .base import BaseSchema
 
 
@@ -19,6 +20,7 @@ class UserSettingsSchema(BaseSchema):
     base_personality_slug: str = "default"
     llm_personality_amendments: list[str] = Field(default_factory=list)
     morning_overview_time: str | None = None  # HH:MM format in user's local timezone
+    alarm_presets: list[AlarmPresetSchema] = Field(default_factory=list)
 
 
 class UserSchema(BaseSchema):
@@ -49,6 +51,7 @@ class UserSettingsUpdateSchema(BaseSchema):
     base_personality_slug: str | None = None
     llm_personality_amendments: list[str] | None = None
     morning_overview_time: str | None = None  # HH:MM format in user's local timezone
+    alarm_presets: list[AlarmPresetSchema] | None = None
 
 
 class UserUpdateSchema(BaseSchema):

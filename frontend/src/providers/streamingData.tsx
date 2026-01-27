@@ -75,7 +75,7 @@ interface StreamingDataContextValue {
   ) => Promise<void>;
   removeReminder: (reminderId: string) => Promise<void>;
   addAlarm: (payload: {
-    name: string;
+    name?: string;
     time: string;
     alarmType?: AlarmType;
     url?: string;
@@ -1088,7 +1088,7 @@ export function StreamingDataProvider(props: ParentProps) {
   };
 
   const addAlarm = async (payload: {
-    name: string;
+    name?: string;
     time: string;
     alarmType?: AlarmType;
     url?: string;

@@ -1,22 +1,74 @@
-import { Component, createSignal } from "solid-js";
+import { Component, createMemo, createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import ModalPage from "@/components/shared/ModalPage";
 import FloatingActionButtons from "@/components/shared/FloatingActionButtons";
 import { useStreamingData } from "@/providers/streamingData";
+import { useAuth } from "@/providers/auth";
 import { Icon } from "@/components/shared/Icon";
 import { faBell } from "@fortawesome/free-solid-svg-icons";
 import { FormError, Input, Select, SubmitButton } from "@/components/forms";
-import type { AlarmType } from "@/types/api";
+import type { AlarmPreset, AlarmType } from "@/types/api";
 
 const AddAlarmPage: Component = () => {
   const navigate = useNavigate();
   const { addAlarm, isLoading } = useStreamingData();
+  const { user } = useAuth();
   const [alarmName, setAlarmName] = createSignal("");
   const [alarmTime, setAlarmTime] = createSignal("");
   const [alarmType, setAlarmType] = createSignal<AlarmType>("URL");
   const [alarmUrl, setAlarmUrl] = createSignal("");
+  const [selectedPresetId, setSelectedPresetId] = createSignal("");
   const [isSaving, setIsSaving] = createSignal(false);
   const [formError, setFormError] = createSignal("");
+
+  const formatDefaultAlarmName = (timeValue: string): string => {
+    if (!timeValue) {
+      return "Alarm";
+    }
+    const [hourValue, minuteValue] = timeValue.split(":");
+    const hours = Number(hourValue);
+    const minutes = Number(minuteValue);
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+      return "Alarm";
+    }
+    const period = hours >= 12 ? "pm" : "am";
+    const hour12 = hours % 12 || 12;
+    return `${hour12}:${String(minutes).padStart(2, "0")} ${period} Alarm`;
+  };
+
+  const formatPresetLabel = (preset: AlarmPreset): string => {
+    const timeLabel = preset.time ? formatDefaultAlarmName(preset.time) : null;
+    const nameLabel = preset.name?.trim() || timeLabel || "Untitled alarm";
+    const hasUrl = Boolean(preset.url?.trim());
+    return hasUrl ? `${nameLabel} · link` : nameLabel;
+  };
+
+  const alarmPresets = createMemo<AlarmPreset[]>(
+    () => user()?.settings.alarm_presets ?? [],
+  );
+  const presetOptions = createMemo(() =>
+    alarmPresets().map((preset, index) => ({
+      value: preset.id ?? `preset-${index}`,
+      label: formatPresetLabel(preset),
+    })),
+  );
+
+  const handlePresetChange = (presetId: string) => {
+    setSelectedPresetId(presetId);
+    if (!presetId) {
+      return;
+    }
+    const preset = alarmPresets().find(
+      (item, index) => (item.id ?? `preset-${index}`) === presetId,
+    );
+    if (!preset) {
+      return;
+    }
+    setAlarmName(preset.name ?? "");
+    setAlarmTime(preset.time ?? "");
+    setAlarmType(preset.type ?? "URL");
+    setAlarmUrl(preset.url ?? "");
+  };
 
   const handleSave = async (event: Event) => {
     event.preventDefault();
@@ -24,10 +76,6 @@ const AddAlarmPage: Component = () => {
     const name = alarmName().trim();
     const time = alarmTime().trim();
     const url = alarmUrl().trim();
-    if (!name) {
-      setFormError("Alarm name is required.");
-      return;
-    }
     if (!time) {
       setFormError("Alarm time is required.");
       return;
@@ -36,7 +84,7 @@ const AddAlarmPage: Component = () => {
     try {
       setIsSaving(true);
       await addAlarm({
-        name,
+        name: name || undefined,
         time,
         alarmType: alarmType(),
         url: url || undefined,
@@ -63,13 +111,22 @@ const AddAlarmPage: Component = () => {
         }
       >
         <form class="space-y-5" onSubmit={handleSave}>
+          <Select
+            id="alarm-preset"
+            value={selectedPresetId}
+            onChange={handlePresetChange}
+            options={presetOptions()}
+            placeholder="Choose a preset (optional)"
+          />
           <Input
             id="alarm-name"
-            placeholder="Alarm name"
+            placeholder="Alarm name (optional)"
             value={alarmName}
             onChange={setAlarmName}
-            required
           />
+          <p class="text-xs text-stone-500">
+            Leave blank to use {formatDefaultAlarmName(alarmTime())}.
+          </p>
           <Input
             id="alarm-time"
             type="time"

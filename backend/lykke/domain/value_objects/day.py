@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime as dt_datetime, time
+from datetime import datetime as dt_datetime, time as dt_time
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
@@ -79,7 +79,7 @@ class Alarm(BaseValueObject):
 
     id: UUID = field(default_factory=uuid4)
     name: str
-    time: time
+    time: dt_time
     datetime: dt_datetime | None = None
     type: AlarmType = AlarmType.URL
     url: str = ""
@@ -91,7 +91,7 @@ class Alarm(BaseValueObject):
         """Create an Alarm from a JSON-style dict."""
         alarm_time = data["time"]
         if isinstance(alarm_time, str):
-            alarm_time = time.fromisoformat(alarm_time)
+            alarm_time = dt_time.fromisoformat(alarm_time)
 
         alarm_datetime = data.get("datetime")
         if isinstance(alarm_datetime, str):
@@ -129,6 +129,40 @@ class Alarm(BaseValueObject):
             url=data.get("url", ""),
             status=alarm_status,
             snoozed_until=snoozed_until,
+        )
+
+
+@dataclass(kw_only=True)
+class AlarmPreset(BaseValueObject):
+    """Alarm preset stored in user settings."""
+
+    id: UUID = field(default_factory=uuid4)
+    name: str | None = None
+    time: dt_time | None = None
+    type: AlarmType = AlarmType.URL
+    url: str = ""
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "AlarmPreset":
+        """Create an AlarmPreset from a JSON-style dict."""
+        alarm_time = data.get("time")
+        if isinstance(alarm_time, str):
+            alarm_time = dt_time.fromisoformat(alarm_time)
+
+        alarm_type = data.get("type", AlarmType.URL)
+        if isinstance(alarm_type, str):
+            alarm_type = AlarmType(alarm_type)
+
+        alarm_id = data.get("id")
+        if isinstance(alarm_id, str):
+            alarm_id = UUID(alarm_id)
+
+        return cls(
+            id=alarm_id or uuid4(),
+            name=data.get("name"),
+            time=alarm_time,
+            type=alarm_type,
+            url=data.get("url", ""),
         )
 
 

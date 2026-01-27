@@ -15,7 +15,7 @@ class AddAlarmToDayCommand(Command):
     """Command to add an alarm to a day."""
 
     date: date
-    name: str
+    name: str | None
     time: dt_time
     alarm_type: value_objects.AlarmType = value_objects.AlarmType.URL
     url: str = ""
@@ -23,6 +23,13 @@ class AddAlarmToDayCommand(Command):
 
 class AddAlarmToDayHandler(BaseCommandHandler[AddAlarmToDayCommand, value_objects.Alarm]):
     """Adds an alarm to a day."""
+
+    @staticmethod
+    def _default_alarm_name(alarm_time: dt_time) -> str:
+        hour = alarm_time.hour % 12 or 12
+        minute = alarm_time.minute
+        period = "am" if alarm_time.hour < 12 else "pm"
+        return f"{hour}:{minute:02d} {period} Alarm"
 
     async def handle(self, command: AddAlarmToDayCommand) -> value_objects.Alarm:
         """Add an alarm to a day.
@@ -53,8 +60,12 @@ class AddAlarmToDayHandler(BaseCommandHandler[AddAlarmToDayCommand, value_object
                     timezone = ZoneInfo("UTC")
 
             alarm_local_dt = datetime.combine(command.date, command.time, tzinfo=timezone)
+            name = (command.name or "").strip()
+            if not name:
+                name = self._default_alarm_name(command.time)
+
             alarm = value_objects.Alarm(
-                name=command.name,
+                name=name,
                 time=command.time,
                 datetime=alarm_local_dt.astimezone(UTC),
                 type=command.alarm_type,

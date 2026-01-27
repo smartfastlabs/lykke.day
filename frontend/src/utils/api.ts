@@ -232,15 +232,15 @@ export const reminderAPI = {
 
 export const alarmAPI = {
   addAlarm: (payload: {
-    name: string;
+    name?: string;
     time: string;
     alarm_type?: string;
     url?: string;
   }): Promise<Alarm> => {
-    const params = new URLSearchParams({
-      name: payload.name,
-      time: payload.time,
-    });
+    const params = new URLSearchParams({ time: payload.time });
+    if (payload.name) {
+      params.set("name", payload.name);
+    }
     if (payload.alarm_type) {
       params.set("alarm_type", payload.alarm_type);
     }

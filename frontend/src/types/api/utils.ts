@@ -100,6 +100,14 @@ export interface Alarm {
   snoozed_until?: string | null;
 }
 
+export interface AlarmPreset {
+  id?: string | null;
+  name?: string | null;
+  time?: string | null;
+  type?: AlarmType;
+  url?: string | null;
+}
+
 export type BrainDumpItem = components["schemas"]["BrainDumpItemSchema"] & {
   llm_run_result?: LLMRunResultSnapshot | Record<string, unknown> | null;
 };

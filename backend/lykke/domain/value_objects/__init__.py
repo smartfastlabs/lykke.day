@@ -11,6 +11,7 @@ from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .calendar_subscription import CalendarSubscription
 from .day import (
     Alarm,
+    AlarmPreset,
     AlarmStatus,
     AlarmType,
     BrainDumpItemStatus,
@@ -105,6 +106,7 @@ __all__ = [
     "Action",
     "ActionType",
     "Alarm",
+    "AlarmPreset",
     "AlarmStatus",
     "AlarmType",
     "AuditLogQuery",

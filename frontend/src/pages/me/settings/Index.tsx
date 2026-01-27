@@ -111,6 +111,12 @@ const settingsSections: SettingsSection[] = [
         url: "/me/settings/notifications",
       },
       {
+        label: "Alarm Presets",
+        description: "Save reusable alarm configurations.",
+        icon: faBell,
+        url: "/me/settings/alarms",
+      },
+      {
         label: "Push Subscriptions",
         description: "Manage device push permissions.",
         icon: faMobileScreenButton,
