@@ -1,7 +1,8 @@
 import { Component, type Accessor } from "solid-js";
 
 // Shared input styles
-const inputClass = "w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow";
+const inputClass =
+  "w-full px-4 py-3 bg-white border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow";
 
 interface InputProps {
   id: string;
@@ -85,21 +86,14 @@ export function Select<T extends string>(props: SelectProps<T>) {
         class={inputClass}
         required={props.required}
       >
-        {props.placeholder && (
-          <option value="">{props.placeholder}</option>
-        )}
+        {props.placeholder && <option value="">{props.placeholder}</option>}
         {props.options.map((option) => {
           if (typeof option === "string") {
-            return (
-              <option value={option}>{option}</option>
-            );
+            return <option value={option}>{option}</option>;
           }
-          return (
-            <option value={option.value}>{option.label}</option>
-          );
+          return <option value={option.value}>{option.label}</option>;
         })}
       </select>
     </div>
   );
 }
-

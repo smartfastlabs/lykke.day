@@ -31,6 +31,7 @@ from lykke.core.utils.dates import get_current_date
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.events.base import AuditableDomainEvent
+from lykke.domain.events.day_events import NewDayEvent
 from lykke.domain.value_objects import DayUpdateObject
 from lykke.presentation.api.schemas import DayContextSchema, DaySchema, DayUpdateSchema
 from lykke.presentation.api.schemas.mappers import (
@@ -150,6 +151,51 @@ async def send_error(websocket: WebSocket, code: str, message: str) -> None:
     await send_ws_message(websocket, error_schema.model_dump(mode="json"))
 
 
+async def _build_full_sync_response(
+    *,
+    get_day_context_handler: GetDayContextHandler,
+    get_incremental_changes_handler: GetIncrementalChangesHandler,
+    schedule_day_handler: ScheduleDayHandler,
+    date_value: date,
+    user_timezone: str | None,
+) -> WebSocketSyncResponseSchema:
+    try:
+        context = await get_day_context_handler.handle(
+            GetDayContextQuery(date=date_value)
+        )
+    except NotFoundError:
+        # Day doesn't exist, auto-schedule it (WebSocket is THE place that creates Day if missing)
+        context = await schedule_day_handler.handle(ScheduleDayCommand(date=date_value))
+
+    audit_logs = await get_incremental_changes_handler.audit_log_ro_repo.search(
+        value_objects.AuditLogQuery()
+    )
+    last_audit_timestamp: dt_datetime | None = None
+    if audit_logs:
+        sorted_logs = sorted(audit_logs, key=lambda x: x.occurred_at, reverse=True)
+        last_audit_timestamp = sorted_logs[0].occurred_at
+
+    if last_audit_timestamp is None:
+        last_audit_timestamp = dt_datetime.now(UTC)
+
+    # Fetch routines for the day
+    from lykke.presentation.api.schemas.mappers import map_routine_to_schema
+
+    routines = await get_day_context_handler.routine_ro_repo.search(
+        value_objects.RoutineQuery(date=date_value)
+    )
+    routine_schemas = [map_routine_to_schema(routine) for routine in routines]
+
+    return WebSocketSyncResponseSchema(
+        day_context=map_day_context_to_schema(context, user_timezone=user_timezone),
+        changes=None,
+        routines=routine_schemas,
+        last_audit_log_timestamp=last_audit_timestamp.isoformat()
+        if last_audit_timestamp
+        else None,
+    )
+
+
 @router.websocket("/today/context")
 async def days_context_websocket(
     websocket: WebSocket,
@@ -196,6 +242,7 @@ async def days_context_websocket(
         except Exception:
             user_timezone = None
         today_date = get_current_date(user_timezone)
+        date_state = {"value": today_date}
 
         # Subscribe to user's domain-events channel for real-time updates
         async with pubsub_gateway.subscribe_to_user_channel(
@@ -208,7 +255,7 @@ async def days_context_websocket(
                     day_context_handler,
                     incremental_changes_handler_ws,
                     schedule_day_handler,
-                    today_date,
+                    date_state,
                     user_timezone,
                 )
             )
@@ -216,8 +263,10 @@ async def days_context_websocket(
                 _handle_realtime_events(
                     websocket,
                     domain_events_subscription,
-                    today_date,
+                    date_state,
                     incremental_changes_handler_ws,
+                    day_context_handler,
+                    schedule_day_handler,
                     user_timezone,
                 )
             )
@@ -255,7 +304,7 @@ async def _handle_client_messages(
     get_day_context_handler: GetDayContextHandler,
     get_incremental_changes_handler: GetIncrementalChangesHandler,
     schedule_day_handler: ScheduleDayHandler,
-    today_date: date,
+    date_state: dict[str, date],
     user_timezone: str | None,
 ) -> None:
     """Handle messages from the client (sync requests).
@@ -264,7 +313,7 @@ async def _handle_client_messages(
         websocket: WebSocket connection
         get_day_context_handler: Handler for getting full day context
         get_incremental_changes_handler: Handler for getting incremental changes
-        today: Today's date
+        date_state: Mutable container holding the current date
     """
     while True:
         try:
@@ -296,7 +345,9 @@ async def _handle_client_messages(
                         changes,
                         last_timestamp,
                     ) = await get_incremental_changes_handler.handle(
-                        GetIncrementalChangesQuery(since=since_dt, date=today_date)
+                        GetIncrementalChangesQuery(
+                            since=since_dt, date=date_state["value"]
+                        )
                     )
 
                     response = WebSocketSyncResponseSchema(
@@ -317,52 +368,12 @@ async def _handle_client_messages(
             else:
                 # Full sync
                 try:
-                    try:
-                        context = await get_day_context_handler.handle(
-                            GetDayContextQuery(date=today_date)
-                        )
-                    except NotFoundError:
-                        # Day doesn't exist, auto-schedule it (WebSocket is THE place that creates Day if missing)
-                        context = await schedule_day_handler.handle(
-                            ScheduleDayCommand(date=today_date)
-                        )
-
-                    audit_logs = (
-                        await get_incremental_changes_handler.audit_log_ro_repo.search(
-                            value_objects.AuditLogQuery()
-                        )
-                    )
-                    last_audit_timestamp: dt_datetime | None = None
-                    if audit_logs:
-                        sorted_logs = sorted(
-                            audit_logs, key=lambda x: x.occurred_at, reverse=True
-                        )
-                        last_audit_timestamp = sorted_logs[0].occurred_at
-
-                    if last_audit_timestamp is None:
-                        last_audit_timestamp = dt_datetime.now(UTC)
-
-                    # Fetch routines for today
-                    from lykke.presentation.api.schemas.mappers import (
-                        map_routine_to_schema,
-                    )
-
-                    routines = await get_day_context_handler.routine_ro_repo.search(
-                        value_objects.RoutineQuery(date=today_date)
-                    )
-                    routine_schemas = [
-                        map_routine_to_schema(routine) for routine in routines
-                    ]
-
-                    response = WebSocketSyncResponseSchema(
-                        day_context=map_day_context_to_schema(
-                            context, user_timezone=user_timezone
-                        ),
-                        changes=None,
-                        routines=routine_schemas,
-                        last_audit_log_timestamp=last_audit_timestamp.isoformat()
-                        if last_audit_timestamp
-                        else None,
+                    response = await _build_full_sync_response(
+                        get_day_context_handler=get_day_context_handler,
+                        get_incremental_changes_handler=get_incremental_changes_handler,
+                        schedule_day_handler=schedule_day_handler,
+                        date_value=date_state["value"],
+                        user_timezone=user_timezone,
                     )
                 except Exception as e:
                     logger.error(f"Error getting day context: {e}")
@@ -386,8 +397,10 @@ async def _handle_client_messages(
 async def _handle_realtime_events(
     websocket: WebSocket,
     domain_events_subscription: Any,
-    today_date: date,
+    date_state: dict[str, date],
     incremental_changes_handler: GetIncrementalChangesHandler,
+    day_context_handler: GetDayContextHandler,
+    schedule_day_handler: ScheduleDayHandler,
     user_timezone: str | None,
 ) -> None:
     """Handle real-time domain events from pubsub and convert to entity changes.
@@ -398,7 +411,7 @@ async def _handle_realtime_events(
     Args:
         websocket: WebSocket connection
         domain_events_subscription: PubSub subscription for domain events
-        today_date: Today's date for filtering
+        date_state: Mutable container holding the current date
         incremental_changes_handler: Handler to access repositories and load entity data
     """
 
@@ -420,6 +433,28 @@ async def _handle_realtime_events(
                     logger.debug(
                         f"Deserialized domain event: {domain_event.__class__.__name__}"
                     )
+
+                    if isinstance(domain_event, NewDayEvent):
+                        next_date = domain_event.date
+                        current_date = date_state["value"]
+                        if next_date != current_date:
+                            logger.info(
+                                "New day detected (%s -> %s). Sending full sync.",
+                                current_date,
+                                next_date,
+                            )
+                            date_state["value"] = next_date
+                            response = await _build_full_sync_response(
+                                get_day_context_handler=day_context_handler,
+                                get_incremental_changes_handler=incremental_changes_handler,
+                                schedule_day_handler=schedule_day_handler,
+                                date_value=next_date,
+                                user_timezone=user_timezone,
+                            )
+                            await send_ws_message(
+                                websocket, response.model_dump(mode="json")
+                            )
+                        continue
 
                     if not isinstance(domain_event, AuditableDomainEvent):
                         logger.debug(
@@ -450,7 +485,7 @@ async def _handle_realtime_events(
                     if isinstance(entity_date, dt_datetime):
                         entity_date = entity_date.date()
 
-                    if entity_date and entity_date != today_date:
+                    if entity_date and entity_date != date_state["value"]:
                         logger.debug(
                             f"Filtered out {domain_event.__class__.__name__} for entity {domain_event.entity_id} (not for today)"
                         )

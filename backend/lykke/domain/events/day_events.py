@@ -32,6 +32,14 @@ class DayScheduledEvent(DomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
+class NewDayEvent(DomainEvent):
+    """Event raised when a new day is created and scheduled."""
+
+    day_id: UUID
+    date: dt_date
+
+
+@dataclass(frozen=True, kw_only=True)
 class DayCompletedEvent(DomainEvent):
     """Event raised when a day is marked as complete."""
 
@@ -278,6 +286,7 @@ __all__ = [
     "DayScheduledEvent",
     "DayUnscheduledEvent",
     "DayUpdatedEvent",
+    "NewDayEvent",
     "ReminderAddedEvent",
     "ReminderRemovedEvent",
     "ReminderStatusChangedEvent",

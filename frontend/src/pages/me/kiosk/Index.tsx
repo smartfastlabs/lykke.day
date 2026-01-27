@@ -87,7 +87,8 @@ const formatWindow = (window: TimeWindow | null | undefined): string | null => {
   const start = window.available_time ?? window.start_time;
   const end = window.cutoff_time ?? window.end_time;
   if (!start && !end) return null;
-  if (start && end) return `${formatTimeString(start)}-${formatTimeString(end)}`;
+  if (start && end)
+    return `${formatTimeString(start)}-${formatTimeString(end)}`;
   if (start) return `after ${formatTimeString(start)}`;
   return `before ${formatTimeString(end!)}`;
 };
@@ -164,7 +165,7 @@ const getTaskTimeLabel = (task: Task): string | null => {
 
   if (timeWindow.start_time && timeWindow.end_time) {
     return `${formatTimeString(timeWindow.start_time)}-${formatTimeString(
-      timeWindow.end_time
+      timeWindow.end_time,
     )}`;
   }
 
@@ -209,9 +210,7 @@ const KioskPanel: Component<{
         </span>
       </Show>
     </div>
-    <div class="flex-1 min-h-0 overflow-y-auto pr-1">
-      {props.children}
-    </div>
+    <div class="flex-1 min-h-0 overflow-y-auto pr-1">{props.children}</div>
   </div>
 );
 
@@ -307,7 +306,8 @@ const KioskPage: Component = () => {
           setWeather({
             temperature: Math.round(data.current_weather.temperature),
             condition:
-              WEATHER_CODE_LABELS[data.current_weather.weathercode] ?? "Weather",
+              WEATHER_CODE_LABELS[data.current_weather.weathercode] ??
+              "Weather",
           });
         } catch (error) {
           console.error("Weather lookup failed:", error);
@@ -317,7 +317,7 @@ const KioskPage: Component = () => {
       () => {
         setWeatherError(true);
       },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 30 * 60 * 1000 }
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 30 * 60 * 1000 },
     );
   });
 
@@ -330,43 +330,48 @@ const KioskPage: Component = () => {
   });
 
   const weekday = createMemo(() =>
-    new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date())
+    new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date()),
   );
 
   const monthDay = createMemo(() =>
     new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
-    }).format(date())
+    }).format(date()),
   );
 
   const dateLabel = createMemo(() => `${weekday()} ${monthDay()}`);
-  const planTitle = createMemo(() => day()?.high_level_plan?.title?.trim() ?? "");
+  const planTitle = createMemo(
+    () => day()?.high_level_plan?.title?.trim() ?? "",
+  );
   const isWorkday = createMemo(() => Boolean(day()?.tags?.includes("WORKDAY")));
-  const timeBlocks = createMemo<TimeBlock[]>(() => day()?.template?.time_blocks ?? []);
+  const timeBlocks = createMemo<TimeBlock[]>(
+    () => day()?.template?.time_blocks ?? [],
+  );
   const dayDate = createMemo(() => day()?.date ?? getDateString());
   const isToday = createMemo(() => dayDate() === getDateString());
 
   const blocks = createMemo(() =>
     timeBlocks()
       .map((block) => {
-        const start = Number(block.start_time.slice(0, 2)) * 60 +
+        const start =
+          Number(block.start_time.slice(0, 2)) * 60 +
           Number(block.start_time.slice(3, 5));
         const end = Math.max(
           Number(block.end_time.slice(0, 2)) * 60 +
             Number(block.end_time.slice(3, 5)),
-          start + 1
+          start + 1,
         );
         return { ...block, start, end };
       })
-      .sort((a, b) => a.start - b.start)
+      .sort((a, b) => a.start - b.start),
   );
 
   const currentBlock = createMemo(() => {
     if (!isToday()) return null;
     const nowMinutes = now().getHours() * 60 + now().getMinutes();
     return blocks().find(
-      (block) => nowMinutes >= block.start && nowMinutes < block.end
+      (block) => nowMinutes >= block.start && nowMinutes < block.end,
     );
   });
 
@@ -383,16 +388,18 @@ const KioskPage: Component = () => {
   const allReminders = createMemo(() => reminders() ?? []);
   const allRoutines = createMemo(() => routines() ?? []);
   const activeReminders = createMemo(() =>
-    allReminders().filter((reminder) => reminder.status === "INCOMPLETE")
+    allReminders().filter((reminder) => reminder.status === "INCOMPLETE"),
   );
   const visibleTasks = createMemo(() => filterVisibleTasks(allTasks(), now()));
   const activeTasks = createMemo(() =>
     visibleTasks().filter(
-      (task) => task.status !== "COMPLETE" && task.status !== "PUNT"
-    )
+      (task) => task.status !== "COMPLETE" && task.status !== "PUNT",
+    ),
   );
   const upcomingTaskCandidates = createMemo(() =>
-    allTasks().filter((task) => task.status !== "COMPLETE" && task.status !== "PUNT")
+    allTasks().filter(
+      (task) => task.status !== "COMPLETE" && task.status !== "PUNT",
+    ),
   );
 
   const rightNowEventIds = createMemo(() => {
@@ -406,7 +413,7 @@ const KioskPage: Component = () => {
           return start <= currentTime && (!end || end >= currentTime);
         })
         .map((event) => event.id)
-        .filter((id): id is string => Boolean(id))
+        .filter((id): id is string => Boolean(id)),
     );
   });
 
@@ -425,7 +432,7 @@ const KioskPage: Component = () => {
           return start >= currentTime && start <= windowEnd;
         })
         .map((event) => event.id)
-        .filter((id): id is string => Boolean(id))
+        .filter((id): id is string => Boolean(id)),
     );
   });
 
@@ -439,7 +446,7 @@ const KioskPage: Component = () => {
           return taskTime < currentTime;
         })
         .map((task) => task.id)
-        .filter((id): id is string => Boolean(id))
+        .filter((id): id is string => Boolean(id)),
     );
   });
 
@@ -455,7 +462,7 @@ const KioskPage: Component = () => {
           return taskTime <= windowEnd;
         })
         .map((task) => task.id)
-        .filter((id): id is string => Boolean(id))
+        .filter((id): id is string => Boolean(id)),
     );
   });
 
@@ -508,10 +515,9 @@ const KioskPage: Component = () => {
       })
       .forEach((task) => {
         items.push({
-          label: task.name.replace("ROUTINE DEFINITION: ", "").replace(
-            "Routine Definition: ",
-            ""
-          ),
+          label: task.name
+            .replace("ROUTINE DEFINITION: ", "")
+            .replace("Routine Definition: ", ""),
           time: getTaskTimeLabel(task),
           meta: "task",
         });
@@ -548,10 +554,9 @@ const KioskPage: Component = () => {
       })
       .forEach((task) => {
         items.push({
-          label: task.name.replace("ROUTINE DEFINITION: ", "").replace(
-            "Routine Definition: ",
-            ""
-          ),
+          label: task.name
+            .replace("ROUTINE DEFINITION: ", "")
+            .replace("Routine Definition: ", ""),
           time: getTaskTimeLabel(task),
           meta: "task",
         });
@@ -563,10 +568,15 @@ const KioskPage: Component = () => {
   const eventItems = createMemo<KioskItem[]>(() => {
     const items = eventsForSections()
       .slice()
-      .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
+      .sort(
+        (a, b) =>
+          new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+      )
       .map((event) => ({
         label: event.name ?? "Event",
-        time: isAllDayEvent(event) ? "all day" : formatEventTime(event.starts_at),
+        time: isAllDayEvent(event)
+          ? "all day"
+          : formatEventTime(event.starts_at),
         meta: event.category?.toLowerCase().replace("_", " "),
       }));
 
@@ -577,20 +587,19 @@ const KioskPage: Component = () => {
     tasksForSections()
       .filter((task) => task.status !== "COMPLETE" && task.status !== "PUNT")
       .map((task) => ({
-        label: task.name.replace("ROUTINE DEFINITION: ", "").replace(
-          "Routine Definition: ",
-          ""
-        ),
+        label: task.name
+          .replace("ROUTINE DEFINITION: ", "")
+          .replace("Routine Definition: ", ""),
         time: getTaskTimeLabel(task),
         meta: task.type?.toLowerCase().replace("_", " "),
-      }))
+      })),
   );
 
   const reminderItems = createMemo<KioskItem[]>(() =>
     activeReminders().map((reminder: Reminder) => ({
       label: reminder.name,
       meta: "reminder",
-    }))
+    })),
   );
 
   const routineItems = createMemo<KioskItem[]>(() => {
@@ -606,7 +615,7 @@ const KioskPage: Component = () => {
 
   const triggeredAlarm = createMemo<Alarm | null>(() => {
     const active = (alarms() ?? []).filter(
-      (alarm) => (alarm.status ?? "ACTIVE") === "TRIGGERED"
+      (alarm) => (alarm.status ?? "ACTIVE") === "TRIGGERED",
     );
     if (active.length === 0) return null;
     return [...active].sort((a, b) => {
@@ -712,92 +721,104 @@ const KioskPage: Component = () => {
                 </div>
               </div>
               <div class="flex-1 min-h-0 grid grid-cols-3 grid-rows-2 gap-3">
-              <KioskPanel title="Now" count={rightNowItems().length}>
-                <div class="space-y-3">
-                  <div class="flex items-end justify-between">
-                    <div class="text-4xl font-semibold text-amber-700 tabular-nums">
-                      {timeLabel()}
+                <KioskPanel title="Now" count={rightNowItems().length}>
+                  <div class="space-y-3">
+                    <div class="flex items-end justify-between">
+                      <div class="text-4xl font-semibold text-amber-700 tabular-nums">
+                        {timeLabel()}
+                      </div>
                     </div>
+                    <Show when={isWorkday()}>
+                      <span class="inline-flex items-center rounded-full bg-amber-50/95 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-600 shadow-sm shadow-amber-900/5">
+                        Workday
+                      </span>
+                    </Show>
+                    <div class="flex items-center justify-between rounded-xl bg-white/70 px-3 py-2 text-sm text-stone-700">
+                      <div>
+                        <p class="text-[11px] uppercase tracking-[0.2em] text-stone-400">
+                          Weather
+                        </p>
+                        <Show
+                          when={weather()}
+                          fallback={
+                            <p class="text-sm text-stone-500">
+                              {weatherError() ? "Unavailable" : "Loading..."}
+                            </p>
+                          }
+                        >
+                          {(snapshot) => (
+                            <p class="text-base font-semibold text-stone-800">
+                              {snapshot().temperature}°F ·{" "}
+                              {snapshot().condition}
+                            </p>
+                          )}
+                        </Show>
+                      </div>
+                      <div class="text-2xl">⛅️</div>
+                    </div>
+                    <Show when={blocks().length > 0}>
+                      <div class="text-[11px] text-stone-500">
+                        <Show
+                          when={currentBlock()}
+                          fallback={
+                            <span>
+                              <span class="font-medium">Current:</span> none
+                            </span>
+                          }
+                        >
+                          {(block) => (
+                            <span>
+                              <span class="font-medium">Current:</span>{" "}
+                              {block().name}
+                            </span>
+                          )}
+                        </Show>
+                        <span class="mx-2 text-stone-300">•</span>
+                        <Show
+                          when={nextBlock()}
+                          fallback={
+                            <span>
+                              <span class="font-medium">Next:</span> none
+                            </span>
+                          }
+                        >
+                          {(block) => (
+                            <span>
+                              <span class="font-medium">Next:</span>{" "}
+                              {block().name}
+                            </span>
+                          )}
+                        </Show>
+                      </div>
+                    </Show>
+                    <KioskList
+                      items={rightNowItems()}
+                      emptyLabel="active items"
+                    />
                   </div>
-                  <Show when={isWorkday()}>
-                    <span class="inline-flex items-center rounded-full bg-amber-50/95 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-600 shadow-sm shadow-amber-900/5">
-                      Workday
-                    </span>
-                  </Show>
-                  <div class="flex items-center justify-between rounded-xl bg-white/70 px-3 py-2 text-sm text-stone-700">
-                    <div>
-                      <p class="text-[11px] uppercase tracking-[0.2em] text-stone-400">
-                        Weather
-                      </p>
-                      <Show
-                        when={weather()}
-                        fallback={
-                          <p class="text-sm text-stone-500">
-                            {weatherError() ? "Unavailable" : "Loading..."}
-                          </p>
-                        }
-                      >
-                        {(snapshot) => (
-                          <p class="text-base font-semibold text-stone-800">
-                            {snapshot().temperature}°F · {snapshot().condition}
-                          </p>
-                        )}
-                      </Show>
-                    </div>
-                    <div class="text-2xl">⛅️</div>
-                  </div>
-                  <Show when={blocks().length > 0}>
-                    <div class="text-[11px] text-stone-500">
-                      <Show
-                        when={currentBlock()}
-                        fallback={
-                          <span>
-                            <span class="font-medium">Current:</span> none
-                          </span>
-                        }
-                      >
-                        {(block) => (
-                          <span>
-                            <span class="font-medium">Current:</span> {block().name}
-                          </span>
-                        )}
-                      </Show>
-                      <span class="mx-2 text-stone-300">•</span>
-                      <Show
-                        when={nextBlock()}
-                        fallback={
-                          <span>
-                            <span class="font-medium">Next:</span> none
-                          </span>
-                        }
-                      >
-                        {(block) => (
-                          <span>
-                            <span class="font-medium">Next:</span> {block().name}
-                          </span>
-                        )}
-                      </Show>
-                    </div>
-                  </Show>
-                  <KioskList items={rightNowItems()} emptyLabel="active items" />
-                </div>
-              </KioskPanel>
-              <KioskPanel title="Upcoming (30m)" count={upcomingItems().length}>
-                <KioskList items={upcomingItems()} emptyLabel="upcoming items" />
-              </KioskPanel>
-              <KioskPanel title="Reminders" count={activeReminders().length}>
-                <KioskList items={reminderItems()} emptyLabel="reminders" />
-              </KioskPanel>
-              <KioskPanel title="Events" count={eventItems().length}>
-                <KioskList items={eventItems()} emptyLabel="events" />
-              </KioskPanel>
-              <KioskPanel title="Tasks" count={taskItems().length}>
-                <KioskList items={taskItems()} emptyLabel="tasks" />
-              </KioskPanel>
-              <KioskPanel title="Routines" count={routineItems().length}>
-                <KioskList items={routineItems()} emptyLabel="routines" />
-              </KioskPanel>
-            </div>
+                </KioskPanel>
+                <KioskPanel
+                  title="Upcoming (30m)"
+                  count={upcomingItems().length}
+                >
+                  <KioskList
+                    items={upcomingItems()}
+                    emptyLabel="upcoming items"
+                  />
+                </KioskPanel>
+                <KioskPanel title="Reminders" count={activeReminders().length}>
+                  <KioskList items={reminderItems()} emptyLabel="reminders" />
+                </KioskPanel>
+                <KioskPanel title="Events" count={eventItems().length}>
+                  <KioskList items={eventItems()} emptyLabel="events" />
+                </KioskPanel>
+                <KioskPanel title="Tasks" count={taskItems().length}>
+                  <KioskList items={taskItems()} emptyLabel="tasks" />
+                </KioskPanel>
+                <KioskPanel title="Routines" count={routineItems().length}>
+                  <KioskList items={routineItems()} emptyLabel="routines" />
+                </KioskPanel>
+              </div>
             </div>
           </div>
         </Show>

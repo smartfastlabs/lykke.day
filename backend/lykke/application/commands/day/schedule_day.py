@@ -22,7 +22,7 @@ from lykke.domain.entities import (
     RoutineEntity,
     TaskEntity,
 )
-from lykke.domain.events.day_events import DayUpdatedEvent
+from lykke.domain.events.day_events import DayUpdatedEvent, NewDayEvent
 
 
 @dataclass(frozen=True)
@@ -353,6 +353,16 @@ class ScheduleDayHandler(
             # Set timeblocks before scheduling
             day.time_blocks = day_time_blocks
             day.schedule(template)
+            day.add_event(
+                NewDayEvent(
+                    user_id=self.user_id,
+                    day_id=day.id,
+                    date=command.date,
+                    entity_id=day.id,
+                    entity_type="day",
+                    entity_date=command.date,
+                )
+            )
             await uow.create(day)
         else:
             day = existing_day
