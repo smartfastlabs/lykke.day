@@ -18,8 +18,6 @@ from lykke.application.queries.get_llm_prompt_context import (
 )
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.config import settings
-from lykke.core.utils.day_context_serialization import serialize_day_context
-from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
 
 
@@ -98,37 +96,6 @@ class KioskNotificationHandler(
         prompt_context: value_objects.LLMPromptContext,
         llm_provider: value_objects.LLMProvider,
     ) -> list[LLMTool]:
-        def build_llm_snapshot(
-            *,
-            tool_name: str,
-            tool_args: dict[str, object | None],
-        ) -> value_objects.LLMRunResultSnapshot | None:
-            snapshot_context = self._llm_snapshot_context
-            if snapshot_context is None:
-                return None
-            return value_objects.LLMRunResultSnapshot(
-                tool_calls=[
-                    value_objects.LLMToolCallResultSnapshot(
-                        tool_name=tool_name,
-                        arguments=tool_args,
-                        result=None,
-                    )
-                ],
-                prompt_context=serialize_day_context(
-                    snapshot_context.prompt_context,
-                    current_time=snapshot_context.current_time,
-                ),
-                current_time=snapshot_context.current_time,
-                llm_provider=snapshot_context.llm_provider,
-                system_prompt=snapshot_context.system_prompt,
-                context_prompt=snapshot_context.context_prompt,
-                ask_prompt=snapshot_context.ask_prompt,
-                tools_prompt=snapshot_context.tools_prompt,
-                referenced_entities=build_referenced_entities(
-                    snapshot_context.prompt_context
-                ),
-            )
-
         async def decide_kiosk_notification(
             should_notify: bool,
             message: str | None = None,
