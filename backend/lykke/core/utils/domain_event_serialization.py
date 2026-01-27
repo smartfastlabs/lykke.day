@@ -7,7 +7,7 @@ on the receiving end (WebSocket handlers).
 
 import importlib
 from dataclasses import asdict, fields, is_dataclass
-from datetime import UTC, date as dt_date, datetime, time
+from datetime import date as dt_date, datetime, time
 from enum import Enum
 from types import UnionType
 from typing import Any, Union, get_args, get_origin, get_type_hints
@@ -186,12 +186,23 @@ def _build_type_hint_namespace(event_class: type[DomainEvent]) -> dict[str, Any]
 def _get_event_type_hints(
     event_class: type[DomainEvent], namespace: dict[str, Any]
 ) -> dict[str, Any]:
-    try:
-        return get_type_hints(
-            event_class, globalns=namespace, localns=namespace, include_extras=True
-        )
-    except (NameError, TypeError, SyntaxError):
-        return {}
+    merged: dict[str, Any] = {}
+    for cls in reversed(event_class.mro()):
+        if not issubclass(cls, DomainEvent):
+            continue
+        if cls is object:
+            continue
+        cls_namespace = namespace
+        if cls is not event_class:
+            cls_namespace = _build_type_hint_namespace(cls)
+        try:
+            hints = get_type_hints(
+                cls, globalns=cls_namespace, localns=cls_namespace, include_extras=True
+            )
+        except (NameError, TypeError, SyntaxError):
+            hints = {}
+        merged.update(hints)
+    return merged
 
 
 def _coerce_event_data(

@@ -1,14 +1,15 @@
 import asyncio
 import contextlib
 import json
-from datetime import date
+from datetime import date, time
 from uuid import UUID, uuid4
 
 import pytest
 
 from lykke.core.utils.domain_event_serialization import serialize_domain_event
-from lykke.domain.events.day_events import ReminderAddedEvent
+from lykke.domain.events.day_events import AlarmStatusChangedEvent, ReminderAddedEvent
 from lykke.domain.events.task_events import TaskCreatedEvent
+from lykke.domain.value_objects.day import AlarmStatus, AlarmType
 from lykke.presentation.api.routers.days import _handle_realtime_events
 
 
@@ -88,6 +89,51 @@ async def test_realtime_reminder_added_event_is_forwarded() -> None:
         date=today,
         reminder_id=reminder_id,
         reminder_name="LLM Reminder",
+        entity_id=day_id,
+        entity_type="day",
+        entity_date=today,
+    )
+
+    websocket = _FakeWebSocket()
+    subscription = _FakeSubscription([serialize_domain_event(event)])
+    handler = _FakeIncrementalChangesHandler()
+    date_state = {"value": today}
+
+    task = asyncio.create_task(
+        _handle_realtime_events(
+            websocket, subscription, date_state, handler, None, None, None
+        )
+    )
+    await asyncio.sleep(0.05)
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
+
+    assert websocket.messages
+    response = websocket.messages[0]
+    assert response["type"] == "sync_response"
+    assert response["changes"]
+    assert response["changes"][0]["entity_type"] == "day"
+    assert response["changes"][0]["entity_id"] == str(day_id)
+
+
+@pytest.mark.asyncio
+async def test_realtime_alarm_status_changed_event_is_forwarded() -> None:
+    user_id = uuid4()
+    day_id = uuid4()
+    alarm_id = uuid4()
+    today = date(2026, 1, 25)
+    event = AlarmStatusChangedEvent(
+        user_id=user_id,
+        day_id=day_id,
+        date=today,
+        alarm_id=alarm_id,
+        alarm_name="Wake up",
+        alarm_time=time(7, 0),
+        alarm_type=AlarmType.URL,
+        alarm_url="https://example.com",
+        old_status=AlarmStatus.TRIGGERED,
+        new_status=AlarmStatus.CANCELLED,
         entity_id=day_id,
         entity_type="day",
         entity_date=today,

@@ -83,3 +83,20 @@ class WebSocketSyncResponseSchema(BaseSchema):
         None  # Routines (included in full sync response)
     )
     last_audit_log_timestamp: str | None  # ISO format datetime - always included
+
+
+class KioskNotificationSchema(BaseSchema):
+    """Kiosk notification message to be read out loud."""
+
+    message: str
+    category: str  # "calendar_event", "routine", "task_reminder", "time_block_change", "other"
+    message_hash: str
+    created_at: str  # ISO format datetime
+    triggered_by: str | None = None
+
+
+class WebSocketKioskNotificationSchema(BaseSchema):
+    """Server → Client: Kiosk notification event."""
+
+    type: Literal["kiosk_notification"] = "kiosk_notification"
+    notification: KioskNotificationSchema

@@ -1,6 +1,6 @@
 """Background task definitions using Taskiq."""
 
-from datetime import date as dt_date
+from datetime import date as dt_date, timedelta as dt_timedelta
 from typing import Annotated, cast
 from uuid import UUID
 
@@ -23,6 +23,8 @@ from lykke.application.commands.calendar import (
     SyncCalendarHandler,
 )
 from lykke.application.commands.notifications import (
+    KioskNotificationCommand,
+    KioskNotificationHandler,
     MorningOverviewCommand,
     MorningOverviewHandler,
     SmartNotificationCommand,
@@ -170,6 +172,20 @@ def get_smart_notification_handler(
         uow_factory=uow_factory,
     )
     return factory.create(SmartNotificationHandler)
+
+
+def get_kiosk_notification_handler(
+    user_id: UUID,
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
+) -> KioskNotificationHandler:
+    """Get a KioskNotificationHandler instance for a user."""
+    factory = CommandHandlerFactory(
+        user_id=user_id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+    )
+    return factory.create(KioskNotificationHandler)
 
 
 def get_morning_overview_handler(
@@ -387,6 +403,34 @@ async def evaluate_smart_notifications_for_all_users_task(
     )
 
 
+@broker.task(schedule=[{"cron": "0,19,20,30,50 * * * *"}])  # type: ignore[untyped-decorator]
+async def evaluate_kiosk_notifications_for_all_users_task(
+    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
+) -> None:
+    """Evaluate kiosk notifications for all users with LLM provider configured.
+
+    Runs at :00, :20, :30, and :50 each hour to check kiosk notifications.
+    """
+    logger.info("Starting kiosk notification evaluation for all users")
+
+    users = await user_repo.all()
+    # Filter to users with LLM provider configured
+    users_with_llm = [
+        user for user in users if user.settings and user.settings.llm_provider
+    ]
+    logger.info(f"Found {len(users_with_llm)} users with LLM provider configured")
+
+    for user in users_with_llm:
+        # Enqueue a sub-task for each user
+        await evaluate_kiosk_notification_task.kiq(
+            user_id=user.id, triggered_by="scheduled"
+        )
+
+    logger.info(
+        f"Enqueued kiosk notification evaluation tasks for {len(users_with_llm)} users"
+    )
+
+
 @broker.task  # type: ignore[untyped-decorator]
 async def evaluate_smart_notification_task(
     user_id: UUID,
@@ -423,6 +467,46 @@ async def evaluate_smart_notification_task(
         except Exception:  # pylint: disable=broad-except
             # Catch-all for resilient background job - continue with other users
             logger.exception(f"Error evaluating smart notification for user {user_id}")
+
+    finally:
+        await pubsub_gateway.close()
+
+
+@broker.task  # type: ignore[untyped-decorator]
+async def evaluate_kiosk_notification_task(
+    user_id: UUID,
+    triggered_by: str | None = None,
+) -> None:
+    """Evaluate and send kiosk notification for a specific user.
+
+    This task can be triggered by:
+    - Scheduled task (every 10 minutes)
+
+    Args:
+        user_id: The user ID to evaluate kiosk notifications for
+        triggered_by: How this task was triggered (e.g., "scheduled")
+    """
+    logger.info(f"Starting kiosk notification evaluation for user {user_id}")
+
+    pubsub_gateway = RedisPubSubGateway()
+    try:
+        handler = get_kiosk_notification_handler(
+            user_id=user_id,
+            uow_factory=get_unit_of_work_factory(pubsub_gateway),
+            ro_repo_factory=get_read_only_repository_factory(),
+        )
+
+        try:
+            await handler.handle(
+                KioskNotificationCommand(
+                    user_id=user_id,
+                    triggered_by=triggered_by,
+                )
+            )
+            logger.debug(f"Kiosk notification evaluation completed for user {user_id}")
+        except Exception:  # pylint: disable=broad-except
+            # Catch-all for resilient background job - continue with other users
+            logger.exception(f"Error evaluating kiosk notification for user {user_id}")
 
     finally:
         await pubsub_gateway.close()
@@ -470,23 +554,13 @@ async def trigger_alarms_for_user_task(
         target_date = get_current_date(timezone)
         now = get_current_datetime()
         evaluation_time = now.replace(second=0, microsecond=0)
+        previous_date = target_date - dt_timedelta(days=1)
 
-        async with uow_factory.create(user_id) as uow:
-            try:
-                day_id = DayEntity.id_from_date_and_user(target_date, user_id)
-                day = await uow.day_ro_repo.get(day_id)
-            except Exception as exc:
-                logger.debug(
-                    "No day found for user %s on %s (%s)",
-                    user_id,
-                    target_date,
-                    exc,
-                )
-                return
-
-            if not day.alarms:
-                return
-
+        def evaluate_day_alarms(
+            day: DayEntity,
+            *,
+            snoozed_only: bool,
+        ) -> None:
             for alarm in day.alarms:
                 if alarm.status in (
                     value_objects.AlarmStatus.CANCELLED,
@@ -499,6 +573,8 @@ async def trigger_alarms_for_user_task(
                         or alarm.snoozed_until > evaluation_time
                     ):
                         continue
+                elif snoozed_only:
+                    continue
                 if alarm.datetime is None or alarm.datetime > evaluation_time:
                     continue
                 day.update_alarm_status(
@@ -506,8 +582,30 @@ async def trigger_alarms_for_user_task(
                     value_objects.AlarmStatus.TRIGGERED,
                 )
 
-            if day.has_events():
-                uow.add(day)
+        async with uow_factory.create(user_id) as uow:
+            for day_date, snoozed_only in (
+                (target_date, False),
+                (previous_date, True),
+            ):
+                try:
+                    day_id = DayEntity.id_from_date_and_user(day_date, user_id)
+                    day = await uow.day_ro_repo.get(day_id)
+                except Exception as exc:
+                    logger.debug(
+                        "No day found for user %s on %s (%s)",
+                        user_id,
+                        day_date,
+                        exc,
+                    )
+                    continue
+
+                if not day.alarms:
+                    continue
+
+                evaluate_day_alarms(day, snoozed_only=snoozed_only)
+
+                if day.has_events():
+                    uow.add(day)
 
         logger.info("Alarm evaluation completed for user %s", user_id)
     finally:

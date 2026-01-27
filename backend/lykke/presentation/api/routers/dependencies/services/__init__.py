@@ -53,6 +53,31 @@ async def get_pubsub_gateway(
         await gateway.close()
 
 
+async def get_pubsub_gateway_for_request(
+    request: Request,
+) -> AsyncIterator[PubSubGatewayProtocol]:
+    """Get a PubSubGateway instance for HTTP requests using the shared Redis connection pool.
+
+    Uses the shared Redis connection pool from app.state. The gateway uses
+    the shared pool, so closing it only closes the client connection, not
+    the pool itself.
+
+    Args:
+        request: FastAPI Request object to access app state
+    """
+    # Get the shared Redis connection pool from app state
+    # If None (e.g., in tests), gateway will create its own connection
+    redis_pool = getattr(request.app.state, "redis_pool", None)
+
+    # Create gateway with shared pool if available, otherwise create new connection
+    gateway = RedisPubSubGateway(redis_pool=redis_pool)
+    try:
+        yield gateway
+    finally:
+        # Close the gateway (only closes client connection, not the shared pool)
+        await gateway.close()
+
+
 async def get_unit_of_work_factory(
     request: Request,
 ) -> AsyncIterator[UnitOfWorkFactory]:

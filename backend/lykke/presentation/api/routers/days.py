@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime as dt_datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Request, WebSocket, WebSocketDisconnect
 from loguru import logger
 
 from lykke.application.commands import (
@@ -40,8 +40,10 @@ from lykke.presentation.api.schemas.mappers import (
 )
 from lykke.presentation.api.schemas.websocket_message import (
     EntityChangeSchema,
+    KioskNotificationSchema,
     WebSocketConnectionAckSchema,
     WebSocketErrorSchema,
+    WebSocketKioskNotificationSchema,
     WebSocketSyncRequestSchema,
     WebSocketSyncResponseSchema,
 )
@@ -51,11 +53,12 @@ from .dependencies.factories import command_handler_factory
 from .dependencies.services import (
     day_context_handler_websocket,
     get_pubsub_gateway,
+    get_pubsub_gateway_for_request,
     get_read_only_repository_factory,
     get_schedule_day_handler_websocket,
     incremental_changes_handler_websocket,
 )
-from .dependencies.user import get_current_user
+from .dependencies.user import get_current_user, get_current_user_from_token
 
 router = APIRouter()
 
@@ -122,6 +125,49 @@ async def update_day(
         value_objects.BrainDumpQuery(date=day.date)
     )
     return map_day_to_schema(updated, brain_dump_items=brain_dump_items)
+
+
+@router.post("/kiosk/test-notification")
+async def send_test_kiosk_notification(
+    request: Request,
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    pubsub_gateway: Annotated[
+        PubSubGatewayProtocol, Depends(get_pubsub_gateway_for_request)
+    ],
+) -> dict[str, str]:
+    """Send a test kiosk notification to all connected kiosks for the current user.
+
+    Returns:
+        A dict with a success message.
+    """
+    import hashlib
+    from datetime import UTC, datetime
+
+    test_message = "This is a test kiosk notification. If you can hear this, the system is working correctly."
+    message_hash = hashlib.sha256(test_message.encode("utf-8")).hexdigest()
+
+    payload = {
+        "type": "kiosk_notification",
+        "message": test_message,
+        "category": "other",
+        "message_hash": message_hash,
+        "created_at": datetime.now(UTC).isoformat(),
+        "triggered_by": "test",
+    }
+
+    try:
+        await pubsub_gateway.publish_to_user_channel(
+            user_id=user.id,
+            channel_type="kiosk-notifications",
+            message=payload,
+        )
+        logger.info(f"Sent test kiosk notification to user {user.id}")
+        return {"status": "success", "message": "Test notification sent"}
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.error(
+            f"Failed to send test kiosk notification for user {user.id}: {exc}"
+        )
+        raise
 
 
 # ============================================================================
@@ -583,3 +629,82 @@ async def _handle_realtime_events(
         except Exception as e:
             logger.error(f"Error in real-time events handler: {e}")
             break
+
+
+@router.websocket("/kiosk/notifications")
+async def kiosk_notifications_websocket(
+    websocket: WebSocket,
+    pubsub_gateway: Annotated[PubSubGatewayProtocol, Depends(get_pubsub_gateway)],
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+) -> None:
+    """WebSocket endpoint for kiosk notifications.
+
+    This endpoint:
+    1. Accepts WebSocket connection
+    2. Authenticates user (via dependency injection)
+    3. Subscribes to user's kiosk-notifications channel for real-time updates
+    4. Sends notifications to client for display and read-out
+
+    Args:
+        websocket: WebSocket connection
+    """
+    await websocket.accept()
+
+    user_id = user.id
+    logger.info(
+        f"Kiosk notifications WebSocket connection established for user {user_id}"
+    )
+
+    # Send connection acknowledgment
+    ack = WebSocketConnectionAckSchema(user_id=user_id)
+    await send_ws_message(websocket, ack.model_dump(mode="json"))
+
+    try:
+        # Subscribe to user's kiosk-notifications channel
+        async with pubsub_gateway.subscribe_to_user_channel(
+            user_id=user_id, channel_type="kiosk-notifications"
+        ) as kiosk_subscription:
+            while True:
+                try:
+                    # Wait for kiosk notifications from Redis with timeout
+                    notification_message = await kiosk_subscription.get_message(
+                        timeout=1.0
+                    )
+
+                    if notification_message:
+                        logger.debug("Received kiosk notification from Redis")
+                        try:
+                            notification = KioskNotificationSchema(
+                                **notification_message
+                            )
+                            ws_message = WebSocketKioskNotificationSchema(
+                                notification=notification
+                            )
+                            await send_ws_message(
+                                websocket, ws_message.model_dump(mode="json")
+                            )
+                            logger.info(
+                                f"Sent kiosk notification to user {user_id}: {notification.message[:50]}"
+                            )
+                        except Exception as process_error:
+                            logger.error(
+                                f"Failed to process kiosk notification message: {process_error}"
+                            )
+
+                except Exception as e:
+                    logger.error(f"Error in kiosk notifications handler: {e}")
+                    break
+
+    except WebSocketDisconnect:
+        logger.info(f"Kiosk notifications WebSocket disconnected for user {user_id}")
+
+    except Exception as e:
+        logger.error(f"Kiosk notifications WebSocket error: {e}")
+        try:
+            await send_error(
+                websocket, "INTERNAL_ERROR", "An unexpected error occurred"
+            )
+            await websocket.close()
+        except Exception:
+            # Connection may already be closed
+            pass
