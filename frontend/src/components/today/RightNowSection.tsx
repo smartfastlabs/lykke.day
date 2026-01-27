@@ -10,7 +10,6 @@ import {
 import { Icon } from "@/components/shared/Icon";
 import { faCircle } from "@fortawesome/free-solid-svg-icons";
 import type { Event, Task } from "@/types/api";
-import { getTaskUpcomingTime, isTaskSnoozed } from "@/utils/tasks";
 import TaskList from "@/components/tasks/List";
 import { EventItem } from "@/components/events/EventItem";
 
@@ -64,29 +63,7 @@ export const RightNowSection: Component<RightNowSectionProps> = (props) => {
   });
 
   const pastDueTasks = createMemo(() => {
-    const currentTime = now();
-    return props.tasks
-      .filter((task) => {
-        // Skip completed or punted tasks
-        if (task.status === "COMPLETE" || task.status === "PUNT") {
-          return false;
-        }
-        if (isTaskSnoozed(task, currentTime)) {
-          return false;
-        }
-
-        const taskTime = getTaskUpcomingTime(task, currentTime);
-        if (!taskTime) return false;
-
-        // Only include if past due (past start time or end time)
-        return taskTime < currentTime;
-      })
-      .sort((a, b) => {
-        const aTime = getTaskUpcomingTime(a, currentTime);
-        const bTime = getTaskUpcomingTime(b, currentTime);
-        if (!aTime || !bTime) return 0;
-        return aTime.getTime() - bTime.getTime();
-      });
+    return props.tasks.filter((task) => task.timing_status === "past-due");
   });
 
   const hasRightNowItems = createMemo(

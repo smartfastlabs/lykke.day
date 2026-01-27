@@ -13,9 +13,9 @@ import {
 import { Portal } from "solid-js/web";
 import Page from "@/components/shared/layout/Page";
 import { useStreamingData } from "@/providers/streamingData";
-import { getDateString, getTime } from "@/utils/dates";
-import { filterVisibleTasks, isTaskSnoozed } from "@/utils/tasks";
-import { buildRoutineGroups } from "@/components/routines/RoutineGroupsList";
+import { getDateString } from "@/utils/dates";
+import { filterVisibleTasks } from "@/utils/tasks";
+import { buildRoutineGroups, type RoutineGroup } from "@/components/routines/RoutineGroupsList";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 import { dayAPI } from "@/utils/api";
 import { globalNotifications } from "@/providers/notifications";
@@ -25,7 +25,6 @@ import type {
   Event,
   Reminder,
   Task,
-  TimeWindow,
 } from "@/types/api";
 
 type TimeBlock = NonNullable<DayTemplate["time_blocks"]>[number];
@@ -85,38 +84,17 @@ const formatEventTime = (dateTimeStr: string): string =>
     .toLowerCase()
     .replace(" ", "");
 
-const formatWindow = (window: TimeWindow | null | undefined): string | null => {
-  if (!window) return null;
-  const start = window.available_time ?? window.start_time;
-  const end = window.cutoff_time ?? window.end_time;
-  if (!start && !end) return null;
-  if (start && end)
-    return `${formatTimeString(start)}-${formatTimeString(end)}`;
-  if (start) return `after ${formatTimeString(start)}`;
-  return `before ${formatTimeString(end!)}`;
-};
-
-const getTaskTime = (task: Task): Date | null => {
-  const taskDate = task.scheduled_date;
-  const timeWindow = task.time_window;
-  if (!taskDate || !timeWindow) return null;
-
-  if (timeWindow.start_time) {
-    return getTime(taskDate, timeWindow.start_time);
+const formatRoutineTiming = (routine: RoutineGroup): string | null => {
+  const status = routine.timing_status ?? "hidden";
+  if (status === "active") return "active";
+  if (status === "available") return "available";
+  if (status === "past-due") return "past due";
+  if (status === "inactive") {
+    if (routine.next_available_time) {
+      return `starts ${formatEventTime(routine.next_available_time)}`;
+    }
+    return "soon";
   }
-
-  if (timeWindow.available_time) {
-    return getTime(taskDate, timeWindow.available_time);
-  }
-
-  if (timeWindow.end_time) {
-    return getTime(taskDate, timeWindow.end_time);
-  }
-
-  if (timeWindow.cutoff_time) {
-    return getTime(taskDate, timeWindow.cutoff_time);
-  }
-
   return null;
 };
 
@@ -263,9 +241,8 @@ const KioskPage: Component = () => {
   const [alarmVideoUrl, setAlarmVideoUrl] = createSignal<string | null>(null);
   const [lastAlarmKey, setLastAlarmKey] = createSignal<string | null>(null);
   const [fullscreenRequested, setFullscreenRequested] = createSignal(false);
-  const [processedNotificationHashes, setProcessedNotificationHashes] = createSignal<
-    Set<string>
-  >(new Set());
+  const [processedNotificationHashes, setProcessedNotificationHashes] =
+    createSignal<Set<string>>(new Set());
   const [isSendingTest, setIsSendingTest] = createSignal(false);
   let fullscreenContainer: HTMLDivElement | undefined;
   let kioskNotificationWs: WebSocket | null = null;
@@ -352,7 +329,7 @@ const KioskPage: Component = () => {
       if (speechUnlocked || !("speechSynthesis" in window)) {
         return;
       }
-      
+
       // Speak a silent utterance to unlock the API
       const unlockUtterance = new window.SpeechSynthesisUtterance("");
       unlockUtterance.volume = 0;
@@ -370,11 +347,10 @@ const KioskPage: Component = () => {
     const unlockEvents = ["click", "touchstart", "keydown"];
     const cleanupUnlockListeners: (() => void)[] = [];
     unlockEvents.forEach((eventType) => {
-      document.addEventListener(
-        eventType,
-        unlockSpeech,
-        { once: true, passive: true }
-      );
+      document.addEventListener(eventType, unlockSpeech, {
+        once: true,
+        passive: true,
+      });
       // Note: Since we use { once: true }, the listener auto-removes after first call
       // But we track it for completeness
       cleanupUnlockListeners.push(() => {
@@ -449,32 +425,39 @@ const KioskPage: Component = () => {
             if ("speechSynthesis" in window) {
               // Cancel any ongoing speech before starting new one
               window.speechSynthesis.cancel();
-              
-              const utterance = new window.SpeechSynthesisUtterance(notification.message);
+
+              const utterance = new window.SpeechSynthesisUtterance(
+                notification.message,
+              );
               utterance.rate = 1.0;
               utterance.pitch = 1.0;
               utterance.volume = 1.0;
-              
+
               // Add error handlers for debugging
               utterance.onerror = (error) => {
                 console.error("Speech synthesis error:", error);
               };
-              
+
               utterance.onstart = () => {
-                console.log("Started reading kiosk notification:", notification.message);
+                console.log(
+                  "Started reading kiosk notification:",
+                  notification.message,
+                );
               };
-              
+
               utterance.onend = () => {
                 console.log("Finished reading kiosk notification");
               };
-              
+
               window.speechSynthesis.speak(utterance);
               console.log("Reading kiosk notification:", notification.message);
             } else {
               console.warn("SpeechSynthesis not available");
             }
           } else if (message.type === "connection_ack") {
-            console.log("Kiosk notifications WebSocket connection acknowledged");
+            console.log(
+              "Kiosk notifications WebSocket connection acknowledged",
+            );
           } else if (message.type === "error") {
             console.error("Kiosk notifications WebSocket error:", message);
           }
@@ -584,16 +567,14 @@ const KioskPage: Component = () => {
   const activeReminders = createMemo(() =>
     allReminders().filter((reminder) => reminder.status === "INCOMPLETE"),
   );
-  const visibleTasks = createMemo(() => filterVisibleTasks(allTasks(), now()));
+  const visibleTasks = createMemo(() => filterVisibleTasks(allTasks()));
   const activeTasks = createMemo(() =>
     visibleTasks().filter(
       (task) => task.status !== "COMPLETE" && task.status !== "PUNT",
     ),
   );
   const upcomingTaskCandidates = createMemo(() =>
-    allTasks().filter(
-      (task) => task.status !== "COMPLETE" && task.status !== "PUNT",
-    ),
+    allTasks().filter((task) => task.timing_status === "inactive"),
   );
 
   const rightNowEventIds = createMemo(() => {
@@ -631,30 +612,17 @@ const KioskPage: Component = () => {
   });
 
   const rightNowTaskIds = createMemo(() => {
-    const currentTime = now();
     return new Set(
       activeTasks()
-        .filter((task) => {
-          const taskTime = getTaskTime(task);
-          if (!taskTime) return false;
-          return taskTime < currentTime;
-        })
+        .filter((task) => task.timing_status === "past-due")
         .map((task) => task.id)
         .filter((id): id is string => Boolean(id)),
     );
   });
 
   const upcomingTaskIds = createMemo(() => {
-    const currentTime = now();
-    const windowEnd = new Date(currentTime.getTime() + 1000 * 30 * 60);
     return new Set(
       upcomingTaskCandidates()
-        .filter((task) => {
-          const taskTime = getTaskTime(task);
-          if (!taskTime) return false;
-          if (taskTime < currentTime) return false;
-          return taskTime <= windowEnd;
-        })
         .map((task) => task.id)
         .filter((id): id is string => Boolean(id)),
     );
@@ -675,11 +643,11 @@ const KioskPage: Component = () => {
     const ids = new Set<string>();
     rightNowTaskIds().forEach((id) => ids.add(id));
     upcomingTaskIds().forEach((id) => ids.add(id));
-    return allTasks().filter((task) => {
+    return filterVisibleTasks(allTasks()).filter((task) => {
       const taskId = task.id;
       if (!taskId) return true;
       if (ids.has(taskId)) return false;
-      return !isTaskSnoozed(task, now());
+      return true;
     });
   });
 
@@ -703,10 +671,7 @@ const KioskPage: Component = () => {
       });
 
     activeTasks()
-      .filter((task) => {
-        const taskTime = getTaskTime(task);
-        return taskTime ? taskTime < currentTime : false;
-      })
+      .filter((task) => task.timing_status === "past-due")
       .forEach((task) => {
         items.push({
           label: task.name
@@ -740,21 +705,15 @@ const KioskPage: Component = () => {
         });
       });
 
-    upcomingTaskCandidates()
-      .filter((task) => {
-        const taskTime = getTaskTime(task);
-        if (!taskTime) return false;
-        return taskTime >= currentTime && taskTime <= windowEnd;
-      })
-      .forEach((task) => {
-        items.push({
-          label: task.name
-            .replace("ROUTINE DEFINITION: ", "")
-            .replace("Routine Definition: ", ""),
-          time: getTaskTimeLabel(task),
-          meta: "task",
-        });
+    upcomingTaskCandidates().forEach((task) => {
+      items.push({
+        label: task.name
+          .replace("ROUTINE DEFINITION: ", "")
+          .replace("Routine Definition: ", ""),
+        time: getTaskTimeLabel(task),
+        meta: "task",
       });
+    });
 
     return items;
   });
@@ -800,7 +759,7 @@ const KioskPage: Component = () => {
     const groups = buildRoutineGroups(activeTasks(), allRoutines());
     return groups.map((group) => ({
       label: group.routineName ?? "Routine",
-      time: formatWindow(group.timeWindow),
+      time: formatRoutineTiming(group),
       meta: `${group.pendingCount}/${group.totalCount}`,
     }));
   });

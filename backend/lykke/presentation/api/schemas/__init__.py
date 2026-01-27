@@ -7,6 +7,7 @@ from .auditable import AuditableSchema
 from .base_personality import BasePersonalitySchema
 from .bot_personality import BotPersonalitySchema
 from .brain_dump import (
+    BrainDumpSchema,
     BrainDumpItemCreateSchema,
     BrainDumpItemSchema,
     BrainDumpItemUpdateSchema,
@@ -120,6 +121,7 @@ AlarmSchema.model_rebuild()
 AlarmPresetSchema.model_rebuild()
 ReminderSchema.model_rebuild()
 BrainDumpItemSchema.model_rebuild()
+BrainDumpSchema.model_rebuild()
 BrainDumpItemCreateSchema.model_rebuild()
 BrainDumpItemUpdateSchema.model_rebuild()
 RoutineDefinitionSchema.model_rebuild()
@@ -165,6 +167,7 @@ __all__ = [
     "AuditableSchema",
     "BasePersonalitySchema",
     "BotPersonalitySchema",
+    "BrainDumpSchema",
     "BrainDumpItemCreateSchema",
     "BrainDumpItemSchema",
     "BrainDumpItemUpdateSchema",

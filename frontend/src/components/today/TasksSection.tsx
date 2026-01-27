@@ -1,78 +1,46 @@
-import { Component, Show, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { Component, Show, createMemo, createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { Icon } from "@/components/shared/Icon";
 import { faListCheck, faPlus } from "@fortawesome/free-solid-svg-icons";
 import type { Task } from "@/types/api";
 import TaskList from "@/components/tasks/List";
-import {
-  filterVisibleTasks,
-  getTaskAvailableTime,
-  getTaskDueByTime,
-  isTaskAvailable,
-} from "@/utils/tasks";
+import { filterVisibleTasks, isTaskAvailable } from "@/utils/tasks";
 
 export interface TasksSectionProps {
   tasks: Task[];
   href: string;
 }
 
-
 export const TasksSection: Component<TasksSectionProps> = (props) => {
   const navigate = useNavigate();
-  const [now, setNow] = createSignal(new Date());
   const [availableExpanded, setAvailableExpanded] = createSignal(false);
-
-  onMount(() => {
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 30000);
-
-    onCleanup(() => {
-      clearInterval(interval);
-    });
-  });
-
-  const visibleTasks = createMemo(() => filterVisibleTasks(props.tasks, now()));
+  const visibleTasks = createMemo(() => filterVisibleTasks(props.tasks));
   const activeTasks = createMemo(() =>
-    visibleTasks().filter((t) => t.status !== "COMPLETE" && t.status !== "PUNT")
+    visibleTasks().filter(
+      (t) => t.status !== "COMPLETE" && t.status !== "PUNT",
+    ),
   );
 
   const importantTasks = createMemo(() =>
-    activeTasks().filter((t) => t.tags?.includes("IMPORTANT"))
+    activeTasks().filter((t) => t.tags?.includes("IMPORTANT")),
   );
 
   const adhocTasks = createMemo(() =>
     activeTasks().filter(
-      (t) => t.type === "ADHOC" && !t.tags?.includes("IMPORTANT")
-    )
+      (t) => t.type === "ADHOC" && !t.tags?.includes("IMPORTANT"),
+    ),
   );
 
-  const availableTasks = createMemo(() => {
-    const currentTime = now();
-    return activeTasks()
-      .filter(
-        (task) =>
-          isTaskAvailable(task, currentTime) &&
-          !task.tags?.includes("IMPORTANT") &&
-          task.type !== "ADHOC"
-      )
-      .sort((a, b) => {
-        const aDue = getTaskDueByTime(a);
-        const bDue = getTaskDueByTime(b);
-        if (aDue && bDue) {
-          return aDue.getTime() - bDue.getTime();
-        }
-        const aAvailable = getTaskAvailableTime(a);
-        const bAvailable = getTaskAvailableTime(b);
-        if (!aAvailable || !bAvailable) return 0;
-        return aAvailable.getTime() - bAvailable.getTime();
-      });
-  });
+  const availableTasks = createMemo(() =>
+    activeTasks().filter(
+      (task) =>
+        isTaskAvailable(task) &&
+        !task.tags?.includes("IMPORTANT") &&
+        task.type !== "ADHOC",
+    ),
+  );
 
-  const primaryTasks = createMemo(() => [
-    ...importantTasks(),
-    ...adhocTasks(),
-  ]);
+  const primaryTasks = createMemo(() => [...importantTasks(), ...adhocTasks()]);
 
   return (
     <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-5 backdrop-blur-sm space-y-4">

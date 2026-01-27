@@ -1,7 +1,7 @@
 """Task schema."""
 
-from datetime import date, datetime, time
-from typing import TYPE_CHECKING, Optional
+from datetime import date, datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from pydantic import Field
@@ -13,6 +13,7 @@ from lykke.domain.value_objects.task import (
     TaskTag,
     TaskType,
 )
+from lykke.domain.value_objects.timing_status import TimingStatus
 
 from .base import BaseEntitySchema, BaseSchema
 from .routine_definition import TimeWindowSchema
@@ -36,6 +37,8 @@ class TaskSchema(BaseEntitySchema):
     snoozed_until: datetime | None = None
     time_window: TimeWindowSchema | None = None
     routine_definition_id: UUID | None = None
+    timing_status: TimingStatus | None = None
+    next_available_time: datetime | None = None
     tags: list[TaskTag] = Field(default_factory=list)
     actions: list["ActionSchema"] = Field(default_factory=list)
 

@@ -10,7 +10,7 @@ import {
 import { Icon } from "@/components/shared/Icon";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import type { Event, Task } from "@/types/api";
-import { getTaskUpcomingTime } from "@/utils/tasks";
+import { getTaskNextAvailableTime } from "@/utils/tasks";
 import TaskList from "@/components/tasks/List";
 import { EventItem } from "@/components/events/EventItem";
 
@@ -72,31 +72,13 @@ export const UpcomingSection: Component<UpcomingSectionProps> = (props) => {
   });
 
   const upcomingTasks = createMemo(() => {
-    const currentTime = now();
     return props.tasks
       .filter((task) => {
-        // Skip completed or punted tasks
-        if (task.status === "COMPLETE" || task.status === "PUNT") {
-          return false;
-        }
-
-        const taskTime = getTaskUpcomingTime(task, currentTime);
-        if (!taskTime) return false;
-
-        // Exclude if past due (those go in Right Now section)
-        if (taskTime < currentTime) {
-          return false;
-        }
-
-        // Include if upcoming
-        return (
-          taskTime >= currentTime &&
-          taskTime <= new Date(currentTime.getTime() + 1000 * 30 * 60)
-        ); // 30 minutes
+        return task.timing_status === "inactive";
       })
       .sort((a, b) => {
-        const aTime = getTaskUpcomingTime(a, currentTime);
-        const bTime = getTaskUpcomingTime(b, currentTime);
+        const aTime = getTaskNextAvailableTime(a);
+        const bTime = getTaskNextAvailableTime(b);
         if (!aTime || !bTime) return 0;
         return aTime.getTime() - bTime.getTime();
       });

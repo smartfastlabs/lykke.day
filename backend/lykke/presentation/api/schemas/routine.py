@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import UUID
 
 from lykke.domain.value_objects import TaskCategory, TaskStatus
+from lykke.domain.value_objects.timing_status import TimingStatus
 
 from .base import BaseDateSchema
 from .routine_definition import TimeWindowSchema
@@ -20,3 +21,5 @@ class RoutineSchema(BaseDateSchema):
     status: TaskStatus
     snoozed_until: datetime | None = None
     time_window: TimeWindowSchema | None = None
+    timing_status: TimingStatus | None = None
+    next_available_time: datetime | None = None

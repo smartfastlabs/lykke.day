@@ -12,9 +12,7 @@ import pytest
 from lykke.application.events.handlers.smart_notification_trigger import (
     SmartNotificationTriggerHandler,
 )
-from lykke.application.events.handlers.task_status_logger import (
-    TaskStatusLoggerHandler,
-)
+from lykke.application.events.handlers.task_status_logger import TaskStatusLoggerHandler
 from lykke.domain.events.base import DomainEvent
 from lykke.domain.events.task_events import (
     TaskCompletedEvent,
@@ -44,9 +42,7 @@ async def test_smart_notification_trigger_enqueues_task(
         recorder,
     )
 
-    handler = SmartNotificationTriggerHandler(
-        create_read_only_repos_double(), user_id
-    )
+    handler = SmartNotificationTriggerHandler(create_read_only_repos_double(), user_id)
     event = TaskCompletedEvent(
         user_id=user_id,
         task_id=uuid4(),
@@ -62,9 +58,7 @@ async def test_smart_notification_trigger_enqueues_task(
 
     await handler.handle(event)
 
-    assert recorder.calls == [
-        {"user_id": user_id, "triggered_by": "task_completed"}
-    ]
+    assert recorder.calls == [{"user_id": user_id, "triggered_by": "task_completed"}]
 
 
 @pytest.mark.asyncio
@@ -82,9 +76,7 @@ async def test_smart_notification_trigger_handles_errors(
         _Task(),
     )
 
-    handler = SmartNotificationTriggerHandler(
-        create_read_only_repos_double(), user_id
-    )
+    handler = SmartNotificationTriggerHandler(create_read_only_repos_double(), user_id)
     event = TaskPuntedEvent(
         user_id=user_id,
         task_id=uuid4(),
@@ -114,9 +106,7 @@ async def test_smart_notification_trigger_handles_status_change(
         recorder,
     )
 
-    handler = SmartNotificationTriggerHandler(
-        create_read_only_repos_double(), user_id
-    )
+    handler = SmartNotificationTriggerHandler(create_read_only_repos_double(), user_id)
     event = TaskStatusChangedEvent(
         user_id=user_id,
         task_id=uuid4(),
@@ -147,15 +137,11 @@ async def test_smart_notification_trigger_handles_unknown_event(
         recorder,
     )
 
-    handler = SmartNotificationTriggerHandler(
-        create_read_only_repos_double(), user_id
-    )
+    handler = SmartNotificationTriggerHandler(create_read_only_repos_double(), user_id)
 
     await handler.handle(_OtherEvent(user_id=user_id))
 
-    assert recorder.calls == [
-        {"user_id": user_id, "triggered_by": "task_event"}
-    ]
+    assert recorder.calls == [{"user_id": user_id, "triggered_by": "task_event"}]
 
 
 @pytest.mark.asyncio

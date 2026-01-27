@@ -1,8 +1,9 @@
 """Mapper functions to convert domain entities to API schemas."""
 
 from dataclasses import asdict
+from datetime import datetime
 
-from lykke.core.utils.dates import resolve_timezone
+from lykke.core.utils.dates import get_current_datetime_in_timezone, resolve_timezone
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import (
@@ -30,12 +31,14 @@ from lykke.domain.entities import (
     UseCaseConfigEntity,
     UserEntity,
 )
+from lykke.domain.services.timing_status import TimingStatusService
 from lykke.presentation.api.schemas import (
     ActionSchema,
     AlarmSchema,
     AuditableSchema,
     AuditLogSchema,
     BotPersonalitySchema,
+    BrainDumpSchema,
     BrainDumpItemSchema,
     CalendarEntrySchema,
     CalendarEntrySeriesSchema,
@@ -111,6 +114,11 @@ def map_brain_dump_item_to_schema(item: BrainDumpEntity) -> BrainDumpItemSchema:
     )
 
 
+def map_brain_dump_to_schema(item: BrainDumpEntity) -> BrainDumpSchema:
+    """Convert BrainDump entity to alias schema."""
+    return BrainDumpSchema(**map_brain_dump_item_to_schema(item).model_dump())
+
+
 def map_task_definition_to_schema(
     task_definition: TaskDefinitionEntity,
 ) -> TaskDefinitionSchema:
@@ -172,11 +180,18 @@ def map_time_window_to_schema(
     )
 
 
-def map_task_to_schema(task: TaskEntity) -> TaskSchema:
+def map_task_to_schema(
+    task: TaskEntity,
+    *,
+    current_time: datetime | None = None,
+    user_timezone: str | None = None,
+) -> TaskSchema:
     """Convert Task entity to Task schema."""
     # Convert nested entities
     action_schemas = [map_action_to_schema(action) for action in task.actions]
     time_window_schema = map_time_window_to_schema(task.time_window)
+    now = current_time or get_current_datetime_in_timezone(user_timezone)
+    timing_info = TimingStatusService.task_status(task, now, timezone=user_timezone)
 
     return TaskSchema(
         id=task.id,
@@ -192,6 +207,8 @@ def map_task_to_schema(task: TaskEntity) -> TaskSchema:
         snoozed_until=task.snoozed_until,
         time_window=time_window_schema,
         routine_definition_id=task.routine_definition_id,
+        timing_status=timing_info.status,
+        next_available_time=timing_info.next_available_time,
         tags=task.tags,
         actions=action_schemas,
     )
@@ -307,6 +324,7 @@ def map_day_context_to_schema(
     user_timezone: str | None = None,
 ) -> DayContextSchema:
     """Convert DayContext value object to DayContext schema."""
+    current_time = get_current_datetime_in_timezone(user_timezone)
     day_schema = map_day_to_schema(
         context.day,
         brain_dump_items=context.brain_dump_items,
@@ -315,8 +333,19 @@ def map_day_context_to_schema(
         map_calendar_entry_to_schema(entry, user_timezone=user_timezone)
         for entry in context.calendar_entries
     ]
-    task_schemas = [map_task_to_schema(task) for task in context.tasks]
-    routine_schemas = [map_routine_to_schema(routine) for routine in context.routines]
+    task_schemas = [
+        map_task_to_schema(task, current_time=current_time, user_timezone=user_timezone)
+        for task in context.tasks
+    ]
+    routine_schemas = [
+        map_routine_to_schema(
+            routine,
+            tasks=context.tasks,
+            current_time=current_time,
+            user_timezone=user_timezone,
+        )
+        for routine in context.routines
+    ]
 
     return DayContextSchema(
         day=day_schema,
@@ -436,8 +465,26 @@ def map_routine_definition_to_schema(
     )
 
 
-def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
+def map_routine_to_schema(
+    routine: RoutineEntity,
+    *,
+    tasks: list[TaskEntity] | None = None,
+    current_time: datetime | None = None,
+    user_timezone: str | None = None,
+) -> RoutineSchema:
     """Convert Routine entity to Routine schema."""
+    timing_status = None
+    next_available_time = None
+    if tasks is not None:
+        now = current_time or get_current_datetime_in_timezone(user_timezone)
+        timing_info = TimingStatusService.routine_status(
+            routine,
+            tasks,
+            now,
+            timezone=user_timezone,
+        )
+        timing_status = timing_info.status
+        next_available_time = timing_info.next_available_time
     return RoutineSchema(
         id=routine.id,
         user_id=routine.user_id,
@@ -449,6 +496,8 @@ def map_routine_to_schema(routine: RoutineEntity) -> RoutineSchema:
         status=routine.status,
         snoozed_until=routine.snoozed_until,
         time_window=map_time_window_to_schema(routine.time_window),
+        timing_status=timing_status,
+        next_available_time=next_available_time,
     )
 
 

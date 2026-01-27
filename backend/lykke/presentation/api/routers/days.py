@@ -230,7 +230,14 @@ async def _build_full_sync_response(
     routines = await get_day_context_handler.routine_ro_repo.search(
         value_objects.RoutineQuery(date=date_value)
     )
-    routine_schemas = [map_routine_to_schema(routine) for routine in routines]
+    routine_schemas = [
+        map_routine_to_schema(
+            routine,
+            tasks=context.tasks,
+            user_timezone=user_timezone,
+        )
+        for routine in routines
+    ]
 
     return WebSocketSyncResponseSchema(
         day_context=map_day_context_to_schema(context, user_timezone=user_timezone),
@@ -462,6 +469,10 @@ async def _handle_realtime_events(
     """
 
     from lykke.core.utils.domain_event_serialization import deserialize_domain_event
+    from lykke.domain.events.timing_status_events import (
+        RoutineTimingStatusChangedEvent,
+        TaskTimingStatusChangedEvent,
+    )
 
     while True:
         try:
@@ -502,7 +513,14 @@ async def _handle_realtime_events(
                             )
                         continue
 
-                    if not isinstance(domain_event, AuditableDomainEvent):
+                    if not isinstance(
+                        domain_event,
+                        (
+                            AuditableDomainEvent,
+                            TaskTimingStatusChangedEvent,
+                            RoutineTimingStatusChangedEvent,
+                        ),
+                    ):
                         logger.debug(
                             "Filtered out non-auditable domain event %s",
                             domain_event.__class__.__name__,

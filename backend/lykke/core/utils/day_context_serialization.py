@@ -6,6 +6,7 @@ from typing import Any
 
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
+from lykke.domain.services.timing_status import TimingStatusService
 
 
 def serialize_day_context(
@@ -26,6 +27,7 @@ def serialize_day_context(
     # Serialize tasks
     tasks = []
     for task in context.tasks:
+        timing_info = TimingStatusService.task_status(task, current_time)
         task_data: dict[str, Any] = {
             "id": str(task.id),
             "name": task.name,
@@ -33,6 +35,7 @@ def serialize_day_context(
             "type": task.type.value,
             "category": task.category.value,
             "scheduled_date": task.scheduled_date.isoformat(),
+            "timing_status": timing_info.status.value,
         }
 
         if task.description:
@@ -57,6 +60,12 @@ def serialize_day_context(
 
         if task.completed_at:
             task_data["completed_at"] = task.completed_at.isoformat()
+        if task.snoozed_until:
+            task_data["snoozed_until"] = task.snoozed_until.isoformat()
+        if timing_info.next_available_time:
+            task_data["next_available_time"] = (
+                timing_info.next_available_time.isoformat()
+            )
 
         # Calculate time until task (if scheduled)
         if task.time_window and task.time_window.start_time:
@@ -69,6 +78,47 @@ def serialize_day_context(
             task_data["minutes_until_start"] = int(time_until)
 
         tasks.append(task_data)
+
+    routines = []
+    for routine in context.routines:
+        timing_info = TimingStatusService.routine_status(
+            routine, context.tasks, current_time
+        )
+        routine_data: dict[str, Any] = {
+            "id": str(routine.id),
+            "name": routine.name,
+            "status": routine.status.value,
+            "category": routine.category.value,
+            "date": routine.date.isoformat(),
+            "timing_status": timing_info.status.value,
+        }
+        if routine.description:
+            routine_data["description"] = routine.description
+        if routine.snoozed_until:
+            routine_data["snoozed_until"] = routine.snoozed_until.isoformat()
+        if routine.time_window:
+            routine_window: dict[str, Any] = {}
+            if routine.time_window.start_time:
+                routine_window["start_time"] = (
+                    routine.time_window.start_time.isoformat()
+                )
+            if routine.time_window.end_time:
+                routine_window["end_time"] = routine.time_window.end_time.isoformat()
+            if routine.time_window.available_time:
+                routine_window["available_time"] = (
+                    routine.time_window.available_time.isoformat()
+                )
+            if routine.time_window.cutoff_time:
+                routine_window["cutoff_time"] = (
+                    routine.time_window.cutoff_time.isoformat()
+                )
+            if routine_window:
+                routine_data["time_window"] = routine_window
+        if timing_info.next_available_time:
+            routine_data["next_available_time"] = (
+                timing_info.next_available_time.isoformat()
+            )
+        routines.append(routine_data)
 
     # Serialize calendar entries
     calendar_entries = []
@@ -123,6 +173,7 @@ def serialize_day_context(
             "tags": [tag.value for tag in day.tags],
         },
         "tasks": tasks,
+        "routines": routines,
         "calendar_entries": calendar_entries,
         "reminders": reminders,
         "brain_dump_items": brain_dump_items,

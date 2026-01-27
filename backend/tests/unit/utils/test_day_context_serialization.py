@@ -145,6 +145,11 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
     assert serialized["tasks"][0]["id"] == str(task.id)
     assert serialized["tasks"][0]["time_window"]["start_time"] == "10:00:00"
     assert serialized["tasks"][0]["minutes_until_start"] == 60
+    assert serialized["tasks"][0]["timing_status"] == "hidden"
+    assert (
+        serialized["tasks"][0]["next_available_time"]
+        == datetime(2025, 1, 1, 10, 0, tzinfo=UTC).isoformat()
+    )
 
     assert serialized["calendar_entries"][0]["id"] == str(calendar_entry.id)
     assert serialized["calendar_entries"][0]["minutes_until_start"] == 240

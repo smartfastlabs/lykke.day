@@ -21,6 +21,10 @@ class BrainDumpItemSchema(BaseEntitySchema):
     llm_run_result: dict[str, Any] | None = None
 
 
+class BrainDumpSchema(BrainDumpItemSchema):
+    """Alias schema for BrainDumpEntity."""
+
+
 class BrainDumpItemCreateSchema(BaseSchema):
     """API schema for creating brain dump items."""
 

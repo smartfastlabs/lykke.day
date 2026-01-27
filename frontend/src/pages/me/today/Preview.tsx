@@ -19,7 +19,7 @@ import {
   RightNowSection,
 } from "@/components/today";
 import { getShowTodayCookie } from "@/utils/cookies";
-import { getTaskUpcomingTime, isTaskSnoozed } from "@/utils/tasks";
+import { filterVisibleTasks } from "@/utils/tasks";
 import type { Event } from "@/types/api";
 
 const isAllDayEvent = (event: Event): boolean => {
@@ -137,39 +137,18 @@ export const TodayPage: Component = () => {
   });
 
   const rightNowTaskIds = createMemo(() => {
-    const currentTime = now();
     return new Set(
       allTasks()
-        .filter((task) => {
-          if (task.status === "COMPLETE" || task.status === "PUNT") {
-            return false;
-          }
-          if (isTaskSnoozed(task, currentTime)) {
-            return false;
-          }
-          const taskTime = getTaskUpcomingTime(task, currentTime);
-          if (!taskTime) return false;
-          return taskTime < currentTime;
-        })
+        .filter((task) => task.timing_status === "past-due")
         .map((task) => task.id)
         .filter((id): id is string => Boolean(id)),
     );
   });
 
   const upcomingTaskIds = createMemo(() => {
-    const currentTime = now();
-    const windowEnd = new Date(currentTime.getTime() + 1000 * 30 * 60);
     return new Set(
       allTasks()
-        .filter((task) => {
-          if (task.status === "COMPLETE" || task.status === "PUNT") {
-            return false;
-          }
-          const taskTime = getTaskUpcomingTime(task, currentTime);
-          if (!taskTime) return false;
-          if (taskTime < currentTime) return false;
-          return taskTime <= windowEnd;
-        })
+        .filter((task) => task.timing_status === "inactive")
         .map((task) => task.id)
         .filter((id): id is string => Boolean(id)),
     );
@@ -190,11 +169,11 @@ export const TodayPage: Component = () => {
     const ids = new Set<string>();
     rightNowTaskIds().forEach((id) => ids.add(id));
     upcomingTaskIds().forEach((id) => ids.add(id));
-    return allTasks().filter((task) => {
+    return filterVisibleTasks(allTasks()).filter((task) => {
       const taskId = task.id;
       if (!taskId) return true;
       if (ids.has(taskId)) return false;
-      return !isTaskSnoozed(task, new Date());
+      return true;
     });
   });
 

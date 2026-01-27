@@ -175,7 +175,7 @@ class GetIncrementalChangesHandler(
                 # Convert task entity to dict using schema mapper
                 from lykke.presentation.api.schemas.mappers import map_task_to_schema
 
-                task_schema = map_task_to_schema(task)
+                task_schema = map_task_to_schema(task, user_timezone=user_timezone)
                 return task_schema.model_dump(mode="json")
 
             elif entity_type == "calendarentry":
@@ -198,7 +198,17 @@ class GetIncrementalChangesHandler(
                     return None
                 from lykke.presentation.api.schemas.mappers import map_routine_to_schema
 
-                routine_schema = map_routine_to_schema(routine)
+                tasks = await self.task_ro_repo.search(
+                    value_objects.TaskQuery(
+                        date=routine.date,
+                        routine_definition_ids=[routine.routine_definition_id],
+                    )
+                )
+                routine_schema = map_routine_to_schema(
+                    routine,
+                    tasks=tasks,
+                    user_timezone=user_timezone,
+                )
                 return routine_schema.model_dump(mode="json")
 
             elif entity_type == "day":

@@ -81,6 +81,7 @@ from .time_block import (
     TimeBlockCategory,
     TimeBlockType,
 )
+from .timing_status import TimingStatus, TimingStatusInfo
 from .update import (
     BaseUpdateObject,
     BotPersonalityUpdateObject,
@@ -188,6 +189,8 @@ __all__ = [
     "TimeBlockDefinitionUpdateObject",
     "TimeBlockType",
     "TimeWindow",
+    "TimingStatus",
+    "TimingStatusInfo",
     "TriggerQuery",
     "TriggerUpdateObject",
     "UseCaseConfigQuery",

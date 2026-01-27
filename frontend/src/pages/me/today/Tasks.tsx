@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { Component, createMemo, createSignal } from "solid-js";
 import { useStreamingData } from "@/providers/streamingData";
 import TaskList from "@/components/tasks/List";
 import { Task, TaskCategory } from "@/types/api";
@@ -24,19 +24,8 @@ export const TodaysTasksView: Component = () => {
   const [taskCategory, setTaskCategory] = createSignal<TaskCategory>("WORK");
   const [isSaving, setIsSaving] = createSignal(false);
   const [formError, setFormError] = createSignal("");
-  const [now, setNow] = createSignal(new Date());
 
-  onMount(() => {
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 30000);
-
-    onCleanup(() => {
-      clearInterval(interval);
-    });
-  });
-
-  const visibleTasks = createMemo(() => filterVisibleTasks(tasks(), now()));
+  const visibleTasks = createMemo(() => filterVisibleTasks(tasks()));
   const stats = createMemo(() => getTaskStats(visibleTasks()));
   const completionPercentage = createMemo(() => {
     const s = stats();
@@ -84,7 +73,9 @@ export const TodaysTasksView: Component = () => {
       await addAdhocTask(name, taskCategory());
       setTaskName("");
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Failed to add task.");
+      setFormError(
+        error instanceof Error ? error.message : "Failed to add task.",
+      );
     } finally {
       setIsSaving(false);
     }

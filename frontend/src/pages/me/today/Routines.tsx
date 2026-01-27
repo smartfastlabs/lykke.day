@@ -5,8 +5,6 @@ import {
   createMemo,
   createResource,
   createSignal,
-  onCleanup,
-  onMount,
 } from "solid-js";
 import { AnimatedSection } from "@/components/shared/AnimatedSection";
 import { SectionCard } from "@/components/shared/SectionCard";
@@ -24,25 +22,14 @@ export const TodaysRoutinesView: Component = () => {
   const { tasks, routines, sync } = useStreamingData();
   const [addError, setAddError] = createSignal("");
   const [addingId, setAddingId] = createSignal<string | null>(null);
-  const [now, setNow] = createSignal(new Date());
-
-  onMount(() => {
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 30000);
-
-    onCleanup(() => {
-      clearInterval(interval);
-    });
-  });
 
   const [routineDefinitions] = createResource<RoutineDefinition[]>(
-    routineDefinitionAPI.getAll
+    routineDefinitionAPI.getAll,
   );
 
-  const visibleTasks = createMemo(() => filterVisibleTasks(tasks(), now()));
+  const visibleTasks = createMemo(() => filterVisibleTasks(tasks()));
   const routineGroups = createMemo(() =>
-    buildRoutineGroups(visibleTasks(), routines())
+    buildRoutineGroups(visibleTasks(), routines()),
   );
 
   const routineDefinitionIdsForToday = createMemo(() => {
@@ -52,13 +39,14 @@ export const TodaysRoutinesView: Component = () => {
   const stats = createMemo(() => {
     const groups = routineGroups();
     const completed = groups.filter(
-      (group) => group.totalCount > 0 && group.completedCount === group.totalCount
+      (group) =>
+        group.totalCount > 0 && group.completedCount === group.totalCount,
     ).length;
     const punted = groups.filter(
       (group) =>
         group.totalCount > 0 &&
         group.puntedCount === group.totalCount &&
-        group.puntedCount > 0
+        group.puntedCount > 0,
     ).length;
     const active = groups.filter((group) => group.pendingCount > 0).length;
     return { total: groups.length, completed, active, punted };
@@ -100,7 +88,7 @@ export const TodaysRoutinesView: Component = () => {
       sync();
     } catch (error) {
       setAddError(
-        error instanceof Error ? error.message : "Failed to add routine."
+        error instanceof Error ? error.message : "Failed to add routine.",
       );
     } finally {
       setAddingId(null);
@@ -124,7 +112,11 @@ export const TodaysRoutinesView: Component = () => {
           title="Add a Routine"
           description="Add tasks from a routine definition to today"
           hasItems={Boolean(routineDefinitions()?.length)}
-          emptyState={<div class="text-sm text-neutral-500">No routine definitions found.</div>}
+          emptyState={
+            <div class="text-sm text-neutral-500">
+              No routine definitions found.
+            </div>
+          }
         >
           <Show
             when={routineDefinitions()}
@@ -134,7 +126,7 @@ export const TodaysRoutinesView: Component = () => {
               <For each={routineDefinitions() ?? []}>
                 {(routineDefinition) => {
                   const isAdded = routineDefinitionIdsForToday().has(
-                    routineDefinition.id!
+                    routineDefinition.id!,
                   );
                   const isAdding = addingId() === routineDefinition.id;
                   return (
@@ -166,7 +158,9 @@ export const TodaysRoutinesView: Component = () => {
           title="Your Routines"
           description="Swipe tasks to complete, punt, or snooze"
           hasItems={routineGroups().length > 0}
-          emptyState={<div class="text-sm text-neutral-500">No routines yet.</div>}
+          emptyState={
+            <div class="text-sm text-neutral-500">No routines yet.</div>
+          }
         >
           <RoutineGroupsList
             tasks={visibleTasks()}

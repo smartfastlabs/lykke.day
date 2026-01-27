@@ -96,7 +96,7 @@ export interface Alarm {
   datetime?: string | null;
   type: AlarmType;
   url: string;
-  status?: AlarmStatus;
+  status: AlarmStatus;
   snoozed_until?: string | null;
 }
 
@@ -114,6 +114,7 @@ export type BrainDumpItem = components["schemas"]["BrainDumpItemSchema"] & {
 
 // Enum types
 export type TaskStatus = components["schemas"]["TaskStatus"];
+export type TimingStatus = components["schemas"]["TimingStatus"];
 export type TaskType = components["schemas"]["TaskType"];
 export type TaskFrequency = components["schemas"]["TaskFrequency"];
 export type TaskCategory = components["schemas"]["TaskCategory"];
