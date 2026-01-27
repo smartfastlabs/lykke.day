@@ -2,7 +2,8 @@
 
 import importlib
 import sys
-from unittest.mock import patch
+
+from lykke.presentation.workers.tasks import common as worker_common
 
 
 def test_worker_tasks_register_domain_event_handlers_on_import() -> None:
@@ -12,12 +13,18 @@ def test_worker_tasks_register_domain_event_handlers_on_import() -> None:
     did not register domain event handlers, so push notifications never fired.
     """
     module_name = "lykke.presentation.workers.tasks"
+    calls: list[tuple[object, object]] = []
+
+    def register_all_handlers(*, ro_repo_factory: object, uow_factory: object) -> None:
+        calls.append((ro_repo_factory, uow_factory))
+
+    worker_common.set_register_handlers_override(register_all_handlers)
 
     # Ensure a clean import so module-level registration runs
     if module_name in sys.modules:
         del sys.modules[module_name]
 
-    with patch("lykke.application.events.register_all_handlers") as register_mock:
-        importlib.import_module(module_name)
+    importlib.import_module(module_name)
+    worker_common.set_register_handlers_override(None)
 
-    register_mock.assert_called_once()
+    assert calls

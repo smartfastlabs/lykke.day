@@ -48,11 +48,14 @@ class SmartNotificationTriggerHandler(DomainEventHandler):
         # This runs asynchronously and doesn't block the transaction
         # Import here to avoid circular imports
         try:
-            from lykke.presentation.workers.tasks import (
-                evaluate_smart_notification_task,
-            )
+            from lykke.presentation.workers import tasks as worker_tasks
+            from lykke.presentation.workers.tasks import registry as task_registry
 
-            await evaluate_smart_notification_task.kiq(
+            task = task_registry.get_task(
+                "evaluate_smart_notification_task",
+                worker_tasks.evaluate_smart_notification_task,
+            )
+            await task.kiq(
                 user_id=user_id,
                 triggered_by=triggered_by,
             )

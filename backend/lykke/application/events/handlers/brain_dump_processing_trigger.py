@@ -21,9 +21,14 @@ class BrainDumpProcessingTriggerHandler(DomainEventHandler):
 
         try:
             # Import here to avoid circular dependencies
-            from lykke.presentation.workers.tasks import process_brain_dump_item_task
+            from lykke.presentation.workers import tasks as worker_tasks
+            from lykke.presentation.workers.tasks import registry as task_registry
 
-            await process_brain_dump_item_task.kiq(
+            task = task_registry.get_task(
+                "process_brain_dump_item_task",
+                worker_tasks.process_brain_dump_item_task,
+            )
+            await task.kiq(
                 user_id=event.user_id,
                 day_date=event.date.isoformat(),
                 item_id=event.item_id,

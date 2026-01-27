@@ -23,7 +23,7 @@ from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
     QueryHandlerFactory,
 )
-from lykke.presentation.workers.tasks import (
+from lykke.presentation.workers.tasks.calendar import (
     resubscribe_calendar_task,
     sync_single_calendar_task,
 )

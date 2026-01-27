@@ -120,6 +120,8 @@ class RoutineDefinitionEntity(BaseEntityObject, AuditableEntity):
             (task for task in self.tasks if task.id == routine_definition_task_id),
             None,
         )
+        if removed_task is None:
+            raise NotFoundError("Routine task not found")
         updated = self._copy_with_tasks(filtered_tasks)
         updated.record_event(
             RoutineDefinitionTaskRemovedEvent(

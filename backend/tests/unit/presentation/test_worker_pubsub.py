@@ -28,7 +28,7 @@ class TestWorkerPubSubGateway:
         silently discarded all pubsub messages, breaking websocket updates
         for calendar sync.
         """
-        from lykke.presentation.workers.tasks import get_unit_of_work_factory
+        from lykke.presentation.workers.tasks.common import get_unit_of_work_factory
 
         # Get factory without providing a gateway (tests default behavior)
         factory = get_unit_of_work_factory()
@@ -47,7 +47,7 @@ class TestWorkerPubSubGateway:
 
     def test_get_unit_of_work_factory_accepts_custom_gateway(self):
         """Test that get_unit_of_work_factory accepts a custom gateway."""
-        from lykke.presentation.workers.tasks import get_unit_of_work_factory
+        from lykke.presentation.workers.tasks.common import get_unit_of_work_factory
 
         custom_gateway = RedisPubSubGateway()
         factory = get_unit_of_work_factory(pubsub_gateway=custom_gateway)
@@ -106,9 +106,7 @@ class TestSyncTaskPubSubBroadcast:
         This is a design test - verifying that the task creates and uses
         a RedisPubSubGateway that will actually publish messages.
         """
-        from lykke.presentation.workers.tasks import (
-            get_unit_of_work_factory,
-        )
+        from lykke.presentation.workers.tasks.common import get_unit_of_work_factory
 
         # Create a real RedisPubSubGateway
         gateway = RedisPubSubGateway()
@@ -129,7 +127,7 @@ class TestSyncTaskPubSubBroadcast:
         CRITICAL: StubPubSubGateway should only be used in tests,
         never in production workers.
         """
-        from lykke.presentation.workers.tasks import get_unit_of_work_factory
+        from lykke.presentation.workers.tasks.common import get_unit_of_work_factory
 
         factory = get_unit_of_work_factory()
         uow = factory.create(user_id=uuid4())

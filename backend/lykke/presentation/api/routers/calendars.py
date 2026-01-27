@@ -43,7 +43,7 @@ from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
     QueryHandlerFactory,
 )
-from lykke.presentation.workers.tasks import sync_single_calendar_task
+from lykke.presentation.workers.tasks.calendar import sync_single_calendar_task
 
 from .dependencies.factories import command_handler_factory, query_handler_factory
 from .dependencies.user import get_current_user
