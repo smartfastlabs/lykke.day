@@ -56,9 +56,12 @@ async def test_realtime_task_created_event_is_forwarded() -> None:
     websocket = _FakeWebSocket()
     subscription = _FakeSubscription([serialize_domain_event(event)])
     handler = _FakeIncrementalChangesHandler()
+    date_state = {"value": today}
 
     task = asyncio.create_task(
-        _handle_realtime_events(websocket, subscription, today, handler, None)
+        _handle_realtime_events(
+            websocket, subscription, date_state, handler, None, None, None
+        )
     )
     await asyncio.sleep(0.05)
     task.cancel()
@@ -93,9 +96,12 @@ async def test_realtime_reminder_added_event_is_forwarded() -> None:
     websocket = _FakeWebSocket()
     subscription = _FakeSubscription([serialize_domain_event(event)])
     handler = _FakeIncrementalChangesHandler()
+    date_state = {"value": today}
 
     task = asyncio.create_task(
-        _handle_realtime_events(websocket, subscription, today, handler, None)
+        _handle_realtime_events(
+            websocket, subscription, date_state, handler, None, None, None
+        )
     )
     await asyncio.sleep(0.05)
     task.cancel()

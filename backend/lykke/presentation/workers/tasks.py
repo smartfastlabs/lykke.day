@@ -469,6 +469,7 @@ async def trigger_alarms_for_user_task(
 
         target_date = get_current_date(timezone)
         now = get_current_datetime()
+        evaluation_time = now.replace(second=0, microsecond=0)
 
         async with uow_factory.create(user_id) as uow:
             try:
@@ -493,9 +494,12 @@ async def trigger_alarms_for_user_task(
                 ):
                     continue
                 if alarm.status == value_objects.AlarmStatus.SNOOZED:
-                    if alarm.snoozed_until is None or alarm.snoozed_until > now:
+                    if (
+                        alarm.snoozed_until is None
+                        or alarm.snoozed_until > evaluation_time
+                    ):
                         continue
-                if alarm.datetime is None or alarm.datetime > now:
+                if alarm.datetime is None or alarm.datetime > evaluation_time:
                     continue
                 day.update_alarm_status(
                     alarm.id,

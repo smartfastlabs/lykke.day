@@ -19,8 +19,22 @@ const formatTime = (timeValue: string): string => {
   return `${hour12}:${String(minutes).padStart(2, "0")}${period}`;
 };
 
+const formatSnoozedUntil = (value?: string | null): string | null => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed
+    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+    .toLowerCase()
+    .replace(" ", "");
+};
+
 const AlarmItem: Component<{ alarm: Alarm }> = (props) => {
   const { removeAlarm } = useStreamingData();
+  const snoozedUntil = () =>
+    props.alarm.status === "SNOOZED"
+      ? formatSnoozedUntil(props.alarm.snoozed_until ?? null)
+      : null;
 
   return (
     <SwipeableItem
@@ -40,7 +54,9 @@ const AlarmItem: Component<{ alarm: Alarm }> = (props) => {
             {props.alarm.name}
           </span>
           <span class="text-xs text-stone-500">
-            {formatTime(props.alarm.time)}
+            {snoozedUntil()
+              ? `Snoozed until ${snoozedUntil()}`
+              : formatTime(props.alarm.time)}
           </span>
         </div>
 
