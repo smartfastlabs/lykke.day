@@ -41,7 +41,11 @@ from lykke.application.queries import (
     PreviewLLMSnapshotHandler,
 )
 from lykke.application.queries.base import BaseQueryHandler
-from lykke.infrastructure.gateways import GoogleCalendarGateway, WebPushGateway
+from lykke.infrastructure.gateways import (
+    GoogleCalendarGateway,
+    RedisPubSubGateway,
+    WebPushGateway,
+)
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -281,8 +285,6 @@ def _build_morning_overview_handler(
 def _build_kiosk_notification_handler(
     factory: CommandHandlerFactory,
 ) -> KioskNotificationHandler:
-    from lykke.infrastructure.gateways import RedisPubSubGateway
-
     return KioskNotificationHandler(
         factory.ro_repos,
         factory.uow_factory,

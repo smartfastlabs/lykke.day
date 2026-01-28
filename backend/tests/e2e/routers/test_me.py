@@ -5,7 +5,11 @@ import pytest
 from lykke.core.utils.dates import get_current_date
 from lykke.domain import value_objects
 from lykke.domain.entities.day import DayEntity
-from lykke.infrastructure.repositories import DayRepository, DayTemplateRepository
+from lykke.infrastructure.repositories import (
+    DayRepository,
+    DayTemplateRepository,
+    UserRepository,
+)
 
 
 @pytest.mark.asyncio
@@ -93,8 +97,6 @@ async def test_update_current_user_persists_settings_and_updates_timestamp(
     assert response.status_code == 200
 
     # Fetch fresh from repository to ensure persistence
-    from lykke.infrastructure.repositories import UserRepository
-
     repo = UserRepository()
     updated_user = await repo.get(user.id)
 

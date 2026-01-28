@@ -6,10 +6,7 @@ This module provides:
 - Auto-registration of all event handlers
 """
 
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositoryFactory,
-    UnitOfWorkFactory,
-)
+from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 
 from .handlers import (
     DomainEventHandler,

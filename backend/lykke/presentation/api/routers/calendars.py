@@ -31,6 +31,7 @@ from lykke.application.queries.calendar import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntity, UserEntity
+from lykke.domain.value_objects import CalendarUpdateObject
 from lykke.presentation.api.schemas import (
     CalendarCreateSchema,
     CalendarSchema,
@@ -201,8 +202,6 @@ async def update_calendar(
     """Update a calendar."""
     update_calendar_handler = command_factory.create(UpdateCalendarHandler)
     # Convert schema to update object
-    from lykke.domain.value_objects import CalendarUpdateObject
-
     update_object = CalendarUpdateObject(
         name=update_data.name,
         auth_token_id=update_data.auth_token_id,

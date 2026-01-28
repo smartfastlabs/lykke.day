@@ -7,7 +7,11 @@ from sqlalchemy.sql import Select
 from lykke.domain import value_objects
 from lykke.domain.entities import AuditLogEntity
 from lykke.infrastructure.database.tables import audit_logs_tbl
-from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
+from lykke.infrastructure.repositories.base.utils import (
+    ensure_datetimes_utc,
+    filter_init_false_fields,
+    normalize_list_fields,
+)
 
 from .base import UserScopedBaseRepository
 
@@ -79,11 +83,6 @@ class AuditLogRepository(
     @classmethod
     def row_to_entity(cls, row: dict[str, Any]) -> AuditLogEntity:
         """Convert a database row dict to an AuditLog entity."""
-        from lykke.infrastructure.repositories.base.utils import (
-            filter_init_false_fields,
-            normalize_list_fields,
-        )
-
         data = normalize_list_fields(dict(row), AuditLogEntity)
 
         # Ensure meta is a dict

@@ -66,6 +66,10 @@ from lykke.presentation.api.schemas import (
     UserSettingsSchema,
 )
 from lykke.presentation.api.schemas.push_notification import PushNotificationSchema
+from lykke.presentation.api.schemas.routine_definition import (
+    RecurrenceScheduleSchema,
+    RoutineDefinitionTaskSchema,
+)
 
 
 def map_action_to_schema(action: value_objects.Action) -> ActionSchema:
@@ -413,11 +417,6 @@ def map_routine_definition_to_schema(
     routine_definition: RoutineDefinitionEntity,
 ) -> RoutineDefinitionSchema:
     """Convert RoutineDefinition entity to RoutineDefinition schema."""
-    from .routine_definition import (
-        RecurrenceScheduleSchema,
-        RoutineDefinitionTaskSchema,
-    )
-
     # Convert routine schedule
     routine_definition_schedule_schema = RecurrenceScheduleSchema(
         frequency=routine_definition.routine_definition_schedule.frequency,

@@ -15,7 +15,15 @@ from lykke.application.queries.get_incremental_changes import (
     GetIncrementalChangesHandler,
     GetIncrementalChangesQuery,
 )
-from lykke.domain.entities import AuditLogEntity
+from lykke.core.utils.strings import entity_type_from_class_name
+from lykke.domain import value_objects
+from lykke.domain.entities import (
+    AuditLogEntity,
+    CalendarEntryEntity,
+    DayEntity,
+    RoutineDefinitionEntity,
+    TaskEntity,
+)
 
 
 def _make_audit_log(
@@ -37,8 +45,6 @@ def _make_audit_log(
 
 def _get_entity_type_name(entity_class_name: str) -> str:
     """Get entity type name using the same logic as UnitOfWork."""
-    from lykke.core.utils.strings import entity_type_from_class_name
-
     return entity_type_from_class_name(entity_class_name)
 
 
@@ -138,9 +144,6 @@ class TestLoadEntityData:
     @pytest.mark.asyncio
     async def test_load_task_entity_data(self, handler_with_mocks):
         """Test loading task entity data."""
-        from lykke.domain import value_objects
-        from lykke.domain.entities import TaskEntity
-
         task_id = uuid4()
         mock_task = TaskEntity(
             id=task_id,
@@ -169,9 +172,6 @@ class TestLoadEntityData:
 
         REGRESSION TEST: Previously used 'calendar_entry' instead of 'calendarentry'.
         """
-        from lykke.domain import value_objects
-        from lykke.domain.entities import CalendarEntryEntity
-
         entry_id = uuid4()
         mock_entry = CalendarEntryEntity(
             id=entry_id,
@@ -204,8 +204,6 @@ class TestLoadEntityData:
 
         REGRESSION TEST: Previously 'day' entity type was not handled.
         """
-        from lykke.domain.entities import DayEntity
-
         day_id = uuid4()
         mock_day = DayEntity(
             id=day_id,
@@ -227,9 +225,6 @@ class TestLoadEntityData:
     @pytest.mark.asyncio
     async def test_load_routine_definition_entity_data(self, handler_with_mocks):
         """Routine definition entity data is not loaded for day context."""
-        from lykke.domain import value_objects
-        from lykke.domain.entities import RoutineDefinitionEntity
-
         routine_definition_id = uuid4()
         mock_routine_definition = RoutineDefinitionEntity(
             id=routine_definition_id,

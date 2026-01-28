@@ -4,12 +4,15 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy.sql import Select
 
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntryEntity
 from lykke.infrastructure.database.tables import calendar_entries_tbl
 from lykke.infrastructure.repositories.base.utils import (
     ensure_datetime_utc,
     ensure_datetimes_utc,
+    filter_init_false_fields,
+    normalize_list_fields,
 )
 
 from .base import CalendarEntryQuery, UserScopedBaseRepository
@@ -76,8 +79,6 @@ class CalendarEntryRepository(
         }
 
         # Handle JSONB fields
-        from lykke.core.utils.serialization import dataclass_to_json_dict
-
         if calendar_entry.actions:
             row["actions"] = [
                 dataclass_to_json_dict(action) for action in calendar_entry.actions
@@ -93,8 +94,6 @@ class CalendarEntryRepository(
 
         Overrides base to handle enum conversion for frequency field.
         """
-        from lykke.infrastructure.repositories.base.utils import normalize_list_fields
-
         data = normalize_list_fields(dict(row), CalendarEntryEntity)
 
         # Remove 'date' field - it's a computed property, not a constructor argument
@@ -107,10 +106,6 @@ class CalendarEntryRepository(
 
         # Handle actions - they come as dicts from JSONB, need to convert to value objects
         if data.get("actions"):
-            from lykke.infrastructure.repositories.base.utils import (
-                filter_init_false_fields,
-            )
-
             data["actions"] = [
                 value_objects.Action(
                     **filter_init_false_fields(action, value_objects.Action)
@@ -119,10 +114,6 @@ class CalendarEntryRepository(
                 else action
                 for action in data["actions"]
             ]
-
-        from lykke.infrastructure.repositories.base.utils import (
-            filter_init_false_fields,
-        )
 
         data = ensure_datetimes_utc(
             data, keys=("starts_at", "ends_at", "created_at", "updated_at")

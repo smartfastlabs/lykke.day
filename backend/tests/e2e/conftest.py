@@ -1,19 +1,34 @@
 """Fixtures for e2e tests - full API tests with test client."""
 
 import datetime
-from datetime import time
+from datetime import UTC, time
 from uuid import UUID, uuid4
 
 import pytest
+from fastapi import WebSocket
 from fastapi.testclient import TestClient
+from passlib.context import CryptContext
 
 from lykke.app import app
-from lykke.domain.entities import UserEntity
+from lykke.application.commands.day import ScheduleDayCommand, ScheduleDayHandler
+from lykke.application.queries import PreviewDayHandler
+from lykke.domain.entities import AuditLogEntity, UserEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.value_objects.user import UserSetting
 from lykke.infrastructure.database.tables import User as UserDB
 from lykke.infrastructure.database.utils import reset_engine
-from lykke.infrastructure.repositories import DayTemplateRepository, UserRepository
+from lykke.infrastructure.gateways import RedisPubSubGateway, StubPubSubGateway
+from lykke.infrastructure.repositories import (
+    AuditLogRepository,
+    CalendarEntryRepository,
+    DayTemplateRepository,
+    TaskRepository,
+    UserRepository,
+)
+from lykke.infrastructure.unit_of_work import (
+    SqlAlchemyReadOnlyRepositoryFactory,
+    SqlAlchemyUnitOfWorkFactory,
+)
 from lykke.presentation.api.routers.dependencies.user import (
     get_current_user,
     get_current_user_from_token,
@@ -26,8 +41,6 @@ def setup_test_user_day_template():
 
     async def _setup():
         """Create a test user with default DayTemplate."""
-        from passlib.context import CryptContext
-
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         user_repo = UserRepository()
         test_user_email = f"test_{uuid4()}@lykke.day"
@@ -65,14 +78,6 @@ async def schedule_day_for_user(user_id: UUID, date: datetime.date) -> None:
     This is used instead of the removed HTTP endpoint to ensure days exist
     before creating tasks or testing other functionality.
     """
-    from lykke.application.commands.day import ScheduleDayCommand, ScheduleDayHandler
-    from lykke.application.queries import PreviewDayHandler
-    from lykke.infrastructure.gateways import StubPubSubGateway
-    from lykke.infrastructure.unit_of_work import (
-        SqlAlchemyReadOnlyRepositoryFactory,
-        SqlAlchemyUnitOfWorkFactory,
-    )
-
     ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
     uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=StubPubSubGateway())
     ro_repos = ro_repo_factory.create(user_id)
@@ -104,8 +109,6 @@ def authenticated_client(test_client, setup_test_user_day_template, request):
         app.dependency_overrides[get_current_user] = lambda: user
 
         # Also override get_current_user_from_token for WebSocket endpoints
-        from fastapi import WebSocket
-
         async def _get_user_from_token(websocket: WebSocket) -> UserEntity:
             return user
 
@@ -134,9 +137,6 @@ def create_entity_with_uow(test_client):
             entity: The entity to create (with create() already called)
             user_id: The user ID for the UOW
         """
-        from lykke.infrastructure.gateways import RedisPubSubGateway
-        from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
-
         # Get Redis pool from app state
         redis_pool = getattr(test_client.app.state, "redis_pool", None)
         pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
@@ -169,21 +169,12 @@ def create_entity_with_audit_log():
             entity: The entity to create
             user_id: The user ID
         """
-        from datetime import UTC, datetime
-
-        from lykke.domain.entities import AuditLogEntity
-        from lykke.infrastructure.repositories import AuditLogRepository
-
         # Get the appropriate repository for the entity
         if hasattr(entity, "scheduled_date"):
             # Task entity
-            from lykke.infrastructure.repositories import TaskRepository
-
             repo = TaskRepository(user_id=user_id)
         elif hasattr(entity, "platform"):
             # Calendar entry
-            from lykke.infrastructure.repositories import CalendarEntryRepository
-
             repo = CalendarEntryRepository(user_id=user_id)
         else:
             raise ValueError(f"Unknown entity type: {type(entity)}")
@@ -198,7 +189,7 @@ def create_entity_with_audit_log():
             activity_type="EntityCreatedEvent",
             entity_id=entity.id,
             entity_type=entity_type,
-            occurred_at=datetime.now(UTC),
+            occurred_at=datetime.datetime.now(UTC),
             meta={
                 "entity_data": {
                     "id": str(entity.id),

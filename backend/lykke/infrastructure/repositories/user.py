@@ -5,10 +5,14 @@ from typing import Any
 
 from sqlalchemy.sql import Select
 
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.database.tables import users_tbl
-from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
+from lykke.infrastructure.repositories.base.utils import (
+    ensure_datetimes_utc,
+    filter_init_false_fields,
+)
 
 from .base import BaseRepository
 
@@ -48,8 +52,6 @@ class UserRepository(BaseRepository[UserEntity, value_objects.UserQuery]):
         }
 
         # Handle settings JSONB field
-        from lykke.core.utils.serialization import dataclass_to_json_dict
-
         if user.settings:
             row["settings"] = dataclass_to_json_dict(user.settings)
         else:
@@ -104,10 +106,6 @@ class UserRepository(BaseRepository[UserEntity, value_objects.UserQuery]):
         else:
             # Coerce raw values into enum
             data["status"] = value_objects.UserStatus(data["status"])
-
-        from lykke.infrastructure.repositories.base.utils import (
-            filter_init_false_fields,
-        )
 
         data = filter_init_false_fields(data, UserEntity)
         data = ensure_datetimes_utc(data, keys=("created_at", "updated_at"))

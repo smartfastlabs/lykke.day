@@ -3,7 +3,7 @@
 import importlib
 import sys
 
-from lykke.presentation.workers.tasks import common as worker_common
+from lykke.presentation.workers.tasks import registration as worker_registration
 
 
 def test_worker_tasks_register_domain_event_handlers_on_import() -> None:
@@ -18,13 +18,13 @@ def test_worker_tasks_register_domain_event_handlers_on_import() -> None:
     def register_all_handlers(*, ro_repo_factory: object, uow_factory: object) -> None:
         calls.append((ro_repo_factory, uow_factory))
 
-    worker_common.set_register_handlers_override(register_all_handlers)
+    worker_registration.set_register_handlers_override(register_all_handlers)
 
     # Ensure a clean import so module-level registration runs
     if module_name in sys.modules:
         del sys.modules[module_name]
 
     importlib.import_module(module_name)
-    worker_common.set_register_handlers_override(None)
+    worker_registration.set_register_handlers_override(None)
 
     assert calls

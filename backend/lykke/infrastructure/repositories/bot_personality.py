@@ -7,6 +7,11 @@ from sqlalchemy.sql import Select
 from lykke.domain import value_objects
 from lykke.domain.entities import BotPersonalityEntity
 from lykke.infrastructure.database.tables import bot_personalities_tbl
+from lykke.infrastructure.repositories.base.utils import (
+    ensure_datetimes_utc,
+    filter_init_false_fields,
+    normalize_list_fields,
+)
 
 from .base import UserScopedBaseRepository
 
@@ -52,12 +57,6 @@ class BotPersonalityRepository(
     @classmethod
     def row_to_entity(cls, row: dict[str, Any]) -> BotPersonalityEntity:
         """Convert a database row dict to a BotPersonality entity."""
-        from lykke.infrastructure.repositories.base.utils import (
-            ensure_datetimes_utc,
-            filter_init_false_fields,
-            normalize_list_fields,
-        )
-
         data = normalize_list_fields(dict(row), BotPersonalityEntity)
 
         # Ensure meta is a dict

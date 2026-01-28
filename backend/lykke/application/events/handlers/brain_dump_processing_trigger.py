@@ -20,11 +20,9 @@ class BrainDumpProcessingTriggerHandler(DomainEventHandler):
             return
 
         try:
-            # Import here to avoid circular dependencies
             from lykke.presentation.workers import tasks as worker_tasks
-            from lykke.presentation.workers.tasks import registry as task_registry
 
-            task = task_registry.get_task(
+            task = worker_tasks.get_task(
                 "process_brain_dump_item_task",
                 worker_tasks.process_brain_dump_item_task,
             )

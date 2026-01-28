@@ -8,7 +8,10 @@ from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import PushNotificationEntity
 from lykke.infrastructure.database.tables import push_notifications_tbl
-from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
+from lykke.infrastructure.repositories.base.utils import (
+    ensure_datetimes_utc,
+    filter_init_false_fields,
+)
 
 from .base import UserScopedBaseRepository
 
@@ -80,10 +83,6 @@ class PushNotificationRepository(
     @classmethod
     def row_to_entity(cls, row: dict[str, Any]) -> PushNotificationEntity:
         """Convert a database row dict to a PushNotification entity."""
-        from lykke.infrastructure.repositories.base.utils import (
-            filter_init_false_fields,
-        )
-
         data = dict(row)
 
         llm_snapshot = data.get("llm_snapshot")

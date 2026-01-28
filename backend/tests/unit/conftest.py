@@ -5,6 +5,8 @@ from uuid import uuid4
 import pytest
 
 from lykke.application.repositories import MessageRepositoryReadOnlyProtocol
+from lykke.domain.entities import UserEntity
+from lykke.domain.value_objects.user import UserSetting
 from tests.support.dobles import (
     create_auth_token_repo_double,
     create_brain_dump_repo_double,
@@ -164,9 +166,6 @@ def test_user_id():
 @pytest.fixture
 def test_user(test_user_id):
     """Test user entity for unit tests."""
-    from lykke.domain.entities import UserEntity
-    from lykke.domain.value_objects.user import UserSetting
-
     return UserEntity(
         id=test_user_id,
         email="test@example.com",

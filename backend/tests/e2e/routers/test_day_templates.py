@@ -1,8 +1,21 @@
 """E2E tests for day-templates router endpoints."""
 
+from datetime import time
 from uuid import uuid4
 
 import pytest
+
+from lykke.domain import value_objects
+from lykke.domain.entities import RoutineDefinitionEntity, TimeBlockDefinitionEntity
+from lykke.domain.entities.day_template import DayTemplateEntity
+from lykke.domain.value_objects.routine_definition import RecurrenceSchedule
+from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
+from lykke.domain.value_objects.time_block import TimeBlockCategory, TimeBlockType
+from lykke.infrastructure.repositories import (
+    DayTemplateRepository,
+    RoutineDefinitionRepository,
+    TimeBlockDefinitionRepository,
+)
 
 
 @pytest.mark.asyncio
@@ -183,9 +196,6 @@ async def test_add_routine_definition_to_day_template(authenticated_client):
     client, user = await authenticated_client()
 
     # Create a day template
-    from lykke.domain.entities.day_template import DayTemplateEntity
-    from lykke.infrastructure.repositories import DayTemplateRepository
-
     day_template_repo = DayTemplateRepository(user_id=user.id)
     day_template = DayTemplateEntity(
         user_id=user.id,
@@ -195,11 +205,6 @@ async def test_add_routine_definition_to_day_template(authenticated_client):
     day_template = await day_template_repo.put(day_template)
 
     # Create a routine definition
-    from lykke.domain.entities import RoutineDefinitionEntity
-    from lykke.domain.value_objects.routine_definition import RecurrenceSchedule
-    from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
-    from lykke.infrastructure.repositories import RoutineDefinitionRepository
-
     routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
     routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
@@ -207,9 +212,7 @@ async def test_add_routine_definition_to_day_template(authenticated_client):
         name="Test Routine Definition",
         category=TaskCategory.HOUSE,
         description="Test description",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.DAILY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
     routine_definition = await routine_definition_repo.put(routine_definition)
@@ -231,15 +234,6 @@ async def test_add_duplicate_routine_definition_to_day_template(authenticated_cl
     client, user = await authenticated_client()
 
     # Create a day template with a routine definition already attached
-    from lykke.domain.entities import RoutineDefinitionEntity
-    from lykke.domain.entities.day_template import DayTemplateEntity
-    from lykke.domain.value_objects.routine_definition import RecurrenceSchedule
-    from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
-    from lykke.infrastructure.repositories import (
-        DayTemplateRepository,
-        RoutineDefinitionRepository,
-    )
-
     routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
     routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
@@ -247,9 +241,7 @@ async def test_add_duplicate_routine_definition_to_day_template(authenticated_cl
         name="Test Routine Definition",
         category=TaskCategory.HOUSE,
         description="Test description",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.DAILY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
     routine_definition = await routine_definition_repo.put(routine_definition)
@@ -277,11 +269,6 @@ async def test_remove_routine_definition_from_day_template(authenticated_client)
     client, user = await authenticated_client()
 
     # Create a routine definition
-    from lykke.domain.entities import RoutineDefinitionEntity
-    from lykke.domain.value_objects.routine_definition import RecurrenceSchedule
-    from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
-    from lykke.infrastructure.repositories import RoutineDefinitionRepository
-
     routine_definition_repo = RoutineDefinitionRepository(user_id=user.id)
     routine_definition = RoutineDefinitionEntity(
         id=uuid4(),
@@ -289,17 +276,12 @@ async def test_remove_routine_definition_from_day_template(authenticated_client)
         name="Test Routine Definition",
         category=TaskCategory.HOUSE,
         description="Test description",
-        routine_definition_schedule=RecurrenceSchedule(
-            frequency=TaskFrequency.DAILY
-        ),
+        routine_definition_schedule=RecurrenceSchedule(frequency=TaskFrequency.DAILY),
         tasks=[],
     )
     routine_definition = await routine_definition_repo.put(routine_definition)
 
     # Create a day template with the routine definition attached
-    from lykke.domain.entities.day_template import DayTemplateEntity
-    from lykke.infrastructure.repositories import DayTemplateRepository
-
     day_template_repo = DayTemplateRepository(user_id=user.id)
     day_template = DayTemplateEntity(
         user_id=user.id,
@@ -326,9 +308,6 @@ async def test_remove_nonexistent_routine_definition_from_day_template(
     client, user = await authenticated_client()
 
     # Create a day template without any routine definitions
-    from lykke.domain.entities.day_template import DayTemplateEntity
-    from lykke.infrastructure.repositories import DayTemplateRepository
-
     day_template_repo = DayTemplateRepository(user_id=user.id)
     day_template = DayTemplateEntity(
         user_id=user.id,
@@ -354,9 +333,6 @@ async def test_add_time_block_to_day_template_persists_to_database(
     client, user = await authenticated_client()
 
     # Create a day template
-    from lykke.domain.entities.day_template import DayTemplateEntity
-    from lykke.infrastructure.repositories import DayTemplateRepository
-
     day_template_repo = DayTemplateRepository(user_id=user.id)
     day_template = DayTemplateEntity(
         user_id=user.id,
@@ -366,11 +342,6 @@ async def test_add_time_block_to_day_template_persists_to_database(
     day_template = await day_template_repo.put(day_template)
 
     # Create a time block definition
-    from lykke.domain import value_objects
-    from lykke.domain.entities import TimeBlockDefinitionEntity
-    from lykke.domain.value_objects.time_block import TimeBlockCategory, TimeBlockType
-    from lykke.infrastructure.repositories import TimeBlockDefinitionRepository
-
     time_block_def_repo = TimeBlockDefinitionRepository(user_id=user.id)
     time_block_def = TimeBlockDefinitionEntity(
         id=uuid4(),
@@ -415,11 +386,6 @@ async def test_remove_time_block_from_day_template_persists_to_database(
     client, user = await authenticated_client()
 
     # Create a time block definition
-    from lykke.domain import value_objects
-    from lykke.domain.entities import TimeBlockDefinitionEntity
-    from lykke.domain.value_objects.time_block import TimeBlockCategory, TimeBlockType
-    from lykke.infrastructure.repositories import TimeBlockDefinitionRepository
-
     time_block_def_repo = TimeBlockDefinitionRepository(user_id=user.id)
     time_block_def = TimeBlockDefinitionEntity(
         id=uuid4(),
@@ -432,11 +398,6 @@ async def test_remove_time_block_from_day_template_persists_to_database(
     time_block_def = await time_block_def_repo.put(time_block_def)
 
     # Create a day template with a time block
-    from datetime import time
-
-    from lykke.domain.entities.day_template import DayTemplateEntity
-    from lykke.infrastructure.repositories import DayTemplateRepository
-
     day_template_repo = DayTemplateRepository(user_id=user.id)
     day_template = DayTemplateEntity(
         user_id=user.id,

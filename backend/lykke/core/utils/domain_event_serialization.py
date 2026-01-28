@@ -10,7 +10,7 @@ from dataclasses import asdict, fields, is_dataclass
 from datetime import date as dt_date, datetime, time
 from enum import Enum
 from types import UnionType
-from typing import Any, Union, get_args, get_origin, get_type_hints
+from typing import Any, Union, cast, get_args, get_origin, get_type_hints
 from uuid import UUID
 
 from lykke.domain.events.base import DomainEvent
@@ -153,8 +153,6 @@ def deserialize_domain_event(data: dict[str, Any]) -> DomainEvent:
         raise ValueError(
             f"Could not instantiate {event_type} with provided data: {e}"
         ) from e
-
-    from typing import cast
 
     return cast("DomainEvent", event)
 

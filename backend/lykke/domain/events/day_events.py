@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from lykke.domain.entities.audit_log import AuditLogEntity
 from lykke.domain.value_objects.day import AlarmStatus, AlarmType
 from lykke.domain.value_objects.update import DayUpdateObject
 
@@ -14,7 +15,6 @@ if TYPE_CHECKING:
     from datetime import date as dt_date, time
     from uuid import UUID
 
-    from lykke.domain.entities.audit_log import AuditLogEntity
     from lykke.domain.value_objects.day import (
         BrainDumpStatus,
         BrainDumpType,
@@ -131,8 +131,6 @@ class AlarmTriggeredEvent(DomainEvent, AuditableDomainEvent):
 
     def to_audit_log(self, user_id: UUID) -> AuditLogEntity:
         """Create audit log with day context for alarm trigger."""
-        from lykke.domain.entities.audit_log import AuditLogEntity
-
         entity_data: dict[str, Any] = {
             "id": str(self.day_id),
             "date": self.date.isoformat(),
@@ -176,8 +174,6 @@ class AlarmStatusChangedEvent(DomainEvent, AuditableDomainEvent):
 
     def to_audit_log(self, user_id: UUID) -> AuditLogEntity:
         """Create audit log with day context for alarm status change."""
-        from lykke.domain.entities.audit_log import AuditLogEntity
-
         entity_data: dict[str, Any] = {
             "id": str(self.day_id),
             "date": self.date.isoformat(),

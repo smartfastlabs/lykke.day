@@ -5,6 +5,7 @@ These tests verify that dependencies are properly configured and injected.
 
 import contextlib
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 import pytest
 
@@ -70,8 +71,6 @@ async def test_get_unit_of_work_factory_requires_pubsub_gateway():
 
     # Verify the factory has the pubsub_gateway configured
     # by checking that it passes it through when creating a UoW
-    from uuid import uuid4
-
     uow = factory.create(user_id=uuid4())
 
     # The UoW should have the pubsub_gateway set
@@ -94,8 +93,6 @@ def test_unit_of_work_factory_requires_pubsub_gateway():
     factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=stub_gateway)
 
     # Create a UoW
-    from uuid import uuid4
-
     uow = factory.create(user_id=uuid4())
 
     # The UoW should have the pubsub_gateway set

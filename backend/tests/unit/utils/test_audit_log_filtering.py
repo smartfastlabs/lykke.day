@@ -11,6 +11,7 @@ from uuid import uuid4
 import pytest
 
 from lykke.core.utils.audit_log_filtering import is_audit_log_for_today
+from lykke.core.utils.strings import entity_type_from_class_name
 from lykke.domain.entities import AuditLogEntity
 
 USER_TIMEZONE = "America/Chicago"
@@ -35,8 +36,6 @@ def _make_audit_log(
 
 def _get_entity_type_name(entity_class_name: str) -> str:
     """Get entity type name using the same logic as UnitOfWork."""
-    from lykke.core.utils.strings import entity_type_from_class_name
-
     return entity_type_from_class_name(entity_class_name)
 
 
@@ -340,4 +339,5 @@ class TestIsAuditLogForTodayEdgeCases:
         result = await is_audit_log_for_today(
             audit_log, today, user_timezone=USER_TIMEZONE
         )
+        assert result is False
         assert result is False

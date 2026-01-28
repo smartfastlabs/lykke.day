@@ -4,6 +4,7 @@ from uuid import UUID
 
 from sqlalchemy.sql import Select
 
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.infrastructure.database.tables import day_templates_tbl
@@ -44,8 +45,6 @@ class DayTemplateRepository(
         }
 
         # Handle JSONB fields
-        from lykke.core.utils.serialization import dataclass_to_json_dict
-
         # Always include high_level_plan, even if None, so that clearing it works
         row["high_level_plan"] = (
             dataclass_to_json_dict(template.high_level_plan)

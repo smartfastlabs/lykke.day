@@ -2,6 +2,7 @@
 
 import datetime
 import os
+from datetime import UTC
 
 import pytest
 from freezegun import freeze_time
@@ -54,8 +55,6 @@ def test_date_yesterday(test_date):
 @pytest.fixture
 def test_datetime_noon():
     """Fixed test datetime at noon UTC for consistent testing."""
-    from datetime import UTC
-
     with freeze_time(
         "2025-11-27 12:00:00-6:00",
         real_asyncio=True,
@@ -66,8 +65,6 @@ def test_datetime_noon():
 @pytest.fixture
 def test_datetime_morning():
     """Fixed test datetime in the morning UTC for consistent testing."""
-    from datetime import UTC
-
     with freeze_time(
         "2025-11-27 08:00:00-6:00",
         real_asyncio=True,
@@ -78,8 +75,6 @@ def test_datetime_morning():
 @pytest.fixture
 def test_datetime_evening():
     """Fixed test datetime in the evening UTC for consistent testing."""
-    from datetime import UTC
-
     with freeze_time(
         "2025-11-27 18:00:00-6:00",
         real_asyncio=True,

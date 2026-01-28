@@ -8,6 +8,12 @@ from uuid import UUID
 from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.core.utils.audit_log_filtering import is_audit_log_for_today
 from lykke.domain import value_objects
+from lykke.presentation.api.schemas.mappers import (
+    map_calendar_entry_to_schema,
+    map_day_to_schema,
+    map_routine_to_schema,
+    map_task_to_schema,
+)
 from lykke.presentation.api.schemas.websocket_message import EntityChangeSchema
 
 if TYPE_CHECKING:
@@ -173,8 +179,6 @@ class GetIncrementalChangesHandler(
                 if not task:
                     return None
                 # Convert task entity to dict using schema mapper
-                from lykke.presentation.api.schemas.mappers import map_task_to_schema
-
                 task_schema = map_task_to_schema(task, user_timezone=user_timezone)
                 return task_schema.model_dump(mode="json")
 
@@ -183,10 +187,6 @@ class GetIncrementalChangesHandler(
                 if not entry:
                     return None
                 # Convert calendar entry to dict using schema mapper
-                from lykke.presentation.api.schemas.mappers import (
-                    map_calendar_entry_to_schema,
-                )
-
                 entry_schema = map_calendar_entry_to_schema(
                     entry, user_timezone=user_timezone
                 )
@@ -196,8 +196,6 @@ class GetIncrementalChangesHandler(
                 routine = await self.routine_ro_repo.get(entity_id)
                 if not routine:
                     return None
-                from lykke.presentation.api.schemas.mappers import map_routine_to_schema
-
                 tasks = await self.task_ro_repo.search(
                     value_objects.TaskQuery(
                         date=routine.date,
@@ -216,8 +214,6 @@ class GetIncrementalChangesHandler(
                 if not day:
                     return None
                 # Convert day to dict using schema mapper
-                from lykke.presentation.api.schemas.mappers import map_day_to_schema
-
                 brain_dump_items = await self.brain_dump_ro_repo.search(
                     value_objects.BrainDumpQuery(date=day.date)
                 )

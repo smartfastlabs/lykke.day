@@ -2,7 +2,10 @@
 
 from lykke.infrastructure.gateways import GoogleCalendarGateway
 from lykke.infrastructure.repositories import UserRepository
-from lykke.presentation.workers.tasks import common as worker_common
+from lykke.presentation.workers.tasks import (
+    common as worker_common,
+    registration as worker_registration,
+)
 
 
 def test_register_worker_event_handlers() -> None:
@@ -11,7 +14,7 @@ def test_register_worker_event_handlers() -> None:
     def register_all_handlers(*, ro_repo_factory: object, uow_factory: object) -> None:
         calls.append((ro_repo_factory, uow_factory))
 
-    worker_common.register_worker_event_handlers(
+    worker_registration.register_worker_event_handlers(
         register_handlers=register_all_handlers,
         ro_repo_factory="ro",
         uow_factory="uow",
@@ -34,7 +37,7 @@ def test_register_worker_event_handlers_logs() -> None:
     def register_all_handlers(*, ro_repo_factory: object, uow_factory: object) -> None:
         calls.append((ro_repo_factory, uow_factory))
 
-    worker_common.register_worker_event_handlers(
+    worker_registration.register_worker_event_handlers(
         register_handlers=register_all_handlers,
         ro_repo_factory="ro",
         uow_factory="uow",

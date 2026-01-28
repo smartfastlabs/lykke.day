@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from lykke.core.utils.dates import get_current_date
 from lykke.domain import value_objects
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.value_objects.day import DayStatus
@@ -21,6 +22,7 @@ from lykke.infrastructure.repositories import (
     DayTemplateRepository,
     UserRepository,
 )
+from tests.e2e.conftest import schedule_day_for_user
 
 
 @pytest.mark.asyncio
@@ -82,9 +84,6 @@ async def test_full_user_flow_e2e(test_client: TestClient):
 
     # Step 3: Verify day can be scheduled (simulating background job or WebSocket auto-schedule)
     # Schedule the day directly to verify it works
-    from lykke.core.utils.dates import get_current_date
-    from tests.e2e.conftest import schedule_day_for_user
-
     await schedule_day_for_user(user_id, get_current_date())
 
     # Step 4: Verify database state directly

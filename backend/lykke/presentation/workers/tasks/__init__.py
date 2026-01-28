@@ -25,7 +25,6 @@ from .common import (
     get_sync_calendar_handler,
     get_unit_of_work_factory,
     get_user_repository,
-    register_worker_event_handlers,
 )
 from .misc import example_triggered_task, heartbeat_task
 from .notifications import (
@@ -36,6 +35,7 @@ from .notifications import (
     evaluate_smart_notification_task,
     evaluate_smart_notifications_for_all_users_task,
 )
+from .registration import register_worker_event_handlers
 from .registry import clear_task_overrides, get_task, set_task_override
 from .scheduling import schedule_all_users_day_task, schedule_user_day_task
 

@@ -5,9 +5,14 @@ Unit of Work's entity repository mapping, preventing the error:
 "ValueError: No repository found for entity type UseCaseConfigEntity"
 """
 
+from datetime import UTC, datetime
+
 import pytest
 
 from lykke.domain.entities.usecase_config import UseCaseConfigEntity
+from lykke.domain.events.base import EntityUpdatedEvent
+from lykke.domain.value_objects import UseCaseConfigQuery
+from lykke.domain.value_objects.update import BaseUpdateObject
 from lykke.infrastructure.gateways import StubPubSubGateway
 from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 
@@ -41,8 +46,6 @@ async def test_usecase_config_can_be_created_through_uow(test_user):
 
     # Verify the entity was persisted by reading it back
     async with uow_factory.create(user_id) as uow:
-        from lykke.domain.value_objects import UseCaseConfigQuery
-
         retrieved = await uow.usecase_config_ro_repo.search(
             UseCaseConfigQuery(usecase="notification")
         )
@@ -98,11 +101,6 @@ async def test_usecase_config_can_be_updated_through_uow(test_user):
         config_id = created.id
 
     # Update the config
-    from datetime import UTC, datetime
-
-    from lykke.domain.events.base import EntityUpdatedEvent
-    from lykke.domain.value_objects.update import BaseUpdateObject
-
     updated_config = UseCaseConfigEntity(
         id=config_id,
         user_id=user_id,
@@ -122,8 +120,6 @@ async def test_usecase_config_can_be_updated_through_uow(test_user):
 
     # Verify update
     async with uow_factory.create(user_id) as uow:
-        from lykke.domain.value_objects import UseCaseConfigQuery
-
         retrieved = await uow.usecase_config_ro_repo.search(
             UseCaseConfigQuery(usecase="notification")
         )

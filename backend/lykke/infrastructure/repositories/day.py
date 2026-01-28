@@ -1,11 +1,17 @@
+from datetime import datetime as dt_datetime, time as dt_time
 from typing import Any
 from uuid import UUID
 
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.infrastructure.database.tables import days_tbl
-from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
+from lykke.infrastructure.repositories.base.utils import (
+    ensure_datetimes_utc,
+    filter_init_false_fields,
+    normalize_list_fields,
+)
 
 from .base import BaseQuery, UserScopedBaseRepository
 
@@ -29,8 +35,6 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
         }
 
         # Handle JSONB fields
-        from lykke.core.utils.serialization import dataclass_to_json_dict
-
         if day.tags:
             row["tags"] = [tag.value for tag in day.tags]
 
@@ -66,8 +70,6 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
 
         Overrides base to handle JSONB fields (template) and enum conversion.
         """
-        from lykke.infrastructure.repositories.base.utils import normalize_list_fields
-
         data = normalize_list_fields(dict(row), DayEntity)
 
         # Convert status string back to enum if needed
@@ -116,33 +118,25 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                     UUID(routine_definition_id)
                     if isinstance(routine_definition_id, str)
                     else routine_definition_id
-                    for routine_definition_id in template_data[
-                        "routine_definition_ids"
-                    ]
+                    for routine_definition_id in template_data["routine_definition_ids"]
                 ]
 
             # Convert start/end times from strings to time objects
             if "start_time" in template_data and isinstance(
                 template_data["start_time"], str
             ):
-                from datetime import time as dt_time
-
                 template_data["start_time"] = dt_time.fromisoformat(
                     template_data["start_time"]
                 )
             if "end_time" in template_data and isinstance(
                 template_data["end_time"], str
             ):
-                from datetime import time as dt_time
-
                 template_data["end_time"] = dt_time.fromisoformat(
                     template_data["end_time"]
                 )
 
             # Convert time_blocks from dicts to DayTemplateTimeBlock objects
             if template_data.get("time_blocks"):
-                from datetime import time as dt_time
-
                 template_data["time_blocks"] = [
                     value_objects.DayTemplateTimeBlock(
                         time_block_definition_id=(
@@ -181,17 +175,11 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                         intentions=high_level_plan.get("intentions") or [],
                     )
 
-            from lykke.infrastructure.repositories.base.utils import (
-                filter_init_false_fields,
-            )
-
             template_data = filter_init_false_fields(template_data, DayTemplateEntity)
             data["template"] = DayTemplateEntity(**template_data)
 
         # Handle reminders - it comes as a list of dicts from JSONB, need to convert to Reminder value objects
         if data.get("reminders") and isinstance(data["reminders"], list):
-            from datetime import datetime as dt_datetime
-
             reminders_list = []
             for reminder_dict in data["reminders"]:
                 if isinstance(reminder_dict, dict):
@@ -225,10 +213,6 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
                 for alarm in data["alarms"]
                 if isinstance(alarm, dict)
             ]
-
-        from lykke.infrastructure.repositories.base.utils import (
-            filter_init_false_fields,
-        )
 
         data = filter_init_false_fields(data, DayEntity)
         data = ensure_datetimes_utc(data, keys=("scheduled_at", "starts_at", "ends_at"))

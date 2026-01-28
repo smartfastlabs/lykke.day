@@ -7,6 +7,11 @@ from sqlalchemy.sql import Select
 from lykke.domain import value_objects
 from lykke.domain.entities import FactoidEntity
 from lykke.infrastructure.database.tables import factoids_tbl
+from lykke.infrastructure.repositories.base.utils import (
+    ensure_datetimes_utc,
+    filter_init_false_fields,
+    normalize_list_fields,
+)
 
 from .base import UserScopedBaseRepository
 
@@ -65,12 +70,6 @@ class FactoidRepository(
     @classmethod
     def row_to_entity(cls, row: dict[str, Any]) -> FactoidEntity:
         """Convert a database row dict to a Factoid entity."""
-        from lykke.infrastructure.repositories.base.utils import (
-            ensure_datetimes_utc,
-            filter_init_false_fields,
-            normalize_list_fields,
-        )
-
         data = normalize_list_fields(dict(row), FactoidEntity)
 
         # Convert enum strings back to enums

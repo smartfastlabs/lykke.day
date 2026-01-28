@@ -7,12 +7,14 @@ from datetime import UTC, date as dt_date, datetime
 from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from loguru import logger
+
 from lykke.application.events import send_domain_events
-from lykke.application.unit_of_work import (
-    ReadOnlyRepositoryFactory,
-)
+from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.core.exceptions import BadRequestError, NotFoundError
+from lykke.core.utils.domain_event_serialization import serialize_domain_event
 from lykke.core.utils.serialization import dataclass_to_json_dict
+from lykke.core.utils.strings import entity_type_from_class_name
 from lykke.domain.entities import (
     AuditLogEntity,
     AuthTokenEntity,
@@ -133,10 +135,7 @@ if TYPE_CHECKING:
         UserRepositoryReadOnlyProtocol,
         UserRepositoryReadWriteProtocol,
     )
-    from lykke.application.unit_of_work import (
-        ReadOnlyRepositories,
-        UnitOfWorkProtocol,
-    )
+    from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkProtocol
     from lykke.domain import value_objects
 
 # Type variable for entities
@@ -818,10 +817,6 @@ class SqlAlchemyUnitOfWork:
                             ),
                         ):
                             # Infer entity_type from entity class name (e.g., "TaskEntity" -> "task")
-                            from lykke.core.utils.strings import (
-                                entity_type_from_class_name,
-                            )
-
                             entity_type = entity_type_from_class_name(
                                 type(entity).__name__
                             )
@@ -900,8 +895,6 @@ class SqlAlchemyUnitOfWork:
         for entity in self._added_entities:
             entity_events = entity.collect_events()
             if entity_events:
-                from lykke.core.utils.strings import entity_type_from_class_name
-
                 entity_type = entity_type_from_class_name(type(entity).__name__)
                 for event in entity_events:
                     if isinstance(
@@ -980,10 +973,6 @@ class SqlAlchemyUnitOfWork:
         """
         if not events:
             return
-
-        from loguru import logger
-
-        from lykke.core.utils.domain_event_serialization import serialize_domain_event
 
         for event in events:
             try:

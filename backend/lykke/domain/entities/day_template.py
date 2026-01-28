@@ -8,6 +8,12 @@ from uuid import UUID
 
 from lykke.core.exceptions import DomainError, NotFoundError
 from lykke.domain import value_objects
+from lykke.domain.events.day_template_events import (
+    DayTemplateRoutineDefinitionAddedEvent,
+    DayTemplateRoutineDefinitionRemovedEvent,
+    DayTemplateTimeBlockAddedEvent,
+    DayTemplateTimeBlockRemovedEvent,
+)
 from lykke.domain.value_objects.update import DayTemplateUpdateObject
 
 from .base import BaseEntityObject
@@ -72,10 +78,6 @@ class DayTemplateEntity(
         updated = self._copy_with_routine_definition_ids(
             [*self.routine_definition_ids, routine_definition_id]
         )
-        from lykke.domain.events.day_template_events import (
-            DayTemplateRoutineDefinitionAddedEvent,
-        )
-
         updated._add_event(
             DayTemplateRoutineDefinitionAddedEvent(
                 user_id=self.user_id,
@@ -85,22 +87,16 @@ class DayTemplateEntity(
         )
         return updated
 
-    def remove_routine_definition(self, routine_definition_id: UUID) -> DayTemplateEntity:
+    def remove_routine_definition(
+        self, routine_definition_id: UUID
+    ) -> DayTemplateEntity:
         """Detach a routine definition from the day template."""
         if routine_definition_id not in self.routine_definition_ids:
             raise NotFoundError("Routine definition not found in day template")
 
         updated = self._copy_with_routine_definition_ids(
-            [
-                rid
-                for rid in self.routine_definition_ids
-                if rid != routine_definition_id
-            ]
+            [rid for rid in self.routine_definition_ids if rid != routine_definition_id]
         )
-        from lykke.domain.events.day_template_events import (
-            DayTemplateRoutineDefinitionRemovedEvent,
-        )
-
         updated._add_event(
             DayTemplateRoutineDefinitionRemovedEvent(
                 user_id=self.user_id,
@@ -140,10 +136,6 @@ class DayTemplateEntity(
                 raise DomainError("Time block overlaps with existing time block")
 
         updated = self._copy_with_time_blocks([*self.time_blocks, time_block])
-        from lykke.domain.events.day_template_events import (
-            DayTemplateTimeBlockAddedEvent,
-        )
-
         updated._add_event(
             DayTemplateTimeBlockAddedEvent(
                 user_id=self.user_id,
@@ -175,10 +167,6 @@ class DayTemplateEntity(
         updated = self._copy_with_time_blocks(
             [tb for tb in self.time_blocks if tb != time_block_to_remove]
         )
-        from lykke.domain.events.day_template_events import (
-            DayTemplateTimeBlockRemovedEvent,
-        )
-
         updated._add_event(
             DayTemplateTimeBlockRemovedEvent(
                 user_id=self.user_id,

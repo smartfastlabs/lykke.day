@@ -1,72 +1,30 @@
 """Shared helpers for background worker tasks."""
 
-from collections.abc import Callable
-from typing import cast
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
-from loguru import logger
-
-from lykke.application.commands import ScheduleDayCommand, ScheduleDayHandler
-from lykke.application.commands.brain_dump import (
-    ProcessBrainDumpCommand,
-    ProcessBrainDumpHandler,
-)
-from lykke.application.commands.calendar import (
-    SubscribeCalendarCommand,
-    SubscribeCalendarHandler,
-    SyncAllCalendarsCommand,
-    SyncAllCalendarsHandler,
-    SyncCalendarCommand,
-    SyncCalendarHandler,
-)
-from lykke.application.commands.notifications import (
-    KioskNotificationCommand,
-    KioskNotificationHandler,
-    MorningOverviewCommand,
-    MorningOverviewHandler,
-    SmartNotificationCommand,
-    SmartNotificationHandler,
-)
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.repositories import UserRepositoryReadOnlyProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.infrastructure.gateways import GoogleCalendarGateway, RedisPubSubGateway
 from lykke.infrastructure.repositories import UserRepository
-from lykke.infrastructure.unit_of_work import (
-    SqlAlchemyReadOnlyRepositoryFactory,
-    SqlAlchemyUnitOfWorkFactory,
-)
-from lykke.presentation.handler_factory import CommandHandlerFactory
 
-_REGISTER_HANDLERS_OVERRIDE: Callable[..., None] | None = None
-
-
-def set_register_handlers_override(handler: Callable[..., None] | None) -> None:
-    """Override the register_all_handlers callable (tests only)."""
-    global _REGISTER_HANDLERS_OVERRIDE
-    _REGISTER_HANDLERS_OVERRIDE = handler
-
-
-def register_worker_event_handlers(
-    *,
-    register_handlers: Callable[..., None] | None = None,
-    ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
-    uow_factory: UnitOfWorkFactory | None = None,
-) -> None:
-    """Register domain event handlers for background workers.
-
-    Workers execute commands that emit domain events (e.g., calendar sync).
-    Without registration, handlers like push notifications never run.
-    """
-    from lykke.application.events import register_all_handlers
-
-    register_handlers = (
-        register_handlers or _REGISTER_HANDLERS_OVERRIDE or register_all_handlers
+if TYPE_CHECKING:
+    from lykke.application.commands import ScheduleDayHandler
+    from lykke.application.commands.brain_dump import ProcessBrainDumpHandler
+    from lykke.application.commands.calendar import (
+        SubscribeCalendarHandler,
+        SyncAllCalendarsHandler,
+        SyncCalendarHandler,
     )
-    ro_repo_factory = ro_repo_factory or get_read_only_repository_factory()
-    uow_factory = uow_factory or get_unit_of_work_factory()
-    register_handlers(ro_repo_factory=ro_repo_factory, uow_factory=uow_factory)
-    logger.info("Registered domain event handlers for worker process")
+    from lykke.application.commands.notifications import (
+        KioskNotificationHandler,
+        MorningOverviewHandler,
+        SmartNotificationHandler,
+    )
+    from lykke.presentation.handler_factory import CommandHandlerFactory
 
 
 def get_google_gateway() -> GoogleCalendarGatewayProtocol:
@@ -83,12 +41,16 @@ def get_unit_of_work_factory(
         pubsub_gateway: Optional RedisPubSubGateway instance. If not provided,
             a new one will be created that connects lazily to Redis.
     """
+    from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
+
     gateway = pubsub_gateway or RedisPubSubGateway()
     return SqlAlchemyUnitOfWorkFactory(pubsub_gateway=gateway)
 
 
 def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
     """Get a ReadOnlyRepositoryFactory instance."""
+    from lykke.infrastructure.unit_of_work import SqlAlchemyReadOnlyRepositoryFactory
+
     return SqlAlchemyReadOnlyRepositoryFactory()
 
 
@@ -104,6 +66,9 @@ def get_sync_all_calendars_handler(
     google_gateway: GoogleCalendarGatewayProtocol,
 ) -> SyncAllCalendarsHandler:
     """Get a SyncAllCalendarsHandler instance for a user."""
+    from lykke.application.commands.calendar import SyncAllCalendarsHandler
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
     factory = CommandHandlerFactory(
         user_id=user_id,
         ro_repo_factory=ro_repo_factory,
@@ -120,6 +85,9 @@ def get_sync_calendar_handler(
     google_gateway: GoogleCalendarGatewayProtocol,
 ) -> SyncCalendarHandler:
     """Get a SyncCalendarHandler instance for a user."""
+    from lykke.application.commands.calendar import SyncCalendarHandler
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
     factory = CommandHandlerFactory(
         user_id=user_id,
         ro_repo_factory=ro_repo_factory,
@@ -136,6 +104,9 @@ def get_subscribe_calendar_handler(
     google_gateway: GoogleCalendarGatewayProtocol,
 ) -> SubscribeCalendarHandler:
     """Get a SubscribeCalendarHandler instance for a user."""
+    from lykke.application.commands.calendar import SubscribeCalendarHandler
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
     factory = CommandHandlerFactory(
         user_id=user_id,
         ro_repo_factory=ro_repo_factory,
@@ -151,6 +122,9 @@ def get_schedule_day_handler(
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> ScheduleDayHandler:
     """Get a ScheduleDayHandler instance for a user."""
+    from lykke.application.commands import ScheduleDayHandler
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
     factory = CommandHandlerFactory(
         user_id=user_id,
         ro_repo_factory=ro_repo_factory,
@@ -165,6 +139,9 @@ def get_smart_notification_handler(
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> SmartNotificationHandler:
     """Get a SmartNotificationHandler instance for a user."""
+    from lykke.application.commands.notifications import SmartNotificationHandler
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
     factory = CommandHandlerFactory(
         user_id=user_id,
         ro_repo_factory=ro_repo_factory,
@@ -179,6 +156,9 @@ def get_kiosk_notification_handler(
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> KioskNotificationHandler:
     """Get a KioskNotificationHandler instance for a user."""
+    from lykke.application.commands.notifications import KioskNotificationHandler
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
     factory = CommandHandlerFactory(
         user_id=user_id,
         ro_repo_factory=ro_repo_factory,
@@ -193,6 +173,9 @@ def get_morning_overview_handler(
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> MorningOverviewHandler:
     """Get a MorningOverviewHandler instance for a user."""
+    from lykke.application.commands.notifications import MorningOverviewHandler
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
     factory = CommandHandlerFactory(
         user_id=user_id,
         ro_repo_factory=ro_repo_factory,
@@ -207,6 +190,9 @@ def get_process_brain_dump_handler(
     ro_repo_factory: ReadOnlyRepositoryFactory,
 ) -> ProcessBrainDumpHandler:
     """Get a ProcessBrainDumpHandler instance for a user."""
+    from lykke.application.commands.brain_dump import ProcessBrainDumpHandler
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
     factory = CommandHandlerFactory(
         user_id=user_id,
         ro_repo_factory=ro_repo_factory,

@@ -5,6 +5,7 @@ and non-user-scoped operations through composition rather than inheritance dupli
 """
 
 from contextlib import asynccontextmanager
+from dataclasses import replace
 from typing import Any, ClassVar, Generic, TypeVar
 from uuid import UUID
 
@@ -18,7 +19,11 @@ from lykke.domain import value_objects
 from lykke.domain.entities.base import BaseEntityObject
 from lykke.infrastructure.database import get_engine
 from lykke.infrastructure.database.transaction import get_transaction_connection
-from lykke.infrastructure.repositories.base.utils import normalize_list_fields
+from lykke.infrastructure.repositories.base.utils import (
+    ensure_datetimes_utc,
+    filter_init_false_fields,
+    normalize_list_fields,
+)
 
 ObjectType = TypeVar("ObjectType", bound=BaseEntityObject)
 QueryType = TypeVar("QueryType", bound=value_objects.BaseQuery)
@@ -80,11 +85,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
         Returns:
             An instance of the entity class.
         """
-        from lykke.infrastructure.repositories.base.utils import (
-            ensure_datetimes_utc,
-            filter_init_false_fields,
-        )
-
         # Filter out excluded fields (e.g., database-only computed columns)
         if cls.excluded_row_fields:
             data = {k: v for k, v in row.items() if k not in cls.excluded_row_fields}
@@ -166,8 +166,6 @@ class BaseRepository(Generic[ObjectType, QueryType]):
 
     def _strip_pagination(self, query: QueryType) -> QueryType:
         """Return a copy of the query with pagination removed."""
-        from dataclasses import replace
-
         return replace(query, limit=None, offset=None)
 
     def _get_engine(self) -> AsyncEngine:

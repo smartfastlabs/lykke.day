@@ -2,13 +2,12 @@
 
 import datetime
 from datetime import UTC, timedelta
+from uuid import uuid4
 
 import pytest
 from freezegun import freeze_time
 
-from lykke.application.utils.filters import (
-    filter_upcoming_calendar_entries,
-)
+from lykke.application.utils.filters import filter_upcoming_calendar_entries
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 
@@ -16,8 +15,6 @@ from lykke.domain.entities import CalendarEntity, CalendarEntryEntity
 @pytest.fixture
 def test_calendar_entry(test_user_id: str) -> CalendarEntryEntity:
     """Create a calendar entry for testing."""
-    from uuid import uuid4
-
     calendar = CalendarEntity(
         user_id=test_user_id,
         name="Test Calendar",
@@ -102,8 +99,6 @@ def test_is_calendar_entry_eligible_for_upcoming_no_ends_at(
     test_user_id: str,
 ) -> None:
     """Test calendar entries without ends_at are handled correctly."""
-    from uuid import uuid4
-
     calendar = CalendarEntity(
         user_id=test_user_id,
         name="Test Calendar",
@@ -131,8 +126,6 @@ def test_is_calendar_entry_eligible_for_upcoming_no_ends_at(
 
 def test_filter_upcoming_calendar_entries(test_user_id: str) -> None:
     """Test filter_upcoming_calendar_entries filters entries correctly."""
-    from uuid import uuid4
-
     auth_token_id = uuid4()
     calendar = CalendarEntity(
         user_id=test_user_id,
@@ -198,8 +191,6 @@ def test_filter_upcoming_calendar_entries_ongoing_events(
     test_user_id: str,
 ) -> None:
     """Test filter_upcoming_calendar_entries includes ongoing events."""
-    from uuid import uuid4
-
     calendar = CalendarEntity(
         user_id=test_user_id,
         name="Test Calendar",

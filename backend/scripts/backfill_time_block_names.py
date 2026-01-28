@@ -10,7 +10,10 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from lykke.domain import value_objects
+from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.infrastructure.database import async_session_maker
+from lykke.infrastructure.database.tables import day_templates_tbl
 from lykke.infrastructure.repositories import (
     DayTemplateRepository,
     TimeBlockDefinitionRepository,
@@ -23,8 +26,6 @@ async def backfill_time_block_names() -> None:
         session = AsyncSession(bind=session.bind)
 
         # Get all unique user_ids from day_templates
-        from lykke.infrastructure.database.tables import day_templates_tbl
-
         stmt = select(day_templates_tbl.c.user_id).distinct()
         result = await session.execute(stmt)
         user_ids = [row[0] for row in result]
@@ -57,8 +58,6 @@ async def backfill_time_block_names() -> None:
                                 tb.time_block_definition_id
                             )
                             # Create updated time block with name
-                            from lykke.domain import value_objects
-
                             updated_tb = value_objects.DayTemplateTimeBlock(
                                 time_block_definition_id=tb.time_block_definition_id,
                                 start_time=tb.start_time,
@@ -81,8 +80,6 @@ async def backfill_time_block_names() -> None:
 
                 if updated:
                     # Save the updated template
-                    from lykke.domain.entities.day_template import DayTemplateEntity
-
                     updated_template = DayTemplateEntity(
                         id=template.id,
                         user_id=template.user_id,

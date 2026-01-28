@@ -1,5 +1,6 @@
 """Unit tests for FactoidEntity domain logic."""
 
+import time
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -46,8 +47,6 @@ def test_factoid_creation() -> None:
 
 def test_access_updates_timestamp_and_count(factoid: FactoidEntity) -> None:
     """Test that access() updates timestamp and increments count."""
-    import time
-
     original_time = factoid.last_accessed
     original_count = factoid.access_count
 

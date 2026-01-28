@@ -1,6 +1,6 @@
 import asyncio
 import json
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -8,20 +8,33 @@ from fastapi import WebSocket
 from fastapi.testclient import TestClient
 
 from lykke.core.config import settings
+from lykke.core.utils.domain_event_serialization import serialize_domain_event
 from lykke.domain.entities import (
+    AuditLogEntity,
     BrainDumpEntity,
     CalendarEntryEntity,
     DayEntity,
     TaskEntity,
 )
+from lykke.domain.events.day_events import BrainDumpAddedEvent
 from lykke.domain.events.notification_events import KioskNotificationEvent
+from lykke.domain.events.task_events import TaskCompletedEvent
 from lykke.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
     TaskStatus,
     TaskType,
 )
-from lykke.infrastructure.repositories import CalendarEntryRepository, TaskRepository
+from lykke.infrastructure.gateways import RedisPubSubGateway
+from lykke.infrastructure.repositories import (
+    AuditLogRepository,
+    BrainDumpRepository,
+    CalendarEntryRepository,
+    DayRepository,
+    TaskRepository,
+)
+from lykke.presentation.api.schemas.mappers import map_day_to_schema
+from tests.e2e.conftest import schedule_day_for_user
 
 API_PREFIX = settings.API_PREFIX.rstrip("/")
 WS_CONTEXT_PATH = (
@@ -57,8 +70,6 @@ async def test_full_sync_request(authenticated_client, test_date):
     client, user = await authenticated_client()
 
     # Ensure day is scheduled first (this creates the day)
-    from tests.e2e.conftest import schedule_day_for_user
-
     await schedule_day_for_user(user.id, test_date)
 
     # Create a test task after day is scheduled
@@ -105,8 +116,6 @@ async def test_incremental_sync_request(authenticated_client, test_date):
 
     # Pre-schedule the day to avoid auto-scheduling during websocket session
     # (auto-scheduling creates real-time events that interfere with TestClient)
-    from tests.e2e.conftest import schedule_day_for_user
-
     await schedule_day_for_user(user.id, test_date)
 
     # Create initial task directly (for baseline)
@@ -139,11 +148,6 @@ async def test_incremental_sync_request(authenticated_client, test_date):
         await asyncio.sleep(0.1)
 
         # Create a new task after baseline with audit log
-        from datetime import UTC, datetime, timedelta
-
-        from lykke.domain.entities import AuditLogEntity
-        from lykke.infrastructure.repositories import AuditLogRepository
-
         new_task = TaskEntity(
             id=uuid4(),
             user_id=user.id,
@@ -211,13 +215,8 @@ async def test_websocket_topic_subscription_receives_kiosk_event(
         ack = websocket.receive_json()
         assert ack["type"] == "connection_ack"
 
-        websocket.send_json(
-            {"type": "subscribe", "topics": ["KioskNotificationEvent"]}
-        )
+        websocket.send_json({"type": "subscribe", "topics": ["KioskNotificationEvent"]})
         await asyncio.sleep(0.05)
-
-        from lykke.core.utils.domain_event_serialization import serialize_domain_event
-        from lykke.infrastructure.gateways import RedisPubSubGateway
 
         redis_pool = getattr(client.app.state, "redis_pool", None)
         pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
@@ -258,8 +257,6 @@ async def test_realtime_task_update_notification(
     client, user = await authenticated_client()
 
     # Ensure day is scheduled first (this creates the day)
-    from tests.e2e.conftest import schedule_day_for_user
-
     await schedule_day_for_user(user.id, test_date)
 
     # Create a test task after day is scheduled
@@ -288,8 +285,6 @@ async def test_realtime_task_update_notification(
         assert sync_response["type"] == "sync_response"
 
         # Update task status via repository
-        from lykke.infrastructure.gateways import RedisPubSubGateway
-
         # Get Redis pool from app state
         redis_pool = getattr(client.app.state, "redis_pool", None)
         pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
@@ -300,11 +295,6 @@ async def test_realtime_task_update_notification(
         await task_repo.put(task)
 
         # Create an auditable domain event (TaskCompletedEvent)
-        from lykke.core.utils.domain_event_serialization import serialize_domain_event
-        from lykke.domain.entities import AuditLogEntity
-        from lykke.domain.events.task_events import TaskCompletedEvent
-        from lykke.infrastructure.repositories import AuditLogRepository
-
         domain_event = TaskCompletedEvent(
             user_id=user.id,
             task_id=test_task.id,
@@ -385,11 +375,7 @@ async def test_realtime_brain_dump_update_notification(
     """Test that brain dump updates trigger real-time notifications."""
     client, user = await authenticated_client()
 
-    from tests.e2e.conftest import schedule_day_for_user
-
     await schedule_day_for_user(user.id, test_date)
-
-    from lykke.infrastructure.repositories import BrainDumpRepository, DayRepository
 
     day_repo = DayRepository(user_id=user.id)
     day_id = DayEntity.id_from_date_and_user(test_date, user.id)
@@ -410,13 +396,6 @@ async def test_realtime_brain_dump_update_notification(
         websocket.send_json(sync_request)
         sync_response = websocket.receive_json()
         assert sync_response["type"] == "sync_response"
-
-        from lykke.core.utils.domain_event_serialization import serialize_domain_event
-        from lykke.domain.entities import AuditLogEntity
-        from lykke.domain.events.day_events import BrainDumpAddedEvent
-        from lykke.infrastructure.gateways import RedisPubSubGateway
-        from lykke.infrastructure.repositories import AuditLogRepository
-        from lykke.presentation.api.schemas.mappers import map_day_to_schema
 
         redis_pool = getattr(client.app.state, "redis_pool", None)
         pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
@@ -493,8 +472,6 @@ async def test_filtering_other_days_entities(authenticated_client, test_date):
     client, user = await authenticated_client()
 
     # Ensure day is scheduled first (this creates the day)
-    from tests.e2e.conftest import schedule_day_for_user
-
     await schedule_day_for_user(user.id, test_date)
 
     # Create a task for today after day is scheduled
@@ -512,8 +489,6 @@ async def test_filtering_other_days_entities(authenticated_client, test_date):
     await task_repo.put(today_task)
 
     # Create a task for tomorrow directly
-    from datetime import timedelta
-
     tomorrow_date = test_date + timedelta(days=1)
     tomorrow_task = TaskEntity(
         id=uuid4(),
@@ -563,8 +538,6 @@ async def test_multiple_websocket_connections(
     client, user = await authenticated_client()
 
     # Ensure day is scheduled first (this creates the day)
-    from tests.e2e.conftest import schedule_day_for_user
-
     await schedule_day_for_user(user.id, test_date)
 
     # Create a test task after day is scheduled
@@ -603,12 +576,6 @@ async def test_multiple_websocket_connections(
         assert response2["type"] == "sync_response"
 
         # Update task - both should receive notification
-        from lykke.core.utils.domain_event_serialization import serialize_domain_event
-        from lykke.domain.entities import AuditLogEntity
-        from lykke.domain.events.task_events import TaskCompletedEvent
-        from lykke.infrastructure.gateways import RedisPubSubGateway
-        from lykke.infrastructure.repositories import AuditLogRepository
-
         redis_pool = getattr(client.app.state, "redis_pool", None)
         pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
 
@@ -696,14 +663,6 @@ async def test_sync_detection_out_of_sync(authenticated_client, test_date, monke
 
         # Simulate receiving a real-time event and verify timestamp is included
         # This allows frontend to detect out-of-sync situations
-        from datetime import UTC, datetime
-
-        from lykke.core.utils.domain_event_serialization import serialize_domain_event
-        from lykke.domain.entities import AuditLogEntity
-        from lykke.domain.events.task_events import TaskCompletedEvent
-        from lykke.infrastructure.gateways import RedisPubSubGateway
-        from lykke.infrastructure.repositories import AuditLogRepository, TaskRepository
-
         task_repo = TaskRepository(user_id=user.id)
         test_task = TaskEntity(
             id=uuid4(),
@@ -814,11 +773,6 @@ async def test_websocket_reconnection_scenario(authenticated_client, test_date):
         last_timestamp = response1["last_audit_log_timestamp"]
 
         # Create a task while first connection is active with audit log
-        from datetime import UTC, datetime, timedelta
-
-        from lykke.domain.entities import AuditLogEntity
-        from lykke.infrastructure.repositories import AuditLogRepository, TaskRepository
-
         task_repo = TaskRepository(user_id=user.id)
         task1 = TaskEntity(
             id=uuid4(),

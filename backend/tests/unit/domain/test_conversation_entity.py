@@ -1,5 +1,6 @@
 """Unit tests for ConversationEntity domain logic."""
 
+import time
 from uuid import uuid4
 
 import pytest
@@ -37,8 +38,6 @@ def test_update_last_message_time_updates_timestamp(
     conversation: ConversationEntity,
 ) -> None:
     """Test that update_last_message_time actually updates the timestamp."""
-    import time
-
     original_time = conversation.last_message_at
     time.sleep(0.01)  # Small delay to ensure timestamp difference
     updated = conversation.update_last_message_time()

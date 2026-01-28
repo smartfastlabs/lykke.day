@@ -35,7 +35,6 @@ from lykke.application.commands.notifications import (
     SmartNotificationCommand,
     SmartNotificationHandler,
 )
-from lykke.application.events import register_all_handlers
 from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
 from lykke.application.repositories import (
     PushNotificationRepositoryReadOnlyProtocol,
@@ -68,6 +67,8 @@ def register_worker_event_handlers() -> None:
     Workers execute commands that emit domain events (e.g., calendar sync).
     Without registration, handlers like push notifications never run.
     """
+    from lykke.application.events import register_all_handlers
+
     ro_repo_factory = get_read_only_repository_factory()
     uow_factory = get_unit_of_work_factory()
     register_all_handlers(ro_repo_factory=ro_repo_factory, uow_factory=uow_factory)

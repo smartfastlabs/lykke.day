@@ -16,6 +16,7 @@ from lykke.application.commands.google import (
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import AuthTokenEntity, CalendarEntity
+from lykke.domain.value_objects import CalendarQuery
 from lykke.domain.value_objects.sync import SyncSubscription
 from tests.support.dobles import (
     create_auth_token_repo_double,
@@ -74,7 +75,6 @@ async def test_handle_google_login_callback_updates_auth_token_and_calendars(
     allow(calendar_repo).search.and_return([existing_calendar, other_calendar])
     # When searching for specific platform_id: return existing for "calendar-1", None for "calendar-3"
     # We need to stub with_args for each case
-    from lykke.domain.value_objects import CalendarQuery
     allow(calendar_repo).search_one_or_none.with_args(
         CalendarQuery(platform_id="calendar-1")
     ).and_return(existing_calendar)

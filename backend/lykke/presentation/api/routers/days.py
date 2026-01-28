@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+import hashlib
 import json
 from datetime import UTC, date, datetime as dt_datetime
 from typing import Annotated, Any, Literal
@@ -28,17 +29,25 @@ from lykke.application.queries import (
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.core.exceptions import NotFoundError
 from lykke.core.utils.dates import get_current_date
-from lykke.core.utils.domain_event_serialization import serialize_domain_event
+from lykke.core.utils.domain_event_serialization import (
+    deserialize_domain_event,
+    serialize_domain_event,
+)
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.events.base import AuditableDomainEvent
 from lykke.domain.events.day_events import NewDayEvent
 from lykke.domain.events.notification_events import KioskNotificationEvent
+from lykke.domain.events.timing_status_events import (
+    RoutineTimingStatusChangedEvent,
+    TaskTimingStatusChangedEvent,
+)
 from lykke.domain.value_objects import DayUpdateObject
 from lykke.presentation.api.schemas import DayContextSchema, DaySchema, DayUpdateSchema
 from lykke.presentation.api.schemas.mappers import (
     map_day_context_to_schema,
     map_day_to_schema,
+    map_routine_to_schema,
 )
 from lykke.presentation.api.schemas.websocket_message import (
     EntityChangeSchema,
@@ -142,9 +151,6 @@ async def send_test_kiosk_notification(
     Returns:
         A dict with a success message.
     """
-    import hashlib
-    from datetime import UTC, datetime
-
     test_message = "This is a test kiosk notification. If you can hear this, the system is working correctly."
     message_hash = hashlib.sha256(test_message.encode("utf-8")).hexdigest()
 
@@ -153,7 +159,7 @@ async def send_test_kiosk_notification(
         message=test_message,
         category="other",
         message_hash=message_hash,
-        created_at=datetime.now(UTC),
+        created_at=dt_datetime.now(UTC),
         triggered_by="test",
     )
 
@@ -224,8 +230,6 @@ async def _build_full_sync_response(
 
     if last_audit_timestamp is None:
         last_audit_timestamp = dt_datetime.now(UTC)
-
-    from lykke.presentation.api.schemas.mappers import map_routine_to_schema
 
     routines = await get_day_context_handler.routine_ro_repo.search(
         value_objects.RoutineQuery(date=date_value)
@@ -477,12 +481,6 @@ async def _handle_realtime_events(
         incremental_changes_handler: Handler to access repositories and load entity data
     """
 
-    from lykke.core.utils.domain_event_serialization import deserialize_domain_event
-    from lykke.domain.events.timing_status_events import (
-        RoutineTimingStatusChangedEvent,
-        TaskTimingStatusChangedEvent,
-    )
-
     while True:
         try:
             domain_event_message = await domain_events_subscription.get_message(
@@ -651,5 +649,3 @@ async def _handle_realtime_events(
         except Exception as e:
             logger.error(f"Error in real-time events handler: {e}")
             break
-
-

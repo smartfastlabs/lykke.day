@@ -1,6 +1,7 @@
 """Integration tests for DayTemplateRepository."""
 
 from datetime import UTC, datetime, time
+from uuid import uuid4
 
 import pytest
 
@@ -81,8 +82,6 @@ async def test_user_isolation(
 @pytest.mark.asyncio
 async def test_put_with_time_blocks_persists_to_database(day_template_repo, test_user):
     """Test that creating a day template with time blocks persists them to the database."""
-    from uuid import uuid4
-
     # Create a template with time blocks
     time_block_def_id = uuid4()
     template = DayTemplateEntity(

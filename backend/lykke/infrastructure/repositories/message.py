@@ -8,6 +8,11 @@ from sqlalchemy.sql import Select
 from lykke.domain import value_objects
 from lykke.domain.entities import MessageEntity
 from lykke.infrastructure.database.tables import messages_tbl
+from lykke.infrastructure.repositories.base.utils import (
+    ensure_datetimes_utc,
+    filter_init_false_fields,
+    normalize_list_fields,
+)
 
 from .base import BaseRepository
 
@@ -58,12 +63,6 @@ class MessageRepository(BaseRepository[MessageEntity, value_objects.MessageQuery
     @classmethod
     def row_to_entity(cls, row: dict[str, Any]) -> MessageEntity:
         """Convert a database row dict to a Message entity."""
-        from lykke.infrastructure.repositories.base.utils import (
-            ensure_datetimes_utc,
-            filter_init_false_fields,
-            normalize_list_fields,
-        )
-
         data = normalize_list_fields(dict(row), MessageEntity)
 
         # Convert enum strings back to enums

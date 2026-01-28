@@ -5,8 +5,8 @@ from uuid import uuid4
 import pytest
 from fastapi import status
 
-from lykke.domain.entities import TaskEntity
 from lykke.core.utils.dates import ensure_utc
+from lykke.domain.entities import TaskEntity
 from lykke.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
@@ -14,6 +14,7 @@ from lykke.domain.value_objects.task import (
     TaskType,
 )
 from lykke.infrastructure.repositories import TaskRepository
+from tests.e2e.conftest import schedule_day_for_user
 
 
 @pytest.mark.asyncio
@@ -29,8 +30,6 @@ async def test_complete_task_action(authenticated_client, test_date):
     client, user = await authenticated_client()
 
     # Ensure day exists by scheduling it
-    from tests.e2e.conftest import schedule_day_for_user
-
     await schedule_day_for_user(user.id, test_date)
 
     # Create a test task
@@ -73,8 +72,6 @@ async def test_punt_task_action(authenticated_client, test_date):
     client, user = await authenticated_client()
 
     # Ensure day exists by scheduling it
-    from tests.e2e.conftest import schedule_day_for_user
-
     await schedule_day_for_user(user.id, test_date)
 
     # Create a test task
@@ -116,8 +113,6 @@ async def test_snooze_task_action(authenticated_client, test_date):
     client, user = await authenticated_client()
 
     # Ensure day exists by scheduling it
-    from tests.e2e.conftest import schedule_day_for_user
-
     await schedule_day_for_user(user.id, test_date)
 
     # Create a test task

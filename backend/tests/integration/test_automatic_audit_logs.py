@@ -6,7 +6,12 @@ from uuid import uuid4
 import pytest
 
 from lykke.domain import value_objects
-from lykke.domain.entities import DayEntity, DayTemplateEntity, TaskEntity
+from lykke.domain.entities import (
+    AuditLogEntity,
+    DayEntity,
+    DayTemplateEntity,
+    TaskEntity,
+)
 from lykke.domain.events.task_events import TaskCompletedEvent, TaskStatusChangedEvent
 from lykke.infrastructure.gateways import StubPubSubGateway
 from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWork
@@ -135,8 +140,6 @@ async def test_audit_log_entity_does_not_trigger_more_audit_logs(
 ):
     """Test that AuditLogEntity itself does not trigger infinite audit log creation."""
     user_id = test_user.id
-
-    from lykke.domain.entities import AuditLogEntity
 
     # Create an audit log entity directly
     audit_log = AuditLogEntity(

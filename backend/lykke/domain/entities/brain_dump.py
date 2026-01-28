@@ -16,6 +16,7 @@ from lykke.domain.events.day_events import (
 )
 
 from .base import BaseEntityObject
+from .day import DayEntity
 
 
 @dataclass(kw_only=True)
@@ -45,9 +46,7 @@ class BrainDumpEntity(BaseEntityObject):
             )
         )
 
-    def update_status(
-        self, status: value_objects.BrainDumpStatus
-    ) -> BrainDumpEntity:
+    def update_status(self, status: value_objects.BrainDumpStatus) -> BrainDumpEntity:
         """Update the status of a brain dump item."""
         if status == self.status:
             return self
@@ -69,9 +68,7 @@ class BrainDumpEntity(BaseEntityObject):
         )
         return updated
 
-    def update_type(
-        self, item_type: value_objects.BrainDumpType
-    ) -> BrainDumpEntity:
+    def update_type(self, item_type: value_objects.BrainDumpType) -> BrainDumpEntity:
         """Update the type of a brain dump item."""
         if item_type == self.type:
             return self
@@ -129,6 +126,4 @@ class BrainDumpEntity(BaseEntityObject):
         return updated
 
     def _get_day_id(self) -> UUID:
-        from .day import DayEntity
-
         return DayEntity.id_from_date_and_user(self.date, self.user_id)

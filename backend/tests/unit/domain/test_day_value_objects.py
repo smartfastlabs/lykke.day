@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import pytest
 
+from lykke.domain.entities import DayEntity
 from lykke.domain.value_objects.day import (
     Alarm,
     AlarmStatus,
@@ -62,8 +63,6 @@ def test_day_mode_values(mode: DayMode, expected_value: str) -> None:
 
 def test_day_context_creation(test_user_id: str) -> None:
     """Test DayContext can be created with a day."""
-    from lykke.domain.entities import DayEntity
-
     day = DayEntity(
         user_id=test_user_id,
         date=datetime.date(2025, 11, 27),
@@ -79,10 +78,6 @@ def test_day_context_creation(test_user_id: str) -> None:
 
 def test_day_context_defaults() -> None:
     """Test DayContext has default empty lists."""
-    from uuid import uuid4
-
-    from lykke.domain.entities import DayEntity
-
     test_user_id = uuid4()
     day = DayEntity(
         user_id=test_user_id,
@@ -111,8 +106,6 @@ def test_reminder_status_values(status: ReminderStatus, expected_value: str) -> 
 
 def test_reminder_creation() -> None:
     """Test Reminder can be created with required fields."""
-    from uuid import uuid4
-
     reminder = Reminder(
         id=uuid4(),
         name="Test Reminder",
@@ -125,8 +118,6 @@ def test_reminder_creation() -> None:
 
 def test_reminder_creation_with_defaults() -> None:
     """Test Reminder uses default values when not specified."""
-    from uuid import uuid4
-
     reminder = Reminder(
         id=uuid4(),
         name="Test Reminder",
@@ -138,8 +129,6 @@ def test_reminder_creation_with_defaults() -> None:
 
 def test_reminder_creation_with_all_fields() -> None:
     """Test Reminder can be created with all fields."""
-    from uuid import uuid4
-
     created_at = datetime.datetime(2025, 11, 27, 12, 0, 0, tzinfo=UTC)
     reminder = Reminder(
         id=uuid4(),

@@ -2,10 +2,15 @@
 from datetime import time as dt_time
 from typing import Any, ClassVar
 
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects
 from lykke.domain.entities import TaskEntity
 from lykke.infrastructure.database.tables import tasks_tbl
-from lykke.infrastructure.repositories.base.utils import ensure_datetimes_utc
+from lykke.infrastructure.repositories.base.utils import (
+    ensure_datetimes_utc,
+    filter_init_false_fields,
+    normalize_list_fields,
+)
 from sqlalchemy.sql import Select
 
 from .base import UserScopedBaseRepository
@@ -31,9 +36,7 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
 
         if query.routine_definition_ids:
             stmt = stmt.where(
-                self.table.c.routine_definition_id.in_(
-                    query.routine_definition_ids
-                )
+                self.table.c.routine_definition_id.in_(query.routine_definition_ids)
             )
 
         if query.is_adhoc is True:
@@ -72,8 +75,6 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
         }
 
         # Handle JSONB fields
-        from lykke.core.utils.serialization import dataclass_to_json_dict
-
         if task.time_window:
             row["time_window"] = dataclass_to_json_dict(task.time_window)
 
@@ -91,11 +92,6 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
 
         Overrides base to handle enum conversion and Action value objects.
         """
-        from lykke.infrastructure.repositories.base.utils import (
-            filter_init_false_fields,
-            normalize_list_fields,
-        )
-
         data = normalize_list_fields(dict(row), TaskEntity)
 
         # Remove 'date' field - it's a computed property, not a constructor argument
@@ -117,7 +113,12 @@ class TaskRepository(UserScopedBaseRepository[TaskEntity, value_objects.TaskQuer
             # TimeWindow value object
             time_window_dict = data["time_window"]
             # Convert time strings back to time objects if needed
-            for time_field in ["available_time", "start_time", "end_time", "cutoff_time"]:
+            for time_field in [
+                "available_time",
+                "start_time",
+                "end_time",
+                "cutoff_time",
+            ]:
                 if time_field in time_window_dict and isinstance(
                     time_window_dict[time_field], str
                 ):

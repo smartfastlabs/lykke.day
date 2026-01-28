@@ -17,6 +17,7 @@ Example:
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import os
 import re
@@ -85,8 +86,6 @@ def get_dest_url() -> str:
 
 def mask_password(url: str) -> str:
     """Mask password in database URL for display."""
-    import re
-
     return re.sub(r"(://[^:]+:)[^@]+(@)", r"\1****\2", url)
 
 
@@ -271,8 +270,6 @@ async def run_migration(mode: str) -> None:
 
 def main() -> None:
     """Main entry point."""
-    import argparse
-
     parser = argparse.ArgumentParser(
         description="Migrate data from local dev database to production",
         formatter_class=argparse.RawDescriptionHelpFormatter,

@@ -9,6 +9,7 @@ used StubPubSubGateway (which does nothing) instead of RedisPubSubGateway,
 causing calendar sync changes to never be pushed to the frontend.
 """
 
+import asyncio
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -16,6 +17,8 @@ import pytest
 
 from lykke.infrastructure.gateways import RedisPubSubGateway, StubPubSubGateway
 from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
+from lykke.presentation.workers import tasks
+from lykke.presentation.workers.tasks.common import get_unit_of_work_factory
 
 
 class TestWorkerPubSubGateway:
@@ -28,8 +31,6 @@ class TestWorkerPubSubGateway:
         silently discarded all pubsub messages, breaking websocket updates
         for calendar sync.
         """
-        from lykke.presentation.workers.tasks.common import get_unit_of_work_factory
-
         # Get factory without providing a gateway (tests default behavior)
         factory = get_unit_of_work_factory()
 
@@ -47,8 +48,6 @@ class TestWorkerPubSubGateway:
 
     def test_get_unit_of_work_factory_accepts_custom_gateway(self):
         """Test that get_unit_of_work_factory accepts a custom gateway."""
-        from lykke.presentation.workers.tasks.common import get_unit_of_work_factory
-
         custom_gateway = RedisPubSubGateway()
         factory = get_unit_of_work_factory(pubsub_gateway=custom_gateway)
 
@@ -64,8 +63,6 @@ class TestWorkerPubSubGateway:
         stub = StubPubSubGateway()
 
         # Verify the stub's publish method is a no-op
-        import asyncio
-
         async def test_publish():
             # This should not raise and should do nothing
             await stub.publish_to_user_channel(
@@ -85,8 +82,6 @@ class TestWorkerPubSubGateway:
         Now it should be:
             from lykke.infrastructure.gateways import GoogleCalendarGateway, RedisPubSubGateway
         """
-        from lykke.presentation.workers import tasks
-
         # Check that RedisPubSubGateway is imported
         assert (
             hasattr(tasks, "RedisPubSubGateway")
@@ -106,8 +101,6 @@ class TestSyncTaskPubSubBroadcast:
         This is a design test - verifying that the task creates and uses
         a RedisPubSubGateway that will actually publish messages.
         """
-        from lykke.presentation.workers.tasks.common import get_unit_of_work_factory
-
         # Create a real RedisPubSubGateway
         gateway = RedisPubSubGateway()
 
@@ -127,8 +120,6 @@ class TestSyncTaskPubSubBroadcast:
         CRITICAL: StubPubSubGateway should only be used in tests,
         never in production workers.
         """
-        from lykke.presentation.workers.tasks.common import get_unit_of_work_factory
-
         factory = get_unit_of_work_factory()
         uow = factory.create(user_id=uuid4())
 
