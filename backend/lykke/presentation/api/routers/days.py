@@ -44,9 +44,9 @@ from lykke.presentation.api.schemas.websocket_message import (
     EntityChangeSchema,
     WebSocketConnectionAckSchema,
     WebSocketErrorSchema,
+    WebSocketSubscriptionSchema,
     WebSocketSyncRequestSchema,
     WebSocketSyncResponseSchema,
-    WebSocketSubscriptionSchema,
     WebSocketTopicEventSchema,
 )
 from lykke.presentation.handler_factory import CommandHandlerFactory

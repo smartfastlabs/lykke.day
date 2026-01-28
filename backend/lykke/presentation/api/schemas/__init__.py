@@ -52,13 +52,13 @@ from .routine_definition import (
     RoutineDefinitionUpdateSchema,
     TimeWindowSchema,
 )
+from .tactic import TacticCreateSchema, TacticSchema, TacticUpdateSchema
 from .task import AdhocTaskCreateSchema, TaskSchema
 from .task_definition import (
     TaskDefinitionCreateSchema,
     TaskDefinitionSchema,
     TaskDefinitionUpdateSchema,
 )
-from .tactic import TacticCreateSchema, TacticSchema, TacticUpdateSchema
 from .time_block_definition import (
     TimeBlockDefinitionCreateSchema,
     TimeBlockDefinitionSchema,
@@ -154,15 +154,15 @@ WebSocketSyncResponseSchema.model_rebuild()
 
 __all__ = [
     "ActionSchema",
-    "AlarmSchema",
-    "AlarmPresetSchema",
     "AdhocTaskCreateSchema",
+    "AlarmPresetSchema",
+    "AlarmSchema",
     "AuditLogSchema",
     "AuditableSchema",
     "BasePersonalitySchema",
     "BotPersonalitySchema",
-    "BrainDumpSchema",
     "BrainDumpCreateSchema",
+    "BrainDumpSchema",
     "BrainDumpUpdateSchema",
     "CalendarCreateSchema",
     "CalendarEntrySchema",
@@ -206,13 +206,13 @@ __all__ = [
     "SendMessageResponseSchema",
     "StatusResponseSchema",
     "SyncSubscriptionSchema",
+    "TacticCreateSchema",
+    "TacticSchema",
+    "TacticUpdateSchema",
     "TaskDefinitionCreateSchema",
     "TaskDefinitionSchema",
     "TaskDefinitionUpdateSchema",
     "TaskSchema",
-    "TacticCreateSchema",
-    "TacticSchema",
-    "TacticUpdateSchema",
     "TimeBlockDefinitionCreateSchema",
     "TimeBlockDefinitionSchema",
     "TimeBlockDefinitionUpdateSchema",

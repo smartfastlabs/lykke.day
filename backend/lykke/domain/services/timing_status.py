@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import UTC
-from datetime import date as dt_date
-from datetime import datetime, time, timedelta, tzinfo
+from datetime import UTC, date as dt_date, datetime, time, timedelta, tzinfo
 
 from lykke.core.utils.dates import ensure_utc, resolve_timezone
 from lykke.domain.entities import RoutineEntity, TaskEntity

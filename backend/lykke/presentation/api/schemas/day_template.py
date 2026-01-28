@@ -5,8 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from .base import BaseEntitySchema, BaseSchema
 from .alarm import AlarmSchema
+from .base import BaseEntitySchema, BaseSchema
 from .high_level_plan import HighLevelPlanSchema
 
 

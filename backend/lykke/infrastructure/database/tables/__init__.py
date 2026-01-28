@@ -17,10 +17,10 @@ from .push_notifications import PushNotification
 from .push_subscriptions import PushSubscription
 from .routine_definitions import RoutineDefinition
 from .routines import Routine
+from .tactics import Tactic
 from .task_definitions import TaskDefinition
 from .tasks import Task
 from .time_block_definitions import TimeBlockDefinition
-from .tactics import Tactic
 from .trigger_tactics import TriggerTactic
 from .triggers import Trigger
 from .usecase_config import UseCaseConfig

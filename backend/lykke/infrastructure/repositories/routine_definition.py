@@ -1,6 +1,6 @@
 from datetime import time
-from uuid import UUID
 from typing import Any
+from uuid import UUID
 
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.domain import value_objects

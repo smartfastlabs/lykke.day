@@ -12,9 +12,9 @@ from .base import BaseEntitySchema, BaseSchema
 from .high_level_plan import HighLevelPlanSchema
 
 if TYPE_CHECKING:
+    from .alarm import AlarmSchema
     from .brain_dump import BrainDumpSchema
     from .day_template import DayTemplateSchema
-    from .alarm import AlarmSchema
     from .reminder import ReminderSchema
 
 

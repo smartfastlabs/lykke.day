@@ -5,13 +5,13 @@ from uuid import UUID
 
 from loguru import logger
 
-from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
-from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.application.commands.calendar import (
     SubscribeCalendarCommand,
     SyncAllCalendarsCommand,
     SyncCalendarCommand,
 )
+from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
 

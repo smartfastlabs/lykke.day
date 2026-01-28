@@ -65,6 +65,10 @@ from .routine_repository import (
     RoutineRepositoryReadOnlyProtocol,
     RoutineRepositoryReadWriteProtocol,
 )
+from .tactic_repository import (
+    TacticRepositoryReadOnlyProtocol,
+    TacticRepositoryReadWriteProtocol,
+)
 from .task_definition_repository import (
     TaskDefinitionRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadWriteProtocol,
@@ -72,10 +76,6 @@ from .task_definition_repository import (
 from .task_repository import (
     TaskRepositoryReadOnlyProtocol,
     TaskRepositoryReadWriteProtocol,
-)
-from .tactic_repository import (
-    TacticRepositoryReadOnlyProtocol,
-    TacticRepositoryReadWriteProtocol,
 )
 from .time_block_definition_repository import (
     TimeBlockDefinitionRepositoryReadOnlyProtocol,
@@ -127,12 +127,12 @@ __all__ = [
     "RoutineDefinitionRepositoryReadWriteProtocol",
     "RoutineRepositoryReadOnlyProtocol",
     "RoutineRepositoryReadWriteProtocol",
+    "TacticRepositoryReadOnlyProtocol",
+    "TacticRepositoryReadWriteProtocol",
     "TaskDefinitionRepositoryReadOnlyProtocol",
     "TaskDefinitionRepositoryReadWriteProtocol",
     "TaskRepositoryReadOnlyProtocol",
     "TaskRepositoryReadWriteProtocol",
-    "TacticRepositoryReadOnlyProtocol",
-    "TacticRepositoryReadWriteProtocol",
     "TimeBlockDefinitionRepositoryReadOnlyProtocol",
     "TimeBlockDefinitionRepositoryReadWriteProtocol",
     "TriggerRepositoryReadOnlyProtocol",

@@ -20,7 +20,7 @@ class UserSetting(BaseValueObject):
     def __post_init__(self) -> None:
         if isinstance(self.llm_provider, str):
             self.llm_provider = LLMProvider(self.llm_provider)
-        raw_presets = cast(list[Any], self.alarm_presets)
+        raw_presets = cast("list[Any]", self.alarm_presets)
         if raw_presets:
             normalized: list[AlarmPreset] = []
             for preset in raw_presets:

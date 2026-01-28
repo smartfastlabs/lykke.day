@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from datetime import datetime, time
     from uuid import UUID
 
+    from .ai_chat import FactoidCriticality, FactoidType
     from .day import Alarm, DayStatus, DayTag, Reminder
     from .high_level_plan import HighLevelPlan
     from .routine_definition import (
@@ -26,7 +27,6 @@ if TYPE_CHECKING:
         TimeBlockCategory,
         TimeBlockType,
     )
-    from .ai_chat import FactoidCriticality, FactoidType
     from .user import UserSetting, UserStatus
 
 

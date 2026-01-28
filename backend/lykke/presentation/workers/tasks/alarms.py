@@ -1,7 +1,7 @@
 """Alarm-related background worker tasks."""
 
-from datetime import datetime as dt_datetime, date as dt_date, timedelta as dt_timedelta
 from collections.abc import Callable
+from datetime import date as dt_date, datetime as dt_datetime, timedelta as dt_timedelta
 from typing import Annotated, Protocol
 from uuid import UUID
 

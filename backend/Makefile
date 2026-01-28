@@ -121,8 +121,8 @@ check-mappers:
 	poetry run python scripts/check_mappers.py
 
 fix:
-	poetry run ruff check --fix .
-	poetry run black .
+	poetry run ruff check --fix lykke
+	poetry run black lykke
 
 check:
 	make typecheck

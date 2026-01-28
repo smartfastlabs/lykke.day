@@ -7,8 +7,8 @@ from lykke.application.repositories.base import (
     ReadOnlyRepositoryProtocol,
     ReadWriteRepositoryProtocol,
 )
-from lykke.domain.entities import TacticEntity, TriggerEntity
 from lykke.domain import value_objects
+from lykke.domain.entities import TacticEntity, TriggerEntity
 
 
 class TriggerRepositoryReadOnlyProtocol(

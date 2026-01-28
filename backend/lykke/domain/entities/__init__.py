@@ -16,9 +16,9 @@ from .push_notification import PushNotificationEntity
 from .push_subscription import PushSubscriptionEntity
 from .routine import RoutineEntity
 from .routine_definition import RoutineDefinitionEntity
+from .tactic import TacticEntity
 from .task import TaskEntity
 from .task_definition import TaskDefinitionEntity
-from .tactic import TacticEntity
 from .time_block_definition import TimeBlockDefinitionEntity
 from .trigger import TriggerEntity
 from .usecase_config import UseCaseConfigEntity
@@ -44,9 +44,9 @@ __all__ = [
     "PushSubscriptionEntity",
     "RoutineDefinitionEntity",
     "RoutineEntity",
+    "TacticEntity",
     "TaskDefinitionEntity",
     "TaskEntity",
-    "TacticEntity",
     "TimeBlockDefinitionEntity",
     "TriggerEntity",
     "UseCaseConfigEntity",
