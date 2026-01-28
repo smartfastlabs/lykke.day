@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from . import (
     brain_dump,
+    calendar_entries,
     calendar_entry_series,
     calendars,
     day_templates,
@@ -53,6 +54,11 @@ router.include_router(
     factoids.router,
     prefix="/factoids",
     tags=["factoids"],
+)
+router.include_router(
+    calendar_entries.router,
+    prefix="/calendar-entries",
+    tags=["calendar-entries"],
 )
 router.include_router(
     calendar_entry_series.router,

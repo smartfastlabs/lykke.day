@@ -1,7 +1,8 @@
 """Calendar entries table definition."""
 
 from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, String
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 from .base import Base
 
@@ -22,6 +23,7 @@ class CalendarEntry(Base):
     platform_id = Column(String, nullable=False)
     platform = Column(String, nullable=False)
     status = Column(String, nullable=False)
+    attendance_status = Column(String, nullable=True)
     starts_at = Column(DateTime, nullable=False)
     frequency = Column(String, nullable=False)  # TaskFrequency enum as string
     category = Column(String)  # TaskCategory enum as string

@@ -509,6 +509,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/calendar-entries/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Calendar Entry
+         * @description Update a calendar entry.
+         */
+        put: operations["update_calendar_entry_calendar_entries__uuid__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/calendar-entry-series/{uuid}": {
         parameters: {
             query?: never;
@@ -1977,6 +1997,12 @@ export interface components {
             default_event_category?: components["schemas"]["EventCategory"] | null;
         };
         /**
+         * CalendarEntryAttendanceStatus
+         * @description User-controlled attendance status for calendar entries.
+         * @enum {string}
+         */
+        CalendarEntryAttendanceStatus: "MISSED" | "DIDNT_HAPPEN" | "ATTENDING" | "COMPLETE" | "NOT_GOING" | "SNOOZED";
+        /**
          * CalendarEntrySchema
          * @description API schema for CalendarEntry entity.
          */
@@ -2001,6 +2027,7 @@ export interface components {
             platform: string;
             /** Status */
             status: string;
+            attendance_status?: components["schemas"]["CalendarEntryAttendanceStatus"] | null;
             /**
              * Starts At
              * Format: date-time
@@ -2097,6 +2124,27 @@ export interface components {
             /** Name */
             name?: string | null;
             event_category?: components["schemas"]["EventCategory"] | null;
+        };
+        /**
+         * CalendarEntryUpdateSchema
+         * @description API schema for updating a CalendarEntry entity.
+         */
+        CalendarEntryUpdateSchema: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Status */
+            status?: string | null;
+            attendance_status?: components["schemas"]["CalendarEntryAttendanceStatus"] | null;
+            /** Starts At */
+            starts_at?: string | null;
+            /** Ends At */
+            ends_at?: string | null;
+            frequency?: components["schemas"]["TaskFrequency"] | null;
+            category?: components["schemas"]["EventCategory"] | null;
+            /** Calendar Entry Series Id */
+            calendar_entry_series_id?: string | null;
         };
         /** CalendarQuery */
         CalendarQuery: {
@@ -4828,6 +4876,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FactoidSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_calendar_entry_calendar_entries__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarEntryUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarEntrySchema"];
                 };
             };
             /** @description Validation Error */

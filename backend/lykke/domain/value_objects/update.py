@@ -20,7 +20,13 @@ if TYPE_CHECKING:
         TimeWindow,
     )
     from .sync import SyncSubscription
-    from .task import EventCategory, TaskCategory, TaskFrequency, TaskType
+    from .task import (
+        CalendarEntryAttendanceStatus,
+        EventCategory,
+        TaskCategory,
+        TaskFrequency,
+        TaskType,
+    )
     from .time_block import (
         DayTemplateTimeBlock,
         DayTimeBlock,
@@ -156,6 +162,7 @@ class CalendarEntryUpdateObject(BaseUpdateObject):
 
     name: str | None = None
     status: str | None = None
+    attendance_status: CalendarEntryAttendanceStatus | None = None
     starts_at: datetime | None = None
     ends_at: datetime | None = None
     frequency: TaskFrequency | None = None

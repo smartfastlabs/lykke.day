@@ -13,7 +13,7 @@ from .calendar import (
     CalendarUpdateSchema,
     SyncSubscriptionSchema,
 )
-from .calendar_entry import CalendarEntrySchema
+from .calendar_entry import CalendarEntrySchema, CalendarEntryUpdateSchema
 from .calendar_entry_series import (
     CalendarEntrySeriesSchema,
     CalendarEntrySeriesUpdateSchema,
@@ -97,6 +97,7 @@ CalendarCreateSchema.model_rebuild()
 CalendarSchema.model_rebuild()
 SyncSubscriptionSchema.model_rebuild()
 CalendarEntrySchema.model_rebuild()
+CalendarEntryUpdateSchema.model_rebuild()
 CalendarUpdateSchema.model_rebuild()
 CalendarEntrySeriesSchema.model_rebuild()
 CalendarEntrySeriesUpdateSchema.model_rebuild()
@@ -168,6 +169,7 @@ __all__ = [
     "CalendarEntrySchema",
     "CalendarEntrySeriesSchema",
     "CalendarEntrySeriesUpdateSchema",
+    "CalendarEntryUpdateSchema",
     "CalendarSchema",
     "CalendarUpdateSchema",
     "ConversationSchema",

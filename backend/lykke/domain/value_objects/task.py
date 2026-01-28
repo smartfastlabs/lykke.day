@@ -119,4 +119,15 @@ class TaskStatus(str, Enum):
     SNOOZE = "SNOOZE"
 
 
+class CalendarEntryAttendanceStatus(str, Enum):
+    """User-controlled attendance status for calendar entries."""
+
+    MISSED = "MISSED"
+    DIDNT_HAPPEN = "DIDNT_HAPPEN"
+    ATTENDING = "ATTENDING"
+    COMPLETE = "COMPLETE"
+    NOT_GOING = "NOT_GOING"
+    SNOOZED = "SNOOZED"
+
+
 # TimeWindow defines task timing fields (see routine_definition.py)

@@ -68,6 +68,7 @@ from .routine_definition import (
 )
 from .sync import SyncSubscription
 from .task import (
+    CalendarEntryAttendanceStatus,
     EventCategory,
     TaskCategory,
     TaskFrequency,
@@ -122,6 +123,7 @@ __all__ = [
     "BrainDumpQuery",
     "BrainDumpStatus",
     "BrainDumpType",
+    "CalendarEntryAttendanceStatus",
     "CalendarEntryQuery",
     "CalendarEntrySeriesQuery",
     "CalendarEntrySeriesUpdateObject",

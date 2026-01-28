@@ -1705,6 +1705,65 @@
         ]
       }
     },
+    "/calendar-entries/{uuid}": {
+      "put": {
+        "tags": [
+          "calendar-entries"
+        ],
+        "summary": "Update Calendar Entry",
+        "description": "Update a calendar entry.",
+        "operationId": "update_calendar_entry_calendar_entries__uuid__put",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarEntryUpdateSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarEntrySchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/calendar-entry-series/{uuid}": {
       "get": {
         "tags": [
@@ -6066,6 +6125,19 @@
         "title": "CalendarCreateSchema",
         "description": "API schema for creating a Calendar entity."
       },
+      "CalendarEntryAttendanceStatus": {
+        "type": "string",
+        "enum": [
+          "MISSED",
+          "DIDNT_HAPPEN",
+          "ATTENDING",
+          "COMPLETE",
+          "NOT_GOING",
+          "SNOOZED"
+        ],
+        "title": "CalendarEntryAttendanceStatus",
+        "description": "User-controlled attendance status for calendar entries."
+      },
       "CalendarEntrySchema": {
         "properties": {
           "id": {
@@ -6105,6 +6177,16 @@
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "attendance_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalendarEntryAttendanceStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "starts_at": {
             "type": "string",
@@ -6405,6 +6487,113 @@
         "type": "object",
         "title": "CalendarEntrySeriesUpdateSchema",
         "description": "API schema for updating a CalendarEntrySeries."
+      },
+      "CalendarEntryUpdateSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "attendance_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalendarEntryAttendanceStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "frequency": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskFrequency"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EventCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "calendar_entry_series_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calendar Entry Series Id"
+          }
+        },
+        "type": "object",
+        "title": "CalendarEntryUpdateSchema",
+        "description": "API schema for updating a CalendarEntry entity."
       },
       "CalendarQuery": {
         "properties": {

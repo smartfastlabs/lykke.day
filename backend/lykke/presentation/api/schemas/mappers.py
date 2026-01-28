@@ -305,6 +305,7 @@ def map_calendar_entry_to_schema(
         platform_id=entry.platform_id,
         platform=entry.platform,
         status=entry.status,
+        attendance_status=entry.attendance_status,
         starts_at=entry.starts_at,
         frequency=entry.frequency,
         category=entry.category,

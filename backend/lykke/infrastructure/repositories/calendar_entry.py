@@ -71,6 +71,11 @@ class CalendarEntryRepository(
             "platform_id": calendar_entry.platform_id,
             "platform": calendar_entry.platform,
             "status": calendar_entry.status,
+            "attendance_status": (
+                calendar_entry.attendance_status.value
+                if calendar_entry.attendance_status is not None
+                else None
+            ),
             "starts_at": starts_at_utc,
             "frequency": calendar_entry.frequency.value,
             "ends_at": ends_at_utc,
@@ -103,6 +108,10 @@ class CalendarEntryRepository(
             data["frequency"] = value_objects.TaskFrequency(data["frequency"])
         if "category" in data and isinstance(data["category"], str):
             data["category"] = value_objects.EventCategory(data["category"])
+        if "attendance_status" in data and isinstance(data["attendance_status"], str):
+            data["attendance_status"] = value_objects.CalendarEntryAttendanceStatus(
+                data["attendance_status"]
+            )
 
         # Handle actions - they come as dicts from JSONB, need to convert to value objects
         if data.get("actions"):

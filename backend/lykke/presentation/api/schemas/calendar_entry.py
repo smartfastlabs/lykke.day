@@ -6,7 +6,11 @@ from uuid import UUID
 
 from pydantic import Field
 
-from lykke.domain.value_objects.task import EventCategory, TaskFrequency
+from lykke.domain.value_objects.task import (
+    CalendarEntryAttendanceStatus,
+    EventCategory,
+    TaskFrequency,
+)
 
 from .base import BaseEntitySchema
 
@@ -23,6 +27,7 @@ class CalendarEntrySchema(BaseEntitySchema):
     platform_id: str
     platform: str
     status: str
+    attendance_status: CalendarEntryAttendanceStatus | None = None
     starts_at: datetime
     frequency: TaskFrequency
     category: EventCategory | None = None
@@ -31,3 +36,16 @@ class CalendarEntrySchema(BaseEntitySchema):
     updated_at: datetime
     actions: list["ActionSchema"] = Field(default_factory=list)
     date: date  # Computed field from starts_at
+
+
+class CalendarEntryUpdateSchema(BaseEntitySchema):
+    """API schema for updating a CalendarEntry entity."""
+
+    name: str | None = None
+    status: str | None = None
+    attendance_status: CalendarEntryAttendanceStatus | None = None
+    starts_at: datetime | None = None
+    ends_at: datetime | None = None
+    frequency: TaskFrequency | None = None
+    category: EventCategory | None = None
+    calendar_entry_series_id: UUID | None = None

@@ -58,6 +58,7 @@ class CalendarEntryEntity(BaseEntityObject, AuditableEntity):
     platform_id: str
     platform: str
     status: str
+    attendance_status: value_objects.CalendarEntryAttendanceStatus | None = None
     starts_at: datetime
     frequency: value_objects.TaskFrequency
     category: value_objects.EventCategory | None = None
