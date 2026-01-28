@@ -7,6 +7,7 @@ from .base import (
     EntityDeletedEvent,
     EntityUpdatedEvent,
 )
+from .notification_events import KioskNotificationEvent
 
 __all__ = [
     "AuditableDomainEvent",
@@ -14,4 +15,5 @@ __all__ = [
     "EntityCreatedEvent",
     "EntityDeletedEvent",
     "EntityUpdatedEvent",
+    "KioskNotificationEvent",
 ]

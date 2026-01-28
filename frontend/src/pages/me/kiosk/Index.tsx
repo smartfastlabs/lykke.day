@@ -9,6 +9,7 @@ import {
   createSignal,
   onCleanup,
   onMount,
+  untrack,
 } from "solid-js";
 import { Portal } from "solid-js/web";
 import Page from "@/components/shared/layout/Page";
@@ -16,7 +17,6 @@ import { useStreamingData } from "@/providers/streamingData";
 import { getDateString } from "@/utils/dates";
 import { filterVisibleTasks } from "@/utils/tasks";
 import { buildRoutineGroups, type RoutineGroup } from "@/components/routines/RoutineGroupsList";
-import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 import { dayAPI } from "@/utils/api";
 import { globalNotifications } from "@/providers/notifications";
 import type {
@@ -233,6 +233,7 @@ const KioskPage: Component = () => {
     reminders,
     routines,
     alarms,
+    subscribeToTopic,
   } = useStreamingData();
   const [now, setNow] = createSignal(new Date());
   const [weather, setWeather] = createSignal<WeatherSnapshot | null>(null);
@@ -245,7 +246,6 @@ const KioskPage: Component = () => {
     createSignal<Set<string>>(new Set());
   const [isSendingTest, setIsSendingTest] = createSignal(false);
   let fullscreenContainer: HTMLDivElement | undefined;
-  let kioskNotificationWs: WebSocket | null = null;
 
   const handleSendTestNotification = async () => {
     setIsSendingTest(true);
@@ -319,8 +319,8 @@ const KioskPage: Component = () => {
     );
   });
 
-  // Connect to kiosk notifications WebSocket and handle TTS
-  onMount(() => {
+  // Subscribe to kiosk notification events and handle TTS
+  createEffect(() => {
     let speechUnlocked = false;
 
     // Unlock speech synthesis API on first user interaction
@@ -358,137 +358,63 @@ const KioskPage: Component = () => {
       });
     });
 
-    const getCookie = (name: string): string | null => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) {
-        return parts.pop()?.split(";").shift() ?? null;
+    const unsubscribe = subscribeToTopic("KioskNotificationEvent", (event) => {
+      const payload = event.event_data as {
+        message?: string;
+        category?: string;
+        message_hash?: string;
+        created_at?: string;
+        triggered_by?: string | null;
+      };
+
+      if (!payload.message || !payload.message_hash) {
+        return;
       }
-      return null;
-    };
 
-    const protocol = getWebSocketProtocol();
-    const baseUrl = getWebSocketBaseUrl();
-    const token = getCookie("lykke_auth");
+      const hash = payload.message_hash;
+      const processed = untrack(() => processedNotificationHashes());
+      if (processed.has(hash)) {
+        console.log("Skipping duplicate kiosk notification:", hash);
+        return;
+      }
 
-    // Build WebSocket URL
-    let wsUrl = `${protocol}//${baseUrl}/days/kiosk/notifications`;
-    if (token) {
-      wsUrl += `?token=${encodeURIComponent(token)}`;
-    }
-
-    try {
-      kioskNotificationWs = new WebSocket(wsUrl);
-
-      kioskNotificationWs.onopen = () => {
-        console.log("Kiosk notifications WebSocket connected");
-      };
-
-      kioskNotificationWs.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data) as {
-            type: string;
-            notification?: {
-              message: string;
-              category: string;
-              message_hash: string;
-              created_at: string;
-              triggered_by?: string | null;
-            };
-          };
-
-          if (message.type === "kiosk_notification" && message.notification) {
-            const notification = message.notification;
-            const hash = notification.message_hash;
-
-            // De-duplicate: skip if we've already processed this message
-            const processed = processedNotificationHashes();
-            if (processed.has(hash)) {
-              console.log("Skipping duplicate kiosk notification:", hash);
-              return;
-            }
-
-            // Mark as processed
-            setProcessedNotificationHashes((prev) => {
-              const next = new Set(prev);
-              next.add(hash);
-              // Keep only last 100 hashes to prevent memory leak
-              if (next.size > 100) {
-                const entries = Array.from(next);
-                entries.shift();
-                return new Set(entries);
-              }
-              return next;
-            });
-
-            // Read out the notification using Web Speech API
-            if ("speechSynthesis" in window) {
-              // Cancel any ongoing speech before starting new one
-              window.speechSynthesis.cancel();
-
-              const utterance = new window.SpeechSynthesisUtterance(
-                notification.message,
-              );
-              utterance.rate = 1.0;
-              utterance.pitch = 1.0;
-              utterance.volume = 1.0;
-
-              // Add error handlers for debugging
-              utterance.onerror = (error) => {
-                console.error("Speech synthesis error:", error);
-              };
-
-              utterance.onstart = () => {
-                console.log(
-                  "Started reading kiosk notification:",
-                  notification.message,
-                );
-              };
-
-              utterance.onend = () => {
-                console.log("Finished reading kiosk notification");
-              };
-
-              window.speechSynthesis.speak(utterance);
-              console.log("Reading kiosk notification:", notification.message);
-            } else {
-              console.warn("SpeechSynthesis not available");
-            }
-          } else if (message.type === "connection_ack") {
-            console.log(
-              "Kiosk notifications WebSocket connection acknowledged",
-            );
-          } else if (message.type === "error") {
-            console.error("Kiosk notifications WebSocket error:", message);
-          }
-        } catch (err) {
-          console.error("Error parsing kiosk notification message:", err);
+      setProcessedNotificationHashes((prev) => {
+        const next = new Set(prev);
+        next.add(hash);
+        if (next.size > 100) {
+          const entries = Array.from(next);
+          entries.shift();
+          return new Set(entries);
         }
-      };
+        return next;
+      });
 
-      kioskNotificationWs.onerror = (err) => {
-        console.error("Kiosk notifications WebSocket error:", err);
-      };
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
 
-      kioskNotificationWs.onclose = () => {
-        console.log("Kiosk notifications WebSocket closed");
-        // Attempt to reconnect after 3 seconds
-        setTimeout(() => {
-          if (kioskNotificationWs?.readyState === WebSocket.CLOSED) {
-            // Reconnect logic would go here, but for simplicity we'll just log
-            console.log("Would reconnect kiosk notifications WebSocket");
-          }
-        }, 3000);
-      };
-    } catch (err) {
-      console.error("Error creating kiosk notifications WebSocket:", err);
-    }
+        const utterance = new window.SpeechSynthesisUtterance(payload.message);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        utterance.onerror = (error) => {
+          console.error("Speech synthesis error:", error);
+        };
+        utterance.onstart = () => {
+          console.log("Started reading kiosk notification:", payload.message);
+        };
+        utterance.onend = () => {
+          console.log("Finished reading kiosk notification");
+        };
+
+        window.speechSynthesis.speak(utterance);
+        console.log("Reading kiosk notification:", payload.message);
+      } else {
+        console.warn("SpeechSynthesis not available");
+      }
+    });
 
     onCleanup(() => {
-      if (kioskNotificationWs) {
-        kioskNotificationWs.close();
-        kioskNotificationWs = null;
-      }
+      unsubscribe();
       // Cancel any ongoing speech
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();

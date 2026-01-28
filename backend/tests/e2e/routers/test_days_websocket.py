@@ -14,6 +14,7 @@ from lykke.domain.entities import (
     DayEntity,
     TaskEntity,
 )
+from lykke.domain.events.notification_events import KioskNotificationEvent
 from lykke.domain.value_objects.task import (
     TaskCategory,
     TaskFrequency,
@@ -26,6 +27,15 @@ API_PREFIX = settings.API_PREFIX.rstrip("/")
 WS_CONTEXT_PATH = (
     f"{API_PREFIX}/days/today/context" if API_PREFIX else "/days/today/context"
 )
+
+
+async def _receive_json_with_timeout(
+    websocket: WebSocket, timeout: float
+) -> dict[str, object]:
+    loop = asyncio.get_running_loop()
+    return await asyncio.wait_for(
+        loop.run_in_executor(None, websocket.receive_json), timeout
+    )
 
 
 @pytest.mark.asyncio
@@ -189,6 +199,50 @@ async def test_incremental_sync_request(authenticated_client, test_date):
             change["entity_id"] for change in incremental_response["changes"]
         ]
         assert str(new_task.id) in change_entity_ids
+
+
+@pytest.mark.asyncio
+async def test_websocket_topic_subscription_receives_kiosk_event(
+    authenticated_client, test_date
+):
+    client, user = await authenticated_client()
+
+    with client.websocket_connect(f"{WS_CONTEXT_PATH}?token={user.id}") as websocket:
+        ack = websocket.receive_json()
+        assert ack["type"] == "connection_ack"
+
+        websocket.send_json(
+            {"type": "subscribe", "topics": ["KioskNotificationEvent"]}
+        )
+        await asyncio.sleep(0.05)
+
+        from lykke.core.utils.domain_event_serialization import serialize_domain_event
+        from lykke.infrastructure.gateways import RedisPubSubGateway
+
+        redis_pool = getattr(client.app.state, "redis_pool", None)
+        pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
+
+        event = KioskNotificationEvent(
+            user_id=user.id,
+            message="Kiosk alert",
+            category="other",
+            message_hash="hash",
+            created_at=datetime.now(UTC),
+            triggered_by="test",
+        )
+
+        await pubsub_gateway.publish_to_user_channel(
+            user_id=user.id,
+            channel_type="domain-events",
+            message=serialize_domain_event(event),
+        )
+
+        await asyncio.sleep(0.2)
+
+        message = await _receive_json_with_timeout(websocket, timeout=2)
+        assert message["type"] == "topic_event"
+        assert message["topic"] == "KioskNotificationEvent"
+        assert message["event"]["event_data"]["message"] == "Kiosk alert"
 
 
 @pytest.mark.skip(

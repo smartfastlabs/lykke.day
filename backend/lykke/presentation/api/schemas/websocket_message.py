@@ -57,6 +57,13 @@ class WebSocketSyncRequestSchema(BaseSchema):
     )
 
 
+class WebSocketSubscriptionSchema(BaseSchema):
+    """Client → Server: Subscribe or unsubscribe to domain event topics."""
+
+    type: Literal["subscribe", "unsubscribe"]
+    topics: list[str]
+
+
 class EntityChangeSchema(BaseSchema):
     """Represents a single entity change from audit logs (only for entities associated with current day)."""
 
@@ -83,6 +90,14 @@ class WebSocketSyncResponseSchema(BaseSchema):
         None  # Routines (included in full sync response)
     )
     last_audit_log_timestamp: str | None  # ISO format datetime - always included
+
+
+class WebSocketTopicEventSchema(BaseSchema):
+    """Server → Client: Domain event message for subscribed topics."""
+
+    type: Literal["topic_event"] = "topic_event"
+    topic: str
+    event: dict[str, Any]
 
 
 class KioskNotificationSchema(BaseSchema):

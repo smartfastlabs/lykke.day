@@ -18,7 +18,9 @@ from lykke.application.queries.get_llm_prompt_context import (
 )
 from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.core.config import settings
+from lykke.core.utils.domain_event_serialization import serialize_domain_event
 from lykke.domain import value_objects
+from lykke.domain.events.notification_events import KioskNotificationEvent
 
 
 @dataclass(frozen=True)
@@ -136,22 +138,21 @@ class KioskNotificationHandler(
             # Create message hash for de-duplication
             message_hash = hashlib.sha256(decision.message.encode("utf-8")).hexdigest()
 
-            # Build payload for kiosk notification
-            payload = {
-                "type": "kiosk_notification",
-                "message": decision.message,
-                "category": decision.category,
-                "message_hash": message_hash,
-                "created_at": datetime.now(UTC).isoformat(),
-                "triggered_by": self._triggered_by,
-            }
+            event = KioskNotificationEvent(
+                user_id=self.user_id,
+                message=decision.message,
+                category=decision.category,
+                message_hash=message_hash,
+                created_at=datetime.now(UTC),
+                triggered_by=self._triggered_by,
+            )
 
             try:
-                # Publish to Redis channel for kiosk WebSocket clients
+                # Publish to Redis domain-events channel for websocket subscribers
                 await self.pubsub_gateway.publish_to_user_channel(
                     user_id=self.user_id,
-                    channel_type="kiosk-notifications",
-                    message=payload,
+                    channel_type="domain-events",
+                    message=serialize_domain_event(event),
                 )
                 logger.info(
                     "Published kiosk notification to user %s: %s",

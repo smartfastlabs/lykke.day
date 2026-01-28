@@ -1,13 +1,14 @@
 import asyncio
 import contextlib
 import json
-from datetime import date, time
+from datetime import date, datetime, time
 from uuid import UUID, uuid4
 
 import pytest
 
 from lykke.core.utils.domain_event_serialization import serialize_domain_event
 from lykke.domain.events.day_events import AlarmStatusChangedEvent, ReminderAddedEvent
+from lykke.domain.events.notification_events import KioskNotificationEvent
 from lykke.domain.events.task_events import TaskCreatedEvent
 from lykke.domain.value_objects.day import AlarmStatus, AlarmType
 from lykke.presentation.api.routers.days import _handle_realtime_events
@@ -61,13 +62,27 @@ async def test_realtime_task_created_event_is_forwarded() -> None:
 
     task = asyncio.create_task(
         _handle_realtime_events(
-            websocket, subscription, date_state, handler, None, None, None
+            websocket,
+            subscription,
+            date_state,
+            handler,
+            None,
+            None,
+            None,
+            {"topics": set()},
         )
     )
     await asyncio.sleep(0.05)
     task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
         await task
+
+    assert websocket.messages
+    response = websocket.messages[0]
+    assert response["type"] == "sync_response"
+    assert response["changes"]
+    assert response["changes"][0]["entity_type"] == "task"
+    assert response["changes"][0]["entity_id"] == str(task_id)
 
     assert websocket.messages
     response = websocket.messages[0]
@@ -101,7 +116,14 @@ async def test_realtime_reminder_added_event_is_forwarded() -> None:
 
     task = asyncio.create_task(
         _handle_realtime_events(
-            websocket, subscription, date_state, handler, None, None, None
+            websocket,
+            subscription,
+            date_state,
+            handler,
+            None,
+            None,
+            None,
+            {"topics": set()},
         )
     )
     await asyncio.sleep(0.05)
@@ -146,7 +168,47 @@ async def test_realtime_alarm_status_changed_event_is_forwarded() -> None:
 
     task = asyncio.create_task(
         _handle_realtime_events(
-            websocket, subscription, date_state, handler, None, None, None
+            websocket,
+            subscription,
+            date_state,
+            handler,
+            None,
+            None,
+            None,
+            {"topics": set()},
+        )
+    )
+
+
+@pytest.mark.asyncio
+async def test_topic_event_is_sent_when_subscribed() -> None:
+    user_id = uuid4()
+    today = date(2026, 1, 25)
+    event = KioskNotificationEvent(
+        user_id=user_id,
+        message="Kiosk alert",
+        category="other",
+        message_hash="hash",
+        created_at=datetime(2026, 1, 25, 8, 0),
+        triggered_by="test",
+    )
+
+    websocket = _FakeWebSocket()
+    subscription = _FakeSubscription([serialize_domain_event(event)])
+    handler = _FakeIncrementalChangesHandler()
+    date_state = {"value": today}
+    subscription_state = {"topics": {"KioskNotificationEvent"}}
+
+    task = asyncio.create_task(
+        _handle_realtime_events(
+            websocket,
+            subscription,
+            date_state,
+            handler,
+            None,
+            None,
+            None,
+            subscription_state,
         )
     )
     await asyncio.sleep(0.05)
@@ -156,7 +218,5 @@ async def test_realtime_alarm_status_changed_event_is_forwarded() -> None:
 
     assert websocket.messages
     response = websocket.messages[0]
-    assert response["type"] == "sync_response"
-    assert response["changes"]
-    assert response["changes"][0]["entity_type"] == "day"
-    assert response["changes"][0]["entity_id"] == str(day_id)
+    assert response["type"] == "topic_event"
+    assert response["topic"] == "KioskNotificationEvent"

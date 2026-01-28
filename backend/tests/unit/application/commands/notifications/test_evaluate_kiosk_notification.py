@@ -232,11 +232,13 @@ async def test_kiosk_tool_publishes_notification() -> None:
     )
 
     assert len(published) == 1
+    assert published[0]["channel_type"] == "domain-events"
     payload = published[0]["message"]
-    assert payload["type"] == "kiosk_notification"
-    assert payload["message"] == "Check your next task"
-    assert payload["category"] == "task_reminder"
-    assert payload["triggered_by"] == "scheduled"
+    assert payload["event_type"].endswith(".KioskNotificationEvent")
+    event_data = payload["event_data"]
+    assert event_data["message"] == "Check your next task"
+    assert event_data["category"] == "task_reminder"
+    assert event_data["triggered_by"] == "scheduled"
 
 
 @pytest.mark.asyncio

@@ -28,10 +28,12 @@ from lykke.application.queries import (
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.core.exceptions import NotFoundError
 from lykke.core.utils.dates import get_current_date
+from lykke.core.utils.domain_event_serialization import serialize_domain_event
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.events.base import AuditableDomainEvent
 from lykke.domain.events.day_events import NewDayEvent
+from lykke.domain.events.notification_events import KioskNotificationEvent
 from lykke.domain.value_objects import DayUpdateObject
 from lykke.presentation.api.schemas import DayContextSchema, DaySchema, DayUpdateSchema
 from lykke.presentation.api.schemas.mappers import (
@@ -40,12 +42,12 @@ from lykke.presentation.api.schemas.mappers import (
 )
 from lykke.presentation.api.schemas.websocket_message import (
     EntityChangeSchema,
-    KioskNotificationSchema,
     WebSocketConnectionAckSchema,
     WebSocketErrorSchema,
-    WebSocketKioskNotificationSchema,
     WebSocketSyncRequestSchema,
     WebSocketSyncResponseSchema,
+    WebSocketSubscriptionSchema,
+    WebSocketTopicEventSchema,
 )
 from lykke.presentation.handler_factory import CommandHandlerFactory
 
@@ -58,7 +60,7 @@ from .dependencies.services import (
     get_schedule_day_handler_websocket,
     incremental_changes_handler_websocket,
 )
-from .dependencies.user import get_current_user, get_current_user_from_token
+from .dependencies.user import get_current_user
 
 router = APIRouter()
 
@@ -146,20 +148,20 @@ async def send_test_kiosk_notification(
     test_message = "This is a test kiosk notification. If you can hear this, the system is working correctly."
     message_hash = hashlib.sha256(test_message.encode("utf-8")).hexdigest()
 
-    payload = {
-        "type": "kiosk_notification",
-        "message": test_message,
-        "category": "other",
-        "message_hash": message_hash,
-        "created_at": datetime.now(UTC).isoformat(),
-        "triggered_by": "test",
-    }
+    event = KioskNotificationEvent(
+        user_id=user.id,
+        message=test_message,
+        category="other",
+        message_hash=message_hash,
+        created_at=datetime.now(UTC),
+        triggered_by="test",
+    )
 
     try:
         await pubsub_gateway.publish_to_user_channel(
             user_id=user.id,
-            channel_type="kiosk-notifications",
-            message=payload,
+            channel_type="domain-events",
+            message=serialize_domain_event(event),
         )
         logger.info(f"Sent test kiosk notification to user {user.id}")
         return {"status": "success", "message": "Test notification sent"}
@@ -296,6 +298,7 @@ async def days_context_websocket(
             user_timezone = None
         today_date = get_current_date(user_timezone)
         date_state = {"value": today_date}
+        subscription_state: dict[str, set[str]] = {"topics": set()}
 
         # Subscribe to user's domain-events channel for real-time updates
         async with pubsub_gateway.subscribe_to_user_channel(
@@ -310,6 +313,7 @@ async def days_context_websocket(
                     schedule_day_handler,
                     date_state,
                     user_timezone,
+                    subscription_state,
                 )
             )
             events_task = asyncio.create_task(
@@ -321,6 +325,7 @@ async def days_context_websocket(
                     day_context_handler,
                     schedule_day_handler,
                     user_timezone,
+                    subscription_state,
                 )
             )
 
@@ -359,6 +364,7 @@ async def _handle_client_messages(
     schedule_day_handler: ScheduleDayHandler,
     date_state: dict[str, date],
     user_timezone: str | None,
+    subscription_state: dict[str, set[str]],
 ) -> None:
     """Handle messages from the client (sync requests).
 
@@ -373,6 +379,24 @@ async def _handle_client_messages(
             # Receive message from client
             message_text = await websocket.receive_text()
             message_data = json.loads(message_text)
+
+            message_type = message_data.get("type")
+            if message_type in ("subscribe", "unsubscribe"):
+                try:
+                    subscription_request = WebSocketSubscriptionSchema(**message_data)
+                except Exception as e:
+                    logger.warning(f"Invalid subscription request: {e}")
+                    await send_error(
+                        websocket, "INVALID_REQUEST", f"Invalid request: {e}"
+                    )
+                    continue
+
+                topics = {topic for topic in subscription_request.topics if topic}
+                if subscription_request.type == "subscribe":
+                    subscription_state["topics"].update(topics)
+                else:
+                    subscription_state["topics"].difference_update(topics)
+                continue
 
             # Parse sync request
             try:
@@ -455,6 +479,7 @@ async def _handle_realtime_events(
     day_context_handler: GetDayContextHandler,
     schedule_day_handler: ScheduleDayHandler,
     user_timezone: str | None,
+    subscription_state: dict[str, set[str]],
 ) -> None:
     """Handle real-time domain events from pubsub and convert to entity changes.
 
@@ -512,6 +537,16 @@ async def _handle_realtime_events(
                                 websocket, response.model_dump(mode="json")
                             )
                         continue
+
+                    event_topic = domain_event.__class__.__name__
+                    if event_topic in subscription_state["topics"]:
+                        topic_event = WebSocketTopicEventSchema(
+                            topic=event_topic,
+                            event=serialize_domain_event(domain_event),
+                        )
+                        await send_ws_message(
+                            websocket, topic_event.model_dump(mode="json")
+                        )
 
                     if not isinstance(
                         domain_event,
@@ -649,80 +684,3 @@ async def _handle_realtime_events(
             break
 
 
-@router.websocket("/kiosk/notifications")
-async def kiosk_notifications_websocket(
-    websocket: WebSocket,
-    pubsub_gateway: Annotated[PubSubGatewayProtocol, Depends(get_pubsub_gateway)],
-    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
-) -> None:
-    """WebSocket endpoint for kiosk notifications.
-
-    This endpoint:
-    1. Accepts WebSocket connection
-    2. Authenticates user (via dependency injection)
-    3. Subscribes to user's kiosk-notifications channel for real-time updates
-    4. Sends notifications to client for display and read-out
-
-    Args:
-        websocket: WebSocket connection
-    """
-    await websocket.accept()
-
-    user_id = user.id
-    logger.info(
-        f"Kiosk notifications WebSocket connection established for user {user_id}"
-    )
-
-    # Send connection acknowledgment
-    ack = WebSocketConnectionAckSchema(user_id=user_id)
-    await send_ws_message(websocket, ack.model_dump(mode="json"))
-
-    try:
-        # Subscribe to user's kiosk-notifications channel
-        async with pubsub_gateway.subscribe_to_user_channel(
-            user_id=user_id, channel_type="kiosk-notifications"
-        ) as kiosk_subscription:
-            while True:
-                try:
-                    # Wait for kiosk notifications from Redis with timeout
-                    notification_message = await kiosk_subscription.get_message(
-                        timeout=1.0
-                    )
-
-                    if notification_message:
-                        logger.debug("Received kiosk notification from Redis")
-                        try:
-                            notification = KioskNotificationSchema(
-                                **notification_message
-                            )
-                            ws_message = WebSocketKioskNotificationSchema(
-                                notification=notification
-                            )
-                            await send_ws_message(
-                                websocket, ws_message.model_dump(mode="json")
-                            )
-                            logger.info(
-                                f"Sent kiosk notification to user {user_id}: {notification.message[:50]}"
-                            )
-                        except Exception as process_error:
-                            logger.error(
-                                f"Failed to process kiosk notification message: {process_error}"
-                            )
-
-                except Exception as e:
-                    logger.error(f"Error in kiosk notifications handler: {e}")
-                    break
-
-    except WebSocketDisconnect:
-        logger.info(f"Kiosk notifications WebSocket disconnected for user {user_id}")
-
-    except Exception as e:
-        logger.error(f"Kiosk notifications WebSocket error: {e}")
-        try:
-            await send_error(
-                websocket, "INTERNAL_ERROR", "An unexpected error occurred"
-            )
-            await websocket.close()
-        except Exception:
-            # Connection may already be closed
-            pass

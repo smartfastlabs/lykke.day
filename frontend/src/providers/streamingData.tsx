@@ -90,6 +90,11 @@ interface StreamingDataContextValue {
   ) => Promise<void>;
   removeBrainDumpItem: (itemId: string) => Promise<void>;
   loadNotifications: () => Promise<void>;
+  subscribeToTopic: (
+    topic: string,
+    handler: (event: DomainEventEnvelope) => void,
+  ) => () => void;
+  unsubscribeFromTopic: (topic: string) => void;
 }
 
 const StreamingDataContext = createContext<StreamingDataContextValue>();
@@ -137,6 +142,22 @@ interface ErrorMessage extends WebSocketMessage {
   type: "error";
   code: string;
   message: string;
+}
+
+interface DomainEventEnvelope {
+  event_type: string;
+  event_data: Record<string, unknown>;
+}
+
+interface TopicEventMessage extends WebSocketMessage {
+  type: "topic_event";
+  topic: string;
+  event: DomainEventEnvelope;
+}
+
+interface SubscriptionMessage extends WebSocketMessage {
+  type: "subscribe" | "unsubscribe";
+  topics: string[];
 }
 
 interface EntityChange {
@@ -283,6 +304,11 @@ export function StreamingDataProvider(props: ParentProps) {
   let reconnectTimeout: number | null = null;
   let syncDebounceTimeout: number | null = null;
   let isMounted = false;
+  const subscribedTopics = new Set<string>();
+  const topicHandlers = new Map<
+    string,
+    Set<(event: DomainEventEnvelope) => void>
+  >();
 
   type ReminderWithOptionalId = Omit<Reminder, "id"> & { id?: string | null };
   type BrainDumpItemWithOptionalId = Omit<BrainDumpItem, "id"> & {
@@ -417,6 +443,9 @@ export function StreamingDataProvider(props: ParentProps) {
         console.log("StreamingDataProvider: WebSocket connected");
         console.log("StreamingDataProvider: Requesting full sync");
         requestFullSync();
+        if (subscribedTopics.size > 0) {
+          sendSubscriptionUpdate("subscribe", Array.from(subscribedTopics));
+        }
       };
 
       ws.onmessage = async (event) => {
@@ -445,6 +474,8 @@ export function StreamingDataProvider(props: ParentProps) {
               errorMsg.code,
               errorMsg.message,
             );
+          } else if (message.type === "topic_event") {
+            handleTopicEvent(message as TopicEventMessage);
           }
         } catch (err) {
           console.error(
@@ -512,6 +543,20 @@ export function StreamingDataProvider(props: ParentProps) {
     ws.send(JSON.stringify(request));
   };
 
+  const sendSubscriptionUpdate = (
+    type: SubscriptionMessage["type"],
+    topics: string[],
+  ) => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      return;
+    }
+    if (topics.length === 0) {
+      return;
+    }
+    const request: SubscriptionMessage = { type, topics };
+    ws.send(JSON.stringify(request));
+  };
+
   // Handle sync response
   const handleSyncResponse = async (message: SyncResponseMessage) => {
     setIsLoading(false);
@@ -574,6 +619,14 @@ export function StreamingDataProvider(props: ParentProps) {
         }
       }
     }
+  };
+
+  const handleTopicEvent = (message: TopicEventMessage) => {
+    const handlers = topicHandlers.get(message.topic);
+    if (!handlers || handlers.size === 0) {
+      return;
+    }
+    handlers.forEach((handler) => handler(message.event));
   };
 
   // Apply incremental changes to store
@@ -1236,6 +1289,42 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
+  const subscribeToTopic = (
+    topic: string,
+    handler: (event: DomainEventEnvelope) => void,
+  ) => {
+    const handlers = topicHandlers.get(topic) ?? new Set();
+    handlers.add(handler);
+    topicHandlers.set(topic, handlers);
+
+    if (!subscribedTopics.has(topic)) {
+      subscribedTopics.add(topic);
+      sendSubscriptionUpdate("subscribe", [topic]);
+    }
+
+    return () => {
+      const currentHandlers = topicHandlers.get(topic);
+      if (!currentHandlers) {
+        return;
+      }
+      currentHandlers.delete(handler);
+      if (currentHandlers.size === 0) {
+        topicHandlers.delete(topic);
+        unsubscribeFromTopic(topic);
+      } else {
+        topicHandlers.set(topic, currentHandlers);
+      }
+    };
+  };
+
+  const unsubscribeFromTopic = (topic: string) => {
+    if (!subscribedTopics.has(topic)) {
+      return;
+    }
+    subscribedTopics.delete(topic);
+    sendSubscriptionUpdate("unsubscribe", [topic]);
+  };
+
   // Connect on mount
   onMount(() => {
     isMounted = true;
@@ -1290,6 +1379,8 @@ export function StreamingDataProvider(props: ParentProps) {
     updateBrainDumpItemStatus,
     removeBrainDumpItem,
     loadNotifications,
+    subscribeToTopic,
+    unsubscribeFromTopic,
   };
 
   return (
