@@ -5,5 +5,10 @@
         "command": "./hooks/format.sh"
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(find:*)"
+    ]
   }
 }

@@ -1,4 +1,3 @@
-from datetime import time
 from typing import Any
 
 from sqlalchemy.sql import Select
@@ -9,7 +8,10 @@ from lykke.domain.entities import RoutineEntity
 from lykke.domain.value_objects.task import TaskCategory
 from lykke.infrastructure.database.tables import routines_tbl
 from lykke.infrastructure.repositories.base.utils import (
+    convert_enum_fields,
+    convert_time_fields,
     ensure_datetimes_utc,
+    enum_to_value,
     filter_init_false_fields,
 )
 
@@ -46,13 +48,9 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, value_objects.Ro
             "date": routine.date,
             "routine_definition_id": routine.routine_definition_id,
             "name": routine.name,
-            "category": routine.category.value
-            if hasattr(routine.category, "value")
-            else routine.category,
+            "category": enum_to_value(routine.category),
             "description": routine.description,
-            "status": routine.status.value
-            if hasattr(routine.status, "value")
-            else routine.status,
+            "status": enum_to_value(routine.status),
             "snoozed_until": routine.snoozed_until,
         }
 
@@ -66,28 +64,19 @@ class RoutineRepository(UserScopedBaseRepository[RoutineEntity, value_objects.Ro
         """Convert a database row dict to a Routine entity."""
         data = filter_init_false_fields(dict(row), RoutineEntity)
 
-        category = data.get("category")
-        if isinstance(category, str):
-            data["category"] = TaskCategory(category)
+        # Convert enum fields
+        data = convert_enum_fields(data, {
+            "category": TaskCategory,
+            "status": value_objects.TaskStatus,
+        })
 
-        status = data.get("status")
-        if isinstance(status, str):
-            data["status"] = value_objects.TaskStatus(status)
-
+        # Handle time_window JSONB field
         time_window = data.get("time_window")
         if time_window:
-            for time_field in [
-                "available_time",
-                "start_time",
-                "end_time",
-                "cutoff_time",
-            ]:
-                if time_window.get(time_field) and isinstance(
-                    time_window[time_field], str
-                ):
-                    time_window[time_field] = time.fromisoformat(
-                        time_window[time_field]
-                    )
+            time_window = convert_time_fields(
+                time_window,
+                ["available_time", "start_time", "end_time", "cutoff_time"],
+            )
             data["time_window"] = value_objects.TimeWindow(**time_window)
 
         data = ensure_datetimes_utc(data, keys=("snoozed_until",))

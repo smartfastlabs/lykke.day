@@ -4,8 +4,8 @@ from zoneinfo import ZoneInfo
 
 from dateutil.tz import tzoffset
 
-from lykke.domain.entities.calendar_entry import CalendarEntryEntity, get_datetime
 from lykke.domain.value_objects import EventCategory, TaskFrequency
+from lykke.infrastructure.mappers import GoogleCalendarMapper, get_datetime
 
 TARGET_TIMEZONE = "America/Chicago"
 
@@ -88,7 +88,7 @@ class _DummyGoogleEvent:
         self.updated = end if end.tzinfo else end.replace(tzinfo=UTC)
 
 
-def test_from_google_preserves_event_timezone_and_converts_to_utc() -> None:
+def test_mapper_preserves_event_timezone_and_converts_to_utc() -> None:
     """Event timezone should be stored while datetimes are converted to UTC."""
     user_id = uuid4()
     calendar_id = uuid4()
@@ -101,7 +101,7 @@ def test_from_google_preserves_event_timezone_and_converts_to_utc() -> None:
         event_id="evt-1",
     )
 
-    entry = CalendarEntryEntity.from_google(
+    entry = GoogleCalendarMapper.to_calendar_entry(
         user_id=user_id,
         calendar_id=calendar_id,
         google_event=google_event,
@@ -114,7 +114,7 @@ def test_from_google_preserves_event_timezone_and_converts_to_utc() -> None:
     assert entry.timezone == event_timezone
 
 
-def test_from_google_falls_back_to_target_timezone_when_missing() -> None:
+def test_mapper_falls_back_to_target_timezone_when_missing() -> None:
     """Fallback to target timezone when Google event has no timezone."""
     user_id = uuid4()
     calendar_id = uuid4()
@@ -127,7 +127,7 @@ def test_from_google_falls_back_to_target_timezone_when_missing() -> None:
         event_id="evt-2",
     )
 
-    entry = CalendarEntryEntity.from_google(
+    entry = GoogleCalendarMapper.to_calendar_entry(
         user_id=user_id,
         calendar_id=calendar_id,
         google_event=google_event,
@@ -140,7 +140,7 @@ def test_from_google_falls_back_to_target_timezone_when_missing() -> None:
     assert entry.timezone == target_timezone
 
 
-def test_from_google_sets_category_when_provided() -> None:
+def test_mapper_sets_category_when_provided() -> None:
     """Provided category should be applied to the entry."""
     user_id = uuid4()
     calendar_id = uuid4()
@@ -152,7 +152,7 @@ def test_from_google_sets_category_when_provided() -> None:
         event_id="evt-3",
     )
 
-    entry = CalendarEntryEntity.from_google(
+    entry = GoogleCalendarMapper.to_calendar_entry(
         user_id=user_id,
         calendar_id=calendar_id,
         google_event=google_event,
