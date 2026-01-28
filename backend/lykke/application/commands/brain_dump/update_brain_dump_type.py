@@ -1,4 +1,4 @@
-"""Command to update a brain dump's status."""
+"""Command to update a brain dump's type."""
 
 from dataclasses import dataclass
 from datetime import date as dt_date
@@ -7,27 +7,22 @@ from uuid import UUID
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.core.exceptions import DomainError
 from lykke.domain import value_objects
-from lykke.domain.entities import BrainDumpEntity
 
 
 @dataclass(frozen=True)
-class UpdateBrainDumpStatusCommand(Command):
-    """Command to update a brain dump's status."""
+class UpdateBrainDumpTypeCommand(Command):
+    """Command to update a brain dump's type."""
 
     date: dt_date
     item_id: UUID
-    status: value_objects.BrainDumpItemStatus
+    item_type: value_objects.BrainDumpType
 
 
-class UpdateBrainDumpStatusHandler(
-    BaseCommandHandler[UpdateBrainDumpStatusCommand, BrainDumpEntity]
-):
-    """Updates a brain dump's status."""
+class UpdateBrainDumpTypeHandler(BaseCommandHandler[UpdateBrainDumpTypeCommand, None]):
+    """Updates a brain dump's type."""
 
-    async def handle(
-        self, command: UpdateBrainDumpStatusCommand
-    ) -> BrainDumpEntity:
-        """Update a brain dump's status."""
+    async def handle(self, command: UpdateBrainDumpTypeCommand) -> None:
+        """Update a brain dump's type."""
         async with self.new_uow() as uow:
             item = await uow.brain_dump_ro_repo.get(command.item_id)
             if item.date != command.date:
@@ -35,7 +30,6 @@ class UpdateBrainDumpStatusHandler(
                     f"Brain dump {command.item_id} not found for {command.date}"
                 )
 
-            updated = item.update_status(command.status)
+            updated = item.update_type(command.item_type)
             if updated.has_events():
                 uow.add(updated)
-            return updated

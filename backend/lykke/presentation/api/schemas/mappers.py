@@ -39,7 +39,6 @@ from lykke.presentation.api.schemas import (
     AuditLogSchema,
     BotPersonalitySchema,
     BrainDumpSchema,
-    BrainDumpItemSchema,
     CalendarEntrySchema,
     CalendarEntrySeriesSchema,
     CalendarSchema,
@@ -98,9 +97,9 @@ def map_alarm_to_schema(alarm: value_objects.Alarm) -> AlarmSchema:
     )
 
 
-def map_brain_dump_item_to_schema(item: BrainDumpEntity) -> BrainDumpItemSchema:
+def map_brain_dump_to_schema(item: BrainDumpEntity) -> BrainDumpSchema:
     """Convert BrainDump entity to schema."""
-    return BrainDumpItemSchema(
+    return BrainDumpSchema(
         id=item.id,
         user_id=item.user_id,
         date=item.date,
@@ -112,11 +111,6 @@ def map_brain_dump_item_to_schema(item: BrainDumpEntity) -> BrainDumpItemSchema:
             dataclass_to_json_dict(item.llm_run_result) if item.llm_run_result else None
         ),
     )
-
-
-def map_brain_dump_to_schema(item: BrainDumpEntity) -> BrainDumpSchema:
-    """Convert BrainDump entity to alias schema."""
-    return BrainDumpSchema(**map_brain_dump_item_to_schema(item).model_dump())
 
 
 def map_task_definition_to_schema(
@@ -262,7 +256,7 @@ def map_day_to_schema(
     reminder_schemas = [map_reminder_to_schema(reminder) for reminder in day.reminders]
     alarm_schemas = [map_alarm_to_schema(alarm) for alarm in day.alarms]
     brain_dump_item_schemas = [
-        map_brain_dump_item_to_schema(item) for item in (brain_dump_items or [])
+        map_brain_dump_to_schema(item) for item in (brain_dump_items or [])
     ]
 
     return DaySchema(

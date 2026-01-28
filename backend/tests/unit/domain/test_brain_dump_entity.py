@@ -6,10 +6,10 @@ from uuid import uuid4
 from lykke.domain import value_objects
 from lykke.domain.entities import BrainDumpEntity, DayEntity
 from lykke.domain.events.day_events import (
-    BrainDumpItemAddedEvent,
-    BrainDumpItemRemovedEvent,
-    BrainDumpItemStatusChangedEvent,
-    BrainDumpItemTypeChangedEvent,
+    BrainDumpAddedEvent,
+    BrainDumpRemovedEvent,
+    BrainDumpStatusChangedEvent,
+    BrainDumpTypeChangedEvent,
 )
 
 
@@ -22,7 +22,7 @@ def test_mark_added_emits_event() -> None:
     events = item.collect_events()
 
     assert len(events) == 1
-    assert isinstance(events[0], BrainDumpItemAddedEvent)
+    assert isinstance(events[0], BrainDumpAddedEvent)
     assert events[0].item_id == item.id
     assert events[0].item_text == item.text
     assert events[0].day_id == DayEntity.id_from_date_and_user(day_date, user_id)
@@ -34,14 +34,14 @@ def test_update_status_emits_event() -> None:
     day_date = date(2025, 11, 27)
     item = BrainDumpEntity(user_id=user_id, date=day_date, text="Pick up coffee")
 
-    updated = item.update_status(value_objects.BrainDumpItemStatus.COMPLETE)
+    updated = item.update_status(value_objects.BrainDumpStatus.COMPLETE)
     events = updated.collect_events()
 
-    assert updated.status == value_objects.BrainDumpItemStatus.COMPLETE
+    assert updated.status == value_objects.BrainDumpStatus.COMPLETE
     assert len(events) == 1
-    assert isinstance(events[0], BrainDumpItemStatusChangedEvent)
-    assert events[0].old_status == value_objects.BrainDumpItemStatus.ACTIVE
-    assert events[0].new_status == value_objects.BrainDumpItemStatus.COMPLETE
+    assert isinstance(events[0], BrainDumpStatusChangedEvent)
+    assert events[0].old_status == value_objects.BrainDumpStatus.ACTIVE
+    assert events[0].new_status == value_objects.BrainDumpStatus.COMPLETE
     assert events[0].item_text == item.text
 
 
@@ -52,10 +52,10 @@ def test_update_status_no_change_no_event() -> None:
         text="Refill filters",
     )
 
-    updated = item.update_status(value_objects.BrainDumpItemStatus.ACTIVE)
+    updated = item.update_status(value_objects.BrainDumpStatus.ACTIVE)
     events = updated.collect_events()
 
-    assert updated.status == value_objects.BrainDumpItemStatus.ACTIVE
+    assert updated.status == value_objects.BrainDumpStatus.ACTIVE
     assert len(events) == 0
 
 
@@ -66,14 +66,14 @@ def test_update_type_emits_event() -> None:
         text="Capture action",
     )
 
-    updated = item.update_type(value_objects.BrainDumpItemType.COMMAND)
+    updated = item.update_type(value_objects.BrainDumpType.COMMAND)
     events = updated.collect_events()
 
-    assert updated.type == value_objects.BrainDumpItemType.COMMAND
+    assert updated.type == value_objects.BrainDumpType.COMMAND
     assert len(events) == 1
-    assert isinstance(events[0], BrainDumpItemTypeChangedEvent)
-    assert events[0].old_type == value_objects.BrainDumpItemType.GENERAL
-    assert events[0].new_type == value_objects.BrainDumpItemType.COMMAND
+    assert isinstance(events[0], BrainDumpTypeChangedEvent)
+    assert events[0].old_type == value_objects.BrainDumpType.GENERAL
+    assert events[0].new_type == value_objects.BrainDumpType.COMMAND
 
 
 def test_mark_removed_emits_event() -> None:
@@ -87,6 +87,6 @@ def test_mark_removed_emits_event() -> None:
     events = item.collect_events()
 
     assert len(events) == 1
-    assert isinstance(events[0], BrainDumpItemRemovedEvent)
+    assert isinstance(events[0], BrainDumpRemovedEvent)
     assert events[0].item_id == item.id
     assert events[0].item_text == item.text

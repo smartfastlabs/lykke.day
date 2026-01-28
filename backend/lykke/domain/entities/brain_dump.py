@@ -8,11 +8,11 @@ from uuid import UUID
 
 from lykke.domain import value_objects
 from lykke.domain.events.day_events import (
-    BrainDumpItemAddedEvent,
-    BrainDumpItemLLMRunRecordedEvent,
-    BrainDumpItemRemovedEvent,
-    BrainDumpItemStatusChangedEvent,
-    BrainDumpItemTypeChangedEvent,
+    BrainDumpAddedEvent,
+    BrainDumpLLMRunRecordedEvent,
+    BrainDumpRemovedEvent,
+    BrainDumpStatusChangedEvent,
+    BrainDumpTypeChangedEvent,
 )
 
 from .base import BaseEntityObject
@@ -25,15 +25,15 @@ class BrainDumpEntity(BaseEntityObject):
     user_id: UUID
     date: dt_date
     text: str
-    status: value_objects.BrainDumpItemStatus = value_objects.BrainDumpItemStatus.ACTIVE
+    status: value_objects.BrainDumpStatus = value_objects.BrainDumpStatus.ACTIVE
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    type: value_objects.BrainDumpItemType = value_objects.BrainDumpItemType.GENERAL
+    type: value_objects.BrainDumpType = value_objects.BrainDumpType.GENERAL
     llm_run_result: value_objects.LLMRunResultSnapshot | None = None
 
     def mark_added(self) -> None:
         """Record a brain dump item creation event."""
         self._add_event(
-            BrainDumpItemAddedEvent(
+            BrainDumpAddedEvent(
                 user_id=self.user_id,
                 day_id=self._get_day_id(),
                 date=self.date,
@@ -46,7 +46,7 @@ class BrainDumpEntity(BaseEntityObject):
         )
 
     def update_status(
-        self, status: value_objects.BrainDumpItemStatus
+        self, status: value_objects.BrainDumpStatus
     ) -> BrainDumpEntity:
         """Update the status of a brain dump item."""
         if status == self.status:
@@ -54,7 +54,7 @@ class BrainDumpEntity(BaseEntityObject):
 
         updated = self.clone(status=status)
         updated._add_event(
-            BrainDumpItemStatusChangedEvent(
+            BrainDumpStatusChangedEvent(
                 user_id=self.user_id,
                 day_id=self._get_day_id(),
                 date=self.date,
@@ -70,7 +70,7 @@ class BrainDumpEntity(BaseEntityObject):
         return updated
 
     def update_type(
-        self, item_type: value_objects.BrainDumpItemType
+        self, item_type: value_objects.BrainDumpType
     ) -> BrainDumpEntity:
         """Update the type of a brain dump item."""
         if item_type == self.type:
@@ -78,7 +78,7 @@ class BrainDumpEntity(BaseEntityObject):
 
         updated = self.clone(type=item_type)
         updated._add_event(
-            BrainDumpItemTypeChangedEvent(
+            BrainDumpTypeChangedEvent(
                 user_id=self.user_id,
                 day_id=self._get_day_id(),
                 date=self.date,
@@ -96,7 +96,7 @@ class BrainDumpEntity(BaseEntityObject):
     def mark_removed(self) -> None:
         """Record a brain dump item removal event."""
         self._add_event(
-            BrainDumpItemRemovedEvent(
+            BrainDumpRemovedEvent(
                 user_id=self.user_id,
                 day_id=self._get_day_id(),
                 date=self.date,
@@ -116,7 +116,7 @@ class BrainDumpEntity(BaseEntityObject):
             return self
         updated = self.clone(llm_run_result=result)
         updated._add_event(
-            BrainDumpItemLLMRunRecordedEvent(
+            BrainDumpLLMRunRecordedEvent(
                 user_id=self.user_id,
                 day_id=self._get_day_id(),
                 date=self.date,

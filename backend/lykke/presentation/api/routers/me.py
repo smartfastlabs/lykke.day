@@ -42,7 +42,7 @@ from lykke.domain.value_objects import UserSetting, UserUpdateObject
 from lykke.presentation.api.schemas import (
     AlarmSchema,
     BasePersonalitySchema,
-    BrainDumpItemSchema,
+    BrainDumpSchema,
     ReminderSchema,
     TaskSchema,
     UserSchema,
@@ -50,7 +50,7 @@ from lykke.presentation.api.schemas import (
 )
 from lykke.presentation.api.schemas.mappers import (
     map_alarm_to_schema,
-    map_brain_dump_item_to_schema,
+    map_brain_dump_to_schema,
     map_reminder_to_schema,
     map_task_to_schema,
     map_user_to_schema,
@@ -298,46 +298,46 @@ async def update_alarm_status_for_today(
 # ============================================================================
 
 
-@router.post("/today/brain-dump", response_model=BrainDumpItemSchema)
-async def add_brain_dump_item_to_today(
+@router.post("/today/brain-dump", response_model=BrainDumpSchema)
+async def add_brain_dump_to_today(
     text: str,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> BrainDumpItemSchema:
-    """Add a brain dump item to today."""
+) -> BrainDumpSchema:
+    """Add a brain dump to today."""
     date = get_current_date(user.settings.timezone)
     handler = command_factory.create(CreateBrainDumpHandler)
     item = await handler.handle(CreateBrainDumpCommand(date=date, text=text))
-    return map_brain_dump_item_to_schema(item)
+    return map_brain_dump_to_schema(item)
 
 
-@router.patch("/today/brain-dump/{item_id}", response_model=BrainDumpItemSchema)
-async def update_brain_dump_item_status(
+@router.patch("/today/brain-dump/{item_id}", response_model=BrainDumpSchema)
+async def update_brain_dump_status(
     item_id: UUID,
-    status: value_objects.BrainDumpItemStatus,
+    status: value_objects.BrainDumpStatus,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> BrainDumpItemSchema:
-    """Update a brain dump item's status for today."""
+) -> BrainDumpSchema:
+    """Update a brain dump's status for today."""
     date = get_current_date(user.settings.timezone)
     handler = command_factory.create(UpdateBrainDumpStatusHandler)
     item = await handler.handle(
         UpdateBrainDumpStatusCommand(date=date, item_id=item_id, status=status)
     )
-    return map_brain_dump_item_to_schema(item)
+    return map_brain_dump_to_schema(item)
 
 
-@router.delete("/today/brain-dump/{item_id}", response_model=BrainDumpItemSchema)
-async def remove_brain_dump_item_from_today(
+@router.delete("/today/brain-dump/{item_id}", response_model=BrainDumpSchema)
+async def remove_brain_dump_from_today(
     item_id: UUID,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
     user: Annotated[UserEntity, Depends(get_current_user)],
-) -> BrainDumpItemSchema:
-    """Remove a brain dump item from today."""
+) -> BrainDumpSchema:
+    """Remove a brain dump from today."""
     date = get_current_date(user.settings.timezone)
     handler = command_factory.create(DeleteBrainDumpHandler)
     item = await handler.handle(DeleteBrainDumpCommand(date=date, item_id=item_id))
-    return map_brain_dump_item_to_schema(item)
+    return map_brain_dump_to_schema(item)
 
 
 # ============================================================================

@@ -13,7 +13,7 @@ from lykke.application.commands.brain_dump import (
 from lykke.core.exceptions import NotFoundError
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity, UserEntity
-from lykke.domain.events.day_events import BrainDumpItemAddedEvent
+from lykke.domain.events.day_events import BrainDumpAddedEvent
 from tests.support.dobles import (
     create_day_repo_double,
     create_day_template_repo_double,
@@ -71,9 +71,9 @@ async def test_create_brain_dump_creates_item():
     )
 
     assert result.text == "Test brain dump"
-    assert result.status == value_objects.BrainDumpItemStatus.ACTIVE
+    assert result.status == value_objects.BrainDumpStatus.ACTIVE
     events = result.collect_events()
-    assert any(isinstance(event, BrainDumpItemAddedEvent) for event in events)
+    assert any(isinstance(event, BrainDumpAddedEvent) for event in events)
 
 
 @pytest.mark.asyncio

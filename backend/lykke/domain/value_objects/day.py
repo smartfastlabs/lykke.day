@@ -166,16 +166,16 @@ class AlarmPreset(BaseValueObject):
         )
 
 
-class BrainDumpItemStatus(str, Enum):
-    """Status of a brain dump item."""
+class BrainDumpStatus(str, Enum):
+    """Status of a brain dump."""
 
     ACTIVE = "ACTIVE"
     COMPLETE = "COMPLETE"
     PUNT = "PUNT"
 
 
-class BrainDumpItemType(str, Enum):
-    """Type of a brain dump item."""
+class BrainDumpType(str, Enum):
+    """Type of a brain dump."""
 
     GENERAL = "GENERAL"
     COMMAND = "COMMAND"

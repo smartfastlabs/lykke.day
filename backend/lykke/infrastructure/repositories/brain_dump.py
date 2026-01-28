@@ -47,11 +47,11 @@ class BrainDumpRepository(
 
         status = data.get("status")
         if isinstance(status, str):
-            data["status"] = value_objects.BrainDumpItemStatus(status)
+            data["status"] = value_objects.BrainDumpStatus(status)
 
         item_type = data.get("type")
         if isinstance(item_type, str):
-            data["type"] = value_objects.BrainDumpItemType(item_type)
+            data["type"] = value_objects.BrainDumpType(item_type)
 
         text = data.get("text")
         if isinstance(text, str):

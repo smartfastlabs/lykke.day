@@ -8,7 +8,7 @@ from typing import Generic, TypeVar
 from uuid import UUID
 
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
-from .day import BrainDumpItemStatus, BrainDumpItemType
+from .day import BrainDumpStatus, BrainDumpType
 
 
 @dataclass(kw_only=True)
@@ -88,8 +88,8 @@ class DayQuery(DateQuery):
 class BrainDumpQuery(DateQuery):
     """Query class for BrainDump entities."""
 
-    status: BrainDumpItemStatus | None = None
-    type: BrainDumpItemType | None = None
+    status: BrainDumpStatus | None = None
+    type: BrainDumpType | None = None
 
 
 @dataclass(kw_only=True)

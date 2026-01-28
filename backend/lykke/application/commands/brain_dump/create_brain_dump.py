@@ -31,8 +31,8 @@ class CreateBrainDumpHandler(
                 user_id=self.user_id,
                 date=command.date,
                 text=command.text,
-                status=value_objects.BrainDumpItemStatus.ACTIVE,
-                type=value_objects.BrainDumpItemType.GENERAL,
+                status=value_objects.BrainDumpStatus.ACTIVE,
+                type=value_objects.BrainDumpType.GENERAL,
             )
             item.mark_added()
 

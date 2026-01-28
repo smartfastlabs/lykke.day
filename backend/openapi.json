@@ -996,7 +996,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BrainDumpItemSchema"
+                  "$ref": "#/components/schemas/BrainDumpSchema"
                 }
               }
             }
@@ -1018,8 +1018,8 @@
       "patch": {
         "tags": ["auth", "user"],
         "summary": "Update Brain Dump Item Status",
-        "description": "Update a brain dump item's status for today.",
-        "operationId": "update_brain_dump_item_status_me_today_brain_dump__item_id__patch",
+        "description": "Update a brain dump's status for today.",
+        "operationId": "update_brain_dump_status_me_today_brain_dump__item_id__patch",
         "security": [
           {
             "APIKeyCookie": []
@@ -1041,7 +1041,7 @@
             "in": "query",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/BrainDumpItemStatus"
+              "$ref": "#/components/schemas/BrainDumpStatus"
             }
           }
         ],
@@ -1051,7 +1051,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BrainDumpItemSchema"
+                  "$ref": "#/components/schemas/BrainDumpSchema"
                 }
               }
             }
@@ -1096,7 +1096,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BrainDumpItemSchema"
+                  "$ref": "#/components/schemas/BrainDumpSchema"
                 }
               }
             }
@@ -1194,7 +1194,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BrainDumpItemSchema"
+                  "$ref": "#/components/schemas/BrainDumpSchema"
                 }
               }
             }
@@ -1214,8 +1214,8 @@
       "patch": {
         "tags": ["brain-dump"],
         "summary": "Update Brain Dump Item",
-        "description": "Update a brain dump item's status or type.",
-        "operationId": "update_brain_dump_item_brain_dump__uuid__patch",
+        "description": "Update a brain dump's status or type.",
+        "operationId": "update_brain_dump_brain_dump__uuid__patch",
         "security": [
           {
             "APIKeyCookie": []
@@ -1238,7 +1238,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BrainDumpItemUpdateSchema"
+              "$ref": "#/components/schemas/BrainDumpUpdateSchema"
               }
             }
           }
@@ -1249,7 +1249,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BrainDumpItemSchema"
+                  "$ref": "#/components/schemas/BrainDumpSchema"
                 }
               }
             }
@@ -1269,8 +1269,8 @@
       "delete": {
         "tags": ["brain-dump"],
         "summary": "Delete Brain Dump Item",
-        "description": "Delete a brain dump item.",
-        "operationId": "delete_brain_dump_item_brain_dump__uuid__delete",
+        "description": "Delete a brain dump.",
+        "operationId": "delete_brain_dump_brain_dump__uuid__delete",
         "security": [
           {
             "APIKeyCookie": []
@@ -1327,7 +1327,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResponseSchema_BrainDumpItemSchema_"
+                  "$ref": "#/components/schemas/PagedResponseSchema_BrainDumpSchema_"
                 }
               }
             }
@@ -1354,13 +1354,13 @@
       "post": {
         "tags": ["brain-dump"],
         "summary": "Create Brain Dump Item",
-        "description": "Create a new brain dump item.",
-        "operationId": "create_brain_dump_item_brain_dump_create_post",
+        "description": "Create a new brain dump.",
+        "operationId": "create_brain_dump_brain_dump_create_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BrainDumpItemCreateSchema"
+                "$ref": "#/components/schemas/BrainDumpCreateSchema"
               }
             }
           },
@@ -1372,7 +1372,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BrainDumpItemSchema"
+                  "$ref": "#/components/schemas/BrainDumpSchema"
                 }
               }
             }
@@ -5494,7 +5494,7 @@
         "required": ["token", "password"],
         "title": "Body_reset_reset_password_auth_reset_password_post"
       },
-      "BrainDumpItemCreateSchema": {
+      "BrainDumpCreateSchema": {
         "properties": {
           "date": {
             "type": "string",
@@ -5508,10 +5508,10 @@
         },
         "type": "object",
         "required": ["date", "text"],
-        "title": "BrainDumpItemCreateSchema",
-        "description": "API schema for creating brain dump items."
+        "title": "BrainDumpCreateSchema",
+        "description": "API schema for creating brain dumps."
       },
-      "BrainDumpItemSchema": {
+      "BrainDumpSchema": {
         "properties": {
           "id": {
             "anyOf": [
@@ -5540,10 +5540,10 @@
             "title": "Text"
           },
           "status": {
-            "$ref": "#/components/schemas/BrainDumpItemStatus"
+            "$ref": "#/components/schemas/BrainDumpStatus"
           },
           "type": {
-            "$ref": "#/components/schemas/BrainDumpItemType"
+            "$ref": "#/components/schemas/BrainDumpType"
           },
           "created_at": {
             "anyOf": [
@@ -5572,27 +5572,27 @@
         },
         "type": "object",
         "required": ["user_id", "date", "text", "status", "type"],
-        "title": "BrainDumpItemSchema",
+        "title": "BrainDumpSchema",
         "description": "API schema for BrainDump entity."
       },
-      "BrainDumpItemStatus": {
+      "BrainDumpStatus": {
         "type": "string",
         "enum": ["ACTIVE", "COMPLETE", "PUNT"],
-        "title": "BrainDumpItemStatus",
-        "description": "Status of a brain dump item."
+        "title": "BrainDumpStatus",
+        "description": "Status of a brain dump."
       },
-      "BrainDumpItemType": {
+      "BrainDumpType": {
         "type": "string",
         "enum": ["GENERAL", "COMMAND"],
-        "title": "BrainDumpItemType",
-        "description": "Type of a brain dump item."
+        "title": "BrainDumpType",
+        "description": "Type of a brain dump."
       },
-      "BrainDumpItemUpdateSchema": {
+      "BrainDumpUpdateSchema": {
         "properties": {
           "status": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BrainDumpItemStatus"
+                "$ref": "#/components/schemas/BrainDumpStatus"
               },
               {
                 "type": "null"
@@ -5602,7 +5602,7 @@
           "type": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BrainDumpItemType"
+                "$ref": "#/components/schemas/BrainDumpType"
               },
               {
                 "type": "null"
@@ -5611,8 +5611,8 @@
           }
         },
         "type": "object",
-        "title": "BrainDumpItemUpdateSchema",
-        "description": "API schema for updating a brain dump item."
+        "title": "BrainDumpUpdateSchema",
+        "description": "API schema for updating a brain dump."
       },
       "BrainDumpQuery": {
         "properties": {
@@ -5699,7 +5699,7 @@
           "status": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BrainDumpItemStatus"
+                "$ref": "#/components/schemas/BrainDumpStatus"
               },
               {
                 "type": "null"
@@ -5709,7 +5709,7 @@
           "type": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/BrainDumpItemType"
+                "$ref": "#/components/schemas/BrainDumpType"
               },
               {
                 "type": "null"
@@ -6495,7 +6495,7 @@
           },
           "brain_dump_items": {
             "items": {
-              "$ref": "#/components/schemas/BrainDumpItemSchema"
+                  "$ref": "#/components/schemas/BrainDumpSchema"
             },
             "type": "array",
             "title": "Brain Dump Items"
@@ -7492,11 +7492,11 @@
         "title": "NotificationUseCaseConfigSchema",
         "description": "Schema for notification usecase config (typed)."
       },
-      "PagedResponseSchema_BrainDumpItemSchema_": {
+      "PagedResponseSchema_BrainDumpSchema_": {
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/BrainDumpItemSchema"
+              "$ref": "#/components/schemas/BrainDumpSchema"
             },
             "type": "array",
             "title": "Items"
@@ -7531,7 +7531,7 @@
           "has_next",
           "has_previous"
         ],
-        "title": "PagedResponseSchema[BrainDumpItemSchema]"
+        "title": "PagedResponseSchema[BrainDumpSchema]"
       },
       "PagedResponseSchema_CalendarEntrySeriesSchema_": {
         "properties": {

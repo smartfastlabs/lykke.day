@@ -12,7 +12,7 @@ from .base import BaseEntitySchema, BaseSchema
 from .high_level_plan import HighLevelPlanSchema
 
 if TYPE_CHECKING:
-    from .brain_dump import BrainDumpItemSchema
+    from .brain_dump import BrainDumpSchema
     from .day_template import DayTemplateSchema
     from .alarm import AlarmSchema
     from .reminder import ReminderSchema
@@ -31,7 +31,7 @@ class DaySchema(BaseEntitySchema):
     template: Optional["DayTemplateSchema"] = None
     reminders: list["ReminderSchema"] = Field(default_factory=list)
     alarms: list["AlarmSchema"] = Field(default_factory=list)
-    brain_dump_items: list["BrainDumpItemSchema"] = Field(default_factory=list)
+    brain_dump_items: list["BrainDumpSchema"] = Field(default_factory=list)
     high_level_plan: HighLevelPlanSchema | None = None
 
 

@@ -6,12 +6,7 @@ from .audit_log import AuditLogSchema
 from .auditable import AuditableSchema
 from .base_personality import BasePersonalitySchema
 from .bot_personality import BotPersonalitySchema
-from .brain_dump import (
-    BrainDumpSchema,
-    BrainDumpItemCreateSchema,
-    BrainDumpItemSchema,
-    BrainDumpItemUpdateSchema,
-)
+from .brain_dump import BrainDumpCreateSchema, BrainDumpSchema, BrainDumpUpdateSchema
 from .calendar import (
     CalendarCreateSchema,
     CalendarSchema,
@@ -120,10 +115,9 @@ DayContextSchema.model_rebuild()
 AlarmSchema.model_rebuild()
 AlarmPresetSchema.model_rebuild()
 ReminderSchema.model_rebuild()
-BrainDumpItemSchema.model_rebuild()
 BrainDumpSchema.model_rebuild()
-BrainDumpItemCreateSchema.model_rebuild()
-BrainDumpItemUpdateSchema.model_rebuild()
+BrainDumpCreateSchema.model_rebuild()
+BrainDumpUpdateSchema.model_rebuild()
 RoutineDefinitionSchema.model_rebuild()
 RoutineDefinitionTaskCreateSchema.model_rebuild()
 RoutineDefinitionTaskUpdateSchema.model_rebuild()
@@ -168,9 +162,8 @@ __all__ = [
     "BasePersonalitySchema",
     "BotPersonalitySchema",
     "BrainDumpSchema",
-    "BrainDumpItemCreateSchema",
-    "BrainDumpItemSchema",
-    "BrainDumpItemUpdateSchema",
+    "BrainDumpCreateSchema",
+    "BrainDumpUpdateSchema",
     "CalendarCreateSchema",
     "CalendarEntrySchema",
     "CalendarEntrySeriesSchema",

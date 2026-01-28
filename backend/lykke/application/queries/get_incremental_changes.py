@@ -105,9 +105,9 @@ class GetIncrementalChangesHandler(
                 or audit_log.activity_type == "EntityUpdatedEvent"
                 or audit_log.activity_type == "TaskCompletedEvent"
                 or audit_log.activity_type == "TaskPuntedEvent"
-                or audit_log.activity_type == "BrainDumpItemAddedEvent"
-                or audit_log.activity_type == "BrainDumpItemStatusChangedEvent"
-                or audit_log.activity_type == "BrainDumpItemRemovedEvent"
+                or audit_log.activity_type == "BrainDumpAddedEvent"
+                or audit_log.activity_type == "BrainDumpStatusChangedEvent"
+                or audit_log.activity_type == "BrainDumpRemovedEvent"
             ):
                 change_type = "updated"
             else:

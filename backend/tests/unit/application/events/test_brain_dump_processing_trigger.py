@@ -12,7 +12,7 @@ import pytest
 from lykke.application.events.handlers.brain_dump_processing_trigger import (
     BrainDumpProcessingTriggerHandler,
 )
-from lykke.domain.events.day_events import BrainDumpItemAddedEvent
+from lykke.domain.events.day_events import BrainDumpAddedEvent
 from tests.support.dobles import create_read_only_repos_double
 
 
@@ -40,7 +40,7 @@ async def test_brain_dump_processing_enqueues_task(
     handler = BrainDumpProcessingTriggerHandler(
         create_read_only_repos_double(), user_id
     )
-    event = BrainDumpItemAddedEvent(
+    event = BrainDumpAddedEvent(
         user_id=user_id,
         day_id=uuid4(),
         date=dt_date(2025, 11, 27),
@@ -78,7 +78,7 @@ async def test_brain_dump_processing_handles_errors(
     handler = BrainDumpProcessingTriggerHandler(
         create_read_only_repos_double(), user_id
     )
-    event = BrainDumpItemAddedEvent(
+    event = BrainDumpAddedEvent(
         user_id=user_id,
         day_id=uuid4(),
         date=dt_date(2025, 11, 27),

@@ -413,7 +413,7 @@ async def test_realtime_brain_dump_update_notification(
 
         from lykke.core.utils.domain_event_serialization import serialize_domain_event
         from lykke.domain.entities import AuditLogEntity
-        from lykke.domain.events.day_events import BrainDumpItemAddedEvent
+        from lykke.domain.events.day_events import BrainDumpAddedEvent
         from lykke.infrastructure.gateways import RedisPubSubGateway
         from lykke.infrastructure.repositories import AuditLogRepository
         from lykke.presentation.api.schemas.mappers import map_day_to_schema
@@ -422,7 +422,7 @@ async def test_realtime_brain_dump_update_notification(
         pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
 
         # Create domain event
-        domain_event = BrainDumpItemAddedEvent(
+        domain_event = BrainDumpAddedEvent(
             day_id=day.id,
             user_id=user.id,
             date=test_date,
@@ -438,7 +438,7 @@ async def test_realtime_brain_dump_update_notification(
         day_schema = map_day_to_schema(day, brain_dump_items=[brain_dump_item])
         audit_log = AuditLogEntity(
             user_id=user.id,
-            activity_type="BrainDumpItemAddedEvent",
+            activity_type="BrainDumpAddedEvent",
             entity_id=day.id,
             entity_type="day",
             occurred_at=datetime.now(UTC),

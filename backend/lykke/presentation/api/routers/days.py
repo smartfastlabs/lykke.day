@@ -619,10 +619,10 @@ async def _handle_realtime_events(
                         or activity_type == "EntityUpdatedEvent"
                         or activity_type == "TaskCompletedEvent"
                         or activity_type == "TaskPuntedEvent"
-                        or activity_type == "BrainDumpItemAddedEvent"
-                        or activity_type == "BrainDumpItemStatusChangedEvent"
-                        or activity_type == "BrainDumpItemTypeChangedEvent"
-                        or activity_type == "BrainDumpItemRemovedEvent"
+                        or activity_type == "BrainDumpAddedEvent"
+                        or activity_type == "BrainDumpStatusChangedEvent"
+                        or activity_type == "BrainDumpTypeChangedEvent"
+                        or activity_type == "BrainDumpRemovedEvent"
                     ):
                         change_type = "updated"
                     else:

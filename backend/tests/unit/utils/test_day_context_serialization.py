@@ -43,7 +43,7 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
         user_id=user_id,
         date=day_date,
         text="Buy milk",
-        status=value_objects.BrainDumpItemStatus.ACTIVE,
+        status=value_objects.BrainDumpStatus.ACTIVE,
         created_at=current_time,
     )
 

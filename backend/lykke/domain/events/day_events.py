@@ -16,8 +16,8 @@ if TYPE_CHECKING:
 
     from lykke.domain.entities.audit_log import AuditLogEntity
     from lykke.domain.value_objects.day import (
-        BrainDumpItemStatus,
-        BrainDumpItemType,
+        BrainDumpStatus,
+        BrainDumpType,
         ReminderStatus,
     )
 
@@ -207,10 +207,10 @@ class AlarmStatusChangedEvent(DomainEvent, AuditableDomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class BrainDumpItemAddedEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a brain dump item is added.
+class BrainDumpAddedEvent(DomainEvent, AuditableDomainEvent):
+    """Event raised when a brain dump is added.
 
-    Uses AuditableDomainEvent: User explicitly added a brain dump item,
+    Uses AuditableDomainEvent: User explicitly added a brain dump,
     this is a user-facing action they'd want to see in their activity timeline.
     """
 
@@ -221,36 +221,36 @@ class BrainDumpItemAddedEvent(DomainEvent, AuditableDomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class BrainDumpItemStatusChangedEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a brain dump item status changes.
+class BrainDumpStatusChangedEvent(DomainEvent, AuditableDomainEvent):
+    """Event raised when a brain dump status changes.
 
-    Uses AuditableDomainEvent: User changed status of brain dump item
+    Uses AuditableDomainEvent: User changed status of brain dump
     (e.g., marked as done), this is a user-facing action worth tracking.
     """
 
     day_id: UUID
     date: dt_date
     item_id: UUID
-    old_status: BrainDumpItemStatus
-    new_status: BrainDumpItemStatus
+    old_status: BrainDumpStatus
+    new_status: BrainDumpStatus
     item_text: str
 
 
 @dataclass(frozen=True, kw_only=True)
-class BrainDumpItemTypeChangedEvent(DomainEvent):
-    """Event raised when a brain dump item's type changes."""
+class BrainDumpTypeChangedEvent(DomainEvent):
+    """Event raised when a brain dump's type changes."""
 
     day_id: UUID
     date: dt_date
     item_id: UUID
-    old_type: BrainDumpItemType
-    new_type: BrainDumpItemType
+    old_type: BrainDumpType
+    new_type: BrainDumpType
     item_text: str
 
 
 @dataclass(frozen=True, kw_only=True)
-class BrainDumpItemLLMRunRecordedEvent(DomainEvent):
-    """Event raised when an LLM run result is stored for a brain dump item."""
+class BrainDumpLLMRunRecordedEvent(DomainEvent):
+    """Event raised when an LLM run result is stored for a brain dump."""
 
     user_id: UUID
     day_id: UUID
@@ -259,10 +259,10 @@ class BrainDumpItemLLMRunRecordedEvent(DomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class BrainDumpItemRemovedEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a brain dump item is removed.
+class BrainDumpRemovedEvent(DomainEvent, AuditableDomainEvent):
+    """Event raised when a brain dump is removed.
 
-    Uses AuditableDomainEvent: User explicitly removed a brain dump item,
+    Uses AuditableDomainEvent: User explicitly removed a brain dump,
     this is a user-facing action they'd want to see in their history.
     """
 
@@ -277,11 +277,11 @@ __all__ = [
     "AlarmRemovedEvent",
     "AlarmStatusChangedEvent",
     "AlarmTriggeredEvent",
-    "BrainDumpItemAddedEvent",
-    "BrainDumpItemLLMRunRecordedEvent",
-    "BrainDumpItemRemovedEvent",
-    "BrainDumpItemStatusChangedEvent",
-    "BrainDumpItemTypeChangedEvent",
+    "BrainDumpAddedEvent",
+    "BrainDumpLLMRunRecordedEvent",
+    "BrainDumpRemovedEvent",
+    "BrainDumpStatusChangedEvent",
+    "BrainDumpTypeChangedEvent",
     "DayCompletedEvent",
     "DayScheduledEvent",
     "DayUnscheduledEvent",

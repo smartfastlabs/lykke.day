@@ -1,13 +1,13 @@
 """Brain dump command handlers."""
 
-from .create_brain_dump_item import CreateBrainDumpCommand, CreateBrainDumpHandler
-from .delete_brain_dump_item import DeleteBrainDumpCommand, DeleteBrainDumpHandler
+from .create_brain_dump import CreateBrainDumpCommand, CreateBrainDumpHandler
+from .delete_brain_dump import DeleteBrainDumpCommand, DeleteBrainDumpHandler
 from .process_brain_dump import ProcessBrainDumpCommand, ProcessBrainDumpHandler
-from .update_brain_dump_item_status import (
+from .update_brain_dump_status import (
     UpdateBrainDumpStatusCommand,
     UpdateBrainDumpStatusHandler,
 )
-from .update_brain_dump_item_type import (
+from .update_brain_dump_type import (
     UpdateBrainDumpTypeCommand,
     UpdateBrainDumpTypeHandler,
 )

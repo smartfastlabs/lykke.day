@@ -14,16 +14,16 @@ async def test_brain_dump_put_round_trip(brain_dump_repo, test_user, test_date):
         user_id=test_user.id,
         date=test_date,
         text="Remember to buy bread",
-        status=value_objects.BrainDumpItemStatus.ACTIVE,
-        type=value_objects.BrainDumpItemType.GENERAL,
+        status=value_objects.BrainDumpStatus.ACTIVE,
+        type=value_objects.BrainDumpType.GENERAL,
         created_at=datetime.now(UTC),
     )
     await brain_dump_repo.put(item)
 
     retrieved = await brain_dump_repo.get(item.id)
     assert retrieved.text == item.text
-    assert retrieved.status == value_objects.BrainDumpItemStatus.ACTIVE
-    assert retrieved.type == value_objects.BrainDumpItemType.GENERAL
+    assert retrieved.status == value_objects.BrainDumpStatus.ACTIVE
+    assert retrieved.type == value_objects.BrainDumpType.GENERAL
     assert retrieved.date == test_date
 
 

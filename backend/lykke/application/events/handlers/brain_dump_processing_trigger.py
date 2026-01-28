@@ -6,17 +6,17 @@ from loguru import logger
 
 from lykke.application.events.handlers.base import DomainEventHandler
 from lykke.domain.events.base import DomainEvent
-from lykke.domain.events.day_events import BrainDumpItemAddedEvent
+from lykke.domain.events.day_events import BrainDumpAddedEvent
 
 
 class BrainDumpProcessingTriggerHandler(DomainEventHandler):
     """Triggers async brain dump processing when a new item is added."""
 
-    handles: ClassVar[list[type[DomainEvent]]] = [BrainDumpItemAddedEvent]
+    handles: ClassVar[list[type[DomainEvent]]] = [BrainDumpAddedEvent]
 
     async def handle(self, event: DomainEvent) -> None:
         """Handle new brain dump items by enqueuing processing."""
-        if not isinstance(event, BrainDumpItemAddedEvent):
+        if not isinstance(event, BrainDumpAddedEvent):
             return
 
         try:

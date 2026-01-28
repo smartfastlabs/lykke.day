@@ -15,8 +15,8 @@ class BrainDump(Base):
     user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
     date = Column(Date, nullable=False)
     text = Column(Text, nullable=False)
-    status = Column(String, nullable=False)  # BrainDumpItemStatus enum as string
-    type = Column(String, nullable=False)  # BrainDumpItemType enum as string
+    status = Column(String, nullable=False)  # BrainDumpStatus enum as string
+    type = Column(String, nullable=False)  # BrainDumpType enum as string
     llm_run_result = Column(JSONB, nullable=True)
     created_at = Column(DateTime, nullable=False)
 

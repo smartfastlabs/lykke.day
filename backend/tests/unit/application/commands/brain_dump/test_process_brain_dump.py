@@ -16,7 +16,7 @@ from lykke.application.commands.brain_dump import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities import BrainDumpEntity, DayEntity, DayTemplateEntity
-from lykke.domain.events.day_events import BrainDumpItemTypeChangedEvent
+from lykke.domain.events.day_events import BrainDumpTypeChangedEvent
 from tests.support.dobles import (
     create_brain_dump_repo_double,
     create_day_repo_double,
@@ -298,6 +298,6 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
 
     assert len(uow.added) == 1
     updated = uow.added[0]
-    assert updated.type == value_objects.BrainDumpItemType.COMMAND
+    assert updated.type == value_objects.BrainDumpType.COMMAND
     events = updated.collect_events()
-    assert any(isinstance(event, BrainDumpItemTypeChangedEvent) for event in events)
+    assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)
