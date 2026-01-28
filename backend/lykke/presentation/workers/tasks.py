@@ -59,7 +59,6 @@ from lykke.infrastructure.unit_of_work import (
 from lykke.infrastructure.workers.config import broker
 from lykke.presentation.handler_factory import CommandHandlerFactory
 
-# Create a scheduler for periodic tasks
 scheduler = TaskiqScheduler(broker=broker, sources=[LabelScheduleSource(broker)])
 
 
@@ -349,7 +348,6 @@ async def schedule_all_users_day_task(
     logger.info(f"Found {len(users)} users to schedule")
 
     for user in users:
-        # Enqueue a sub-task for each user
         await schedule_user_day_task.kiq(user_id=user.id)
 
     logger.info(f"Enqueued daily scheduling tasks for {len(users)} users")
@@ -377,16 +375,13 @@ async def schedule_user_day_task(
         except Exception:
             timezone = None
 
-        # Use user's timezone for "today"
         target_date = get_current_date(timezone)
         try:
             await schedule_handler.handle(ScheduleDayCommand(date=target_date))
             logger.debug(f"Scheduled {target_date} for user {user_id}")
         except ValueError as e:
-            # Day template might be missing - log and continue
             logger.warning(f"Could not schedule {target_date} for user {user_id}: {e}")
         except Exception:  # pylint: disable=broad-except
-            # Catch-all for resilient background job - continue with other users
             logger.exception(f"Error scheduling {target_date} for user {user_id}")
 
         logger.info(f"Daily scheduling completed for user {user_id}")
@@ -405,14 +400,12 @@ async def evaluate_smart_notifications_for_all_users_task(
     logger.info("Starting smart notification evaluation for all users")
 
     users = await user_repo.all()
-    # Filter to users with LLM provider configured
     users_with_llm = [
         user for user in users if user.settings and user.settings.llm_provider
     ]
     logger.info(f"Found {len(users_with_llm)} users with LLM provider configured")
 
     for user in users_with_llm:
-        # Enqueue a sub-task for each user
         await evaluate_smart_notification_task.kiq(
             user_id=user.id, triggered_by="scheduled"
         )
@@ -433,14 +426,12 @@ async def evaluate_kiosk_notifications_for_all_users_task(
     logger.info("Starting kiosk notification evaluation for all users")
 
     users = await user_repo.all()
-    # Filter to users with LLM provider configured
     users_with_llm = [
         user for user in users if user.settings and user.settings.llm_provider
     ]
     logger.info(f"Found {len(users_with_llm)} users with LLM provider configured")
 
     for user in users_with_llm:
-        # Enqueue a sub-task for each user
         await evaluate_kiosk_notification_task.kiq(
             user_id=user.id, triggered_by="scheduled"
         )
@@ -484,7 +475,6 @@ async def evaluate_smart_notification_task(
             )
             logger.debug(f"Smart notification evaluation completed for user {user_id}")
         except Exception:  # pylint: disable=broad-except
-            # Catch-all for resilient background job - continue with other users
             logger.exception(f"Error evaluating smart notification for user {user_id}")
 
     finally:
@@ -524,7 +514,6 @@ async def evaluate_kiosk_notification_task(
             )
             logger.debug(f"Kiosk notification evaluation completed for user {user_id}")
         except Exception:  # pylint: disable=broad-except
-            # Catch-all for resilient background job - continue with other users
             logger.exception(f"Error evaluating kiosk notification for user {user_id}")
 
     finally:
@@ -694,7 +683,6 @@ async def evaluate_morning_overviews_for_all_users_task(
     logger.info("Starting morning overview evaluation for all users")
 
     users = await user_repo.all()
-    # Filter to users with LLM provider and morning overview time configured
     eligible_users = [
         user
         for user in users
@@ -708,7 +696,6 @@ async def evaluate_morning_overviews_for_all_users_task(
 
     for user in eligible_users:
         try:
-            # Parse the morning overview time (HH:MM format)
             overview_time_str = user.settings.morning_overview_time
             if not overview_time_str:
                 continue
@@ -723,13 +710,10 @@ async def evaluate_morning_overviews_for_all_users_task(
                 )
                 continue
 
-            # Get current time in user's timezone
             current_time = get_current_time(user.settings.timezone)
             current_hour = current_time.hour
             current_minute = current_time.minute
 
-            # Check if current time matches overview time (within 15 minute window)
-            # We check if we're within 0-14 minutes past the target time
             time_matches = (
                 current_hour == overview_hour
                 and current_minute >= overview_minute
@@ -739,7 +723,6 @@ async def evaluate_morning_overviews_for_all_users_task(
             if not time_matches:
                 continue
 
-            # Check if we've already sent today
             ro_repos = ro_repo_factory.create(user.id)
             push_notification_repo: PushNotificationRepositoryReadOnlyProtocol = (
                 ro_repos.push_notification_ro_repo
@@ -749,7 +732,6 @@ async def evaluate_morning_overviews_for_all_users_task(
             today_start = get_current_datetime_in_timezone(user.settings.timezone)
             today_start = today_start.replace(hour=0, minute=0, second=0, microsecond=0)
 
-            # Check for morning overview notifications sent today
             existing_notifications = await push_notification_repo.search(
                 value_objects.PushNotificationQuery(
                     sent_after=today_start,
@@ -757,7 +739,6 @@ async def evaluate_morning_overviews_for_all_users_task(
                 )
             )
 
-            # Filter to morning overview notifications
             morning_overview_sent_today = any(
                 n.triggered_by == "morning_overview" for n in existing_notifications
             )
@@ -768,7 +749,6 @@ async def evaluate_morning_overviews_for_all_users_task(
                 )
                 continue
 
-            # Enqueue the morning overview task
             await evaluate_morning_overview_task.kiq(user_id=user.id)
             logger.info(f"Enqueued morning overview for user {user.id}")
 
@@ -801,7 +781,6 @@ async def evaluate_morning_overview_task(
             await handler.handle(MorningOverviewCommand(user_id=user_id))
             logger.debug(f"Morning overview evaluation completed for user {user_id}")
         except Exception:  # pylint: disable=broad-except
-            # Catch-all for resilient background job
             logger.exception(f"Error evaluating morning overview for user {user_id}")
 
     finally:
@@ -869,5 +848,4 @@ async def example_triggered_task(message: str) -> dict[str, str]:
     return {"status": "completed", "message": message}
 
 
-# Ensure handlers are registered when the worker tasks module is imported
 register_worker_event_handlers()

@@ -62,13 +62,10 @@ def serialize_domain_event(event: DomainEvent) -> dict[str, Any]:
     if not is_dataclass(event):
         raise TypeError(f"Event {type(event)} must be a dataclass")
 
-    # Get fully qualified class name for deserialization
     event_type = f"{event.__class__.__module__}.{event.__class__.__name__}"
 
-    # Convert event to dict using dataclass's asdict
     event_dict = asdict(event)
 
-    # Convert to JSON-serializable format
     json_safe_data: dict[str, Any] = {}
     for key, value in event_dict.items():
         json_safe_data[key] = _serialize_value(value)
@@ -101,7 +98,6 @@ def _serialize_value(value: Any) -> Any:
     elif isinstance(value, list):
         return [_serialize_value(item) for item in value]
     else:
-        # Primitives (str, int, float, bool, None) pass through
         return value
 
 
@@ -136,26 +132,20 @@ def deserialize_domain_event(data: dict[str, Any]) -> DomainEvent:
     event_type = data["event_type"]
     event_data = data["event_data"]
 
-    # Parse fully qualified class name
     try:
         module_name, class_name = event_type.rsplit(".", 1)
     except ValueError as e:
         raise ValueError(f"Invalid event_type format: {event_type}") from e
 
-    # Import the module and get the class
     try:
         module = importlib.import_module(module_name)
         event_class = getattr(module, class_name)
     except (ImportError, AttributeError) as e:
         raise ValueError(f"Could not load event class {event_type}: {e}") from e
 
-    # Verify it's a DomainEvent subclass
     if not issubclass(event_class, DomainEvent):
         raise TypeError(f"Event class {event_type} is not a DomainEvent")
 
-    # Deserialize event data based on event field annotations.
-
-    # Create the event instance
     try:
         coerced_event_data = _coerce_event_data(event_class, event_data)
         event = event_class(**coerced_event_data)
@@ -164,8 +154,6 @@ def deserialize_domain_event(data: dict[str, Any]) -> DomainEvent:
             f"Could not instantiate {event_type} with provided data: {e}"
         ) from e
 
-    # Type assertion: We've already verified event_class is a DomainEvent subclass
-    # but mypy can't infer this from the dynamic loading
     from typing import cast
 
     return cast("DomainEvent", event)

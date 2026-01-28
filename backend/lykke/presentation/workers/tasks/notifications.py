@@ -61,7 +61,6 @@ async def evaluate_smart_notifications_for_all_users_task(
     logger.info("Starting smart notification evaluation for all users")
 
     users = await user_repo.all()
-    # Filter to users with LLM provider configured
     users_with_llm = [
         user for user in users if user.settings and user.settings.llm_provider
     ]
@@ -69,7 +68,6 @@ async def evaluate_smart_notifications_for_all_users_task(
 
     task = enqueue_task or evaluate_smart_notification_task
     for user in users_with_llm:
-        # Enqueue a sub-task for each user
         await task.kiq(user_id=user.id, triggered_by="scheduled")
 
     logger.info(
@@ -90,7 +88,6 @@ async def evaluate_kiosk_notifications_for_all_users_task(
     logger.info("Starting kiosk notification evaluation for all users")
 
     users = await user_repo.all()
-    # Filter to users with LLM provider configured
     users_with_llm = [
         user for user in users if user.settings and user.settings.llm_provider
     ]
@@ -98,7 +95,6 @@ async def evaluate_kiosk_notifications_for_all_users_task(
 
     task = enqueue_task or evaluate_kiosk_notification_task
     for user in users_with_llm:
-        # Enqueue a sub-task for each user
         await task.kiq(user_id=user.id, triggered_by="scheduled")
 
     logger.info(
@@ -149,7 +145,6 @@ async def evaluate_smart_notification_task(
             )
             logger.debug(f"Smart notification evaluation completed for user {user_id}")
         except Exception:  # pylint: disable=broad-except
-            # Catch-all for resilient background job - continue with other users
             logger.exception(f"Error evaluating smart notification for user {user_id}")
 
     finally:
@@ -198,7 +193,6 @@ async def evaluate_kiosk_notification_task(
             )
             logger.debug(f"Kiosk notification evaluation completed for user {user_id}")
         except Exception:  # pylint: disable=broad-except
-            # Catch-all for resilient background job - continue with other users
             logger.exception(f"Error evaluating kiosk notification for user {user_id}")
 
     finally:
@@ -222,7 +216,6 @@ async def evaluate_morning_overviews_for_all_users_task(
     logger.info("Starting morning overview evaluation for all users")
 
     users = await user_repo.all()
-    # Filter to users with LLM provider and morning overview time configured
     eligible_users = [
         user
         for user in users
@@ -241,7 +234,6 @@ async def evaluate_morning_overviews_for_all_users_task(
     task = enqueue_task or evaluate_morning_overview_task
     for user in eligible_users:
         try:
-            # Parse the morning overview time (HH:MM format)
             overview_time_str = user.settings.morning_overview_time
             if not overview_time_str:
                 continue
@@ -258,13 +250,10 @@ async def evaluate_morning_overviews_for_all_users_task(
                 )
                 continue
 
-            # Get current time in user's timezone
             current_time = current_time_provider(user.settings.timezone)
             current_hour = current_time.hour
             current_minute = current_time.minute
 
-            # Check if current time matches overview time (within 15 minute window)
-            # We check if we're within 0-14 minutes past the target time
             time_matches = (
                 current_hour == overview_hour
                 and current_minute >= overview_minute
@@ -274,7 +263,6 @@ async def evaluate_morning_overviews_for_all_users_task(
             if not time_matches:
                 continue
 
-            # Check if we've already sent today
             ro_repos = ro_repo_factory.create(user.id)
             push_notification_repo: PushNotificationRepositoryReadOnlyProtocol = (
                 ro_repos.push_notification_ro_repo
@@ -284,7 +272,6 @@ async def evaluate_morning_overviews_for_all_users_task(
             today_start = current_datetime_provider(user.settings.timezone)
             today_start = today_start.replace(hour=0, minute=0, second=0, microsecond=0)
 
-            # Check for morning overview notifications sent today
             existing_notifications = await push_notification_repo.search(
                 value_objects.PushNotificationQuery(
                     sent_after=today_start,
@@ -292,7 +279,6 @@ async def evaluate_morning_overviews_for_all_users_task(
                 )
             )
 
-            # Filter to morning overview notifications
             morning_overview_sent_today = any(
                 n.triggered_by == "morning_overview" for n in existing_notifications
             )
@@ -304,7 +290,6 @@ async def evaluate_morning_overviews_for_all_users_task(
                 )
                 continue
 
-            # Enqueue the morning overview task
             await task.kiq(user_id=user.id)
             logger.info("Enqueued morning overview for user %s", user.id)
 
@@ -346,7 +331,6 @@ async def evaluate_morning_overview_task(
             await resolved_handler.handle(MorningOverviewCommand(user_id=user_id))
             logger.debug(f"Morning overview evaluation completed for user {user_id}")
         except Exception:  # pylint: disable=broad-except
-            # Catch-all for resilient background job
             logger.exception(f"Error evaluating morning overview for user {user_id}")
 
     finally:

@@ -62,7 +62,6 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
         Raises:
             DomainError: If the action is invalid for the current state
         """
-        # Handle status transitions based on action type
         old_status = self.status
         if (
             action.type == value_objects.ActionType.PUNT
@@ -70,7 +69,6 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
         ):
             return old_status
 
-        # Add the action
         self.actions.append(action)
 
         if action.type == value_objects.ActionType.COMPLETE:
@@ -89,13 +87,10 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
             self.status = value_objects.TaskStatus.SNOOZE
             self.snoozed_until = snoozed_until
         elif action.type == value_objects.ActionType.NOTIFY:
-            # Notification doesn't change status, just records the action
             pass
         else:
-            # Other action types don't change status
             pass
 
-        # Record a task-level event so persistence is tied to a domain event
         self._add_event(
             TaskStateUpdatedEvent(
                 user_id=self.user_id,
@@ -110,7 +105,6 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
             )
         )
 
-        # Return the old status so the aggregate root can raise events if needed
         return old_status
 
     def mark_pending(self) -> value_objects.TaskStatus:
@@ -122,7 +116,7 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
             The old status before the change
         """
         if self.status == value_objects.TaskStatus.PENDING:
-            return self.status  # Already pending
+            return self.status
 
         old_status = self.status
         self.status = value_objects.TaskStatus.PENDING
@@ -138,7 +132,7 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
             The old status before the change
         """
         if self.status == value_objects.TaskStatus.READY:
-            return self.status  # Already ready
+            return self.status
 
         old_status = self.status
         self.status = value_objects.TaskStatus.READY
@@ -158,7 +152,6 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
         Returns:
             True if the task should be included, False otherwise
         """
-        # Exclude tasks that are not in eligible statuses
         if self.status not in (
             value_objects.TaskStatus.PENDING,
             value_objects.TaskStatus.NOT_STARTED,
@@ -166,22 +159,17 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
         ):
             return False
 
-        # Exclude tasks that are already completed
         if self.completed_at:
             return False
 
-        # Exclude tasks without a time_window
         if not self.time_window:
             return False
 
-        # Check available_time - task must be available
         if self.time_window.available_time:
             if self.time_window.available_time > now:
                 return False
 
-        # Check start_time - task must start before cutoff
         elif self.time_window.start_time and cutoff_time < self.time_window.start_time:
             return False
 
-        # Check end_time - task must not have ended
         return not (self.time_window.end_time and now > self.time_window.end_time)

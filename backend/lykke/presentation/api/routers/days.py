@@ -212,7 +212,6 @@ async def _build_full_sync_response(
             GetDayContextQuery(date=date_value)
         )
     except NotFoundError:
-        # Day doesn't exist, auto-schedule it (WebSocket is THE place that creates Day if missing)
         context = await schedule_day_handler.handle(ScheduleDayCommand(date=date_value))
 
     audit_logs = await get_incremental_changes_handler.audit_log_ro_repo.search(
@@ -226,7 +225,6 @@ async def _build_full_sync_response(
     if last_audit_timestamp is None:
         last_audit_timestamp = dt_datetime.now(UTC)
 
-    # Fetch routines for the day
     from lykke.presentation.api.schemas.mappers import map_routine_to_schema
 
     routines = await get_day_context_handler.routine_ro_repo.search(
@@ -281,15 +279,12 @@ async def days_context_websocket(
     await websocket.accept()
 
     try:
-        # Get user_id from the handler (user was authenticated via dependency)
         user_id = day_context_handler.user_id
         logger.info(f"Days context WebSocket connection established for user {user_id}")
 
-        # Send connection acknowledgment
         ack = WebSocketConnectionAckSchema(user_id=user_id)
         await send_ws_message(websocket, ack.model_dump(mode="json"))
 
-        # Get today's date in the user's timezone
         user_timezone = None
         try:
             user = await day_context_handler.user_ro_repo.get(user_id)
@@ -300,11 +295,9 @@ async def days_context_websocket(
         date_state = {"value": today_date}
         subscription_state: dict[str, set[str]] = {"topics": set()}
 
-        # Subscribe to user's domain-events channel for real-time updates
         async with pubsub_gateway.subscribe_to_user_channel(
             user_id=user_id, channel_type="domain-events"
         ) as domain_events_subscription:
-            # Create tasks for handling messages and real-time events
             message_task = asyncio.create_task(
                 _handle_client_messages(
                     websocket,
@@ -329,12 +322,10 @@ async def days_context_websocket(
                 )
             )
 
-            # Wait for either task to complete (or fail)
             done, pending = await asyncio.wait(
                 [message_task, events_task], return_when=asyncio.FIRST_COMPLETED
             )
 
-            # Cancel pending tasks
             for task in pending:
                 task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
@@ -353,7 +344,6 @@ async def days_context_websocket(
             )
             await websocket.close()
         except Exception:
-            # Connection may already be closed
             pass
 
 
@@ -376,7 +366,6 @@ async def _handle_client_messages(
     """
     while True:
         try:
-            # Receive message from client
             message_text = await websocket.receive_text()
             message_data = json.loads(message_text)
 
@@ -398,7 +387,6 @@ async def _handle_client_messages(
                     subscription_state["topics"].difference_update(topics)
                 continue
 
-            # Parse sync request
             try:
                 sync_request = WebSocketSyncRequestSchema(**message_data)
             except Exception as e:
@@ -406,9 +394,7 @@ async def _handle_client_messages(
                 await send_error(websocket, "INVALID_REQUEST", f"Invalid request: {e}")
                 continue
 
-            # Handle sync request
             if sync_request.since_timestamp:
-                # Incremental sync
                 try:
                     since_dt = dt_datetime.fromisoformat(
                         sync_request.since_timestamp.replace("Z", "+00:00")
@@ -443,7 +429,6 @@ async def _handle_client_messages(
                     )
                     continue
             else:
-                # Full sync
                 try:
                     response = await _build_full_sync_response(
                         get_day_context_handler=get_day_context_handler,
@@ -459,7 +444,6 @@ async def _handle_client_messages(
                     )
                     continue
 
-            # Send response
             await send_ws_message(websocket, response.model_dump(mode="json"))
 
         except WebSocketDisconnect:
@@ -501,7 +485,6 @@ async def _handle_realtime_events(
 
     while True:
         try:
-            # Wait for domain events from Redis with timeout
             domain_event_message = await domain_events_subscription.get_message(
                 timeout=1.0
             )
@@ -509,7 +492,6 @@ async def _handle_realtime_events(
             if domain_event_message:
                 logger.debug("Received message from Redis subscription")
                 try:
-                    # Deserialize domain event
                     logger.debug("Received domain event message from Redis")
                     domain_event = deserialize_domain_event(domain_event_message)
                     logger.debug(
@@ -562,7 +544,6 @@ async def _handle_realtime_events(
                         )
                         continue
 
-                    # Only process events that identify an entity
                     if not domain_event.entity_id or not domain_event.entity_type:
                         logger.warning(
                             f"Domain event {domain_event.__class__.__name__} missing entity_id or entity_type"
@@ -579,7 +560,6 @@ async def _handle_realtime_events(
                         f"Processing {domain_event.__class__.__name__} for {domain_event.entity_type} {domain_event.entity_id} on date {domain_event.entity_date}"
                     )
 
-                    # Filter to today's entities using entity_date
                     entity_date = domain_event.entity_date
                     if isinstance(entity_date, dt_datetime):
                         entity_date = entity_date.date()
@@ -590,10 +570,6 @@ async def _handle_realtime_events(
                         )
                         continue
 
-                    # For entities without entity_date (like routines), always include them
-                    # They're not date-specific
-
-                    # Determine change type from activity_type
                     activity_type = domain_event.__class__.__name__
                     change_type: Literal["created", "updated", "deleted"] | None = None
                     if (
@@ -626,11 +602,9 @@ async def _handle_realtime_events(
                     ):
                         change_type = "updated"
                     else:
-                        # Skip events we don't know how to handle
                         logger.warning(f"Unknown activity type: {activity_type}")
                         continue
 
-                    # Load entity data for created/updated entities
                     entity_data: dict[str, Any] | None = None
                     if change_type in ("created", "updated"):
                         try:
@@ -647,9 +621,6 @@ async def _handle_realtime_events(
                             logger.error(
                                 f"Failed to load entity data for {domain_event.entity_type} {domain_event.entity_id}: {e}"
                             )
-                            # Continue without entity data - client can refetch if needed
-
-                    # Create EntityChangeSchema
                     change = EntityChangeSchema(
                         change_type=change_type,
                         entity_type=domain_event.entity_type,
@@ -657,7 +628,6 @@ async def _handle_realtime_events(
                         entity_data=entity_data,
                     )
 
-                    # Send to client via WebSocket
                     last_audit_log_timestamp = domain_event.occurred_at.isoformat()
 
                     response = WebSocketSyncResponseSchema(
@@ -677,7 +647,6 @@ async def _handle_realtime_events(
                     logger.error(
                         f"Failed to process domain event message: {deserialize_error}"
                     )
-                    # Continue loop to avoid breaking the connection on bad messages
 
         except Exception as e:
             logger.error(f"Error in real-time events handler: {e}")
