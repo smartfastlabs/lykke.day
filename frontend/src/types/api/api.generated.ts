@@ -4,7355 +4,7224 @@
  */
 
 export interface paths {
-  "/auth/login": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Auth:Cookie.Login */
-    post: operations["auth_cookie_login_auth_login_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/logout": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Auth:Cookie.Logout */
-    post: operations["auth_cookie_logout_auth_logout_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/register": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Register:Register */
-    post: operations["register_register_auth_register_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/forgot-password": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Reset:Forgot Password */
-    post: operations["reset_forgot_password_auth_forgot_password_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/reset-password": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Reset:Reset Password */
-    post: operations["reset_reset_password_auth_reset_password_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/early-access": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Request Early Access
-     * @description Capture lead contact as a user with status NEW_LEAD.
-     */
-    post: operations["request_early_access_early_access_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/google/login": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Google Login */
-    get: operations["google_login_google_login_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/google/callback/login": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Google Login Callback */
-    get: operations["google_login_callback_google_callback_login_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/google/webhook/{user_id}/{calendar_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Google Webhook
-     * @description Webhook endpoint for Google Calendar push notifications.
-     *
-     *     Google sends notifications to this endpoint when calendar events change.
-     *     The actual sync is performed asynchronously via a background task.
-     *
-     *     Args:
-     *         user_id: The user ID extracted from the webhook URL.
-     *         calendar_id: The calendar ID extracted from the webhook URL.
-     *
-     *     Headers:
-     *         X-Goog-Channel-Token: Secret token for webhook verification.
-     *         X-Goog-Resource-State: The type of change (sync, exists, not_exists).
-     *
-     *     Returns:
-     *         Empty 200 response to acknowledge receipt.
-     */
-    post: operations["google_webhook_google_webhook__user_id___calendar_id__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Current User Profile
-     * @description Return the currently authenticated user.
-     */
-    get: operations["get_current_user_profile_me_get"];
-    /**
-     * Update Current User Profile
-     * @description Update the current authenticated user.
-     */
-    put: operations["update_current_user_profile_me_put"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/me/base-personalities": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Base Personalities
-     * @description List available base personalities.
-     */
-    get: operations["list_base_personalities_me_base_personalities_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/me/today/reminders": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Add Reminder To Today
-     * @description Add a reminder to today.
-     */
-    post: operations["add_reminder_to_today_me_today_reminders_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/me/today/reminders/{reminder_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Remove Reminder From Today
-     * @description Remove a reminder from today.
-     */
-    delete: operations["remove_reminder_from_today_me_today_reminders__reminder_id__delete"];
-    options?: never;
-    head?: never;
-    /**
-     * Update Today Reminder Status
-     * @description Update a reminder's status for today.
-     */
-    patch: operations["update_today_reminder_status_me_today_reminders__reminder_id__patch"];
-    trace?: never;
-  };
-  "/me/today/alarms": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Add Alarm To Today
-     * @description Add an alarm to today.
-     */
-    post: operations["add_alarm_to_today_me_today_alarms_post"];
-    /**
-     * Remove Alarm From Today
-     * @description Remove an alarm from today.
-     */
-    delete: operations["remove_alarm_from_today_me_today_alarms_delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/me/today/alarms/{alarm_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update Alarm Status For Today
-     * @description Update an alarm's status for today.
-     */
-    patch: operations["update_alarm_status_for_today_me_today_alarms__alarm_id__patch"];
-    trace?: never;
-  };
-  "/me/today/brain-dump": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Add Brain Dump Item To Today
-     * @description Add a brain dump item to today.
-     */
-    post: operations["add_brain_dump_item_to_today_me_today_brain_dump_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/me/today/brain-dump/{item_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Remove Brain Dump Item From Today
-     * @description Remove a brain dump item from today.
-     */
-    delete: operations["remove_brain_dump_item_from_today_me_today_brain_dump__item_id__delete"];
-    options?: never;
-    head?: never;
-    /**
-     * Update Brain Dump Item Status
-     * @description Update a brain dump item's status for today.
-     */
-    patch: operations["update_brain_dump_item_status_me_today_brain_dump__item_id__patch"];
-    trace?: never;
-  };
-  "/me/today/routines": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Add Routine To Today
-     * @description Add a routine's tasks to today (creates today's routine if needed).
-     */
-    post: operations["add_routine_to_today_me_today_routines_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/brain-dump/{uuid}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Brain Dump Item
-     * @description Get a single brain dump item by ID.
-     */
-    get: operations["get_brain_dump_item_brain_dump__uuid__get"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete Brain Dump Item
-     * @description Delete a brain dump item.
-     */
-    delete: operations["delete_brain_dump_item_brain_dump__uuid__delete"];
-    options?: never;
-    head?: never;
-    /**
-     * Update Brain Dump Item
-     * @description Update a brain dump item's status or type.
-     */
-    patch: operations["update_brain_dump_item_brain_dump__uuid__patch"];
-    trace?: never;
-  };
-  "/brain-dump/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Brain Dump Items
-     * @description Search brain dump items with pagination and optional filters.
-     */
-    post: operations["search_brain_dump_items_brain_dump__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/brain-dump/create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Brain Dump Item
-     * @description Create a new brain dump item.
-     */
-    post: operations["create_brain_dump_item_brain_dump_create_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/factoids/{uuid}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Factoid
-     * @description Get a single factoid by ID.
-     */
-    get: operations["get_factoid_factoids__uuid__get"];
-    /**
-     * Update Factoid
-     * @description Update a factoid.
-     */
-    put: operations["update_factoid_factoids__uuid__put"];
-    post?: never;
-    /**
-     * Delete Factoid
-     * @description Delete a factoid.
-     */
-    delete: operations["delete_factoid_factoids__uuid__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/factoids/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Factoids
-     * @description Search factoids with pagination and optional filters.
-     */
-    post: operations["search_factoids_factoids__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/factoids/create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Factoid
-     * @description Create a new factoid.
-     */
-    post: operations["create_factoid_factoids_create_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/calendar-entry-series/{uuid}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Calendar Entry Series
-     * @description Get a single calendar entry series by ID.
-     */
-    get: operations["get_calendar_entry_series_calendar_entry_series__uuid__get"];
-    /**
-     * Update Calendar Entry Series
-     * @description Update a calendar entry series.
-     */
-    put: operations["update_calendar_entry_series_calendar_entry_series__uuid__put"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/calendar-entry-series/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Calendar Entry Series
-     * @description Search calendar entry series with pagination and optional filters.
-     */
-    post: operations["search_calendar_entry_series_calendar_entry_series__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/push-notifications/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Push Notifications
-     * @description Search push notifications with pagination and optional filters.
-     */
-    post: operations["search_push_notifications_push_notifications__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/push-notifications/{notification_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Push Notification
-     * @description Get a specific push notification by ID.
-     */
-    get: operations["get_push_notification_push_notifications__notification_id__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/push/subscriptions/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Subscriptions
-     * @description Search push subscriptions with pagination and optional filters.
-     */
-    post: operations["search_subscriptions_push_subscriptions__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/push/subscriptions/{subscription_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get Subscription */
-    get: operations["get_subscription_push_subscriptions__subscription_id__get"];
-    /** Update Subscription */
-    put: operations["update_subscription_push_subscriptions__subscription_id__put"];
-    post?: never;
-    /** Delete Subscription */
-    delete: operations["delete_subscription_push_subscriptions__subscription_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/push/subscribe/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Subscribe */
-    post: operations["subscribe_push_subscribe__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/push/test-push/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Send Test Push
-     * @description Send a test push notification to all user's subscribed devices.
-     *
-     *     Returns:
-     *         A dict with the count of devices that will receive the notification.
-     */
-    post: operations["send_test_push_push_test_push__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/tasks/{_id}/actions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Add Task Action
-     * @description Record an action on a task.
-     */
-    post: operations["add_task_action_tasks___id__actions_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/tasks/adhoc": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Adhoc Task
-     * @description Create an adhoc task.
-     */
-    post: operations["create_adhoc_task_tasks_adhoc_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/days/today/reschedule": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Reschedule Today
-     * @description Reschedule today by cleaning up and recreating all tasks.
-     */
-    put: operations["reschedule_today_days_today_reschedule_put"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/days/{day_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update Day
-     * @description Update a day.
-     */
-    patch: operations["update_day_days__day_id__patch"];
-    trace?: never;
-  };
-  "/days/kiosk/test-notification": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Send Test Kiosk Notification
-     * @description Send a test kiosk notification to all connected kiosks for the current user.
-     *
-     *     Returns:
-     *         A dict with a success message.
-     */
-    post: operations["send_test_kiosk_notification_days_kiosk_test_notification_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/day-templates/{uuid}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Day Template
-     * @description Get a single day template by ID.
-     */
-    get: operations["get_day_template_day_templates__uuid__get"];
-    /**
-     * Update Day Template
-     * @description Update a day template.
-     */
-    put: operations["update_day_template_day_templates__uuid__put"];
-    post?: never;
-    /**
-     * Delete Day Template
-     * @description Delete a day template.
-     */
-    delete: operations["delete_day_template_day_templates__uuid__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/day-templates/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Day Templates
-     * @description Search day templates with pagination and optional filters.
-     */
-    post: operations["search_day_templates_day_templates__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/day-templates/create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Day Template
-     * @description Create a new day template.
-     */
-    post: operations["create_day_template_day_templates_create_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/day-templates/{uuid}/routine-definitions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Add Day Template Routine Definition
-     * @description Attach a routine definition to a day template.
-     */
-    post: operations["add_day_template_routine_definition_day_templates__uuid__routine_definitions_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/day-templates/{uuid}/routine-definitions/{routine_definition_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Remove Day Template Routine Definition
-     * @description Detach a routine definition from a day template.
-     */
-    delete: operations["remove_day_template_routine_definition_day_templates__uuid__routine_definitions__routine_definition_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/day-templates/{uuid}/time-blocks": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Add Day Template Time Block
-     * @description Add a time block to a day template.
-     */
-    post: operations["add_day_template_time_block_day_templates__uuid__time_blocks_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/day-templates/{uuid}/time-blocks/{time_block_definition_id}/{start_time}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Remove Day Template Time Block
-     * @description Remove a time block from a day template.
-     */
-    delete: operations["remove_day_template_time_block_day_templates__uuid__time_blocks__time_block_definition_id___start_time__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/task-definitions/{uuid}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Task Definition
-     * @description Get a single task definition by ID.
-     */
-    get: operations["get_task_definition_task_definitions__uuid__get"];
-    /**
-     * Update Task Definition
-     * @description Update a task definition.
-     */
-    put: operations["update_task_definition_task_definitions__uuid__put"];
-    post?: never;
-    /**
-     * Delete Task Definition
-     * @description Delete a task definition.
-     */
-    delete: operations["delete_task_definition_task_definitions__uuid__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/task-definitions/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Task Definitions
-     * @description Search task definitions with pagination and optional filters.
-     */
-    post: operations["search_task_definitions_task_definitions__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/task-definitions/create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Task Definition
-     * @description Create a new task definition.
-     */
-    post: operations["create_task_definition_task_definitions_create_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/routine-definitions/{uuid}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Routine Definition
-     * @description Get a single routine definition by ID.
-     */
-    get: operations["get_routine_definition_routine_definitions__uuid__get"];
-    /**
-     * Update Routine Definition
-     * @description Update an existing routine definition.
-     */
-    put: operations["update_routine_definition_routine_definitions__uuid__put"];
-    post?: never;
-    /**
-     * Delete Routine Definition
-     * @description Delete a routine definition.
-     */
-    delete: operations["delete_routine_definition_routine_definitions__uuid__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/routine-definitions/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Routine Definitions
-     * @description Search routine definitions with pagination and optional filters.
-     */
-    post: operations["search_routine_definitions_routine_definitions__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/routine-definitions/create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Routine Definition
-     * @description Create a new routine definition.
-     */
-    post: operations["create_routine_definition_routine_definitions_create_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/routine-definitions/{uuid}/tasks": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Add Routine Definition Task
-     * @description Attach a task definition to a routine definition.
-     */
-    post: operations["add_routine_definition_task_routine_definitions__uuid__tasks_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/routine-definitions/{uuid}/tasks/{routine_definition_task_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update Routine Definition Task
-     * @description Update an attached routine definition task (name/schedule).
-     */
-    put: operations["update_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__put"];
-    post?: never;
-    /**
-     * Remove Routine Definition Task
-     * @description Detach a routine definition task from a routine definition by RoutineDefinitionTask.id.
-     */
-    delete: operations["remove_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/routine-definitions/{uuid}/actions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Record Routine Definition Action
-     * @description Record an action on all tasks in a routine definition for today.
-     */
-    post: operations["record_routine_definition_action_routine_definitions__uuid__actions_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/routines/{uuid}/actions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Record Routine Action
-     * @description Record an action on all tasks in a routine for today.
-     */
-    post: operations["record_routine_action_routines__uuid__actions_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/time-block-definitions/{uuid}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Time Block Definition
-     * @description Get a single time block definition by ID.
-     */
-    get: operations["get_time_block_definition_time_block_definitions__uuid__get"];
-    /**
-     * Update Time Block Definition
-     * @description Update an existing time block definition.
-     */
-    put: operations["update_time_block_definition_time_block_definitions__uuid__put"];
-    post?: never;
-    /**
-     * Delete Time Block Definition
-     * @description Delete a time block definition.
-     */
-    delete: operations["delete_time_block_definition_time_block_definitions__uuid__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/time-block-definitions/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Time Block Definitions
-     * @description Search time block definitions with pagination and optional filters.
-     */
-    post: operations["search_time_block_definitions_time_block_definitions__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/time-block-definitions/create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Time Block Definition
-     * @description Create a new time block definition.
-     */
-    post: operations["create_time_block_definition_time_block_definitions_create_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/triggers/defaults": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Default Triggers
-     * @description List default triggers available for import.
-     */
-    get: operations["list_default_triggers_triggers_defaults_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/triggers/import-defaults": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Import Default Triggers
-     * @description Import default triggers into the user's account.
-     */
-    post: operations["import_default_triggers_triggers_import_defaults_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/triggers/{uuid}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Trigger
-     * @description Get a single trigger by ID.
-     */
-    get: operations["get_trigger_triggers__uuid__get"];
-    /**
-     * Update Trigger
-     * @description Update a trigger.
-     */
-    put: operations["update_trigger_triggers__uuid__put"];
-    post?: never;
-    /**
-     * Delete Trigger
-     * @description Delete a trigger.
-     */
-    delete: operations["delete_trigger_triggers__uuid__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/triggers/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Triggers
-     * @description Search triggers with pagination and optional filters.
-     */
-    post: operations["search_triggers_triggers__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/triggers/create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Trigger
-     * @description Create a new trigger.
-     */
-    post: operations["create_trigger_triggers_create_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/triggers/{uuid}/tactics": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Trigger Tactics
-     * @description List tactics linked to a trigger.
-     */
-    get: operations["list_trigger_tactics_triggers__uuid__tactics_get"];
-    /**
-     * Update Trigger Tactics
-     * @description Replace all tactics linked to a trigger.
-     */
-    put: operations["update_trigger_tactics_triggers__uuid__tactics_put"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/tactics/defaults": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Default Tactics
-     * @description List default tactics available for import.
-     */
-    get: operations["list_default_tactics_tactics_defaults_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/tactics/import-defaults": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Import Default Tactics
-     * @description Import default tactics into the user's account.
-     */
-    post: operations["import_default_tactics_tactics_import_defaults_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/tactics/{uuid}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Tactic
-     * @description Get a single tactic by ID.
-     */
-    get: operations["get_tactic_tactics__uuid__get"];
-    /**
-     * Update Tactic
-     * @description Update a tactic.
-     */
-    put: operations["update_tactic_tactics__uuid__put"];
-    post?: never;
-    /**
-     * Delete Tactic
-     * @description Delete a tactic.
-     */
-    delete: operations["delete_tactic_tactics__uuid__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/tactics/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Tactics
-     * @description Search tactics with pagination and optional filters.
-     */
-    post: operations["search_tactics_tactics__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/tactics/create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Tactic
-     * @description Create a new tactic.
-     */
-    post: operations["create_tactic_tactics_create_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/calendars/{uuid}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Calendar
-     * @description Get a single calendar by ID.
-     */
-    get: operations["get_calendar_calendars__uuid__get"];
-    /**
-     * Update Calendar
-     * @description Update a calendar.
-     */
-    put: operations["update_calendar_calendars__uuid__put"];
-    post?: never;
-    /**
-     * Delete Calendar
-     * @description Delete a calendar.
-     */
-    delete: operations["delete_calendar_calendars__uuid__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/calendars/{uuid}/subscribe": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Subscribe Calendar
-     * @description Enable push notifications for a calendar.
-     */
-    post: operations["subscribe_calendar_calendars__uuid__subscribe_post"];
-    /**
-     * Unsubscribe Calendar
-     * @description Disable push notifications for a calendar.
-     */
-    delete: operations["unsubscribe_calendar_calendars__uuid__subscribe_delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/calendars/{uuid}/resync": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Resync Calendar
-     * @description Resubscribe and fully resync a calendar.
-     */
-    post: operations["resync_calendar_calendars__uuid__resync_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/calendars/reset-subscriptions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Reset Calendar Subscriptions
-     * @description Delete all calendar data and refresh subscriptions for the user.
-     */
-    post: operations["reset_calendar_subscriptions_calendars_reset_subscriptions_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/calendars/reset-sync": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Reset Calendar Sync
-     * @description Reset calendar sync: unsubscribe, delete future events, resubscribe, and sync.
-     *
-     *     This operation:
-     *     1. Unsubscribes all calendars that have syncing enabled
-     *     2. Deletes all future calendar entries for those calendars
-     *     3. Resubscribes to updates for all calendars that were previously subscribed
-     *     4. Performs initial sync for each calendar
-     */
-    post: operations["reset_calendar_sync_calendars_reset_sync_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/calendars/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search Calendars
-     * @description Search calendars with pagination and optional filters.
-     */
-    post: operations["search_calendars_calendars__post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/calendars/create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Calendar
-     * @description Create a new calendar.
-     */
-    post: operations["create_calendar_calendars_create_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/usecase-configs/{usecase}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Usecase Config
-     * @description Get usecase config by usecase key.
-     */
-    get: operations["get_usecase_config_usecase_configs__usecase__get"];
-    /**
-     * Update Usecase Config
-     * @description Create or update usecase config.
-     */
-    put: operations["update_usecase_config_usecase_configs__usecase__put"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/usecase-configs/{usecase}/llm-preview": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Llm Snapshot Preview
-     * @description Build a synthetic LLM snapshot preview for a usecase.
-     */
-    get: operations["get_llm_snapshot_preview_usecase_configs__usecase__llm_preview_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/usecase-configs/{usecase_config_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Delete Usecase Config
-     * @description Delete a usecase config.
-     */
-    delete: operations["delete_usecase_config_usecase_configs__usecase_config_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/twilio/webhook/sms": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Twilio Sms Webhook
-     * @description Webhook endpoint for inbound Twilio SMS messages.
-     */
-    post: operations["twilio_sms_webhook_twilio_webhook_sms_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/health": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Health Check
-     * @description Health check endpoint.
-     */
-    get: operations["health_check_health_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth:Cookie.Login */
+        post: operations["auth_cookie_login_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth:Cookie.Logout */
+        post: operations["auth_cookie_logout_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register:Register */
+        post: operations["register_register_auth_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset:Forgot Password */
+        post: operations["reset_forgot_password_auth_forgot_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset:Reset Password */
+        post: operations["reset_reset_password_auth_reset_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/early-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Early Access
+         * @description Capture lead contact as a user with status NEW_LEAD.
+         */
+        post: operations["request_early_access_early_access_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/google/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Google Login */
+        get: operations["google_login_google_login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/google/callback/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Google Login Callback */
+        get: operations["google_login_callback_google_callback_login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/google/webhook/{user_id}/{calendar_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Google Webhook
+         * @description Webhook endpoint for Google Calendar push notifications.
+         *
+         *     Google sends notifications to this endpoint when calendar events change.
+         *     The actual sync is performed asynchronously via a background task.
+         *
+         *     Args:
+         *         user_id: The user ID extracted from the webhook URL.
+         *         calendar_id: The calendar ID extracted from the webhook URL.
+         *
+         *     Headers:
+         *         X-Goog-Channel-Token: Secret token for webhook verification.
+         *         X-Goog-Resource-State: The type of change (sync, exists, not_exists).
+         *
+         *     Returns:
+         *         Empty 200 response to acknowledge receipt.
+         */
+        post: operations["google_webhook_google_webhook__user_id___calendar_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Current User Profile
+         * @description Return the currently authenticated user.
+         */
+        get: operations["get_current_user_profile_me_get"];
+        /**
+         * Update Current User Profile
+         * @description Update the current authenticated user.
+         */
+        put: operations["update_current_user_profile_me_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/base-personalities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Base Personalities
+         * @description List available base personalities.
+         */
+        get: operations["list_base_personalities_me_base_personalities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/today/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Reminder To Today
+         * @description Add a reminder to today.
+         */
+        post: operations["add_reminder_to_today_me_today_reminders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/today/reminders/{reminder_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Reminder From Today
+         * @description Remove a reminder from today.
+         */
+        delete: operations["remove_reminder_from_today_me_today_reminders__reminder_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Today Reminder Status
+         * @description Update a reminder's status for today.
+         */
+        patch: operations["update_today_reminder_status_me_today_reminders__reminder_id__patch"];
+        trace?: never;
+    };
+    "/me/today/alarms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Alarm To Today
+         * @description Add an alarm to today.
+         */
+        post: operations["add_alarm_to_today_me_today_alarms_post"];
+        /**
+         * Remove Alarm From Today
+         * @description Remove an alarm from today.
+         */
+        delete: operations["remove_alarm_from_today_me_today_alarms_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/today/alarms/{alarm_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Alarm Status For Today
+         * @description Update an alarm's status for today.
+         */
+        patch: operations["update_alarm_status_for_today_me_today_alarms__alarm_id__patch"];
+        trace?: never;
+    };
+    "/me/today/brain-dump": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Brain Dump To Today
+         * @description Add a brain dump to today.
+         */
+        post: operations["add_brain_dump_to_today_me_today_brain_dump_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/today/brain-dump/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Brain Dump From Today
+         * @description Remove a brain dump from today.
+         */
+        delete: operations["remove_brain_dump_from_today_me_today_brain_dump__item_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Brain Dump Status
+         * @description Update a brain dump's status for today.
+         */
+        patch: operations["update_brain_dump_status_me_today_brain_dump__item_id__patch"];
+        trace?: never;
+    };
+    "/me/today/routines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Routine To Today
+         * @description Add a routine's tasks to today (creates today's routine if needed).
+         */
+        post: operations["add_routine_to_today_me_today_routines_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/brain-dump/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Brain Dump
+         * @description Get a single brain dump by ID.
+         */
+        get: operations["get_brain_dump_brain_dump__uuid__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Brain Dump
+         * @description Delete a brain dump.
+         */
+        delete: operations["delete_brain_dump_brain_dump__uuid__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Brain Dump
+         * @description Update a brain dump's status or type.
+         */
+        patch: operations["update_brain_dump_brain_dump__uuid__patch"];
+        trace?: never;
+    };
+    "/brain-dump/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Brain Dumps
+         * @description Search brain dumps with pagination and optional filters.
+         */
+        post: operations["search_brain_dumps_brain_dump__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/brain-dump/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Brain Dump
+         * @description Create a new brain dump.
+         */
+        post: operations["create_brain_dump_brain_dump_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/factoids/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Factoid
+         * @description Get a single factoid by ID.
+         */
+        get: operations["get_factoid_factoids__uuid__get"];
+        /**
+         * Update Factoid
+         * @description Update a factoid.
+         */
+        put: operations["update_factoid_factoids__uuid__put"];
+        post?: never;
+        /**
+         * Delete Factoid
+         * @description Delete a factoid.
+         */
+        delete: operations["delete_factoid_factoids__uuid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/factoids/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Factoids
+         * @description Search factoids with pagination and optional filters.
+         */
+        post: operations["search_factoids_factoids__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/factoids/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Factoid
+         * @description Create a new factoid.
+         */
+        post: operations["create_factoid_factoids_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendar-entry-series/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Calendar Entry Series
+         * @description Get a single calendar entry series by ID.
+         */
+        get: operations["get_calendar_entry_series_calendar_entry_series__uuid__get"];
+        /**
+         * Update Calendar Entry Series
+         * @description Update a calendar entry series.
+         */
+        put: operations["update_calendar_entry_series_calendar_entry_series__uuid__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendar-entry-series/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Calendar Entry Series
+         * @description Search calendar entry series with pagination and optional filters.
+         */
+        post: operations["search_calendar_entry_series_calendar_entry_series__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push-notifications/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Push Notifications
+         * @description Search push notifications with pagination and optional filters.
+         */
+        post: operations["search_push_notifications_push_notifications__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push-notifications/{notification_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Push Notification
+         * @description Get a specific push notification by ID.
+         */
+        get: operations["get_push_notification_push_notifications__notification_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/subscriptions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Subscriptions
+         * @description Search push subscriptions with pagination and optional filters.
+         */
+        post: operations["search_subscriptions_push_subscriptions__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/subscriptions/{subscription_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Subscription */
+        get: operations["get_subscription_push_subscriptions__subscription_id__get"];
+        /** Update Subscription */
+        put: operations["update_subscription_push_subscriptions__subscription_id__put"];
+        post?: never;
+        /** Delete Subscription */
+        delete: operations["delete_subscription_push_subscriptions__subscription_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/subscribe/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Subscribe */
+        post: operations["subscribe_push_subscribe__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/test-push/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Test Push
+         * @description Send a test push notification to all user's subscribed devices.
+         *
+         *     Returns:
+         *         A dict with the count of devices that will receive the notification.
+         */
+        post: operations["send_test_push_push_test_push__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tasks/{_id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Task Action
+         * @description Record an action on a task.
+         */
+        post: operations["add_task_action_tasks___id__actions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tasks/adhoc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Adhoc Task
+         * @description Create an adhoc task.
+         */
+        post: operations["create_adhoc_task_tasks_adhoc_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/days/today/reschedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Reschedule Today
+         * @description Reschedule today by cleaning up and recreating all tasks.
+         */
+        put: operations["reschedule_today_days_today_reschedule_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/days/{day_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Day
+         * @description Update a day.
+         */
+        patch: operations["update_day_days__day_id__patch"];
+        trace?: never;
+    };
+    "/days/kiosk/test-notification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Test Kiosk Notification
+         * @description Send a test kiosk notification to all connected kiosks for the current user.
+         *
+         *     Returns:
+         *         A dict with a success message.
+         */
+        post: operations["send_test_kiosk_notification_days_kiosk_test_notification_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/day-templates/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Day Template
+         * @description Get a single day template by ID.
+         */
+        get: operations["get_day_template_day_templates__uuid__get"];
+        /**
+         * Update Day Template
+         * @description Update a day template.
+         */
+        put: operations["update_day_template_day_templates__uuid__put"];
+        post?: never;
+        /**
+         * Delete Day Template
+         * @description Delete a day template.
+         */
+        delete: operations["delete_day_template_day_templates__uuid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/day-templates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Day Templates
+         * @description Search day templates with pagination and optional filters.
+         */
+        post: operations["search_day_templates_day_templates__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/day-templates/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Day Template
+         * @description Create a new day template.
+         */
+        post: operations["create_day_template_day_templates_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/day-templates/{uuid}/routine-definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Day Template Routine Definition
+         * @description Attach a routine definition to a day template.
+         */
+        post: operations["add_day_template_routine_definition_day_templates__uuid__routine_definitions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/day-templates/{uuid}/routine-definitions/{routine_definition_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Day Template Routine Definition
+         * @description Detach a routine definition from a day template.
+         */
+        delete: operations["remove_day_template_routine_definition_day_templates__uuid__routine_definitions__routine_definition_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/day-templates/{uuid}/time-blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Day Template Time Block
+         * @description Add a time block to a day template.
+         */
+        post: operations["add_day_template_time_block_day_templates__uuid__time_blocks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/day-templates/{uuid}/time-blocks/{time_block_definition_id}/{start_time}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Day Template Time Block
+         * @description Remove a time block from a day template.
+         */
+        delete: operations["remove_day_template_time_block_day_templates__uuid__time_blocks__time_block_definition_id___start_time__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/task-definitions/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Task Definition
+         * @description Get a single task definition by ID.
+         */
+        get: operations["get_task_definition_task_definitions__uuid__get"];
+        /**
+         * Update Task Definition
+         * @description Update a task definition.
+         */
+        put: operations["update_task_definition_task_definitions__uuid__put"];
+        post?: never;
+        /**
+         * Delete Task Definition
+         * @description Delete a task definition.
+         */
+        delete: operations["delete_task_definition_task_definitions__uuid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/task-definitions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Task Definitions
+         * @description Search task definitions with pagination and optional filters.
+         */
+        post: operations["search_task_definitions_task_definitions__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/task-definitions/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Task Definition
+         * @description Create a new task definition.
+         */
+        post: operations["create_task_definition_task_definitions_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routine-definitions/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Routine Definition
+         * @description Get a single routine definition by ID.
+         */
+        get: operations["get_routine_definition_routine_definitions__uuid__get"];
+        /**
+         * Update Routine Definition
+         * @description Update an existing routine definition.
+         */
+        put: operations["update_routine_definition_routine_definitions__uuid__put"];
+        post?: never;
+        /**
+         * Delete Routine Definition
+         * @description Delete a routine definition.
+         */
+        delete: operations["delete_routine_definition_routine_definitions__uuid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routine-definitions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Routine Definitions
+         * @description Search routine definitions with pagination and optional filters.
+         */
+        post: operations["search_routine_definitions_routine_definitions__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routine-definitions/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Routine Definition
+         * @description Create a new routine definition.
+         */
+        post: operations["create_routine_definition_routine_definitions_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routine-definitions/{uuid}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Routine Definition Task
+         * @description Attach a task definition to a routine definition.
+         */
+        post: operations["add_routine_definition_task_routine_definitions__uuid__tasks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routine-definitions/{uuid}/tasks/{routine_definition_task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Routine Definition Task
+         * @description Update an attached routine definition task (name/schedule).
+         */
+        put: operations["update_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__put"];
+        post?: never;
+        /**
+         * Remove Routine Definition Task
+         * @description Detach a routine definition task from a routine definition by RoutineDefinitionTask.id.
+         */
+        delete: operations["remove_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routine-definitions/{uuid}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Routine Definition Action
+         * @description Record an action on all tasks in a routine definition for today.
+         */
+        post: operations["record_routine_definition_action_routine_definitions__uuid__actions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routines/{uuid}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Routine Action
+         * @description Record an action on all tasks in a routine for today.
+         */
+        post: operations["record_routine_action_routines__uuid__actions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/time-block-definitions/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Time Block Definition
+         * @description Get a single time block definition by ID.
+         */
+        get: operations["get_time_block_definition_time_block_definitions__uuid__get"];
+        /**
+         * Update Time Block Definition
+         * @description Update an existing time block definition.
+         */
+        put: operations["update_time_block_definition_time_block_definitions__uuid__put"];
+        post?: never;
+        /**
+         * Delete Time Block Definition
+         * @description Delete a time block definition.
+         */
+        delete: operations["delete_time_block_definition_time_block_definitions__uuid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/time-block-definitions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Time Block Definitions
+         * @description Search time block definitions with pagination and optional filters.
+         */
+        post: operations["search_time_block_definitions_time_block_definitions__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/time-block-definitions/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Time Block Definition
+         * @description Create a new time block definition.
+         */
+        post: operations["create_time_block_definition_time_block_definitions_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/triggers/defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Default Triggers
+         * @description List default triggers available for import.
+         */
+        get: operations["list_default_triggers_triggers_defaults_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/triggers/import-defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Default Triggers
+         * @description Import default triggers into the user's account.
+         */
+        post: operations["import_default_triggers_triggers_import_defaults_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/triggers/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Trigger
+         * @description Get a single trigger by ID.
+         */
+        get: operations["get_trigger_triggers__uuid__get"];
+        /**
+         * Update Trigger
+         * @description Update a trigger.
+         */
+        put: operations["update_trigger_triggers__uuid__put"];
+        post?: never;
+        /**
+         * Delete Trigger
+         * @description Delete a trigger.
+         */
+        delete: operations["delete_trigger_triggers__uuid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/triggers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Triggers
+         * @description Search triggers with pagination and optional filters.
+         */
+        post: operations["search_triggers_triggers__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/triggers/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Trigger
+         * @description Create a new trigger.
+         */
+        post: operations["create_trigger_triggers_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/triggers/{uuid}/tactics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Trigger Tactics
+         * @description List tactics linked to a trigger.
+         */
+        get: operations["list_trigger_tactics_triggers__uuid__tactics_get"];
+        /**
+         * Update Trigger Tactics
+         * @description Replace all tactics linked to a trigger.
+         */
+        put: operations["update_trigger_tactics_triggers__uuid__tactics_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tactics/defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Default Tactics
+         * @description List default tactics available for import.
+         */
+        get: operations["list_default_tactics_tactics_defaults_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tactics/import-defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Default Tactics
+         * @description Import default tactics into the user's account.
+         */
+        post: operations["import_default_tactics_tactics_import_defaults_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tactics/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Tactic
+         * @description Get a single tactic by ID.
+         */
+        get: operations["get_tactic_tactics__uuid__get"];
+        /**
+         * Update Tactic
+         * @description Update a tactic.
+         */
+        put: operations["update_tactic_tactics__uuid__put"];
+        post?: never;
+        /**
+         * Delete Tactic
+         * @description Delete a tactic.
+         */
+        delete: operations["delete_tactic_tactics__uuid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tactics/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Tactics
+         * @description Search tactics with pagination and optional filters.
+         */
+        post: operations["search_tactics_tactics__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tactics/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Tactic
+         * @description Create a new tactic.
+         */
+        post: operations["create_tactic_tactics_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendars/{uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Calendar
+         * @description Get a single calendar by ID.
+         */
+        get: operations["get_calendar_calendars__uuid__get"];
+        /**
+         * Update Calendar
+         * @description Update a calendar.
+         */
+        put: operations["update_calendar_calendars__uuid__put"];
+        post?: never;
+        /**
+         * Delete Calendar
+         * @description Delete a calendar.
+         */
+        delete: operations["delete_calendar_calendars__uuid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendars/{uuid}/subscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Subscribe Calendar
+         * @description Enable push notifications for a calendar.
+         */
+        post: operations["subscribe_calendar_calendars__uuid__subscribe_post"];
+        /**
+         * Unsubscribe Calendar
+         * @description Disable push notifications for a calendar.
+         */
+        delete: operations["unsubscribe_calendar_calendars__uuid__subscribe_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendars/{uuid}/resync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resync Calendar
+         * @description Resubscribe and fully resync a calendar.
+         */
+        post: operations["resync_calendar_calendars__uuid__resync_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendars/reset-subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Calendar Subscriptions
+         * @description Delete all calendar data and refresh subscriptions for the user.
+         */
+        post: operations["reset_calendar_subscriptions_calendars_reset_subscriptions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendars/reset-sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Calendar Sync
+         * @description Reset calendar sync: unsubscribe, delete future events, resubscribe, and sync.
+         *
+         *     This operation:
+         *     1. Unsubscribes all calendars that have syncing enabled
+         *     2. Deletes all future calendar entries for those calendars
+         *     3. Resubscribes to updates for all calendars that were previously subscribed
+         *     4. Performs initial sync for each calendar
+         */
+        post: operations["reset_calendar_sync_calendars_reset_sync_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendars/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Calendars
+         * @description Search calendars with pagination and optional filters.
+         */
+        post: operations["search_calendars_calendars__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendars/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Calendar
+         * @description Create a new calendar.
+         */
+        post: operations["create_calendar_calendars_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/usecase-configs/{usecase}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Usecase Config
+         * @description Get usecase config by usecase key.
+         */
+        get: operations["get_usecase_config_usecase_configs__usecase__get"];
+        /**
+         * Update Usecase Config
+         * @description Create or update usecase config.
+         */
+        put: operations["update_usecase_config_usecase_configs__usecase__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/usecase-configs/{usecase}/llm-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Llm Snapshot Preview
+         * @description Build a synthetic LLM snapshot preview for a usecase.
+         */
+        get: operations["get_llm_snapshot_preview_usecase_configs__usecase__llm_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/usecase-configs/{usecase_config_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Usecase Config
+         * @description Delete a usecase config.
+         */
+        delete: operations["delete_usecase_config_usecase_configs__usecase_config_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/twilio/webhook/sms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Twilio Sms Webhook
+         * @description Webhook endpoint for inbound Twilio SMS messages.
+         */
+        post: operations["twilio_sms_webhook_twilio_webhook_sms_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health Check
+         * @description Health check endpoint.
+         */
+        get: operations["health_check_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** Action */
-    Action: {
-      type: components["schemas"]["ActionType"];
-      /** Data */
-      data?: {
-        [key: string]: unknown;
-      };
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at?: string;
-    };
-    /**
-     * ActionSchema
-     * @description API schema for Action value object.
-     */
-    ActionSchema: {
-      /** Id */
-      id?: string | null;
-      type: components["schemas"]["ActionType"];
-      /** Data */
-      data?: {
-        [key: string]: string;
-      };
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-    };
-    /**
-     * ActionType
-     * @enum {string}
-     */
-    ActionType:
-      | "COMPLETE"
-      | "DELETE"
-      | "EDIT"
-      | "NOTIFY"
-      | "PAUSE"
-      | "PUNT"
-      | "RESUME"
-      | "SNOOZE"
-      | "START"
-      | "VIEW";
-    /**
-     * AdhocTaskCreateSchema
-     * @description API schema for creating adhoc tasks.
-     */
-    AdhocTaskCreateSchema: {
-      /**
-       * Scheduled Date
-       * Format: date
-       */
-      scheduled_date: string;
-      /** Name */
-      name: string;
-      /** Description */
-      description?: string | null;
-      category: components["schemas"]["TaskCategory"];
-      time_window?: components["schemas"]["TimeWindowSchema"] | null;
-      /** Tags */
-      tags?: components["schemas"]["TaskTag"][];
-    };
-    /**
-     * AlarmPresetSchema
-     * @description API schema for an alarm preset stored in user settings.
-     */
-    AlarmPresetSchema: {
-      /** Id */
-      id?: string | null;
-      /** Name */
-      name?: string | null;
-      /** Time */
-      time?: string | null;
-      /** @default URL */
-      type: components["schemas"]["AlarmType"];
-      /**
-       * Url
-       * @default
-       */
-      url: string;
-    };
-    /**
-     * AlarmSchema
-     * @description API schema for Alarm value object.
-     */
-    AlarmSchema: {
-      /** Id */
-      id?: string | null;
-      /** Name */
-      name: string;
-      /**
-       * Time
-       * Format: time
-       */
-      time: string;
-      /** Datetime */
-      datetime?: string | null;
-      type: components["schemas"]["AlarmType"];
-      /** Url */
-      url: string;
-      /** @default ACTIVE */
-      status: components["schemas"]["AlarmStatus"];
-      /** Snoozed Until */
-      snoozed_until?: string | null;
-    };
-    /**
-     * AlarmStatus
-     * @description Status of an alarm.
-     * @enum {string}
-     */
-    AlarmStatus: "ACTIVE" | "TRIGGERED" | "SNOOZED" | "CANCELLED";
-    /**
-     * AlarmType
-     * @description Type of alarm behavior.
-     * @enum {string}
-     */
-    AlarmType: "URL" | "GENERIC";
-    /**
-     * BasePersonalitySchema
-     * @description Schema for base personality metadata.
-     */
-    BasePersonalitySchema: {
-      /** Slug */
-      slug: string;
-      /** Label */
-      label: string;
-    };
-    /** Body_auth_cookie_login_auth_login_post */
-    Body_auth_cookie_login_auth_login_post: {
-      /** Grant Type */
-      grant_type?: string | null;
-      /** Username */
-      username: string;
-      /**
-       * Password
-       * Format: password
-       */
-      password: string;
-      /**
-       * Scope
-       * @default
-       */
-      scope: string;
-      /** Client Id */
-      client_id?: string | null;
-      /**
-       * Client Secret
-       * Format: password
-       */
-      client_secret?: string | null;
-    };
-    /** Body_reset_forgot_password_auth_forgot_password_post */
-    Body_reset_forgot_password_auth_forgot_password_post: {
-      /**
-       * Email
-       * Format: email
-       */
-      email: string;
-    };
-    /** Body_reset_reset_password_auth_reset_password_post */
-    Body_reset_reset_password_auth_reset_password_post: {
-      /** Token */
-      token: string;
-      /** Password */
-      password: string;
-    };
-    /**
-     * BrainDumpItemCreateSchema
-     * @description API schema for creating brain dump items.
-     */
-    BrainDumpItemCreateSchema: {
-      /**
-       * Date
-       * Format: date
-       */
-      date: string;
-      /** Text */
-      text: string;
-    };
-    /**
-     * BrainDumpItemSchema
-     * @description API schema for BrainDump entity.
-     */
-    BrainDumpItemSchema: {
-      /** Id */
-      id?: string | null;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-      /**
-       * Date
-       * Format: date
-       */
-      date: string;
-      /** Text */
-      text: string;
-      status: components["schemas"]["BrainDumpItemStatus"];
-      type: components["schemas"]["BrainDumpItemType"];
-      /** Created At */
-      created_at?: string | null;
-      /** Llm Run Result */
-      llm_run_result?: {
-        [key: string]: unknown;
-      } | null;
-    };
-    /**
-     * BrainDumpItemStatus
-     * @description Status of a brain dump item.
-     * @enum {string}
-     */
-    BrainDumpItemStatus: "ACTIVE" | "COMPLETE" | "PUNT";
-    /**
-     * BrainDumpItemType
-     * @description Type of a brain dump item.
-     * @enum {string}
-     */
-    BrainDumpItemType: "GENERAL" | "COMMAND";
-    /**
-     * BrainDumpItemUpdateSchema
-     * @description API schema for updating a brain dump item.
-     */
-    BrainDumpItemUpdateSchema: {
-      status?: components["schemas"]["BrainDumpItemStatus"] | null;
-      type?: components["schemas"]["BrainDumpItemType"] | null;
-    };
-    /** BrainDumpQuery */
-    BrainDumpQuery: {
-      /** Limit */
-      limit?: number | null;
-      /** Offset */
-      offset?: number | null;
-      /** Order By */
-      order_by?: string | null;
-      /** Order By Desc */
-      order_by_desc?: boolean | null;
-      /** Created Before */
-      created_before?: string | null;
-      /** Created After */
-      created_after?: string | null;
-      /** Date */
-      date?: string | null;
-      status?: components["schemas"]["BrainDumpItemStatus"] | null;
-      type?: components["schemas"]["BrainDumpItemType"] | null;
-    };
-    /**
-     * CalendarCreateSchema
-     * @description API schema for creating a Calendar entity.
-     */
-    CalendarCreateSchema: {
-      /** Name */
-      name: string;
-      /**
-       * Auth Token Id
-       * Format: uuid
-       */
-      auth_token_id: string;
-      /** Platform Id */
-      platform_id: string;
-      /** Platform */
-      platform: string;
-      /** Last Sync At */
-      last_sync_at?: string | null;
-      default_event_category?: components["schemas"]["EventCategory"] | null;
-    };
-    /**
-     * CalendarEntrySchema
-     * @description API schema for CalendarEntry entity.
-     */
-    CalendarEntrySchema: {
-      /** Id */
-      id?: string | null;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-      /** Name */
-      name: string;
-      /**
-       * Calendar Id
-       * Format: uuid
-       */
-      calendar_id: string;
-      /** Platform Id */
-      platform_id: string;
-      /** Platform */
-      platform: string;
-      /** Status */
-      status: string;
-      /**
-       * Starts At
-       * Format: date-time
-       */
-      starts_at: string;
-      frequency: components["schemas"]["TaskFrequency"];
-      category?: components["schemas"]["EventCategory"] | null;
-      /** Ends At */
-      ends_at?: string | null;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
-      /** Actions */
-      actions?: components["schemas"]["ActionSchema"][];
-      /**
-       * Date
-       * Format: date
-       */
-      date: string;
-    };
-    /** CalendarEntrySeriesQuery */
-    CalendarEntrySeriesQuery: {
-      /** Limit */
-      limit?: number | null;
-      /** Offset */
-      offset?: number | null;
-      /** Order By */
-      order_by?: string | null;
-      /** Order By Desc */
-      order_by_desc?: boolean | null;
-      /** Created Before */
-      created_before?: string | null;
-      /** Created After */
-      created_after?: string | null;
-      /** Calendar Id */
-      calendar_id?: string | null;
-      /** Platform Id */
-      platform_id?: string | null;
-    };
-    /**
-     * CalendarEntrySeriesSchema
-     * @description API schema for CalendarEntrySeries entity.
-     */
-    CalendarEntrySeriesSchema: {
-      /** Id */
-      id?: string | null;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-      /**
-       * Calendar Id
-       * Format: uuid
-       */
-      calendar_id: string;
-      /** Name */
-      name: string;
-      /** Platform Id */
-      platform_id: string;
-      /** Platform */
-      platform: string;
-      frequency: components["schemas"]["TaskFrequency"];
-      event_category?: components["schemas"]["EventCategory"] | null;
-      /** Recurrence */
-      recurrence?: string[];
-      /** Starts At */
-      starts_at?: string | null;
-      /** Ends At */
-      ends_at?: string | null;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
-    };
-    /**
-     * CalendarEntrySeriesUpdateSchema
-     * @description API schema for updating a CalendarEntrySeries.
-     */
-    CalendarEntrySeriesUpdateSchema: {
-      /** Name */
-      name?: string | null;
-      event_category?: components["schemas"]["EventCategory"] | null;
-    };
-    /** CalendarQuery */
-    CalendarQuery: {
-      /** Limit */
-      limit?: number | null;
-      /** Offset */
-      offset?: number | null;
-      /** Order By */
-      order_by?: string | null;
-      /** Order By Desc */
-      order_by_desc?: boolean | null;
-      /** Created Before */
-      created_before?: string | null;
-      /** Created After */
-      created_after?: string | null;
-      /** Subscription Id */
-      subscription_id?: string | null;
-      /** Resource Id */
-      resource_id?: string | null;
-      /** Platform Id */
-      platform_id?: string | null;
-    };
-    /**
-     * CalendarSchema
-     * @description API schema for Calendar entity.
-     */
-    CalendarSchema: {
-      /** Id */
-      id?: string | null;
-      /** Name */
-      name: string;
-      /**
-       * Auth Token Id
-       * Format: uuid
-       */
-      auth_token_id: string;
-      /** Platform Id */
-      platform_id: string;
-      /** Platform */
-      platform: string;
-      /** Last Sync At */
-      last_sync_at?: string | null;
-      default_event_category?: components["schemas"]["EventCategory"] | null;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-      sync_subscription?:
-        | components["schemas"]["SyncSubscriptionSchema"]
-        | null;
-      /** Sync Subscription Id */
-      sync_subscription_id?: string | null;
-      /**
-       * Sync Enabled
-       * @default false
-       */
-      sync_enabled: boolean;
-    };
-    /**
-     * CalendarUpdateSchema
-     * @description API schema for Calendar update requests.
-     */
-    CalendarUpdateSchema: {
-      /** Name */
-      name?: string | null;
-      /** Auth Token Id */
-      auth_token_id?: string | null;
-      default_event_category?: components["schemas"]["EventCategory"] | null;
-      /** Last Sync At */
-      last_sync_at?: string | null;
-    };
-    /**
-     * DayContextSchema
-     * @description API schema for DayContext value object.
-     */
-    DayContextSchema: {
-      day: components["schemas"]["DaySchema"];
-      /** Calendar Entries */
-      calendar_entries?: components["schemas"]["CalendarEntrySchema"][];
-      /** Tasks */
-      tasks?: components["schemas"]["TaskSchema"][];
-      /** Routines */
-      routines?: components["schemas"]["RoutineSchema"][];
-    };
-    /**
-     * DayOfWeek
-     * @enum {integer}
-     */
-    DayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6;
-    /**
-     * DaySchema
-     * @description API schema for Day entity.
-     */
-    DaySchema: {
-      /** Id */
-      id?: string | null;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-      /**
-       * Date
-       * Format: date
-       */
-      date: string;
-      status: components["schemas"]["DayStatus"];
-      /** Scheduled At */
-      scheduled_at?: string | null;
-      /** Starts At */
-      starts_at?: string | null;
-      /** Ends At */
-      ends_at?: string | null;
-      /** Tags */
-      tags?: components["schemas"]["DayTag"][];
-      template?: components["schemas"]["DayTemplateSchema"] | null;
-      /** Reminders */
-      reminders?: components["schemas"]["ReminderSchema"][];
-      /** Alarms */
-      alarms?: components["schemas"]["AlarmSchema"][];
-      /** Brain Dump Items */
-      brain_dump_items?: components["schemas"]["BrainDumpItemSchema"][];
-      high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
-    };
-    /**
-     * DayStatus
-     * @enum {string}
-     */
-    DayStatus: "UNSCHEDULED" | "SCHEDULED" | "STARTED" | "COMPLETE";
-    /**
-     * DayTag
-     * @enum {string}
-     */
-    DayTag: "WEEKEND" | "VACATION" | "WORKDAY";
-    /**
-     * DayTemplateCreateSchema
-     * @description API schema for creating a DayTemplate entity.
-     */
-    DayTemplateCreateSchema: {
-      /** Slug */
-      slug: string;
-      /** Start Time */
-      start_time?: string | null;
-      /** End Time */
-      end_time?: string | null;
-      /** Icon */
-      icon?: string | null;
-      /** Routine Definition Ids */
-      routine_definition_ids?: string[];
-      /** Time Blocks */
-      time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][];
-      /** Alarms */
-      alarms?: components["schemas"]["AlarmSchema"][];
-      high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
-    };
-    /** DayTemplateQuery */
-    DayTemplateQuery: {
-      /** Limit */
-      limit?: number | null;
-      /** Offset */
-      offset?: number | null;
-      /** Order By */
-      order_by?: string | null;
-      /** Order By Desc */
-      order_by_desc?: boolean | null;
-      /** Created Before */
-      created_before?: string | null;
-      /** Created After */
-      created_after?: string | null;
-      /** Slug */
-      slug?: string | null;
-    };
-    /**
-     * DayTemplateRoutineDefinitionCreateSchema
-     * @description API schema for attaching a routine definition to a day template.
-     */
-    DayTemplateRoutineDefinitionCreateSchema: {
-      /**
-       * Routine Definition Id
-       * Format: uuid
-       */
-      routine_definition_id: string;
-    };
-    /**
-     * DayTemplateSchema
-     * @description API schema for DayTemplate entity.
-     */
-    DayTemplateSchema: {
-      /** Id */
-      id?: string | null;
-      /** Slug */
-      slug: string;
-      /** Start Time */
-      start_time?: string | null;
-      /** End Time */
-      end_time?: string | null;
-      /** Icon */
-      icon?: string | null;
-      /** Routine Definition Ids */
-      routine_definition_ids?: string[];
-      /** Time Blocks */
-      time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][];
-      /** Alarms */
-      alarms?: components["schemas"]["AlarmSchema"][];
-      high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-    };
-    /**
-     * DayTemplateTimeBlockCreateSchema
-     * @description API schema for adding a time block to a day template.
-     */
-    DayTemplateTimeBlockCreateSchema: {
-      /**
-       * Time Block Definition Id
-       * Format: uuid
-       */
-      time_block_definition_id: string;
-      /**
-       * Start Time
-       * Format: time
-       */
-      start_time: string;
-      /**
-       * End Time
-       * Format: time
-       */
-      end_time: string;
-    };
-    /**
-     * DayTemplateTimeBlockSchema
-     * @description API schema for a time block in a day template.
-     */
-    DayTemplateTimeBlockSchema: {
-      /**
-       * Time Block Definition Id
-       * Format: uuid
-       */
-      time_block_definition_id: string;
-      /**
-       * Start Time
-       * Format: time
-       */
-      start_time: string;
-      /**
-       * End Time
-       * Format: time
-       */
-      end_time: string;
-      /** Name */
-      name: string;
-    };
-    /**
-     * DayTemplateUpdateSchema
-     * @description API schema for DayTemplate update requests.
-     */
-    DayTemplateUpdateSchema: {
-      /** Slug */
-      slug?: string | null;
-      /** Start Time */
-      start_time?: string | null;
-      /** End Time */
-      end_time?: string | null;
-      /** Icon */
-      icon?: string | null;
-      /** Routine Definition Ids */
-      routine_definition_ids?: string[] | null;
-      /** Time Blocks */
-      time_blocks?:
-        | components["schemas"]["DayTemplateTimeBlockSchema"][]
-        | null;
-      /** Alarms */
-      alarms?: components["schemas"]["AlarmSchema"][] | null;
-      high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
-    };
-    /**
-     * DayUpdateSchema
-     * @description API schema for Day update requests.
-     */
-    DayUpdateSchema: {
-      status?: components["schemas"]["DayStatus"] | null;
-      /** Scheduled At */
-      scheduled_at?: string | null;
-      /** Tags */
-      tags?: components["schemas"]["DayTag"][] | null;
-      /** Template Id */
-      template_id?: string | null;
-      /** Alarms */
-      alarms?: components["schemas"]["AlarmSchema"][] | null;
-      high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
-    };
-    /**
-     * EarlyAccessRequestSchema
-     * @description Request body for early access opt-in.
-     */
-    EarlyAccessRequestSchema: {
-      /**
-       * Email
-       * Format: email
-       */
-      email: string;
-    };
-    /** ErrorModel */
-    ErrorModel: {
-      /** Detail */
-      detail:
-        | string
-        | {
-            [key: string]: string;
-          };
-    };
-    /**
-     * EventCategory
-     * @enum {string}
-     */
-    EventCategory: "WORK" | "PERSONAL" | "FAMILY" | "SOCIAL" | "OTHER";
-    /**
-     * FactoidCreateSchema
-     * @description API schema for creating a Factoid entity.
-     */
-    FactoidCreateSchema: {
-      /** Content */
-      content: string;
-      /** @default semantic */
-      factoid_type: components["schemas"]["FactoidType"];
-      /** @default normal */
-      criticality: components["schemas"]["FactoidCriticality"];
-      /** Conversation Id */
-      conversation_id?: string | null;
-      /**
-       * Ai Suggested
-       * @default false
-       */
-      ai_suggested: boolean;
-      /**
-       * User Confirmed
-       * @default true
-       */
-      user_confirmed: boolean;
-    };
-    /**
-     * FactoidCriticality
-     * @description Criticality level of a factoid.
-     * @enum {string}
-     */
-    FactoidCriticality: "normal" | "important" | "critical";
-    /** FactoidQuery */
-    FactoidQuery: {
-      /** Limit */
-      limit?: number | null;
-      /** Offset */
-      offset?: number | null;
-      /** Order By */
-      order_by?: string | null;
-      /** Order By Desc */
-      order_by_desc?: boolean | null;
-      /** Created Before */
-      created_before?: string | null;
-      /** Created After */
-      created_after?: string | null;
-      /** Conversation Id */
-      conversation_id?: string | null;
-      /** Factoid Type */
-      factoid_type?: string | null;
-      /** Criticality */
-      criticality?: string | null;
-      /** Is Global */
-      is_global?: boolean | null;
-    };
-    /**
-     * FactoidSchema
-     * @description Schema for Factoid entity.
-     */
-    FactoidSchema: {
-      /** Id */
-      id?: string | null;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-      /** Conversation Id */
-      conversation_id?: string | null;
-      /** Factoid Type */
-      factoid_type: string;
-      /** Criticality */
-      criticality: string;
-      /** Content */
-      content: string;
-      /** Embedding */
-      embedding?: number[] | null;
-      /**
-       * Ai Suggested
-       * @default false
-       */
-      ai_suggested: boolean;
-      /**
-       * User Confirmed
-       * @default false
-       */
-      user_confirmed: boolean;
-      /**
-       * Last Accessed
-       * Format: date-time
-       */
-      last_accessed: string;
-      /**
-       * Access Count
-       * @default 0
-       */
-      access_count: number;
-      /** Meta */
-      meta?: {
-        [key: string]: unknown;
-      };
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-    };
-    /**
-     * FactoidType
-     * @description Type of factoid/memory stored.
-     * @enum {string}
-     */
-    FactoidType: "episodic" | "semantic" | "procedural";
-    /**
-     * FactoidUpdateSchema
-     * @description API schema for Factoid update requests.
-     */
-    FactoidUpdateSchema: {
-      /** Content */
-      content?: string | null;
-      factoid_type?: components["schemas"]["FactoidType"] | null;
-      criticality?: components["schemas"]["FactoidCriticality"] | null;
-      /** Conversation Id */
-      conversation_id?: string | null;
-      /** User Confirmed */
-      user_confirmed?: boolean | null;
-    };
-    /** HTTPValidationError */
-    HTTPValidationError: {
-      /** Detail */
-      detail?: components["schemas"]["ValidationError"][];
-    };
-    /**
-     * HighLevelPlanSchema
-     * @description API schema for high level plan value object.
-     */
-    HighLevelPlanSchema: {
-      /** Title */
-      title?: string | null;
-      /** Text */
-      text?: string | null;
-      /** Intentions */
-      intentions?: string[];
-    };
-    /**
-     * LLMProvider
-     * @description LLM provider for generating responses.
-     * @enum {string}
-     */
-    LLMProvider: "anthropic" | "openai";
-    /**
-     * NotificationUseCaseConfigSchema
-     * @description Schema for notification usecase config (typed).
-     */
-    NotificationUseCaseConfigSchema: {
-      /** User Amendments */
-      user_amendments?: string[];
-      /** Rendered Prompt */
-      rendered_prompt?: string | null;
-    };
-    /** PagedResponseSchema[BrainDumpItemSchema] */
-    PagedResponseSchema_BrainDumpItemSchema_: {
-      /** Items */
-      items: components["schemas"]["BrainDumpItemSchema"][];
-      /** Total */
-      total: number;
-      /** Limit */
-      limit: number;
-      /** Offset */
-      offset: number;
-      /** Has Next */
-      has_next: boolean;
-      /** Has Previous */
-      has_previous: boolean;
-    };
-    /** PagedResponseSchema[CalendarEntrySeriesSchema] */
-    PagedResponseSchema_CalendarEntrySeriesSchema_: {
-      /** Items */
-      items: components["schemas"]["CalendarEntrySeriesSchema"][];
-      /** Total */
-      total: number;
-      /** Limit */
-      limit: number;
-      /** Offset */
-      offset: number;
-      /** Has Next */
-      has_next: boolean;
-      /** Has Previous */
-      has_previous: boolean;
-    };
-    /** PagedResponseSchema[CalendarSchema] */
-    PagedResponseSchema_CalendarSchema_: {
-      /** Items */
-      items: components["schemas"]["CalendarSchema"][];
-      /** Total */
-      total: number;
-      /** Limit */
-      limit: number;
-      /** Offset */
-      offset: number;
-      /** Has Next */
-      has_next: boolean;
-      /** Has Previous */
-      has_previous: boolean;
-    };
-    /** PagedResponseSchema[DayTemplateSchema] */
-    PagedResponseSchema_DayTemplateSchema_: {
-      /** Items */
-      items: components["schemas"]["DayTemplateSchema"][];
-      /** Total */
-      total: number;
-      /** Limit */
-      limit: number;
-      /** Offset */
-      offset: number;
-      /** Has Next */
-      has_next: boolean;
-      /** Has Previous */
-      has_previous: boolean;
-    };
-    /** PagedResponseSchema[FactoidSchema] */
-    PagedResponseSchema_FactoidSchema_: {
-      /** Items */
-      items: components["schemas"]["FactoidSchema"][];
-      /** Total */
-      total: number;
-      /** Limit */
-      limit: number;
-      /** Offset */
-      offset: number;
-      /** Has Next */
-      has_next: boolean;
-      /** Has Previous */
-      has_previous: boolean;
-    };
-    /** PagedResponseSchema[PushNotificationSchema] */
-    PagedResponseSchema_PushNotificationSchema_: {
-      /** Items */
-      items: components["schemas"]["PushNotificationSchema"][];
-      /** Total */
-      total: number;
-      /** Limit */
-      limit: number;
-      /** Offset */
-      offset: number;
-      /** Has Next */
-      has_next: boolean;
-      /** Has Previous */
-      has_previous: boolean;
-    };
-    /** PagedResponseSchema[PushSubscriptionSchema] */
-    PagedResponseSchema_PushSubscriptionSchema_: {
-      /** Items */
-      items: components["schemas"]["PushSubscriptionSchema"][];
-      /** Total */
-      total: number;
-      /** Limit */
-      limit: number;
-      /** Offset */
-      offset: number;
-      /** Has Next */
-      has_next: boolean;
-      /** Has Previous */
-      has_previous: boolean;
-    };
-    /** PagedResponseSchema[RoutineDefinitionSchema] */
-    PagedResponseSchema_RoutineDefinitionSchema_: {
-      /** Items */
-      items: components["schemas"]["RoutineDefinitionSchema"][];
-      /** Total */
-      total: number;
-      /** Limit */
-      limit: number;
-      /** Offset */
-      offset: number;
-      /** Has Next */
-      has_next: boolean;
-      /** Has Previous */
-      has_previous: boolean;
-    };
-    /** PagedResponseSchema[TacticSchema] */
-    PagedResponseSchema_TacticSchema_: {
-      /** Items */
-      items: components["schemas"]["TacticSchema"][];
-      /** Total */
-      total: number;
-      /** Limit */
-      limit: number;
-      /** Offset */
-      offset: number;
-      /** Has Next */
-      has_next: boolean;
-      /** Has Previous */
-      has_previous: boolean;
-    };
-    /** PagedResponseSchema[TaskDefinitionSchema] */
-    PagedResponseSchema_TaskDefinitionSchema_: {
-      /** Items */
-      items: components["schemas"]["TaskDefinitionSchema"][];
-      /** Total */
-      total: number;
-      /** Limit */
-      limit: number;
-      /** Offset */
-      offset: number;
-      /** Has Next */
-      has_next: boolean;
-      /** Has Previous */
-      has_previous: boolean;
-    };
-    /** PagedResponseSchema[TimeBlockDefinitionSchema] */
-    PagedResponseSchema_TimeBlockDefinitionSchema_: {
-      /** Items */
-      items: components["schemas"]["TimeBlockDefinitionSchema"][];
-      /** Total */
-      total: number;
-      /** Limit */
-      limit: number;
-      /** Offset */
-      offset: number;
-      /** Has Next */
-      has_next: boolean;
-      /** Has Previous */
-      has_previous: boolean;
-    };
-    /** PagedResponseSchema[TriggerSchema] */
-    PagedResponseSchema_TriggerSchema_: {
-      /** Items */
-      items: components["schemas"]["TriggerSchema"][];
-      /** Total */
-      total: number;
-      /** Limit */
-      limit: number;
-      /** Offset */
-      offset: number;
-      /** Has Next */
-      has_next: boolean;
-      /** Has Previous */
-      has_previous: boolean;
-    };
-    /** PushNotificationQuery */
-    PushNotificationQuery: {
-      /** Limit */
-      limit?: number | null;
-      /** Offset */
-      offset?: number | null;
-      /** Order By */
-      order_by?: string | null;
-      /** Order By Desc */
-      order_by_desc?: boolean | null;
-      /** Created Before */
-      created_before?: string | null;
-      /** Created After */
-      created_after?: string | null;
-      /** Push Subscription Id */
-      push_subscription_id?: string | null;
-      /** Status */
-      status?: string | null;
-      /** Sent After */
-      sent_after?: string | null;
-      /** Sent Before */
-      sent_before?: string | null;
-      /** Message Hash */
-      message_hash?: string | null;
-      /** Triggered By */
-      triggered_by?: string | null;
-      /** Priority */
-      priority?: string | null;
-    };
-    /**
-     * PushNotificationSchema
-     * @description API schema for PushNotification entity.
-     */
-    PushNotificationSchema: {
-      /** Id */
-      id?: string | null;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-      /** Push Subscription Ids */
-      push_subscription_ids?: string[];
-      /** Content */
-      content: string;
-      /** Status */
-      status: string;
-      /** Error Message */
-      error_message?: string | null;
-      /**
-       * Sent At
-       * Format: date-time
-       */
-      sent_at: string;
-      /** Message */
-      message?: string | null;
-      /** Priority */
-      priority?: string | null;
-      /** Message Hash */
-      message_hash?: string | null;
-      /** Triggered By */
-      triggered_by?: string | null;
-      /** Llm Snapshot */
-      llm_snapshot?: {
-        [key: string]: unknown;
-      } | null;
-    };
-    /**
-     * PushSubscriptionCreateSchema
-     * @description API schema for PushSubscription create requests.
-     */
-    PushSubscriptionCreateSchema: {
-      /** Device Name */
-      device_name: string;
-      /** Endpoint */
-      endpoint: string;
-      keys: components["schemas"]["PushSubscriptionKeysSchema"];
-    };
-    /**
-     * PushSubscriptionKeysSchema
-     * @description API schema for push subscription keys.
-     */
-    PushSubscriptionKeysSchema: {
-      /** P256Dh */
-      p256dh: string;
-      /** Auth */
-      auth: string;
-    };
-    /** PushSubscriptionQuery */
-    PushSubscriptionQuery: {
-      /** Limit */
-      limit?: number | null;
-      /** Offset */
-      offset?: number | null;
-      /** Order By */
-      order_by?: string | null;
-      /** Order By Desc */
-      order_by_desc?: boolean | null;
-      /** Created Before */
-      created_before?: string | null;
-      /** Created After */
-      created_after?: string | null;
-    };
-    /**
-     * PushSubscriptionSchema
-     * @description API schema for PushSubscription entity.
-     */
-    PushSubscriptionSchema: {
-      /** Id */
-      id?: string | null;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-      /** Device Name */
-      device_name?: string | null;
-      /** Endpoint */
-      endpoint: string;
-      /** P256Dh */
-      p256dh: string;
-      /** Auth */
-      auth: string;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-    };
-    /**
-     * PushSubscriptionUpdateSchema
-     * @description API schema for PushSubscription update requests.
-     */
-    PushSubscriptionUpdateSchema: {
-      /** Device Name */
-      device_name?: string | null;
-    };
-    /** QuerySchema[BrainDumpQuery] */
-    QuerySchema_BrainDumpQuery_: {
-      /**
-       * Limit
-       * @default 50
-       */
-      limit: number;
-      /**
-       * Offset
-       * @default 0
-       */
-      offset: number;
-      filters?: components["schemas"]["BrainDumpQuery"] | null;
-    };
-    /** QuerySchema[CalendarEntrySeriesQuery] */
-    QuerySchema_CalendarEntrySeriesQuery_: {
-      /**
-       * Limit
-       * @default 50
-       */
-      limit: number;
-      /**
-       * Offset
-       * @default 0
-       */
-      offset: number;
-      filters?: components["schemas"]["CalendarEntrySeriesQuery"] | null;
-    };
-    /** QuerySchema[CalendarQuery] */
-    QuerySchema_CalendarQuery_: {
-      /**
-       * Limit
-       * @default 50
-       */
-      limit: number;
-      /**
-       * Offset
-       * @default 0
-       */
-      offset: number;
-      filters?: components["schemas"]["CalendarQuery"] | null;
-    };
-    /** QuerySchema[DayTemplateQuery] */
-    QuerySchema_DayTemplateQuery_: {
-      /**
-       * Limit
-       * @default 50
-       */
-      limit: number;
-      /**
-       * Offset
-       * @default 0
-       */
-      offset: number;
-      filters?: components["schemas"]["DayTemplateQuery"] | null;
-    };
-    /** QuerySchema[FactoidQuery] */
-    QuerySchema_FactoidQuery_: {
-      /**
-       * Limit
-       * @default 50
-       */
-      limit: number;
-      /**
-       * Offset
-       * @default 0
-       */
-      offset: number;
-      filters?: components["schemas"]["FactoidQuery"] | null;
-    };
-    /** QuerySchema[PushNotificationQuery] */
-    QuerySchema_PushNotificationQuery_: {
-      /**
-       * Limit
-       * @default 50
-       */
-      limit: number;
-      /**
-       * Offset
-       * @default 0
-       */
-      offset: number;
-      filters?: components["schemas"]["PushNotificationQuery"] | null;
-    };
-    /** QuerySchema[PushSubscriptionQuery] */
-    QuerySchema_PushSubscriptionQuery_: {
-      /**
-       * Limit
-       * @default 50
-       */
-      limit: number;
-      /**
-       * Offset
-       * @default 0
-       */
-      offset: number;
-      filters?: components["schemas"]["PushSubscriptionQuery"] | null;
-    };
-    /** QuerySchema[RoutineDefinitionQuery] */
-    QuerySchema_RoutineDefinitionQuery_: {
-      /**
-       * Limit
-       * @default 50
-       */
-      limit: number;
-      /**
-       * Offset
-       * @default 0
-       */
-      offset: number;
-      filters?: components["schemas"]["RoutineDefinitionQuery"] | null;
-    };
-    /** QuerySchema[TacticQuery] */
-    QuerySchema_TacticQuery_: {
-      /**
-       * Limit
-       * @default 50
-       */
-      limit: number;
-      /**
-       * Offset
-       * @default 0
-       */
-      offset: number;
-      filters?: components["schemas"]["TacticQuery"] | null;
-    };
-    /** QuerySchema[TaskDefinitionQuery] */
-    QuerySchema_TaskDefinitionQuery_: {
-      /**
-       * Limit
-       * @default 50
-       */
-      limit: number;
-      /**
-       * Offset
-       * @default 0
-       */
-      offset: number;
-      filters?: components["schemas"]["TaskDefinitionQuery"] | null;
-    };
-    /** QuerySchema[TimeBlockDefinitionQuery] */
-    QuerySchema_TimeBlockDefinitionQuery_: {
-      /**
-       * Limit
-       * @default 50
-       */
-      limit: number;
-      /**
-       * Offset
-       * @default 0
-       */
-      offset: number;
-      filters?: components["schemas"]["TimeBlockDefinitionQuery"] | null;
-    };
-    /** QuerySchema[TriggerQuery] */
-    QuerySchema_TriggerQuery_: {
-      /**
-       * Limit
-       * @default 50
-       */
-      limit: number;
-      /**
-       * Offset
-       * @default 0
-       */
-      offset: number;
-      filters?: components["schemas"]["TriggerQuery"] | null;
-    };
-    /**
-     * RecurrenceScheduleSchema
-     * @description API schema for RecurrenceSchedule value object.
-     */
-    RecurrenceScheduleSchema: {
-      frequency: components["schemas"]["TaskFrequency"];
-      /** Weekdays */
-      weekdays?: components["schemas"]["DayOfWeek"][] | null;
-      /** Day Number */
-      day_number?: number | null;
-    };
-    /**
-     * ReminderSchema
-     * @description API schema for Reminder value object.
-     */
-    ReminderSchema: {
-      /** Id */
-      id?: string | null;
-      /** Name */
-      name: string;
-      status: components["schemas"]["ReminderStatus"];
-      /** Created At */
-      created_at?: string | null;
-    };
-    /**
-     * ReminderStatus
-     * @description Status of a reminder.
-     * @enum {string}
-     */
-    ReminderStatus: "INCOMPLETE" | "COMPLETE" | "PUNT";
-    /**
-     * RoutineDefinitionCreateSchema
-     * @description API schema for creating a RoutineDefinition entity.
-     */
-    RoutineDefinitionCreateSchema: {
-      /** Name */
-      name: string;
-      category: components["schemas"]["TaskCategory"];
-      routine_definition_schedule: components["schemas"]["RecurrenceScheduleSchema"];
-      /**
-       * Description
-       * @default
-       */
-      description: string;
-      time_window?: components["schemas"]["TimeWindowSchema"] | null;
-      /** Tasks */
-      tasks?: components["schemas"]["RoutineDefinitionTaskSchema-Input"][];
-    };
-    /** RoutineDefinitionQuery */
-    RoutineDefinitionQuery: {
-      /** Limit */
-      limit?: number | null;
-      /** Offset */
-      offset?: number | null;
-      /** Order By */
-      order_by?: string | null;
-      /** Order By Desc */
-      order_by_desc?: boolean | null;
-      /** Created Before */
-      created_before?: string | null;
-      /** Created After */
-      created_after?: string | null;
-    };
-    /**
-     * RoutineDefinitionSchema
-     * @description API schema for RoutineDefinition entity.
-     */
-    RoutineDefinitionSchema: {
-      /** Id */
-      id?: string | null;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-      /** Name */
-      name: string;
-      category: components["schemas"]["TaskCategory"];
-      routine_definition_schedule: components["schemas"]["RecurrenceScheduleSchema"];
-      /**
-       * Description
-       * @default
-       */
-      description: string;
-      time_window?: components["schemas"]["TimeWindowSchema"] | null;
-      /** Tasks */
-      tasks?: components["schemas"]["RoutineDefinitionTaskSchema-Output"][];
-    };
-    /**
-     * RoutineDefinitionTaskCreateSchema
-     * @description API schema for attaching a RoutineDefinitionTask.
-     */
-    RoutineDefinitionTaskCreateSchema: {
-      /**
-       * Task Definition Id
-       * Format: uuid
-       */
-      task_definition_id: string;
-      /** Name */
-      name?: string | null;
-      task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
-      time_window?: components["schemas"]["TimeWindowSchema"] | null;
-    };
-    /**
-     * RoutineDefinitionTaskSchema
-     * @description API schema for RoutineDefinitionTask value object.
-     */
-    "RoutineDefinitionTaskSchema-Input": {
-      /** Id */
-      id?: string | null;
-      /**
-       * Task Definition Id
-       * Format: uuid
-       */
-      task_definition_id: string;
-      /** Name */
-      name?: string | null;
-      task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
-      time_window?: components["schemas"]["TimeWindowSchema"] | null;
-    };
-    /**
-     * RoutineDefinitionTaskSchema
-     * @description API schema for RoutineDefinitionTask value object.
-     */
-    "RoutineDefinitionTaskSchema-Output": {
-      /** Id */
-      id?: string | null;
-      /**
-       * Task Definition Id
-       * Format: uuid
-       */
-      task_definition_id: string;
-      /** Name */
-      name?: string | null;
-      task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
-      time_window?: components["schemas"]["TimeWindowSchema"] | null;
-    };
-    /**
-     * RoutineDefinitionTaskUpdateSchema
-     * @description API schema for updating an attached RoutineDefinitionTask.
-     */
-    RoutineDefinitionTaskUpdateSchema: {
-      /** Name */
-      name?: string | null;
-      task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
-      time_window?: components["schemas"]["TimeWindowSchema"] | null;
-    };
-    /**
-     * RoutineDefinitionUpdateSchema
-     * @description API schema for RoutineDefinition update requests.
-     */
-    RoutineDefinitionUpdateSchema: {
-      /** Name */
-      name?: string | null;
-      category?: components["schemas"]["TaskCategory"] | null;
-      routine_definition_schedule?:
-        | components["schemas"]["RecurrenceScheduleSchema"]
-        | null;
-      /** Description */
-      description?: string | null;
-      time_window?: components["schemas"]["TimeWindowSchema"] | null;
-      /** Tasks */
-      tasks?:
-        | components["schemas"]["RoutineDefinitionTaskSchema-Input"][]
-        | null;
-    };
-    /**
-     * RoutineSchema
-     * @description API schema for Routine entity.
-     */
-    RoutineSchema: {
-      /** Id */
-      id?: string | null;
-      /**
-       * Date
-       * Format: date
-       */
-      date: string;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-      /**
-       * Routine Definition Id
-       * Format: uuid
-       */
-      routine_definition_id: string;
-      /** Name */
-      name: string;
-      category: components["schemas"]["TaskCategory"];
-      /** Description */
-      description: string;
-      status: components["schemas"]["TaskStatus"];
-      /** Snoozed Until */
-      snoozed_until?: string | null;
-      time_window?: components["schemas"]["TimeWindowSchema"] | null;
-      timing_status?: components["schemas"]["TimingStatus"] | null;
-      /** Next Available Time */
-      next_available_time?: string | null;
-    };
-    /**
-     * StatusResponseSchema
-     * @description Simple OK response.
-     */
-    StatusResponseSchema: {
-      /**
-       * Ok
-       * @default true
-       */
-      ok: boolean;
-    };
-    /**
-     * SyncSubscriptionSchema
-     * @description Schema describing a calendar sync subscription.
-     */
-    SyncSubscriptionSchema: {
-      /** Subscription Id */
-      subscription_id: string;
-      /** Resource Id */
-      resource_id?: string | null;
-      /**
-       * Expiration
-       * Format: date-time
-       */
-      expiration: string;
-      /** Provider */
-      provider: string;
-      /** Client State */
-      client_state?: string | null;
-      /** Sync Token */
-      sync_token?: string | null;
-      /** Webhook Url */
-      webhook_url?: string | null;
-    };
-    /**
-     * TacticCreateSchema
-     * @description API schema for creating a Tactic.
-     */
-    TacticCreateSchema: {
-      /** Name */
-      name: string;
-      /** Description */
-      description: string;
-    };
-    /** TacticQuery */
-    TacticQuery: {
-      /** Limit */
-      limit?: number | null;
-      /** Offset */
-      offset?: number | null;
-      /** Order By */
-      order_by?: string | null;
-      /** Order By Desc */
-      order_by_desc?: boolean | null;
-      /** Created Before */
-      created_before?: string | null;
-      /** Created After */
-      created_after?: string | null;
-      /** Ids */
-      ids?: string[] | null;
-      /** Name */
-      name?: string | null;
-    };
-    /**
-     * TacticSchema
-     * @description API schema for Tactic entity.
-     */
-    TacticSchema: {
-      /** Id */
-      id?: string | null;
-      /** Name */
-      name: string;
-      /** Description */
-      description: string;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-    };
-    /**
-     * TacticUpdateSchema
-     * @description API schema for Tactic update requests.
-     */
-    TacticUpdateSchema: {
-      /** Name */
-      name?: string | null;
-      /** Description */
-      description?: string | null;
-    };
-    /**
-     * TaskCategory
-     * @enum {string}
-     */
-    TaskCategory:
-      | "HYGIENE"
-      | "GROOMING"
-      | "SLEEP"
-      | "HEALTH"
-      | "FITNESS"
-      | "MEDICAL"
-      | "NUTRITION"
-      | "COOKING"
-      | "HOUSE"
-      | "CLEANING"
-      | "MAINTENANCE"
-      | "ORGANIZATION"
-      | "WORK"
-      | "MEETING"
-      | "PROFESSIONAL"
-      | "FAMILY"
-      | "SOCIAL"
-      | "RELATIONSHIP"
-      | "SHOPPING"
-      | "ERRAND"
-      | "COMMUTE"
-      | "TRAVEL"
-      | "ENTERTAINMENT"
-      | "HOBBY"
-      | "RECREATION"
-      | "EDUCATION"
-      | "LEARNING"
-      | "FINANCE"
-      | "BILLS"
-      | "TECHNOLOGY"
-      | "DIGITAL"
-      | "PET"
-      | "PLANNING"
-      | "ADMIN";
-    /**
-     * TaskDefinitionCreateSchema
-     * @description API schema for creating a TaskDefinition entity.
-     */
-    TaskDefinitionCreateSchema: {
-      /** Name */
-      name: string;
-      /** Description */
-      description: string;
-      type: components["schemas"]["TaskType"];
-    };
-    /** TaskDefinitionQuery */
-    TaskDefinitionQuery: {
-      /** Limit */
-      limit?: number | null;
-      /** Offset */
-      offset?: number | null;
-      /** Order By */
-      order_by?: string | null;
-      /** Order By Desc */
-      order_by_desc?: boolean | null;
-      /** Created Before */
-      created_before?: string | null;
-      /** Created After */
-      created_after?: string | null;
-    };
-    /**
-     * TaskDefinitionSchema
-     * @description API schema for TaskDefinition entity.
-     */
-    TaskDefinitionSchema: {
-      /** Id */
-      id?: string | null;
-      /** Name */
-      name: string;
-      /** Description */
-      description: string;
-      type: components["schemas"]["TaskType"];
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-    };
-    /**
-     * TaskDefinitionUpdateSchema
-     * @description API schema for TaskDefinition update requests.
-     */
-    TaskDefinitionUpdateSchema: {
-      /** Name */
-      name?: string | null;
-      /** Description */
-      description?: string | null;
-      type?: components["schemas"]["TaskType"] | null;
-    };
-    /**
-     * TaskFrequency
-     * @enum {string}
-     */
-    TaskFrequency:
-      | "DAILY"
-      | "CUSTOM_WEEKLY"
-      | "WEEKLY"
-      | "ONCE"
-      | "YEARLY"
-      | "MONTHLY"
-      | "BI_WEEKLY"
-      | "WORK_DAYS"
-      | "WEEKENDS";
-    /**
-     * TaskSchema
-     * @description API schema for Task entity.
-     */
-    TaskSchema: {
-      /** Id */
-      id?: string | null;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-      /**
-       * Scheduled Date
-       * Format: date
-       */
-      scheduled_date: string;
-      /** Name */
-      name: string;
-      status: components["schemas"]["TaskStatus"];
-      type: components["schemas"]["TaskType"];
-      /** Description */
-      description?: string | null;
-      category: components["schemas"]["TaskCategory"];
-      frequency: components["schemas"]["TaskFrequency"];
-      /** Completed At */
-      completed_at?: string | null;
-      /** Snoozed Until */
-      snoozed_until?: string | null;
-      time_window?: components["schemas"]["TimeWindowSchema"] | null;
-      /** Routine Definition Id */
-      routine_definition_id?: string | null;
-      timing_status?: components["schemas"]["TimingStatus"] | null;
-      /** Next Available Time */
-      next_available_time?: string | null;
-      /** Tags */
-      tags?: components["schemas"]["TaskTag"][];
-      /** Actions */
-      actions?: components["schemas"]["ActionSchema"][];
-    };
-    /**
-     * TaskStatus
-     * @enum {string}
-     */
-    TaskStatus:
-      | "COMPLETE"
-      | "NOT_READY"
-      | "READY"
-      | "PUNT"
-      | "NOT_STARTED"
-      | "PENDING"
-      | "SNOOZE";
-    /**
-     * TaskTag
-     * @enum {string}
-     */
-    TaskTag: "AVOIDANT" | "FORGETTABLE" | "IMPORTANT" | "URGENT" | "FUN";
-    /**
-     * TaskType
-     * @enum {string}
-     */
-    TaskType:
-      | "ADHOC"
-      | "MEAL"
-      | "WORK"
-      | "MEETING"
-      | "EXERCISE"
-      | "EVENT"
-      | "SOCIAL"
-      | "CHORE"
-      | "ERRAND"
-      | "SHOPPING"
-      | "PERSONAL_CARE"
-      | "ACTIVITY"
-      | "ENTERTAINMENT"
-      | "LEARNING"
-      | "COMMUTE"
-      | "TRAVEL"
-      | "APPOINTMENT"
-      | "COMMUNICATION"
-      | "FINANCIAL"
-      | "MAINTENANCE"
-      | "PLANNING"
-      | "TECHNOLOGY";
-    /**
-     * TimeBlockCategory
-     * @enum {string}
-     */
-    TimeBlockCategory:
-      | "WORK"
-      | "PROFESSIONAL"
-      | "MEETING"
-      | "PERSONAL_CARE"
-      | "HEALTH"
-      | "FITNESS"
-      | "NUTRITION"
-      | "SLEEP"
-      | "HOUSEHOLD"
-      | "CHORES"
-      | "MAINTENANCE"
-      | "FAMILY"
-      | "SOCIAL"
-      | "RELATIONSHIP"
-      | "ENTERTAINMENT"
-      | "HOBBY"
-      | "RECREATION"
-      | "EDUCATION"
-      | "LEARNING"
-      | "COMMUTE"
-      | "TRAVEL"
-      | "PLANNING"
-      | "ADMIN"
-      | "OTHER";
-    /**
-     * TimeBlockDefinitionCreateSchema
-     * @description API schema for creating a TimeBlockDefinition.
-     */
-    TimeBlockDefinitionCreateSchema: {
-      /** Name */
-      name: string;
-      /** Description */
-      description: string;
-      type: components["schemas"]["TimeBlockType"];
-      category: components["schemas"]["TimeBlockCategory"];
-    };
-    /** TimeBlockDefinitionQuery */
-    TimeBlockDefinitionQuery: {
-      /** Limit */
-      limit?: number | null;
-      /** Offset */
-      offset?: number | null;
-      /** Order By */
-      order_by?: string | null;
-      /** Order By Desc */
-      order_by_desc?: boolean | null;
-      /** Created Before */
-      created_before?: string | null;
-      /** Created After */
-      created_after?: string | null;
-    };
-    /**
-     * TimeBlockDefinitionSchema
-     * @description API schema for TimeBlockDefinition entity.
-     */
-    TimeBlockDefinitionSchema: {
-      /** Id */
-      id?: string | null;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-      /** Name */
-      name: string;
-      /** Description */
-      description: string;
-      type: components["schemas"]["TimeBlockType"];
-      category: components["schemas"]["TimeBlockCategory"];
-    };
-    /**
-     * TimeBlockDefinitionUpdateSchema
-     * @description API schema for TimeBlockDefinition update requests.
-     */
-    TimeBlockDefinitionUpdateSchema: {
-      /** Name */
-      name?: string | null;
-      /** Description */
-      description?: string | null;
-      type?: components["schemas"]["TimeBlockType"] | null;
-      category?: components["schemas"]["TimeBlockCategory"] | null;
-    };
-    /**
-     * TimeBlockType
-     * @enum {string}
-     */
-    TimeBlockType:
-      | "WORK"
-      | "BREAK"
-      | "MEAL"
-      | "EXERCISE"
-      | "COMMUTE"
-      | "MEETING"
-      | "FOCUS"
-      | "ADMIN"
-      | "CREATIVE"
-      | "LEARNING"
-      | "SOCIAL"
-      | "PERSONAL"
-      | "ROUTINE"
-      | "SLEEP"
-      | "OTHER";
-    /**
-     * TimeWindowSchema
-     * @description API schema for TimeWindow value object.
-     */
-    TimeWindowSchema: {
-      /** Available Time */
-      available_time?: string | null;
-      /** Start Time */
-      start_time?: string | null;
-      /** End Time */
-      end_time?: string | null;
-      /** Cutoff Time */
-      cutoff_time?: string | null;
-    };
-    /**
-     * TimingStatus
-     * @enum {string}
-     */
-    TimingStatus: "hidden" | "inactive" | "available" | "active" | "past-due";
-    /**
-     * TriggerCreateSchema
-     * @description API schema for creating a Trigger.
-     */
-    TriggerCreateSchema: {
-      /** Name */
-      name: string;
-      /** Description */
-      description: string;
-    };
-    /** TriggerQuery */
-    TriggerQuery: {
-      /** Limit */
-      limit?: number | null;
-      /** Offset */
-      offset?: number | null;
-      /** Order By */
-      order_by?: string | null;
-      /** Order By Desc */
-      order_by_desc?: boolean | null;
-      /** Created Before */
-      created_before?: string | null;
-      /** Created After */
-      created_after?: string | null;
-      /** Ids */
-      ids?: string[] | null;
-      /** Name */
-      name?: string | null;
-    };
-    /**
-     * TriggerSchema
-     * @description API schema for Trigger entity.
-     */
-    TriggerSchema: {
-      /** Id */
-      id?: string | null;
-      /** Name */
-      name: string;
-      /** Description */
-      description: string;
-      /**
-       * User Id
-       * Format: uuid
-       */
-      user_id: string;
-    };
-    /**
-     * TriggerTacticsUpdateSchema
-     * @description API schema for updating tactics linked to a trigger.
-     */
-    TriggerTacticsUpdateSchema: {
-      /** Tactic Ids */
-      tactic_ids: string[];
-    };
-    /**
-     * TriggerUpdateSchema
-     * @description API schema for Trigger update requests.
-     */
-    TriggerUpdateSchema: {
-      /** Name */
-      name?: string | null;
-      /** Description */
-      description?: string | null;
-    };
-    /**
-     * UserCreate
-     * @description Schema for creating a new user.
-     */
-    UserCreate: {
-      /**
-       * Email
-       * Format: email
-       */
-      email: string;
-      /** Password */
-      password: string;
-      /**
-       * Is Active
-       * @default true
-       */
-      is_active: boolean | null;
-      /**
-       * Is Superuser
-       * @default false
-       */
-      is_superuser: boolean | null;
-      /**
-       * Is Verified
-       * @default false
-       */
-      is_verified: boolean | null;
-    };
-    /**
-     * UserRead
-     * @description Schema for reading user data.
-     */
-    UserRead: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /**
-       * Email
-       * Format: email
-       */
-      email: string;
-      /**
-       * Is Active
-       * @default true
-       */
-      is_active: boolean;
-      /**
-       * Is Superuser
-       * @default false
-       */
-      is_superuser: boolean;
-      /**
-       * Is Verified
-       * @default false
-       */
-      is_verified: boolean;
-      /** Phone Number */
-      phone_number?: string | null;
-    };
-    /**
-     * UserSchema
-     * @description Schema for the current authenticated user.
-     */
-    UserSchema: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Email */
-      email: string;
-      /** Phone Number */
-      phone_number?: string | null;
-      status: components["schemas"]["UserStatus"];
-      /** Is Active */
-      is_active: boolean;
-      /** Is Superuser */
-      is_superuser: boolean;
-      /** Is Verified */
-      is_verified: boolean;
-      settings: components["schemas"]["UserSettingsSchema"];
-      /** Default Conversation Id */
-      default_conversation_id?: string | null;
-      /** Sms Conversation Id */
-      sms_conversation_id?: string | null;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /** Updated At */
-      updated_at?: string | null;
-    };
-    /**
-     * UserSettingsSchema
-     * @description Schema for user settings.
-     */
-    UserSettingsSchema: {
-      /** Template Defaults */
-      template_defaults: string[];
-      llm_provider?: components["schemas"]["LLMProvider"] | null;
-      /** Timezone */
-      timezone?: string | null;
-      /**
-       * Base Personality Slug
-       * @default default
-       */
-      base_personality_slug: string;
-      /** Llm Personality Amendments */
-      llm_personality_amendments?: string[];
-      /** Morning Overview Time */
-      morning_overview_time?: string | null;
-      /** Alarm Presets */
-      alarm_presets?: components["schemas"]["AlarmPresetSchema"][];
-    };
-    /**
-     * UserSettingsUpdateSchema
-     * @description Schema for updating user settings.
-     */
-    UserSettingsUpdateSchema: {
-      /** Template Defaults */
-      template_defaults?: string[] | null;
-      llm_provider?: components["schemas"]["LLMProvider"] | null;
-      /** Timezone */
-      timezone?: string | null;
-      /** Base Personality Slug */
-      base_personality_slug?: string | null;
-      /** Llm Personality Amendments */
-      llm_personality_amendments?: string[] | null;
-      /** Morning Overview Time */
-      morning_overview_time?: string | null;
-      /** Alarm Presets */
-      alarm_presets?: components["schemas"]["AlarmPresetSchema"][] | null;
-    };
-    /**
-     * UserStatus
-     * @description Lifecycle status for a user/account record.
-     * @enum {string}
-     */
-    UserStatus: "active" | "new-lead";
-    /**
-     * UserUpdateSchema
-     * @description Schema for updating a user profile.
-     */
-    UserUpdateSchema: {
-      /** Phone Number */
-      phone_number?: string | null;
-      status?: components["schemas"]["UserStatus"] | null;
-      /** Is Active */
-      is_active?: boolean | null;
-      /** Is Superuser */
-      is_superuser?: boolean | null;
-      /** Is Verified */
-      is_verified?: boolean | null;
-      settings?: components["schemas"]["UserSettingsUpdateSchema"] | null;
-      /** Default Conversation Id */
-      default_conversation_id?: string | null;
-      /** Sms Conversation Id */
-      sms_conversation_id?: string | null;
-    };
-    /** ValidationError */
-    ValidationError: {
-      /** Location */
-      loc: (string | number)[];
-      /** Message */
-      msg: string;
-      /** Error Type */
-      type: string;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    schemas: {
+        /** Action */
+        Action: {
+            type: components["schemas"]["ActionType"];
+            /** Data */
+            data?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at?: string;
+        };
+        /**
+         * ActionSchema
+         * @description API schema for Action value object.
+         */
+        ActionSchema: {
+            /** Id */
+            id?: string | null;
+            type: components["schemas"]["ActionType"];
+            /** Data */
+            data?: {
+                [key: string]: string;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * ActionType
+         * @enum {string}
+         */
+        ActionType: "COMPLETE" | "DELETE" | "EDIT" | "NOTIFY" | "PAUSE" | "PUNT" | "RESUME" | "SNOOZE" | "START" | "VIEW";
+        /**
+         * AdhocTaskCreateSchema
+         * @description API schema for creating adhoc tasks.
+         */
+        AdhocTaskCreateSchema: {
+            /**
+             * Scheduled Date
+             * Format: date
+             */
+            scheduled_date: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            category: components["schemas"]["TaskCategory"];
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
+            /** Tags */
+            tags?: components["schemas"]["TaskTag"][];
+        };
+        /**
+         * AlarmPresetSchema
+         * @description API schema for an alarm preset stored in user settings.
+         */
+        AlarmPresetSchema: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Time */
+            time?: string | null;
+            /** @default URL */
+            type: components["schemas"]["AlarmType"];
+            /**
+             * Url
+             * @default
+             */
+            url: string;
+        };
+        /**
+         * AlarmSchema
+         * @description API schema for Alarm value object.
+         */
+        AlarmSchema: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+            /**
+             * Time
+             * Format: time
+             */
+            time: string;
+            /** Datetime */
+            datetime?: string | null;
+            type: components["schemas"]["AlarmType"];
+            /** Url */
+            url: string;
+            /** @default ACTIVE */
+            status: components["schemas"]["AlarmStatus"];
+            /** Snoozed Until */
+            snoozed_until?: string | null;
+        };
+        /**
+         * AlarmStatus
+         * @description Status of an alarm.
+         * @enum {string}
+         */
+        AlarmStatus: "ACTIVE" | "TRIGGERED" | "SNOOZED" | "CANCELLED";
+        /**
+         * AlarmType
+         * @description Type of alarm behavior.
+         * @enum {string}
+         */
+        AlarmType: "URL" | "GENERIC";
+        /**
+         * BasePersonalitySchema
+         * @description Schema for base personality metadata.
+         */
+        BasePersonalitySchema: {
+            /** Slug */
+            slug: string;
+            /** Label */
+            label: string;
+        };
+        /** Body_auth_cookie_login_auth_login_post */
+        Body_auth_cookie_login_auth_login_post: {
+            /** Grant Type */
+            grant_type?: string | null;
+            /** Username */
+            username: string;
+            /**
+             * Password
+             * Format: password
+             */
+            password: string;
+            /**
+             * Scope
+             * @default
+             */
+            scope: string;
+            /** Client Id */
+            client_id?: string | null;
+            /**
+             * Client Secret
+             * Format: password
+             */
+            client_secret?: string | null;
+        };
+        /** Body_reset_forgot_password_auth_forgot_password_post */
+        Body_reset_forgot_password_auth_forgot_password_post: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+        };
+        /** Body_reset_reset_password_auth_reset_password_post */
+        Body_reset_reset_password_auth_reset_password_post: {
+            /** Token */
+            token: string;
+            /** Password */
+            password: string;
+        };
+        /**
+         * BrainDumpCreateSchema
+         * @description API schema for creating brain dumps.
+         */
+        BrainDumpCreateSchema: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Text */
+            text: string;
+        };
+        /** BrainDumpQuery */
+        BrainDumpQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Date */
+            date?: string | null;
+            status?: components["schemas"]["BrainDumpStatus"] | null;
+            type?: components["schemas"]["BrainDumpType"] | null;
+        };
+        /**
+         * BrainDumpSchema
+         * @description API schema for BrainDump entity.
+         */
+        BrainDumpSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Text */
+            text: string;
+            status: components["schemas"]["BrainDumpStatus"];
+            type: components["schemas"]["BrainDumpType"];
+            /** Created At */
+            created_at?: string | null;
+            /** Llm Run Result */
+            llm_run_result?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * BrainDumpStatus
+         * @description Status of a brain dump.
+         * @enum {string}
+         */
+        BrainDumpStatus: "ACTIVE" | "COMPLETE" | "PUNT";
+        /**
+         * BrainDumpType
+         * @description Type of a brain dump.
+         * @enum {string}
+         */
+        BrainDumpType: "GENERAL" | "COMMAND";
+        /**
+         * BrainDumpUpdateSchema
+         * @description API schema for updating a brain dump.
+         */
+        BrainDumpUpdateSchema: {
+            status?: components["schemas"]["BrainDumpStatus"] | null;
+            type?: components["schemas"]["BrainDumpType"] | null;
+        };
+        /**
+         * CalendarCreateSchema
+         * @description API schema for creating a Calendar entity.
+         */
+        CalendarCreateSchema: {
+            /** Name */
+            name: string;
+            /**
+             * Auth Token Id
+             * Format: uuid
+             */
+            auth_token_id: string;
+            /** Platform Id */
+            platform_id: string;
+            /** Platform */
+            platform: string;
+            /** Last Sync At */
+            last_sync_at?: string | null;
+            default_event_category?: components["schemas"]["EventCategory"] | null;
+        };
+        /**
+         * CalendarEntrySchema
+         * @description API schema for CalendarEntry entity.
+         */
+        CalendarEntrySchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            /**
+             * Calendar Id
+             * Format: uuid
+             */
+            calendar_id: string;
+            /** Platform Id */
+            platform_id: string;
+            /** Platform */
+            platform: string;
+            /** Status */
+            status: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            frequency: components["schemas"]["TaskFrequency"];
+            category?: components["schemas"]["EventCategory"] | null;
+            /** Ends At */
+            ends_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Actions */
+            actions?: components["schemas"]["ActionSchema"][];
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+        };
+        /** CalendarEntrySeriesQuery */
+        CalendarEntrySeriesQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Calendar Id */
+            calendar_id?: string | null;
+            /** Platform Id */
+            platform_id?: string | null;
+        };
+        /**
+         * CalendarEntrySeriesSchema
+         * @description API schema for CalendarEntrySeries entity.
+         */
+        CalendarEntrySeriesSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Calendar Id
+             * Format: uuid
+             */
+            calendar_id: string;
+            /** Name */
+            name: string;
+            /** Platform Id */
+            platform_id: string;
+            /** Platform */
+            platform: string;
+            frequency: components["schemas"]["TaskFrequency"];
+            event_category?: components["schemas"]["EventCategory"] | null;
+            /** Recurrence */
+            recurrence?: string[];
+            /** Starts At */
+            starts_at?: string | null;
+            /** Ends At */
+            ends_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * CalendarEntrySeriesUpdateSchema
+         * @description API schema for updating a CalendarEntrySeries.
+         */
+        CalendarEntrySeriesUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            event_category?: components["schemas"]["EventCategory"] | null;
+        };
+        /** CalendarQuery */
+        CalendarQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Subscription Id */
+            subscription_id?: string | null;
+            /** Resource Id */
+            resource_id?: string | null;
+            /** Platform Id */
+            platform_id?: string | null;
+        };
+        /**
+         * CalendarSchema
+         * @description API schema for Calendar entity.
+         */
+        CalendarSchema: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+            /**
+             * Auth Token Id
+             * Format: uuid
+             */
+            auth_token_id: string;
+            /** Platform Id */
+            platform_id: string;
+            /** Platform */
+            platform: string;
+            /** Last Sync At */
+            last_sync_at?: string | null;
+            default_event_category?: components["schemas"]["EventCategory"] | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            sync_subscription?: components["schemas"]["SyncSubscriptionSchema"] | null;
+            /** Sync Subscription Id */
+            sync_subscription_id?: string | null;
+            /**
+             * Sync Enabled
+             * @default false
+             */
+            sync_enabled: boolean;
+        };
+        /**
+         * CalendarUpdateSchema
+         * @description API schema for Calendar update requests.
+         */
+        CalendarUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            /** Auth Token Id */
+            auth_token_id?: string | null;
+            default_event_category?: components["schemas"]["EventCategory"] | null;
+            /** Last Sync At */
+            last_sync_at?: string | null;
+        };
+        /**
+         * DayContextSchema
+         * @description API schema for DayContext value object.
+         */
+        DayContextSchema: {
+            day: components["schemas"]["DaySchema"];
+            /** Calendar Entries */
+            calendar_entries?: components["schemas"]["CalendarEntrySchema"][];
+            /** Tasks */
+            tasks?: components["schemas"]["TaskSchema"][];
+            /** Routines */
+            routines?: components["schemas"]["RoutineSchema"][];
+        };
+        /**
+         * DayOfWeek
+         * @enum {integer}
+         */
+        DayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+        /**
+         * DaySchema
+         * @description API schema for Day entity.
+         */
+        DaySchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            status: components["schemas"]["DayStatus"];
+            /** Scheduled At */
+            scheduled_at?: string | null;
+            /** Starts At */
+            starts_at?: string | null;
+            /** Ends At */
+            ends_at?: string | null;
+            /** Tags */
+            tags?: components["schemas"]["DayTag"][];
+            template?: components["schemas"]["DayTemplateSchema"] | null;
+            /** Reminders */
+            reminders?: components["schemas"]["ReminderSchema"][];
+            /** Alarms */
+            alarms?: components["schemas"]["AlarmSchema"][];
+            /** Brain Dump Items */
+            brain_dump_items?: components["schemas"]["BrainDumpSchema"][];
+            high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
+        };
+        /**
+         * DayStatus
+         * @enum {string}
+         */
+        DayStatus: "UNSCHEDULED" | "SCHEDULED" | "STARTED" | "COMPLETE";
+        /**
+         * DayTag
+         * @enum {string}
+         */
+        DayTag: "WEEKEND" | "VACATION" | "WORKDAY";
+        /**
+         * DayTemplateCreateSchema
+         * @description API schema for creating a DayTemplate entity.
+         */
+        DayTemplateCreateSchema: {
+            /** Slug */
+            slug: string;
+            /** Start Time */
+            start_time?: string | null;
+            /** End Time */
+            end_time?: string | null;
+            /** Icon */
+            icon?: string | null;
+            /** Routine Definition Ids */
+            routine_definition_ids?: string[];
+            /** Time Blocks */
+            time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][];
+            /** Alarms */
+            alarms?: components["schemas"]["AlarmSchema"][];
+            high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
+        };
+        /** DayTemplateQuery */
+        DayTemplateQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Slug */
+            slug?: string | null;
+        };
+        /**
+         * DayTemplateRoutineDefinitionCreateSchema
+         * @description API schema for attaching a routine definition to a day template.
+         */
+        DayTemplateRoutineDefinitionCreateSchema: {
+            /**
+             * Routine Definition Id
+             * Format: uuid
+             */
+            routine_definition_id: string;
+        };
+        /**
+         * DayTemplateSchema
+         * @description API schema for DayTemplate entity.
+         */
+        DayTemplateSchema: {
+            /** Id */
+            id?: string | null;
+            /** Slug */
+            slug: string;
+            /** Start Time */
+            start_time?: string | null;
+            /** End Time */
+            end_time?: string | null;
+            /** Icon */
+            icon?: string | null;
+            /** Routine Definition Ids */
+            routine_definition_ids?: string[];
+            /** Time Blocks */
+            time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][];
+            /** Alarms */
+            alarms?: components["schemas"]["AlarmSchema"][];
+            high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
+         * DayTemplateTimeBlockCreateSchema
+         * @description API schema for adding a time block to a day template.
+         */
+        DayTemplateTimeBlockCreateSchema: {
+            /**
+             * Time Block Definition Id
+             * Format: uuid
+             */
+            time_block_definition_id: string;
+            /**
+             * Start Time
+             * Format: time
+             */
+            start_time: string;
+            /**
+             * End Time
+             * Format: time
+             */
+            end_time: string;
+        };
+        /**
+         * DayTemplateTimeBlockSchema
+         * @description API schema for a time block in a day template.
+         */
+        DayTemplateTimeBlockSchema: {
+            /**
+             * Time Block Definition Id
+             * Format: uuid
+             */
+            time_block_definition_id: string;
+            /**
+             * Start Time
+             * Format: time
+             */
+            start_time: string;
+            /**
+             * End Time
+             * Format: time
+             */
+            end_time: string;
+            /** Name */
+            name: string;
+        };
+        /**
+         * DayTemplateUpdateSchema
+         * @description API schema for DayTemplate update requests.
+         */
+        DayTemplateUpdateSchema: {
+            /** Slug */
+            slug?: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            /** End Time */
+            end_time?: string | null;
+            /** Icon */
+            icon?: string | null;
+            /** Routine Definition Ids */
+            routine_definition_ids?: string[] | null;
+            /** Time Blocks */
+            time_blocks?: components["schemas"]["DayTemplateTimeBlockSchema"][] | null;
+            /** Alarms */
+            alarms?: components["schemas"]["AlarmSchema"][] | null;
+            high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
+        };
+        /**
+         * DayUpdateSchema
+         * @description API schema for Day update requests.
+         */
+        DayUpdateSchema: {
+            status?: components["schemas"]["DayStatus"] | null;
+            /** Scheduled At */
+            scheduled_at?: string | null;
+            /** Tags */
+            tags?: components["schemas"]["DayTag"][] | null;
+            /** Template Id */
+            template_id?: string | null;
+            /** Alarms */
+            alarms?: components["schemas"]["AlarmSchema"][] | null;
+            high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
+        };
+        /**
+         * EarlyAccessRequestSchema
+         * @description Request body for early access opt-in.
+         */
+        EarlyAccessRequestSchema: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+        };
+        /** ErrorModel */
+        ErrorModel: {
+            /** Detail */
+            detail: string | {
+                [key: string]: string;
+            };
+        };
+        /**
+         * EventCategory
+         * @enum {string}
+         */
+        EventCategory: "WORK" | "PERSONAL" | "FAMILY" | "SOCIAL" | "OTHER";
+        /**
+         * FactoidCreateSchema
+         * @description API schema for creating a Factoid entity.
+         */
+        FactoidCreateSchema: {
+            /** Content */
+            content: string;
+            /** @default semantic */
+            factoid_type: components["schemas"]["FactoidType"];
+            /** @default normal */
+            criticality: components["schemas"]["FactoidCriticality"];
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /**
+             * Ai Suggested
+             * @default false
+             */
+            ai_suggested: boolean;
+            /**
+             * User Confirmed
+             * @default true
+             */
+            user_confirmed: boolean;
+        };
+        /**
+         * FactoidCriticality
+         * @description Criticality level of a factoid.
+         * @enum {string}
+         */
+        FactoidCriticality: "normal" | "important" | "critical";
+        /** FactoidQuery */
+        FactoidQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Factoid Type */
+            factoid_type?: string | null;
+            /** Criticality */
+            criticality?: string | null;
+            /** Is Global */
+            is_global?: boolean | null;
+        };
+        /**
+         * FactoidSchema
+         * @description Schema for Factoid entity.
+         */
+        FactoidSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Factoid Type */
+            factoid_type: string;
+            /** Criticality */
+            criticality: string;
+            /** Content */
+            content: string;
+            /** Embedding */
+            embedding?: number[] | null;
+            /**
+             * Ai Suggested
+             * @default false
+             */
+            ai_suggested: boolean;
+            /**
+             * User Confirmed
+             * @default false
+             */
+            user_confirmed: boolean;
+            /**
+             * Last Accessed
+             * Format: date-time
+             */
+            last_accessed: string;
+            /**
+             * Access Count
+             * @default 0
+             */
+            access_count: number;
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * FactoidType
+         * @description Type of factoid/memory stored.
+         * @enum {string}
+         */
+        FactoidType: "episodic" | "semantic" | "procedural";
+        /**
+         * FactoidUpdateSchema
+         * @description API schema for Factoid update requests.
+         */
+        FactoidUpdateSchema: {
+            /** Content */
+            content?: string | null;
+            factoid_type?: components["schemas"]["FactoidType"] | null;
+            criticality?: components["schemas"]["FactoidCriticality"] | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** User Confirmed */
+            user_confirmed?: boolean | null;
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * HighLevelPlanSchema
+         * @description API schema for high level plan value object.
+         */
+        HighLevelPlanSchema: {
+            /** Title */
+            title?: string | null;
+            /** Text */
+            text?: string | null;
+            /** Intentions */
+            intentions?: string[];
+        };
+        /**
+         * LLMProvider
+         * @description LLM provider for generating responses.
+         * @enum {string}
+         */
+        LLMProvider: "anthropic" | "openai";
+        /**
+         * NotificationUseCaseConfigSchema
+         * @description Schema for notification usecase config (typed).
+         */
+        NotificationUseCaseConfigSchema: {
+            /** User Amendments */
+            user_amendments?: string[];
+            /** Rendered Prompt */
+            rendered_prompt?: string | null;
+        };
+        /** PagedResponseSchema[BrainDumpSchema] */
+        PagedResponseSchema_BrainDumpSchema_: {
+            /** Items */
+            items: components["schemas"]["BrainDumpSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[CalendarEntrySeriesSchema] */
+        PagedResponseSchema_CalendarEntrySeriesSchema_: {
+            /** Items */
+            items: components["schemas"]["CalendarEntrySeriesSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[CalendarSchema] */
+        PagedResponseSchema_CalendarSchema_: {
+            /** Items */
+            items: components["schemas"]["CalendarSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[DayTemplateSchema] */
+        PagedResponseSchema_DayTemplateSchema_: {
+            /** Items */
+            items: components["schemas"]["DayTemplateSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[FactoidSchema] */
+        PagedResponseSchema_FactoidSchema_: {
+            /** Items */
+            items: components["schemas"]["FactoidSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[PushNotificationSchema] */
+        PagedResponseSchema_PushNotificationSchema_: {
+            /** Items */
+            items: components["schemas"]["PushNotificationSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[PushSubscriptionSchema] */
+        PagedResponseSchema_PushSubscriptionSchema_: {
+            /** Items */
+            items: components["schemas"]["PushSubscriptionSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[RoutineDefinitionSchema] */
+        PagedResponseSchema_RoutineDefinitionSchema_: {
+            /** Items */
+            items: components["schemas"]["RoutineDefinitionSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[TacticSchema] */
+        PagedResponseSchema_TacticSchema_: {
+            /** Items */
+            items: components["schemas"]["TacticSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[TaskDefinitionSchema] */
+        PagedResponseSchema_TaskDefinitionSchema_: {
+            /** Items */
+            items: components["schemas"]["TaskDefinitionSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[TimeBlockDefinitionSchema] */
+        PagedResponseSchema_TimeBlockDefinitionSchema_: {
+            /** Items */
+            items: components["schemas"]["TimeBlockDefinitionSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PagedResponseSchema[TriggerSchema] */
+        PagedResponseSchema_TriggerSchema_: {
+            /** Items */
+            items: components["schemas"]["TriggerSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /** PushNotificationQuery */
+        PushNotificationQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Push Subscription Id */
+            push_subscription_id?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Sent After */
+            sent_after?: string | null;
+            /** Sent Before */
+            sent_before?: string | null;
+            /** Message Hash */
+            message_hash?: string | null;
+            /** Triggered By */
+            triggered_by?: string | null;
+            /** Priority */
+            priority?: string | null;
+        };
+        /**
+         * PushNotificationSchema
+         * @description API schema for PushNotification entity.
+         */
+        PushNotificationSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Push Subscription Ids */
+            push_subscription_ids?: string[];
+            /** Content */
+            content: string;
+            /** Status */
+            status: string;
+            /** Error Message */
+            error_message?: string | null;
+            /**
+             * Sent At
+             * Format: date-time
+             */
+            sent_at: string;
+            /** Message */
+            message?: string | null;
+            /** Priority */
+            priority?: string | null;
+            /** Message Hash */
+            message_hash?: string | null;
+            /** Triggered By */
+            triggered_by?: string | null;
+            /** Llm Snapshot */
+            llm_snapshot?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * PushSubscriptionCreateSchema
+         * @description API schema for PushSubscription create requests.
+         */
+        PushSubscriptionCreateSchema: {
+            /** Device Name */
+            device_name: string;
+            /** Endpoint */
+            endpoint: string;
+            keys: components["schemas"]["PushSubscriptionKeysSchema"];
+        };
+        /**
+         * PushSubscriptionKeysSchema
+         * @description API schema for push subscription keys.
+         */
+        PushSubscriptionKeysSchema: {
+            /** P256Dh */
+            p256dh: string;
+            /** Auth */
+            auth: string;
+        };
+        /** PushSubscriptionQuery */
+        PushSubscriptionQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+        };
+        /**
+         * PushSubscriptionSchema
+         * @description API schema for PushSubscription entity.
+         */
+        PushSubscriptionSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Device Name */
+            device_name?: string | null;
+            /** Endpoint */
+            endpoint: string;
+            /** P256Dh */
+            p256dh: string;
+            /** Auth */
+            auth: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * PushSubscriptionUpdateSchema
+         * @description API schema for PushSubscription update requests.
+         */
+        PushSubscriptionUpdateSchema: {
+            /** Device Name */
+            device_name?: string | null;
+        };
+        /** QuerySchema[BrainDumpQuery] */
+        QuerySchema_BrainDumpQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["BrainDumpQuery"] | null;
+        };
+        /** QuerySchema[CalendarEntrySeriesQuery] */
+        QuerySchema_CalendarEntrySeriesQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["CalendarEntrySeriesQuery"] | null;
+        };
+        /** QuerySchema[CalendarQuery] */
+        QuerySchema_CalendarQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["CalendarQuery"] | null;
+        };
+        /** QuerySchema[DayTemplateQuery] */
+        QuerySchema_DayTemplateQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["DayTemplateQuery"] | null;
+        };
+        /** QuerySchema[FactoidQuery] */
+        QuerySchema_FactoidQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["FactoidQuery"] | null;
+        };
+        /** QuerySchema[PushNotificationQuery] */
+        QuerySchema_PushNotificationQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["PushNotificationQuery"] | null;
+        };
+        /** QuerySchema[PushSubscriptionQuery] */
+        QuerySchema_PushSubscriptionQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["PushSubscriptionQuery"] | null;
+        };
+        /** QuerySchema[RoutineDefinitionQuery] */
+        QuerySchema_RoutineDefinitionQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["RoutineDefinitionQuery"] | null;
+        };
+        /** QuerySchema[TacticQuery] */
+        QuerySchema_TacticQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["TacticQuery"] | null;
+        };
+        /** QuerySchema[TaskDefinitionQuery] */
+        QuerySchema_TaskDefinitionQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["TaskDefinitionQuery"] | null;
+        };
+        /** QuerySchema[TimeBlockDefinitionQuery] */
+        QuerySchema_TimeBlockDefinitionQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["TimeBlockDefinitionQuery"] | null;
+        };
+        /** QuerySchema[TriggerQuery] */
+        QuerySchema_TriggerQuery_: {
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            filters?: components["schemas"]["TriggerQuery"] | null;
+        };
+        /**
+         * RecurrenceScheduleSchema
+         * @description API schema for RecurrenceSchedule value object.
+         */
+        RecurrenceScheduleSchema: {
+            frequency: components["schemas"]["TaskFrequency"];
+            /** Weekdays */
+            weekdays?: components["schemas"]["DayOfWeek"][] | null;
+            /** Day Number */
+            day_number?: number | null;
+        };
+        /**
+         * ReminderSchema
+         * @description API schema for Reminder value object.
+         */
+        ReminderSchema: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+            status: components["schemas"]["ReminderStatus"];
+            /** Created At */
+            created_at?: string | null;
+        };
+        /**
+         * ReminderStatus
+         * @description Status of a reminder.
+         * @enum {string}
+         */
+        ReminderStatus: "INCOMPLETE" | "COMPLETE" | "PUNT";
+        /**
+         * RoutineDefinitionCreateSchema
+         * @description API schema for creating a RoutineDefinition entity.
+         */
+        RoutineDefinitionCreateSchema: {
+            /** Name */
+            name: string;
+            category: components["schemas"]["TaskCategory"];
+            routine_definition_schedule: components["schemas"]["RecurrenceScheduleSchema"];
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
+            /** Tasks */
+            tasks?: components["schemas"]["RoutineDefinitionTaskSchema-Input"][];
+        };
+        /** RoutineDefinitionQuery */
+        RoutineDefinitionQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+        };
+        /**
+         * RoutineDefinitionSchema
+         * @description API schema for RoutineDefinition entity.
+         */
+        RoutineDefinitionSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            category: components["schemas"]["TaskCategory"];
+            routine_definition_schedule: components["schemas"]["RecurrenceScheduleSchema"];
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
+            /** Tasks */
+            tasks?: components["schemas"]["RoutineDefinitionTaskSchema-Output"][];
+        };
+        /**
+         * RoutineDefinitionTaskCreateSchema
+         * @description API schema for attaching a RoutineDefinitionTask.
+         */
+        RoutineDefinitionTaskCreateSchema: {
+            /**
+             * Task Definition Id
+             * Format: uuid
+             */
+            task_definition_id: string;
+            /** Name */
+            name?: string | null;
+            task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
+        };
+        /**
+         * RoutineDefinitionTaskSchema
+         * @description API schema for RoutineDefinitionTask value object.
+         */
+        "RoutineDefinitionTaskSchema-Input": {
+            /** Id */
+            id?: string | null;
+            /**
+             * Task Definition Id
+             * Format: uuid
+             */
+            task_definition_id: string;
+            /** Name */
+            name?: string | null;
+            task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
+        };
+        /**
+         * RoutineDefinitionTaskSchema
+         * @description API schema for RoutineDefinitionTask value object.
+         */
+        "RoutineDefinitionTaskSchema-Output": {
+            /** Id */
+            id?: string | null;
+            /**
+             * Task Definition Id
+             * Format: uuid
+             */
+            task_definition_id: string;
+            /** Name */
+            name?: string | null;
+            task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
+        };
+        /**
+         * RoutineDefinitionTaskUpdateSchema
+         * @description API schema for updating an attached RoutineDefinitionTask.
+         */
+        RoutineDefinitionTaskUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            task_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
+        };
+        /**
+         * RoutineDefinitionUpdateSchema
+         * @description API schema for RoutineDefinition update requests.
+         */
+        RoutineDefinitionUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            category?: components["schemas"]["TaskCategory"] | null;
+            routine_definition_schedule?: components["schemas"]["RecurrenceScheduleSchema"] | null;
+            /** Description */
+            description?: string | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
+            /** Tasks */
+            tasks?: components["schemas"]["RoutineDefinitionTaskSchema-Input"][] | null;
+        };
+        /**
+         * RoutineSchema
+         * @description API schema for Routine entity.
+         */
+        RoutineSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Routine Definition Id
+             * Format: uuid
+             */
+            routine_definition_id: string;
+            /** Name */
+            name: string;
+            category: components["schemas"]["TaskCategory"];
+            /** Description */
+            description: string;
+            status: components["schemas"]["TaskStatus"];
+            /** Snoozed Until */
+            snoozed_until?: string | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
+            timing_status?: components["schemas"]["TimingStatus"] | null;
+            /** Next Available Time */
+            next_available_time?: string | null;
+        };
+        /**
+         * StatusResponseSchema
+         * @description Simple OK response.
+         */
+        StatusResponseSchema: {
+            /**
+             * Ok
+             * @default true
+             */
+            ok: boolean;
+        };
+        /**
+         * SyncSubscriptionSchema
+         * @description Schema describing a calendar sync subscription.
+         */
+        SyncSubscriptionSchema: {
+            /** Subscription Id */
+            subscription_id: string;
+            /** Resource Id */
+            resource_id?: string | null;
+            /**
+             * Expiration
+             * Format: date-time
+             */
+            expiration: string;
+            /** Provider */
+            provider: string;
+            /** Client State */
+            client_state?: string | null;
+            /** Sync Token */
+            sync_token?: string | null;
+            /** Webhook Url */
+            webhook_url?: string | null;
+        };
+        /**
+         * TacticCreateSchema
+         * @description API schema for creating a Tactic.
+         */
+        TacticCreateSchema: {
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+        };
+        /** TacticQuery */
+        TacticQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Ids */
+            ids?: string[] | null;
+            /** Name */
+            name?: string | null;
+        };
+        /**
+         * TacticSchema
+         * @description API schema for Tactic entity.
+         */
+        TacticSchema: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
+         * TacticUpdateSchema
+         * @description API schema for Tactic update requests.
+         */
+        TacticUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+        };
+        /**
+         * TaskCategory
+         * @enum {string}
+         */
+        TaskCategory: "HYGIENE" | "GROOMING" | "SLEEP" | "HEALTH" | "FITNESS" | "MEDICAL" | "NUTRITION" | "COOKING" | "HOUSE" | "CLEANING" | "MAINTENANCE" | "ORGANIZATION" | "WORK" | "MEETING" | "PROFESSIONAL" | "FAMILY" | "SOCIAL" | "RELATIONSHIP" | "SHOPPING" | "ERRAND" | "COMMUTE" | "TRAVEL" | "ENTERTAINMENT" | "HOBBY" | "RECREATION" | "EDUCATION" | "LEARNING" | "FINANCE" | "BILLS" | "TECHNOLOGY" | "DIGITAL" | "PET" | "PLANNING" | "ADMIN";
+        /**
+         * TaskDefinitionCreateSchema
+         * @description API schema for creating a TaskDefinition entity.
+         */
+        TaskDefinitionCreateSchema: {
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            type: components["schemas"]["TaskType"];
+        };
+        /** TaskDefinitionQuery */
+        TaskDefinitionQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+        };
+        /**
+         * TaskDefinitionSchema
+         * @description API schema for TaskDefinition entity.
+         */
+        TaskDefinitionSchema: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            type: components["schemas"]["TaskType"];
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
+         * TaskDefinitionUpdateSchema
+         * @description API schema for TaskDefinition update requests.
+         */
+        TaskDefinitionUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+            type?: components["schemas"]["TaskType"] | null;
+        };
+        /**
+         * TaskFrequency
+         * @enum {string}
+         */
+        TaskFrequency: "DAILY" | "CUSTOM_WEEKLY" | "WEEKLY" | "ONCE" | "YEARLY" | "MONTHLY" | "BI_WEEKLY" | "WORK_DAYS" | "WEEKENDS";
+        /**
+         * TaskSchema
+         * @description API schema for Task entity.
+         */
+        TaskSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Scheduled Date
+             * Format: date
+             */
+            scheduled_date: string;
+            /** Name */
+            name: string;
+            status: components["schemas"]["TaskStatus"];
+            type: components["schemas"]["TaskType"];
+            /** Description */
+            description?: string | null;
+            category: components["schemas"]["TaskCategory"];
+            frequency: components["schemas"]["TaskFrequency"];
+            /** Completed At */
+            completed_at?: string | null;
+            /** Snoozed Until */
+            snoozed_until?: string | null;
+            time_window?: components["schemas"]["TimeWindowSchema"] | null;
+            /** Routine Definition Id */
+            routine_definition_id?: string | null;
+            timing_status?: components["schemas"]["TimingStatus"] | null;
+            /** Next Available Time */
+            next_available_time?: string | null;
+            /** Tags */
+            tags?: components["schemas"]["TaskTag"][];
+            /** Actions */
+            actions?: components["schemas"]["ActionSchema"][];
+        };
+        /**
+         * TaskStatus
+         * @enum {string}
+         */
+        TaskStatus: "COMPLETE" | "NOT_READY" | "READY" | "PUNT" | "NOT_STARTED" | "PENDING" | "SNOOZE";
+        /**
+         * TaskTag
+         * @enum {string}
+         */
+        TaskTag: "AVOIDANT" | "FORGETTABLE" | "IMPORTANT" | "URGENT" | "FUN";
+        /**
+         * TaskType
+         * @enum {string}
+         */
+        TaskType: "ADHOC" | "MEAL" | "WORK" | "MEETING" | "EXERCISE" | "EVENT" | "SOCIAL" | "CHORE" | "ERRAND" | "SHOPPING" | "PERSONAL_CARE" | "ACTIVITY" | "ENTERTAINMENT" | "LEARNING" | "COMMUTE" | "TRAVEL" | "APPOINTMENT" | "COMMUNICATION" | "FINANCIAL" | "MAINTENANCE" | "PLANNING" | "TECHNOLOGY";
+        /**
+         * TimeBlockCategory
+         * @enum {string}
+         */
+        TimeBlockCategory: "WORK" | "PROFESSIONAL" | "MEETING" | "PERSONAL_CARE" | "HEALTH" | "FITNESS" | "NUTRITION" | "SLEEP" | "HOUSEHOLD" | "CHORES" | "MAINTENANCE" | "FAMILY" | "SOCIAL" | "RELATIONSHIP" | "ENTERTAINMENT" | "HOBBY" | "RECREATION" | "EDUCATION" | "LEARNING" | "COMMUTE" | "TRAVEL" | "PLANNING" | "ADMIN" | "OTHER";
+        /**
+         * TimeBlockDefinitionCreateSchema
+         * @description API schema for creating a TimeBlockDefinition.
+         */
+        TimeBlockDefinitionCreateSchema: {
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            type: components["schemas"]["TimeBlockType"];
+            category: components["schemas"]["TimeBlockCategory"];
+        };
+        /** TimeBlockDefinitionQuery */
+        TimeBlockDefinitionQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+        };
+        /**
+         * TimeBlockDefinitionSchema
+         * @description API schema for TimeBlockDefinition entity.
+         */
+        TimeBlockDefinitionSchema: {
+            /** Id */
+            id?: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            type: components["schemas"]["TimeBlockType"];
+            category: components["schemas"]["TimeBlockCategory"];
+        };
+        /**
+         * TimeBlockDefinitionUpdateSchema
+         * @description API schema for TimeBlockDefinition update requests.
+         */
+        TimeBlockDefinitionUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+            type?: components["schemas"]["TimeBlockType"] | null;
+            category?: components["schemas"]["TimeBlockCategory"] | null;
+        };
+        /**
+         * TimeBlockType
+         * @enum {string}
+         */
+        TimeBlockType: "WORK" | "BREAK" | "MEAL" | "EXERCISE" | "COMMUTE" | "MEETING" | "FOCUS" | "ADMIN" | "CREATIVE" | "LEARNING" | "SOCIAL" | "PERSONAL" | "ROUTINE" | "SLEEP" | "OTHER";
+        /**
+         * TimeWindowSchema
+         * @description API schema for TimeWindow value object.
+         */
+        TimeWindowSchema: {
+            /** Available Time */
+            available_time?: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            /** End Time */
+            end_time?: string | null;
+            /** Cutoff Time */
+            cutoff_time?: string | null;
+        };
+        /**
+         * TimingStatus
+         * @enum {string}
+         */
+        TimingStatus: "hidden" | "inactive" | "available" | "active" | "past-due";
+        /**
+         * TriggerCreateSchema
+         * @description API schema for creating a Trigger.
+         */
+        TriggerCreateSchema: {
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+        };
+        /** TriggerQuery */
+        TriggerQuery: {
+            /** Limit */
+            limit?: number | null;
+            /** Offset */
+            offset?: number | null;
+            /** Order By */
+            order_by?: string | null;
+            /** Order By Desc */
+            order_by_desc?: boolean | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created After */
+            created_after?: string | null;
+            /** Ids */
+            ids?: string[] | null;
+            /** Name */
+            name?: string | null;
+        };
+        /**
+         * TriggerSchema
+         * @description API schema for Trigger entity.
+         */
+        TriggerSchema: {
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
+         * TriggerTacticsUpdateSchema
+         * @description API schema for updating tactics linked to a trigger.
+         */
+        TriggerTacticsUpdateSchema: {
+            /** Tactic Ids */
+            tactic_ids: string[];
+        };
+        /**
+         * TriggerUpdateSchema
+         * @description API schema for Trigger update requests.
+         */
+        TriggerUpdateSchema: {
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+        };
+        /**
+         * UserCreate
+         * @description Schema for creating a new user.
+         */
+        UserCreate: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Password */
+            password: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean | null;
+            /**
+             * Is Superuser
+             * @default false
+             */
+            is_superuser: boolean | null;
+            /**
+             * Is Verified
+             * @default false
+             */
+            is_verified: boolean | null;
+        };
+        /**
+         * UserRead
+         * @description Schema for reading user data.
+         */
+        UserRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /**
+             * Is Superuser
+             * @default false
+             */
+            is_superuser: boolean;
+            /**
+             * Is Verified
+             * @default false
+             */
+            is_verified: boolean;
+            /** Phone Number */
+            phone_number?: string | null;
+        };
+        /**
+         * UserSchema
+         * @description Schema for the current authenticated user.
+         */
+        UserSchema: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Email */
+            email: string;
+            /** Phone Number */
+            phone_number?: string | null;
+            status: components["schemas"]["UserStatus"];
+            /** Is Active */
+            is_active: boolean;
+            /** Is Superuser */
+            is_superuser: boolean;
+            /** Is Verified */
+            is_verified: boolean;
+            settings: components["schemas"]["UserSettingsSchema"];
+            /** Default Conversation Id */
+            default_conversation_id?: string | null;
+            /** Sms Conversation Id */
+            sms_conversation_id?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Updated At */
+            updated_at?: string | null;
+        };
+        /**
+         * UserSettingsSchema
+         * @description Schema for user settings.
+         */
+        UserSettingsSchema: {
+            /** Template Defaults */
+            template_defaults: string[];
+            llm_provider?: components["schemas"]["LLMProvider"] | null;
+            /** Timezone */
+            timezone?: string | null;
+            /**
+             * Base Personality Slug
+             * @default default
+             */
+            base_personality_slug: string;
+            /** Llm Personality Amendments */
+            llm_personality_amendments?: string[];
+            /** Morning Overview Time */
+            morning_overview_time?: string | null;
+            /** Alarm Presets */
+            alarm_presets?: components["schemas"]["AlarmPresetSchema"][];
+        };
+        /**
+         * UserSettingsUpdateSchema
+         * @description Schema for updating user settings.
+         */
+        UserSettingsUpdateSchema: {
+            /** Template Defaults */
+            template_defaults?: string[] | null;
+            llm_provider?: components["schemas"]["LLMProvider"] | null;
+            /** Timezone */
+            timezone?: string | null;
+            /** Base Personality Slug */
+            base_personality_slug?: string | null;
+            /** Llm Personality Amendments */
+            llm_personality_amendments?: string[] | null;
+            /** Morning Overview Time */
+            morning_overview_time?: string | null;
+            /** Alarm Presets */
+            alarm_presets?: components["schemas"]["AlarmPresetSchema"][] | null;
+        };
+        /**
+         * UserStatus
+         * @description Lifecycle status for a user/account record.
+         * @enum {string}
+         */
+        UserStatus: "active" | "new-lead";
+        /**
+         * UserUpdateSchema
+         * @description Schema for updating a user profile.
+         */
+        UserUpdateSchema: {
+            /** Phone Number */
+            phone_number?: string | null;
+            status?: components["schemas"]["UserStatus"] | null;
+            /** Is Active */
+            is_active?: boolean | null;
+            /** Is Superuser */
+            is_superuser?: boolean | null;
+            /** Is Verified */
+            is_verified?: boolean | null;
+            settings?: components["schemas"]["UserSettingsUpdateSchema"] | null;
+            /** Default Conversation Id */
+            default_conversation_id?: string | null;
+            /** Sms Conversation Id */
+            sms_conversation_id?: string | null;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  auth_cookie_login_auth_login_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/x-www-form-urlencoded": components["schemas"]["Body_auth_cookie_login_auth_login_post"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  auth_cookie_logout_auth_logout_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description No Content */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Missing token or inactive user. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  register_register_auth_register_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UserCreate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["UserRead"];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  reset_forgot_password_auth_forgot_password_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["Body_reset_forgot_password_auth_forgot_password_post"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      202: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  reset_reset_password_auth_reset_password_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["Body_reset_reset_password_auth_reset_password_post"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorModel"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  request_early_access_early_access_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["EarlyAccessRequestSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["StatusResponseSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  google_login_google_login_get: {
-    parameters: {
-      query?: {
-        auth_token_id?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  google_login_callback_google_callback_login_get: {
-    parameters: {
-      query: {
-        state: string;
-        code: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  google_webhook_google_webhook__user_id___calendar_id__post: {
-    parameters: {
-      query?: never;
-      header?: {
-        "x-goog-channel-token"?: string | null;
-        "x-goog-resource-state"?: string | null;
-      };
-      path: {
-        user_id: string;
-        calendar_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_current_user_profile_me_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["UserSchema"];
-        };
-      };
-    };
-  };
-  update_current_user_profile_me_put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UserUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["UserSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_base_personalities_me_base_personalities_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BasePersonalitySchema"][];
-        };
-      };
-    };
-  };
-  add_reminder_to_today_me_today_reminders_post: {
-    parameters: {
-      query: {
-        name: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ReminderSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  remove_reminder_from_today_me_today_reminders__reminder_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        reminder_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ReminderSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_today_reminder_status_me_today_reminders__reminder_id__patch: {
-    parameters: {
-      query: {
-        status: components["schemas"]["ReminderStatus"];
-      };
-      header?: never;
-      path: {
-        reminder_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ReminderSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  add_alarm_to_today_me_today_alarms_post: {
-    parameters: {
-      query: {
-        time: string;
-        name?: string | null;
-        alarm_type?: components["schemas"]["AlarmType"];
-        url?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AlarmSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  remove_alarm_from_today_me_today_alarms_delete: {
-    parameters: {
-      query: {
-        name: string;
-        time: string;
-        alarm_type?: components["schemas"]["AlarmType"] | null;
-        url?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AlarmSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_alarm_status_for_today_me_today_alarms__alarm_id__patch: {
-    parameters: {
-      query: {
-        status: components["schemas"]["AlarmStatus"];
-        snoozed_until?: string | null;
-      };
-      header?: never;
-      path: {
-        alarm_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AlarmSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  add_brain_dump_item_to_today_me_today_brain_dump_post: {
-    parameters: {
-      query: {
-        text: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BrainDumpItemSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  remove_brain_dump_item_from_today_me_today_brain_dump__item_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        item_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BrainDumpItemSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_brain_dump_item_status_me_today_brain_dump__item_id__patch: {
-    parameters: {
-      query: {
-        status: components["schemas"]["BrainDumpItemStatus"];
-      };
-      header?: never;
-      path: {
-        item_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BrainDumpItemSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  add_routine_to_today_me_today_routines_post: {
-    parameters: {
-      query: {
-        routine_definition_id: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskSchema"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_brain_dump_item_brain_dump__uuid__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BrainDumpItemSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_brain_dump_item_brain_dump__uuid__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_brain_dump_item_brain_dump__uuid__patch: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["BrainDumpItemUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BrainDumpItemSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_brain_dump_items_brain_dump__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QuerySchema_BrainDumpQuery_"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PagedResponseSchema_BrainDumpItemSchema_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_brain_dump_item_brain_dump_create_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["BrainDumpItemCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BrainDumpItemSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_factoid_factoids__uuid__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["FactoidSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_factoid_factoids__uuid__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["FactoidUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["FactoidSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_factoid_factoids__uuid__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_factoids_factoids__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QuerySchema_FactoidQuery_"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PagedResponseSchema_FactoidSchema_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_factoid_factoids_create_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["FactoidCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["FactoidSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_calendar_entry_series_calendar_entry_series__uuid__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CalendarEntrySeriesSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_calendar_entry_series_calendar_entry_series__uuid__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CalendarEntrySeriesUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CalendarEntrySeriesSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_calendar_entry_series_calendar_entry_series__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QuerySchema_CalendarEntrySeriesQuery_"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PagedResponseSchema_CalendarEntrySeriesSchema_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_push_notifications_push_notifications__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QuerySchema_PushNotificationQuery_"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PagedResponseSchema_PushNotificationSchema_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_push_notification_push_notifications__notification_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        notification_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PushNotificationSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_subscriptions_push_subscriptions__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QuerySchema_PushSubscriptionQuery_"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PagedResponseSchema_PushSubscriptionSchema_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_subscription_push_subscriptions__subscription_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        subscription_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PushSubscriptionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_subscription_push_subscriptions__subscription_id__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        subscription_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["PushSubscriptionUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PushSubscriptionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_subscription_push_subscriptions__subscription_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        subscription_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  subscribe_push_subscribe__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["PushSubscriptionCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PushSubscriptionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  send_test_push_push_test_push__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: number;
-          };
-        };
-      };
-    };
-  };
-  add_task_action_tasks___id__actions_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        _id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["Action"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_adhoc_task_tasks_adhoc_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AdhocTaskCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  reschedule_today_days_today_reschedule_put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DayContextSchema"];
-        };
-      };
-    };
-  };
-  update_day_days__day_id__patch: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        day_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DayUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DaySchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  send_test_kiosk_notification_days_kiosk_test_notification_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: string;
-          };
-        };
-      };
-    };
-  };
-  get_day_template_day_templates__uuid__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DayTemplateSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_day_template_day_templates__uuid__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DayTemplateUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DayTemplateSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_day_template_day_templates__uuid__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_day_templates_day_templates__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QuerySchema_DayTemplateQuery_"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PagedResponseSchema_DayTemplateSchema_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_day_template_day_templates_create_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DayTemplateCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DayTemplateSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  add_day_template_routine_definition_day_templates__uuid__routine_definitions_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DayTemplateRoutineDefinitionCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DayTemplateSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  remove_day_template_routine_definition_day_templates__uuid__routine_definitions__routine_definition_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-        routine_definition_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DayTemplateSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  add_day_template_time_block_day_templates__uuid__time_blocks_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DayTemplateTimeBlockCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DayTemplateSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  remove_day_template_time_block_day_templates__uuid__time_blocks__time_block_definition_id___start_time__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-        time_block_definition_id: string;
-        start_time: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DayTemplateSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_task_definition_task_definitions__uuid__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskDefinitionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_task_definition_task_definitions__uuid__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["TaskDefinitionUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskDefinitionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_task_definition_task_definitions__uuid__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_task_definitions_task_definitions__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QuerySchema_TaskDefinitionQuery_"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PagedResponseSchema_TaskDefinitionSchema_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_task_definition_task_definitions_create_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["TaskDefinitionCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskDefinitionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_routine_definition_routine_definitions__uuid__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["RoutineDefinitionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_routine_definition_routine_definitions__uuid__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["RoutineDefinitionUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["RoutineDefinitionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_routine_definition_routine_definitions__uuid__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_routine_definitions_routine_definitions__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QuerySchema_RoutineDefinitionQuery_"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PagedResponseSchema_RoutineDefinitionSchema_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_routine_definition_routine_definitions_create_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["RoutineDefinitionCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["RoutineDefinitionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  add_routine_definition_task_routine_definitions__uuid__tasks_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["RoutineDefinitionTaskCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["RoutineDefinitionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-        routine_definition_task_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["RoutineDefinitionTaskUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["RoutineDefinitionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  remove_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-        routine_definition_task_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["RoutineDefinitionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  record_routine_definition_action_routine_definitions__uuid__actions_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["Action"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskSchema"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  record_routine_action_routines__uuid__actions_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["Action"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskSchema"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_time_block_definition_time_block_definitions__uuid__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TimeBlockDefinitionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_time_block_definition_time_block_definitions__uuid__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["TimeBlockDefinitionUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TimeBlockDefinitionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_time_block_definition_time_block_definitions__uuid__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_time_block_definitions_time_block_definitions__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QuerySchema_TimeBlockDefinitionQuery_"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PagedResponseSchema_TimeBlockDefinitionSchema_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_time_block_definition_time_block_definitions_create_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["TimeBlockDefinitionCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TimeBlockDefinitionSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_default_triggers_triggers_defaults_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TriggerCreateSchema"][];
-        };
-      };
-    };
-  };
-  import_default_triggers_triggers_import_defaults_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TriggerSchema"][];
-        };
-      };
-    };
-  };
-  get_trigger_triggers__uuid__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TriggerSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_trigger_triggers__uuid__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["TriggerUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TriggerSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_trigger_triggers__uuid__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_triggers_triggers__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QuerySchema_TriggerQuery_"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PagedResponseSchema_TriggerSchema_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_trigger_triggers_create_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["TriggerCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TriggerSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_trigger_tactics_triggers__uuid__tactics_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TacticSchema"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_trigger_tactics_triggers__uuid__tactics_put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["TriggerTacticsUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TacticSchema"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_default_tactics_tactics_defaults_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TacticCreateSchema"][];
-        };
-      };
-    };
-  };
-  import_default_tactics_tactics_import_defaults_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TacticSchema"][];
-        };
-      };
-    };
-  };
-  get_tactic_tactics__uuid__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TacticSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_tactic_tactics__uuid__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["TacticUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TacticSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_tactic_tactics__uuid__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_tactics_tactics__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QuerySchema_TacticQuery_"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PagedResponseSchema_TacticSchema_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_tactic_tactics_create_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["TacticCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TacticSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_calendar_calendars__uuid__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CalendarSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_calendar_calendars__uuid__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CalendarUpdateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CalendarSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_calendar_calendars__uuid__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  subscribe_calendar_calendars__uuid__subscribe_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CalendarSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  unsubscribe_calendar_calendars__uuid__subscribe_delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CalendarSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  resync_calendar_calendars__uuid__resync_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CalendarSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  reset_calendar_subscriptions_calendars_reset_subscriptions_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CalendarSchema"][];
-        };
-      };
-    };
-  };
-  reset_calendar_sync_calendars_reset_sync_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CalendarSchema"][];
-        };
-      };
-    };
-  };
-  search_calendars_calendars__post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["QuerySchema_CalendarQuery_"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["PagedResponseSchema_CalendarSchema_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_calendar_calendars_create_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CalendarCreateSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CalendarSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_usecase_config_usecase_configs__usecase__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        usecase: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["NotificationUseCaseConfigSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_usecase_config_usecase_configs__usecase__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        usecase: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["NotificationUseCaseConfigSchema"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["NotificationUseCaseConfigSchema"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_llm_snapshot_preview_usecase_configs__usecase__llm_preview_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        usecase: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: unknown;
-          } | null;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_usecase_config_usecase_configs__usecase_config_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        usecase_config_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  twilio_sms_webhook_twilio_webhook_sms_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-    };
-  };
-  health_check_health_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: string;
-          };
-        };
-      };
-    };
-  };
+    auth_cookie_login_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["Body_auth_cookie_login_auth_login_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_cookie_logout_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing token or inactive user. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    register_register_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRead"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_forgot_password_auth_forgot_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Body_reset_forgot_password_auth_forgot_password_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_reset_password_auth_reset_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Body_reset_reset_password_auth_reset_password_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_early_access_early_access_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EarlyAccessRequestSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatusResponseSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    google_login_google_login_get: {
+        parameters: {
+            query?: {
+                auth_token_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    google_login_callback_google_callback_login_get: {
+        parameters: {
+            query: {
+                state: string;
+                code: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    google_webhook_google_webhook__user_id___calendar_id__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-goog-channel-token"?: string | null;
+                "x-goog-resource-state"?: string | null;
+            };
+            path: {
+                user_id: string;
+                calendar_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_current_user_profile_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserSchema"];
+                };
+            };
+        };
+    };
+    update_current_user_profile_me_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_base_personalities_me_base_personalities_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BasePersonalitySchema"][];
+                };
+            };
+        };
+    };
+    add_reminder_to_today_me_today_reminders_post: {
+        parameters: {
+            query: {
+                name: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_reminder_from_today_me_today_reminders__reminder_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reminder_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_today_reminder_status_me_today_reminders__reminder_id__patch: {
+        parameters: {
+            query: {
+                status: components["schemas"]["ReminderStatus"];
+            };
+            header?: never;
+            path: {
+                reminder_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_alarm_to_today_me_today_alarms_post: {
+        parameters: {
+            query: {
+                time: string;
+                name?: string | null;
+                alarm_type?: components["schemas"]["AlarmType"];
+                url?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlarmSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_alarm_from_today_me_today_alarms_delete: {
+        parameters: {
+            query: {
+                name: string;
+                time: string;
+                alarm_type?: components["schemas"]["AlarmType"] | null;
+                url?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlarmSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_alarm_status_for_today_me_today_alarms__alarm_id__patch: {
+        parameters: {
+            query: {
+                status: components["schemas"]["AlarmStatus"];
+                snoozed_until?: string | null;
+            };
+            header?: never;
+            path: {
+                alarm_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlarmSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_brain_dump_to_today_me_today_brain_dump_post: {
+        parameters: {
+            query: {
+                text: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrainDumpSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_brain_dump_from_today_me_today_brain_dump__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrainDumpSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_brain_dump_status_me_today_brain_dump__item_id__patch: {
+        parameters: {
+            query: {
+                status: components["schemas"]["BrainDumpStatus"];
+            };
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrainDumpSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_routine_to_today_me_today_routines_post: {
+        parameters: {
+            query: {
+                routine_definition_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSchema"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_brain_dump_brain_dump__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrainDumpSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_brain_dump_brain_dump__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_brain_dump_brain_dump__uuid__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BrainDumpUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrainDumpSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_brain_dumps_brain_dump__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_BrainDumpQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_BrainDumpSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_brain_dump_brain_dump_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BrainDumpCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrainDumpSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_factoid_factoids__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FactoidSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_factoid_factoids__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FactoidUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FactoidSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_factoid_factoids__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_factoids_factoids__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_FactoidQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_FactoidSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_factoid_factoids_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FactoidCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FactoidSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_calendar_entry_series_calendar_entry_series__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarEntrySeriesSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_calendar_entry_series_calendar_entry_series__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarEntrySeriesUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarEntrySeriesSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_calendar_entry_series_calendar_entry_series__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_CalendarEntrySeriesQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_CalendarEntrySeriesSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_push_notifications_push_notifications__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_PushNotificationQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_PushNotificationSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_push_notification_push_notifications__notification_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushNotificationSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_subscriptions_push_subscriptions__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_PushSubscriptionQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_PushSubscriptionSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_subscription_push_subscriptions__subscription_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subscription_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscriptionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_subscription_push_subscriptions__subscription_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subscription_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscriptionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_subscription_push_subscriptions__subscription_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subscription_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    subscribe_push_subscribe__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscriptionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_test_push_push_test_push__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+        };
+    };
+    add_task_action_tasks___id__actions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                _id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Action"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_adhoc_task_tasks_adhoc_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdhocTaskCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reschedule_today_days_today_reschedule_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayContextSchema"];
+                };
+            };
+        };
+    };
+    update_day_days__day_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                day_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DayUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DaySchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_test_kiosk_notification_days_kiosk_test_notification_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    get_day_template_day_templates__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayTemplateSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_day_template_day_templates__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DayTemplateUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayTemplateSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_day_template_day_templates__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_day_templates_day_templates__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_DayTemplateQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_DayTemplateSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_day_template_day_templates_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DayTemplateCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayTemplateSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_day_template_routine_definition_day_templates__uuid__routine_definitions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DayTemplateRoutineDefinitionCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayTemplateSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_day_template_routine_definition_day_templates__uuid__routine_definitions__routine_definition_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+                routine_definition_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayTemplateSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_day_template_time_block_day_templates__uuid__time_blocks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DayTemplateTimeBlockCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayTemplateSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_day_template_time_block_day_templates__uuid__time_blocks__time_block_definition_id___start_time__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+                time_block_definition_id: string;
+                start_time: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayTemplateSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_task_definition_task_definitions__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_task_definition_task_definitions__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskDefinitionUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_task_definition_task_definitions__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_task_definitions_task_definitions__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_TaskDefinitionQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_TaskDefinitionSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_task_definition_task_definitions_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskDefinitionCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_routine_definition_routine_definitions__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_routine_definition_routine_definitions__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineDefinitionUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_routine_definition_routine_definitions__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_routine_definitions_routine_definitions__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_RoutineDefinitionQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_RoutineDefinitionSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_routine_definition_routine_definitions_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineDefinitionCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_routine_definition_task_routine_definitions__uuid__tasks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineDefinitionTaskCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+                routine_definition_task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutineDefinitionTaskUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+                routine_definition_task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_routine_definition_action_routine_definitions__uuid__actions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Action"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSchema"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_routine_action_routines__uuid__actions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Action"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSchema"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_time_block_definition_time_block_definitions__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeBlockDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_time_block_definition_time_block_definitions__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimeBlockDefinitionUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeBlockDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_time_block_definition_time_block_definitions__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_time_block_definitions_time_block_definitions__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_TimeBlockDefinitionQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_TimeBlockDefinitionSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_time_block_definition_time_block_definitions_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimeBlockDefinitionCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeBlockDefinitionSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_default_triggers_triggers_defaults_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TriggerCreateSchema"][];
+                };
+            };
+        };
+    };
+    import_default_triggers_triggers_import_defaults_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TriggerSchema"][];
+                };
+            };
+        };
+    };
+    get_trigger_triggers__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TriggerSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_trigger_triggers__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TriggerUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TriggerSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_trigger_triggers__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_triggers_triggers__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_TriggerQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_TriggerSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_trigger_triggers_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TriggerCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TriggerSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_trigger_tactics_triggers__uuid__tactics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TacticSchema"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_trigger_tactics_triggers__uuid__tactics_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TriggerTacticsUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TacticSchema"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_default_tactics_tactics_defaults_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TacticCreateSchema"][];
+                };
+            };
+        };
+    };
+    import_default_tactics_tactics_import_defaults_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TacticSchema"][];
+                };
+            };
+        };
+    };
+    get_tactic_tactics__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TacticSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_tactic_tactics__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TacticUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TacticSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_tactic_tactics__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_tactics_tactics__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_TacticQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_TacticSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_tactic_tactics_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TacticCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TacticSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_calendar_calendars__uuid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_calendar_calendars__uuid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarUpdateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_calendar_calendars__uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    subscribe_calendar_calendars__uuid__subscribe_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unsubscribe_calendar_calendars__uuid__subscribe_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resync_calendar_calendars__uuid__resync_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_calendar_subscriptions_calendars_reset_subscriptions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"][];
+                };
+            };
+        };
+    };
+    reset_calendar_sync_calendars_reset_sync_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"][];
+                };
+            };
+        };
+    };
+    search_calendars_calendars__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuerySchema_CalendarQuery_"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedResponseSchema_CalendarSchema_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_calendar_calendars_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarCreateSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_usecase_config_usecase_configs__usecase__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usecase: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationUseCaseConfigSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_usecase_config_usecase_configs__usecase__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usecase: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationUseCaseConfigSchema"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationUseCaseConfigSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_llm_snapshot_preview_usecase_configs__usecase__llm_preview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usecase: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    } | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_usecase_config_usecase_configs__usecase_config_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usecase_config_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    twilio_sms_webhook_twilio_webhook_sms_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    health_check_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
 }

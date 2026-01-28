@@ -1,16 +1,16 @@
 import { Component, Show, createMemo, createSignal } from "solid-js";
-import type { BrainDumpItem } from "@/types/api";
+import type { BrainDump } from "@/types/api";
 import BrainDumpList from "@/components/brain-dump/List";
 import { Icon } from "@/components/shared/Icon";
 import { faBrain } from "@fortawesome/free-solid-svg-icons";
 import { useStreamingData } from "@/providers/streamingData";
 
 export interface BrainDumpSummaryProps {
-  items: BrainDumpItem[];
+  items: BrainDump[];
 }
 
 export const BrainDumpSummary: Component<BrainDumpSummaryProps> = (props) => {
-  const { addBrainDumpItem, isLoading } = useStreamingData();
+  const { addBrainDump, isLoading } = useStreamingData();
   const [newItemText, setNewItemText] = createSignal("");
   const [isAdding, setIsAdding] = createSignal(false);
 
@@ -25,7 +25,7 @@ export const BrainDumpSummary: Component<BrainDumpSummaryProps> = (props) => {
 
     setIsAdding(true);
     try {
-      await addBrainDumpItem(text);
+      await addBrainDump(text);
       setNewItemText("");
     } catch (error) {
       console.error("Failed to add brain dump item:", error);

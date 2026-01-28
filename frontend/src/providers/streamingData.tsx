@@ -20,8 +20,8 @@ import {
   Alarm,
   AlarmType,
   AlarmStatus,
-  BrainDumpItem,
-  BrainDumpItemStatus,
+  BrainDump,
+  BrainDumpStatus,
   PushNotification,
   DayContextWithRoutines,
   Routine,
@@ -46,7 +46,7 @@ interface StreamingDataContextValue {
   events: Accessor<Event[]>;
   reminders: Accessor<Reminder[]>;
   alarms: Accessor<Alarm[]>;
-  brainDumps: Accessor<BrainDumpItem[]>;
+  brainDumps: Accessor<BrainDump[]>;
   notifications: Accessor<PushNotification[]>;
   day: Accessor<Day | undefined>;
   routines: Accessor<Routine[]>;
@@ -83,12 +83,12 @@ interface StreamingDataContextValue {
   snoozeAlarm: (alarm: Alarm, snoozedUntil: string) => Promise<void>;
   cancelAlarm: (alarm: Alarm) => Promise<void>;
   removeAlarm: (alarm: Alarm) => Promise<void>;
-  addBrainDumpItem: (text: string) => Promise<void>;
-  updateBrainDumpItemStatus: (
-    item: BrainDumpItem,
-    status: BrainDumpItemStatus,
+  addBrainDump: (text: string) => Promise<void>;
+  updateBrainDumpStatus: (
+    item: BrainDump,
+    status: BrainDumpStatus,
   ) => Promise<void>;
-  removeBrainDumpItem: (itemId: string) => Promise<void>;
+  removeBrainDump: (itemId: string) => Promise<void>;
   loadNotifications: () => Promise<void>;
   subscribeToTopic: (
     topic: string,
@@ -311,7 +311,7 @@ export function StreamingDataProvider(props: ParentProps) {
   >();
 
   type ReminderWithOptionalId = Omit<Reminder, "id"> & { id?: string | null };
-  type BrainDumpItemWithOptionalId = Omit<BrainDumpItem, "id"> & {
+  type BrainDumpWithOptionalId = Omit<BrainDump, "id"> & {
     id?: string | null;
   };
 
@@ -340,9 +340,9 @@ export function StreamingDataProvider(props: ParentProps) {
   const normalizeReminders = (items?: ReminderWithOptionalId[]): Reminder[] =>
     dedupeById((items ?? []).filter(hasNonEmptyId));
 
-  const normalizeBrainDumpItems = (
-    items?: BrainDumpItemWithOptionalId[],
-  ): BrainDumpItem[] => (items ?? []).filter(hasNonEmptyId);
+  const normalizeBrainDumps = (
+    items?: BrainDumpWithOptionalId[],
+  ): BrainDump[] => (items ?? []).filter(hasNonEmptyId);
 
   const isSameAlarm = (left: Alarm, right: Alarm): boolean => {
     if (left.id && right.id) {
@@ -395,9 +395,8 @@ export function StreamingDataProvider(props: ParentProps) {
   const brainDumps = createMemo(() => {
     const day = dayContextStore.data?.day;
     if (!day) return [];
-    return normalizeBrainDumpItems(
-      (day as { brain_dump_items?: BrainDumpItemWithOptionalId[] })
-        .brain_dump_items,
+    return normalizeBrainDumps(
+      (day as { brain_dump_items?: BrainDumpWithOptionalId[] }).brain_dump_items,
     );
   });
   const day = createMemo<Day | undefined>(() => {
@@ -848,9 +847,9 @@ export function StreamingDataProvider(props: ParentProps) {
     } else if (
       activityType.includes("Updated") ||
       activityType === "EntityUpdatedEvent" ||
-      activityType === "BrainDumpItemAddedEvent" ||
-      activityType === "BrainDumpItemStatusChangedEvent" ||
-      activityType === "BrainDumpItemRemovedEvent"
+      activityType === "BrainDumpAddedEvent" ||
+      activityType === "BrainDumpStatusChangedEvent" ||
+      activityType === "BrainDumpRemovedEvent"
     ) {
       changeType = "updated";
     }
@@ -1071,7 +1070,7 @@ export function StreamingDataProvider(props: ParentProps) {
     updateAlarmsLocally(next);
   };
 
-  const updateBrainDumpsLocally = (updatedItems: BrainDumpItem[]) => {
+  const updateBrainDumpsLocally = (updatedItems: BrainDump[]) => {
     setDayContextStore((current) => {
       if (!current.data || !current.data.day) return current;
       const updated = {
@@ -1219,14 +1218,14 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
-  const addBrainDumpItem = async (text: string): Promise<void> => {
+  const addBrainDump = async (text: string): Promise<void> => {
     const item = await brainDumpAPI.addItem(text);
     updateBrainDumpsLocally([...(brainDumps() ?? []), item]);
   };
 
-  const updateBrainDumpItemStatus = async (
-    item: BrainDumpItem,
-    status: BrainDumpItemStatus,
+  const updateBrainDumpStatus = async (
+    item: BrainDump,
+    status: BrainDumpStatus,
   ): Promise<void> => {
     if (!item.id) {
       return;
@@ -1249,7 +1248,7 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
-  const removeBrainDumpItem = async (itemId: string): Promise<void> => {
+  const removeBrainDump = async (itemId: string): Promise<void> => {
     const previousItems = brainDumps();
     const updatedItems = previousItems.filter((i) => i.id !== itemId);
     updateBrainDumpsLocally(updatedItems);
@@ -1375,9 +1374,9 @@ export function StreamingDataProvider(props: ParentProps) {
     snoozeAlarm,
     cancelAlarm,
     removeAlarm,
-    addBrainDumpItem,
-    updateBrainDumpItemStatus,
-    removeBrainDumpItem,
+    addBrainDump,
+    updateBrainDumpStatus,
+    removeBrainDump,
     loadNotifications,
     subscribeToTopic,
     unsubscribeFromTopic,

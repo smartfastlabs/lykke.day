@@ -19,7 +19,7 @@ import {
   LLMRunResultSnapshot,
   Alarm,
   Reminder,
-  BrainDumpItem,
+  BrainDump,
   PushNotification,
   Factoid,
   Tactic,
@@ -290,14 +290,14 @@ export const alarmAPI = {
 };
 
 export const brainDumpAPI = {
-  getToday: async (): Promise<BrainDumpItem[]> => {
+  getToday: async (): Promise<BrainDump[]> => {
     const now = new Date();
     const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
       2,
       "0",
     )}-${String(now.getDate()).padStart(2, "0")}`;
 
-    const data = await fetchData<PaginatedResponse<BrainDumpItem>>(
+    const data = await fetchData<PaginatedResponse<BrainDump>>(
       "/api/brain-dump/",
       {
         method: "POST",
@@ -314,11 +314,11 @@ export const brainDumpAPI = {
     );
     return data.items;
   },
-  get: (id: string): Promise<BrainDumpItem> =>
-    fetchData<BrainDumpItem>(`/api/brain-dump/${id}`),
-  addItem: (text: string): Promise<BrainDumpItem> => {
+  get: (id: string): Promise<BrainDump> =>
+    fetchData<BrainDump>(`/api/brain-dump/${id}`),
+  addItem: (text: string): Promise<BrainDump> => {
     const params = new URLSearchParams({ text });
-    return fetchData<BrainDumpItem>(
+    return fetchData<BrainDump>(
       `/api/me/today/brain-dump?${params.toString()}`,
       {
         method: "POST",
@@ -329,9 +329,9 @@ export const brainDumpAPI = {
   updateItemStatus: (
     itemId: string,
     status: string,
-  ): Promise<BrainDumpItem> => {
+  ): Promise<BrainDump> => {
     const params = new URLSearchParams({ status });
-    return fetchData<BrainDumpItem>(
+    return fetchData<BrainDump>(
       `/api/me/today/brain-dump/${itemId}?${params.toString()}`,
       {
         method: "PATCH",
@@ -339,8 +339,8 @@ export const brainDumpAPI = {
     );
   },
 
-  removeItem: (itemId: string): Promise<BrainDumpItem> =>
-    fetchData<BrainDumpItem>(`/api/me/today/brain-dump/${itemId}`, {
+  removeItem: (itemId: string): Promise<BrainDump> =>
+    fetchData<BrainDump>(`/api/me/today/brain-dump/${itemId}`, {
       method: "DELETE",
     }),
 };

@@ -36,7 +36,7 @@ export type Event = components["schemas"]["CalendarEntrySchema"];
 export type Day = components["schemas"]["DaySchema"] & {
   reminders?: Reminder[];
   alarms?: Alarm[];
-  brain_dump_items?: BrainDumpItem[];
+  brain_dump_items?: BrainDump[];
 };
 
 // DayContext with events alias
@@ -108,7 +108,7 @@ export interface AlarmPreset {
   url?: string | null;
 }
 
-export type BrainDumpItem = components["schemas"]["BrainDumpItemSchema"] & {
+export type BrainDump = components["schemas"]["BrainDumpSchema"] & {
   llm_run_result?: LLMRunResultSnapshot | Record<string, unknown> | null;
 };
 
@@ -129,8 +129,8 @@ export type ReminderStatus = "INCOMPLETE" | "COMPLETE" | "PUNT";
 export type AlarmType = "URL" | "GENERIC";
 export type AlarmStatus = "ACTIVE" | "TRIGGERED" | "SNOOZED" | "CANCELLED";
 
-export type BrainDumpItemStatus = "ACTIVE" | "COMPLETE" | "PUNT";
-export type BrainDumpItemType = components["schemas"]["BrainDumpItemType"];
+export type BrainDumpStatus = "ACTIVE" | "COMPLETE" | "PUNT";
+export type BrainDumpType = components["schemas"]["BrainDumpType"];
 
 // UseCase Config types
 export interface UseCaseConfig {

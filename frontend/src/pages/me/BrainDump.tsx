@@ -6,7 +6,7 @@ import { Icon } from "@/components/shared/Icon";
 import { faBrain } from "@fortawesome/free-solid-svg-icons";
 
 const BrainDumpPage: Component = () => {
-  const { brainDumps, addBrainDumpItem, isLoading } = useStreamingData();
+  const { brainDumps, addBrainDump, isLoading } = useStreamingData();
   const [newItemText, setNewItemText] = createSignal("");
   const [isAdding, setIsAdding] = createSignal(false);
 
@@ -19,7 +19,7 @@ const BrainDumpPage: Component = () => {
 
     setIsAdding(true);
     try {
-      await addBrainDumpItem(text);
+      await addBrainDump(text);
       setNewItemText("");
     } catch (error) {
       console.error("Failed to add brain dump item:", error);

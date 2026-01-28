@@ -3,7 +3,7 @@ import { Component, Show, createMemo } from "solid-js";
 import SettingsPage from "@/components/shared/SettingsPage";
 import LLMSnapshotDetails from "@/components/llm/LLMSnapshotDetails";
 import { useStreamingData } from "@/providers/streamingData";
-import type { BrainDumpItem, LLMRunResultSnapshot } from "@/types/api";
+import type { BrainDump, LLMRunResultSnapshot } from "@/types/api";
 
 const safeStringify = (value: unknown): string => {
   if (typeof value === "string") return value;
@@ -29,7 +29,7 @@ const formatDateTime = (value?: string | null): string | null => {
 const TodayBrainDumpDetailPage: Component = () => {
   const params = useParams();
   const { brainDumps, isLoading } = useStreamingData();
-  const brainDump = createMemo<BrainDumpItem | undefined>(() => {
+  const brainDump = createMemo<BrainDump | undefined>(() => {
     if (!params.id) return undefined;
     return brainDumps().find((item) => item.id === params.id);
   });

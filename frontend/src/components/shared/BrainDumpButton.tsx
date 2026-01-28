@@ -40,7 +40,7 @@ type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
 
 const BrainDumpButton: Component = () => {
   const navigate = useNavigate();
-  const { addBrainDumpItem, isLoading } = useStreamingData();
+  const { addBrainDump, isLoading } = useStreamingData();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
   const [newItemText, setNewItemText] = createSignal("");
   const [dictationInterim, setDictationInterim] = createSignal("");
@@ -171,7 +171,7 @@ const BrainDumpButton: Component = () => {
 
     setIsSaving(true);
     try {
-      await addBrainDumpItem(text);
+      await addBrainDump(text);
       closeDictationModal();
     } catch (error) {
       console.error("Failed to add brain dump item:", error);

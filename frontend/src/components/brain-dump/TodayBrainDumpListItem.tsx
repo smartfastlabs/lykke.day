@@ -1,5 +1,5 @@
 import { Component, Show, createMemo } from "solid-js";
-import type { BrainDumpItem } from "@/types/api";
+import type { BrainDump } from "@/types/api";
 
 const formatTime = (value?: string | null): string | null => {
   if (!value) return null;
@@ -12,7 +12,7 @@ const formatTime = (value?: string | null): string | null => {
 };
 
 interface ListItemProps {
-  item: BrainDumpItem;
+  item: BrainDump;
 }
 
 const TodayBrainDumpListItem: Component<ListItemProps> = (props) => {

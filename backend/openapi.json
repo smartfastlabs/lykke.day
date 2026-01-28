@@ -8,7 +8,9 @@
   "paths": {
     "/auth/login": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Auth:Cookie.Login",
         "operationId": "auth_cookie_login_auth_login_post",
         "requestBody": {
@@ -72,7 +74,9 @@
     },
     "/auth/logout": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Auth:Cookie.Logout",
         "operationId": "auth_cookie_logout_auth_logout_post",
         "responses": {
@@ -100,7 +104,9 @@
     },
     "/auth/register": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Register:Register",
         "operationId": "register_register_auth_register_post",
         "requestBody": {
@@ -166,7 +172,9 @@
     },
     "/auth/forgot-password": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Reset:Forgot Password",
         "operationId": "reset_forgot_password_auth_forgot_password_post",
         "requestBody": {
@@ -203,7 +211,9 @@
     },
     "/auth/reset-password": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Reset:Reset Password",
         "operationId": "reset_reset_password_auth_reset_password_post",
         "requestBody": {
@@ -267,7 +277,9 @@
     },
     "/early-access": {
       "post": {
-        "tags": ["public"],
+        "tags": [
+          "public"
+        ],
         "summary": "Request Early Access",
         "description": "Capture lead contact as a user with status NEW_LEAD.",
         "operationId": "request_early_access_early_access_post",
@@ -307,7 +319,10 @@
     },
     "/google/login": {
       "get": {
-        "tags": ["google", "auth"],
+        "tags": [
+          "google",
+          "auth"
+        ],
         "summary": "Google Login",
         "operationId": "google_login_google_login_get",
         "parameters": [
@@ -353,7 +368,10 @@
     },
     "/google/callback/login": {
       "get": {
-        "tags": ["google", "auth"],
+        "tags": [
+          "google",
+          "auth"
+        ],
         "summary": "Google Login Callback",
         "operationId": "google_login_callback_google_callback_login_get",
         "security": [
@@ -405,7 +423,10 @@
     },
     "/google/webhook/{user_id}/{calendar_id}": {
       "post": {
-        "tags": ["google", "auth"],
+        "tags": [
+          "google",
+          "auth"
+        ],
         "summary": "Google Webhook",
         "description": "Webhook endpoint for Google Calendar push notifications.\n\nGoogle sends notifications to this endpoint when calendar events change.\nThe actual sync is performed asynchronously via a background task.\n\nArgs:\n    user_id: The user ID extracted from the webhook URL.\n    calendar_id: The calendar ID extracted from the webhook URL.\n\nHeaders:\n    X-Goog-Channel-Token: Secret token for webhook verification.\n    X-Goog-Resource-State: The type of change (sync, exists, not_exists).\n\nReturns:\n    Empty 200 response to acknowledge receipt.",
         "operationId": "google_webhook_google_webhook__user_id___calendar_id__post",
@@ -487,7 +508,10 @@
     },
     "/me": {
       "get": {
-        "tags": ["auth", "user"],
+        "tags": [
+          "auth",
+          "user"
+        ],
         "summary": "Get Current User Profile",
         "description": "Return the currently authenticated user.",
         "operationId": "get_current_user_profile_me_get",
@@ -510,7 +534,10 @@
         ]
       },
       "put": {
-        "tags": ["auth", "user"],
+        "tags": [
+          "auth",
+          "user"
+        ],
         "summary": "Update Current User Profile",
         "description": "Update the current authenticated user.",
         "operationId": "update_current_user_profile_me_put",
@@ -555,7 +582,10 @@
     },
     "/me/base-personalities": {
       "get": {
-        "tags": ["auth", "user"],
+        "tags": [
+          "auth",
+          "user"
+        ],
         "summary": "List Base Personalities",
         "description": "List available base personalities.",
         "operationId": "list_base_personalities_me_base_personalities_get",
@@ -584,7 +614,10 @@
     },
     "/me/today/reminders": {
       "post": {
-        "tags": ["auth", "user"],
+        "tags": [
+          "auth",
+          "user"
+        ],
         "summary": "Add Reminder To Today",
         "description": "Add a reminder to today.",
         "operationId": "add_reminder_to_today_me_today_reminders_post",
@@ -630,7 +663,10 @@
     },
     "/me/today/reminders/{reminder_id}": {
       "patch": {
-        "tags": ["auth", "user"],
+        "tags": [
+          "auth",
+          "user"
+        ],
         "summary": "Update Today Reminder Status",
         "description": "Update a reminder's status for today.",
         "operationId": "update_today_reminder_status_me_today_reminders__reminder_id__patch",
@@ -683,7 +719,10 @@
         }
       },
       "delete": {
-        "tags": ["auth", "user"],
+        "tags": [
+          "auth",
+          "user"
+        ],
         "summary": "Remove Reminder From Today",
         "description": "Remove a reminder from today.",
         "operationId": "remove_reminder_from_today_me_today_reminders__reminder_id__delete",
@@ -730,7 +769,10 @@
     },
     "/me/today/alarms": {
       "post": {
-        "tags": ["auth", "user"],
+        "tags": [
+          "auth",
+          "user"
+        ],
         "summary": "Add Alarm To Today",
         "description": "Add an alarm to today.",
         "operationId": "add_alarm_to_today_me_today_alarms_post",
@@ -810,7 +852,10 @@
         }
       },
       "delete": {
-        "tags": ["auth", "user"],
+        "tags": [
+          "auth",
+          "user"
+        ],
         "summary": "Remove Alarm From Today",
         "description": "Remove an alarm from today.",
         "operationId": "remove_alarm_from_today_me_today_alarms_delete",
@@ -898,7 +943,10 @@
     },
     "/me/today/alarms/{alarm_id}": {
       "patch": {
-        "tags": ["auth", "user"],
+        "tags": [
+          "auth",
+          "user"
+        ],
         "summary": "Update Alarm Status For Today",
         "description": "Update an alarm's status for today.",
         "operationId": "update_alarm_status_for_today_me_today_alarms__alarm_id__patch",
@@ -970,10 +1018,13 @@
     },
     "/me/today/brain-dump": {
       "post": {
-        "tags": ["auth", "user"],
-        "summary": "Add Brain Dump Item To Today",
-        "description": "Add a brain dump item to today.",
-        "operationId": "add_brain_dump_item_to_today_me_today_brain_dump_post",
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Add Brain Dump To Today",
+        "description": "Add a brain dump to today.",
+        "operationId": "add_brain_dump_to_today_me_today_brain_dump_post",
         "security": [
           {
             "APIKeyCookie": []
@@ -1016,8 +1067,11 @@
     },
     "/me/today/brain-dump/{item_id}": {
       "patch": {
-        "tags": ["auth", "user"],
-        "summary": "Update Brain Dump Item Status",
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Update Brain Dump Status",
         "description": "Update a brain dump's status for today.",
         "operationId": "update_brain_dump_status_me_today_brain_dump__item_id__patch",
         "security": [
@@ -1069,10 +1123,13 @@
         }
       },
       "delete": {
-        "tags": ["auth", "user"],
-        "summary": "Remove Brain Dump Item From Today",
-        "description": "Remove a brain dump item from today.",
-        "operationId": "remove_brain_dump_item_from_today_me_today_brain_dump__item_id__delete",
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Remove Brain Dump From Today",
+        "description": "Remove a brain dump from today.",
+        "operationId": "remove_brain_dump_from_today_me_today_brain_dump__item_id__delete",
         "security": [
           {
             "APIKeyCookie": []
@@ -1116,7 +1173,10 @@
     },
     "/me/today/routines": {
       "post": {
-        "tags": ["auth", "user"],
+        "tags": [
+          "auth",
+          "user"
+        ],
         "summary": "Add Routine To Today",
         "description": "Add a routine's tasks to today (creates today's routine if needed).",
         "operationId": "add_routine_to_today_me_today_routines_post",
@@ -1167,10 +1227,12 @@
     },
     "/brain-dump/{uuid}": {
       "get": {
-        "tags": ["brain-dump"],
-        "summary": "Get Brain Dump Item",
-        "description": "Get a single brain dump item by ID.",
-        "operationId": "get_brain_dump_item_brain_dump__uuid__get",
+        "tags": [
+          "brain-dump"
+        ],
+        "summary": "Get Brain Dump",
+        "description": "Get a single brain dump by ID.",
+        "operationId": "get_brain_dump_brain_dump__uuid__get",
         "security": [
           {
             "APIKeyCookie": []
@@ -1212,8 +1274,10 @@
         }
       },
       "patch": {
-        "tags": ["brain-dump"],
-        "summary": "Update Brain Dump Item",
+        "tags": [
+          "brain-dump"
+        ],
+        "summary": "Update Brain Dump",
         "description": "Update a brain dump's status or type.",
         "operationId": "update_brain_dump_brain_dump__uuid__patch",
         "security": [
@@ -1238,7 +1302,7 @@
           "content": {
             "application/json": {
               "schema": {
-              "$ref": "#/components/schemas/BrainDumpUpdateSchema"
+                "$ref": "#/components/schemas/BrainDumpUpdateSchema"
               }
             }
           }
@@ -1267,8 +1331,10 @@
         }
       },
       "delete": {
-        "tags": ["brain-dump"],
-        "summary": "Delete Brain Dump Item",
+        "tags": [
+          "brain-dump"
+        ],
+        "summary": "Delete Brain Dump",
         "description": "Delete a brain dump.",
         "operationId": "delete_brain_dump_brain_dump__uuid__delete",
         "security": [
@@ -1307,10 +1373,12 @@
     },
     "/brain-dump/": {
       "post": {
-        "tags": ["brain-dump"],
-        "summary": "Search Brain Dump Items",
-        "description": "Search brain dump items with pagination and optional filters.",
-        "operationId": "search_brain_dump_items_brain_dump__post",
+        "tags": [
+          "brain-dump"
+        ],
+        "summary": "Search Brain Dumps",
+        "description": "Search brain dumps with pagination and optional filters.",
+        "operationId": "search_brain_dumps_brain_dump__post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1352,8 +1420,10 @@
     },
     "/brain-dump/create": {
       "post": {
-        "tags": ["brain-dump"],
-        "summary": "Create Brain Dump Item",
+        "tags": [
+          "brain-dump"
+        ],
+        "summary": "Create Brain Dump",
         "description": "Create a new brain dump.",
         "operationId": "create_brain_dump_brain_dump_create_post",
         "requestBody": {
@@ -1397,7 +1467,9 @@
     },
     "/factoids/{uuid}": {
       "get": {
-        "tags": ["factoids"],
+        "tags": [
+          "factoids"
+        ],
         "summary": "Get Factoid",
         "description": "Get a single factoid by ID.",
         "operationId": "get_factoid_factoids__uuid__get",
@@ -1442,7 +1514,9 @@
         }
       },
       "put": {
-        "tags": ["factoids"],
+        "tags": [
+          "factoids"
+        ],
         "summary": "Update Factoid",
         "description": "Update a factoid.",
         "operationId": "update_factoid_factoids__uuid__put",
@@ -1497,7 +1571,9 @@
         }
       },
       "delete": {
-        "tags": ["factoids"],
+        "tags": [
+          "factoids"
+        ],
         "summary": "Delete Factoid",
         "description": "Delete a factoid.",
         "operationId": "delete_factoid_factoids__uuid__delete",
@@ -1537,7 +1613,9 @@
     },
     "/factoids/": {
       "post": {
-        "tags": ["factoids"],
+        "tags": [
+          "factoids"
+        ],
         "summary": "Search Factoids",
         "description": "Search factoids with pagination and optional filters.",
         "operationId": "search_factoids_factoids__post",
@@ -1582,7 +1660,9 @@
     },
     "/factoids/create": {
       "post": {
-        "tags": ["factoids"],
+        "tags": [
+          "factoids"
+        ],
         "summary": "Create Factoid",
         "description": "Create a new factoid.",
         "operationId": "create_factoid_factoids_create_post",
@@ -1627,7 +1707,9 @@
     },
     "/calendar-entry-series/{uuid}": {
       "get": {
-        "tags": ["calendar-entry-series"],
+        "tags": [
+          "calendar-entry-series"
+        ],
         "summary": "Get Calendar Entry Series",
         "description": "Get a single calendar entry series by ID.",
         "operationId": "get_calendar_entry_series_calendar_entry_series__uuid__get",
@@ -1672,7 +1754,9 @@
         }
       },
       "put": {
-        "tags": ["calendar-entry-series"],
+        "tags": [
+          "calendar-entry-series"
+        ],
         "summary": "Update Calendar Entry Series",
         "description": "Update a calendar entry series.",
         "operationId": "update_calendar_entry_series_calendar_entry_series__uuid__put",
@@ -1729,7 +1813,9 @@
     },
     "/calendar-entry-series/": {
       "post": {
-        "tags": ["calendar-entry-series"],
+        "tags": [
+          "calendar-entry-series"
+        ],
         "summary": "Search Calendar Entry Series",
         "description": "Search calendar entry series with pagination and optional filters.",
         "operationId": "search_calendar_entry_series_calendar_entry_series__post",
@@ -1774,7 +1860,9 @@
     },
     "/push-notifications/": {
       "post": {
-        "tags": ["push-notifications"],
+        "tags": [
+          "push-notifications"
+        ],
         "summary": "Search Push Notifications",
         "description": "Search push notifications with pagination and optional filters.",
         "operationId": "search_push_notifications_push_notifications__post",
@@ -1819,7 +1907,9 @@
     },
     "/push-notifications/{notification_id}": {
       "get": {
-        "tags": ["push-notifications"],
+        "tags": [
+          "push-notifications"
+        ],
         "summary": "Get Push Notification",
         "description": "Get a specific push notification by ID.",
         "operationId": "get_push_notification_push_notifications__notification_id__get",
@@ -1866,7 +1956,10 @@
     },
     "/push/subscriptions/": {
       "post": {
-        "tags": ["push", "notifications"],
+        "tags": [
+          "push",
+          "notifications"
+        ],
         "summary": "Search Subscriptions",
         "description": "Search push subscriptions with pagination and optional filters.",
         "operationId": "search_subscriptions_push_subscriptions__post",
@@ -1911,7 +2004,10 @@
     },
     "/push/subscriptions/{subscription_id}": {
       "get": {
-        "tags": ["push", "notifications"],
+        "tags": [
+          "push",
+          "notifications"
+        ],
         "summary": "Get Subscription",
         "operationId": "get_subscription_push_subscriptions__subscription_id__get",
         "security": [
@@ -1954,7 +2050,10 @@
         }
       },
       "put": {
-        "tags": ["push", "notifications"],
+        "tags": [
+          "push",
+          "notifications"
+        ],
         "summary": "Update Subscription",
         "operationId": "update_subscription_push_subscriptions__subscription_id__put",
         "security": [
@@ -2007,7 +2106,10 @@
         }
       },
       "delete": {
-        "tags": ["push", "notifications"],
+        "tags": [
+          "push",
+          "notifications"
+        ],
         "summary": "Delete Subscription",
         "operationId": "delete_subscription_push_subscriptions__subscription_id__delete",
         "security": [
@@ -2050,7 +2152,10 @@
     },
     "/push/subscribe/": {
       "post": {
-        "tags": ["push", "notifications"],
+        "tags": [
+          "push",
+          "notifications"
+        ],
         "summary": "Subscribe",
         "operationId": "subscribe_push_subscribe__post",
         "requestBody": {
@@ -2094,7 +2199,10 @@
     },
     "/push/test-push/": {
       "post": {
-        "tags": ["push", "notifications"],
+        "tags": [
+          "push",
+          "notifications"
+        ],
         "summary": "Send Test Push",
         "description": "Send a test push notification to all user's subscribed devices.\n\nReturns:\n    A dict with the count of devices that will receive the notification.",
         "operationId": "send_test_push_push_test_push__post",
@@ -2123,7 +2231,9 @@
     },
     "/tasks/{_id}/actions": {
       "post": {
-        "tags": ["tasks"],
+        "tags": [
+          "tasks"
+        ],
         "summary": "Add Task Action",
         "description": "Record an action on a task.",
         "operationId": "add_task_action_tasks___id__actions_post",
@@ -2180,7 +2290,9 @@
     },
     "/tasks/adhoc": {
       "post": {
-        "tags": ["tasks"],
+        "tags": [
+          "tasks"
+        ],
         "summary": "Create Adhoc Task",
         "description": "Create an adhoc task.",
         "operationId": "create_adhoc_task_tasks_adhoc_post",
@@ -2225,7 +2337,11 @@
     },
     "/days/today/reschedule": {
       "put": {
-        "tags": ["day", "scheduling", "planning"],
+        "tags": [
+          "day",
+          "scheduling",
+          "planning"
+        ],
         "summary": "Reschedule Today",
         "description": "Reschedule today by cleaning up and recreating all tasks.",
         "operationId": "reschedule_today_days_today_reschedule_put",
@@ -2250,7 +2366,11 @@
     },
     "/days/{day_id}": {
       "patch": {
-        "tags": ["day", "scheduling", "planning"],
+        "tags": [
+          "day",
+          "scheduling",
+          "planning"
+        ],
         "summary": "Update Day",
         "description": "Update a day.",
         "operationId": "update_day_days__day_id__patch",
@@ -2307,7 +2427,11 @@
     },
     "/days/kiosk/test-notification": {
       "post": {
-        "tags": ["day", "scheduling", "planning"],
+        "tags": [
+          "day",
+          "scheduling",
+          "planning"
+        ],
         "summary": "Send Test Kiosk Notification",
         "description": "Send a test kiosk notification to all connected kiosks for the current user.\n\nReturns:\n    A dict with a success message.",
         "operationId": "send_test_kiosk_notification_days_kiosk_test_notification_post",
@@ -2336,7 +2460,9 @@
     },
     "/day-templates/{uuid}": {
       "get": {
-        "tags": ["day-templates"],
+        "tags": [
+          "day-templates"
+        ],
         "summary": "Get Day Template",
         "description": "Get a single day template by ID.",
         "operationId": "get_day_template_day_templates__uuid__get",
@@ -2381,7 +2507,9 @@
         }
       },
       "put": {
-        "tags": ["day-templates"],
+        "tags": [
+          "day-templates"
+        ],
         "summary": "Update Day Template",
         "description": "Update a day template.",
         "operationId": "update_day_template_day_templates__uuid__put",
@@ -2436,7 +2564,9 @@
         }
       },
       "delete": {
-        "tags": ["day-templates"],
+        "tags": [
+          "day-templates"
+        ],
         "summary": "Delete Day Template",
         "description": "Delete a day template.",
         "operationId": "delete_day_template_day_templates__uuid__delete",
@@ -2481,7 +2611,9 @@
     },
     "/day-templates/": {
       "post": {
-        "tags": ["day-templates"],
+        "tags": [
+          "day-templates"
+        ],
         "summary": "Search Day Templates",
         "description": "Search day templates with pagination and optional filters.",
         "operationId": "search_day_templates_day_templates__post",
@@ -2526,7 +2658,9 @@
     },
     "/day-templates/create": {
       "post": {
-        "tags": ["day-templates"],
+        "tags": [
+          "day-templates"
+        ],
         "summary": "Create Day Template",
         "description": "Create a new day template.",
         "operationId": "create_day_template_day_templates_create_post",
@@ -2571,7 +2705,9 @@
     },
     "/day-templates/{uuid}/routine-definitions": {
       "post": {
-        "tags": ["day-templates"],
+        "tags": [
+          "day-templates"
+        ],
         "summary": "Add Day Template Routine Definition",
         "description": "Attach a routine definition to a day template.",
         "operationId": "add_day_template_routine_definition_day_templates__uuid__routine_definitions_post",
@@ -2628,7 +2764,9 @@
     },
     "/day-templates/{uuid}/routine-definitions/{routine_definition_id}": {
       "delete": {
-        "tags": ["day-templates"],
+        "tags": [
+          "day-templates"
+        ],
         "summary": "Remove Day Template Routine Definition",
         "description": "Detach a routine definition from a day template.",
         "operationId": "remove_day_template_routine_definition_day_templates__uuid__routine_definitions__routine_definition_id__delete",
@@ -2685,7 +2823,9 @@
     },
     "/day-templates/{uuid}/time-blocks": {
       "post": {
-        "tags": ["day-templates"],
+        "tags": [
+          "day-templates"
+        ],
         "summary": "Add Day Template Time Block",
         "description": "Add a time block to a day template.",
         "operationId": "add_day_template_time_block_day_templates__uuid__time_blocks_post",
@@ -2742,7 +2882,9 @@
     },
     "/day-templates/{uuid}/time-blocks/{time_block_definition_id}/{start_time}": {
       "delete": {
-        "tags": ["day-templates"],
+        "tags": [
+          "day-templates"
+        ],
         "summary": "Remove Day Template Time Block",
         "description": "Remove a time block from a day template.",
         "operationId": "remove_day_template_time_block_day_templates__uuid__time_blocks__time_block_definition_id___start_time__delete",
@@ -2808,7 +2950,9 @@
     },
     "/task-definitions/{uuid}": {
       "get": {
-        "tags": ["task-definitions"],
+        "tags": [
+          "task-definitions"
+        ],
         "summary": "Get Task Definition",
         "description": "Get a single task definition by ID.",
         "operationId": "get_task_definition_task_definitions__uuid__get",
@@ -2853,7 +2997,9 @@
         }
       },
       "put": {
-        "tags": ["task-definitions"],
+        "tags": [
+          "task-definitions"
+        ],
         "summary": "Update Task Definition",
         "description": "Update a task definition.",
         "operationId": "update_task_definition_task_definitions__uuid__put",
@@ -2908,7 +3054,9 @@
         }
       },
       "delete": {
-        "tags": ["task-definitions"],
+        "tags": [
+          "task-definitions"
+        ],
         "summary": "Delete Task Definition",
         "description": "Delete a task definition.",
         "operationId": "delete_task_definition_task_definitions__uuid__delete",
@@ -2948,7 +3096,9 @@
     },
     "/task-definitions/": {
       "post": {
-        "tags": ["task-definitions"],
+        "tags": [
+          "task-definitions"
+        ],
         "summary": "Search Task Definitions",
         "description": "Search task definitions with pagination and optional filters.",
         "operationId": "search_task_definitions_task_definitions__post",
@@ -2993,7 +3143,9 @@
     },
     "/task-definitions/create": {
       "post": {
-        "tags": ["task-definitions"],
+        "tags": [
+          "task-definitions"
+        ],
         "summary": "Create Task Definition",
         "description": "Create a new task definition.",
         "operationId": "create_task_definition_task_definitions_create_post",
@@ -3038,7 +3190,9 @@
     },
     "/routine-definitions/{uuid}": {
       "get": {
-        "tags": ["routine-definitions"],
+        "tags": [
+          "routine-definitions"
+        ],
         "summary": "Get Routine Definition",
         "description": "Get a single routine definition by ID.",
         "operationId": "get_routine_definition_routine_definitions__uuid__get",
@@ -3083,7 +3237,9 @@
         }
       },
       "put": {
-        "tags": ["routine-definitions"],
+        "tags": [
+          "routine-definitions"
+        ],
         "summary": "Update Routine Definition",
         "description": "Update an existing routine definition.",
         "operationId": "update_routine_definition_routine_definitions__uuid__put",
@@ -3138,7 +3294,9 @@
         }
       },
       "delete": {
-        "tags": ["routine-definitions"],
+        "tags": [
+          "routine-definitions"
+        ],
         "summary": "Delete Routine Definition",
         "description": "Delete a routine definition.",
         "operationId": "delete_routine_definition_routine_definitions__uuid__delete",
@@ -3178,7 +3336,9 @@
     },
     "/routine-definitions/": {
       "post": {
-        "tags": ["routine-definitions"],
+        "tags": [
+          "routine-definitions"
+        ],
         "summary": "Search Routine Definitions",
         "description": "Search routine definitions with pagination and optional filters.",
         "operationId": "search_routine_definitions_routine_definitions__post",
@@ -3223,7 +3383,9 @@
     },
     "/routine-definitions/create": {
       "post": {
-        "tags": ["routine-definitions"],
+        "tags": [
+          "routine-definitions"
+        ],
         "summary": "Create Routine Definition",
         "description": "Create a new routine definition.",
         "operationId": "create_routine_definition_routine_definitions_create_post",
@@ -3268,7 +3430,9 @@
     },
     "/routine-definitions/{uuid}/tasks": {
       "post": {
-        "tags": ["routine-definitions"],
+        "tags": [
+          "routine-definitions"
+        ],
         "summary": "Add Routine Definition Task",
         "description": "Attach a task definition to a routine definition.",
         "operationId": "add_routine_definition_task_routine_definitions__uuid__tasks_post",
@@ -3325,7 +3489,9 @@
     },
     "/routine-definitions/{uuid}/tasks/{routine_definition_task_id}": {
       "put": {
-        "tags": ["routine-definitions"],
+        "tags": [
+          "routine-definitions"
+        ],
         "summary": "Update Routine Definition Task",
         "description": "Update an attached routine definition task (name/schedule).",
         "operationId": "update_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__put",
@@ -3390,7 +3556,9 @@
         }
       },
       "delete": {
-        "tags": ["routine-definitions"],
+        "tags": [
+          "routine-definitions"
+        ],
         "summary": "Remove Routine Definition Task",
         "description": "Detach a routine definition task from a routine definition by RoutineDefinitionTask.id.",
         "operationId": "remove_routine_definition_task_routine_definitions__uuid__tasks__routine_definition_task_id__delete",
@@ -3447,7 +3615,9 @@
     },
     "/routine-definitions/{uuid}/actions": {
       "post": {
-        "tags": ["routine-definitions"],
+        "tags": [
+          "routine-definitions"
+        ],
         "summary": "Record Routine Definition Action",
         "description": "Record an action on all tasks in a routine definition for today.",
         "operationId": "record_routine_definition_action_routine_definitions__uuid__actions_post",
@@ -3508,7 +3678,9 @@
     },
     "/routines/{uuid}/actions": {
       "post": {
-        "tags": ["routines"],
+        "tags": [
+          "routines"
+        ],
         "summary": "Record Routine Action",
         "description": "Record an action on all tasks in a routine for today.",
         "operationId": "record_routine_action_routines__uuid__actions_post",
@@ -3569,7 +3741,9 @@
     },
     "/time-block-definitions/{uuid}": {
       "get": {
-        "tags": ["time-block-definitions"],
+        "tags": [
+          "time-block-definitions"
+        ],
         "summary": "Get Time Block Definition",
         "description": "Get a single time block definition by ID.",
         "operationId": "get_time_block_definition_time_block_definitions__uuid__get",
@@ -3614,7 +3788,9 @@
         }
       },
       "put": {
-        "tags": ["time-block-definitions"],
+        "tags": [
+          "time-block-definitions"
+        ],
         "summary": "Update Time Block Definition",
         "description": "Update an existing time block definition.",
         "operationId": "update_time_block_definition_time_block_definitions__uuid__put",
@@ -3669,7 +3845,9 @@
         }
       },
       "delete": {
-        "tags": ["time-block-definitions"],
+        "tags": [
+          "time-block-definitions"
+        ],
         "summary": "Delete Time Block Definition",
         "description": "Delete a time block definition.",
         "operationId": "delete_time_block_definition_time_block_definitions__uuid__delete",
@@ -3709,7 +3887,9 @@
     },
     "/time-block-definitions/": {
       "post": {
-        "tags": ["time-block-definitions"],
+        "tags": [
+          "time-block-definitions"
+        ],
         "summary": "Search Time Block Definitions",
         "description": "Search time block definitions with pagination and optional filters.",
         "operationId": "search_time_block_definitions_time_block_definitions__post",
@@ -3754,7 +3934,9 @@
     },
     "/time-block-definitions/create": {
       "post": {
-        "tags": ["time-block-definitions"],
+        "tags": [
+          "time-block-definitions"
+        ],
         "summary": "Create Time Block Definition",
         "description": "Create a new time block definition.",
         "operationId": "create_time_block_definition_time_block_definitions_create_post",
@@ -3799,7 +3981,9 @@
     },
     "/triggers/defaults": {
       "get": {
-        "tags": ["triggers"],
+        "tags": [
+          "triggers"
+        ],
         "summary": "List Default Triggers",
         "description": "List default triggers available for import.",
         "operationId": "list_default_triggers_triggers_defaults_get",
@@ -3823,7 +4007,9 @@
     },
     "/triggers/import-defaults": {
       "post": {
-        "tags": ["triggers"],
+        "tags": [
+          "triggers"
+        ],
         "summary": "Import Default Triggers",
         "description": "Import default triggers into the user's account.",
         "operationId": "import_default_triggers_triggers_import_defaults_post",
@@ -3852,7 +4038,9 @@
     },
     "/triggers/{uuid}": {
       "get": {
-        "tags": ["triggers"],
+        "tags": [
+          "triggers"
+        ],
         "summary": "Get Trigger",
         "description": "Get a single trigger by ID.",
         "operationId": "get_trigger_triggers__uuid__get",
@@ -3897,7 +4085,9 @@
         }
       },
       "put": {
-        "tags": ["triggers"],
+        "tags": [
+          "triggers"
+        ],
         "summary": "Update Trigger",
         "description": "Update a trigger.",
         "operationId": "update_trigger_triggers__uuid__put",
@@ -3952,7 +4142,9 @@
         }
       },
       "delete": {
-        "tags": ["triggers"],
+        "tags": [
+          "triggers"
+        ],
         "summary": "Delete Trigger",
         "description": "Delete a trigger.",
         "operationId": "delete_trigger_triggers__uuid__delete",
@@ -3992,7 +4184,9 @@
     },
     "/triggers/": {
       "post": {
-        "tags": ["triggers"],
+        "tags": [
+          "triggers"
+        ],
         "summary": "Search Triggers",
         "description": "Search triggers with pagination and optional filters.",
         "operationId": "search_triggers_triggers__post",
@@ -4037,7 +4231,9 @@
     },
     "/triggers/create": {
       "post": {
-        "tags": ["triggers"],
+        "tags": [
+          "triggers"
+        ],
         "summary": "Create Trigger",
         "description": "Create a new trigger.",
         "operationId": "create_trigger_triggers_create_post",
@@ -4082,7 +4278,9 @@
     },
     "/triggers/{uuid}/tactics": {
       "get": {
-        "tags": ["triggers"],
+        "tags": [
+          "triggers"
+        ],
         "summary": "List Trigger Tactics",
         "description": "List tactics linked to a trigger.",
         "operationId": "list_trigger_tactics_triggers__uuid__tactics_get",
@@ -4131,7 +4329,9 @@
         }
       },
       "put": {
-        "tags": ["triggers"],
+        "tags": [
+          "triggers"
+        ],
         "summary": "Update Trigger Tactics",
         "description": "Replace all tactics linked to a trigger.",
         "operationId": "update_trigger_tactics_triggers__uuid__tactics_put",
@@ -4192,7 +4392,9 @@
     },
     "/tactics/defaults": {
       "get": {
-        "tags": ["tactics"],
+        "tags": [
+          "tactics"
+        ],
         "summary": "List Default Tactics",
         "description": "List default tactics available for import.",
         "operationId": "list_default_tactics_tactics_defaults_get",
@@ -4216,7 +4418,9 @@
     },
     "/tactics/import-defaults": {
       "post": {
-        "tags": ["tactics"],
+        "tags": [
+          "tactics"
+        ],
         "summary": "Import Default Tactics",
         "description": "Import default tactics into the user's account.",
         "operationId": "import_default_tactics_tactics_import_defaults_post",
@@ -4245,7 +4449,9 @@
     },
     "/tactics/{uuid}": {
       "get": {
-        "tags": ["tactics"],
+        "tags": [
+          "tactics"
+        ],
         "summary": "Get Tactic",
         "description": "Get a single tactic by ID.",
         "operationId": "get_tactic_tactics__uuid__get",
@@ -4290,7 +4496,9 @@
         }
       },
       "put": {
-        "tags": ["tactics"],
+        "tags": [
+          "tactics"
+        ],
         "summary": "Update Tactic",
         "description": "Update a tactic.",
         "operationId": "update_tactic_tactics__uuid__put",
@@ -4345,7 +4553,9 @@
         }
       },
       "delete": {
-        "tags": ["tactics"],
+        "tags": [
+          "tactics"
+        ],
         "summary": "Delete Tactic",
         "description": "Delete a tactic.",
         "operationId": "delete_tactic_tactics__uuid__delete",
@@ -4385,7 +4595,9 @@
     },
     "/tactics/": {
       "post": {
-        "tags": ["tactics"],
+        "tags": [
+          "tactics"
+        ],
         "summary": "Search Tactics",
         "description": "Search tactics with pagination and optional filters.",
         "operationId": "search_tactics_tactics__post",
@@ -4430,7 +4642,9 @@
     },
     "/tactics/create": {
       "post": {
-        "tags": ["tactics"],
+        "tags": [
+          "tactics"
+        ],
         "summary": "Create Tactic",
         "description": "Create a new tactic.",
         "operationId": "create_tactic_tactics_create_post",
@@ -4475,7 +4689,9 @@
     },
     "/calendars/{uuid}": {
       "get": {
-        "tags": ["calendars"],
+        "tags": [
+          "calendars"
+        ],
         "summary": "Get Calendar",
         "description": "Get a single calendar by ID.",
         "operationId": "get_calendar_calendars__uuid__get",
@@ -4520,7 +4736,9 @@
         }
       },
       "put": {
-        "tags": ["calendars"],
+        "tags": [
+          "calendars"
+        ],
         "summary": "Update Calendar",
         "description": "Update a calendar.",
         "operationId": "update_calendar_calendars__uuid__put",
@@ -4575,7 +4793,9 @@
         }
       },
       "delete": {
-        "tags": ["calendars"],
+        "tags": [
+          "calendars"
+        ],
         "summary": "Delete Calendar",
         "description": "Delete a calendar.",
         "operationId": "delete_calendar_calendars__uuid__delete",
@@ -4620,7 +4840,9 @@
     },
     "/calendars/{uuid}/subscribe": {
       "post": {
-        "tags": ["calendars"],
+        "tags": [
+          "calendars"
+        ],
         "summary": "Subscribe Calendar",
         "description": "Enable push notifications for a calendar.",
         "operationId": "subscribe_calendar_calendars__uuid__subscribe_post",
@@ -4665,7 +4887,9 @@
         }
       },
       "delete": {
-        "tags": ["calendars"],
+        "tags": [
+          "calendars"
+        ],
         "summary": "Unsubscribe Calendar",
         "description": "Disable push notifications for a calendar.",
         "operationId": "unsubscribe_calendar_calendars__uuid__subscribe_delete",
@@ -4712,7 +4936,9 @@
     },
     "/calendars/{uuid}/resync": {
       "post": {
-        "tags": ["calendars"],
+        "tags": [
+          "calendars"
+        ],
         "summary": "Resync Calendar",
         "description": "Resubscribe and fully resync a calendar.",
         "operationId": "resync_calendar_calendars__uuid__resync_post",
@@ -4759,7 +4985,9 @@
     },
     "/calendars/reset-subscriptions": {
       "post": {
-        "tags": ["calendars"],
+        "tags": [
+          "calendars"
+        ],
         "summary": "Reset Calendar Subscriptions",
         "description": "Delete all calendar data and refresh subscriptions for the user.",
         "operationId": "reset_calendar_subscriptions_calendars_reset_subscriptions_post",
@@ -4788,7 +5016,9 @@
     },
     "/calendars/reset-sync": {
       "post": {
-        "tags": ["calendars"],
+        "tags": [
+          "calendars"
+        ],
         "summary": "Reset Calendar Sync",
         "description": "Reset calendar sync: unsubscribe, delete future events, resubscribe, and sync.\n\nThis operation:\n1. Unsubscribes all calendars that have syncing enabled\n2. Deletes all future calendar entries for those calendars\n3. Resubscribes to updates for all calendars that were previously subscribed\n4. Performs initial sync for each calendar",
         "operationId": "reset_calendar_sync_calendars_reset_sync_post",
@@ -4817,7 +5047,9 @@
     },
     "/calendars/": {
       "post": {
-        "tags": ["calendars"],
+        "tags": [
+          "calendars"
+        ],
         "summary": "Search Calendars",
         "description": "Search calendars with pagination and optional filters.",
         "operationId": "search_calendars_calendars__post",
@@ -4862,7 +5094,9 @@
     },
     "/calendars/create": {
       "post": {
-        "tags": ["calendars"],
+        "tags": [
+          "calendars"
+        ],
         "summary": "Create Calendar",
         "description": "Create a new calendar.",
         "operationId": "create_calendar_calendars_create_post",
@@ -4907,7 +5141,9 @@
     },
     "/usecase-configs/{usecase}": {
       "get": {
-        "tags": ["usecase-configs"],
+        "tags": [
+          "usecase-configs"
+        ],
         "summary": "Get Usecase Config",
         "description": "Get usecase config by usecase key.",
         "operationId": "get_usecase_config_usecase_configs__usecase__get",
@@ -4951,7 +5187,9 @@
         }
       },
       "put": {
-        "tags": ["usecase-configs"],
+        "tags": [
+          "usecase-configs"
+        ],
         "summary": "Update Usecase Config",
         "description": "Create or update usecase config.",
         "operationId": "update_usecase_config_usecase_configs__usecase__put",
@@ -5007,7 +5245,9 @@
     },
     "/usecase-configs/{usecase}/llm-preview": {
       "get": {
-        "tags": ["usecase-configs"],
+        "tags": [
+          "usecase-configs"
+        ],
         "summary": "Get Llm Snapshot Preview",
         "description": "Build a synthetic LLM snapshot preview for a usecase.",
         "operationId": "get_llm_snapshot_preview_usecase_configs__usecase__llm_preview_get",
@@ -5062,7 +5302,9 @@
     },
     "/usecase-configs/{usecase_config_id}": {
       "delete": {
-        "tags": ["usecase-configs"],
+        "tags": [
+          "usecase-configs"
+        ],
         "summary": "Delete Usecase Config",
         "description": "Delete a usecase config.",
         "operationId": "delete_usecase_config_usecase_configs__usecase_config_id__delete",
@@ -5107,7 +5349,10 @@
     },
     "/twilio/webhook/sms": {
       "post": {
-        "tags": ["twilio", "sms"],
+        "tags": [
+          "twilio",
+          "sms"
+        ],
         "summary": "Twilio Sms Webhook",
         "description": "Webhook endpoint for inbound Twilio SMS messages.",
         "operationId": "twilio_sms_webhook_twilio_webhook_sms_post",
@@ -5166,7 +5411,9 @@
           }
         },
         "type": "object",
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "title": "Action"
       },
       "ActionSchema": {
@@ -5200,7 +5447,10 @@
           }
         },
         "type": "object",
-        "required": ["type", "created_at"],
+        "required": [
+          "type",
+          "created_at"
+        ],
         "title": "ActionSchema",
         "description": "API schema for Action value object."
       },
@@ -5264,7 +5514,11 @@
           }
         },
         "type": "object",
-        "required": ["scheduled_date", "name", "category"],
+        "required": [
+          "scheduled_date",
+          "name",
+          "category"
+        ],
         "title": "AdhocTaskCreateSchema",
         "description": "API schema for creating adhoc tasks."
       },
@@ -5379,19 +5633,32 @@
           }
         },
         "type": "object",
-        "required": ["name", "time", "type", "url"],
+        "required": [
+          "name",
+          "time",
+          "type",
+          "url"
+        ],
         "title": "AlarmSchema",
         "description": "API schema for Alarm value object."
       },
       "AlarmStatus": {
         "type": "string",
-        "enum": ["ACTIVE", "TRIGGERED", "SNOOZED", "CANCELLED"],
+        "enum": [
+          "ACTIVE",
+          "TRIGGERED",
+          "SNOOZED",
+          "CANCELLED"
+        ],
         "title": "AlarmStatus",
         "description": "Status of an alarm."
       },
       "AlarmType": {
         "type": "string",
-        "enum": ["URL", "GENERIC"],
+        "enum": [
+          "URL",
+          "GENERIC"
+        ],
         "title": "AlarmType",
         "description": "Type of alarm behavior."
       },
@@ -5407,7 +5674,10 @@
           }
         },
         "type": "object",
-        "required": ["slug", "label"],
+        "required": [
+          "slug",
+          "label"
+        ],
         "title": "BasePersonalitySchema",
         "description": "Schema for base personality metadata."
       },
@@ -5464,7 +5734,10 @@
           }
         },
         "type": "object",
-        "required": ["username", "password"],
+        "required": [
+          "username",
+          "password"
+        ],
         "title": "Body_auth_cookie_login_auth_login_post"
       },
       "Body_reset_forgot_password_auth_forgot_password_post": {
@@ -5476,7 +5749,9 @@
           }
         },
         "type": "object",
-        "required": ["email"],
+        "required": [
+          "email"
+        ],
         "title": "Body_reset_forgot_password_auth_forgot_password_post"
       },
       "Body_reset_reset_password_auth_reset_password_post": {
@@ -5491,7 +5766,10 @@
           }
         },
         "type": "object",
-        "required": ["token", "password"],
+        "required": [
+          "token",
+          "password"
+        ],
         "title": "Body_reset_reset_password_auth_reset_password_post"
       },
       "BrainDumpCreateSchema": {
@@ -5507,112 +5785,12 @@
           }
         },
         "type": "object",
-        "required": ["date", "text"],
+        "required": [
+          "date",
+          "text"
+        ],
         "title": "BrainDumpCreateSchema",
         "description": "API schema for creating brain dumps."
-      },
-      "BrainDumpSchema": {
-        "properties": {
-          "id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Id"
-          },
-          "user_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "User Id"
-          },
-          "date": {
-            "type": "string",
-            "format": "date",
-            "title": "Date"
-          },
-          "text": {
-            "type": "string",
-            "title": "Text"
-          },
-          "status": {
-            "$ref": "#/components/schemas/BrainDumpStatus"
-          },
-          "type": {
-            "$ref": "#/components/schemas/BrainDumpType"
-          },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created At"
-          },
-          "llm_run_result": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Llm Run Result"
-          }
-        },
-        "type": "object",
-        "required": ["user_id", "date", "text", "status", "type"],
-        "title": "BrainDumpSchema",
-        "description": "API schema for BrainDump entity."
-      },
-      "BrainDumpStatus": {
-        "type": "string",
-        "enum": ["ACTIVE", "COMPLETE", "PUNT"],
-        "title": "BrainDumpStatus",
-        "description": "Status of a brain dump."
-      },
-      "BrainDumpType": {
-        "type": "string",
-        "enum": ["GENERAL", "COMMAND"],
-        "title": "BrainDumpType",
-        "description": "Type of a brain dump."
-      },
-      "BrainDumpUpdateSchema": {
-        "properties": {
-          "status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/BrainDumpStatus"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "type": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/BrainDumpType"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "title": "BrainDumpUpdateSchema",
-        "description": "API schema for updating a brain dump."
       },
       "BrainDumpQuery": {
         "properties": {
@@ -5720,6 +5898,122 @@
         "type": "object",
         "title": "BrainDumpQuery"
       },
+      "BrainDumpSchema": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BrainDumpStatus"
+          },
+          "type": {
+            "$ref": "#/components/schemas/BrainDumpType"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "llm_run_result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Run Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "date",
+          "text",
+          "status",
+          "type"
+        ],
+        "title": "BrainDumpSchema",
+        "description": "API schema for BrainDump entity."
+      },
+      "BrainDumpStatus": {
+        "type": "string",
+        "enum": [
+          "ACTIVE",
+          "COMPLETE",
+          "PUNT"
+        ],
+        "title": "BrainDumpStatus",
+        "description": "Status of a brain dump."
+      },
+      "BrainDumpType": {
+        "type": "string",
+        "enum": [
+          "GENERAL",
+          "COMMAND"
+        ],
+        "title": "BrainDumpType",
+        "description": "Type of a brain dump."
+      },
+      "BrainDumpUpdateSchema": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrainDumpStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrainDumpType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "BrainDumpUpdateSchema",
+        "description": "API schema for updating a brain dump."
+      },
       "CalendarCreateSchema": {
         "properties": {
           "name": {
@@ -5763,7 +6057,12 @@
           }
         },
         "type": "object",
-        "required": ["name", "auth_token_id", "platform_id", "platform"],
+        "required": [
+          "name",
+          "auth_token_id",
+          "platform_id",
+          "platform"
+        ],
         "title": "CalendarCreateSchema",
         "description": "API schema for creating a Calendar entity."
       },
@@ -6390,13 +6689,23 @@
           }
         },
         "type": "object",
-        "required": ["day"],
+        "required": [
+          "day"
+        ],
         "title": "DayContextSchema",
         "description": "API schema for DayContext value object."
       },
       "DayOfWeek": {
         "type": "integer",
-        "enum": [0, 1, 2, 3, 4, 5, 6],
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
         "title": "DayOfWeek"
       },
       "DaySchema": {
@@ -6495,7 +6804,7 @@
           },
           "brain_dump_items": {
             "items": {
-                  "$ref": "#/components/schemas/BrainDumpSchema"
+              "$ref": "#/components/schemas/BrainDumpSchema"
             },
             "type": "array",
             "title": "Brain Dump Items"
@@ -6512,18 +6821,31 @@
           }
         },
         "type": "object",
-        "required": ["user_id", "date", "status"],
+        "required": [
+          "user_id",
+          "date",
+          "status"
+        ],
         "title": "DaySchema",
         "description": "API schema for Day entity."
       },
       "DayStatus": {
         "type": "string",
-        "enum": ["UNSCHEDULED", "SCHEDULED", "STARTED", "COMPLETE"],
+        "enum": [
+          "UNSCHEDULED",
+          "SCHEDULED",
+          "STARTED",
+          "COMPLETE"
+        ],
         "title": "DayStatus"
       },
       "DayTag": {
         "type": "string",
-        "enum": ["WEEKEND", "VACATION", "WORKDAY"],
+        "enum": [
+          "WEEKEND",
+          "VACATION",
+          "WORKDAY"
+        ],
         "title": "DayTag"
       },
       "DayTemplateCreateSchema": {
@@ -6601,7 +6923,9 @@
           }
         },
         "type": "object",
-        "required": ["slug"],
+        "required": [
+          "slug"
+        ],
         "title": "DayTemplateCreateSchema",
         "description": "API schema for creating a DayTemplate entity."
       },
@@ -6699,7 +7023,9 @@
           }
         },
         "type": "object",
-        "required": ["routine_definition_id"],
+        "required": [
+          "routine_definition_id"
+        ],
         "title": "DayTemplateRoutineDefinitionCreateSchema",
         "description": "API schema for attaching a routine definition to a day template."
       },
@@ -6795,7 +7121,10 @@
           }
         },
         "type": "object",
-        "required": ["slug", "user_id"],
+        "required": [
+          "slug",
+          "user_id"
+        ],
         "title": "DayTemplateSchema",
         "description": "API schema for DayTemplate entity."
       },
@@ -6818,7 +7147,11 @@
           }
         },
         "type": "object",
-        "required": ["time_block_definition_id", "start_time", "end_time"],
+        "required": [
+          "time_block_definition_id",
+          "start_time",
+          "end_time"
+        ],
         "title": "DayTemplateTimeBlockCreateSchema",
         "description": "API schema for adding a time block to a day template."
       },
@@ -7048,7 +7381,9 @@
           }
         },
         "type": "object",
-        "required": ["email"],
+        "required": [
+          "email"
+        ],
         "title": "EarlyAccessRequestSchema",
         "description": "Request body for early access opt-in."
       },
@@ -7070,12 +7405,20 @@
           }
         },
         "type": "object",
-        "required": ["detail"],
+        "required": [
+          "detail"
+        ],
         "title": "ErrorModel"
       },
       "EventCategory": {
         "type": "string",
-        "enum": ["WORK", "PERSONAL", "FAMILY", "SOCIAL", "OTHER"],
+        "enum": [
+          "WORK",
+          "PERSONAL",
+          "FAMILY",
+          "SOCIAL",
+          "OTHER"
+        ],
         "title": "EventCategory"
       },
       "FactoidCreateSchema": {
@@ -7116,13 +7459,19 @@
           }
         },
         "type": "object",
-        "required": ["content"],
+        "required": [
+          "content"
+        ],
         "title": "FactoidCreateSchema",
         "description": "API schema for creating a Factoid entity."
       },
       "FactoidCriticality": {
         "type": "string",
-        "enum": ["normal", "important", "critical"],
+        "enum": [
+          "normal",
+          "important",
+          "critical"
+        ],
         "title": "FactoidCriticality",
         "description": "Criticality level of a factoid."
       },
@@ -7347,7 +7696,11 @@
       },
       "FactoidType": {
         "type": "string",
-        "enum": ["episodic", "semantic", "procedural"],
+        "enum": [
+          "episodic",
+          "semantic",
+          "procedural"
+        ],
         "title": "FactoidType",
         "description": "Type of factoid/memory stored."
       },
@@ -7463,7 +7816,10 @@
       },
       "LLMProvider": {
         "type": "string",
-        "enum": ["anthropic", "openai"],
+        "enum": [
+          "anthropic",
+          "openai"
+        ],
         "title": "LLMProvider",
         "description": "LLM provider for generating responses."
       },
@@ -8247,7 +8603,12 @@
           }
         },
         "type": "object",
-        "required": ["user_id", "content", "status", "sent_at"],
+        "required": [
+          "user_id",
+          "content",
+          "status",
+          "sent_at"
+        ],
         "title": "PushNotificationSchema",
         "description": "API schema for PushNotification entity."
       },
@@ -8266,7 +8627,11 @@
           }
         },
         "type": "object",
-        "required": ["device_name", "endpoint", "keys"],
+        "required": [
+          "device_name",
+          "endpoint",
+          "keys"
+        ],
         "title": "PushSubscriptionCreateSchema",
         "description": "API schema for PushSubscription create requests."
       },
@@ -8282,7 +8647,10 @@
           }
         },
         "type": "object",
-        "required": ["p256dh", "auth"],
+        "required": [
+          "p256dh",
+          "auth"
+        ],
         "title": "PushSubscriptionKeysSchema",
         "description": "API schema for push subscription keys."
       },
@@ -8409,7 +8777,13 @@
           }
         },
         "type": "object",
-        "required": ["user_id", "endpoint", "p256dh", "auth", "created_at"],
+        "required": [
+          "user_id",
+          "endpoint",
+          "p256dh",
+          "auth",
+          "created_at"
+        ],
         "title": "PushSubscriptionSchema",
         "description": "API schema for PushSubscription entity."
       },
@@ -8811,7 +9185,9 @@
           }
         },
         "type": "object",
-        "required": ["frequency"],
+        "required": [
+          "frequency"
+        ],
         "title": "RecurrenceScheduleSchema",
         "description": "API schema for RecurrenceSchedule value object."
       },
@@ -8850,13 +9226,20 @@
           }
         },
         "type": "object",
-        "required": ["name", "status"],
+        "required": [
+          "name",
+          "status"
+        ],
         "title": "ReminderSchema",
         "description": "API schema for Reminder value object."
       },
       "ReminderStatus": {
         "type": "string",
-        "enum": ["INCOMPLETE", "COMPLETE", "PUNT"],
+        "enum": [
+          "INCOMPLETE",
+          "COMPLETE",
+          "PUNT"
+        ],
         "title": "ReminderStatus",
         "description": "Status of a reminder."
       },
@@ -8896,7 +9279,11 @@
           }
         },
         "type": "object",
-        "required": ["name", "category", "routine_definition_schedule"],
+        "required": [
+          "name",
+          "category",
+          "routine_definition_schedule"
+        ],
         "title": "RoutineDefinitionCreateSchema",
         "description": "API schema for creating a RoutineDefinition entity."
       },
@@ -9076,7 +9463,9 @@
           }
         },
         "type": "object",
-        "required": ["task_definition_id"],
+        "required": [
+          "task_definition_id"
+        ],
         "title": "RoutineDefinitionTaskCreateSchema",
         "description": "API schema for attaching a RoutineDefinitionTask."
       },
@@ -9132,7 +9521,9 @@
           }
         },
         "type": "object",
-        "required": ["task_definition_id"],
+        "required": [
+          "task_definition_id"
+        ],
         "title": "RoutineDefinitionTaskSchema",
         "description": "API schema for RoutineDefinitionTask value object."
       },
@@ -9188,7 +9579,9 @@
           }
         },
         "type": "object",
-        "required": ["task_definition_id"],
+        "required": [
+          "task_definition_id"
+        ],
         "title": "RoutineDefinitionTaskSchema",
         "description": "API schema for RoutineDefinitionTask value object."
       },
@@ -9477,7 +9870,11 @@
           }
         },
         "type": "object",
-        "required": ["subscription_id", "expiration", "provider"],
+        "required": [
+          "subscription_id",
+          "expiration",
+          "provider"
+        ],
         "title": "SyncSubscriptionSchema",
         "description": "Schema describing a calendar sync subscription."
       },
@@ -9493,7 +9890,10 @@
           }
         },
         "type": "object",
-        "required": ["name", "description"],
+        "required": [
+          "name",
+          "description"
+        ],
         "title": "TacticCreateSchema",
         "description": "API schema for creating a Tactic."
       },
@@ -9626,7 +10026,11 @@
           }
         },
         "type": "object",
-        "required": ["name", "description", "user_id"],
+        "required": [
+          "name",
+          "description",
+          "user_id"
+        ],
         "title": "TacticSchema",
         "description": "API schema for Tactic entity."
       },
@@ -9714,7 +10118,11 @@
           }
         },
         "type": "object",
-        "required": ["name", "description", "type"],
+        "required": [
+          "name",
+          "description",
+          "type"
+        ],
         "title": "TaskDefinitionCreateSchema",
         "description": "API schema for creating a TaskDefinition entity."
       },
@@ -9824,7 +10232,12 @@
           }
         },
         "type": "object",
-        "required": ["name", "description", "type", "user_id"],
+        "required": [
+          "name",
+          "description",
+          "type",
+          "user_id"
+        ],
         "title": "TaskDefinitionSchema",
         "description": "API schema for TaskDefinition entity."
       },
@@ -10044,7 +10457,13 @@
       },
       "TaskTag": {
         "type": "string",
-        "enum": ["AVOIDANT", "FORGETTABLE", "IMPORTANT", "URGENT", "FUN"],
+        "enum": [
+          "AVOIDANT",
+          "FORGETTABLE",
+          "IMPORTANT",
+          "URGENT",
+          "FUN"
+        ],
         "title": "TaskTag"
       },
       "TaskType": {
@@ -10123,7 +10542,12 @@
           }
         },
         "type": "object",
-        "required": ["name", "description", "type", "category"],
+        "required": [
+          "name",
+          "description",
+          "type",
+          "category"
+        ],
         "title": "TimeBlockDefinitionCreateSchema",
         "description": "API schema for creating a TimeBlockDefinition."
       },
@@ -10236,7 +10660,13 @@
           }
         },
         "type": "object",
-        "required": ["user_id", "name", "description", "type", "category"],
+        "required": [
+          "user_id",
+          "name",
+          "description",
+          "type",
+          "category"
+        ],
         "title": "TimeBlockDefinitionSchema",
         "description": "API schema for TimeBlockDefinition entity."
       },
@@ -10367,7 +10797,13 @@
       },
       "TimingStatus": {
         "type": "string",
-        "enum": ["hidden", "inactive", "available", "active", "past-due"],
+        "enum": [
+          "hidden",
+          "inactive",
+          "available",
+          "active",
+          "past-due"
+        ],
         "title": "TimingStatus"
       },
       "TriggerCreateSchema": {
@@ -10382,7 +10818,10 @@
           }
         },
         "type": "object",
-        "required": ["name", "description"],
+        "required": [
+          "name",
+          "description"
+        ],
         "title": "TriggerCreateSchema",
         "description": "API schema for creating a Trigger."
       },
@@ -10515,7 +10954,11 @@
           }
         },
         "type": "object",
-        "required": ["name", "description", "user_id"],
+        "required": [
+          "name",
+          "description",
+          "user_id"
+        ],
         "title": "TriggerSchema",
         "description": "API schema for Trigger entity."
       },
@@ -10531,7 +10974,9 @@
           }
         },
         "type": "object",
-        "required": ["tactic_ids"],
+        "required": [
+          "tactic_ids"
+        ],
         "title": "TriggerTacticsUpdateSchema",
         "description": "API schema for updating tactics linked to a trigger."
       },
@@ -10613,7 +11058,10 @@
           }
         },
         "type": "object",
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "title": "UserCreate",
         "description": "Schema for creating a new user."
       },
@@ -10657,7 +11105,10 @@
           }
         },
         "type": "object",
-        "required": ["id", "email"],
+        "required": [
+          "id",
+          "email"
+        ],
         "title": "UserRead",
         "description": "Schema for reading user data."
       },
@@ -10819,7 +11270,9 @@
           }
         },
         "type": "object",
-        "required": ["template_defaults"],
+        "required": [
+          "template_defaults"
+        ],
         "title": "UserSettingsSchema",
         "description": "Schema for user settings."
       },
@@ -10919,7 +11372,10 @@
       },
       "UserStatus": {
         "type": "string",
-        "enum": ["active", "new-lead"],
+        "enum": [
+          "active",
+          "new-lead"
+        ],
         "title": "UserStatus",
         "description": "Lifecycle status for a user/account record."
       },
@@ -11044,7 +11500,11 @@
           }
         },
         "type": "object",
-        "required": ["loc", "msg", "type"],
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
         "title": "ValidationError"
       }
     },

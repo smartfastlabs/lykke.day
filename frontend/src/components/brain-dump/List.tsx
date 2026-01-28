@@ -1,11 +1,11 @@
 import { Component, For, Show } from "solid-js";
 import type { Accessor } from "solid-js";
-import { BrainDumpItem, BrainDumpItemStatus } from "@/types/api";
+import { BrainDump, BrainDumpStatus } from "@/types/api";
 import { Icon } from "@/components/shared/Icon";
 import { useStreamingData } from "@/providers/streamingData";
 import { SwipeableItem } from "@/components/shared/SwipeableItem";
 
-const getStatusClasses = (status: BrainDumpItemStatus): string => {
+const getStatusClasses = (status: BrainDumpStatus): string => {
   switch (status) {
     case "COMPLETE":
       return "bg-stone-50/50";
@@ -16,22 +16,22 @@ const getStatusClasses = (status: BrainDumpItemStatus): string => {
   }
 };
 
-const BrainDumpItemRow: Component<{ item: BrainDumpItem }> = (props) => {
-  const { updateBrainDumpItemStatus, removeBrainDumpItem } = useStreamingData();
+const BrainDumpItemRow: Component<{ item: BrainDump }> = (props) => {
+  const { updateBrainDumpStatus, removeBrainDump } = useStreamingData();
 
   const handleSwipeLeft = () => {
     if (props.item.status === "COMPLETE") {
       if (props.item.id) {
-        removeBrainDumpItem(props.item.id);
+        removeBrainDump(props.item.id);
       }
     } else {
-      updateBrainDumpItemStatus(props.item, "PUNT");
+      updateBrainDumpStatus(props.item, "PUNT");
     }
   };
 
   return (
     <SwipeableItem
-      onSwipeRight={() => updateBrainDumpItemStatus(props.item, "COMPLETE")}
+      onSwipeRight={() => updateBrainDumpStatus(props.item, "COMPLETE")}
       onSwipeLeft={handleSwipeLeft}
       rightLabel="✅ Complete"
       leftLabel={props.item.status === "COMPLETE" ? "🗑 Remove" : "⏸ Punt"}
@@ -66,7 +66,7 @@ const BrainDumpItemRow: Component<{ item: BrainDumpItem }> = (props) => {
 };
 
 interface BrainDumpListProps {
-  items: Accessor<BrainDumpItem[]>;
+  items: Accessor<BrainDump[]>;
 }
 
 const BrainDumpList: Component<BrainDumpListProps> = (props) => {

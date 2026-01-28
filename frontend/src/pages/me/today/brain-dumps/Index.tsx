@@ -4,9 +4,9 @@ import SettingsPage from "@/components/shared/SettingsPage";
 import SettingsList from "@/components/shared/SettingsList";
 import TodayBrainDumpListItem from "@/components/brain-dump/TodayBrainDumpListItem";
 import { useStreamingData } from "@/providers/streamingData";
-import type { BrainDumpItem } from "@/types/api";
+import type { BrainDump } from "@/types/api";
 
-const getBrainDumpLabel = (item: BrainDumpItem): string =>
+const getBrainDumpLabel = (item: BrainDump): string =>
   item.text.trim() || item.status;
 
 const TodayBrainDumpsPage: Component = () => {
