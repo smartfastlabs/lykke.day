@@ -13,6 +13,7 @@ from lykke.application.commands.notifications import (
     SmartNotificationCommand,
     SmartNotificationHandler,
 )
+from lykke.application.gateways.llm_protocol import LLMTool, LLMToolRunResult
 from lykke.application.llm.mixin import LLMRunSnapshotContext
 from lykke.core.config import settings
 from lykke.domain import value_objects
@@ -23,6 +24,29 @@ from tests.support.dobles import (
     create_uow_double,
     create_uow_factory_double,
 )
+
+
+class _LLMGateway:
+    async def run_usecase(
+        self,
+        system_prompt: str,
+        context_prompt: str,
+        ask_prompt: str,
+        tools: list[LLMTool],
+        metadata: dict[str, Any] | None = None,
+    ) -> LLMToolRunResult | None:
+        _ = system_prompt
+        _ = context_prompt
+        _ = ask_prompt
+        _ = tools
+        _ = metadata
+        return None
+
+
+class _LLMGatewayFactory:
+    def create_gateway(self, provider: value_objects.LLMProvider) -> _LLMGateway:
+        _ = provider
+        return _LLMGateway()
 
 
 @dataclass
@@ -72,6 +96,7 @@ async def test_smart_handle_skips_when_disabled(
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _Recorder(commands=[]),
     )
@@ -99,6 +124,7 @@ async def test_smart_handle_runs_llm_when_enabled(
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _Recorder(commands=[]),
     )
@@ -128,6 +154,7 @@ async def test_smart_build_prompt_input() -> None:
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _Recorder(commands=[]),
     )
@@ -146,6 +173,7 @@ async def test_smart_tool_skips_low_priority() -> None:
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         send_recorder,
     )
@@ -171,6 +199,7 @@ async def test_smart_tool_skips_when_llm_declines() -> None:
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         send_recorder,
     )
@@ -197,6 +226,7 @@ async def test_smart_tool_creates_skipped_notification_when_no_subscriptions() -
         create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
         create_uow_factory_double(uow),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _Recorder(commands=[]),
     )
@@ -249,6 +279,7 @@ async def test_smart_tool_sends_notification_with_subscriptions() -> None:
         create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         send_recorder,
     )
@@ -291,6 +322,7 @@ async def test_smart_tool_handles_send_errors() -> None:
         create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         send_recorder,
     )
@@ -302,4 +334,5 @@ async def test_smart_tool_handles_send_errors() -> None:
     )
     tool = tools[0]
 
+    await tool.callback(should_notify=True, message="Urgent", priority="high")
     await tool.callback(should_notify=True, message="Urgent", priority="high")

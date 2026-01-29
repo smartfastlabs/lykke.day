@@ -56,7 +56,10 @@ from lykke.infrastructure.unit_of_work import (
     SqlAlchemyUnitOfWorkFactory,
 )
 from lykke.infrastructure.workers.config import broker
-from lykke.presentation.handler_factory import CommandHandlerFactory
+from lykke.presentation.handler_factory import (
+    CommandHandlerFactory,
+    build_domain_event_handler,
+)
 from lykke.presentation.utils.structured_logging import structured_task
 
 scheduler = TaskiqScheduler(broker=broker, sources=[LabelScheduleSource(broker)])
@@ -72,7 +75,11 @@ def register_worker_event_handlers() -> None:
 
     ro_repo_factory = get_read_only_repository_factory()
     uow_factory = get_unit_of_work_factory()
-    register_all_handlers(ro_repo_factory=ro_repo_factory, uow_factory=uow_factory)
+    register_all_handlers(
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+        handler_factory=build_domain_event_handler,
+    )
     logger.info("Registered domain event handlers for worker process")
 
 

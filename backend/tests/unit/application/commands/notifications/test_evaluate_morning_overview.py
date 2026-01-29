@@ -9,7 +9,11 @@ from uuid import uuid4
 
 import pytest
 
-from lykke.application.commands.notifications import MorningOverviewCommand, MorningOverviewHandler
+from lykke.application.commands.notifications import (
+    MorningOverviewCommand,
+    MorningOverviewHandler,
+)
+from lykke.application.gateways.llm_protocol import LLMTool, LLMToolRunResult
 from lykke.application.llm.mixin import LLMRunSnapshotContext
 from lykke.application.queries.compute_task_risk import TaskRiskResult, TaskRiskScore
 from lykke.core.config import settings
@@ -28,6 +32,29 @@ from tests.support.dobles import (
     create_uow_factory_double,
     create_user_repo_double,
 )
+
+
+class _LLMGateway:
+    async def run_usecase(
+        self,
+        system_prompt: str,
+        context_prompt: str,
+        ask_prompt: str,
+        tools: list[LLMTool],
+        metadata: dict[str, Any] | None = None,
+    ) -> LLMToolRunResult | None:
+        _ = system_prompt
+        _ = context_prompt
+        _ = ask_prompt
+        _ = tools
+        _ = metadata
+        return None
+
+
+class _LLMGatewayFactory:
+    def create_gateway(self, provider: value_objects.LLMProvider) -> _LLMGateway:
+        _ = provider
+        return _LLMGateway()
 
 
 @dataclass
@@ -85,6 +112,7 @@ async def test_morning_overview_skips_when_disabled(
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
         _Recorder(commands=[]),
@@ -119,6 +147,7 @@ async def test_morning_overview_handles_user_lookup_errors(
         create_read_only_repos_double(user_repo=user_repo),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
         _Recorder(commands=[]),
@@ -144,6 +173,7 @@ async def test_morning_overview_skips_without_llm_provider(
         create_read_only_repos_double(user_repo=user_repo),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
         _Recorder(commands=[]),
@@ -176,6 +206,7 @@ async def test_morning_overview_skips_without_time(
         create_read_only_repos_double(user_repo=user_repo),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
         _Recorder(commands=[]),
@@ -219,6 +250,7 @@ async def test_morning_overview_runs_llm_when_configured(
         create_read_only_repos_double(user_repo=user_repo),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
         _Recorder(commands=[]),
@@ -274,6 +306,7 @@ async def test_morning_overview_build_prompt_input_includes_risk_data() -> None:
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _TaskRiskHandler(result=risk_result),
         _Recorder(commands=[]),
@@ -314,6 +347,7 @@ async def test_morning_overview_build_prompt_input_skips_unrated_tasks() -> None
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
         _Recorder(commands=[]),
@@ -335,6 +369,7 @@ async def test_morning_overview_tool_creates_skipped_notification() -> None:
         create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
         create_uow_factory_double(uow),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
         send_recorder,
@@ -383,6 +418,7 @@ async def test_morning_overview_tool_skips_when_llm_declines() -> None:
         create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
         create_uow_factory_double(uow),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
         send_recorder,
@@ -417,6 +453,7 @@ async def test_morning_overview_tool_sends_notification() -> None:
         create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
         send_recorder,
@@ -460,6 +497,7 @@ async def test_morning_overview_tool_handles_send_errors() -> None:
         create_read_only_repos_double(push_subscription_repo=push_subscription_repo),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         _TaskRiskHandler(TaskRiskResult(high_risk_tasks=[])),
         send_recorder,
@@ -472,4 +510,5 @@ async def test_morning_overview_tool_handles_send_errors() -> None:
     )
     tool = tools[0]
 
+    await tool.callback(should_notify=True, message="Morning plan", priority="high")
     await tool.callback(should_notify=True, message="Morning plan", priority="high")

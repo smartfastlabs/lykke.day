@@ -22,6 +22,7 @@ from lykke.infrastructure.unit_of_work import (
     SqlAlchemyUnitOfWorkFactory,
 )
 from lykke.presentation.api.routers import router
+from lykke.presentation.handler_factory import build_domain_event_handler
 
 
 def is_testing() -> bool:
@@ -65,6 +66,7 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
     register_all_handlers(
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
+        handler_factory=build_domain_event_handler,
     )
     from lykke.application.events.handlers.base import DomainEventHandler
 

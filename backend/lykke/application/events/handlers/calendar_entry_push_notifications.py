@@ -1,6 +1,9 @@
 """Event handler that sends push notifications when calendar entries change."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, ClassVar
+from uuid import UUID
 
 from loguru import logger
 
@@ -11,19 +14,17 @@ from lykke.application.commands.push_subscription import (
 from lykke.application.notifications import (
     build_notification_payload_for_calendar_entry_change,
 )
+from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
 from lykke.domain.events.base import DomainEvent
 from lykke.domain.events.calendar_entry_events import (
     CalendarEntryCreatedEvent,
     CalendarEntryDeletedEvent,
     CalendarEntryUpdatedEvent,
 )
-from lykke.infrastructure.gateways import WebPushGateway
 
 from .base import DomainEventHandler
 
 if TYPE_CHECKING:
-    from uuid import UUID
-
     from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
     from lykke.domain.entities import CalendarEntryEntity
 
@@ -40,6 +41,17 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
         CalendarEntryUpdatedEvent,
         CalendarEntryDeletedEvent,
     ]
+
+    def __init__(
+        self,
+        ro_repos: ReadOnlyRepositories,
+        user_id: UUID,
+        *,
+        uow_factory: UnitOfWorkFactory | None = None,
+        web_push_gateway: WebPushGatewayProtocol,
+    ) -> None:
+        super().__init__(ro_repos=ro_repos, user_id=user_id, uow_factory=uow_factory)
+        self._web_push_gateway = web_push_gateway
 
     async def handle(self, event: DomainEvent) -> None:
         """Handle calendar entry events by sending push notifications.
@@ -114,12 +126,11 @@ class CalendarEntryPushNotificationHandler(DomainEventHandler):
             )
             return
 
-        web_push_gateway: WebPushGatewayProtocol = WebPushGateway()
         send_handler = SendPushNotificationHandler(
             ro_repos=self._ro_repos,
             uow_factory=self._uow_factory,
             user_id=user_id,
-            web_push_gateway=web_push_gateway,
+            web_push_gateway=self._web_push_gateway,
         )
 
         command = SendPushNotificationCommand(

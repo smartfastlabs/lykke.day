@@ -14,6 +14,7 @@ from lykke.application.commands.brain_dump import (
     ProcessBrainDumpCommand,
     ProcessBrainDumpHandler,
 )
+from lykke.application.gateways.llm_protocol import LLMTool, LLMToolRunResult
 from lykke.domain import value_objects
 from lykke.domain.entities import BrainDumpEntity, DayEntity, DayTemplateEntity
 from lykke.domain.events.day_events import BrainDumpTypeChangedEvent
@@ -24,6 +25,29 @@ from tests.support.dobles import (
     create_uow_double,
     create_uow_factory_double,
 )
+
+
+class _LLMGateway:
+    async def run_usecase(
+        self,
+        system_prompt: str,
+        context_prompt: str,
+        ask_prompt: str,
+        tools: list[LLMTool],
+        metadata: dict[str, Any] | None = None,
+    ) -> LLMToolRunResult | None:
+        _ = system_prompt
+        _ = context_prompt
+        _ = ask_prompt
+        _ = tools
+        _ = metadata
+        return None
+
+
+class _LLMGatewayFactory:
+    def create_gateway(self, provider: value_objects.LLMProvider) -> _LLMGateway:
+        _ = provider
+        return _LLMGateway()
 
 
 @dataclass
@@ -80,12 +104,14 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
         ro_repos,
         create_uow_factory_double(uow),
         user_id,
+        _LLMGatewayFactory(),
         object(),
         task_recorder,
         _Recorder(commands=[]),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
     )
+
     async def run_llm_side_effect() -> None:
         tools = handler.build_tools(
             current_time=datetime.now(UTC),
@@ -94,6 +120,7 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
         )
         tool = next(tool for tool in tools if tool.name == "add_task")
         await tool.callback(**result)
+
     handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
 
     await handler.handle(ProcessBrainDumpCommand(date=date, item_id=item.id))
@@ -147,12 +174,14 @@ async def test_process_brain_dump_update_task_records_action() -> None:
         ro_repos,
         create_uow_factory_double(uow),
         user_id,
+        _LLMGatewayFactory(),
         object(),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
         task_action_recorder,
     )
+
     async def run_llm_side_effect() -> None:
         tools = handler.build_tools(
             current_time=datetime.now(UTC),
@@ -161,6 +190,7 @@ async def test_process_brain_dump_update_task_records_action() -> None:
         )
         tool = next(tool for tool in tools if tool.name == "update_task")
         await tool.callback(task_id=task_id, action="complete")
+
     handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
 
     await handler.handle(ProcessBrainDumpCommand(date=date, item_id=item.id))
@@ -211,12 +241,14 @@ async def test_process_brain_dump_update_reminder_updates_status() -> None:
         ro_repos,
         create_uow_factory_double(uow),
         user_id,
+        _LLMGatewayFactory(),
         object(),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
         reminder_status_recorder,
         _Recorder(commands=[]),
     )
+
     async def run_llm_side_effect() -> None:
         tools = handler.build_tools(
             current_time=datetime.now(UTC),
@@ -228,6 +260,7 @@ async def test_process_brain_dump_update_reminder_updates_status() -> None:
             reminder_id=reminder_id,
             status=value_objects.ReminderStatus.COMPLETE,
         )
+
     handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
 
     await handler.handle(ProcessBrainDumpCommand(date=date, item_id=item.id))
@@ -275,12 +308,14 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
         ro_repos,
         create_uow_factory_double(uow),
         user_id,
+        _LLMGatewayFactory(),
         object(),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
     )
+
     async def run_llm_side_effect() -> None:
         tools = handler.build_tools(
             current_time=datetime.now(UTC),
@@ -292,6 +327,7 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
             name="Follow up on invoice",
             category=value_objects.TaskCategory.WORK,
         )
+
     handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
 
     await handler.handle(ProcessBrainDumpCommand(date=date, item_id=item.id))
@@ -300,4 +336,5 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
     updated = uow.added[0]
     assert updated.type == value_objects.BrainDumpType.COMMAND
     events = updated.collect_events()
+    assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)
     assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)

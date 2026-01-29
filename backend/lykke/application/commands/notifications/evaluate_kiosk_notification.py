@@ -9,6 +9,9 @@ from uuid import UUID
 from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
+from lykke.application.gateways.llm_gateway_factory_protocol import (
+    LLMGatewayFactoryProtocol,
+)
 from lykke.application.gateways.llm_protocol import LLMTool
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
 from lykke.application.llm import LLMHandlerMixin, UseCasePromptInput
@@ -36,7 +39,9 @@ class KioskNotificationDecision:
     """Decision from LLM about whether to send a kiosk notification."""
 
     message: str  # The notification text to read out
-    category: str  # "calendar_event", "routine", "task_reminder", "time_block_change", etc.
+    category: (
+        str  # "calendar_event", "routine", "task_reminder", "time_block_change", etc.
+    )
     reason: str | None = None  # Why the LLM decided to notify (for debugging)
 
 
@@ -54,6 +59,7 @@ class KioskNotificationHandler(
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
+        llm_gateway_factory: LLMGatewayFactoryProtocol,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
         pubsub_gateway: PubSubGatewayProtocol,
     ) -> None:
@@ -67,6 +73,7 @@ class KioskNotificationHandler(
             pubsub_gateway: Gateway for publishing kiosk notifications to Redis
         """
         super().__init__(ro_repos, uow_factory, user_id)
+        self._llm_gateway_factory = llm_gateway_factory
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
         self.pubsub_gateway = pubsub_gateway
         self._triggered_by: str | None = None
@@ -79,7 +86,9 @@ class KioskNotificationHandler(
         """
         # Check if kiosk notifications are enabled
         if not settings.SMART_NOTIFICATIONS_ENABLED:
-            logger.debug("Kiosk notifications are disabled (using SMART_NOTIFICATIONS_ENABLED setting)")
+            logger.debug(
+                "Kiosk notifications are disabled (using SMART_NOTIFICATIONS_ENABLED setting)"
+            )
             return
 
         self._triggered_by = command.triggered_by

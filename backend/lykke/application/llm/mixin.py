@@ -9,7 +9,9 @@ from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
-from lykke.application.gateways.llm_gateway_factory import LLMGatewayFactory
+from lykke.application.gateways.llm_gateway_factory_protocol import (
+    LLMGatewayFactoryProtocol,
+)
 from lykke.application.gateways.llm_protocol import LLMTool, LLMToolCallResult
 from lykke.application.llm.prompt_rendering import (
     render_ask_prompt,
@@ -74,6 +76,7 @@ class LLMHandlerMixin(ABC):
     user_id: UUID
     user_ro_repo: UserRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
+    _llm_gateway_factory: LLMGatewayFactoryProtocol
     _llm_snapshot_context: LLMRunSnapshotContext | None = None
 
     @abstractmethod
@@ -146,7 +149,7 @@ class LLMHandlerMixin(ABC):
         )
 
         try:
-            llm_gateway = LLMGatewayFactory.create_gateway(llm_provider)
+            llm_gateway = self._llm_gateway_factory.create_gateway(llm_provider)
         except DomainError as exc:
             logger.error(
                 f"Failed to create LLM gateway for provider {llm_provider}: {exc}"

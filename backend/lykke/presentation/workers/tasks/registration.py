@@ -38,8 +38,11 @@ def register_worker_event_handlers(
     if register_handlers:
         ro_repo_factory = ro_repo_factory or get_read_only_repository_factory()
         uow_factory = uow_factory or get_unit_of_work_factory()
+        from lykke.presentation.handler_factory import build_domain_event_handler
+
         register_handlers(
             ro_repo_factory=ro_repo_factory,
             uow_factory=uow_factory,
+            handler_factory=build_domain_event_handler,
         )
         logger.info("Registered domain event handlers for worker process")

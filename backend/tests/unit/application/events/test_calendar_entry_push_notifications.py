@@ -12,14 +12,15 @@ import pytest
 from lykke.application.events.handlers.calendar_entry_push_notifications import (
     CalendarEntryPushNotificationHandler,
 )
+from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
 from lykke.domain import value_objects
 from lykke.domain.entities import CalendarEntryEntity, PushSubscriptionEntity
+from lykke.domain.events.base import DomainEvent
 from lykke.domain.events.calendar_entry_events import (
     CalendarEntryCreatedEvent,
     CalendarEntryDeletedEvent,
     CalendarEntryUpdatedEvent,
 )
-from lykke.domain.events.base import DomainEvent
 from tests.support.dobles import (
     create_calendar_entry_repo_double,
     create_push_subscription_repo_double,
@@ -68,6 +69,7 @@ async def test_calendar_entry_handler_skips_without_subscriptions() -> None:
         return calendar_entry
 
     calendar_entry_repo.get = get_entry
+    web_push_gateway = _WebPushGateway()
     handler = CalendarEntryPushNotificationHandler(
         create_read_only_repos_double(
             push_subscription_repo=push_subscription_repo,
@@ -75,16 +77,17 @@ async def test_calendar_entry_handler_skips_without_subscriptions() -> None:
         ),
         user_id,
         uow_factory=create_uow_factory_double(create_uow_double()),
+        web_push_gateway=web_push_gateway,
     )
 
-    event = CalendarEntryCreatedEvent(user_id=user_id, calendar_entry_id=calendar_entry.id)
+    event = CalendarEntryCreatedEvent(
+        user_id=user_id, calendar_entry_id=calendar_entry.id
+    )
     await handler.handle(event)
 
 
 @pytest.mark.asyncio
-async def test_calendar_entry_handler_returns_without_uow_factory(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_calendar_entry_handler_returns_without_uow_factory() -> None:
     user_id = uuid4()
     calendar_entry = _build_calendar_entry(user_id)
     push_subscription_repo = create_push_subscription_repo_double()
@@ -99,6 +102,7 @@ async def test_calendar_entry_handler_returns_without_uow_factory(
         return calendar_entry
 
     calendar_entry_repo.get = get_entry
+    web_push_gateway = _WebPushGateway()
     handler = CalendarEntryPushNotificationHandler(
         create_read_only_repos_double(
             push_subscription_repo=push_subscription_repo,
@@ -106,14 +110,17 @@ async def test_calendar_entry_handler_returns_without_uow_factory(
         ),
         user_id,
         uow_factory=None,
+        web_push_gateway=web_push_gateway,
     )
 
-    event = CalendarEntryCreatedEvent(user_id=user_id, calendar_entry_id=calendar_entry.id)
+    event = CalendarEntryCreatedEvent(
+        user_id=user_id, calendar_entry_id=calendar_entry.id
+    )
     await handler.handle(event)
 
 
 @pytest.mark.asyncio
-async def test_calendar_entry_handler_loads_entry_and_sends(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_calendar_entry_handler_loads_entry_and_sends() -> None:
     user_id = uuid4()
     calendar_entry = _build_calendar_entry(user_id)
     push_subscription_repo = create_push_subscription_repo_double()
@@ -131,17 +138,16 @@ async def test_calendar_entry_handler_loads_entry_and_sends(monkeypatch: pytest.
 
     send_calls: list[PushSubscriptionEntity] = []
 
-    class _WebPushGateway:
+    class _WebPushGateway(WebPushGatewayProtocol):
         async def send_notification(
-            self, *, subscription: PushSubscriptionEntity, content: object
+            self,
+            subscription: PushSubscriptionEntity,
+            content: object,
         ) -> None:
+            _ = content
             send_calls.append(subscription)
 
-    monkeypatch.setattr(
-        "lykke.application.events.handlers.calendar_entry_push_notifications.WebPushGateway",
-        _WebPushGateway,
-    )
-
+    web_push_gateway = _WebPushGateway()
     handler = CalendarEntryPushNotificationHandler(
         create_read_only_repos_double(
             push_subscription_repo=push_subscription_repo,
@@ -149,6 +155,7 @@ async def test_calendar_entry_handler_loads_entry_and_sends(monkeypatch: pytest.
         ),
         user_id,
         uow_factory=create_uow_factory_double(create_uow_double()),
+        web_push_gateway=web_push_gateway,
     )
 
     event = CalendarEntryUpdatedEvent(
@@ -176,6 +183,7 @@ async def test_calendar_entry_handler_uses_snapshot_on_delete() -> None:
         raise AssertionError("Should not fetch entry for deleted event")
 
     calendar_entry_repo.get = get_entry
+    web_push_gateway = _WebPushGateway()
     handler = CalendarEntryPushNotificationHandler(
         create_read_only_repos_double(
             push_subscription_repo=push_subscription_repo,
@@ -183,6 +191,7 @@ async def test_calendar_entry_handler_uses_snapshot_on_delete() -> None:
         ),
         user_id,
         uow_factory=create_uow_factory_double(create_uow_double()),
+        web_push_gateway=web_push_gateway,
     )
 
     event = CalendarEntryDeletedEvent(
@@ -217,6 +226,7 @@ async def test_calendar_entry_handler_handles_missing_entry() -> None:
         raise RuntimeError("not found")
 
     calendar_entry_repo.get = raise_get
+    web_push_gateway = _WebPushGateway()
     handler = CalendarEntryPushNotificationHandler(
         create_read_only_repos_double(
             push_subscription_repo=push_subscription_repo,
@@ -224,6 +234,7 @@ async def test_calendar_entry_handler_handles_missing_entry() -> None:
         ),
         user_id,
         uow_factory=create_uow_factory_double(create_uow_double()),
+        web_push_gateway=web_push_gateway,
     )
 
     event = CalendarEntryCreatedEvent(user_id=user_id, calendar_entry_id=uuid4())
@@ -238,6 +249,7 @@ async def test_calendar_entry_handler_ignores_unknown_event() -> None:
     class _OtherEvent(DomainEvent):
         pass
 
+    web_push_gateway = _WebPushGateway()
     handler = CalendarEntryPushNotificationHandler(
         create_read_only_repos_double(
             push_subscription_repo=create_push_subscription_repo_double(),
@@ -245,6 +257,7 @@ async def test_calendar_entry_handler_ignores_unknown_event() -> None:
         ),
         user_id,
         uow_factory=create_uow_factory_double(create_uow_double()),
+        web_push_gateway=web_push_gateway,
     )
 
     await handler.handle(_OtherEvent(user_id=user_id))
@@ -265,6 +278,7 @@ async def test_calendar_entry_handler_logs_when_entry_data_missing() -> None:
         return None
 
     calendar_entry_repo.get = return_none
+    web_push_gateway = _WebPushGateway()
     handler = CalendarEntryPushNotificationHandler(
         create_read_only_repos_double(
             push_subscription_repo=push_subscription_repo,
@@ -272,6 +286,7 @@ async def test_calendar_entry_handler_logs_when_entry_data_missing() -> None:
         ),
         user_id,
         uow_factory=create_uow_factory_double(create_uow_double()),
+        web_push_gateway=web_push_gateway,
     )
 
     event = CalendarEntryUpdatedEvent(
@@ -301,6 +316,7 @@ async def test_calendar_entry_handler_handles_payload_errors(
         return calendar_entry
 
     calendar_entry_repo.get = get_entry
+    web_push_gateway = _WebPushGateway()
     handler = CalendarEntryPushNotificationHandler(
         create_read_only_repos_double(
             push_subscription_repo=push_subscription_repo,
@@ -308,6 +324,7 @@ async def test_calendar_entry_handler_handles_payload_errors(
         ),
         user_id,
         uow_factory=create_uow_factory_double(create_uow_double()),
+        web_push_gateway=web_push_gateway,
     )
 
     def raise_payload(*_: Any, **__: Any) -> None:
@@ -319,5 +336,17 @@ async def test_calendar_entry_handler_handles_payload_errors(
         raise_payload,
     )
 
-    event = CalendarEntryCreatedEvent(user_id=user_id, calendar_entry_id=calendar_entry.id)
+    event = CalendarEntryCreatedEvent(
+        user_id=user_id, calendar_entry_id=calendar_entry.id
+    )
     await handler.handle(event)
+
+
+class _WebPushGateway(WebPushGatewayProtocol):
+    async def send_notification(
+        self,
+        subscription: PushSubscriptionEntity,
+        content: object,
+    ) -> None:
+        _ = subscription
+        _ = content

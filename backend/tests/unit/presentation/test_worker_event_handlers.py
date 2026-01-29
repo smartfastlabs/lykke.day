@@ -15,7 +15,13 @@ def test_worker_tasks_register_domain_event_handlers_on_import() -> None:
     module_name = "lykke.presentation.workers.tasks"
     calls: list[tuple[object, object]] = []
 
-    def register_all_handlers(*, ro_repo_factory: object, uow_factory: object) -> None:
+    def register_all_handlers(
+        *,
+        ro_repo_factory: object,
+        uow_factory: object,
+        handler_factory: object | None = None,
+    ) -> None:
+        _ = handler_factory
         calls.append((ro_repo_factory, uow_factory))
 
     worker_registration.set_register_handlers_override(register_all_handlers)

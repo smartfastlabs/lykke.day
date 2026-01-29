@@ -13,6 +13,7 @@ from lykke.application.commands.notifications import (
     KioskNotificationCommand,
     KioskNotificationHandler,
 )
+from lykke.application.gateways.llm_protocol import LLMTool, LLMToolRunResult
 from lykke.core.config import settings
 from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity, DayTemplateEntity
@@ -22,6 +23,29 @@ from tests.support.dobles import (
     create_uow_double,
     create_uow_factory_double,
 )
+
+
+class _LLMGateway:
+    async def run_usecase(
+        self,
+        system_prompt: str,
+        context_prompt: str,
+        ask_prompt: str,
+        tools: list[LLMTool],
+        metadata: dict[str, Any] | None = None,
+    ) -> LLMToolRunResult | None:
+        _ = system_prompt
+        _ = context_prompt
+        _ = ask_prompt
+        _ = tools
+        _ = metadata
+        return None
+
+
+class _LLMGatewayFactory:
+    def create_gateway(self, provider: value_objects.LLMProvider) -> _LLMGateway:
+        _ = provider
+        return _LLMGateway()
 
 
 @dataclass
@@ -46,7 +70,9 @@ def _build_prompt_context(user_id: Any) -> value_objects.LLMPromptContext:
 
 
 @pytest.mark.asyncio
-async def test_kiosk_handle_skips_when_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_kiosk_handle_skips_when_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     user_id = uuid4()
     ro_repos = create_read_only_repos_double()
     uow = create_uow_double()
@@ -54,6 +80,7 @@ async def test_kiosk_handle_skips_when_disabled(monkeypatch: pytest.MonkeyPatch)
         ro_repos,
         create_uow_factory_double(uow),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         create_pubsub_gateway_double(),
     )
@@ -85,6 +112,7 @@ async def test_kiosk_handle_runs_llm_when_enabled(
         ro_repos,
         create_uow_factory_double(uow),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=_build_prompt_context(user_id)),
         create_pubsub_gateway_double(),
     )
@@ -114,6 +142,7 @@ async def test_kiosk_build_prompt_input() -> None:
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         create_pubsub_gateway_double(),
     )
@@ -142,6 +171,7 @@ async def test_kiosk_tool_does_not_publish_without_message() -> None:
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         pubsub_gateway,
     )
@@ -177,6 +207,7 @@ async def test_kiosk_tool_skips_when_llm_says_no() -> None:
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         pubsub_gateway,
     )
@@ -212,6 +243,7 @@ async def test_kiosk_tool_publishes_notification() -> None:
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         pubsub_gateway,
     )
@@ -255,6 +287,7 @@ async def test_kiosk_tool_handles_publish_errors() -> None:
         create_read_only_repos_double(),
         create_uow_factory_double(create_uow_double()),
         user_id,
+        _LLMGatewayFactory(),
         _PromptContextHandler(prompt_context=prompt_context),
         pubsub_gateway,
     )
@@ -266,4 +299,5 @@ async def test_kiosk_tool_handles_publish_errors() -> None:
     )
     tool = tools[0]
 
+    await tool.callback(should_notify=True, message="Heads up", category="other")
     await tool.callback(should_notify=True, message="Heads up", category="other")

@@ -1,6 +1,7 @@
 """Base class for domain event handlers."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from typing import ClassVar
 from uuid import UUID
 
@@ -55,6 +56,18 @@ class DomainEventHandler(ABC, BaseHandler):
     # Factory references for creating handler instances per user (class variables)
     _class_ro_repo_factory: ClassVar[ReadOnlyRepositoryFactory | None] = None
     _class_uow_factory: ClassVar[UnitOfWorkFactory | None] = None
+    _class_handler_factory: ClassVar[
+        Callable[
+            [
+                type["DomainEventHandler"],
+                ReadOnlyRepositories,
+                UUID,
+                UnitOfWorkFactory | None,
+            ],
+            "DomainEventHandler",
+        ]
+        | None
+    ] = None
 
     def __init_subclass__(cls, **kwargs: object) -> None:
         """Track all concrete subclasses for auto-registration."""
@@ -133,11 +146,19 @@ class DomainEventHandler(ABC, BaseHandler):
                     continue  # Skip if factories not set up
 
                 ro_repos = cls._class_ro_repo_factory.create(user_id)
-                handler_instance = handler_class(
-                    ro_repos=ro_repos,
-                    user_id=user_id,
-                    uow_factory=cls._class_uow_factory,
-                )
+                if cls._class_handler_factory is not None:
+                    handler_instance = cls._class_handler_factory(
+                        handler_class,
+                        ro_repos,
+                        user_id,
+                        cls._class_uow_factory,
+                    )
+                else:
+                    handler_instance = handler_class(
+                        ro_repos=ro_repos,
+                        user_id=user_id,
+                        uow_factory=cls._class_uow_factory,
+                    )
                 await handler_instance.handle(event_obj)
 
     @classmethod
@@ -145,6 +166,16 @@ class DomainEventHandler(ABC, BaseHandler):
         cls,
         ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
         uow_factory: UnitOfWorkFactory | None = None,
+        handler_factory: Callable[
+            [
+                type["DomainEventHandler"],
+                ReadOnlyRepositories,
+                UUID,
+                UnitOfWorkFactory | None,
+            ],
+            "DomainEventHandler",
+        ]
+        | None = None,
     ) -> None:
         """Register all tracked handler classes and connect them to the event signal.
 
@@ -161,6 +192,7 @@ class DomainEventHandler(ABC, BaseHandler):
         # Store factories as class variables for use when creating handler instances
         cls._class_ro_repo_factory = ro_repo_factory
         cls._class_uow_factory = uow_factory
+        cls._class_handler_factory = handler_factory
 
         # Connect the dispatcher to all event types handled by any registered handler
         event_types: set[type[DomainEvent]] = set()

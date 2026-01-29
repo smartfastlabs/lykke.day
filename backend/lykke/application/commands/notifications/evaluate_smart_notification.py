@@ -14,6 +14,9 @@ from lykke.application.commands.push_subscription import (
     SendPushNotificationCommand,
     SendPushNotificationHandler,
 )
+from lykke.application.gateways.llm_gateway_factory_protocol import (
+    LLMGatewayFactoryProtocol,
+)
 from lykke.application.gateways.llm_protocol import LLMTool
 from lykke.application.llm import LLMHandlerMixin, UseCasePromptInput
 from lykke.application.notifications import (
@@ -55,6 +58,7 @@ class SmartNotificationHandler(
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
+        llm_gateway_factory: LLMGatewayFactoryProtocol,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
         send_push_notification_handler: SendPushNotificationHandler,
     ) -> None:
@@ -68,6 +72,7 @@ class SmartNotificationHandler(
             send_push_notification_handler: Handler for sending push notifications
         """
         super().__init__(ro_repos, uow_factory, user_id)
+        self._llm_gateway_factory = llm_gateway_factory
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
         self._send_push_notification_handler = send_push_notification_handler
         self._triggered_by: str | None = None

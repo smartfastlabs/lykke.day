@@ -6,7 +6,14 @@ This module provides:
 - Auto-registration of all event handlers
 """
 
-from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
+from collections.abc import Callable
+from uuid import UUID
+
+from lykke.application.unit_of_work import (
+    ReadOnlyRepositories,
+    ReadOnlyRepositoryFactory,
+    UnitOfWorkFactory,
+)
 
 from .handlers import (
     DomainEventHandler,
@@ -19,6 +26,16 @@ from .signals import domain_event_signal, send_domain_events
 def register_all_handlers(
     ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
     uow_factory: UnitOfWorkFactory | None = None,
+    handler_factory: Callable[
+        [
+            type[DomainEventHandler],
+            ReadOnlyRepositories,
+            UUID,
+            UnitOfWorkFactory | None,
+        ],
+        DomainEventHandler,
+    ]
+    | None = None,
 ) -> None:
     """Register all domain event handler classes.
 
@@ -35,6 +52,7 @@ def register_all_handlers(
     DomainEventHandler.register_all_handlers(
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,
+        handler_factory=handler_factory,
     )
 
 

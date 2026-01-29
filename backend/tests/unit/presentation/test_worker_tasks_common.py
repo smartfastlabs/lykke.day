@@ -11,7 +11,13 @@ from lykke.presentation.workers.tasks import (
 def test_register_worker_event_handlers() -> None:
     calls: list[tuple[object, object]] = []
 
-    def register_all_handlers(*, ro_repo_factory: object, uow_factory: object) -> None:
+    def register_all_handlers(
+        *,
+        ro_repo_factory: object,
+        uow_factory: object,
+        handler_factory: object | None = None,
+    ) -> None:
+        _ = handler_factory
         calls.append((ro_repo_factory, uow_factory))
 
     worker_registration.register_worker_event_handlers(
@@ -34,7 +40,13 @@ def test_get_user_repository_returns_repository() -> None:
 def test_register_worker_event_handlers_logs() -> None:
     calls: list[tuple[object, object]] = []
 
-    def register_all_handlers(*, ro_repo_factory: object, uow_factory: object) -> None:
+    def register_all_handlers(
+        *,
+        ro_repo_factory: object,
+        uow_factory: object,
+        handler_factory: object | None = None,
+    ) -> None:
+        _ = handler_factory
         calls.append((ro_repo_factory, uow_factory))
 
     worker_registration.register_worker_event_handlers(

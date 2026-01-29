@@ -50,7 +50,11 @@ from lykke.infrastructure.gateways import (
 if TYPE_CHECKING:
     from uuid import UUID
 
+    from lykke.application.events.handlers import DomainEventHandler
     from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProtocol
+    from lykke.application.gateways.llm_gateway_factory_protocol import (
+        LLMGatewayFactoryProtocol,
+    )
     from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
     from lykke.application.unit_of_work import (
         ReadOnlyRepositories,
@@ -68,6 +72,38 @@ def _default_google_gateway() -> GoogleCalendarGatewayProtocol:
 
 def _default_web_push_gateway() -> WebPushGatewayProtocol:
     return WebPushGateway()
+
+
+def _default_llm_gateway_factory() -> LLMGatewayFactoryProtocol:
+    from lykke.infrastructure.gateways.llm_gateway_factory import InfraLLMGatewayFactory
+
+    return InfraLLMGatewayFactory()
+
+
+def build_domain_event_handler(
+    handler_class: type[DomainEventHandler],
+    ro_repos: ReadOnlyRepositories,
+    user_id: UUID,
+    uow_factory: UnitOfWorkFactory | None,
+) -> DomainEventHandler:
+    """Construct a domain event handler with outer-layer dependencies."""
+    from lykke.application.events.handlers.calendar_entry_push_notifications import (
+        CalendarEntryPushNotificationHandler,
+    )
+
+    if handler_class is CalendarEntryPushNotificationHandler:
+        return CalendarEntryPushNotificationHandler(
+            ro_repos=ro_repos,
+            user_id=user_id,
+            uow_factory=uow_factory,
+            web_push_gateway=_default_web_push_gateway(),
+        )
+
+    return handler_class(
+        ro_repos=ro_repos,
+        user_id=user_id,
+        uow_factory=uow_factory,
+    )
 
 
 QueryHandlerProvider = Callable[["QueryHandlerFactory"], BaseQueryHandler]
@@ -264,6 +300,7 @@ def _build_smart_notification_handler(
         factory.ro_repos,
         factory.uow_factory,
         factory.user_id,
+        factory.llm_gateway_factory,
         factory.query_factory.create(GetLLMPromptContextHandler),
         factory.create(SendPushNotificationHandler),
     )
@@ -276,6 +313,7 @@ def _build_morning_overview_handler(
         factory.ro_repos,
         factory.uow_factory,
         factory.user_id,
+        factory.llm_gateway_factory,
         factory.query_factory.create(GetLLMPromptContextHandler),
         factory.query_factory.create(ComputeTaskRiskHandler),
         factory.create(SendPushNotificationHandler),
@@ -289,6 +327,7 @@ def _build_kiosk_notification_handler(
         factory.ro_repos,
         factory.uow_factory,
         factory.user_id,
+        factory.llm_gateway_factory,
         factory.query_factory.create(GetLLMPromptContextHandler),
         RedisPubSubGateway(),
     )
@@ -301,6 +340,7 @@ def _build_process_brain_dump_handler(
         factory.ro_repos,
         factory.uow_factory,
         factory.user_id,
+        factory.llm_gateway_factory,
         factory.query_factory.create(GetLLMPromptContextHandler),
         factory.create(CreateAdhocTaskHandler),
         factory.create(AddReminderToDayHandler),
@@ -344,6 +384,8 @@ class CommandHandlerFactory:
         google_gateway_provider: Callable[[], GoogleCalendarGatewayProtocol]
         | None = None,
         web_push_gateway_provider: Callable[[], WebPushGatewayProtocol] | None = None,
+        llm_gateway_factory_provider: Callable[[], LLMGatewayFactoryProtocol]
+        | None = None,
         registry: dict[type[BaseCommandHandler], CommandHandlerProvider] | None = None,
     ) -> None:
         self.user_id = user_id
@@ -361,8 +403,12 @@ class CommandHandlerFactory:
         self._web_push_gateway_provider = (
             web_push_gateway_provider or _default_web_push_gateway
         )
+        self._llm_gateway_factory_provider = (
+            llm_gateway_factory_provider or _default_llm_gateway_factory
+        )
         self._google_gateway: GoogleCalendarGatewayProtocol | None = None
         self._web_push_gateway: WebPushGatewayProtocol | None = None
+        self._llm_gateway_factory: LLMGatewayFactoryProtocol | None = None
 
     @property
     def ro_repos(self) -> ReadOnlyRepositories:
@@ -379,6 +425,12 @@ class CommandHandlerFactory:
         if self._web_push_gateway is None:
             self._web_push_gateway = self._web_push_gateway_provider()
         return self._web_push_gateway
+
+    @property
+    def llm_gateway_factory(self) -> LLMGatewayFactoryProtocol:
+        if self._llm_gateway_factory is None:
+            self._llm_gateway_factory = self._llm_gateway_factory_provider()
+        return self._llm_gateway_factory
 
     @overload
     def create(self, handler_class: type[ScheduleDayHandler]) -> ScheduleDayHandler: ...

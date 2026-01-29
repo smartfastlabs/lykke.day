@@ -22,6 +22,9 @@ from lykke.application.commands.task import (
     RecordTaskActionCommand,
     RecordTaskActionHandler,
 )
+from lykke.application.gateways.llm_gateway_factory_protocol import (
+    LLMGatewayFactoryProtocol,
+)
 from lykke.application.gateways.llm_protocol import LLMTool
 from lykke.application.llm import LLMHandlerMixin, LLMRunResult, UseCasePromptInput
 from lykke.application.queries.get_llm_prompt_context import (
@@ -33,8 +36,7 @@ from lykke.core.utils.llm_snapshot import build_referenced_entities
 from lykke.domain import value_objects
 
 if TYPE_CHECKING:
-    from datetime import date as dt_date, datetime, time
-    from uuid import UUID
+    from datetime import date as dt_date, datetime
 
     from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkFactory
     from lykke.domain.entities import BrainDumpEntity
@@ -61,6 +63,7 @@ class ProcessBrainDumpHandler(
         ro_repos: ReadOnlyRepositories,
         uow_factory: UnitOfWorkFactory,
         user_id: UUID,
+        llm_gateway_factory: LLMGatewayFactoryProtocol,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
         create_adhoc_task_handler: CreateAdhocTaskHandler,
         add_reminder_handler: AddReminderToDayHandler,
@@ -68,6 +71,7 @@ class ProcessBrainDumpHandler(
         record_task_action_handler: RecordTaskActionHandler,
     ) -> None:
         super().__init__(ro_repos, uow_factory, user_id)
+        self._llm_gateway_factory = llm_gateway_factory
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
         self._create_adhoc_task_handler = create_adhoc_task_handler
         self._add_reminder_handler = add_reminder_handler
