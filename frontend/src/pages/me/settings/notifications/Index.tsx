@@ -1,4 +1,10 @@
-import { Component, Show, createResource, createSignal, createEffect } from "solid-js";
+import {
+  Component,
+  Show,
+  createResource,
+  createSignal,
+  createEffect,
+} from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import SettingsPage from "@/components/shared/SettingsPage";
 import AmendmentsEditor from "@/components/shared/AmendmentsEditor";
@@ -6,24 +12,29 @@ import { Input } from "@/components/forms";
 import LLMSnapshotDetails from "@/components/llm/LLMSnapshotDetails";
 import { useAuth } from "@/providers/auth";
 import { usecaseConfigAPI, authAPI } from "@/utils/api";
-import type { LLMRunResultSnapshot, NotificationUseCaseConfig } from "@/types/api";
+import type {
+  LLMRunResultSnapshot,
+  NotificationUseCaseConfig,
+} from "@/types/api";
 import { globalNotifications } from "@/providers/notifications";
 
 const NotificationConfigPage: Component = () => {
   const navigate = useNavigate();
   const { user, refetch: refetchUser } = useAuth();
   const [config, { mutate }] = createResource<NotificationUseCaseConfig>(
-    usecaseConfigAPI.getNotificationConfig
+    usecaseConfigAPI.getNotificationConfig,
   );
-  const [snapshotPreview, { refetch: refetchSnapshotPreview }] = createResource<
-    LLMRunResultSnapshot | null
-  >(usecaseConfigAPI.getNotificationLLMSnapshotPreview);
+  const [snapshotPreview, { refetch: refetchSnapshotPreview }] =
+    createResource<LLMRunResultSnapshot | null>(
+      usecaseConfigAPI.getNotificationLLMSnapshotPreview,
+    );
   const [amendments, setAmendments] = createSignal<string[]>([]);
-  const [morningOverviewTime, setMorningOverviewTime] = createSignal<string>("");
+  const [morningOverviewTime, setMorningOverviewTime] =
+    createSignal<string>("");
   const [isSaving, setIsSaving] = createSignal(false);
   const [error, setError] = createSignal<string>("");
 
-  // Initialize amendments and morning overview time when config/user loads or changes
+  // Initialize amendments when config loads or changes
   createEffect(() => {
     const configData = config();
     if (configData) {
@@ -36,7 +47,10 @@ const NotificationConfigPage: Component = () => {
         setError(err.message);
       }
     }
-    
+  });
+
+  // Initialize morning overview time when user loads or changes
+  createEffect(() => {
     const currentUser = user();
     if (currentUser?.settings.morning_overview_time) {
       setMorningOverviewTime(currentUser.settings.morning_overview_time);
@@ -55,7 +69,7 @@ const NotificationConfigPage: Component = () => {
       });
       // Update the resource directly to avoid refetch delay
       mutate(updated);
-      
+
       // Save morning overview time to user profile
       const timeValue = morningOverviewTime().trim() || null;
       if (user()) {
@@ -68,10 +82,13 @@ const NotificationConfigPage: Component = () => {
       }
 
       refetchSnapshotPreview();
-      
-      globalNotifications.addSuccess("Notification settings saved successfully");
+
+      globalNotifications.addSuccess(
+        "Notification settings saved successfully",
+      );
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to save settings";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to save settings";
       setError(errorMessage);
       globalNotifications.addError(errorMessage);
     } finally {
@@ -80,7 +97,7 @@ const NotificationConfigPage: Component = () => {
   };
 
   return (
-    <SettingsPage 
+    <SettingsPage
       heading="Notification Settings"
       bottomLink={{ label: "Back to Settings", url: "/me/settings" }}
     >
@@ -90,11 +107,11 @@ const NotificationConfigPage: Component = () => {
             {error()}
           </div>
         </Show>
-        
+
         <Show when={config.loading}>
           <div class="text-center text-gray-500 py-8">Loading...</div>
         </Show>
-        
+
         {/* Navigation to Push Subscriptions */}
         <div class="mb-6">
           <button
@@ -105,23 +122,31 @@ const NotificationConfigPage: Component = () => {
             <div class="flex items-center justify-between">
               <div>
                 <div class="font-medium text-gray-900">Push Subscriptions</div>
-                <div class="text-sm text-gray-500">Manage your push notification devices</div>
+                <div class="text-sm text-gray-500">
+                  Manage your push notification devices
+                </div>
               </div>
               <div class="text-gray-400">→</div>
             </div>
           </button>
         </div>
-        
+
         {/* Morning Overview Time Setting */}
         <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <div class="mb-4">
-            <h2 class="text-lg font-semibold text-gray-900 mb-1">Morning Overview</h2>
+            <h2 class="text-lg font-semibold text-gray-900 mb-1">
+              Morning Overview
+            </h2>
             <p class="text-sm text-gray-600">
-              Set a time to receive a daily morning overview notification highlighting out-of-the-ordinary items and high-risk tasks.
+              Set a time to receive a daily morning overview notification
+              highlighting out-of-the-ordinary items and high-risk tasks.
             </p>
           </div>
           <div class="space-y-2">
-            <label for="morning-overview-time" class="block text-sm font-medium text-gray-700">
+            <label
+              for="morning-overview-time"
+              class="block text-sm font-medium text-gray-700"
+            >
               Overview Time
             </label>
             <Input
@@ -132,11 +157,12 @@ const NotificationConfigPage: Component = () => {
               placeholder="07:30"
             />
             <p class="text-xs text-gray-500">
-              Time in your local timezone (24-hour format). Leave empty to disable morning overviews.
+              Time in your local timezone (24-hour format). Leave empty to
+              disable morning overviews.
             </p>
           </div>
         </div>
-        
+
         <AmendmentsEditor
           heading="User Customizations"
           description={
@@ -157,7 +183,9 @@ const NotificationConfigPage: Component = () => {
           </div>
           <Show
             when={!snapshotPreview.loading}
-            fallback={<div class="text-sm text-stone-500">Loading preview...</div>}
+            fallback={
+              <div class="text-sm text-stone-500">Loading preview...</div>
+            }
           >
             <Show
               when={snapshotPreview()}

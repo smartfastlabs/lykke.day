@@ -130,3 +130,4 @@ async def trigger_alarms_for_user_task(
     finally:
         await pubsub_gateway.close()
         await pubsub_gateway.close()
+        await pubsub_gateway.close()

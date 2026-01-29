@@ -99,6 +99,10 @@ async def create_day_template(
         )
         for tb in day_template_data.time_blocks
     ]
+    alarms = [
+        value_objects.Alarm.from_dict(alarm.model_dump())
+        for alarm in day_template_data.alarms
+    ]
 
     day_template = DayTemplateEntity(
         user_id=user.id,
@@ -108,6 +112,7 @@ async def create_day_template(
         icon=day_template_data.icon,
         routine_definition_ids=day_template_data.routine_definition_ids,
         time_blocks=time_blocks,
+        alarms=alarms,
         high_level_plan=(
             value_objects.HighLevelPlan(
                 title=day_template_data.high_level_plan.title,
@@ -147,6 +152,12 @@ async def update_day_template(
             )
             for tb in update_data.time_blocks
         ]
+    alarms = None
+    if update_data.alarms is not None:
+        alarms = [
+            value_objects.Alarm.from_dict(alarm.model_dump())
+            for alarm in update_data.alarms
+        ]
 
     update_object = DayTemplateUpdateObject(
         slug=update_data.slug,
@@ -155,6 +166,7 @@ async def update_day_template(
         icon=update_data.icon,
         routine_definition_ids=update_data.routine_definition_ids,
         time_blocks=time_blocks,
+        alarms=alarms,
         high_level_plan=(
             value_objects.HighLevelPlan(
                 title=update_data.high_level_plan.title,
