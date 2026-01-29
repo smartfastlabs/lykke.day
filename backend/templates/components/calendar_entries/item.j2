@@ -1,5 +1,7 @@
+{% set already_happened = (entry.ends_at and entry.ends_at <= current_time) or (not entry.ends_at and entry.starts_at <= current_time) %}
 - name: {{ entry.name }}
   status: {{ entry.status }}
+  already_happened: {{ "yes" if already_happened else "no" }}
   {{- kv_line("  ", "category", entry.category and entry.category.value) -}}
   starts_at: {{ fmt_datetime(entry.starts_at) }}
   {{- kv_line("  ", "ends_at", entry.ends_at and fmt_datetime(entry.ends_at)) -}}
