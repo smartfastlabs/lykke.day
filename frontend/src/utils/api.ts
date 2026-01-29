@@ -326,10 +326,7 @@ export const brainDumpAPI = {
     );
   },
 
-  updateItemStatus: (
-    itemId: string,
-    status: string,
-  ): Promise<BrainDump> => {
+  updateItemStatus: (itemId: string, status: string): Promise<BrainDump> => {
     const params = new URLSearchParams({ status });
     return fetchData<BrainDump>(
       `/api/me/today/brain-dump/${itemId}?${params.toString()}`,
@@ -870,7 +867,7 @@ export const adminAPI = {
     if (filters.offset) params.set("offset", String(filters.offset));
 
     return fetchData<DomainEventListResponse>(
-      `/api/admin/domain-events?${params.toString()}`,
+      `/api/admin/events?${params.toString()}`,
     );
   },
 };

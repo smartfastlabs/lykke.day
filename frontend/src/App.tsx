@@ -83,7 +83,7 @@ import PushSubscriptionsPage from "@/pages/me/settings/push-subscriptions/Index"
 import PushSubscriptionDetailPage from "@/pages/me/settings/push-subscriptions/Detail";
 import AdminLayout from "@/pages/admin/Layout";
 import AdminIndexPage from "@/pages/admin/Index";
-import DomainEventsPage from "@/pages/admin/DomainEvents";
+import EventsPage from "@/pages/admin/Events";
 import NotFound from "@/pages/NotFound";
 
 import "@/utils/icons";
@@ -142,7 +142,7 @@ export default function App() {
           // Listen for controller change (new SW activated)
           navigator.serviceWorker.addEventListener(
             "controllerchange",
-            handleControllerChange
+            handleControllerChange,
           );
 
           // Listen for update found
@@ -183,11 +183,11 @@ export default function App() {
           onCleanup(() => {
             navigator.serviceWorker.removeEventListener(
               "controllerchange",
-              handleControllerChange
+              handleControllerChange,
             );
             document.removeEventListener(
               "visibilitychange",
-              handleVisibilityChange
+              handleVisibilityChange,
             );
             clearInterval(updateInterval);
           });
@@ -201,25 +201,37 @@ export default function App() {
   return (
     <NotificationProvider>
       <LoadingProvider>
-        <div class="min-h-screen relative overflow-hidden" style={{ "min-height": "100dvh" }}>
+        <div
+          class="min-h-screen relative overflow-hidden"
+          style={{ "min-height": "100dvh" }}
+        >
           <LoadingIndicator />
           {/* Background gradients - use fixed positioning to cover entire viewport including notch */}
-          <div class="fixed inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50" style={{ "top": "0", "left": "0", "right": "0", "bottom": "0" }} />
-          <div class="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(251,191,36,0.15)_0%,_transparent_50%)]" style={{ "top": "0", "left": "0", "right": "0", "bottom": "0" }} />
-          <div class="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(244,114,82,0.1)_0%,_transparent_50%)]" style={{ "top": "0", "left": "0", "right": "0", "bottom": "0" }} />
+          <div
+            class="fixed inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50"
+            style={{ top: "0", left: "0", right: "0", bottom: "0" }}
+          />
+          <div
+            class="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(251,191,36,0.15)_0%,_transparent_50%)]"
+            style={{ top: "0", left: "0", right: "0", bottom: "0" }}
+          />
+          <div
+            class="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(244,114,82,0.1)_0%,_transparent_50%)]"
+            style={{ top: "0", left: "0", right: "0", bottom: "0" }}
+          />
 
           {/* Decorative blurs - also fixed */}
           <div class="fixed top-20 right-10 w-64 h-64 bg-gradient-to-br from-amber-200/30 to-orange-200/20 rounded-full blur-3xl" />
           <div class="fixed bottom-32 left-10 w-48 h-48 bg-gradient-to-tr from-rose-200/25 to-amber-200/15 rounded-full blur-3xl" />
 
           {/* Content with safe area padding */}
-          <div 
-            class="relative z-10" 
+          <div
+            class="relative z-10"
             style={{
               "padding-top": "env(safe-area-inset-top)",
               "padding-left": "env(safe-area-inset-left)",
               "padding-right": "env(safe-area-inset-right)",
-              "padding-bottom": "env(safe-area-inset-bottom)"
+              "padding-bottom": "env(safe-area-inset-bottom)",
             }}
           >
             <Router
@@ -283,7 +295,10 @@ export default function App() {
                   <Route path="/reminders" component={RemindersView} />
                   <Route path="/routines" component={RoutinesView} />
                   <Route path="/brain-dumps" component={TodayBrainDumpsPage} />
-                  <Route path="/notifications" component={TodayNotificationsPage} />
+                  <Route
+                    path="/notifications"
+                    component={TodayNotificationsPage}
+                  />
                   <Route path="/edit" component={TodayEditPage} />
                 </Route>
                 <Route path="/nav" component={NavigationLayout}>
@@ -295,10 +310,19 @@ export default function App() {
                   <Route path="/" component={SettingsIndexPage} />
                   <Route path="/profile" component={ProfileSettingsPage} />
                   <Route path="/llm" component={LLMSettingsPage} />
-                  <Route path="/notifications" component={NotificationConfigPage} />
+                  <Route
+                    path="/notifications"
+                    component={NotificationConfigPage}
+                  />
                   <Route path="/alarms" component={AlarmPresetsPage} />
-                  <Route path="/notifications/push" component={PushSubscriptionsPage} />
-                  <Route path="/notifications/push/:id" component={PushSubscriptionDetailPage} />
+                  <Route
+                    path="/notifications/push"
+                    component={PushSubscriptionsPage}
+                  />
+                  <Route
+                    path="/notifications/push/:id"
+                    component={PushSubscriptionDetailPage}
+                  />
                   <Route path="/day-templates" component={DayTemplatesPage} />
                   <Route
                     path="/day-templates/new"
@@ -367,7 +391,7 @@ export default function App() {
               <Route path="/admin" component={AdminGuard}>
                 <Route path="/" component={AdminLayout}>
                   <Route path="/" component={AdminIndexPage} />
-                  <Route path="/domain-events" component={DomainEventsPage} />
+                  <Route path="/events" component={EventsPage} />
                 </Route>
               </Route>
 

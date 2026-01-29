@@ -24,12 +24,36 @@ function formatEventType(eventType: string): string {
   return parts[parts.length - 1];
 }
 
+/** Map event type (short name) to a cluster for filtering. */
+function getEventCluster(eventType: string): string {
+  const short = formatEventType(eventType);
+  const lower = short.toLowerCase();
+  if (short === "TaskIQRun" || lower.startsWith("taskiq")) return "TaskIQ";
+  if (short === "LLMUsecaseRun" || lower.includes("llm")) return "LLM";
+  if (lower.startsWith("task")) return "Task";
+  if (lower.startsWith("braindump")) return "Brain dump";
+  if (lower.startsWith("day")) return "Day";
+  if (lower.startsWith("reminder")) return "Reminder";
+  if (lower.startsWith("alarm")) return "Alarm";
+  if (lower.includes("calendar")) return "Calendar";
+  if (lower.startsWith("routine")) return "Routine";
+  if (lower.startsWith("entity")) return "Entity";
+  if (lower.startsWith("message")) return "Message";
+  if (lower.startsWith("kiosk")) return "Notification";
+  if (lower.startsWith("factoid")) return "Factoid";
+  if (lower.startsWith("trigger") || lower.startsWith("tactic"))
+    return "Trigger/Tactic";
+  if (lower.startsWith("user")) return "User";
+  if (lower.startsWith("conversation")) return "Chat";
+  return "Other";
+}
+
 function formatTimestamp(isoString: string): string {
   const date = new Date(isoString);
   return date.toLocaleString();
 }
 
-const DomainEventsPage: Component = () => {
+const EventsPage: Component = () => {
   const [filters, setFilters] = createSignal<DomainEventFilters>({
     limit: 100,
     offset: 0,
@@ -41,6 +65,9 @@ const DomainEventsPage: Component = () => {
     [],
   );
   const [expandedEvents, setExpandedEvents] = createSignal<Set<string>>(
+    new Set(),
+  );
+  const [hiddenClusters, setHiddenClusters] = createSignal<Set<string>>(
     new Set(),
   );
   const [isConnected, setIsConnected] = createSignal(false);
@@ -59,7 +86,7 @@ const DomainEventsPage: Component = () => {
     const token = getCookie("lykke_auth");
 
     // Build WebSocket URL - same pattern as days websocket
-    let wsUrl = `${protocol}//${baseUrl}/admin/domain-events/stream`;
+    let wsUrl = `${protocol}//${baseUrl}/admin/events/stream`;
     if (token) {
       wsUrl += `?token=${encodeURIComponent(token)}`;
     }
@@ -120,6 +147,34 @@ const DomainEventsPage: Component = () => {
     return combined;
   });
 
+  const clusterCounts = createMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const e of allEvents()) {
+      const cluster = getEventCluster(e.event_type);
+      counts[cluster] = (counts[cluster] ?? 0) + 1;
+    }
+    return counts;
+  });
+
+  const visibleEvents = createMemo(() => {
+    const hidden = hiddenClusters();
+    return allEvents().filter(
+      (e) => !hidden.has(getEventCluster(e.event_type)),
+    );
+  });
+
+  const toggleClusterVisibility = (cluster: string) => {
+    setHiddenClusters((prev) => {
+      const next = new Set(prev);
+      if (next.has(cluster)) {
+        next.delete(cluster);
+      } else {
+        next.add(cluster);
+      }
+      return next;
+    });
+  };
+
   const toggleExpanded = (id: string) => {
     setExpandedEvents((prev) => {
       const newSet = new Set(prev);
@@ -156,7 +211,7 @@ const DomainEventsPage: Component = () => {
   };
 
   return (
-    <SettingsPage heading="Domain Events">
+    <SettingsPage heading="Events">
       {/* Connection Status */}
       <div class="mb-4 flex items-center gap-4">
         <div class="flex items-center gap-2">
@@ -236,6 +291,47 @@ const DomainEventsPage: Component = () => {
         </div>
       </div>
 
+      {/* Cluster filters: show/hide by category */}
+      <Show when={Object.keys(clusterCounts()).length > 0}>
+        <div class="mb-4 flex flex-wrap items-center gap-2">
+          <span class="text-xs uppercase tracking-wider text-gray-400 mr-1">
+            Show / hide:
+          </span>
+          <Show when={hiddenClusters().size > 0}>
+            <button
+              type="button"
+              onClick={() => setHiddenClusters(new Set())}
+              class="text-xs text-amber-600 hover:text-amber-700 font-medium"
+            >
+              Show all
+            </button>
+          </Show>
+          <For
+            each={Object.entries(clusterCounts()).sort((a, b) =>
+              a[0].localeCompare(b[0]),
+            )}
+          >
+            {([cluster, count]) => {
+              const isHidden = () => hiddenClusters().has(cluster);
+              return (
+                <button
+                  type="button"
+                  onClick={() => toggleClusterVisibility(cluster)}
+                  class={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                    isHidden()
+                      ? "bg-gray-100 text-gray-400 border border-gray-200 hover:bg-gray-200"
+                      : "bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200"
+                  }`}
+                >
+                  {cluster}
+                  <span class="text-xs opacity-80">({count})</span>
+                </button>
+              );
+            }}
+          </For>
+        </div>
+      </Show>
+
       {/* Events List */}
       <div class="space-y-2">
         <Show
@@ -245,12 +341,16 @@ const DomainEventsPage: Component = () => {
           }
         >
           <Show
-            when={allEvents().length > 0}
+            when={visibleEvents().length > 0}
             fallback={
-              <div class="text-center text-gray-500 py-8">No events found</div>
+              <div class="text-center text-gray-500 py-8">
+                {allEvents().length > 0
+                  ? "No events match the current filters"
+                  : "No events found"}
+              </div>
             }
           >
-            <For each={allEvents()}>
+            <For each={visibleEvents()}>
               {(event) => (
                 <div
                   class="p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-gray-200 transition-colors cursor-pointer"
@@ -327,4 +427,4 @@ const DomainEventsPage: Component = () => {
   );
 };
 
-export default DomainEventsPage;
+export default EventsPage;

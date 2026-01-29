@@ -28,10 +28,10 @@ const AdminIndexPage: Component = () => {
       description: "System monitoring and debugging tools.",
       items: [
         {
-          label: "Domain Events",
+          label: "Events",
           description: "View and search all domain events in the system.",
           icon: faListCheck,
-          url: "/admin/domain-events",
+          url: "/admin/events",
         },
       ],
     },

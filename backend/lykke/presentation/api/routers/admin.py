@@ -27,7 +27,7 @@ def _get_redis_pool(request: Request) -> aioredis.ConnectionPool:
     return request.app.state.redis_pool
 
 
-@router.get("/domain-events")
+@router.get("/events")
 async def list_domain_events(
     request: Request,
     user: Annotated[UserEntity, Depends(get_current_superuser)],
@@ -123,7 +123,7 @@ async def list_domain_events(
         await redis.close()
 
 
-@router.websocket("/domain-events/stream")
+@router.websocket("/events/stream")
 async def domain_events_stream(
     websocket: WebSocket,
     user: Annotated[UserEntity, Depends(get_current_superuser_from_token)],
