@@ -232,6 +232,7 @@ const KioskPage: Component = () => {
     routines,
     alarms,
     subscribeToTopic,
+    isConnected,
   } = useStreamingData();
   const { user } = useAuth();
   const [now, setNow] = createSignal(new Date());
@@ -244,11 +245,118 @@ const KioskPage: Component = () => {
   const [processedNotificationHashes, setProcessedNotificationHashes] =
     createSignal<Set<string>>(new Set());
   const [isSendingTest, setIsSendingTest] = createSignal(false);
+  const [ttsSupported, setTtsSupported] = createSignal(false);
+  const [speechUnlocked, setSpeechUnlocked] = createSignal(false);
+  const [voices, setVoices] = createSignal<SpeechSynthesisVoice[]>([]);
+  const [queuedKioskMessages, setQueuedKioskMessages] = createSignal<string[]>(
+    [],
+  );
+  const [lastKioskMessage, setLastKioskMessage] = createSignal<{
+    message: string;
+    created_at?: string;
+    triggered_by?: string | null;
+  } | null>(null);
+  const [ttsLastError, setTtsLastError] = createSignal<string | null>(null);
   let fullscreenContainer: HTMLDivElement | undefined;
+
+  const loadVoices = () => {
+    if (!("speechSynthesis" in window)) return;
+    setVoices(window.speechSynthesis.getVoices() ?? []);
+  };
+
+  const unlockSpeech = () => {
+    if (speechUnlocked() || !("speechSynthesis" in window)) {
+      return;
+    }
+
+    // Chrome often requires a direct user interaction before audio APIs work.
+    // Speak a silent utterance to "unlock" speech synthesis.
+    try {
+      const utterance = new window.SpeechSynthesisUtterance("");
+      utterance.volume = 0;
+      utterance.rate = 0.1;
+      utterance.onstart = () => {
+        setSpeechUnlocked(true);
+        // Cancel immediately after starting
+        window.speechSynthesis.cancel();
+      };
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.error("Failed to unlock speech synthesis:", err);
+    }
+  };
+
+  const speakQueuedMessages = () => {
+    if (!("speechSynthesis" in window)) return;
+    if (!speechUnlocked()) return;
+    const queue = queuedKioskMessages();
+    if (queue.length === 0) return;
+
+    const message = queue[0];
+    setQueuedKioskMessages(queue.slice(1));
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new window.SpeechSynthesisUtterance(message);
+    const voiceSetting = (
+      untrack(() => user())?.settings as { voice_setting?: unknown } | undefined
+    )?.voice_setting as
+      | {
+          voice_uri?: string | null;
+          rate?: number | null;
+          pitch?: number | null;
+          volume?: number | null;
+        }
+      | null
+      | undefined;
+
+    const configuredVoiceURI =
+      typeof voiceSetting?.voice_uri === "string"
+        ? voiceSetting.voice_uri
+        : null;
+    const configuredVoice = configuredVoiceURI
+      ? (voices().find((v) => v.voiceURI === configuredVoiceURI) ?? null)
+      : null;
+
+    if (configuredVoice) {
+      utterance.voice = configuredVoice;
+    }
+
+    utterance.rate =
+      typeof voiceSetting?.rate === "number" ? voiceSetting.rate : 1.0;
+    utterance.pitch =
+      typeof voiceSetting?.pitch === "number" ? voiceSetting.pitch : 1.0;
+    utterance.volume =
+      typeof voiceSetting?.volume === "number" ? voiceSetting.volume : 1.0;
+
+    utterance.onerror = (event) => {
+      console.error("Speech synthesis error:", event);
+      setTtsLastError(
+        typeof (event as unknown as { error?: unknown }).error === "string"
+          ? String((event as unknown as { error?: unknown }).error)
+          : "Speech synthesis error",
+      );
+    };
+    utterance.onend = () => {
+      // Continue draining the queue
+      queueMicrotask(() => speakQueuedMessages());
+    };
+
+    setTtsLastError(null);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const enqueueKioskMessage = (message: string) => {
+    setQueuedKioskMessages((prev) => [...prev, message]);
+    // Attempt immediate playback (will no-op if not unlocked)
+    speakQueuedMessages();
+  };
 
   const handleSendTestNotification = async () => {
     setIsSendingTest(true);
     try {
+      // Ensure this click also unlocks speech on devices that require gestures.
+      unlockSpeech();
       await dayAPI.sendTestKioskNotification();
       globalNotifications.addInfo("Test notification sent", { duration: 3000 });
     } catch (error) {
@@ -260,6 +368,15 @@ const KioskPage: Component = () => {
   };
 
   onMount(() => {
+    setTtsSupported("speechSynthesis" in window);
+
+    if ("speechSynthesis" in window) {
+      loadVoices();
+      window.speechSynthesis.onvoiceschanged = () => {
+        loadVoices();
+      };
+    }
+
     const interval = setInterval(() => {
       setNow(new Date());
     }, 30000);
@@ -320,40 +437,6 @@ const KioskPage: Component = () => {
 
   // Subscribe to kiosk notification events and handle TTS
   createEffect(() => {
-    let speechUnlocked = false;
-    const [voices, setVoices] = createSignal<SpeechSynthesisVoice[]>([]);
-
-    const loadVoices = () => {
-      if (!("speechSynthesis" in window)) return;
-      setVoices(window.speechSynthesis.getVoices() ?? []);
-    };
-    loadVoices();
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        loadVoices();
-      };
-    }
-
-    // Unlock speech synthesis API on first user interaction
-    // Chrome requires a direct user interaction to enable speech synthesis
-    const unlockSpeech = () => {
-      if (speechUnlocked || !("speechSynthesis" in window)) {
-        return;
-      }
-
-      // Speak a silent utterance to unlock the API
-      const unlockUtterance = new window.SpeechSynthesisUtterance("");
-      unlockUtterance.volume = 0;
-      unlockUtterance.rate = 0.1;
-      unlockUtterance.onstart = () => {
-        speechUnlocked = true;
-        console.log("Speech synthesis API unlocked via user interaction");
-        // Cancel immediately after starting
-        window.speechSynthesis.cancel();
-      };
-      window.speechSynthesis.speak(unlockUtterance);
-    };
-
     // Unlock on any user interaction (click, touch, keypress)
     const unlockEvents = ["click", "touchstart", "keydown"];
     const cleanupUnlockListeners: (() => void)[] = [];
@@ -382,6 +465,12 @@ const KioskPage: Component = () => {
         return;
       }
 
+      setLastKioskMessage({
+        message: payload.message,
+        created_at: payload.created_at,
+        triggered_by: payload.triggered_by,
+      });
+
       const hash = payload.message_hash;
       const processed = untrack(() => processedNotificationHashes());
       if (processed.has(hash)) {
@@ -400,64 +489,24 @@ const KioskPage: Component = () => {
         return next;
       });
 
-      if ("speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-
-        const utterance = new window.SpeechSynthesisUtterance(payload.message);
-        const voiceSetting = (
-          untrack(() => user())?.settings as
-            | { voice_setting?: unknown }
-            | undefined
-        )?.voice_setting as
-          | {
-              voice_uri?: string | null;
-              rate?: number | null;
-              pitch?: number | null;
-              volume?: number | null;
-            }
-          | null
-          | undefined;
-
-        const configuredVoiceURI =
-          typeof voiceSetting?.voice_uri === "string"
-            ? voiceSetting.voice_uri
-            : null;
-        const configuredVoice = configuredVoiceURI
-          ? (voices().find((v) => v.voiceURI === configuredVoiceURI) ?? null)
-          : null;
-
-        if (configuredVoice) {
-          utterance.voice = configuredVoice;
-        }
-
-        utterance.rate =
-          typeof voiceSetting?.rate === "number" ? voiceSetting.rate : 1.0;
-        utterance.pitch =
-          typeof voiceSetting?.pitch === "number" ? voiceSetting.pitch : 1.0;
-        utterance.volume =
-          typeof voiceSetting?.volume === "number" ? voiceSetting.volume : 1.0;
-        utterance.onerror = (error) => {
-          console.error("Speech synthesis error:", error);
-        };
-        utterance.onstart = () => {
-          console.log("Started reading kiosk notification:", payload.message);
-        };
-        utterance.onend = () => {
-          console.log("Finished reading kiosk notification");
-        };
-
-        window.speechSynthesis.speak(utterance);
-        console.log("Reading kiosk notification:", payload.message);
-      } else {
+      if (!("speechSynthesis" in window)) {
         console.warn("SpeechSynthesis not available");
+        return;
       }
+
+      if (!speechUnlocked()) {
+        console.log(
+          "Kiosk notification received, but audio is locked. Waiting for user interaction to enable speech.",
+        );
+      }
+
+      enqueueKioskMessage(payload.message);
     });
 
     onCleanup(() => {
       unsubscribe();
       // Cancel any ongoing speech
       if ("speechSynthesis" in window) {
-        window.speechSynthesis.onvoiceschanged = null;
         window.speechSynthesis.cancel();
       }
       // Clean up unlock event listeners
@@ -838,15 +887,89 @@ const KioskPage: Component = () => {
                   <p class="text-2xl font-semibold text-stone-800">
                     {planTitle() || "Today"}
                   </p>
+                  <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-stone-500">
+                    <span
+                      class={
+                        isConnected()
+                          ? "rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700"
+                          : "rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-rose-700"
+                      }
+                    >
+                      {isConnected() ? "WS connected" : "WS disconnected"}
+                    </span>
+                    <Show when={ttsSupported()}>
+                      <span
+                        class={
+                          speechUnlocked()
+                            ? "rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700"
+                            : "rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700"
+                        }
+                      >
+                        {speechUnlocked() ? "Audio enabled" : "Audio locked"}
+                      </span>
+                    </Show>
+                    <Show when={!ttsSupported()}>
+                      <span class="rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-rose-700">
+                        No SpeechSynthesis
+                      </span>
+                    </Show>
+                    <Show when={queuedKioskMessages().length > 0}>
+                      <span class="rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700">
+                        {queuedKioskMessages().length} queued
+                      </span>
+                    </Show>
+                  </div>
                 </div>
-                <button
-                  onClick={handleSendTestNotification}
-                  disabled={isSendingTest()}
-                  class="rounded-lg bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isSendingTest() ? "Sending..." : "Test Notification"}
-                </button>
+                <div class="flex items-center gap-2">
+                  <Show when={ttsSupported() && !speechUnlocked()}>
+                    <button
+                      onClick={() => {
+                        unlockSpeech();
+                        speakQueuedMessages();
+                      }}
+                      class="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 transition-colors"
+                    >
+                      Enable audio
+                    </button>
+                  </Show>
+                  <button
+                    onClick={handleSendTestNotification}
+                    disabled={isSendingTest()}
+                    class="rounded-lg bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isSendingTest() ? "Sending..." : "Test Notification"}
+                  </button>
+                </div>
               </div>
+              <Show when={ttsLastError()}>
+                <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-800">
+                  TTS error: {ttsLastError()}
+                </div>
+              </Show>
+              <Show when={lastKioskMessage()}>
+                {(msg) => (
+                  <div class="rounded-xl border border-white/70 bg-white/70 px-4 py-2 text-sm text-stone-700">
+                    <span class="text-xs uppercase tracking-[0.2em] text-stone-400">
+                      Last kiosk notification
+                    </span>
+                    <div class="mt-1 flex flex-wrap items-center gap-2">
+                      <span class="font-medium text-stone-800">
+                        {msg().message}
+                      </span>
+                      <Show when={msg().triggered_by}>
+                        <span class="rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-semibold text-stone-600">
+                          {msg().triggered_by}
+                        </span>
+                      </Show>
+                      <Show when={msg().created_at}>
+                        <span class="text-[11px] text-stone-500 tabular-nums">
+                          {msg().created_at}
+                        </span>
+                      </Show>
+                    </div>
+                  </div>
+                )}
+              </Show>
               <div class="flex-1 min-h-0 grid grid-cols-3 grid-rows-2 gap-3">
                 <KioskPanel title="Now" count={rightNowItems().length}>
                   <div class="space-y-3">
