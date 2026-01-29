@@ -1,21 +1,28 @@
 """E2E tests for day-templates router endpoints."""
 
-from datetime import time
+from datetime import UTC, datetime, time
 from uuid import uuid4
 
 import pytest
 
+from lykke.core.utils.dates import get_current_date
 from lykke.domain import value_objects
-from lykke.domain.entities import RoutineDefinitionEntity, TimeBlockDefinitionEntity
+from lykke.domain.entities import (
+    DayEntity,
+    RoutineDefinitionEntity,
+    TimeBlockDefinitionEntity,
+)
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.domain.value_objects.routine_definition import RecurrenceSchedule
 from lykke.domain.value_objects.task import TaskCategory, TaskFrequency
 from lykke.domain.value_objects.time_block import TimeBlockCategory, TimeBlockType
 from lykke.infrastructure.repositories import (
+    DayRepository,
     DayTemplateRepository,
     RoutineDefinitionRepository,
     TimeBlockDefinitionRepository,
 )
+from tests.e2e.conftest import schedule_day_for_user
 
 
 @pytest.mark.asyncio
@@ -113,6 +120,52 @@ async def test_update_day_template(authenticated_client):
     data = response.json()
     assert data["id"] == template_id
     assert data["icon"] == "test-icon"
+
+
+@pytest.mark.asyncio
+async def test_schedule_day_copies_template_alarms(authenticated_client):
+    """Test alarms from templates are copied when scheduling a day."""
+    client, user = await authenticated_client()
+
+    list_response = client.post("/day-templates/", json={"limit": 50, "offset": 0})
+    assert list_response.status_code == 200
+    templates = list_response.json()["items"]
+    default_template = next(
+        template for template in templates if template["slug"] == "default"
+    )
+
+    update_data = {
+        "slug": "default",
+        "alarms": [
+            {
+                "name": "Wake up",
+                "time": "08:00:00",
+                "type": "URL",
+                "url": "https://example.com",
+            }
+        ],
+    }
+    update_response = client.put(
+        f"/day-templates/{default_template['id']}", json=update_data
+    )
+    assert update_response.status_code == 200
+
+    target_date = get_current_date(user.settings.timezone)
+    await schedule_day_for_user(user.id, target_date)
+
+    day_repo = DayRepository(user_id=user.id)
+    day_id = DayEntity.id_from_date_and_user(target_date, user.id)
+    scheduled_day = await day_repo.get(day_id)
+
+    assert len(scheduled_day.alarms) == 1
+    alarm = scheduled_day.alarms[0]
+    assert alarm.name == "Wake up"
+    assert alarm.time == time(8, 0, 0)
+    assert alarm.type == value_objects.AlarmType.URL
+    assert alarm.url == "https://example.com"
+    assert alarm.datetime == datetime(
+        target_date.year, target_date.month, target_date.day, 8, 0, tzinfo=UTC
+    )
 
 
 @pytest.mark.asyncio
