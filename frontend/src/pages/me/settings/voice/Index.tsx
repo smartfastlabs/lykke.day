@@ -11,16 +11,11 @@ import {
 } from "solid-js";
 
 import SettingsPage from "@/components/shared/SettingsPage";
-import { useAuth } from "@/providers/auth";
 import { globalNotifications } from "@/providers/notifications";
-import { authAPI } from "@/utils/api";
-
-type VoiceSetting = {
-  voice_uri?: string | null;
-  rate?: number | null;
-  pitch?: number | null;
-  volume?: number | null;
-};
+import {
+  loadDeviceVoiceSetting,
+  saveDeviceVoiceSetting,
+} from "@/utils/voiceSettings";
 
 const DEFAULT_SAMPLE =
   "Hi. This is a sample. Your next task is to take a deep breath, and keep going.";
@@ -30,9 +25,10 @@ const clamp = (value: number, min: number, max: number) =>
 
 const VoiceSettingsPage: Component = () => {
   const navigate = useNavigate();
-  const { user, refetch } = useAuth();
 
-  const [voices, setVoices] = createSignal<SpeechSynthesisVoice[]>([]);
+  const [voices, setVoices] = createSignal<globalThis.SpeechSynthesisVoice[]>(
+    [],
+  );
   const [sampleText, setSampleText] = createSignal(DEFAULT_SAMPLE);
   const [selectedVoiceURI, setSelectedVoiceURI] = createSignal<string | null>(
     null,
@@ -68,10 +64,7 @@ const VoiceSettingsPage: Component = () => {
   });
 
   createEffect(() => {
-    const current = user();
-    const raw = (current?.settings as { voice_setting?: unknown } | undefined)
-      ?.voice_setting;
-    const voice = (raw ?? null) as VoiceSetting | null;
+    const voice = loadDeviceVoiceSetting();
     setSelectedVoiceURI(
       typeof voice?.voice_uri === "string" ? voice.voice_uri : null,
     );
@@ -115,7 +108,7 @@ const VoiceSettingsPage: Component = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const payload: VoiceSetting | null = selectedVoiceURI()
+      const payload = selectedVoiceURI()
         ? {
             voice_uri: selectedVoiceURI(),
             rate: rate(),
@@ -124,13 +117,8 @@ const VoiceSettingsPage: Component = () => {
           }
         : null;
 
-      await authAPI.updateProfile({
-        settings: {
-          voice_setting: payload as unknown as Record<string, unknown> | null,
-        },
-      });
-      await refetch();
-      globalNotifications.addSuccess("Voice settings saved");
+      saveDeviceVoiceSetting(payload);
+      globalNotifications.addSuccess("Voice settings saved (this device only)");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to save voice settings";
@@ -156,6 +144,10 @@ const VoiceSettingsPage: Component = () => {
             <p class="text-sm text-stone-600">
               Choose which voice is used when the kiosk reads notifications out
               loud.
+            </p>
+            <p class="text-xs text-stone-400">
+              This setting is saved to this device’s browser storage (it doesn’t
+              sync across devices).
             </p>
           </div>
 

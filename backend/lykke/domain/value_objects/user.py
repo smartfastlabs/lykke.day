@@ -16,7 +16,6 @@ class UserSetting(BaseValueObject):
     llm_personality_amendments: list[str] = field(default_factory=list)
     morning_overview_time: str | None = None  # HH:MM format in user's local timezone
     alarm_presets: list[AlarmPreset] = field(default_factory=list)
-    voice_setting: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if isinstance(self.llm_provider, str):

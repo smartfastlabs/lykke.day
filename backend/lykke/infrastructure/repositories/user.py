@@ -89,7 +89,12 @@ class UserRepository(BaseRepository[UserEntity, value_objects.UserQuery]):
                 field.name for field in fields(value_objects.UserSetting)
             }
             if isinstance(data["settings"], dict):
-                data["settings"] = value_objects.UserSetting(**data["settings"])
+                filtered = {
+                    key: value
+                    for key, value in data["settings"].items()
+                    if key in settings_fields
+                }
+                data["settings"] = value_objects.UserSetting(**filtered)
             elif isinstance(data["settings"], str):
                 raw_settings = json.loads(data["settings"])
                 filtered = {

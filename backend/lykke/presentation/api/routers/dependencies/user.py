@@ -27,9 +27,15 @@ def _db_user_to_entity(user: UserDB) -> UserEntity:
         User domain entity
     """
     settings_data = cast("dict[str, Any] | None", user.settings)
-    settings = (
-        value_objects.UserSetting(**settings_data)
+    allowed_settings_keys = set(value_objects.UserSetting.__dataclass_fields__.keys())
+    filtered_settings_data = (
+        {k: v for k, v in settings_data.items() if k in allowed_settings_keys}
         if settings_data
+        else None
+    )
+    settings = (
+        value_objects.UserSetting(**filtered_settings_data)
+        if filtered_settings_data
         else value_objects.UserSetting()
     )
 
@@ -79,15 +85,21 @@ async def get_current_user_from_token(websocket: WebSocket) -> UserEntity:
     """
     # Try to get token from cookie first
     token = websocket.cookies.get("lykke_auth")
-    logger.debug(f"get_current_user_from_token: cookie token={'present' if token else 'missing'}")
+    logger.debug(
+        f"get_current_user_from_token: cookie token={'present' if token else 'missing'}"
+    )
 
     # Fallback to query parameter for non-browser clients
     if not token:
         token = websocket.query_params.get("token")
-        logger.debug(f"get_current_user_from_token: query param token={'present' if token else 'missing'}")
+        logger.debug(
+            f"get_current_user_from_token: query param token={'present' if token else 'missing'}"
+        )
 
     if not token:
-        logger.warning("get_current_user_from_token: No token found in cookies or query params")
+        logger.warning(
+            "get_current_user_from_token: No token found in cookies or query params"
+        )
         raise AuthenticationError("Authentication token not provided")
 
     try:
@@ -103,14 +115,20 @@ async def get_current_user_from_token(websocket: WebSocket) -> UserEntity:
         async for session in get_async_session():
             logger.debug("get_current_user_from_token: got session, getting user_db...")
             async for user_db in get_user_db(session):
-                logger.debug("get_current_user_from_token: got user_db, getting user_manager...")
+                logger.debug(
+                    "get_current_user_from_token: got user_db, getting user_manager..."
+                )
                 async for user_manager in get_user_manager(user_db):
-                    logger.debug("get_current_user_from_token: got user_manager, reading token...")
+                    logger.debug(
+                        "get_current_user_from_token: got user_manager, reading token..."
+                    )
                     jwt_strategy = get_jwt_strategy()
                     result: Any = await jwt_strategy.read_token(
                         token, user_manager=user_manager
                     )
-                    logger.debug(f"get_current_user_from_token: jwt result type={type(result)}")
+                    logger.debug(
+                        f"get_current_user_from_token: jwt result type={type(result)}"
+                    )
 
                     if result is None:
                         raise AuthenticationError("Invalid authentication token")
@@ -135,7 +153,9 @@ async def get_current_user_from_token(websocket: WebSocket) -> UserEntity:
                         raise AuthenticationError("User is not active")
 
                     # Convert to domain entity
-                    logger.debug(f"get_current_user_from_token: returning user {user.id}")
+                    logger.debug(
+                        f"get_current_user_from_token: returning user {user.id}"
+                    )
                     return _db_user_to_entity(user)
 
         raise AuthenticationError("Failed to get database session")

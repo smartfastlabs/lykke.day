@@ -14,7 +14,6 @@ import {
 import { Portal } from "solid-js/web";
 import Page from "@/components/shared/layout/Page";
 import { useStreamingData } from "@/providers/streamingData";
-import { useAuth } from "@/providers/auth";
 import { getDateString } from "@/utils/dates";
 import { filterVisibleTasks } from "@/utils/tasks";
 import {
@@ -23,6 +22,7 @@ import {
 } from "@/components/routines/RoutineGroupsList";
 import { dayAPI } from "@/utils/api";
 import { globalNotifications } from "@/providers/notifications";
+import { loadDeviceVoiceSetting } from "@/utils/voiceSettings";
 import type { Alarm, DayTemplate, Event, Reminder, Task } from "@/types/api";
 
 type TimeBlock = NonNullable<DayTemplate["time_blocks"]>[number];
@@ -251,7 +251,6 @@ const KioskPage: Component = () => {
     subscribeToTopic,
     isConnected,
   } = useStreamingData();
-  const { user } = useAuth();
   const [now, setNow] = createSignal(new Date());
   const [weather, setWeather] = createSignal<WeatherSnapshot | null>(null);
   const [weatherError, setWeatherError] = createSignal(false);
@@ -264,7 +263,9 @@ const KioskPage: Component = () => {
   const [isSendingTest, setIsSendingTest] = createSignal(false);
   const [ttsSupported, setTtsSupported] = createSignal(false);
   const [speechUnlocked, setSpeechUnlocked] = createSignal(false);
-  const [voices, setVoices] = createSignal<SpeechSynthesisVoice[]>([]);
+  const [voices, setVoices] = createSignal<globalThis.SpeechSynthesisVoice[]>(
+    [],
+  );
   const [unlockState, setUnlockState] = createSignal<UnlockState>("idle");
   const [queuedKioskMessages, setQueuedKioskMessages] = createSignal<string[]>(
     [],
@@ -352,7 +353,7 @@ const KioskPage: Component = () => {
 
       // If nothing starts shortly, mark as failed (helps on devices that silently no-op).
       window.setTimeout(() => {
-        if (!speechUnlocked()) {
+        if (!untrack(() => speechUnlocked())) {
           setUnlockState("failed");
         }
       }, 1500);
@@ -420,17 +421,7 @@ const KioskPage: Component = () => {
     window.speechSynthesis.cancel();
 
     const utterance = new window.SpeechSynthesisUtterance(message);
-    const voiceSetting = (
-      untrack(() => user())?.settings as { voice_setting?: unknown } | undefined
-    )?.voice_setting as
-      | {
-          voice_uri?: string | null;
-          rate?: number | null;
-          pitch?: number | null;
-          volume?: number | null;
-        }
-      | null
-      | undefined;
+    const voiceSetting = loadDeviceVoiceSetting();
 
     const configuredVoiceURI =
       typeof voiceSetting?.voice_uri === "string"
@@ -467,7 +458,12 @@ const KioskPage: Component = () => {
     };
     utterance.onend = () => {
       // Continue draining the queue
-      queueMicrotask(() => speakQueuedMessages());
+      const next = () => speakQueuedMessages();
+      if (typeof globalThis.queueMicrotask === "function") {
+        globalThis.queueMicrotask(next);
+      } else {
+        void Promise.resolve().then(next);
+      }
     };
 
     setTtsLastError(null);
@@ -566,17 +562,22 @@ const KioskPage: Component = () => {
   // Subscribe to kiosk notification events and handle TTS
   createEffect(() => {
     // Unlock on any user interaction (click, touch, keypress)
+    const unlockSpeechFromEvent = () => {
+      // Called by the browser, not Solid. Avoid accidental tracking.
+      untrack(() => unlockSpeech());
+    };
+
     const unlockEvents = ["click", "touchstart", "keydown"];
     const cleanupUnlockListeners: (() => void)[] = [];
     unlockEvents.forEach((eventType) => {
-      document.addEventListener(eventType, unlockSpeech, {
+      document.addEventListener(eventType, unlockSpeechFromEvent, {
         once: true,
         passive: true,
       });
       // Note: Since we use { once: true }, the listener auto-removes after first call
       // But we track it for completeness
       cleanupUnlockListeners.push(() => {
-        document.removeEventListener(eventType, unlockSpeech);
+        document.removeEventListener(eventType, unlockSpeechFromEvent);
       });
     });
 
@@ -622,7 +623,7 @@ const KioskPage: Component = () => {
         return;
       }
 
-      if (!speechUnlocked()) {
+      if (!untrack(() => speechUnlocked())) {
         console.log(
           "Kiosk notification received, but audio is locked. Waiting for user interaction to enable speech.",
         );

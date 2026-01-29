@@ -37,7 +37,9 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
     def __post_init__(self) -> None:
         """Ensure settings maintains the UserSetting dataclass invariant."""
         if isinstance(self.settings, dict):
-            self.settings = value_objects.UserSetting(**self.settings)
+            allowed_keys = set(value_objects.UserSetting.__dataclass_fields__.keys())
+            filtered = {k: v for k, v in self.settings.items() if k in allowed_keys}
+            self.settings = value_objects.UserSetting(**filtered)
 
     @property
     def user_id(self) -> UUID:

@@ -1713,6 +1713,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Domain Events
+         * @description List domain events with optional filters.
+         *
+         *     Returns paginated list of domain events from Redis, with optional filtering
+         *     by search text, user_id, event_type, and time range.
+         *
+         *     Only accessible by superusers.
+         */
+        get: operations["list_domain_events_admin_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -2435,6 +2460,43 @@ export interface components {
             /** Alarms */
             alarms?: components["schemas"]["AlarmSchema"][] | null;
             high_level_plan?: components["schemas"]["HighLevelPlanSchema"] | null;
+        };
+        /**
+         * DomainEventListResponse
+         * @description Schema for paginated domain event list response.
+         */
+        DomainEventListResponse: {
+            /** Items */
+            items: components["schemas"]["DomainEventSchema"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Has Next */
+            has_next: boolean;
+            /** Has Previous */
+            has_previous: boolean;
+        };
+        /**
+         * DomainEventSchema
+         * @description Schema for a single domain event log entry.
+         */
+        DomainEventSchema: {
+            /** Id */
+            id: string;
+            /** Event Type */
+            event_type: string;
+            /** Event Data */
+            event_data: {
+                [key: string]: unknown;
+            };
+            /**
+             * Stored At
+             * Format: date-time
+             */
+            stored_at: string;
         };
         /**
          * EarlyAccessRequestSchema
@@ -7281,6 +7343,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    list_domain_events_admin_events_get: {
+        parameters: {
+            query?: {
+                /** @description Text search in event data */
+                search?: string | null;
+                /** @description Filter by user ID */
+                user_id?: string | null;
+                /** @description Filter by event type (partial match) */
+                event_type?: string | null;
+                /** @description Filter events after this time */
+                start_time?: string | null;
+                /** @description Filter events before this time */
+                end_time?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DomainEventListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

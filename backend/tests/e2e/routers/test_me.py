@@ -90,7 +90,6 @@ async def test_update_current_user_persists_settings_and_updates_timestamp(
         "phone_number": phone_number,
         "settings": {
             "template_defaults": ["x", "x", "x", "x", "x", "x", "x"],
-            "voice_setting": {"voice_uri": "com.apple.speech.synthesis.voice.Alex"},
         },
     }
 
@@ -102,9 +101,6 @@ async def test_update_current_user_persists_settings_and_updates_timestamp(
     updated_user = await repo.get(user.id)
 
     assert updated_user.settings.template_defaults == ["x"] * 7
-    assert updated_user.settings.voice_setting == {
-        "voice_uri": "com.apple.speech.synthesis.voice.Alex"
-    }
     assert updated_user.phone_number == phone_number
     assert updated_user.updated_at is not None
     assert updated_user.updated_at != original_updated_at
