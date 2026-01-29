@@ -34,7 +34,7 @@ export function getWebSocketBaseUrl(): string {
     return "api.lykke.day";
   } else {
     // Development: connect directly to backend
-    return "localhost:8080";
+    return "92.168.86.41:8080";
   }
 }
 

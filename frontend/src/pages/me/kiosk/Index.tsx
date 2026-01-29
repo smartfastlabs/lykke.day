@@ -38,6 +38,8 @@ interface WeatherSnapshot {
   condition: string;
 }
 
+type UnlockState = "idle" | "attempting" | "enabled" | "failed";
+
 const WEATHER_CODE_LABELS: Record<number, string> = {
   0: "Clear",
   1: "Mostly clear",
@@ -61,6 +63,9 @@ const WEATHER_CODE_LABELS: Record<number, string> = {
 };
 
 const normalizeTime = (time: string): string => time.slice(0, 5);
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
 
 const formatTimeString = (timeStr: string): string => {
   const [h, m] = normalizeTime(timeStr).split(":");
@@ -248,6 +253,7 @@ const KioskPage: Component = () => {
   const [ttsSupported, setTtsSupported] = createSignal(false);
   const [speechUnlocked, setSpeechUnlocked] = createSignal(false);
   const [voices, setVoices] = createSignal<SpeechSynthesisVoice[]>([]);
+  const [unlockState, setUnlockState] = createSignal<UnlockState>("idle");
   const [queuedKioskMessages, setQueuedKioskMessages] = createSignal<string[]>(
     [],
   );
@@ -264,25 +270,116 @@ const KioskPage: Component = () => {
     setVoices(window.speechSynthesis.getVoices() ?? []);
   };
 
+  const getBestAvailableVoice = (preferredVoiceURI: string | null) => {
+    const available = voices();
+    if (available.length === 0) {
+      return null;
+    }
+
+    const exact =
+      preferredVoiceURI && preferredVoiceURI.length > 0
+        ? (available.find((v) => v.voiceURI === preferredVoiceURI) ?? null)
+        : null;
+    if (exact) return exact;
+
+    // Favor "default" and/or English voices if present, otherwise use first.
+    return (
+      available.find((v) => Boolean(v.default)) ??
+      available.find((v) => (v.lang ?? "").toLowerCase().startsWith("en")) ??
+      available[0] ??
+      null
+    );
+  };
+
   const unlockSpeech = () => {
     if (speechUnlocked() || !("speechSynthesis" in window)) {
       return;
     }
 
-    // Chrome often requires a direct user interaction before audio APIs work.
-    // Speak a silent utterance to "unlock" speech synthesis.
+    setUnlockState("attempting");
+
+    // Many Chromium builds require a direct user interaction before speech works.
+    // IMPORTANT: Some engines won't fire `onstart` for an empty string, so use a
+    // non-empty utterance and keep it short.
     try {
-      const utterance = new window.SpeechSynthesisUtterance("");
-      utterance.volume = 0;
-      utterance.rate = 0.1;
+      if (voices().length === 0) {
+        setUnlockState("failed");
+        setTtsLastError(
+          "No voices available on this device (SpeechSynthesis has no voices).",
+        );
+        return;
+      }
+
+      const utterance = new window.SpeechSynthesisUtterance("Audio enabled.");
+      // Keep it quiet but non-zero to avoid "silent utterance" optimizations.
+      utterance.volume = 0.05;
+      utterance.rate = 1.0;
+      const bestVoice = getBestAvailableVoice(null);
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+      }
       utterance.onstart = () => {
         setSpeechUnlocked(true);
+        setUnlockState("enabled");
         // Cancel immediately after starting
         window.speechSynthesis.cancel();
       };
+      utterance.onerror = (event) => {
+        console.error("Unlock speech synthesis error:", event);
+        setUnlockState("failed");
+        setTtsLastError(
+          typeof (event as unknown as { error?: unknown }).error === "string"
+            ? String((event as unknown as { error?: unknown }).error)
+            : "Speech synthesis failed to start",
+        );
+      };
       window.speechSynthesis.speak(utterance);
+
+      // If nothing starts shortly, mark as failed (helps on devices that silently no-op).
+      window.setTimeout(() => {
+        if (!speechUnlocked()) {
+          setUnlockState("failed");
+        }
+      }, 1500);
     } catch (err) {
       console.error("Failed to unlock speech synthesis:", err);
+      setUnlockState("failed");
+    }
+  };
+
+  const speakSample = () => {
+    if (!("speechSynthesis" in window)) return;
+    try {
+      if (voices().length === 0) {
+        setTtsLastError(
+          "No voices available on this device (SpeechSynthesis has no voices).",
+        );
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      const utterance = new window.SpeechSynthesisUtterance(
+        "This is a kiosk voice test.",
+      );
+      const bestVoice = getBestAvailableVoice(null);
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+      }
+      utterance.volume = 1.0;
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.onerror = (event) => {
+        console.error("Sample speech synthesis error:", event);
+        setTtsLastError(
+          typeof (event as unknown as { error?: unknown }).error === "string"
+            ? String((event as unknown as { error?: unknown }).error)
+            : "Speech synthesis error",
+        );
+      };
+      setTtsLastError(null);
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.error("Failed to play sample:", err);
     }
   };
 
@@ -291,6 +388,13 @@ const KioskPage: Component = () => {
     if (!speechUnlocked()) return;
     const queue = queuedKioskMessages();
     if (queue.length === 0) return;
+
+    if (voices().length === 0) {
+      setTtsLastError(
+        "No voices available on this device (SpeechSynthesis has no voices).",
+      );
+      return;
+    }
 
     const message = queue[0];
     setQueuedKioskMessages(queue.slice(1));
@@ -314,20 +418,23 @@ const KioskPage: Component = () => {
       typeof voiceSetting?.voice_uri === "string"
         ? voiceSetting.voice_uri
         : null;
-    const configuredVoice = configuredVoiceURI
-      ? (voices().find((v) => v.voiceURI === configuredVoiceURI) ?? null)
-      : null;
-
-    if (configuredVoice) {
-      utterance.voice = configuredVoice;
+    const bestVoice = getBestAvailableVoice(configuredVoiceURI);
+    if (bestVoice) {
+      utterance.voice = bestVoice;
     }
 
     utterance.rate =
-      typeof voiceSetting?.rate === "number" ? voiceSetting.rate : 1.0;
+      typeof voiceSetting?.rate === "number"
+        ? clamp(voiceSetting.rate, 0.5, 2.0)
+        : 1.0;
     utterance.pitch =
-      typeof voiceSetting?.pitch === "number" ? voiceSetting.pitch : 1.0;
+      typeof voiceSetting?.pitch === "number"
+        ? clamp(voiceSetting.pitch, 0.0, 2.0)
+        : 1.0;
     utterance.volume =
-      typeof voiceSetting?.volume === "number" ? voiceSetting.volume : 1.0;
+      typeof voiceSetting?.volume === "number"
+        ? clamp(voiceSetting.volume, 0.0, 1.0)
+        : 1.0;
 
     utterance.onerror = (event) => {
       console.error("Speech synthesis error:", event);
@@ -907,6 +1014,28 @@ const KioskPage: Component = () => {
                       >
                         {speechUnlocked() ? "Audio enabled" : "Audio locked"}
                       </span>
+                      <span class="rounded-full bg-stone-100 px-2 py-0.5 font-semibold text-stone-600">
+                        {voices().length} voices
+                      </span>
+                      <Show
+                        when={!speechUnlocked() && unlockState() !== "idle"}
+                      >
+                        <span
+                          class={
+                            unlockState() === "attempting"
+                              ? "rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700"
+                              : unlockState() === "failed"
+                                ? "rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-rose-700"
+                                : "rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700"
+                          }
+                        >
+                          {unlockState() === "attempting"
+                            ? "Enabling…"
+                            : unlockState() === "failed"
+                              ? "Enable failed"
+                              : "Enabled"}
+                        </span>
+                      </Show>
                     </Show>
                     <Show when={!ttsSupported()}>
                       <span class="rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-rose-700">
@@ -930,6 +1059,17 @@ const KioskPage: Component = () => {
                       class="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 transition-colors"
                     >
                       Enable audio
+                    </button>
+                  </Show>
+                  <Show when={ttsSupported()}>
+                    <button
+                      onClick={() => {
+                        unlockSpeech();
+                        speakSample();
+                      }}
+                      class="rounded-lg bg-white/80 px-4 py-2 text-sm font-medium text-stone-800 hover:bg-white transition-colors border border-white/70"
+                    >
+                      Play sample
                     </button>
                   </Show>
                   <button
