@@ -67,6 +67,18 @@ const normalizeTime = (time: string): string => time.slice(0, 5);
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
+const isBenignSpeechSynthesisError = (error: unknown): boolean => {
+  // Common, non-fatal errors when we intentionally call `speechSynthesis.cancel()`
+  // or when a new utterance interrupts a previous one.
+  if (typeof error !== "string") return false;
+  const normalized = error.toLowerCase();
+  return (
+    normalized === "interrupted" ||
+    normalized === "canceled" ||
+    normalized === "cancelled"
+  );
+};
+
 const formatTimeString = (timeStr: string): string => {
   const [h, m] = normalizeTime(timeStr).split(":");
   const hour = parseInt(h, 10);
@@ -327,11 +339,14 @@ const KioskPage: Component = () => {
       utterance.onerror = (event) => {
         console.error("Unlock speech synthesis error:", event);
         setUnlockState("failed");
-        setTtsLastError(
-          typeof (event as unknown as { error?: unknown }).error === "string"
-            ? String((event as unknown as { error?: unknown }).error)
-            : "Speech synthesis failed to start",
-        );
+        const errValue = (event as unknown as { error?: unknown }).error;
+        if (!isBenignSpeechSynthesisError(errValue)) {
+          setTtsLastError(
+            typeof errValue === "string"
+              ? String(errValue)
+              : "Speech synthesis failed to start",
+          );
+        }
       };
       window.speechSynthesis.speak(utterance);
 
@@ -370,11 +385,14 @@ const KioskPage: Component = () => {
       utterance.pitch = 1.0;
       utterance.onerror = (event) => {
         console.error("Sample speech synthesis error:", event);
-        setTtsLastError(
-          typeof (event as unknown as { error?: unknown }).error === "string"
-            ? String((event as unknown as { error?: unknown }).error)
-            : "Speech synthesis error",
-        );
+        const errValue = (event as unknown as { error?: unknown }).error;
+        if (!isBenignSpeechSynthesisError(errValue)) {
+          setTtsLastError(
+            typeof errValue === "string"
+              ? String(errValue)
+              : "Speech synthesis error",
+          );
+        }
       };
       setTtsLastError(null);
       window.speechSynthesis.speak(utterance);
@@ -438,11 +456,14 @@ const KioskPage: Component = () => {
 
     utterance.onerror = (event) => {
       console.error("Speech synthesis error:", event);
-      setTtsLastError(
-        typeof (event as unknown as { error?: unknown }).error === "string"
-          ? String((event as unknown as { error?: unknown }).error)
-          : "Speech synthesis error",
-      );
+      const errValue = (event as unknown as { error?: unknown }).error;
+      if (!isBenignSpeechSynthesisError(errValue)) {
+        setTtsLastError(
+          typeof errValue === "string"
+            ? String(errValue)
+            : "Speech synthesis error",
+        );
+      }
     };
     utterance.onend = () => {
       // Continue draining the queue
