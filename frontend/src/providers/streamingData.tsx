@@ -396,7 +396,8 @@ export function StreamingDataProvider(props: ParentProps) {
     const day = dayContextStore.data?.day;
     if (!day) return [];
     return normalizeBrainDumps(
-      (day as { brain_dump_items?: BrainDumpWithOptionalId[] }).brain_dump_items,
+      (day as { brain_dump_items?: BrainDumpWithOptionalId[] })
+        .brain_dump_items,
     );
   });
   const day = createMemo<Day | undefined>(() => {

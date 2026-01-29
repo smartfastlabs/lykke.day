@@ -10,6 +10,7 @@ from lykke.application.commands.brain_dump import ProcessBrainDumpCommand
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
+from lykke.presentation.utils.structured_logging import structured_task
 
 from .common import (
     get_process_brain_dump_handler,
@@ -19,11 +20,11 @@ from .common import (
 
 
 class _BrainDumpHandler(Protocol):
-    async def handle(self, command: ProcessBrainDumpCommand) -> None:
-        ...
+    async def handle(self, command: ProcessBrainDumpCommand) -> None: ...
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def process_brain_dump_item_task(
     user_id: UUID,
     day_date: str,

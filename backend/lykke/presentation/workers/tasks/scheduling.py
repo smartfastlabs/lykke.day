@@ -14,6 +14,7 @@ from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWork
 from lykke.core.utils.dates import get_current_date
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
+from lykke.presentation.utils.structured_logging import structured_task
 
 from .common import (
     get_read_only_repository_factory,
@@ -24,16 +25,15 @@ from .common import (
 
 
 class _EnqueueTask(Protocol):
-    async def kiq(self, **kwargs: object) -> None:
-        ...
+    async def kiq(self, **kwargs: object) -> None: ...
 
 
 class _ScheduleDayHandler(Protocol):
-    async def handle(self, command: ScheduleDayCommand) -> None:
-        ...
+    async def handle(self, command: ScheduleDayCommand) -> None: ...
 
 
 @broker.task(schedule=[{"cron": "0 3 * * *"}])  # type: ignore[untyped-decorator]
+@structured_task()
 async def schedule_all_users_day_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
     *,
@@ -54,6 +54,7 @@ async def schedule_all_users_day_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def schedule_user_day_task(
     user_id: UUID,
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],

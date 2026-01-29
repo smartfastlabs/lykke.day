@@ -1,10 +1,7 @@
 import { useNavigate } from "@solidjs/router";
 import { Component, For } from "solid-js";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import {
-  faHouse,
-  faListCheck,
-} from "@fortawesome/free-solid-svg-icons";
+import { faListCheck } from "@fortawesome/free-solid-svg-icons";
 
 import { Icon } from "@/components/shared/Icon";
 import SettingsPage from "@/components/shared/SettingsPage";
@@ -38,18 +35,6 @@ const AdminIndexPage: Component = () => {
         },
       ],
     },
-    {
-      title: "Navigate",
-      description: "Return to the main app.",
-      items: [
-        {
-          label: "Home",
-          description: "Go back to your day overview.",
-          icon: faHouse,
-          url: "/me",
-        },
-      ],
-    },
   ];
 
   return (
@@ -66,7 +51,11 @@ const AdminIndexPage: Component = () => {
                   <p class="text-sm text-stone-500">{section.description}</p>
                 </div>
 
-                <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                <div
+                  class={`mt-5 grid gap-3 ${
+                    section.items.length > 1 ? "sm:grid-cols-2" : ""
+                  }`}
+                >
                   <For each={section.items}>
                     {(item) => (
                       <button

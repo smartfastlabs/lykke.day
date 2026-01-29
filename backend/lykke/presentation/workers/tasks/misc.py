@@ -3,9 +3,11 @@
 from loguru import logger
 
 from lykke.infrastructure.workers.config import broker
+from lykke.presentation.utils.structured_logging import structured_task
 
 
 @broker.task(schedule=[{"cron": "* * * * *"}])  # type: ignore[untyped-decorator]
+@structured_task()
 async def heartbeat_task() -> None:
     """Heartbeat task that runs every minute.
 
@@ -16,6 +18,7 @@ async def heartbeat_task() -> None:
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def example_triggered_task(message: str) -> dict[str, str]:
     """Example task that can be triggered via API.
 

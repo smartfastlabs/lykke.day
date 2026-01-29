@@ -15,16 +15,17 @@ from lykke.domain import value_objects
 from lykke.domain.entities import DayEntity
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
+from lykke.presentation.utils.structured_logging import structured_task
 
 from .common import get_unit_of_work_factory, get_user_repository
 
 
 class _EnqueueTask(Protocol):
-    async def kiq(self, **kwargs: object) -> None:
-        ...
+    async def kiq(self, **kwargs: object) -> None: ...
 
 
 @broker.task(schedule=[{"cron": "* * * * *"}])  # type: ignore[untyped-decorator]
+@structured_task()
 async def trigger_alarms_for_all_users_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
     *,
@@ -44,6 +45,7 @@ async def trigger_alarms_for_all_users_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def trigger_alarms_for_user_task(
     user_id: UUID,
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
@@ -126,4 +128,5 @@ async def trigger_alarms_for_user_task(
 
         logger.info("Alarm evaluation completed for user %s", user_id)
     finally:
+        await pubsub_gateway.close()
         await pubsub_gateway.close()

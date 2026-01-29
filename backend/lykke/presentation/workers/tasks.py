@@ -57,6 +57,7 @@ from lykke.infrastructure.unit_of_work import (
 )
 from lykke.infrastructure.workers.config import broker
 from lykke.presentation.handler_factory import CommandHandlerFactory
+from lykke.presentation.utils.structured_logging import structured_task
 
 scheduler = TaskiqScheduler(broker=broker, sources=[LabelScheduleSource(broker)])
 
@@ -236,6 +237,7 @@ def get_evaluate_timing_status_handler(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def sync_calendar_task(
     user_id: UUID,
 ) -> None:
@@ -265,6 +267,7 @@ async def sync_calendar_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def sync_single_calendar_task(
     user_id: UUID,
     calendar_id: UUID,
@@ -300,6 +303,7 @@ async def sync_single_calendar_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def resubscribe_calendar_task(
     user_id: UUID,
     calendar_id: UUID,
@@ -339,6 +343,7 @@ async def resubscribe_calendar_task(
 
 
 @broker.task(schedule=[{"cron": "0 3 * * *"}])  # type: ignore[untyped-decorator]
+@structured_task()
 async def schedule_all_users_day_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
 ) -> None:
@@ -355,6 +360,7 @@ async def schedule_all_users_day_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def schedule_user_day_task(
     user_id: UUID,
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
@@ -391,6 +397,7 @@ async def schedule_user_day_task(
 
 
 @broker.task(schedule=[{"cron": "0,19,20,30,50 * * * *"}])  # type: ignore[untyped-decorator]
+@structured_task()
 async def evaluate_smart_notifications_for_all_users_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
 ) -> None:
@@ -417,6 +424,7 @@ async def evaluate_smart_notifications_for_all_users_task(
 
 
 @broker.task(schedule=[{"cron": "0,19,20,30,50 * * * *"}])  # type: ignore[untyped-decorator]
+@structured_task()
 async def evaluate_kiosk_notifications_for_all_users_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
 ) -> None:
@@ -443,6 +451,7 @@ async def evaluate_kiosk_notifications_for_all_users_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def evaluate_smart_notification_task(
     user_id: UUID,
     triggered_by: str | None = None,
@@ -483,6 +492,7 @@ async def evaluate_smart_notification_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def evaluate_kiosk_notification_task(
     user_id: UUID,
     triggered_by: str | None = None,
@@ -527,6 +537,7 @@ async def evaluate_kiosk_notification_task(
 
 
 @broker.task(schedule=[{"cron": "* * * * *"}])  # type: ignore[untyped-decorator]
+@structured_task()
 async def trigger_alarms_for_all_users_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
 ) -> None:
@@ -543,6 +554,7 @@ async def trigger_alarms_for_all_users_task(
 
 
 @broker.task(schedule=[{"cron": "* * * * *"}])  # type: ignore[untyped-decorator]
+@structured_task()
 async def evaluate_timing_status_for_all_users_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
 ) -> None:
@@ -559,6 +571,7 @@ async def evaluate_timing_status_for_all_users_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def evaluate_timing_status_for_user_task(
     user_id: UUID,
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
@@ -584,6 +597,7 @@ async def evaluate_timing_status_for_user_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def trigger_alarms_for_user_task(
     user_id: UUID,
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
@@ -663,6 +677,7 @@ async def trigger_alarms_for_user_task(
 
 
 @broker.task(schedule=[{"cron": "* * * * *"}])  # type: ignore[untyped-decorator]
+@structured_task()
 async def heartbeat_task() -> None:
     """Heartbeat task that runs every minute.
 
@@ -673,6 +688,7 @@ async def heartbeat_task() -> None:
 
 
 @broker.task(schedule=[{"cron": "*/15 * * * *"}])  # type: ignore[untyped-decorator]
+@structured_task()
 async def evaluate_morning_overviews_for_all_users_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
 ) -> None:
@@ -760,6 +776,7 @@ async def evaluate_morning_overviews_for_all_users_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def evaluate_morning_overview_task(
     user_id: UUID,
 ) -> None:
@@ -789,6 +806,7 @@ async def evaluate_morning_overview_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def process_brain_dump_item_task(
     user_id: UUID,
     day_date: str,
@@ -834,6 +852,7 @@ async def process_brain_dump_item_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
+@structured_task()
 async def example_triggered_task(message: str) -> dict[str, str]:
     """Example task that can be triggered via API.
 

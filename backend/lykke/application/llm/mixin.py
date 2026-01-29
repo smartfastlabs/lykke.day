@@ -172,6 +172,12 @@ class LLMHandlerMixin(ABC):
             context_prompt,
             ask_prompt,
             tools,
+            metadata={
+                "user_id": str(self.user_id),
+                "handler": self.name,
+                "usecase": self.template_usecase,
+                "llm_provider": llm_provider.value,
+            },
         )
         if tool_result is None:
             logger.debug(

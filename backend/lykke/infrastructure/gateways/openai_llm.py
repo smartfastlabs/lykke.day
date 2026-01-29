@@ -3,6 +3,7 @@
 import inspect
 import json
 from collections.abc import Callable, Sequence
+from datetime import UTC, datetime
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -16,7 +17,9 @@ from lykke.application.gateways.llm_protocol import (
     LLMToolRunResult,
 )
 from lykke.core.config import settings
+from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.infrastructure.gateways.llm_tools import build_tool_spec_from_callable
+from lykke.infrastructure.gateways.structured_log import StructuredLogGateway
 
 
 def _normalize_response_content(content: str | list[str | dict[str, Any]]) -> str:
@@ -136,6 +139,18 @@ def _extract_tool_calls_from_content(
     return extracted
 
 
+def _coerce_json_safe(value: Any) -> Any:
+    try:
+        serialized = dataclass_to_json_dict(value)
+    except Exception:
+        serialized = value
+    try:
+        json.dumps(serialized)
+        return serialized
+    except TypeError:
+        return str(value)
+
+
 class OpenAILLMGateway:
     """OpenAI (ChatGPT) implementation of LLM gateway."""
 
@@ -153,6 +168,7 @@ class OpenAILLMGateway:
         context_prompt: str,
         ask_prompt: str,
         tools: Sequence[LLMTool],
+        metadata: dict[str, Any] | None = None,
     ) -> LLMToolRunResult | None:
         """Run an LLM use case and return the on_complete result.
 
@@ -165,6 +181,14 @@ class OpenAILLMGateway:
         Returns:
             The tool call result or None if no completion was returned
         """
+        started_at = datetime.now(UTC)
+        status = "success"
+        tool_results_payload: list[dict[str, Any]] = []
+        tool_calls_payload: list[dict[str, Any]] = []
+        response_excerpt = ""
+        response_length = 0
+        error_info: dict[str, Any] | None = None
+
         try:
             if not tools:
                 raise ValueError("At least one tool must be provided")
@@ -206,6 +230,8 @@ class OpenAILLMGateway:
             if not tool_calls:
                 # Parse response content as a fallback
                 response_text = _normalize_response_content(response.content).strip()
+                response_length = len(response_text)
+                response_excerpt = response_text[:2000]
 
                 # Try to extract JSON from response (might be wrapped in markdown code blocks)
                 if "```json" in response_text:
@@ -222,9 +248,13 @@ class OpenAILLMGateway:
                 )
 
             if not tool_calls:
+                status = "no_tool_calls"
                 return None
             tool_results: list[LLMToolCallResult] = []
             for tool_name, tool_args in tool_calls:
+                tool_calls_payload.append(
+                    {"tool_name": tool_name, "arguments": _coerce_json_safe(tool_args)}
+                )
                 if tool_name not in models_by_name:
                     logger.error(f"LLM selected unknown tool '{tool_name}'")
                     continue
@@ -232,6 +262,13 @@ class OpenAILLMGateway:
                 result = callbacks_by_name[tool_name](**validated.model_dump())
                 if inspect.isawaitable(result):
                     result = await result
+                tool_results_payload.append(
+                    {
+                        "tool_name": tool_name,
+                        "arguments": _coerce_json_safe(validated.model_dump()),
+                        "result": _coerce_json_safe(result),
+                    }
+                )
                 tool_results.append(
                     LLMToolCallResult(
                         tool_name=tool_name,
@@ -240,16 +277,61 @@ class OpenAILLMGateway:
                     )
                 )
             if not tool_results:
+                status = "no_tool_results"
                 return None
             return LLMToolRunResult(tool_results=tool_results)
 
         except json.JSONDecodeError as e:
+            status = "error"
+            error_info = {"type": "JSONDecodeError", "message": str(e)}
             logger.error(f"Failed to parse LLM response as JSON: {e}")
             logger.debug(
                 f"Response text: {response_text if 'response_text' in locals() else 'N/A'}"
             )
             return None
         except Exception as e:  # pylint: disable=broad-except
+            status = "error"
+            error_info = {"type": e.__class__.__name__, "message": str(e)}
             logger.error(f"Error running use case with OpenAI: {e}")
             logger.exception(e)
             return None
+        finally:
+            finished_at = datetime.now(UTC)
+            event_data = {
+                "source": "llm",
+                "provider": "openai",
+                "model": settings.OPENAI_MODEL,
+                "status": status,
+                "started_at": started_at.isoformat(),
+                "finished_at": finished_at.isoformat(),
+                "duration_ms": int((finished_at - started_at).total_seconds() * 1000),
+                "metadata": _coerce_json_safe(metadata or {}),
+                "prompts": {
+                    "system": system_prompt,
+                    "context": context_prompt,
+                    "ask": ask_prompt,
+                },
+                "tools": [
+                    {
+                        "name": tool.name,
+                        "description": tool.description,
+                    }
+                    for tool in tools
+                ],
+                "tool_calls": tool_calls_payload,
+                "tool_results": tool_results_payload,
+                "response_excerpt": response_excerpt,
+                "response_length": response_length,
+                "error": error_info,
+            }
+            gateway = StructuredLogGateway()
+            try:
+                await gateway.log_event(
+                    event_type="LLMUsecaseRun",
+                    event_data=event_data,
+                    occurred_at=started_at,
+                )
+            except Exception as exc:
+                logger.error(f"Failed to emit structured LLM log: {exc}")
+            finally:
+                await gateway.close()

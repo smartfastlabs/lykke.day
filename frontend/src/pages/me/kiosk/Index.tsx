@@ -16,16 +16,13 @@ import Page from "@/components/shared/layout/Page";
 import { useStreamingData } from "@/providers/streamingData";
 import { getDateString } from "@/utils/dates";
 import { filterVisibleTasks } from "@/utils/tasks";
-import { buildRoutineGroups, type RoutineGroup } from "@/components/routines/RoutineGroupsList";
+import {
+  buildRoutineGroups,
+  type RoutineGroup,
+} from "@/components/routines/RoutineGroupsList";
 import { dayAPI } from "@/utils/api";
 import { globalNotifications } from "@/providers/notifications";
-import type {
-  Alarm,
-  DayTemplate,
-  Event,
-  Reminder,
-  Task,
-} from "@/types/api";
+import type { Alarm, DayTemplate, Event, Reminder, Task } from "@/types/api";
 
 type TimeBlock = NonNullable<DayTemplate["time_blocks"]>[number];
 

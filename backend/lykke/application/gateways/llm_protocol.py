@@ -62,6 +62,7 @@ class LLMGatewayProtocol(Protocol):
         context_prompt: str,
         ask_prompt: str,
         tools: Sequence[LLMTool],
+        metadata: dict[str, Any] | None = None,
     ) -> LLMToolRunResult | None:
         """Run an LLM use case and return the tool call result.
 
@@ -70,6 +71,7 @@ class LLMGatewayProtocol(Protocol):
             context_prompt: The user context prompt to evaluate
             ask_prompt: The specific ask prompt for the LLM
             tools: Tools available for the LLM to call
+            metadata: Optional metadata for logging/diagnostics
 
         Returns:
             The tool call results or None if no completion was returned
