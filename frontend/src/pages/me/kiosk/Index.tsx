@@ -14,6 +14,7 @@ import {
 import { Portal } from "solid-js/web";
 import Page from "@/components/shared/layout/Page";
 import { useStreamingData } from "@/providers/streamingData";
+import { useAuth } from "@/providers/auth";
 import { getDateString } from "@/utils/dates";
 import { filterVisibleTasks } from "@/utils/tasks";
 import {
@@ -232,6 +233,7 @@ const KioskPage: Component = () => {
     alarms,
     subscribeToTopic,
   } = useStreamingData();
+  const { user } = useAuth();
   const [now, setNow] = createSignal(new Date());
   const [weather, setWeather] = createSignal<WeatherSnapshot | null>(null);
   const [weatherError, setWeatherError] = createSignal(false);
@@ -319,6 +321,18 @@ const KioskPage: Component = () => {
   // Subscribe to kiosk notification events and handle TTS
   createEffect(() => {
     let speechUnlocked = false;
+    const [voices, setVoices] = createSignal<SpeechSynthesisVoice[]>([]);
+
+    const loadVoices = () => {
+      if (!("speechSynthesis" in window)) return;
+      setVoices(window.speechSynthesis.getVoices() ?? []);
+    };
+    loadVoices();
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        loadVoices();
+      };
+    }
 
     // Unlock speech synthesis API on first user interaction
     // Chrome requires a direct user interaction to enable speech synthesis
@@ -390,9 +404,38 @@ const KioskPage: Component = () => {
         window.speechSynthesis.cancel();
 
         const utterance = new window.SpeechSynthesisUtterance(payload.message);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        utterance.volume = 1.0;
+        const voiceSetting = (
+          untrack(() => user())?.settings as
+            | { voice_setting?: unknown }
+            | undefined
+        )?.voice_setting as
+          | {
+              voice_uri?: string | null;
+              rate?: number | null;
+              pitch?: number | null;
+              volume?: number | null;
+            }
+          | null
+          | undefined;
+
+        const configuredVoiceURI =
+          typeof voiceSetting?.voice_uri === "string"
+            ? voiceSetting.voice_uri
+            : null;
+        const configuredVoice = configuredVoiceURI
+          ? (voices().find((v) => v.voiceURI === configuredVoiceURI) ?? null)
+          : null;
+
+        if (configuredVoice) {
+          utterance.voice = configuredVoice;
+        }
+
+        utterance.rate =
+          typeof voiceSetting?.rate === "number" ? voiceSetting.rate : 1.0;
+        utterance.pitch =
+          typeof voiceSetting?.pitch === "number" ? voiceSetting.pitch : 1.0;
+        utterance.volume =
+          typeof voiceSetting?.volume === "number" ? voiceSetting.volume : 1.0;
         utterance.onerror = (error) => {
           console.error("Speech synthesis error:", error);
         };
@@ -414,6 +457,7 @@ const KioskPage: Component = () => {
       unsubscribe();
       // Cancel any ongoing speech
       if ("speechSynthesis" in window) {
+        window.speechSynthesis.onvoiceschanged = null;
         window.speechSynthesis.cancel();
       }
       // Clean up unlock event listeners

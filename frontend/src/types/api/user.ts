@@ -11,6 +11,7 @@ export interface UserSettings {
   llm_personality_amendments: string[];
   morning_overview_time?: string | null; // HH:MM format in user's local timezone
   alarm_presets?: AlarmPreset[];
+  voice_setting?: Record<string, unknown> | null;
 }
 
 export interface UserSettingsUpdate {
@@ -21,6 +22,7 @@ export interface UserSettingsUpdate {
   llm_personality_amendments?: string[] | null;
   morning_overview_time?: string | null; // HH:MM format in user's local timezone
   alarm_presets?: AlarmPreset[] | null;
+  voice_setting?: Record<string, unknown> | null;
 }
 
 export interface CurrentUser {
@@ -49,4 +51,3 @@ export interface BasePersonalityOption {
   slug: string;
   label: string;
 }
-

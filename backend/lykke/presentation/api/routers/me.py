@@ -126,6 +126,11 @@ async def update_current_user_profile(
             and update_data.settings.alarm_presets is not None
             else current_settings.alarm_presets
         )
+        voice_setting = (
+            update_data.settings.voice_setting
+            if "voice_setting" in settings_fields
+            else current_settings.voice_setting
+        )
         # Handle morning_overview_time - check if it was explicitly set (even if None)
         # Pydantic's model_fields_set includes fields that were explicitly provided
         if "morning_overview_time" in settings_fields:
@@ -140,6 +145,7 @@ async def update_current_user_profile(
             llm_personality_amendments=llm_personality_amendments,
             morning_overview_time=morning_overview_time,
             alarm_presets=alarm_presets,
+            voice_setting=voice_setting,
         )
 
     update_object = UserUpdateObject(

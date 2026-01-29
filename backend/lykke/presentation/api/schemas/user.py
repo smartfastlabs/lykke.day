@@ -21,6 +21,7 @@ class UserSettingsSchema(BaseSchema):
     llm_personality_amendments: list[str] = Field(default_factory=list)
     morning_overview_time: str | None = None  # HH:MM format in user's local timezone
     alarm_presets: list[AlarmPresetSchema] = Field(default_factory=list)
+    voice_setting: dict[str, object] | None = None
 
 
 class UserSchema(BaseSchema):
@@ -52,6 +53,7 @@ class UserSettingsUpdateSchema(BaseSchema):
     llm_personality_amendments: list[str] | None = None
     morning_overview_time: str | None = None  # HH:MM format in user's local timezone
     alarm_presets: list[AlarmPresetSchema] | None = None
+    voice_setting: dict[str, object] | None = None
 
 
 class UserUpdateSchema(BaseSchema):

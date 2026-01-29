@@ -15,6 +15,7 @@ import {
   faBolt,
   faBullseye,
   faMobileScreenButton,
+  faVolumeHigh,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { Icon } from "@/components/shared/Icon";
@@ -121,6 +122,12 @@ const settingsSections: SettingsSection[] = [
         description: "Manage device push permissions.",
         icon: faMobileScreenButton,
         url: "/me/settings/push-subscriptions",
+      },
+      {
+        label: "Voice",
+        description: "Pick the voice used by the kiosk.",
+        icon: faVolumeHigh,
+        url: "/me/settings/voice",
       },
       {
         label: "LLM",
