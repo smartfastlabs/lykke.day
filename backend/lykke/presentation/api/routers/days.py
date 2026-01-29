@@ -51,14 +51,17 @@ from lykke.presentation.api.schemas.mappers import (
 )
 from lykke.presentation.api.schemas.websocket_message import (
     EntityChangeSchema,
+    KioskNotificationSchema,
     WebSocketConnectionAckSchema,
     WebSocketErrorSchema,
+    WebSocketKioskNotificationSchema,
     WebSocketSubscriptionSchema,
     WebSocketSyncRequestSchema,
     WebSocketSyncResponseSchema,
     WebSocketTopicEventSchema,
 )
 from lykke.presentation.handler_factory import CommandHandlerFactory
+from lykke.presentation.utils.structured_logging import emit_structured_log
 
 from .dependencies.factories import command_handler_factory
 from .dependencies.services import (
@@ -527,6 +530,48 @@ async def _handle_realtime_events(
                         await send_ws_message(
                             websocket, topic_event.model_dump(mode="json")
                         )
+
+                    if isinstance(domain_event, KioskNotificationEvent):
+                        notification_schema = KioskNotificationSchema(
+                            message=domain_event.message,
+                            category=domain_event.category,
+                            message_hash=domain_event.message_hash,
+                            created_at=domain_event.created_at.isoformat(),
+                            triggered_by=domain_event.triggered_by,
+                        )
+                        kiosk_message = WebSocketKioskNotificationSchema(
+                            notification=notification_schema
+                        )
+                        await send_ws_message(
+                            websocket, kiosk_message.model_dump(mode="json")
+                        )
+
+                        event_data = {
+                            "user_id": str(domain_event.user_id),
+                            "message_hash": domain_event.message_hash,
+                            "category": domain_event.category,
+                            "triggered_by": domain_event.triggered_by,
+                            "created_at": domain_event.created_at.isoformat(),
+                            "source": "days_context_websocket",
+                        }
+                        occurred_at = domain_event.created_at
+                        log_user_id = domain_event.user_id
+
+                        async def _emit_kiosk_log() -> None:
+                            try:
+                                await emit_structured_log(
+                                    event_type="KioskNotificationSent",
+                                    event_data=event_data,
+                                    occurred_at=occurred_at,
+                                )
+                            except Exception as exc:  # pylint: disable=broad-except
+                                logger.error(
+                                    "Failed to emit kiosk structured log for user %s: %s",
+                                    log_user_id,
+                                    exc,
+                                )
+
+                        asyncio.create_task(_emit_kiosk_log())
 
                     if not isinstance(
                         domain_event,

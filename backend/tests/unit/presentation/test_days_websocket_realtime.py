@@ -217,6 +217,55 @@ async def test_topic_event_is_sent_when_subscribed() -> None:
         await task
 
     assert websocket.messages
-    response = websocket.messages[0]
-    assert response["type"] == "topic_event"
-    assert response["topic"] == "KioskNotificationEvent"
+    topic_events = [
+        message
+        for message in websocket.messages
+        if message.get("type") == "topic_event"
+    ]
+    assert topic_events
+    assert topic_events[0]["topic"] == "KioskNotificationEvent"
+
+
+@pytest.mark.asyncio
+async def test_kiosk_notification_event_is_forwarded() -> None:
+    user_id = uuid4()
+    today = date(2026, 1, 25)
+    event = KioskNotificationEvent(
+        user_id=user_id,
+        message="Kiosk alert",
+        category="other",
+        message_hash="hash",
+        created_at=datetime(2026, 1, 25, 8, 0),
+        triggered_by="test",
+    )
+
+    websocket = _FakeWebSocket()
+    subscription = _FakeSubscription([serialize_domain_event(event)])
+    handler = _FakeIncrementalChangesHandler()
+    date_state = {"value": today}
+
+    task = asyncio.create_task(
+        _handle_realtime_events(
+            websocket,
+            subscription,
+            date_state,
+            handler,
+            None,
+            None,
+            None,
+            {"topics": set()},
+        )
+    )
+    await asyncio.sleep(0.05)
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
+
+    assert websocket.messages
+    kiosk_messages = [
+        message
+        for message in websocket.messages
+        if message.get("type") == "kiosk_notification"
+    ]
+    assert kiosk_messages
+    assert kiosk_messages[0]["notification"]["message"] == "Kiosk alert"
