@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from . import (
+    admin,
     brain_dump,
     calendar_entries,
     calendar_entry_series,
@@ -137,4 +138,9 @@ router.include_router(
     twilio.router,
     prefix="/twilio",
     tags=["twilio", "sms"],
+)
+router.include_router(
+    admin.router,
+    prefix="/admin",
+    tags=["admin"],
 )

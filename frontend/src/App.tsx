@@ -7,6 +7,7 @@ import { NotificationProvider } from "@/providers/notifications";
 import { LoadingIndicator, LoadingProvider } from "@/providers/loading";
 import { AuthProvider } from "@/providers/auth";
 import { AuthGuard } from "@/providers/authGuard";
+import { AdminGuard } from "@/providers/adminGuard";
 import CookieDisclaimer from "@/components/shared/CookieDisclaimer";
 
 import Login from "@/pages/Login";
@@ -80,6 +81,9 @@ import RecurringEventSeriesDetailPage from "@/pages/me/settings/recurring-events
 import CalendarRecurringEventsPage from "@/pages/me/settings/calendars/RecurringEvents";
 import PushSubscriptionsPage from "@/pages/me/settings/push-subscriptions/Index";
 import PushSubscriptionDetailPage from "@/pages/me/settings/push-subscriptions/Detail";
+import AdminLayout from "@/pages/admin/Layout";
+import AdminIndexPage from "@/pages/admin/Index";
+import DomainEventsPage from "@/pages/admin/DomainEvents";
 import NotFound from "@/pages/NotFound";
 
 import "@/utils/icons";
@@ -357,6 +361,13 @@ export default function App() {
                     path="/recurring-events/:id"
                     component={RecurringEventSeriesDetailPage}
                   />
+                </Route>
+              </Route>
+
+              <Route path="/admin" component={AdminGuard}>
+                <Route path="/" component={AdminLayout}>
+                  <Route path="/" component={AdminIndexPage} />
+                  <Route path="/domain-events" component={DomainEventsPage} />
                 </Route>
               </Route>
 

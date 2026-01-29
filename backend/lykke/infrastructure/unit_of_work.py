@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
+import json
+import uuid
 from dataclasses import replace
 from datetime import UTC, date as dt_date, datetime
 from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from loguru import logger
+from redis import asyncio as aioredis  # type: ignore
 
 from lykke.application.events import send_domain_events
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
+from lykke.core.config import settings
+from lykke.core.constants import (
+    DOMAIN_EVENT_LOG_KEY,
+    DOMAIN_EVENT_STREAM_CHANNEL,
+    MAX_DOMAIN_EVENT_LOG_SIZE,
+)
 from lykke.core.exceptions import BadRequestError, NotFoundError
 from lykke.core.utils.domain_event_serialization import serialize_domain_event
 from lykke.core.utils.serialization import dataclass_to_json_dict
@@ -974,24 +983,56 @@ class SqlAlchemyUnitOfWork:
         if not events:
             return
 
-        for event in events:
-            try:
-                # Serialize domain event to JSON-compatible dict
-                message = serialize_domain_event(event)
+        redis: aioredis.Redis | None = None
+        try:
+            for event in events:
+                try:
+                    # Serialize domain event to JSON-compatible dict
+                    message = serialize_domain_event(event)
 
-                # Publish to user-specific domain-events channel
-                # Note: We publish to the user_id from the UnitOfWork context
-                await self._pubsub_gateway.publish_to_user_channel(
-                    user_id=self.user_id,
-                    channel_type="domain-events",
-                    message=message,
-                )
-            except Exception as e:
-                # Log error but don't fail the commit
-                # PubSub failures shouldn't affect the transaction
-                logger.error(
-                    f"Failed to broadcast DomainEvent {event.__class__.__name__} via PubSub: {e}"
-                )
+                    # Publish to user-specific domain-events channel
+                    # Note: We publish to the user_id from the UnitOfWork context
+                    await self._pubsub_gateway.publish_to_user_channel(
+                        user_id=self.user_id,
+                        channel_type="domain-events",
+                        message=message,
+                    )
+
+                    # Store a backlog entry for admin inspection
+                    if redis is None:
+                        redis = await aioredis.from_url(
+                            settings.REDIS_URL,
+                            encoding="utf-8",
+                            decode_responses=True,
+                        )
+
+                    event_id = str(uuid.uuid4())
+                    timestamp_ms = int(event.occurred_at.timestamp() * 1000)
+                    log_entry = {
+                        "id": event_id,
+                        "event_type": message["event_type"],
+                        "event_data": message["event_data"],
+                        "stored_at": datetime.now(UTC).isoformat(),
+                    }
+
+                    await redis.zadd(
+                        DOMAIN_EVENT_LOG_KEY, {json.dumps(log_entry): timestamp_ms}
+                    )
+                    await redis.zremrangebyrank(
+                        DOMAIN_EVENT_LOG_KEY, 0, -(MAX_DOMAIN_EVENT_LOG_SIZE + 1)
+                    )
+                    await redis.publish(
+                        DOMAIN_EVENT_STREAM_CHANNEL, json.dumps(log_entry)
+                    )
+                except Exception as e:
+                    # Log error but don't fail the commit
+                    # PubSub/logging failures shouldn't affect the transaction
+                    logger.error(
+                        f"Failed to broadcast DomainEvent {event.__class__.__name__} via PubSub/log: {e}"
+                    )
+        finally:
+            if redis is not None:
+                await redis.close()
 
 
 def _extract_entity_date(
