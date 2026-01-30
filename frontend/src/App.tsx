@@ -32,6 +32,11 @@ import EventsView from "@/pages/me/today/Events";
 import AlarmsView from "@/pages/me/today/Alarms";
 import RemindersView from "@/pages/me/today/Reminders";
 import RoutinesView from "@/pages/me/today/Routines";
+import TomorrowLayout from "@/pages/me/tomorrow/Layout";
+import TomorrowPreviewView from "@/pages/me/tomorrow/Preview";
+import TomorrowAddReminderPage from "@/pages/me/tomorrow/AddReminder";
+import TomorrowAddAdhocTaskPage from "@/pages/me/tomorrow/AddAdhocTask";
+import TomorrowAddAlarmPage from "@/pages/me/tomorrow/AddAlarm";
 import TodayNotificationsPage from "@/pages/me/today/notifications/Index";
 import TodayNotificationDetailPage from "@/pages/me/today/notifications/Detail";
 import TodayBrainDumpsPage from "@/pages/me/today/brain-dumps/Index";
@@ -278,6 +283,21 @@ export default function App() {
                 <Route path="/adhoc-task" component={AddAdhocTaskPage} />
                 <Route path="/add-alarm" component={AddAlarmPage} />
                 <Route path="/add-reminder" component={AddReminderPage} />
+                <Route path="/tomorrow" component={TomorrowLayout}>
+                  <Route path="/" component={TomorrowPreviewView} />
+                </Route>
+                <Route
+                  path="/tomorrow/add-reminder"
+                  component={TomorrowAddReminderPage}
+                />
+                <Route
+                  path="/tomorrow/adhoc-task"
+                  component={TomorrowAddAdhocTaskPage}
+                />
+                <Route
+                  path="/tomorrow/add-alarm"
+                  component={TomorrowAddAlarmPage}
+                />
                 <Route path="/thats-all-for-today" component={ThatsAllPage} />
                 <Route
                   path="/notifications/:id"

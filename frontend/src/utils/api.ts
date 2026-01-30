@@ -230,6 +230,89 @@ export const reminderAPI = {
     }),
 };
 
+export const tomorrowAPI = {
+  ensureScheduled: (): Promise<Day> =>
+    fetchData<Day>("/api/me/tomorrow/ensure-scheduled", { method: "POST" }),
+  reschedule: (): Promise<Day> =>
+    fetchData<Day>("/api/me/tomorrow/reschedule", { method: "PUT" }),
+  getDay: (): Promise<Day> => fetchData<Day>("/api/me/tomorrow/day"),
+  getCalendarEntries: (): Promise<import("@/types/api").Event[]> =>
+    fetchData<import("@/types/api").Event[]>(
+      "/api/me/tomorrow/calendar-entries",
+    ),
+  getTasks: (): Promise<Task[]> => fetchData<Task[]>("/api/me/tomorrow/tasks"),
+  getRoutines: (): Promise<import("@/types/api").Routine[]> =>
+    fetchData<import("@/types/api").Routine[]>("/api/me/tomorrow/routines"),
+
+  addReminder: (name: string): Promise<Reminder> => {
+    const params = new URLSearchParams({ name });
+    return fetchData<Reminder>(
+      `/api/me/tomorrow/reminders?${params.toString()}`,
+      {
+        method: "POST",
+      },
+    );
+  },
+  updateReminderStatus: (
+    reminderId: string,
+    status: string,
+  ): Promise<Reminder> => {
+    const params = new URLSearchParams({ status });
+    return fetchData<Reminder>(
+      `/api/me/tomorrow/reminders/${reminderId}?${params.toString()}`,
+      { method: "PATCH" },
+    );
+  },
+  removeReminder: (reminderId: string): Promise<Reminder> =>
+    fetchData<Reminder>(`/api/me/tomorrow/reminders/${reminderId}`, {
+      method: "DELETE",
+    }),
+
+  addAlarm: (payload: {
+    name?: string;
+    time: string;
+    alarm_type?: string;
+    url?: string;
+  }): Promise<Alarm> => {
+    const params = new URLSearchParams({ time: payload.time });
+    if (payload.name) params.set("name", payload.name);
+    if (payload.alarm_type) params.set("alarm_type", payload.alarm_type);
+    if (payload.url) params.set("url", payload.url);
+    return fetchData<Alarm>(`/api/me/tomorrow/alarms?${params.toString()}`, {
+      method: "POST",
+    });
+  },
+  removeAlarm: (payload: {
+    name: string;
+    time: string;
+    alarm_type?: string;
+    url?: string;
+  }): Promise<Alarm> => {
+    const params = new URLSearchParams({
+      name: payload.name,
+      time: payload.time,
+    });
+    if (payload.alarm_type) params.set("alarm_type", payload.alarm_type);
+    if (payload.url) params.set("url", payload.url);
+    return fetchData<Alarm>(`/api/me/tomorrow/alarms?${params.toString()}`, {
+      method: "DELETE",
+    });
+  },
+  updateAlarmStatus: (payload: {
+    alarm_id: string;
+    status: string;
+    snoozed_until?: string | null;
+  }): Promise<Alarm> => {
+    const params = new URLSearchParams({ status: payload.status });
+    if (payload.snoozed_until)
+      params.set("snoozed_until", payload.snoozed_until);
+    return fetchData<Alarm>(
+      `/api/me/tomorrow/alarms/${payload.alarm_id}?${params.toString()}`,
+      { method: "PATCH" },
+    );
+  },
+};
+
 export const alarmAPI = {
   addAlarm: (payload: {
     name?: string;
