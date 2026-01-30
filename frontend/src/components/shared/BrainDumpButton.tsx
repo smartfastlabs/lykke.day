@@ -1,4 +1,4 @@
-import { useNavigate } from "@solidjs/router";
+import { useLocation, useNavigate } from "@solidjs/router";
 import {
   Component,
   Show,
@@ -8,10 +8,12 @@ import {
   onCleanup,
 } from "solid-js";
 import { Icon } from "@/components/shared/Icon";
+import AddActionModal from "@/components/shared/AddActionModal";
 import { useStreamingData } from "@/providers/streamingData";
 import {
   faHouse,
   faMicrophone,
+  faPlus,
   faStop,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -40,8 +42,10 @@ type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
 
 const BrainDumpButton: Component = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { addBrainDump, isLoading } = useStreamingData();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
+  const [isAddModalOpen, setIsAddModalOpen] = createSignal(false);
   const [newItemText, setNewItemText] = createSignal("");
   const [dictationInterim, setDictationInterim] = createSignal("");
   const [isDictating, setIsDictating] = createSignal(false);
@@ -154,6 +158,16 @@ const BrainDumpButton: Component = () => {
     startDictation();
   };
 
+  const openAddModal = () => {
+    setIsAddModalOpen(true);
+  };
+
+  const closeAddModal = () => {
+    setIsAddModalOpen(false);
+  };
+
+  const isOnMeHome = createMemo(() => location.pathname === "/me");
+
   const closeDictationModal = () => {
     stopDictation(true);
     setIsModalOpen(false);
@@ -226,11 +240,20 @@ const BrainDumpButton: Component = () => {
       <div class="fixed bottom-6 left-6 z-50 print:hidden">
         <div class="flex items-center gap-2">
           <button
-            onClick={() => navigate("/me")}
+            onClick={() => {
+              if (isOnMeHome()) {
+                openAddModal();
+                return;
+              }
+              navigate("/me");
+            }}
             class="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 bg-white/80 text-stone-600 shadow-lg shadow-stone-900/5 transition hover:bg-white active:scale-95"
-            aria-label="Go to home"
+            aria-label={isOnMeHome() ? "Add" : "Go to home"}
           >
-            <Icon icon={faHouse} class="h-5 w-5 fill-current" />
+            <Icon
+              icon={isOnMeHome() ? faPlus : faHouse}
+              class="h-5 w-5 fill-current"
+            />
           </button>
           <button
             onClick={openDictationModal}
@@ -241,6 +264,23 @@ const BrainDumpButton: Component = () => {
           </button>
         </div>
       </div>
+
+      <AddActionModal
+        isOpen={isAddModalOpen()}
+        onClose={closeAddModal}
+        onAddTask={() => {
+          closeAddModal();
+          navigate("/me/adhoc-task");
+        }}
+        onAddReminder={() => {
+          closeAddModal();
+          navigate("/me/add-reminder");
+        }}
+        onAddAlarm={() => {
+          closeAddModal();
+          navigate("/me/add-alarm");
+        }}
+      />
 
       <Show when={isModalOpen()}>
         <div

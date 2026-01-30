@@ -8,7 +8,6 @@ import { SectionCard } from "@/components/shared/SectionCard";
 import { MotivationalQuote } from "@/components/shared/MotivationalQuote";
 import { FormError, Input, Select, SubmitButton } from "@/components/forms";
 import { ALL_TASK_CATEGORIES } from "@/types/api/constants";
-import { filterVisibleTasks } from "@/utils/tasks";
 
 const getTaskStats = (tasks: Task[]) => {
   const total = tasks.length;
@@ -25,8 +24,11 @@ export const TodaysTasksView: Component = () => {
   const [isSaving, setIsSaving] = createSignal(false);
   const [formError, setFormError] = createSignal("");
 
-  const visibleTasks = createMemo(() => filterVisibleTasks(tasks()));
-  const stats = createMemo(() => getTaskStats(visibleTasks()));
+  // IMPORTANT: this is the "all tasks" view, so we intentionally do NOT filter
+  // out tasks with `timing_status === "hidden"` (which the backend uses for
+  // things like "later today" or snoozed items).
+  const allTasks = createMemo(() => tasks() ?? []);
+  const stats = createMemo(() => getTaskStats(allTasks()));
   const completionPercentage = createMemo(() => {
     const s = stats();
     return s.total > 0 ? Math.round((s.completed / s.total) * 100) : 0;
@@ -97,7 +99,7 @@ export const TodaysTasksView: Component = () => {
         <SectionCard
           title="Your Tasks"
           description="Swipe right to complete, left to punt or snooze"
-          hasItems={visibleTasks().length > 0}
+          hasItems={allTasks().length > 0}
           emptyState={emptyState}
         >
           <form class="mb-6 space-y-3" onSubmit={handleAddTask}>
@@ -127,7 +129,7 @@ export const TodaysTasksView: Component = () => {
             </div>
             <FormError error={formError()} />
           </form>
-          <TaskList tasks={visibleTasks} />
+          <TaskList tasks={allTasks} />
         </SectionCard>
       </AnimatedSection>
 
