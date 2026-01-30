@@ -5,6 +5,7 @@ from .openai_llm import OpenAILLMGateway
 from .redis_pubsub import RedisPubSubGateway
 from .sendgrid import SendGridGateway
 from .structured_log import StructuredLogGateway
+from .structured_log_backlog_redis import RedisStructuredLogBacklogGateway
 from .stub_pubsub import StubPubSubGateway
 from .twilio import TwilioGateway
 from .web_push import WebPushGateway
@@ -14,6 +15,7 @@ __all__ = [
     "GoogleCalendarGateway",
     "OpenAILLMGateway",
     "RedisPubSubGateway",
+    "RedisStructuredLogBacklogGateway",
     "SendGridGateway",
     "StructuredLogGateway",
     "StubPubSubGateway",

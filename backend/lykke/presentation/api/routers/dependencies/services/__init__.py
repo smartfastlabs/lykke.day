@@ -10,12 +10,20 @@ from typing import Annotated
 
 from fastapi import Depends, Request, WebSocket
 
+from lykke.application.admin import ListStructuredLogEventsHandler
 from lykke.application.commands import ScheduleDayHandler
 from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
+from lykke.application.gateways.structured_log_backlog_protocol import (
+    StructuredLogBacklogGatewayProtocol,
+    StructuredLogBacklogStreamGatewayProtocol,
+)
 from lykke.application.queries import GetDayContextHandler, GetIncrementalChangesHandler
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
-from lykke.infrastructure.gateways import RedisPubSubGateway
+from lykke.infrastructure.gateways import (
+    RedisPubSubGateway,
+    RedisStructuredLogBacklogGateway,
+)
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
@@ -75,6 +83,42 @@ async def get_pubsub_gateway_for_request(
         yield gateway
     finally:
         # Close the gateway (only closes client connection, not the shared pool)
+        await gateway.close()
+
+
+async def get_structured_log_backlog_gateway_for_request(
+    request: Request,
+) -> AsyncIterator[StructuredLogBacklogGatewayProtocol]:
+    """Get a StructuredLogBacklogGateway instance for HTTP requests."""
+    redis_pool = getattr(request.app.state, "redis_pool", None)
+    gateway = RedisStructuredLogBacklogGateway(redis_pool=redis_pool)
+    try:
+        yield gateway
+    finally:
+        await gateway.close()
+
+
+async def get_structured_log_backlog_stream_gateway(
+    websocket: WebSocket,
+) -> AsyncIterator[StructuredLogBacklogStreamGatewayProtocol]:
+    """Get a StructuredLogBacklogStreamGateway instance for WebSocket requests."""
+    redis_pool = getattr(websocket.app.state, "redis_pool", None)
+    gateway = RedisStructuredLogBacklogGateway(redis_pool=redis_pool)
+    try:
+        yield gateway
+    finally:
+        await gateway.close()
+
+
+async def get_list_structured_log_events_handler(
+    request: Request,
+) -> AsyncIterator[ListStructuredLogEventsHandler]:
+    """Get a ListStructuredLogEventsHandler instance with infra gateway wired."""
+    redis_pool = getattr(request.app.state, "redis_pool", None)
+    gateway = RedisStructuredLogBacklogGateway(redis_pool=redis_pool)
+    try:
+        yield ListStructuredLogEventsHandler(backlog_gateway=gateway)
+    finally:
         await gateway.close()
 
 

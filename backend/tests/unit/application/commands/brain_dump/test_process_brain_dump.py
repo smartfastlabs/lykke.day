@@ -338,3 +338,4 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
     events = updated.collect_events()
     assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)
     assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)
+    assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)

@@ -12,9 +12,9 @@ from redis import asyncio as aioredis  # type: ignore
 
 from lykke.core.config import settings
 from lykke.core.constants import (
-    DOMAIN_EVENT_LOG_KEY,
-    DOMAIN_EVENT_STREAM_CHANNEL,
     MAX_DOMAIN_EVENT_LOG_SIZE,
+    STRUCTURED_LOG_BACKLOG_KEY,
+    STRUCTURED_LOG_STREAM_CHANNEL,
 )
 
 
@@ -62,12 +62,12 @@ class StructuredLogGateway:
 
         try:
             await redis.zadd(
-                DOMAIN_EVENT_LOG_KEY, {payload: int(timestamp.timestamp() * 1000)}
+                STRUCTURED_LOG_BACKLOG_KEY, {payload: int(timestamp.timestamp() * 1000)}
             )
             await redis.zremrangebyrank(
-                DOMAIN_EVENT_LOG_KEY, 0, -(MAX_DOMAIN_EVENT_LOG_SIZE + 1)
+                STRUCTURED_LOG_BACKLOG_KEY, 0, -(MAX_DOMAIN_EVENT_LOG_SIZE + 1)
             )
-            await redis.publish(DOMAIN_EVENT_STREAM_CHANNEL, payload)
+            await redis.publish(STRUCTURED_LOG_STREAM_CHANNEL, payload)
         except Exception as exc:
             logger.error(f"Failed to log structured event {event_type}: {exc}")
             raise

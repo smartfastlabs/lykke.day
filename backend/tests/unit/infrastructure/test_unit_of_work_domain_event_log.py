@@ -1,4 +1,4 @@
-"""Unit tests for UnitOfWork domain event backlog logging."""
+"""Unit tests for UnitOfWork structured-log backlog logging."""
 
 import json
 from datetime import UTC, datetime
@@ -7,9 +7,9 @@ from uuid import uuid4
 import pytest
 
 from lykke.core.constants import (
-    DOMAIN_EVENT_LOG_KEY,
-    DOMAIN_EVENT_STREAM_CHANNEL,
     MAX_DOMAIN_EVENT_LOG_SIZE,
+    STRUCTURED_LOG_BACKLOG_KEY,
+    STRUCTURED_LOG_STREAM_CHANNEL,
 )
 from lykke.domain.events.task_events import TaskCompletedEvent
 from lykke.infrastructure.gateways import StubPubSubGateway
@@ -67,7 +67,7 @@ async def test_broadcast_domain_events_logs_and_streams(monkeypatch) -> None:
 
     assert len(fake_redis.zadd_calls) == 1
     zadd_key, zadd_mapping = fake_redis.zadd_calls[0]
-    assert zadd_key == DOMAIN_EVENT_LOG_KEY
+    assert zadd_key == STRUCTURED_LOG_BACKLOG_KEY
     assert len(zadd_mapping) == 1
 
     log_json = next(iter(zadd_mapping.keys()))
@@ -78,7 +78,7 @@ async def test_broadcast_domain_events_logs_and_streams(monkeypatch) -> None:
     assert "stored_at" in log_entry
 
     assert fake_redis.zrem_calls == [
-        (DOMAIN_EVENT_LOG_KEY, 0, -(MAX_DOMAIN_EVENT_LOG_SIZE + 1))
+        (STRUCTURED_LOG_BACKLOG_KEY, 0, -(MAX_DOMAIN_EVENT_LOG_SIZE + 1))
     ]
 
-    assert fake_redis.publish_calls == [(DOMAIN_EVENT_STREAM_CHANNEL, log_json)]
+    assert fake_redis.publish_calls == [(STRUCTURED_LOG_STREAM_CHANNEL, log_json)]

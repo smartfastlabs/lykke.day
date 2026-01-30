@@ -1,16 +1,21 @@
-"""Admin API routes for domain event log and other admin features."""
+"""Admin API routes for the structured-log backlog and stream."""
 
 import asyncio
 import contextlib
-import json
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request, WebSocket, WebSocketDisconnect
 from loguru import logger
-from redis import asyncio as aioredis  # type: ignore
 
-from lykke.core.constants import DOMAIN_EVENT_LOG_KEY, DOMAIN_EVENT_STREAM_CHANNEL
+from lykke.application.admin import (
+    ListStructuredLogEventsHandler,
+    ListStructuredLogEventsQuery,
+)
+from lykke.application.gateways.structured_log_backlog_protocol import (
+    StructuredLogBacklogStreamGatewayProtocol,
+    StructuredLogBacklogStreamSubscription,
+)
 from lykke.domain.entities import UserEntity
 from lykke.presentation.api.schemas.admin import (
     DomainEventListResponse,
@@ -18,19 +23,21 @@ from lykke.presentation.api.schemas.admin import (
 )
 
 from .dependencies.admin import get_current_superuser, get_current_superuser_from_token
+from .dependencies.services import (
+    get_list_structured_log_events_handler,
+    get_structured_log_backlog_stream_gateway,
+)
 
 router = APIRouter()
 
 
-def _get_redis_pool(request: Request) -> aioredis.ConnectionPool:
-    """Get Redis connection pool from app state."""
-    return request.app.state.redis_pool
-
-
 @router.get("/events")
-async def list_domain_events(
+async def list_structured_log_events(
     request: Request,
     user: Annotated[UserEntity, Depends(get_current_superuser)],
+    handler: Annotated[
+        ListStructuredLogEventsHandler, Depends(get_list_structured_log_events_handler)
+    ],
     search: Annotated[
         str | None, Query(description="Text search in event data")
     ] = None,
@@ -47,90 +54,55 @@ async def list_domain_events(
     limit: Annotated[int, Query(ge=1, le=500)] = 100,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> DomainEventListResponse:
-    """List domain events with optional filters.
+    """List structured log backlog events with optional filters.
 
-    Returns paginated list of domain events from Redis, with optional filtering
-    by search text, user_id, event_type, and time range.
+    Returns paginated list of structured log backlog events (Redis sorted set),
+    with optional filtering by search text, user_id, event_type, and time range.
 
     Only accessible by superusers.
     """
-    redis_pool = _get_redis_pool(request)
-    redis = aioredis.Redis(
-        connection_pool=redis_pool,
-        encoding="utf-8",
-        decode_responses=True,
-    )
-
-    try:
-        min_score = "-inf"
-        max_score = "+inf"
-
-        if start_time:
-            min_score = str(int(start_time.timestamp() * 1000))
-        if end_time:
-            max_score = str(int(end_time.timestamp() * 1000))
-
-        raw_events: list[str] = await redis.zrevrangebyscore(
-            DOMAIN_EVENT_LOG_KEY,
-            max_score,
-            min_score,
-        )
-
-        events: list[DomainEventSchema] = []
-        for raw_event in raw_events:
-            try:
-                event_data = json.loads(raw_event)
-                event = DomainEventSchema(
-                    id=event_data["id"],
-                    event_type=event_data["event_type"],
-                    event_data=event_data["event_data"],
-                    stored_at=datetime.fromisoformat(event_data["stored_at"]),
-                )
-
-                if user_id:
-                    event_user_id = event.event_data.get("user_id")
-                    if not event_user_id or user_id not in str(event_user_id):
-                        continue
-
-                if event_type:
-                    if event_type.lower() not in event.event_type.lower():
-                        continue
-
-                if search:
-                    search_lower = search.lower()
-                    event_str = json.dumps(event_data).lower()
-                    if search_lower not in event_str:
-                        continue
-
-                events.append(event)
-            except (json.JSONDecodeError, KeyError) as e:
-                logger.warning(f"Failed to parse domain event: {e}")
-                continue
-
-        total = len(events)
-        paginated_events = events[offset : offset + limit]
-
-        return DomainEventListResponse(
-            items=paginated_events,
-            total=total,
+    result = await handler.handle(
+        ListStructuredLogEventsQuery(
+            search=search,
+            user_id=user_id,
+            event_type=event_type,
+            start_time=start_time,
+            end_time=end_time,
             limit=limit,
             offset=offset,
-            has_next=offset + limit < total,
-            has_previous=offset > 0,
         )
-
-    finally:
-        await redis.close()
+    )
+    items = [
+        DomainEventSchema(
+            id=item.id,
+            event_type=item.event_type,
+            event_data=item.event_data,
+            stored_at=item.stored_at,
+        )
+        for item in result.items
+    ]
+    return DomainEventListResponse(
+        items=items,
+        total=result.total,
+        limit=result.limit,
+        offset=result.offset,
+        has_next=result.has_next,
+        has_previous=result.has_previous,
+    )
 
 
 @router.websocket("/events/stream")
-async def domain_events_stream(
+async def structured_log_events_stream(
     websocket: WebSocket,
     user: Annotated[UserEntity, Depends(get_current_superuser_from_token)],
+    stream_gateway: Annotated[
+        StructuredLogBacklogStreamGatewayProtocol,
+        Depends(get_structured_log_backlog_stream_gateway),
+    ],
 ) -> None:
-    """WebSocket endpoint for real-time domain event streaming.
+    """WebSocket endpoint for real-time structured log backlog streaming.
 
-    Streams new domain events as they are captured by the AuditEventHandler.
+    Streams new structured log backlog entries as they are emitted.
     Only accessible by superusers.
     """
     await websocket.accept()
@@ -140,19 +112,9 @@ async def domain_events_stream(
 
         await websocket.send_json({"type": "connection_ack", "user_id": str(user.id)})
 
-        redis_pool = websocket.app.state.redis_pool
-        redis = aioredis.Redis(
-            connection_pool=redis_pool,
-            encoding="utf-8",
-            decode_responses=True,
-        )
-
-        try:
-            pubsub = redis.pubsub()
-            await pubsub.subscribe(DOMAIN_EVENT_STREAM_CHANNEL)
-
+        async with stream_gateway.subscribe_to_stream() as subscription:
             receive_task = asyncio.create_task(_handle_client_messages_admin(websocket))
-            stream_task = asyncio.create_task(_stream_events(websocket, pubsub))
+            stream_task = asyncio.create_task(_stream_events(websocket, subscription))
 
             done, pending = await asyncio.wait(
                 [receive_task, stream_task], return_when=asyncio.FIRST_COMPLETED
@@ -162,11 +124,6 @@ async def domain_events_stream(
                 task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await task
-
-        finally:
-            await pubsub.unsubscribe(DOMAIN_EVENT_STREAM_CHANNEL)
-            await pubsub.close()
-            await redis.close()
 
     except WebSocketDisconnect:
         logger.info("Admin domain events WebSocket disconnected")
@@ -204,20 +161,14 @@ async def _handle_client_messages_admin(websocket: WebSocket) -> None:
 
 async def _stream_events(
     websocket: WebSocket,
-    pubsub: Any,
+    subscription: StructuredLogBacklogStreamSubscription,
 ) -> None:
-    """Stream domain events from Redis PubSub to WebSocket."""
+    """Stream structured log backlog events from gateway to WebSocket."""
     while True:
         try:
-            message = await pubsub.get_message(
-                ignore_subscribe_messages=True, timeout=1.0
-            )
-
-            if message and message["type"] == "message":
-                event_data = message["data"]
-                await websocket.send_json(
-                    {"type": "domain_event", "data": json.loads(event_data)}
-                )
+            payload = await subscription.get_message(timeout=1.0)
+            if payload:
+                await websocket.send_json({"type": "domain_event", "data": payload})
 
         except WebSocketDisconnect:
             break

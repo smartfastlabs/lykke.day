@@ -8,7 +8,11 @@ from pydantic import BaseModel, ConfigDict
 
 
 class DomainEventSchema(BaseModel):
-    """Schema for a single domain event log entry."""
+    """Schema for a single structured log backlog entry.
+
+    Note: The endpoint is historically named `/admin/events`, but these entries
+    are produced by the structured logger backlog, not the core domain-event bus.
+    """
 
     id: str
     event_type: str
@@ -39,7 +43,7 @@ class DomainEventSchema(BaseModel):
 
 
 class DomainEventListResponse(BaseModel):
-    """Schema for paginated domain event list response."""
+    """Schema for paginated structured log backlog list response."""
 
     items: list[DomainEventSchema]
     total: int

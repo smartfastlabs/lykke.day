@@ -16,9 +16,9 @@ from lykke.application.events import send_domain_events
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
 from lykke.core.config import settings
 from lykke.core.constants import (
-    DOMAIN_EVENT_LOG_KEY,
-    DOMAIN_EVENT_STREAM_CHANNEL,
     MAX_DOMAIN_EVENT_LOG_SIZE,
+    STRUCTURED_LOG_BACKLOG_KEY,
+    STRUCTURED_LOG_STREAM_CHANNEL,
 )
 from lykke.core.exceptions import BadRequestError, NotFoundError
 from lykke.core.utils.domain_event_serialization import serialize_domain_event
@@ -1016,13 +1016,14 @@ class SqlAlchemyUnitOfWork:
                     }
 
                     await redis.zadd(
-                        DOMAIN_EVENT_LOG_KEY, {json.dumps(log_entry): timestamp_ms}
+                        STRUCTURED_LOG_BACKLOG_KEY,
+                        {json.dumps(log_entry): timestamp_ms},
                     )
                     await redis.zremrangebyrank(
-                        DOMAIN_EVENT_LOG_KEY, 0, -(MAX_DOMAIN_EVENT_LOG_SIZE + 1)
+                        STRUCTURED_LOG_BACKLOG_KEY, 0, -(MAX_DOMAIN_EVENT_LOG_SIZE + 1)
                     )
                     await redis.publish(
-                        DOMAIN_EVENT_STREAM_CHANNEL, json.dumps(log_entry)
+                        STRUCTURED_LOG_STREAM_CHANNEL, json.dumps(log_entry)
                     )
                 except Exception as e:
                     # Log error but don't fail the commit

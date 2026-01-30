@@ -336,3 +336,4 @@ async def test_smart_tool_handles_send_errors() -> None:
 
     await tool.callback(should_notify=True, message="Urgent", priority="high")
     await tool.callback(should_notify=True, message="Urgent", priority="high")
+    await tool.callback(should_notify=True, message="Urgent", priority="high")
