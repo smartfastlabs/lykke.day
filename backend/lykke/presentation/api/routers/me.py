@@ -38,7 +38,7 @@ from lykke.application.queries.list_base_personalities import (
 from lykke.core.utils.dates import get_current_date
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
-from lykke.domain.value_objects import UserSetting, UserUpdateObject
+from lykke.domain.value_objects import UserUpdateObject
 from lykke.presentation.api.schemas import (
     AlarmSchema,
     BasePersonalitySchema,
@@ -82,65 +82,10 @@ async def update_current_user_profile(
 ) -> UserSchema:
     """Update the current authenticated user."""
     update_user_handler = command_factory.create(UpdateUserHandler)
-    settings = None
+    settings_update = None
     if update_data.settings is not None:
-        current_settings = user.settings or UserSetting()
-        # Use model_dump to see which fields were actually provided in the request
-        # This is more reliable than model_fields_set for optional fields
         provided_settings = update_data.settings.model_dump(exclude_unset=True)
-        settings_fields = set(provided_settings.keys())
-        template_defaults = (
-            update_data.settings.template_defaults
-            if "template_defaults" in settings_fields
-            and update_data.settings.template_defaults is not None
-            else current_settings.template_defaults
-        )
-        llm_provider = (
-            update_data.settings.llm_provider
-            if "llm_provider" in settings_fields
-            else current_settings.llm_provider
-        )
-        timezone = (
-            update_data.settings.timezone
-            if "timezone" in settings_fields
-            else current_settings.timezone
-        )
-        base_personality_slug = (
-            update_data.settings.base_personality_slug
-            if "base_personality_slug" in settings_fields
-            and update_data.settings.base_personality_slug is not None
-            else current_settings.base_personality_slug
-        )
-        llm_personality_amendments = (
-            update_data.settings.llm_personality_amendments
-            if "llm_personality_amendments" in settings_fields
-            and update_data.settings.llm_personality_amendments is not None
-            else current_settings.llm_personality_amendments
-        )
-        alarm_presets = (
-            [
-                value_objects.AlarmPreset.from_dict(preset.model_dump())
-                for preset in update_data.settings.alarm_presets
-            ]
-            if "alarm_presets" in settings_fields
-            and update_data.settings.alarm_presets is not None
-            else current_settings.alarm_presets
-        )
-        # Handle morning_overview_time - check if it was explicitly set (even if None)
-        # Pydantic's model_fields_set includes fields that were explicitly provided
-        if "morning_overview_time" in settings_fields:
-            morning_overview_time = update_data.settings.morning_overview_time
-        else:
-            morning_overview_time = current_settings.morning_overview_time
-        settings = UserSetting(
-            template_defaults=template_defaults,
-            llm_provider=llm_provider,
-            timezone=timezone,
-            base_personality_slug=base_personality_slug,
-            llm_personality_amendments=llm_personality_amendments,
-            morning_overview_time=morning_overview_time,
-            alarm_presets=alarm_presets,
-        )
+        settings_update = value_objects.UserSettingUpdate.from_dict(provided_settings)
 
     update_object = UserUpdateObject(
         phone_number=update_data.phone_number,
@@ -148,7 +93,7 @@ async def update_current_user_profile(
         is_active=update_data.is_active,
         is_superuser=update_data.is_superuser,
         is_verified=update_data.is_verified,
-        settings=settings,
+        settings_update=settings_update,
     )
     updated_user = await update_user_handler.handle(
         UpdateUserCommand(update_data=update_object)

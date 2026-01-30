@@ -37,9 +37,7 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
     def __post_init__(self) -> None:
         """Ensure settings maintains the UserSetting dataclass invariant."""
         if isinstance(self.settings, dict):
-            allowed_keys = set(value_objects.UserSetting.__dataclass_fields__.keys())
-            filtered = {k: v for k, v in self.settings.items() if k in allowed_keys}
-            self.settings = value_objects.UserSetting(**filtered)
+            self.settings = value_objects.UserSetting.from_dict(self.settings)
 
     @property
     def user_id(self) -> UUID:
@@ -54,17 +52,14 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
         """Apply updates ensuring settings remain a UserSetting dataclass."""
         # Extract non-None fields from update object without converting nested dataclasses to dicts
         update_dict: dict[str, Any] = {
-            k: v for k, v in update_object.__dict__.items() if v is not None
+            k: v
+            for k, v in update_object.__dict__.items()
+            if v is not None and k != "settings_update"
         }
 
-        # Merge settings if provided - don't replace entire settings object
-        # The /me endpoint already merges settings correctly, so we just need to ensure
-        # the settings object is properly passed through
-        if "settings" in update_dict and isinstance(
-            update_dict["settings"], value_objects.UserSetting
-        ):
-            # Settings are already merged in the /me endpoint, so we can use them directly
-            pass
+        # Merge settings updates in the domain (presentation should pass intent only).
+        if update_object.settings_update is not None:
+            update_dict["settings"] = update_object.settings_update.merge(self.settings)
 
         updated_entity: UserEntity = self.clone(**update_dict)
         updated_entity = updated_entity.clone(updated_at=datetime.now(UTC))

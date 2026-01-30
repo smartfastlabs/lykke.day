@@ -33,7 +33,7 @@ if TYPE_CHECKING:
         TimeBlockCategory,
         TimeBlockType,
     )
-    from .user import UserSetting, UserStatus
+    from .user import UserSettingUpdate, UserStatus
 
 
 @dataclass(kw_only=True)
@@ -103,7 +103,7 @@ class UserUpdateObject(BaseUpdateObject):
     is_active: bool | None = None
     is_superuser: bool | None = None
     is_verified: bool | None = None
-    settings: UserSetting | None = None
+    settings_update: UserSettingUpdate | None = None
     status: UserStatus | None = None
     default_conversation_id: UUID | None = None
     sms_conversation_id: UUID | None = None

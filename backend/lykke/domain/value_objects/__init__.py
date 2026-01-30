@@ -102,7 +102,7 @@ from .update import (
     UserUpdateObject,
 )
 from .usecase_config import NotificationUseCaseConfig
-from .user import UserSetting, UserStatus
+from .user import UserSetting, UserSettingUpdate, UserStatus
 
 __all__ = [
     "Action",
@@ -198,6 +198,7 @@ __all__ = [
     "UseCaseConfigQuery",
     "UserQuery",
     "UserSetting",
+    "UserSettingUpdate",
     "UserStatus",
     "UserUpdateObject",
 ]

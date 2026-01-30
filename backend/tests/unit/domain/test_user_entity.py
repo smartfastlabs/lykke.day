@@ -27,7 +27,7 @@ def test_user_apply_update_adds_event_and_updates_timestamp() -> None:
     user = UserEntity(email="test@example.com", hashed_password="hash")
     update = UserUpdateObject(
         email="new@example.com",
-        settings=value_objects.UserSetting(timezone="UTC"),
+        settings_update=value_objects.UserSettingUpdate.from_dict({"timezone": "UTC"}),
     )
 
     updated = user.apply_update(update, UserUpdatedEvent)

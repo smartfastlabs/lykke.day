@@ -1,5 +1,4 @@
 import json
-from dataclasses import fields
 from datetime import UTC, datetime
 from typing import Any
 
@@ -85,24 +84,13 @@ class UserRepository(BaseRepository[UserEntity, value_objects.UserQuery]):
 
         # Handle settings - if stored as JSONB, deserialize it
         if "settings" in data and data["settings"] is not None:
-            settings_fields = {
-                field.name for field in fields(value_objects.UserSetting)
-            }
             if isinstance(data["settings"], dict):
-                filtered = {
-                    key: value
-                    for key, value in data["settings"].items()
-                    if key in settings_fields
-                }
-                data["settings"] = value_objects.UserSetting(**filtered)
+                data["settings"] = value_objects.UserSetting.from_dict(data["settings"])
             elif isinstance(data["settings"], str):
                 raw_settings = json.loads(data["settings"])
-                filtered = {
-                    key: value
-                    for key, value in raw_settings.items()
-                    if key in settings_fields
-                }
-                data["settings"] = value_objects.UserSetting(**filtered)
+                data["settings"] = value_objects.UserSetting.from_dict(
+                    raw_settings if isinstance(raw_settings, dict) else None
+                )
         else:
             data["settings"] = value_objects.UserSetting()
 

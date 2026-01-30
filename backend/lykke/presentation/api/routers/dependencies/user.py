@@ -27,17 +27,7 @@ def _db_user_to_entity(user: UserDB) -> UserEntity:
         User domain entity
     """
     settings_data = cast("dict[str, Any] | None", user.settings)
-    allowed_settings_keys = set(value_objects.UserSetting.__dataclass_fields__.keys())
-    filtered_settings_data = (
-        {k: v for k, v in settings_data.items() if k in allowed_settings_keys}
-        if settings_data
-        else None
-    )
-    settings = (
-        value_objects.UserSetting(**filtered_settings_data)
-        if filtered_settings_data
-        else value_objects.UserSetting()
-    )
+    settings = value_objects.UserSetting.from_dict(settings_data)
 
     return UserEntity(
         id=user.id,

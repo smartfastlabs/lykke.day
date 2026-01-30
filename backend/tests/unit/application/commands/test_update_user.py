@@ -5,7 +5,12 @@ from dobles import allow
 
 from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
 from lykke.domain.entities import UserEntity
-from lykke.domain.value_objects import UserSetting, UserStatus, UserUpdateObject
+from lykke.domain.value_objects import (
+    UserSetting,
+    UserSettingUpdate,
+    UserStatus,
+    UserUpdateObject,
+)
 from tests.support.dobles import (
     create_read_only_repos_double,
     create_uow_double,
@@ -32,7 +37,9 @@ async def test_update_user_updates_fields_and_settings():
     update_data = UserUpdateObject(
         phone_number="123",
         status=UserStatus.NEW_LEAD,
-        settings=UserSetting(template_defaults=["a", "b", "c", "d", "e", "f", "g"]),
+        settings_update=UserSettingUpdate.from_dict(
+            {"template_defaults": ["a", "b", "c", "d", "e", "f", "g"]}
+        ),
     )
 
     updated = await handler.handle(UpdateUserCommand(update_data=update_data))
@@ -61,7 +68,7 @@ async def test_update_user_skips_none_fields():
     update_data = UserUpdateObject(
         phone_number=None,
         status=None,
-        settings=None,
+        settings_update=None,
     )
 
     updated = await handler.handle(UpdateUserCommand(update_data=update_data))
