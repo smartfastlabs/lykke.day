@@ -1,12 +1,11 @@
-import { Component } from "solid-js";
+import { Component, Show, createMemo } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { Icon } from "@/components/shared/Icon";
-import {
-  faLeaf,
-  faPlus,
-} from "@fortawesome/free-solid-svg-icons";
+import { faLeaf, faPlus } from "@fortawesome/free-solid-svg-icons";
 import type { Routine, Task } from "@/types/api";
 import RoutineGroupsList from "@/components/routines/RoutineGroupsList";
+import { buildRoutineGroups } from "@/components/routines/RoutineGroupsList";
+import { filterVisibleTasks } from "@/utils/tasks";
 
 export interface RoutineSummaryProps {
   tasks: Task[];
@@ -15,6 +14,26 @@ export interface RoutineSummaryProps {
 
 export const RoutineSummary: Component<RoutineSummaryProps> = (props) => {
   const navigate = useNavigate();
+
+  const allGroups = createMemo(() =>
+    buildRoutineGroups(filterVisibleTasks(props.tasks), props.routines),
+  );
+
+  const counts = createMemo(() => {
+    const groups = allGroups();
+    const total = groups.length;
+    const done = groups.filter(
+      (g) => g.totalCount > 0 && g.completedCount === g.totalCount,
+    ).length;
+    const hidden = groups.filter(
+      (g) => (g.timing_status ?? "hidden") === "hidden",
+    ).length;
+    const showingNow = groups.filter(
+      (g) => g.pendingCount > 0 && (g.timing_status ?? "hidden") !== "hidden",
+    ).length;
+    const notShown = Math.max(0, total - showingNow);
+    return { total, done, hidden, showingNow, notShown };
+  });
 
   return (
     <div class="bg-white/70 border border-white/70 shadow-lg shadow-amber-900/5 rounded-2xl p-4 backdrop-blur-sm">
@@ -40,10 +59,23 @@ export const RoutineSummary: Component<RoutineSummaryProps> = (props) => {
           </button>
         </div>
       </div>
+      <Show when={counts().total > 0 && counts().notShown > 0}>
+        <button
+          type="button"
+          onClick={() => navigate("/me/today/routines")}
+          class="mb-3 text-left text-xs text-stone-600 hover:text-stone-800"
+          aria-label="See hidden routines"
+        >
+          Showing {counts().showingNow} now · {counts().done} done ·{" "}
+          {counts().hidden} later ·{" "}
+          <span class="underline underline-offset-2">See all</span>
+        </button>
+      </Show>
       <RoutineGroupsList
         tasks={props.tasks}
         routines={props.routines}
         filterByAvailability={true}
+        filterByPending={true}
         collapseOutsideWindow={true}
       />
     </div>

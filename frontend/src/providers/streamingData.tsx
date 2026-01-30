@@ -34,6 +34,7 @@ import {
   routineAPI,
   TaskActionPayload,
   taskAPI,
+  calendarEntryAPI,
 } from "@/utils/api";
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 import { globalNotifications } from "@/providers/notifications";
@@ -105,6 +106,10 @@ interface StreamingDataContextValue {
   ) => Promise<void>;
   removeBrainDump: (itemId: string) => Promise<void>;
   loadNotifications: () => Promise<void>;
+  updateEventAttendanceStatus: (
+    event: Event,
+    status: import("@/types/api").CalendarEntryAttendanceStatus | null,
+  ) => Promise<void>;
   subscribeToTopic: (
     topic: string,
     handler: (event: DomainEventEnvelope) => void,
@@ -236,7 +241,15 @@ export function StreamingDataProvider(props: ParentProps) {
   // Derived values from the store
   const dayContext = createMemo(() => dayContextStore.data);
   const tasks = createMemo(() => dayContextStore.data?.tasks ?? []);
-  const events = createMemo(() => dayContextStore.data?.calendar_entries ?? []);
+  const shouldHideEvent = (
+    status?: import("@/types/api").CalendarEntryAttendanceStatus | null,
+  ): boolean => status === "DIDNT_HAPPEN" || status === "NOT_GOING";
+
+  const events = createMemo(() =>
+    (dayContextStore.data?.calendar_entries ?? []).filter(
+      (event) => !shouldHideEvent(event.attendance_status),
+    ),
+  );
   const reminders = createMemo(() => {
     // Reminders are stored on the day entity within day_context
     // Note: reminders may not be in the generated types yet, but they exist at runtime
@@ -943,6 +956,38 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
+  const updateEventLocally = (updatedEvent: Event) => {
+    setDayContextStore((current) => {
+      if (!current.data) return current;
+      const next = (current.data.calendar_entries ?? []).map((e) =>
+        e.id === updatedEvent.id ? updatedEvent : e,
+      );
+      return { data: { ...current.data, calendar_entries: next } };
+    });
+  };
+
+  const updateEventAttendanceStatus = async (
+    event: Event,
+    status: import("@/types/api").CalendarEntryAttendanceStatus | null,
+  ): Promise<void> => {
+    if (!event.id) {
+      throw new Error("Event id is missing");
+    }
+
+    const previous = event;
+    updateEventLocally({ ...event, attendance_status: status });
+
+    try {
+      const updated = await calendarEntryAPI.update(event.id, {
+        attendance_status: status,
+      });
+      updateEventLocally(updated);
+    } catch (error) {
+      updateEventLocally(previous);
+      throw error;
+    }
+  };
+
   const sync = () => {
     requestFullSync();
   };
@@ -1029,6 +1074,7 @@ export function StreamingDataProvider(props: ParentProps) {
     updateBrainDumpStatus,
     removeBrainDump,
     loadNotifications,
+    updateEventAttendanceStatus,
     subscribeToTopic,
     unsubscribeFromTopic,
   };

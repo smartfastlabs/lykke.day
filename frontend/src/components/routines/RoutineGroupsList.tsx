@@ -99,7 +99,12 @@ export const buildRoutineGroups = (
     });
   });
 
-  return groups.filter((routine) => routine.pendingCount > 0);
+  // NOTE:
+  // We intentionally return *all* routine groups here (including completed,
+  // punted, and "nothing available right now" routines). Filtering is a
+  // presentation concern and varies by page (e.g. `/me` summary vs
+  // `/me/today/routines`).
+  return groups;
 };
 
 interface RoutineGroupsListProps {
@@ -107,7 +112,9 @@ interface RoutineGroupsListProps {
   routines: Routine[];
   expandedByDefault?: boolean;
   isCollapsable?: boolean;
+  filterHiddenTasks?: boolean;
   filterByAvailability?: boolean;
+  filterByPending?: boolean;
   collapseOutsideWindow?: boolean;
 }
 
@@ -124,7 +131,9 @@ const getRoutineIcon = (name: string) => {
 export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
   const { setRoutineAction } = useStreamingData();
   const isCollapsable = () => props.isCollapsable ?? true;
+  const shouldFilterHiddenTasks = () => props.filterHiddenTasks ?? true;
   const shouldFilterByAvailability = () => props.filterByAvailability ?? false;
+  const shouldFilterByPending = () => props.filterByPending ?? true;
   const shouldCollapseOutsideWindow = () =>
     props.collapseOutsideWindow ?? false;
   const [expandedRoutines, setExpandedRoutines] = createSignal<Set<string>>(
@@ -133,9 +142,11 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
   const [pendingRoutine, setPendingRoutine] = createSignal<RoutineGroup | null>(
     null,
   );
-  const visibleTasks = createMemo(() => filterVisibleTasks(props.tasks));
+  const tasksForGrouping = createMemo(() =>
+    shouldFilterHiddenTasks() ? filterVisibleTasks(props.tasks) : props.tasks,
+  );
   const routineGroups = createMemo(() =>
-    buildRoutineGroups(visibleTasks(), props.routines),
+    buildRoutineGroups(tasksForGrouping(), props.routines),
   );
 
   const handleCloseModal = () => setPendingRoutine(null);
@@ -170,9 +181,16 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
   };
 
   const visibleRoutineGroups = createMemo(() => {
-    const groups = routineGroups();
-    if (!shouldFilterByAvailability()) return groups;
-    return groups.filter((routine) => getRoutineStatus(routine) !== "hidden");
+    let groups = routineGroups();
+    if (shouldFilterByPending()) {
+      groups = groups.filter((routine) => routine.pendingCount > 0);
+    }
+    if (shouldFilterByAvailability()) {
+      groups = groups.filter(
+        (routine) => getRoutineStatus(routine) !== "hidden",
+      );
+    }
+    return groups;
   });
 
   const routineDefinitionIds = createMemo(() =>
@@ -241,6 +259,7 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
               : 0;
 
           const isComplete = () =>
+            routine.totalCount > 0 &&
             routine.completedCount === routine.totalCount;
           const isPunted = () =>
             routine.puntedCount === routine.totalCount &&
@@ -267,7 +286,14 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
               }
               return "Soon";
             }
-            return "Hidden";
+            const nextTime = statusInfo().nextAvailableTime;
+            if (nextTime) {
+              return `Starts ${nextTime.toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+              })}`;
+            }
+            return "Later";
           };
 
           const getStatusPillClass = () => {
@@ -365,13 +391,11 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
                       </span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <Show when={statusInfo().status !== "hidden"}>
-                        <span
-                          class={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${getStatusPillClass()}`}
-                        >
-                          {getStatusLabel()}
-                        </span>
-                      </Show>
+                      <span
+                        class={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${getStatusPillClass()}`}
+                      >
+                        {getStatusLabel()}
+                      </span>
                       <span
                         class="text-xs font-semibold"
                         classList={{

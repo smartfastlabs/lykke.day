@@ -61,25 +61,27 @@ const titleCase = (value: string): string =>
 export const formatByFrequency = (frequency: TaskFrequency): string => {
   switch (frequency) {
     case "DAILY":
-      return "Every day";
+      return "Daily";
     case "WEEKLY":
-      return "Every week";
+      return "Weekly";
     case "BI_WEEKLY":
-      return "Every 2 weeks";
+      return "Bi-weekly";
     case "MONTHLY":
-      return "Every month";
+      return "Monthly";
     case "YEARLY":
-      return "Every year";
+      return "Yearly";
     case "WORK_DAYS":
       return "Weekdays";
     case "WEEKENDS":
       return "Weekends";
     case "CUSTOM_WEEKLY":
-      return "Custom weekly schedule";
+      return "Custom weekly";
     case "ONCE":
-      return "One-time event";
+      return "Once";
     default:
-      return titleCase((frequency as string).replaceAll("_", " ").toLowerCase());
+      return titleCase(
+        (frequency as string).replaceAll("_", " ").toLowerCase(),
+      );
   }
 };
 
@@ -91,13 +93,15 @@ const parseRRule = (rule: string): string | null => {
     return `Every ${days.join(", ")}`;
   }
 
-  const parts = normalized.split(";").reduce<Record<string, string>>((acc, part) => {
-    const [key, value] = part.split("=");
-    if (key && value) {
-      acc[key.toUpperCase()] = value;
-    }
-    return acc;
-  }, {});
+  const parts = normalized
+    .split(";")
+    .reduce<Record<string, string>>((acc, part) => {
+      const [key, value] = part.split("=");
+      if (key && value) {
+        acc[key.toUpperCase()] = value;
+      }
+      return acc;
+    }, {});
 
   const freq = parts.FREQ;
   if (!freq) return null;
@@ -107,7 +111,9 @@ const parseRRule = (rule: string): string | null => {
   }
 
   if (freq === "WEEKLY" && parts.BYDAY) {
-    const days = parts.BYDAY.split(",").map((code) => weekdayNames[code] ?? code);
+    const days = parts.BYDAY.split(",").map(
+      (code) => weekdayNames[code] ?? code,
+    );
     return `Every ${days.join(", ")}`;
   }
 
@@ -121,7 +127,12 @@ const parseRRule = (rule: string): string | null => {
   if (freq === "YEARLY") {
     const day = Number(parts.BYMONTHDAY);
     const month = Number(parts.BYMONTH);
-    if (!Number.isNaN(day) && !Number.isNaN(month) && month >= 1 && month <= 12) {
+    if (
+      !Number.isNaN(day) &&
+      !Number.isNaN(month) &&
+      month >= 1 &&
+      month <= 12
+    ) {
       return `${monthNames[month - 1]} ${toOrdinal(day)}`;
     }
     if (!Number.isNaN(day)) {
@@ -148,7 +159,9 @@ export const formatRecurrenceInfo = (series: CalendarEntrySeries): string => {
   const hasValidStart = startsAt && !Number.isNaN(startsAt.getTime());
 
   if (hasValidStart) {
-    const weekday = startsAt!.toLocaleDateString(undefined, { weekday: "long" });
+    const weekday = startsAt!.toLocaleDateString(undefined, {
+      weekday: "long",
+    });
     const monthName = monthNames[startsAt!.getMonth()];
     const day = startsAt!.getDate();
     const dayOrdinal = toOrdinal(day);
@@ -173,4 +186,3 @@ export const formatRecurrenceInfo = (series: CalendarEntrySeries): string => {
 
   return formatByFrequency(series.frequency);
 };
-

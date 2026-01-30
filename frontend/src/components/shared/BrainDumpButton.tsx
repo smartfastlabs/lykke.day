@@ -3,32 +3,169 @@ import {
   Component,
   Show,
   createEffect,
+  createMemo,
   createSignal,
   onCleanup,
 } from "solid-js";
 import { Icon } from "@/components/shared/Icon";
 import { useStreamingData } from "@/providers/streamingData";
-import { faHouse, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+import {
+  faHouse,
+  faMicrophone,
+  faStop,
+} from "@fortawesome/free-solid-svg-icons";
+
+type SpeechRecognitionResultLike = {
+  isFinal: boolean;
+  0: { transcript: string };
+};
+
+type SpeechRecognitionEventLike = {
+  resultIndex?: number;
+  results: ArrayLike<SpeechRecognitionResultLike>;
+};
+
+type SpeechRecognitionLike = {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
 
 const BrainDumpButton: Component = () => {
   const navigate = useNavigate();
   const { addBrainDump, isLoading } = useStreamingData();
   const [isModalOpen, setIsModalOpen] = createSignal(false);
   const [newItemText, setNewItemText] = createSignal("");
+  const [dictationInterim, setDictationInterim] = createSignal("");
+  const [isDictating, setIsDictating] = createSignal(false);
   const [isSaving, setIsSaving] = createSignal(false);
-  const openModal = () => {
-    setNewItemText("");
-    setIsSaving(false);
-    setIsModalOpen(true);
+  const [dictationError, setDictationError] = createSignal<string | null>(null);
+  const [manualStop, setManualStop] = createSignal(false);
+  const [hasTranscript, setHasTranscript] = createSignal(false);
+
+  const speechRecognitionCtor = createMemo(() => {
+    const windowTyped = window as unknown as {
+      SpeechRecognition?: SpeechRecognitionConstructor;
+      webkitSpeechRecognition?: SpeechRecognitionConstructor;
+    };
+    return (
+      windowTyped.SpeechRecognition ??
+      windowTyped.webkitSpeechRecognition ??
+      null
+    );
+  });
+
+  let recognition: SpeechRecognitionLike | null = null;
+  const appendTranscript = (transcript: string) => {
+    const cleaned = transcript.trim();
+    if (!cleaned) return;
+    setHasTranscript(true);
+    setNewItemText((prev) => {
+      const spacer = prev && !prev.endsWith(" ") ? " " : "";
+      return `${prev}${spacer}${cleaned}`;
+    });
+    setDictationInterim("");
   };
 
-  const closeModal = () => {
+  const finalizeInterim = () => {
+    const interim = dictationInterim().trim();
+    if (!interim) return;
+    appendTranscript(interim);
+  };
+
+  const stopDictation = (isManual = false, clearInterim = true) => {
+    if (isManual) {
+      setManualStop(true);
+    }
+    recognition?.stop();
+    setIsDictating(false);
+    if (clearInterim) {
+      setDictationInterim("");
+    }
+  };
+
+  const startDictation = () => {
+    const ctor = speechRecognitionCtor();
+    if (!ctor) {
+      setDictationError("Speech recognition is not supported.");
+      return;
+    }
+
+    setDictationError(null);
+    recognition = new ctor();
+    recognition.lang = "en-US";
+    recognition.interimResults = true;
+    recognition.continuous = true;
+    recognition.onresult = (event) => {
+      let interimText = "";
+      const startIndex = event.resultIndex ?? 0;
+      for (let i = startIndex; i < event.results.length; i += 1) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          appendTranscript(result[0].transcript);
+          continue;
+        }
+        interimText = `${interimText} ${result[0].transcript}`.trim();
+      }
+      if (interimText) {
+        setHasTranscript(true);
+      }
+      setDictationInterim(interimText);
+    };
+    recognition.onerror = (event) => {
+      setDictationError(event.error);
+      stopDictation(true);
+    };
+    recognition.onend = () => {
+      setIsDictating(false);
+      finalizeInterim();
+      if (manualStop()) {
+        setManualStop(false);
+        return;
+      }
+    };
+    recognition.start();
+    setIsDictating(true);
+  };
+
+  const toggleDictation = () => {
+    if (isDictating()) {
+      stopDictation(true);
+      return;
+    }
+    startDictation();
+  };
+
+  const openDictationModal = () => {
+    setNewItemText("");
+    setDictationInterim("");
+    setDictationError(null);
+    setIsSaving(false);
+    setManualStop(false);
+    setHasTranscript(false);
+    setIsModalOpen(true);
+    startDictation();
+  };
+
+  const closeDictationModal = () => {
+    stopDictation(true);
     setIsModalOpen(false);
     setNewItemText("");
+    setDictationInterim("");
+    setDictationError(null);
+    setHasTranscript(false);
   };
 
   const handleSave = async () => {
     if (isSaving() || isLoading()) return;
+    finalizeInterim();
     const text = newItemText().trim();
     if (!text) {
       return;
@@ -37,21 +174,23 @@ const BrainDumpButton: Component = () => {
     setIsSaving(true);
     try {
       await addBrainDump(text);
-      closeModal();
+      closeDictationModal();
     } catch (error) {
       console.error("Failed to add brain dump item:", error);
       setIsSaving(false);
     }
   };
 
-  onCleanup(() => {});
+  onCleanup(() => {
+    recognition?.stop();
+  });
 
   createEffect(() => {
     if (!isModalOpen()) return;
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        closeModal();
+        closeDictationModal();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -59,6 +198,28 @@ const BrainDumpButton: Component = () => {
       window.removeEventListener("keydown", handleKeyDown);
     });
   });
+
+  const displayText = createMemo(() => {
+    const base = newItemText();
+    const interim = dictationInterim();
+    if (!interim) return base;
+    const spacer = base && !base.endsWith(" ") ? " " : "";
+    return `${base}${spacer}${interim}`;
+  });
+
+  const isSpeechSupported = createMemo(() => Boolean(speechRecognitionCtor()));
+  const handleSaveAndStop = async () => {
+    stopDictation(true, false);
+    await handleSave();
+  };
+
+  const handlePrimaryMicClick = async () => {
+    if (hasTranscript()) {
+      await handleSaveAndStop();
+      return;
+    }
+    toggleDictation();
+  };
 
   return (
     <>
@@ -72,11 +233,11 @@ const BrainDumpButton: Component = () => {
             <Icon icon={faHouse} class="h-5 w-5 fill-current" />
           </button>
           <button
-            onClick={openModal}
+            onClick={openDictationModal}
             class="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 bg-white/80 text-stone-600 shadow-lg shadow-stone-900/5 transition hover:bg-white active:scale-95"
-            aria-label="Add brain dump"
+            aria-label="Start dictation"
           >
-            <Icon icon={faPenToSquare} class="h-5 w-5 fill-current" />
+            <Icon icon={faMicrophone} class="h-5 w-5 fill-current" />
           </button>
         </div>
       </div>
@@ -84,49 +245,60 @@ const BrainDumpButton: Component = () => {
       <Show when={isModalOpen()}>
         <div
           class="fixed inset-0 z-[60] flex items-center justify-center"
-          onClick={closeModal}
+          onClick={closeDictationModal}
         >
           <div class="absolute inset-0 bg-stone-900/45 backdrop-blur-[1px]" />
           <div
-            class="relative w-[min(92vw,520px)] rounded-3xl bg-white p-6 shadow-xl shadow-stone-900/20"
+            class="relative flex flex-col items-center justify-center"
             onClick={(event) => event.stopPropagation()}
           >
-            <div class="space-y-3">
-              <div>
-                <div class="text-xs font-semibold uppercase tracking-wide text-stone-400">
-                  Brain dump
-                </div>
-                <p class="mt-1 text-sm text-stone-600">
-                  Add a quick note to today.
-                </p>
+            <Show when={hasTranscript()}>
+              <div class="mb-6 max-w-[320px] rounded-3xl bg-amber-100 px-5 py-4 text-sm text-stone-800 shadow-md shadow-stone-900/10">
+                <span class="text-left leading-relaxed">{displayText()}</span>
               </div>
-
-              <textarea
-                class="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 shadow-sm focus:border-amber-300 focus:outline-none"
-                rows={5}
-                value={newItemText()}
-                onInput={(e) => setNewItemText(e.currentTarget.value)}
-                placeholder="Type your note…"
+            </Show>
+            <button
+              type="button"
+              onClick={() => void handlePrimaryMicClick()}
+              class={`flex h-20 w-20 items-center justify-center rounded-full border shadow-lg transition-colors ${
+                hasTranscript()
+                  ? "border-amber-200 bg-amber-500 text-white hover:bg-amber-400"
+                  : "border-stone-200 bg-stone-100 text-stone-700 hover:bg-stone-50"
+              }`}
+              aria-label={
+                hasTranscript()
+                  ? "Stop dictation and save brain dump"
+                  : isDictating()
+                    ? "Stop dictation"
+                    : "Start dictation"
+              }
+              disabled={isSaving() || isLoading() || !isSpeechSupported()}
+            >
+              <Icon
+                icon={hasTranscript() ? faStop : faMicrophone}
+                class={`h-7 w-7 fill-current ${isDictating() ? "animate-pulse" : ""}`}
               />
-
-              <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  class="rounded-full border border-stone-200 bg-white px-5 py-2.5 text-sm font-semibold text-stone-700 shadow-sm transition hover:border-stone-300 hover:text-stone-900"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={isSaving() || isLoading() || !newItemText().trim()}
-                  onClick={() => void handleSave()}
-                  class="rounded-full bg-stone-900 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSaving() ? "Saving…" : "Save"}
-                </button>
-              </div>
-            </div>
+            </button>
+            <Show when={dictationError()}>
+              <p class="mt-6 text-xs text-rose-100">
+                Dictation stopped: {dictationError()}
+              </p>
+            </Show>
+            <Show when={!isSpeechSupported()}>
+              <p class="mt-6 text-xs text-stone-200">
+                Speech recognition is not supported.
+              </p>
+            </Show>
+            <Show when={!hasTranscript()}>
+              <button
+                type="button"
+                onClick={closeDictationModal}
+                class="mt-6 text-xs text-stone-200/80 underline-offset-2 transition hover:text-white hover:underline"
+                aria-label="Cancel dictation"
+              >
+                Cancel
+              </button>
+            </Show>
           </div>
         </div>
       </Show>

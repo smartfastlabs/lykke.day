@@ -16,7 +16,6 @@ import type { RoutineDefinition } from "@/types/api";
 import RoutineGroupsList, {
   buildRoutineGroups,
 } from "@/components/routines/RoutineGroupsList";
-import { filterVisibleTasks } from "@/utils/tasks";
 
 export const TodaysRoutinesView: Component = () => {
   const { tasks, routines, sync } = useStreamingData();
@@ -27,9 +26,9 @@ export const TodaysRoutinesView: Component = () => {
     routineDefinitionAPI.getAll,
   );
 
-  const visibleTasks = createMemo(() => filterVisibleTasks(tasks()));
+  const allTasks = createMemo(() => tasks() ?? []);
   const routineGroups = createMemo(() =>
-    buildRoutineGroups(visibleTasks(), routines()),
+    buildRoutineGroups(allTasks(), routines()),
   );
 
   const routineDefinitionIdsForToday = createMemo(() => {
@@ -163,10 +162,12 @@ export const TodaysRoutinesView: Component = () => {
           }
         >
           <RoutineGroupsList
-            tasks={visibleTasks()}
+            tasks={allTasks()}
             routines={routines()}
             expandedByDefault={true}
             isCollapsable={false}
+            filterByPending={false}
+            filterHiddenTasks={false}
           />
         </SectionCard>
       </AnimatedSection>

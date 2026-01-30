@@ -807,6 +807,28 @@ export const calendarEntrySeriesAPI = {
   },
 };
 
+export const calendarEntryAPI = {
+  update: (
+    id: string,
+    patch: Partial<{
+      attendance_status:
+        | import("@/types/api").CalendarEntryAttendanceStatus
+        | null;
+      name: string | null;
+      status: string | null;
+      starts_at: string | null;
+      ends_at: string | null;
+      frequency: import("@/types/api").TaskFrequency | null;
+      category: import("@/types/api").Event["category"] | null;
+      calendar_entry_series_id: string | null;
+    }>,
+  ): Promise<import("@/types/api").Event> =>
+    fetchData<import("@/types/api").Event>(`/api/calendar-entries/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(patch),
+    }),
+};
+
 export const marketingAPI = {
   requestEarlyAccess: (email: string): Promise<void> =>
     fetchData<void>("/api/early-access", {

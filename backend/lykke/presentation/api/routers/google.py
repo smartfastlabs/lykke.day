@@ -48,7 +48,7 @@ async def google_login(
     ).authorization_url(
         access_type="offline",
         state=state,
-        prompt="consent",
+        prompt="consent select_account",
     )
 
     # Store state for validation on callback
@@ -109,9 +109,7 @@ async def google_login_callback(
 
     state_data = verify_state(state, "login")
     auth_token_id_from_state = state_data.get("auth_token_id")
-    auth_token_id = (
-        UUID(auth_token_id_from_state) if auth_token_id_from_state else None
-    )
+    auth_token_id = UUID(auth_token_id_from_state) if auth_token_id_from_state else None
 
     handler = command_factory.create(HandleGoogleLoginCallbackHandler)
     result = await handler.handle(

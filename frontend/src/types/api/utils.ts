@@ -33,6 +33,8 @@ export interface ApiError {
 // Entity types
 export type Task = components["schemas"]["TaskSchema"];
 export type Event = components["schemas"]["CalendarEntrySchema"];
+export type CalendarEntryAttendanceStatus =
+  components["schemas"]["CalendarEntryAttendanceStatus"];
 export type Day = components["schemas"]["DaySchema"] & {
   reminders?: Reminder[];
   alarms?: Alarm[];
