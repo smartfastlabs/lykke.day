@@ -2,241 +2,37 @@
 import {
   Component,
   For,
-  JSX,
   Show,
-  createEffect,
   createMemo,
   createSignal,
   onCleanup,
   onMount,
-  untrack,
 } from "solid-js";
 import { Portal } from "solid-js/web";
+import { KioskList } from "@/components/kiosk/KioskList";
+import { KioskPanel } from "@/components/kiosk/KioskPanel";
+import { useAlarmVideo } from "@/features/kiosk/alarms/useAlarmVideo";
+import {
+  formatClock,
+  formatEventTime,
+  formatRoutineTiming,
+  getTaskTimeLabel,
+  isAllDayEvent,
+  type KioskItem,
+} from "@/features/kiosk/kioskUtils";
+import { useSpeechSynthesis } from "@/features/kiosk/tts/useSpeechSynthesis";
+import { useWeatherSnapshot } from "@/features/kiosk/weather/useWeatherSnapshot";
 import Page from "@/components/shared/layout/Page";
 import { useStreamingData } from "@/providers/streamingData";
 import { getDateString } from "@/utils/dates";
 import { filterVisibleTasks } from "@/utils/tasks";
-import {
-  buildRoutineGroups,
-  type RoutineGroup,
-} from "@/components/routines/RoutineGroupsList";
+import { buildRoutineGroups } from "@/components/routines/RoutineGroupsList";
 import { dayAPI } from "@/utils/api";
 import { globalNotifications } from "@/providers/notifications";
 import { loadDeviceVoiceSetting } from "@/utils/voiceSettings";
-import type { Alarm, DayTemplate, Event, Reminder, Task } from "@/types/api";
+import type { DayTemplate, Reminder, Task } from "@/types/api";
 
 type TimeBlock = NonNullable<DayTemplate["time_blocks"]>[number];
-
-interface KioskItem {
-  label: string;
-  time?: string | null;
-  meta?: string | null;
-}
-
-interface WeatherSnapshot {
-  temperature: number;
-  condition: string;
-}
-
-type UnlockState = "idle" | "attempting" | "enabled" | "failed";
-
-const WEATHER_CODE_LABELS: Record<number, string> = {
-  0: "Clear",
-  1: "Mostly clear",
-  2: "Partly cloudy",
-  3: "Cloudy",
-  45: "Fog",
-  48: "Depositing rime fog",
-  51: "Light drizzle",
-  53: "Drizzle",
-  55: "Heavy drizzle",
-  61: "Light rain",
-  63: "Rain",
-  65: "Heavy rain",
-  71: "Light snow",
-  73: "Snow",
-  75: "Heavy snow",
-  80: "Rain showers",
-  81: "Heavy showers",
-  82: "Violent showers",
-  95: "Thunderstorm",
-};
-
-const normalizeTime = (time: string): string => time.slice(0, 5);
-
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
-
-const isBenignSpeechSynthesisError = (error: unknown): boolean => {
-  // Common, non-fatal errors when we intentionally call `speechSynthesis.cancel()`
-  // or when a new utterance interrupts a previous one.
-  if (typeof error !== "string") return false;
-  const normalized = error.toLowerCase();
-  return (
-    normalized === "interrupted" ||
-    normalized === "canceled" ||
-    normalized === "cancelled"
-  );
-};
-
-const formatTimeString = (timeStr: string): string => {
-  const [h, m] = normalizeTime(timeStr).split(":");
-  const hour = parseInt(h, 10);
-  const ampm = hour >= 12 ? "p" : "a";
-  const hour12 = hour % 12 || 12;
-  return `${hour12}:${m}${ampm}`;
-};
-
-const formatClock = (date: Date): string =>
-  date
-    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-    .toLowerCase()
-    .replace(" ", "");
-
-const formatEventTime = (dateTimeStr: string): string =>
-  new Date(dateTimeStr)
-    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-    .toLowerCase()
-    .replace(" ", "");
-
-const formatRoutineTiming = (routine: RoutineGroup): string | null => {
-  const status = routine.timing_status ?? "hidden";
-  if (status === "active") return "active";
-  if (status === "available") return "available";
-  if (status === "past-due") return "past due";
-  if (status === "inactive") {
-    if (routine.next_available_time) {
-      return `starts ${formatEventTime(routine.next_available_time)}`;
-    }
-    return "soon";
-  }
-  return null;
-};
-
-const buildAlarmKey = (alarm: Alarm): string =>
-  alarm.id?.trim() ||
-  [alarm.name, alarm.time, alarm.type, alarm.url].filter(Boolean).join("|");
-
-const buildYouTubeEmbedUrl = (rawUrl: string): string | null => {
-  try {
-    const url = new URL(rawUrl);
-    const host = url.hostname.replace(/^www\./, "");
-    let videoId: string | null = null;
-
-    if (host === "youtu.be") {
-      videoId = url.pathname.replace("/", "") || null;
-    } else if (host === "youtube.com" || host === "m.youtube.com") {
-      if (url.pathname.startsWith("/watch")) {
-        videoId = url.searchParams.get("v");
-      } else if (url.pathname.startsWith("/embed/")) {
-        videoId = url.pathname.split("/embed/")[1] || null;
-      } else if (url.pathname.startsWith("/shorts/")) {
-        videoId = url.pathname.split("/shorts/")[1] || null;
-      }
-    } else if (host === "youtube-nocookie.com") {
-      videoId = url.pathname.split("/embed/")[1] || null;
-    }
-
-    if (!videoId) return null;
-
-    const params = new URLSearchParams({
-      autoplay: "1",
-      playsinline: "1",
-      controls: "1",
-      rel: "0",
-      modestbranding: "1",
-      fs: "1",
-    });
-
-    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
-  } catch (error) {
-    console.warn("Invalid alarm URL:", rawUrl, error);
-    return null;
-  }
-};
-
-const getTaskTimeLabel = (task: Task): string | null => {
-  const timeWindow = task.time_window;
-  if (!timeWindow) return null;
-
-  if (timeWindow.start_time && timeWindow.end_time) {
-    return `${formatTimeString(timeWindow.start_time)}-${formatTimeString(
-      timeWindow.end_time,
-    )}`;
-  }
-
-  if (timeWindow.start_time) {
-    return formatTimeString(timeWindow.start_time);
-  }
-
-  if (timeWindow.available_time) {
-    return `after ${formatTimeString(timeWindow.available_time)}`;
-  }
-
-  if (timeWindow.end_time) {
-    return `by ${formatTimeString(timeWindow.end_time)}`;
-  }
-
-  if (timeWindow.cutoff_time) {
-    return `before ${formatTimeString(timeWindow.cutoff_time)}`;
-  }
-
-  return null;
-};
-
-const isAllDayEvent = (event: Event): boolean => {
-  const start = new Date(event.starts_at);
-  const end = event.ends_at ? new Date(event.ends_at) : null;
-  if (!end) return false;
-  const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-  return diffHours >= 23;
-};
-
-const KioskPanel: Component<{
-  title: string;
-  count?: number;
-  children: JSX.Element;
-}> = (props) => (
-  <div class="min-h-0 rounded-2xl border border-white/70 bg-white/80 p-3 shadow-sm shadow-amber-900/5 backdrop-blur-sm flex flex-col gap-2">
-    <div class="flex items-center justify-between text-[11px] uppercase tracking-[0.25em] text-stone-500">
-      <span>{props.title}</span>
-      <Show when={props.count !== undefined}>
-        <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-          {props.count}
-        </span>
-      </Show>
-    </div>
-    <div class="flex-1 min-h-0 overflow-y-auto pr-1">{props.children}</div>
-  </div>
-);
-
-const KioskList: Component<{
-  items: KioskItem[];
-  emptyLabel: string;
-}> = (props) => (
-  <Show
-    when={props.items.length > 0}
-    fallback={<p class="text-xs text-stone-400">No {props.emptyLabel}</p>}
-  >
-    <div class="space-y-1.5">
-      <For each={props.items}>
-        {(item) => (
-          <div class="flex items-start gap-2 text-sm text-stone-800">
-            <span class="w-14 flex-shrink-0 text-[11px] text-stone-500 tabular-nums text-right">
-              {item.time ?? ""}
-            </span>
-            <span class="flex-1 min-w-0 truncate">{item.label}</span>
-            <Show when={item.meta}>
-              <span class="text-[10px] uppercase tracking-wide text-stone-400">
-                {item.meta}
-              </span>
-            </Show>
-          </div>
-        )}
-      </For>
-    </div>
-  </Show>
-);
 
 const KioskPage: Component = () => {
   const {
@@ -252,229 +48,26 @@ const KioskPage: Component = () => {
     isConnected,
   } = useStreamingData();
   const [now, setNow] = createSignal(new Date());
-  const [weather, setWeather] = createSignal<WeatherSnapshot | null>(null);
-  const [weatherError, setWeatherError] = createSignal(false);
-  const [activeAlarm, setActiveAlarm] = createSignal<Alarm | null>(null);
-  const [alarmVideoUrl, setAlarmVideoUrl] = createSignal<string | null>(null);
-  const [lastAlarmKey, setLastAlarmKey] = createSignal<string | null>(null);
-  const [fullscreenRequested, setFullscreenRequested] = createSignal(false);
-  const [processedNotificationHashes, setProcessedNotificationHashes] =
-    createSignal<Set<string>>(new Set());
+  const { weather, weatherError } = useWeatherSnapshot();
+  const { activeAlarm, alarmVideoUrl, setFullscreenContainerRef } =
+    useAlarmVideo(alarms);
   const [isSendingTest, setIsSendingTest] = createSignal(false);
-  const [ttsSupported, setTtsSupported] = createSignal(false);
-  const [speechUnlocked, setSpeechUnlocked] = createSignal(false);
-  const [voices, setVoices] = createSignal<globalThis.SpeechSynthesisVoice[]>(
-    [],
-  );
-  const [unlockState, setUnlockState] = createSignal<UnlockState>("idle");
-  const [queuedKioskMessages, setQueuedKioskMessages] = createSignal<string[]>(
-    [],
-  );
-  const [lastKioskMessage, setLastKioskMessage] = createSignal<{
-    message: string;
-    created_at?: string;
-    triggered_by?: string | null;
-  } | null>(null);
-  const [ttsLastError, setTtsLastError] = createSignal<string | null>(null);
-  let fullscreenContainer: HTMLDivElement | undefined;
-
-  const loadVoices = () => {
-    if (!("speechSynthesis" in window)) return;
-    setVoices(window.speechSynthesis.getVoices() ?? []);
-  };
-
-  const getBestAvailableVoice = (preferredVoiceURI: string | null) => {
-    const available = voices();
-    if (available.length === 0) {
-      return null;
-    }
-
-    const exact =
-      preferredVoiceURI && preferredVoiceURI.length > 0
-        ? (available.find((v) => v.voiceURI === preferredVoiceURI) ?? null)
-        : null;
-    if (exact) return exact;
-
-    // Favor "default" and/or English voices if present, otherwise use first.
-    return (
-      available.find((v) => Boolean(v.default)) ??
-      available.find((v) => (v.lang ?? "").toLowerCase().startsWith("en")) ??
-      available[0] ??
-      null
-    );
-  };
-
-  const unlockSpeech = () => {
-    if (speechUnlocked() || !("speechSynthesis" in window)) {
-      return;
-    }
-
-    setUnlockState("attempting");
-
-    // Many Chromium builds require a direct user interaction before speech works.
-    // IMPORTANT: Some engines won't fire `onstart` for an empty string, so use a
-    // non-empty utterance and keep it short.
-    try {
-      if (voices().length === 0) {
-        setUnlockState("failed");
-        setTtsLastError(
-          "No voices available on this device (SpeechSynthesis has no voices).",
-        );
-        return;
-      }
-
-      const utterance = new window.SpeechSynthesisUtterance("Audio enabled.");
-      // Keep it quiet but non-zero to avoid "silent utterance" optimizations.
-      utterance.volume = 0.05;
-      utterance.rate = 1.0;
-      const bestVoice = getBestAvailableVoice(null);
-      if (bestVoice) {
-        utterance.voice = bestVoice;
-      }
-      utterance.onstart = () => {
-        setSpeechUnlocked(true);
-        setUnlockState("enabled");
-        // Cancel immediately after starting
-        window.speechSynthesis.cancel();
-      };
-      utterance.onerror = (event) => {
-        console.error("Unlock speech synthesis error:", event);
-        setUnlockState("failed");
-        const errValue = (event as unknown as { error?: unknown }).error;
-        if (!isBenignSpeechSynthesisError(errValue)) {
-          setTtsLastError(
-            typeof errValue === "string"
-              ? String(errValue)
-              : "Speech synthesis failed to start",
-          );
-        }
-      };
-      window.speechSynthesis.speak(utterance);
-
-      // If nothing starts shortly, mark as failed (helps on devices that silently no-op).
-      window.setTimeout(() => {
-        if (!untrack(() => speechUnlocked())) {
-          setUnlockState("failed");
-        }
-      }, 1500);
-    } catch (err) {
-      console.error("Failed to unlock speech synthesis:", err);
-      setUnlockState("failed");
-    }
-  };
-
-  const speakSample = () => {
-    if (!("speechSynthesis" in window)) return;
-    try {
-      if (voices().length === 0) {
-        setTtsLastError(
-          "No voices available on this device (SpeechSynthesis has no voices).",
-        );
-        return;
-      }
-
-      window.speechSynthesis.cancel();
-      const utterance = new window.SpeechSynthesisUtterance(
-        "This is a kiosk voice test.",
-      );
-      const bestVoice = getBestAvailableVoice(null);
-      if (bestVoice) {
-        utterance.voice = bestVoice;
-      }
-      utterance.volume = 1.0;
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.onerror = (event) => {
-        console.error("Sample speech synthesis error:", event);
-        const errValue = (event as unknown as { error?: unknown }).error;
-        if (!isBenignSpeechSynthesisError(errValue)) {
-          setTtsLastError(
-            typeof errValue === "string"
-              ? String(errValue)
-              : "Speech synthesis error",
-          );
-        }
-      };
-      setTtsLastError(null);
-      window.speechSynthesis.speak(utterance);
-    } catch (err) {
-      console.error("Failed to play sample:", err);
-    }
-  };
-
-  const speakQueuedMessages = () => {
-    if (!("speechSynthesis" in window)) return;
-    if (!speechUnlocked()) return;
-    const queue = queuedKioskMessages();
-    if (queue.length === 0) return;
-
-    if (voices().length === 0) {
-      setTtsLastError(
-        "No voices available on this device (SpeechSynthesis has no voices).",
-      );
-      return;
-    }
-
-    const message = queue[0];
-    setQueuedKioskMessages(queue.slice(1));
-
-    window.speechSynthesis.cancel();
-
-    const utterance = new window.SpeechSynthesisUtterance(message);
-    const voiceSetting = loadDeviceVoiceSetting();
-
-    const configuredVoiceURI =
-      typeof voiceSetting?.voice_uri === "string"
-        ? voiceSetting.voice_uri
-        : null;
-    const bestVoice = getBestAvailableVoice(configuredVoiceURI);
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-    }
-
-    utterance.rate =
-      typeof voiceSetting?.rate === "number"
-        ? clamp(voiceSetting.rate, 0.5, 2.0)
-        : 1.0;
-    utterance.pitch =
-      typeof voiceSetting?.pitch === "number"
-        ? clamp(voiceSetting.pitch, 0.0, 2.0)
-        : 1.0;
-    utterance.volume =
-      typeof voiceSetting?.volume === "number"
-        ? clamp(voiceSetting.volume, 0.0, 1.0)
-        : 1.0;
-
-    utterance.onerror = (event) => {
-      console.error("Speech synthesis error:", event);
-      const errValue = (event as unknown as { error?: unknown }).error;
-      if (!isBenignSpeechSynthesisError(errValue)) {
-        setTtsLastError(
-          typeof errValue === "string"
-            ? String(errValue)
-            : "Speech synthesis error",
-        );
-      }
-    };
-    utterance.onend = () => {
-      // Continue draining the queue
-      const next = () => speakQueuedMessages();
-      if (typeof globalThis.queueMicrotask === "function") {
-        globalThis.queueMicrotask(next);
-      } else {
-        void Promise.resolve().then(next);
-      }
-    };
-
-    setTtsLastError(null);
-    window.speechSynthesis.speak(utterance);
-  };
-
-  const enqueueKioskMessage = (message: string) => {
-    setQueuedKioskMessages((prev) => [...prev, message]);
-    // Attempt immediate playback (will no-op if not unlocked)
-    speakQueuedMessages();
-  };
+  const {
+    ttsSupported,
+    speechUnlocked,
+    voices,
+    unlockState,
+    queuedKioskMessages,
+    lastKioskMessage,
+    ttsLastError,
+    unlockSpeech,
+    speakSample,
+    speakQueuedMessages,
+    enqueueKioskMessage,
+  } = useSpeechSynthesis({
+    subscribeToTopic,
+    loadVoiceSetting: loadDeviceVoiceSetting,
+  });
 
   const handleSendTestNotification = async () => {
     setIsSendingTest(true);
@@ -492,154 +85,12 @@ const KioskPage: Component = () => {
   };
 
   onMount(() => {
-    setTtsSupported("speechSynthesis" in window);
-
-    if ("speechSynthesis" in window) {
-      loadVoices();
-      window.speechSynthesis.onvoiceschanged = () => {
-        loadVoices();
-      };
-    }
-
-    const interval = setInterval(() => {
+    const interval = window.setInterval(() => {
       setNow(new Date());
     }, 30000);
 
     onCleanup(() => {
-      clearInterval(interval);
-    });
-  });
-
-  onMount(() => {
-    if (!("geolocation" in navigator)) {
-      setWeatherError(true);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const url = new window.URL("https://api.open-meteo.com/v1/forecast");
-          url.searchParams.set("latitude", latitude.toString());
-          url.searchParams.set("longitude", longitude.toString());
-          url.searchParams.set("current_weather", "true");
-          url.searchParams.set("temperature_unit", "fahrenheit");
-
-          const response = await fetch(url.toString());
-          if (!response.ok) {
-            setWeatherError(true);
-            return;
-          }
-
-          const data = (await response.json()) as {
-            current_weather?: { temperature: number; weathercode: number };
-          };
-
-          if (!data.current_weather) {
-            setWeatherError(true);
-            return;
-          }
-
-          setWeather({
-            temperature: Math.round(data.current_weather.temperature),
-            condition:
-              WEATHER_CODE_LABELS[data.current_weather.weathercode] ??
-              "Weather",
-          });
-        } catch (error) {
-          console.error("Weather lookup failed:", error);
-          setWeatherError(true);
-        }
-      },
-      () => {
-        setWeatherError(true);
-      },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 30 * 60 * 1000 },
-    );
-  });
-
-  // Subscribe to kiosk notification events and handle TTS
-  createEffect(() => {
-    // Unlock on any user interaction (click, touch, keypress)
-    const unlockSpeechFromEvent = () => {
-      // Called by the browser, not Solid. Avoid accidental tracking.
-      untrack(() => unlockSpeech());
-    };
-
-    const unlockEvents = ["click", "touchstart", "keydown"];
-    const cleanupUnlockListeners: (() => void)[] = [];
-    unlockEvents.forEach((eventType) => {
-      document.addEventListener(eventType, unlockSpeechFromEvent, {
-        once: true,
-        passive: true,
-      });
-      // Note: Since we use { once: true }, the listener auto-removes after first call
-      // But we track it for completeness
-      cleanupUnlockListeners.push(() => {
-        document.removeEventListener(eventType, unlockSpeechFromEvent);
-      });
-    });
-
-    const unsubscribe = subscribeToTopic("KioskNotificationEvent", (event) => {
-      const payload = event.event_data as {
-        message?: string;
-        category?: string;
-        message_hash?: string;
-        created_at?: string;
-        triggered_by?: string | null;
-      };
-
-      if (!payload.message || !payload.message_hash) {
-        return;
-      }
-
-      setLastKioskMessage({
-        message: payload.message,
-        created_at: payload.created_at,
-        triggered_by: payload.triggered_by,
-      });
-
-      const hash = payload.message_hash;
-      const processed = untrack(() => processedNotificationHashes());
-      if (processed.has(hash)) {
-        console.log("Skipping duplicate kiosk notification:", hash);
-        return;
-      }
-
-      setProcessedNotificationHashes((prev) => {
-        const next = new Set(prev);
-        next.add(hash);
-        if (next.size > 100) {
-          const entries = Array.from(next);
-          entries.shift();
-          return new Set(entries);
-        }
-        return next;
-      });
-
-      if (!("speechSynthesis" in window)) {
-        console.warn("SpeechSynthesis not available");
-        return;
-      }
-
-      if (!untrack(() => speechUnlocked())) {
-        console.log(
-          "Kiosk notification received, but audio is locked. Waiting for user interaction to enable speech.",
-        );
-      }
-
-      enqueueKioskMessage(payload.message);
-    });
-
-    onCleanup(() => {
-      unsubscribe();
-      // Cancel any ongoing speech
-      if ("speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-      }
-      // Clean up unlock event listeners
-      cleanupUnlockListeners.forEach((cleanup) => cleanup());
+      window.clearInterval(interval);
     });
   });
 
@@ -911,81 +362,13 @@ const KioskPage: Component = () => {
 
   const timeLabel = createMemo(() => formatClock(now()));
 
-  const triggeredAlarm = createMemo<Alarm | null>(() => {
-    const active = (alarms() ?? []).filter(
-      (alarm) => (alarm.status ?? "ACTIVE") === "TRIGGERED",
-    );
-    if (active.length === 0) return null;
-    return [...active].sort((a, b) => {
-      const aTime = a.datetime
-        ? new Date(a.datetime).getTime()
-        : Number.MAX_SAFE_INTEGER;
-      const bTime = b.datetime
-        ? new Date(b.datetime).getTime()
-        : Number.MAX_SAFE_INTEGER;
-      return aTime - bTime;
-    })[0];
-  });
-
-  createEffect(() => {
-    const alarm = triggeredAlarm();
-    if (!alarm) {
-      setActiveAlarm(null);
-      setAlarmVideoUrl(null);
-      setLastAlarmKey(null);
-      setFullscreenRequested(false);
-      return;
-    }
-
-    const alarmKey = buildAlarmKey(alarm);
-    if (alarmKey === lastAlarmKey()) {
-      return;
-    }
-
-    setLastAlarmKey(alarmKey);
-
-    if (alarm.type === "URL" && alarm.url) {
-      const embedUrl = buildYouTubeEmbedUrl(alarm.url);
-      if (embedUrl) {
-        setActiveAlarm(alarm);
-        setAlarmVideoUrl(embedUrl);
-      } else {
-        window.location.assign(alarm.url);
-      }
-      return;
-    }
-
-    setActiveAlarm(alarm);
-    setAlarmVideoUrl(null);
-  });
-
-  createEffect(() => {
-    if (!alarmVideoUrl() || !fullscreenContainer || fullscreenRequested()) {
-      return;
-    }
-    if (fullscreenContainer.requestFullscreen) {
-      const request = fullscreenContainer.requestFullscreen();
-      if (request && typeof request.then === "function") {
-        request.catch((error: unknown) => {
-          console.warn("Unable to enter fullscreen:", error);
-        });
-      }
-    } else {
-      const legacy = fullscreenContainer as HTMLDivElement & {
-        webkitRequestFullscreen?: () => void;
-      };
-      legacy.webkitRequestFullscreen?.();
-    }
-    setFullscreenRequested(true);
-  });
-
   return (
     <Page variant="app" hideFooter hideFloatingButtons>
       <div class="min-h-[100dvh] h-[100dvh] box-border relative overflow-hidden">
         <Show when={activeAlarm() && alarmVideoUrl()}>
           <Portal>
             <div
-              ref={fullscreenContainer}
+              ref={setFullscreenContainerRef}
               class="fixed inset-0 z-[90] bg-black"
             >
               <iframe
