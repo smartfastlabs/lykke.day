@@ -706,6 +706,14 @@ export const routineAPI = {
       method: "POST",
     });
   },
+  addToTomorrow: (routineDefinitionId: string): Promise<Task[]> => {
+    const params = new URLSearchParams({
+      routine_definition_id: routineDefinitionId,
+    });
+    return fetchData<Task[]>(`/api/me/tomorrow/routines?${params.toString()}`, {
+      method: "POST",
+    });
+  },
 };
 
 export const routineDefinitionAPI = {

@@ -1,4 +1,4 @@
-import { faRotate } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faRotate } from "@fortawesome/free-solid-svg-icons";
 import {
   Component,
   ParentProps,
@@ -6,6 +6,7 @@ import {
   createMemo,
   createSignal,
 } from "solid-js";
+import { useNavigate } from "@solidjs/router";
 import Page from "@/components/shared/layout/Page";
 import { Icon } from "@/components/shared/Icon";
 import {
@@ -15,6 +16,7 @@ import {
 import { tomorrowAPI } from "@/utils/api";
 
 const TomorrowPageLayoutInner: Component<ParentProps> = (props) => {
+  const navigate = useNavigate();
   const { day, isDayLoading, refetchAll } = useTomorrowData();
   const [isRescheduling, setIsRescheduling] = createSignal(false);
 
@@ -62,6 +64,16 @@ const TomorrowPageLayoutInner: Component<ParentProps> = (props) => {
                   </p>
                 </div>
                 <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/me/tomorrow/adhoc-task")}
+                    aria-label="Add task"
+                    title="Add task"
+                    class="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-amber-100/80 bg-amber-50/70 text-amber-700/80 transition hover:bg-amber-100/80 hover:text-amber-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
+                  >
+                    <Icon icon={faPlus} class="w-4 h-4 fill-amber-600/70" />
+                    <span class="text-xs font-semibold">Add task</span>
+                  </button>
                   <button
                     type="button"
                     onClick={async () => {

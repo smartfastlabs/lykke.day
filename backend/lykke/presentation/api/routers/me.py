@@ -588,3 +588,21 @@ async def add_routine_to_today(
         )
     )
     return [map_task_to_schema(task) for task in tasks]
+
+
+@router.post("/tomorrow/routines", response_model=list[TaskSchema])
+async def add_routine_to_tomorrow(
+    routine_definition_id: UUID,
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+    user: Annotated[UserEntity, Depends(get_current_user)],
+) -> list[TaskSchema]:
+    """Add a routine's tasks to tomorrow (creates tomorrow's routine if needed)."""
+    date = get_tomorrows_date(user.settings.timezone)
+    handler = command_factory.create(AddRoutineDefinitionToDayHandler)
+    tasks = await handler.handle(
+        AddRoutineDefinitionToDayCommand(
+            date=date,
+            routine_definition_id=routine_definition_id,
+        )
+    )
+    return [map_task_to_schema(task) for task in tasks]
