@@ -1,7 +1,5 @@
-/* global URL, HTMLDivElement */
 import {
   Component,
-  For,
   Show,
   createMemo,
   createSignal,
@@ -30,7 +28,7 @@ import { buildRoutineGroups } from "@/components/routines/RoutineGroupsList";
 import { dayAPI } from "@/utils/api";
 import { globalNotifications } from "@/providers/notifications";
 import { loadDeviceVoiceSetting } from "@/utils/voiceSettings";
-import type { DayTemplate, Reminder, Task } from "@/types/api";
+import type { DayTemplate, Reminder } from "@/types/api";
 
 type TimeBlock = NonNullable<DayTemplate["time_blocks"]>[number];
 
@@ -63,7 +61,6 @@ const KioskPage: Component = () => {
     unlockSpeech,
     speakSample,
     speakQueuedMessages,
-    enqueueKioskMessage,
   } = useSpeechSynthesis({
     subscribeToTopic,
     loadVoiceSetting: loadDeviceVoiceSetting,

@@ -14,8 +14,8 @@ export function useAlarmVideo(alarms: Accessor<Alarm[] | null | undefined>) {
   const [lastAlarmKey, setLastAlarmKey] = createSignal<string | null>(null);
   const [fullscreenRequested, setFullscreenRequested] = createSignal(false);
 
-  let fullscreenContainer: HTMLDivElement | undefined;
-  const setFullscreenContainerRef = (el: HTMLDivElement) => {
+  let fullscreenContainer: globalThis.HTMLDivElement | undefined;
+  const setFullscreenContainerRef = (el: globalThis.HTMLDivElement) => {
     fullscreenContainer = el;
   };
 
@@ -79,7 +79,7 @@ export function useAlarmVideo(alarms: Accessor<Alarm[] | null | undefined>) {
         });
       }
     } else {
-      const legacy = fullscreenContainer as HTMLDivElement & {
+      const legacy = fullscreenContainer as globalThis.HTMLDivElement & {
         webkitRequestFullscreen?: () => void;
       };
       legacy.webkitRequestFullscreen?.();

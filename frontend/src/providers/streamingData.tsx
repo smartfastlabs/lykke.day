@@ -38,6 +38,21 @@ import {
 import { getWebSocketBaseUrl, getWebSocketProtocol } from "@/utils/config";
 import { globalNotifications } from "@/providers/notifications";
 import AlarmTriggeredOverlay from "@/components/alarms/TriggeredOverlay";
+import {
+  applyEntityChanges,
+  type EntityChange,
+} from "@/providers/streaming/changeApplier";
+import {
+  buildChangeNotification,
+  buildTaskCompletedNotification,
+  countCompletedTasksFromChanges,
+  countCompletedTasksFromFullSync,
+} from "@/providers/streaming/notifications";
+import {
+  createWsClient,
+  type DomainEventEnvelope,
+  type WsClient,
+} from "@/utils/wsClient";
 
 interface StreamingDataContextValue {
   // The main data - provides loading/error states
@@ -144,140 +159,8 @@ interface ErrorMessage extends WebSocketMessage {
   message: string;
 }
 
-interface DomainEventEnvelope {
-  event_type: string;
-  event_data: Record<string, unknown>;
-}
-
-interface TopicEventMessage extends WebSocketMessage {
-  type: "topic_event";
-  topic: string;
-  event: DomainEventEnvelope;
-}
-
-interface SubscriptionMessage extends WebSocketMessage {
-  type: "subscribe" | "unsubscribe";
-  topics: string[];
-}
-
-interface EntityChange {
-  change_type: "created" | "updated" | "deleted";
-  entity_type: string;
-  entity_id: string;
-  entity_data: Task | Event | Routine | null;
-}
-
 const isOnMeRoute = (): boolean =>
   typeof window !== "undefined" && window.location.pathname.startsWith("/me");
-
-const getEntityLabel = (entityType: string): string => {
-  if (entityType === "calendar_entry" || entityType === "calendarentry") {
-    return "event";
-  }
-  if (entityType === "task") return "task";
-  if (entityType === "routine") return "routine";
-  if (entityType === "day") return "day";
-  return entityType.replace(/_/g, " ");
-};
-
-const getChangeVerb = (changeType: EntityChange["change_type"]): string => {
-  if (changeType === "created") return "added";
-  if (changeType === "updated") return "updated";
-  return "removed";
-};
-
-const pluralize = (count: number, noun: string): string =>
-  count === 1 ? noun : `${noun}s`;
-
-const stableStringify = (value: unknown): string => {
-  if (value === null || value === undefined) {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(",")}]`;
-  }
-  if (typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    const keys = Object.keys(record).sort();
-    return `{${keys
-      .map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value);
-};
-
-const areEntitiesEqual = (left: unknown, right: unknown): boolean =>
-  stableStringify(left) === stableStringify(right);
-
-const buildChangeNotification = (changes: EntityChange[]): string | null => {
-  if (changes.length === 0) return null;
-
-  const counts = new Map<string, number>();
-
-  for (const change of changes) {
-    const key = `${getEntityLabel(change.entity_type)}|${getChangeVerb(
-      change.change_type,
-    )}`;
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-
-  const parts = Array.from(counts.entries()).map(([key, count]) => {
-    const [entityLabel, changeVerb] = key.split("|");
-    return `${count} ${pluralize(count, entityLabel)} ${changeVerb}`;
-  });
-
-  if (parts.length === 0) return null;
-
-  const maxParts = 3;
-  const shownParts = parts.slice(0, maxParts);
-  const remaining = parts.length - shownParts.length;
-  const suffix = remaining > 0 ? `, and ${remaining} more updates` : "";
-
-  return `Background update: ${shownParts.join(", ")}${suffix}.`;
-};
-
-const countCompletedTasksFromChanges = (
-  current: DayContextWithRoutines,
-  changes: EntityChange[],
-): number => {
-  const existingTasks = current.tasks ?? [];
-  let completedCount = 0;
-
-  for (const change of changes) {
-    if (change.entity_type !== "task") continue;
-    if (change.change_type !== "updated") continue;
-    const task = change.entity_data as Task | null;
-    if (!task || !task.id) continue;
-    const previous = existingTasks.find((existing) => existing.id === task.id);
-    if (previous?.status !== "COMPLETE" && task.status === "COMPLETE") {
-      completedCount += 1;
-    }
-  }
-
-  return completedCount;
-};
-
-const countCompletedTasksFromFullSync = (
-  previousTasks: Task[],
-  nextTasks: Task[],
-): number => {
-  const previousById = new Map(previousTasks.map((task) => [task.id, task]));
-  let completedCount = 0;
-
-  for (const task of nextTasks) {
-    const previous = task.id ? previousById.get(task.id) : undefined;
-    if (previous?.status !== "COMPLETE" && task.status === "COMPLETE") {
-      completedCount += 1;
-    }
-  }
-
-  return completedCount;
-};
-
-const buildTaskCompletedNotification = (count: number): string =>
-  count === 1
-    ? "Background update: 1 task completed."
-    : `Background update: ${count} tasks completed.`;
 
 export function StreamingDataProvider(props: ParentProps) {
   const [dayContextStore, setDayContextStore] = createStore<{
@@ -300,15 +183,9 @@ export function StreamingDataProvider(props: ParentProps) {
     return context?.routines ?? [];
   });
 
-  let ws: WebSocket | null = null;
-  let reconnectTimeout: number | null = null;
   let syncDebounceTimeout: number | null = null;
   let isMounted = false;
-  const subscribedTopics = new Set<string>();
-  const topicHandlers = new Map<
-    string,
-    Set<(event: DomainEventEnvelope) => void>
-  >();
+  let wsClient: WsClient<DomainEventEnvelope> | null = null;
 
   type ReminderWithOptionalId = Omit<Reminder, "id"> & { id?: string | null };
   type BrainDumpWithOptionalId = Omit<BrainDump, "id"> & {
@@ -419,142 +296,100 @@ export function StreamingDataProvider(props: ParentProps) {
     return null;
   };
 
-  // Connect to WebSocket
-  const connectWebSocket = () => {
-    setIsConnected(false);
-    setError(undefined);
+  const getWebSocketUrl = (): string | null => {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return null;
+    }
 
     const protocol = getWebSocketProtocol();
     const baseUrl = getWebSocketBaseUrl();
     const token = getCookie("lykke_auth");
 
-    // Build WebSocket URL
     let wsUrl = `${protocol}//${baseUrl}/days/today/context`;
     if (token) {
       wsUrl += `?token=${encodeURIComponent(token)}`;
     }
 
-    try {
-      ws = new WebSocket(wsUrl);
+    return wsUrl;
+  };
 
-      ws.onopen = () => {
+  const getOrCreateWsClient = (): WsClient<DomainEventEnvelope> | null => {
+    if (wsClient) return wsClient;
+
+    const url = getWebSocketUrl();
+    if (!url) return null;
+
+    wsClient = createWsClient<WebSocketMessage, DomainEventEnvelope>({
+      url,
+      reconnectDelayMs: 3000,
+      shouldReconnect: () => isMounted,
+      onOpen: () => {
         setIsConnected(true);
         setError(undefined);
-        console.log("StreamingDataProvider: WebSocket connected");
-        console.log("StreamingDataProvider: Requesting full sync");
         requestFullSync();
-        if (subscribedTopics.size > 0) {
-          sendSubscriptionUpdate("subscribe", Array.from(subscribedTopics));
-        }
-      };
-
-      ws.onmessage = async (event) => {
-        try {
-          const message: WebSocketMessage = JSON.parse(event.data);
-
-          if (message.type === "connection_ack") {
-            const ack = message as ConnectionAckMessage;
-            console.log(
-              "StreamingDataProvider: Connection acknowledged for user:",
-              ack.user_id,
-            );
-            // Sync request is now handled in onopen to ensure WebSocket is ready
-            // This prevents race conditions
-          } else if (message.type === "sync_response") {
-            await handleSyncResponse(message as SyncResponseMessage);
-          } else if (message.type === "audit_log_event") {
-            // Deprecated: This handler is kept for backward compatibility
-            // The backend now sends sync_response messages for real-time updates
-            await handleAuditLogEvent(message as AuditLogEventMessage);
-          } else if (message.type === "error") {
-            const errorMsg = message as ErrorMessage;
-            setError(new Error(errorMsg.message || "Unknown error"));
-            console.error(
-              "StreamingDataProvider: WebSocket error:",
-              errorMsg.code,
-              errorMsg.message,
-            );
-          } else if (message.type === "topic_event") {
-            handleTopicEvent(message as TopicEventMessage);
-          }
-        } catch (err) {
-          console.error(
-            "StreamingDataProvider: Error parsing WebSocket message:",
-            err,
-          );
-        }
-      };
-
-      ws.onerror = (err) => {
+      },
+      onClose: () => {
+        setIsConnected(false);
+      },
+      onError: (err) => {
         console.error("StreamingDataProvider: WebSocket error:", err);
         setError(new Error("Connection error occurred"));
         setIsConnected(false);
-      };
+      },
+      onMessage: async (message) => {
+        if (message.type === "connection_ack") {
+          const ack = message as ConnectionAckMessage;
+          console.log(
+            "StreamingDataProvider: Connection acknowledged for user:",
+            ack.user_id,
+          );
+        } else if (message.type === "sync_response") {
+          await handleSyncResponse(message as SyncResponseMessage);
+        } else if (message.type === "audit_log_event") {
+          // Deprecated: This handler is kept for backward compatibility
+          // The backend now sends sync_response messages for real-time updates
+          await handleAuditLogEvent(message as AuditLogEventMessage);
+        } else if (message.type === "error") {
+          const errorMsg = message as ErrorMessage;
+          setError(new Error(errorMsg.message || "Unknown error"));
+          console.error(
+            "StreamingDataProvider: WebSocket error:",
+            errorMsg.code,
+            errorMsg.message,
+          );
+        }
+      },
+    });
 
-      ws.onclose = () => {
-        setIsConnected(false);
-        // Only attempt to reconnect if the component is still mounted
-        if (!isMounted) {
-          return;
-        }
-        // Attempt to reconnect after 3 seconds
-        if (reconnectTimeout) {
-          clearTimeout(reconnectTimeout);
-        }
-        // Capture current state values to avoid reactivity warnings
-        const currentlyConnected = isConnected();
-        reconnectTimeout = window.setTimeout(() => {
-          if (!currentlyConnected && isMounted) {
-            connectWebSocket();
-          }
-        }, 3000);
-      };
-    } catch (err) {
-      console.error("StreamingDataProvider: Error creating WebSocket:", err);
-      setError(new Error("Failed to create WebSocket connection"));
-      setIsConnected(false);
-    }
+    return wsClient;
+  };
+
+  // Connect to WebSocket
+  const connectWebSocket = () => {
+    setIsConnected(false);
+    setError(undefined);
+    getOrCreateWsClient()?.connect();
   };
 
   // Request full sync
   const requestFullSync = () => {
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      return;
-    }
-
     const request: SyncRequestMessage = {
       type: "sync_request",
       since_timestamp: null,
     };
-    ws.send(JSON.stringify(request));
-    setIsLoading(true);
+    const sent = getOrCreateWsClient()?.sendJson(request) ?? false;
+    if (sent) {
+      setIsLoading(true);
+    }
   };
 
   // Request incremental sync
   const requestIncrementalSync = (sinceTimestamp: string) => {
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      return;
-    }
-
     const request: SyncRequestMessage = {
       type: "sync_request",
       since_timestamp: sinceTimestamp,
     };
-    ws.send(JSON.stringify(request));
-  };
-
-  const sendSubscriptionUpdate = (
-    type: SubscriptionMessage["type"],
-    topics: string[],
-  ) => {
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      return;
-    }
-    if (topics.length === 0) {
-      return;
-    }
-    const request: SubscriptionMessage = { type, topics };
-    ws.send(JSON.stringify(request));
+    getOrCreateWsClient()?.sendJson(request);
   };
 
   // Handle sync response
@@ -621,14 +456,6 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
-  const handleTopicEvent = (message: TopicEventMessage) => {
-    const handlers = topicHandlers.get(message.topic);
-    if (!handlers || handlers.size === 0) {
-      return;
-    }
-    handlers.forEach((handler) => handler(message.event));
-  };
-
   // Apply incremental changes to store
   const applyChanges = (changes: EntityChange[]): boolean => {
     let didUpdate = false;
@@ -640,161 +467,11 @@ export function StreamingDataProvider(props: ParentProps) {
         return current;
       }
 
-      const updated = { ...current.data };
-      const updatedTasks = [...(updated.tasks ?? [])];
-      const updatedEvents = [...(updated.calendar_entries ?? [])];
-      const updatedRoutines = [
-        ...((updated as DayContextWithRoutines).routines ?? []),
-      ];
+      const result = applyEntityChanges(current.data, changes);
+      didUpdate = result.didUpdate;
 
-      for (const change of changes) {
-        if (change.entity_type === "task") {
-          if (change.change_type === "deleted") {
-            const index = updatedTasks.findIndex(
-              (t) => t.id === change.entity_id,
-            );
-            if (index >= 0) {
-              updatedTasks.splice(index, 1);
-              didUpdate = true;
-            }
-            continue;
-          }
-          const task = change.entity_data as Task | null;
-          if (!task) {
-            continue;
-          }
-          if (change.change_type === "created") {
-            const index = updatedTasks.findIndex((t) => t.id === task.id);
-            if (index >= 0) {
-              if (!areEntitiesEqual(updatedTasks[index], task)) {
-                updatedTasks[index] = task;
-                didUpdate = true;
-              }
-            } else {
-              updatedTasks.push(task);
-              didUpdate = true;
-            }
-          } else if (change.change_type === "updated") {
-            const index = updatedTasks.findIndex((t) => t.id === task.id);
-            if (index >= 0) {
-              if (!areEntitiesEqual(updatedTasks[index], task)) {
-                updatedTasks[index] = task;
-                didUpdate = true;
-              }
-            } else {
-              // Task not found, add it (might have been created before we loaded)
-              updatedTasks.push(task);
-              didUpdate = true;
-            }
-          }
-        } else if (
-          change.entity_type === "calendar_entry" ||
-          change.entity_type === "calendarentry"
-        ) {
-          if (change.change_type === "deleted") {
-            const index = updatedEvents.findIndex(
-              (e) => e.id === change.entity_id,
-            );
-            if (index >= 0) {
-              updatedEvents.splice(index, 1);
-              didUpdate = true;
-            }
-            continue;
-          }
-          const event = change.entity_data as Event | null;
-          if (!event) {
-            continue;
-          }
-          if (change.change_type === "created") {
-            const index = updatedEvents.findIndex((e) => e.id === event.id);
-            if (index >= 0) {
-              if (!areEntitiesEqual(updatedEvents[index], event)) {
-                updatedEvents[index] = event;
-                didUpdate = true;
-              }
-            } else {
-              updatedEvents.push(event);
-              didUpdate = true;
-            }
-          } else if (change.change_type === "updated") {
-            const index = updatedEvents.findIndex((e) => e.id === event.id);
-            if (index >= 0) {
-              if (!areEntitiesEqual(updatedEvents[index], event)) {
-                updatedEvents[index] = event;
-                didUpdate = true;
-              }
-            } else {
-              // Event not found, add it
-              updatedEvents.push(event);
-              didUpdate = true;
-            }
-          }
-        } else if (change.entity_type === "routine") {
-          if (change.change_type === "deleted") {
-            const index = updatedRoutines.findIndex(
-              (item) => item.id === change.entity_id,
-            );
-            if (index >= 0) {
-              updatedRoutines.splice(index, 1);
-              didUpdate = true;
-            }
-            continue;
-          }
-          const routine = change.entity_data as Routine | null;
-          if (!routine) {
-            continue;
-          }
-          if (change.change_type === "created") {
-            const index = updatedRoutines.findIndex(
-              (item) => item.id === routine.id,
-            );
-            if (index >= 0) {
-              if (!areEntitiesEqual(updatedRoutines[index], routine)) {
-                updatedRoutines[index] = routine;
-                didUpdate = true;
-              }
-            } else {
-              updatedRoutines.push(routine);
-              didUpdate = true;
-            }
-          } else if (change.change_type === "updated") {
-            const index = updatedRoutines.findIndex(
-              (item) => item.id === routine.id,
-            );
-            if (index >= 0) {
-              if (!areEntitiesEqual(updatedRoutines[index], routine)) {
-                updatedRoutines[index] = routine;
-                didUpdate = true;
-              }
-            } else {
-              updatedRoutines.push(routine);
-              didUpdate = true;
-            }
-          }
-        } else if (change.entity_type === "day") {
-          const updatedDay = change.entity_data as Day | null;
-          if (
-            updatedDay &&
-            (change.change_type === "updated" ||
-              change.change_type === "created")
-          ) {
-            if (!areEntitiesEqual(updated.day, updatedDay)) {
-              updated.day = updatedDay;
-              didUpdate = true;
-            }
-          }
-        }
-      }
-
-      if (!didUpdate) {
-        return current;
-      }
-
-      updated.tasks = updatedTasks;
-      updated.calendar_entries = updatedEvents;
-      (updated as DayContextWithRoutines).routines = updatedRoutines;
-
-      return { data: updated };
+      if (!result.didUpdate) return current;
+      return { data: result.nextContext };
     });
     return didUpdate;
   };
@@ -1293,36 +970,13 @@ export function StreamingDataProvider(props: ParentProps) {
     topic: string,
     handler: (event: DomainEventEnvelope) => void,
   ) => {
-    const handlers = topicHandlers.get(topic) ?? new Set();
-    handlers.add(handler);
-    topicHandlers.set(topic, handlers);
-
-    if (!subscribedTopics.has(topic)) {
-      subscribedTopics.add(topic);
-      sendSubscriptionUpdate("subscribe", [topic]);
-    }
-
-    return () => {
-      const currentHandlers = topicHandlers.get(topic);
-      if (!currentHandlers) {
-        return;
-      }
-      currentHandlers.delete(handler);
-      if (currentHandlers.size === 0) {
-        topicHandlers.delete(topic);
-        unsubscribeFromTopic(topic);
-      } else {
-        topicHandlers.set(topic, currentHandlers);
-      }
-    };
+    const client = getOrCreateWsClient();
+    if (!client) return () => {};
+    return client.subscribeTopic(topic, handler);
   };
 
   const unsubscribeFromTopic = (topic: string) => {
-    if (!subscribedTopics.has(topic)) {
-      return;
-    }
-    subscribedTopics.delete(topic);
-    sendSubscriptionUpdate("unsubscribe", [topic]);
+    getOrCreateWsClient()?.unsubscribeTopic(topic);
   };
 
   // Connect on mount
@@ -1336,15 +990,11 @@ export function StreamingDataProvider(props: ParentProps) {
     // Set isMounted to false first to prevent reconnection attempts
     isMounted = false;
 
-    if (reconnectTimeout) {
-      clearTimeout(reconnectTimeout);
-    }
     if (syncDebounceTimeout) {
       clearTimeout(syncDebounceTimeout);
     }
-    if (ws) {
-      ws.close();
-    }
+    wsClient?.close();
+    wsClient = null;
   });
 
   const value: StreamingDataContextValue = {

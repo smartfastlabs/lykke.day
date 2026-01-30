@@ -91,7 +91,7 @@ export const buildAlarmKey = (alarm: Alarm): string =>
 
 export const buildYouTubeEmbedUrl = (rawUrl: string): string | null => {
   try {
-    const url = new URL(rawUrl);
+    const url = new globalThis.URL(rawUrl);
     const host = url.hostname.replace(/^www\./, "");
     let videoId: string | null = null;
 

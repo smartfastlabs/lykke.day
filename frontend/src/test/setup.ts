@@ -1,12 +1,6 @@
 import "@testing-library/jest-dom";
 import { afterEach } from "vitest";
 import { cleanup } from "@solidjs/testing-library";
-import { webcrypto } from "node:crypto";
-
-// Polyfill for crypto.getRandomValues (needed for older Node versions)
-if (!globalThis.crypto) {
-  (globalThis as unknown as { crypto: typeof webcrypto }).crypto = webcrypto;
-}
 
 // Cleanup after each test
 afterEach(() => {
