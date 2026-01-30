@@ -772,29 +772,6 @@ export interface paths {
         patch: operations["update_day_days__day_id__patch"];
         trace?: never;
     };
-    "/days/kiosk/test-notification": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Send Test Kiosk Notification
-         * @description Send a test kiosk notification to all connected kiosks for the current user.
-         *
-         *     Returns:
-         *         A dict with a success message.
-         */
-        post: operations["send_test_kiosk_notification_days_kiosk_test_notification_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/day-templates/{uuid}": {
         parameters: {
             query?: never;
@@ -1721,15 +1698,15 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Domain Events
-         * @description List domain events with optional filters.
+         * List Structured Log Events
+         * @description List structured log backlog events with optional filters.
          *
-         *     Returns paginated list of domain events from Redis, with optional filtering
-         *     by search text, user_id, event_type, and time range.
+         *     Returns paginated list of structured log backlog events (Redis sorted set),
+         *     with optional filtering by search text, user_id, event_type, and time range.
          *
          *     Only accessible by superusers.
          */
-        get: operations["list_domain_events_admin_events_get"];
+        get: operations["list_structured_log_events_admin_events_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2463,7 +2440,7 @@ export interface components {
         };
         /**
          * DomainEventListResponse
-         * @description Schema for paginated domain event list response.
+         * @description Schema for paginated structured log backlog list response.
          */
         DomainEventListResponse: {
             /** Items */
@@ -2481,7 +2458,10 @@ export interface components {
         };
         /**
          * DomainEventSchema
-         * @description Schema for a single domain event log entry.
+         * @description Schema for a single structured log backlog entry.
+         *
+         *     Note: The endpoint is historically named `/admin/events`, but these entries
+         *     are produced by the structured logger backlog, not the core domain-event bus.
          */
         DomainEventSchema: {
             /** Id */
@@ -5457,28 +5437,6 @@ export interface operations {
             };
         };
     };
-    send_test_kiosk_notification_days_kiosk_test_notification_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
-                };
-            };
-        };
-    };
     get_day_template_day_templates__uuid__get: {
         parameters: {
             query?: never;
@@ -7347,7 +7305,7 @@ export interface operations {
             };
         };
     };
-    list_domain_events_admin_events_get: {
+    list_structured_log_events_admin_events_get: {
         parameters: {
             query?: {
                 /** @description Text search in event data */

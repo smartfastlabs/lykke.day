@@ -18,16 +18,12 @@ import {
   isAllDayEvent,
   type KioskItem,
 } from "@/features/kiosk/kioskUtils";
-import { useSpeechSynthesis } from "@/features/kiosk/tts/useSpeechSynthesis";
 import { useWeatherSnapshot } from "@/features/kiosk/weather/useWeatherSnapshot";
 import Page from "@/components/shared/layout/Page";
 import { useStreamingData } from "@/providers/streamingData";
 import { getDateString } from "@/utils/dates";
 import { filterVisibleTasks } from "@/utils/tasks";
 import { buildRoutineGroups } from "@/components/routines/RoutineGroupsList";
-import { dayAPI } from "@/utils/api";
-import { globalNotifications } from "@/providers/notifications";
-import { loadDeviceVoiceSetting } from "@/utils/voiceSettings";
 import type { DayTemplate, Reminder } from "@/types/api";
 
 type TimeBlock = NonNullable<DayTemplate["time_blocks"]>[number];
@@ -42,44 +38,12 @@ const KioskPage: Component = () => {
     reminders,
     routines,
     alarms,
-    subscribeToTopic,
     isConnected,
   } = useStreamingData();
   const [now, setNow] = createSignal(new Date());
   const { weather, weatherError } = useWeatherSnapshot();
   const { activeAlarm, alarmVideoUrl, setFullscreenContainerRef } =
     useAlarmVideo(alarms);
-  const [isSendingTest, setIsSendingTest] = createSignal(false);
-  const {
-    ttsSupported,
-    speechUnlocked,
-    voices,
-    unlockState,
-    queuedKioskMessages,
-    lastKioskMessage,
-    ttsLastError,
-    unlockSpeech,
-    speakSample,
-    speakQueuedMessages,
-  } = useSpeechSynthesis({
-    subscribeToTopic,
-    loadVoiceSetting: loadDeviceVoiceSetting,
-  });
-
-  const handleSendTestNotification = async () => {
-    setIsSendingTest(true);
-    try {
-      // Ensure this click also unlocks speech on devices that require gestures.
-      unlockSpeech();
-      await dayAPI.sendTestKioskNotification();
-      globalNotifications.addInfo("Test notification sent", { duration: 3000 });
-    } catch (error) {
-      console.error("Failed to send test notification:", error);
-      globalNotifications.addError("Failed to send test notification");
-    } finally {
-      setIsSendingTest(false);
-    }
-  };
 
   onMount(() => {
     const interval = window.setInterval(() => {
@@ -362,7 +326,7 @@ const KioskPage: Component = () => {
   return (
     <Page variant="app" hideFooter hideFloatingButtons>
       <div class="min-h-[100dvh] h-[100dvh] box-border relative overflow-hidden">
-        <Show when={activeAlarm() && alarmVideoUrl()}>
+        {activeAlarm() && alarmVideoUrl() ? (
           <Portal>
             <div
               ref={setFullscreenContainerRef}
@@ -377,15 +341,8 @@ const KioskPage: Component = () => {
               />
             </div>
           </Portal>
-        </Show>
-        <Show
-          when={!isLoading() && dayContext()}
-          fallback={
-            <div class="relative z-10 p-8 text-center text-stone-400">
-              Loading...
-            </div>
-          }
-        >
+        ) : null}
+        {!isLoading() && dayContext() ? (
           <div class="relative z-10 h-full w-full">
             <div class="h-full w-full flex flex-col gap-3 p-[25px]">
               <div class="flex items-center justify-between">
@@ -406,112 +363,9 @@ const KioskPage: Component = () => {
                     >
                       {isConnected() ? "WS connected" : "WS disconnected"}
                     </span>
-                    <Show when={ttsSupported()}>
-                      <span
-                        class={
-                          speechUnlocked()
-                            ? "rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700"
-                            : "rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700"
-                        }
-                      >
-                        {speechUnlocked() ? "Audio enabled" : "Audio locked"}
-                      </span>
-                      <span class="rounded-full bg-stone-100 px-2 py-0.5 font-semibold text-stone-600">
-                        {voices().length} voices
-                      </span>
-                      <Show
-                        when={!speechUnlocked() && unlockState() !== "idle"}
-                      >
-                        <span
-                          class={
-                            unlockState() === "attempting"
-                              ? "rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700"
-                              : unlockState() === "failed"
-                                ? "rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-rose-700"
-                                : "rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700"
-                          }
-                        >
-                          {unlockState() === "attempting"
-                            ? "Enabling…"
-                            : unlockState() === "failed"
-                              ? "Enable failed"
-                              : "Enabled"}
-                        </span>
-                      </Show>
-                    </Show>
-                    <Show when={!ttsSupported()}>
-                      <span class="rounded-full bg-rose-50 px-2 py-0.5 font-semibold text-rose-700">
-                        No SpeechSynthesis
-                      </span>
-                    </Show>
-                    <Show when={queuedKioskMessages().length > 0}>
-                      <span class="rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700">
-                        {queuedKioskMessages().length} queued
-                      </span>
-                    </Show>
                   </div>
-                </div>
-                <div class="flex items-center gap-2">
-                  <Show when={ttsSupported() && !speechUnlocked()}>
-                    <button
-                      onClick={() => {
-                        unlockSpeech();
-                        speakQueuedMessages();
-                      }}
-                      class="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800 transition-colors"
-                    >
-                      Enable audio
-                    </button>
-                  </Show>
-                  <Show when={ttsSupported()}>
-                    <button
-                      onClick={() => {
-                        unlockSpeech();
-                        speakSample();
-                      }}
-                      class="rounded-lg bg-white/80 px-4 py-2 text-sm font-medium text-stone-800 hover:bg-white transition-colors border border-white/70"
-                    >
-                      Play sample
-                    </button>
-                  </Show>
-                  <button
-                    onClick={handleSendTestNotification}
-                    disabled={isSendingTest()}
-                    class="rounded-lg bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isSendingTest() ? "Sending..." : "Test Notification"}
-                  </button>
                 </div>
               </div>
-              <Show when={ttsLastError()}>
-                <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-800">
-                  TTS error: {ttsLastError()}
-                </div>
-              </Show>
-              <Show when={lastKioskMessage()}>
-                {(msg) => (
-                  <div class="rounded-xl border border-white/70 bg-white/70 px-4 py-2 text-sm text-stone-700">
-                    <span class="text-xs uppercase tracking-[0.2em] text-stone-400">
-                      Last kiosk notification
-                    </span>
-                    <div class="mt-1 flex flex-wrap items-center gap-2">
-                      <span class="font-medium text-stone-800">
-                        {msg().message}
-                      </span>
-                      <Show when={msg().triggered_by}>
-                        <span class="rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-semibold text-stone-600">
-                          {msg().triggered_by}
-                        </span>
-                      </Show>
-                      <Show when={msg().created_at}>
-                        <span class="text-[11px] text-stone-500 tabular-nums">
-                          {msg().created_at}
-                        </span>
-                      </Show>
-                    </div>
-                  </div>
-                )}
-              </Show>
               <div class="flex-1 min-h-0 grid grid-cols-3 grid-rows-2 gap-3">
                 <KioskPanel title="Now" count={rightNowItems().length}>
                   <div class="space-y-3">
@@ -613,7 +467,11 @@ const KioskPage: Component = () => {
               </div>
             </div>
           </div>
-        </Show>
+        ) : (
+          <div class="relative z-10 p-8 text-center text-stone-400">
+            Loading...
+          </div>
+        )}
       </div>
     </Page>
   );

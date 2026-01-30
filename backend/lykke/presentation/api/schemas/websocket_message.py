@@ -98,20 +98,3 @@ class WebSocketTopicEventSchema(BaseSchema):
     type: Literal["topic_event"] = "topic_event"
     topic: str
     event: dict[str, Any]
-
-
-class KioskNotificationSchema(BaseSchema):
-    """Kiosk notification message to be read out loud."""
-
-    message: str
-    category: str  # "calendar_event", "routine", "task_reminder", "time_block_change", "other"
-    message_hash: str
-    created_at: str  # ISO format datetime
-    triggered_by: str | None = None
-
-
-class WebSocketKioskNotificationSchema(BaseSchema):
-    """Server → Client: Kiosk notification event."""
-
-    type: Literal["kiosk_notification"] = "kiosk_notification"
-    notification: KioskNotificationSchema

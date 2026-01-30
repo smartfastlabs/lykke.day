@@ -37,7 +37,6 @@ from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
 from lykke.domain.events.base import AuditableDomainEvent
 from lykke.domain.events.day_events import NewDayEvent
-from lykke.domain.events.notification_events import KioskNotificationEvent
 from lykke.domain.events.timing_status_events import (
     RoutineTimingStatusChangedEvent,
     TaskTimingStatusChangedEvent,
@@ -51,10 +50,8 @@ from lykke.presentation.api.schemas.mappers import (
 )
 from lykke.presentation.api.schemas.websocket_message import (
     EntityChangeSchema,
-    KioskNotificationSchema,
     WebSocketConnectionAckSchema,
     WebSocketErrorSchema,
-    WebSocketKioskNotificationSchema,
     WebSocketSubscriptionSchema,
     WebSocketSyncRequestSchema,
     WebSocketSyncResponseSchema,
@@ -139,46 +136,6 @@ async def update_day(
         value_objects.BrainDumpQuery(date=day.date)
     )
     return map_day_to_schema(updated, brain_dump_items=brain_dump_items)
-
-
-@router.post("/kiosk/test-notification")
-async def send_test_kiosk_notification(
-    request: Request,
-    user: Annotated[UserEntity, Depends(get_current_user)],
-    pubsub_gateway: Annotated[
-        PubSubGatewayProtocol, Depends(get_pubsub_gateway_for_request)
-    ],
-) -> dict[str, str]:
-    """Send a test kiosk notification to all connected kiosks for the current user.
-
-    Returns:
-        A dict with a success message.
-    """
-    test_message = "This is a test kiosk notification. If you can hear this, the system is working correctly."
-    message_hash = hashlib.sha256(test_message.encode("utf-8")).hexdigest()
-
-    event = KioskNotificationEvent(
-        user_id=user.id,
-        message=test_message,
-        category="other",
-        message_hash=message_hash,
-        created_at=dt_datetime.now(UTC),
-        triggered_by="test",
-    )
-
-    try:
-        await pubsub_gateway.publish_to_user_channel(
-            user_id=user.id,
-            channel_type="domain-events",
-            message=serialize_domain_event(event),
-        )
-        logger.info(f"Sent test kiosk notification to user {user.id}")
-        return {"status": "success", "message": "Test notification sent"}
-    except Exception as exc:  # pylint: disable=broad-except
-        logger.error(
-            f"Failed to send test kiosk notification for user {user.id}: {exc}"
-        )
-        raise
 
 
 # ============================================================================
@@ -530,48 +487,6 @@ async def _handle_realtime_events(
                         await send_ws_message(
                             websocket, topic_event.model_dump(mode="json")
                         )
-
-                    if isinstance(domain_event, KioskNotificationEvent):
-                        notification_schema = KioskNotificationSchema(
-                            message=domain_event.message,
-                            category=domain_event.category,
-                            message_hash=domain_event.message_hash,
-                            created_at=domain_event.created_at.isoformat(),
-                            triggered_by=domain_event.triggered_by,
-                        )
-                        kiosk_message = WebSocketKioskNotificationSchema(
-                            notification=notification_schema
-                        )
-                        await send_ws_message(
-                            websocket, kiosk_message.model_dump(mode="json")
-                        )
-
-                        event_data = {
-                            "user_id": str(domain_event.user_id),
-                            "message_hash": domain_event.message_hash,
-                            "category": domain_event.category,
-                            "triggered_by": domain_event.triggered_by,
-                            "created_at": domain_event.created_at.isoformat(),
-                            "source": "days_context_websocket",
-                        }
-                        occurred_at = domain_event.created_at
-                        log_user_id = domain_event.user_id
-
-                        async def _emit_kiosk_log() -> None:
-                            try:
-                                await emit_structured_log(
-                                    event_type="KioskNotificationSent",
-                                    event_data=event_data,
-                                    occurred_at=occurred_at,
-                                )
-                            except Exception as exc:  # pylint: disable=broad-except
-                                logger.error(
-                                    "Failed to emit kiosk structured log for user %s: %s",
-                                    log_user_id,
-                                    exc,
-                                )
-
-                        asyncio.create_task(_emit_kiosk_log())
 
                     if not isinstance(
                         domain_event,

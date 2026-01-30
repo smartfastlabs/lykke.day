@@ -20,7 +20,6 @@ if TYPE_CHECKING:
         SyncCalendarHandler,
     )
     from lykke.application.commands.notifications import (
-        KioskNotificationHandler,
         MorningOverviewHandler,
         SmartNotificationHandler,
     )
@@ -148,23 +147,6 @@ def get_smart_notification_handler(
         uow_factory=uow_factory,
     )
     return factory.create(SmartNotificationHandler)
-
-
-def get_kiosk_notification_handler(
-    user_id: UUID,
-    uow_factory: UnitOfWorkFactory,
-    ro_repo_factory: ReadOnlyRepositoryFactory,
-) -> KioskNotificationHandler:
-    """Get a KioskNotificationHandler instance for a user."""
-    from lykke.application.commands.notifications import KioskNotificationHandler
-    from lykke.presentation.handler_factory import CommandHandlerFactory
-
-    factory = CommandHandlerFactory(
-        user_id=user_id,
-        ro_repo_factory=ro_repo_factory,
-        uow_factory=uow_factory,
-    )
-    return factory.create(KioskNotificationHandler)
 
 
 def get_morning_overview_handler(

@@ -56,7 +56,6 @@ import NewDayTemplatePage from "@/pages/me/settings/day-templates/New";
 import DayTemplateDetailPage from "@/pages/me/settings/day-templates/Detail";
 import NotificationConfigPage from "@/pages/me/settings/notifications/Index";
 import AlarmPresetsPage from "@/pages/me/settings/alarms/Index";
-import VoiceSettingsPage from "@/pages/me/settings/voice/Index";
 import TaskDefinitionsPage from "@/pages/me/settings/task-definitions/Index";
 import NewTaskDefinitionPage from "@/pages/me/settings/task-definitions/New";
 import TaskDefinitionDetailPage from "@/pages/me/settings/task-definitions/Detail";
@@ -316,7 +315,6 @@ export default function App() {
                     component={NotificationConfigPage}
                   />
                   <Route path="/alarms" component={AlarmPresetsPage} />
-                  <Route path="/voice" component={VoiceSettingsPage} />
                   <Route
                     path="/notifications/push"
                     component={PushSubscriptionsPage}

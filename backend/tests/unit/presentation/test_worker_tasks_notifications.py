@@ -37,44 +37,11 @@ async def test_evaluate_smart_notifications_for_all_users_task() -> None:
 
 
 @pytest.mark.asyncio
-async def test_evaluate_kiosk_notifications_for_all_users_task() -> None:
-    users = [
-        build_user(uuid4(), llm_provider=value_objects.LLMProvider.OPENAI),
-        build_user(uuid4(), llm_provider=None),
-    ]
-    task, calls = create_task_recorder()
-    user_repo = create_user_repo(users)
-
-    await notification_tasks.evaluate_kiosk_notifications_for_all_users_task(
-        user_repo=user_repo,
-        enqueue_task=task,
-    )
-
-    assert len(calls) == 1
-
-
-@pytest.mark.asyncio
 async def test_evaluate_smart_notification_task_calls_handler() -> None:
     gateway, gateway_state = create_gateway_recorder()
     handler, handler_calls = create_handler_recorder()
 
     await notification_tasks.evaluate_smart_notification_task(
-        user_id=uuid4(),
-        triggered_by="scheduled",
-        handler=handler,
-        pubsub_gateway=gateway,
-    )
-
-    assert handler_calls
-    assert gateway_state["closed"] is True
-
-
-@pytest.mark.asyncio
-async def test_evaluate_kiosk_notification_task_calls_handler() -> None:
-    gateway, gateway_state = create_gateway_recorder()
-    handler, handler_calls = create_handler_recorder()
-
-    await notification_tasks.evaluate_kiosk_notification_task(
         user_id=uuid4(),
         triggered_by="scheduled",
         handler=handler,

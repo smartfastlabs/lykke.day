@@ -27,7 +27,7 @@ const CommandsPage: Component = () => {
   const handleRescheduleToday = async () => {
     if (
       !confirm(
-        "This will delete all tasks and audit logs for today and create fresh tasks from your routine definitions. Continue?"
+        "This will delete all tasks and audit logs for today and create fresh tasks from your routine definitions. Continue?",
       )
     ) {
       return;
@@ -69,7 +69,7 @@ const CommandsPage: Component = () => {
   const handleResetCalendarSync = async () => {
     if (
       !confirm(
-        "This will unsubscribe all calendars from syncing, delete all future calendar events, then resubscribe and resync. Continue?"
+        "This will unsubscribe all calendars from syncing, delete all future calendar events, then resubscribe and resync. Continue?",
       )
     ) {
       return;
@@ -108,22 +108,18 @@ const CommandsPage: Component = () => {
     setTestPushMessage(null);
 
     try {
-      // Send both push notification and kiosk notification
-      const [pushResponse, kioskResponse] = await Promise.allSettled([
+      // Send push notification
+      const [pushResponse] = await Promise.allSettled([
         fetch("/api/push/test-push/", {
-          method: "POST",
-          credentials: "include",
-        }),
-        fetch("/api/days/kiosk/test-notification", {
           method: "POST",
           credentials: "include",
         }),
       ]);
 
-      const pushSuccess = pushResponse.status === "fulfilled" && pushResponse.value.ok;
-      const kioskSuccess = kioskResponse.status === "fulfilled" && kioskResponse.value.ok;
+      const pushSuccess =
+        pushResponse.status === "fulfilled" && pushResponse.value.ok;
 
-      if (!pushSuccess && !kioskSuccess) {
+      if (!pushSuccess) {
         throw new Error("Failed to send test notifications");
       }
 
@@ -135,17 +131,15 @@ const CommandsPage: Component = () => {
           const pushData = await pushResponse.value.json();
           const deviceCount = pushData.device_count || 0;
           if (deviceCount > 0) {
-            parts.push(`push notification to ${deviceCount} device${deviceCount === 1 ? "" : "s"}`);
+            parts.push(
+              `push notification to ${deviceCount} device${deviceCount === 1 ? "" : "s"}`,
+            );
           } else {
             parts.push("push notification (no devices subscribed)");
           }
         } catch {
           parts.push("push notification");
         }
-      }
-
-      if (kioskSuccess) {
-        parts.push("kiosk notification");
       }
 
       if (parts.length === 0) {
@@ -380,12 +374,15 @@ const CommandsPage: Component = () => {
                 Send Test Push
               </h2>
               <p class="text-stone-600 mb-4">
-                Send a test push notification to all your subscribed devices and kiosk displays.
-                This helps verify that notifications are working correctly.
+                Send a test push notification to all your subscribed devices and
+                kiosk displays. This helps verify that notifications are working
+                correctly.
               </p>
               <ul class="text-stone-600 text-sm space-y-1 mb-6 ml-4">
                 <li>• Sends to all devices with notifications enabled</li>
-                <li>• Sends to all connected kiosk displays (will be read aloud)</li>
+                <li>
+                  • Sends to all connected kiosk displays (will be read aloud)
+                </li>
                 <li>• Verifies your push notification and kiosk setup</li>
                 <li>• No data is modified</li>
               </ul>

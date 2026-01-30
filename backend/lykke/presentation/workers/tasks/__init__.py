@@ -14,7 +14,6 @@ from .calendar import (
 )
 from .common import (
     get_google_gateway,
-    get_kiosk_notification_handler,
     get_morning_overview_handler,
     get_process_brain_dump_handler,
     get_read_only_repository_factory,
@@ -28,8 +27,6 @@ from .common import (
 )
 from .misc import example_triggered_task, heartbeat_task
 from .notifications import (
-    evaluate_kiosk_notification_task,
-    evaluate_kiosk_notifications_for_all_users_task,
     evaluate_morning_overview_task,
     evaluate_morning_overviews_for_all_users_task,
     evaluate_smart_notification_task,
@@ -47,15 +44,12 @@ register_worker_event_handlers()
 
 __all__ = [
     "clear_task_overrides",
-    "evaluate_kiosk_notification_task",
-    "evaluate_kiosk_notifications_for_all_users_task",
     "evaluate_morning_overview_task",
     "evaluate_morning_overviews_for_all_users_task",
     "evaluate_smart_notification_task",
     "evaluate_smart_notifications_for_all_users_task",
     "example_triggered_task",
     "get_google_gateway",
-    "get_kiosk_notification_handler",
     "get_morning_overview_handler",
     "get_process_brain_dump_handler",
     "get_read_only_repository_factory",

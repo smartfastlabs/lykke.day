@@ -9,7 +9,6 @@ from loguru import logger
 from taskiq_dependencies import Depends
 
 from lykke.application.commands.notifications import (
-    KioskNotificationCommand,
     MorningOverviewCommand,
     SmartNotificationCommand,
 )
@@ -29,7 +28,6 @@ from lykke.infrastructure.workers.config import broker
 from lykke.presentation.utils.structured_logging import structured_task
 
 from .common import (
-    get_kiosk_notification_handler,
     get_morning_overview_handler,
     get_read_only_repository_factory,
     get_smart_notification_handler,
@@ -74,34 +72,6 @@ async def evaluate_smart_notifications_for_all_users_task(
 
     logger.info(
         f"Enqueued smart notification evaluation tasks for {len(users_with_llm)} users"
-    )
-
-
-@broker.task(schedule=[{"cron": "0,19,20,30,50 * * * *"}])  # type: ignore[untyped-decorator]
-@structured_task()
-async def evaluate_kiosk_notifications_for_all_users_task(
-    user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
-    *,
-    enqueue_task: _EnqueueTask | None = None,
-) -> None:
-    """Evaluate kiosk notifications for all users with LLM provider configured.
-
-    Runs at :00, :20, :30, and :50 each hour to check kiosk notifications.
-    """
-    logger.info("Starting kiosk notification evaluation for all users")
-
-    users = await user_repo.all()
-    users_with_llm = [
-        user for user in users if user.settings and user.settings.llm_provider
-    ]
-    logger.info(f"Found {len(users_with_llm)} users with LLM provider configured")
-
-    task = enqueue_task or evaluate_kiosk_notification_task
-    for user in users_with_llm:
-        await task.kiq(user_id=user.id, triggered_by="scheduled")
-
-    logger.info(
-        f"Enqueued kiosk notification evaluation tasks for {len(users_with_llm)} users"
     )
 
 
@@ -150,55 +120,6 @@ async def evaluate_smart_notification_task(
             logger.debug(f"Smart notification evaluation completed for user {user_id}")
         except Exception:  # pylint: disable=broad-except
             logger.exception(f"Error evaluating smart notification for user {user_id}")
-
-    finally:
-        await pubsub_gateway.close()
-
-
-@broker.task  # type: ignore[untyped-decorator]
-@structured_task()
-async def evaluate_kiosk_notification_task(
-    user_id: UUID,
-    triggered_by: str | None = None,
-    *,
-    handler: _NotificationHandler[KioskNotificationCommand] | None = None,
-    uow_factory: UnitOfWorkFactory | None = None,
-    ro_repo_factory: ReadOnlyRepositoryFactory | None = None,
-    pubsub_gateway: RedisPubSubGateway | None = None,
-) -> None:
-    """Evaluate and send kiosk notification for a specific user.
-
-    This task can be triggered by:
-    - Scheduled task (every 10 minutes)
-
-    Args:
-        user_id: The user ID to evaluate kiosk notifications for
-        triggered_by: How this task was triggered (e.g., "scheduled")
-    """
-    logger.info(f"Starting kiosk notification evaluation for user {user_id}")
-
-    pubsub_gateway = pubsub_gateway or RedisPubSubGateway()
-    try:
-        resolved_handler: _NotificationHandler[KioskNotificationCommand]
-        if handler is None:
-            resolved_handler = get_kiosk_notification_handler(
-                user_id=user_id,
-                uow_factory=uow_factory or get_unit_of_work_factory(pubsub_gateway),
-                ro_repo_factory=ro_repo_factory or get_read_only_repository_factory(),
-            )
-        else:
-            resolved_handler = handler
-
-        try:
-            await resolved_handler.handle(
-                KioskNotificationCommand(
-                    user_id=user_id,
-                    triggered_by=triggered_by,
-                )
-            )
-            logger.debug(f"Kiosk notification evaluation completed for user {user_id}")
-        except Exception:  # pylint: disable=broad-except
-            logger.exception(f"Error evaluating kiosk notification for user {user_id}")
 
     finally:
         await pubsub_gateway.close()

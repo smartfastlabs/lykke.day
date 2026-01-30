@@ -39,18 +39,6 @@ export const normalizeTime = (time: string): string => time.slice(0, 5);
 export const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
-export const isBenignSpeechSynthesisError = (error: unknown): boolean => {
-  // Common, non-fatal errors when we intentionally call `speechSynthesis.cancel()`
-  // or when a new utterance interrupts a previous one.
-  if (typeof error !== "string") return false;
-  const normalized = error.toLowerCase();
-  return (
-    normalized === "interrupted" ||
-    normalized === "canceled" ||
-    normalized === "cancelled"
-  );
-};
-
 export const formatTimeString = (timeStr: string): string => {
   const [h, m] = normalizeTime(timeStr).split(":");
   const hour = parseInt(h, 10);

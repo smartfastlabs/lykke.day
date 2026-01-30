@@ -24,7 +24,6 @@ from lykke.application.commands.day.update_reminder_status import (
 )
 from lykke.application.commands.google import HandleGoogleLoginCallbackHandler
 from lykke.application.commands.notifications import (
-    KioskNotificationHandler,
     MorningOverviewHandler,
     SmartNotificationHandler,
 )
@@ -320,19 +319,6 @@ def _build_morning_overview_handler(
     )
 
 
-def _build_kiosk_notification_handler(
-    factory: CommandHandlerFactory,
-) -> KioskNotificationHandler:
-    return KioskNotificationHandler(
-        factory.ro_repos,
-        factory.uow_factory,
-        factory.user_id,
-        factory.llm_gateway_factory,
-        factory.query_factory.create(GetLLMPromptContextHandler),
-        RedisPubSubGateway(),
-    )
-
-
 def _build_process_brain_dump_handler(
     factory: CommandHandlerFactory,
 ) -> ProcessBrainDumpHandler:
@@ -365,7 +351,6 @@ DEFAULT_COMMAND_HANDLER_REGISTRY: dict[
     HandleGoogleLoginCallbackHandler: _build_google_login_callback_handler,
     SmartNotificationHandler: _build_smart_notification_handler,
     MorningOverviewHandler: _build_morning_overview_handler,
-    KioskNotificationHandler: _build_kiosk_notification_handler,
     ProcessBrainDumpHandler: _build_process_brain_dump_handler,
 }
 
@@ -499,11 +484,6 @@ class CommandHandlerFactory:
     def create(
         self, handler_class: type[ProcessBrainDumpHandler]
     ) -> ProcessBrainDumpHandler: ...
-
-    @overload
-    def create(
-        self, handler_class: type[KioskNotificationHandler]
-    ) -> KioskNotificationHandler: ...
 
     @overload
     def create(self, handler_class: type[CommandHandlerT]) -> CommandHandlerT: ...

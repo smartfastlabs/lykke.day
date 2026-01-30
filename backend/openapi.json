@@ -2484,39 +2484,6 @@
         }
       }
     },
-    "/days/kiosk/test-notification": {
-      "post": {
-        "tags": [
-          "day",
-          "scheduling",
-          "planning"
-        ],
-        "summary": "Send Test Kiosk Notification",
-        "description": "Send a test kiosk notification to all connected kiosks for the current user.\n\nReturns:\n    A dict with a success message.",
-        "operationId": "send_test_kiosk_notification_days_kiosk_test_notification_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object",
-                  "title": "Response Send Test Kiosk Notification Days Kiosk Test Notification Post"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ]
-      }
-    },
     "/day-templates/{uuid}": {
       "get": {
         "tags": [
@@ -5432,9 +5399,9 @@
         "tags": [
           "admin"
         ],
-        "summary": "List Domain Events",
-        "description": "List domain events with optional filters.\n\nReturns paginated list of domain events from Redis, with optional filtering\nby search text, user_id, event_type, and time range.\n\nOnly accessible by superusers.",
-        "operationId": "list_domain_events_admin_events_get",
+        "summary": "List Structured Log Events",
+        "description": "List structured log backlog events with optional filters.\n\nReturns paginated list of structured log backlog events (Redis sorted set),\nwith optional filtering by search text, user_id, event_type, and time range.\n\nOnly accessible by superusers.",
+        "operationId": "list_structured_log_events_admin_events_get",
         "security": [
           {
             "APIKeyCookie": []
@@ -7755,7 +7722,7 @@
           "has_previous"
         ],
         "title": "DomainEventListResponse",
-        "description": "Schema for paginated domain event list response."
+        "description": "Schema for paginated structured log backlog list response."
       },
       "DomainEventSchema": {
         "properties": {
@@ -7786,7 +7753,7 @@
           "stored_at"
         ],
         "title": "DomainEventSchema",
-        "description": "Schema for a single domain event log entry."
+        "description": "Schema for a single structured log backlog entry.\n\nNote: The endpoint is historically named `/admin/events`, but these entries\nare produced by the structured logger backlog, not the core domain-event bus."
       },
       "EarlyAccessRequestSchema": {
         "properties": {

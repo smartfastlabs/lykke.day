@@ -359,14 +359,6 @@ export const dayAPI = {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
-
-  sendTestKioskNotification: (): Promise<{ status: string; message: string }> =>
-    fetchData<{ status: string; message: string }>(
-      "/api/days/kiosk/test-notification",
-      {
-        method: "POST",
-      },
-    ),
 };
 
 export const authAPI = {
