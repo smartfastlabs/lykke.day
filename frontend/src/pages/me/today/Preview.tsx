@@ -17,6 +17,7 @@ import {
   AlarmsSummary,
   UpcomingSection,
   RightNowSection,
+  NeedsAttentionSection,
 } from "@/components/today";
 import { getShowTodayCookie } from "@/utils/cookies";
 import { filterVisibleTasks } from "@/utils/tasks";
@@ -154,6 +155,15 @@ export const TodayPage: Component = () => {
     );
   });
 
+  const needsAttentionTaskIds = createMemo(() => {
+    return new Set(
+      allTasks()
+        .filter((task) => task.timing_status === "needs_attention")
+        .map((task) => task.id)
+        .filter((id): id is string => Boolean(id)),
+    );
+  });
+
   const eventsForSections = createMemo(() => {
     const ids = new Set<string>();
     rightNowEventIds().forEach((id) => ids.add(id));
@@ -169,6 +179,7 @@ export const TodayPage: Component = () => {
     const ids = new Set<string>();
     rightNowTaskIds().forEach((id) => ids.add(id));
     upcomingTaskIds().forEach((id) => ids.add(id));
+    needsAttentionTaskIds().forEach((id) => ids.add(id));
     return filterVisibleTasks(allTasks()).filter((task) => {
       const taskId = task.id;
       if (!taskId) return true;
@@ -184,6 +195,9 @@ export const TodayPage: Component = () => {
       </div>
       <div class="mb-3">
         <UpcomingSection events={allEvents()} tasks={allTasks()} />
+      </div>
+      <div class="mb-3">
+        <NeedsAttentionSection tasks={allTasks()} />
       </div>
       <div class="mb-6">
         <RemindersSummary

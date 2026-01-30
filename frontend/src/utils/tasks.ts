@@ -11,7 +11,11 @@ export function isTaskTimingStatus(task: Task, status: TimingStatus): boolean {
 }
 
 export function isTaskAvailable(task: Task): boolean {
-  return task.timing_status === "available" || task.timing_status === "active";
+  return (
+    task.timing_status === "available" ||
+    task.timing_status === "active" ||
+    task.timing_status === "needs_attention"
+  );
 }
 
 export function filterVisibleTasks(tasks: Task[]): Task[] {

@@ -13,5 +13,9 @@ export { TasksSection, type TasksSectionProps } from "./TasksSection";
 export { EventsSection, type EventsSectionProps } from "./EventsSection";
 export { UpcomingSection, type UpcomingSectionProps } from "./UpcomingSection";
 export { RightNowSection, type RightNowSectionProps } from "./RightNowSection";
+export {
+  NeedsAttentionSection,
+  type NeedsAttentionSectionProps,
+} from "./NeedsAttentionSection";
 export { default as HighLevelPlanPrompt } from "./HighLevelPlanPrompt";
 export { default as TimeBlocksSummary } from "./TimeBlocksSummary";

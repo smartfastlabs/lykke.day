@@ -10,6 +10,7 @@ class TimingStatus(str, Enum):
     INACTIVE = "inactive"
     AVAILABLE = "available"
     ACTIVE = "active"
+    NEEDS_ATTENTION = "needs_attention"
     PAST_DUE = "past-due"
 
 

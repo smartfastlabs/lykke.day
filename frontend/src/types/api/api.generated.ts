@@ -3637,7 +3637,7 @@ export interface components {
          * TimingStatus
          * @enum {string}
          */
-        TimingStatus: "hidden" | "inactive" | "available" | "active" | "past-due";
+        TimingStatus: "hidden" | "inactive" | "available" | "active" | "needs_attention" | "past-due";
         /**
          * TriggerCreateSchema
          * @description API schema for creating a Trigger.

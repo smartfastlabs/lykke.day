@@ -31,40 +31,56 @@ interface FormProps {
 }
 
 const RoutineForm: Component<FormProps> = (props) => {
+  const toInputTime = (value: string | null | undefined): string => {
+    if (!value) return "";
+    const parts = value.split(":");
+    if (parts.length >= 2) {
+      return `${(parts[0] ?? "00").padStart(2, "0")}:${(parts[1] ?? "00").padStart(2, "0")}`;
+    }
+    return value;
+  };
+
+  const toApiTime = (value: string): string => {
+    const trimmed = value.trim();
+    return /^\d{2}:\d{2}$/.test(trimmed) ? `${trimmed}:00` : trimmed;
+  };
+
   const [name, setName] = createSignal(props.initialData?.name ?? "");
   const [description, setDescription] = createSignal(
-    props.initialData?.description ?? ""
+    props.initialData?.description ?? "",
   );
   const [category, setCategory] = createSignal<TaskCategory>(
-    props.initialData?.category ?? "HYGIENE"
+    props.initialData?.category ?? "HYGIENE",
   );
   const [routineDefinitionSchedule, setRoutineDefinitionSchedule] =
     createSignal<RecurrenceSchedule>(
       props.initialData?.routine_definition_schedule ?? {
-      frequency: "DAILY",
-      weekdays: null,
-      day_number: null,
-      }
+        frequency: "DAILY",
+        weekdays: null,
+        day_number: null,
+      },
     );
   const [timeWindowAvailable, setTimeWindowAvailable] = createSignal(
-    props.initialData?.time_window?.available_time ?? ""
+    toInputTime(props.initialData?.time_window?.available_time),
   );
   const [timeWindowStart, setTimeWindowStart] = createSignal(
-    props.initialData?.time_window?.start_time ?? ""
+    toInputTime(props.initialData?.time_window?.start_time),
   );
   const [timeWindowEnd, setTimeWindowEnd] = createSignal(
-    props.initialData?.time_window?.end_time ?? ""
+    toInputTime(props.initialData?.time_window?.end_time),
   );
   const [timeWindowCutoff, setTimeWindowCutoff] = createSignal(
-    props.initialData?.time_window?.cutoff_time ?? ""
+    toInputTime(props.initialData?.time_window?.cutoff_time),
   );
 
   const buildTimeWindow = (): TimeWindow | null => {
     const timeWindow: TimeWindow = {
-      available_time: timeWindowAvailable() || null,
-      start_time: timeWindowStart() || null,
-      end_time: timeWindowEnd() || null,
-      cutoff_time: timeWindowCutoff() || null,
+      available_time: timeWindowAvailable()
+        ? toApiTime(timeWindowAvailable())
+        : null,
+      start_time: timeWindowStart() ? toApiTime(timeWindowStart()) : null,
+      end_time: timeWindowEnd() ? toApiTime(timeWindowEnd()) : null,
+      cutoff_time: timeWindowCutoff() ? toApiTime(timeWindowCutoff()) : null,
     };
     return Object.values(timeWindow).some((value) => value) ? timeWindow : null;
   };

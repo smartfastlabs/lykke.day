@@ -64,6 +64,42 @@ def test_task_timing_status_past_due_after_deadline() -> None:
     assert result.status == TimingStatus.PAST_DUE
 
 
+def test_task_timing_status_needs_attention_close_to_end_time() -> None:
+    now = datetime(2025, 1, 1, 10, 50, tzinfo=UTC)
+    task = _build_task(
+        scheduled_date=now.date(),
+        time_window=TimeWindow(start_time=time(10, 0), end_time=time(11, 0)),
+    )
+
+    result = TimingStatusService.task_status(task, now, timezone="UTC")
+
+    assert result.status == TimingStatus.NEEDS_ATTENTION
+
+
+def test_task_timing_status_needs_attention_close_to_cutoff_time() -> None:
+    now = datetime(2025, 1, 1, 10, 50, tzinfo=UTC)
+    task = _build_task(
+        scheduled_date=now.date(),
+        time_window=TimeWindow(start_time=time(10, 0), cutoff_time=time(11, 0)),
+    )
+
+    result = TimingStatusService.task_status(task, now, timezone="UTC")
+
+    assert result.status == TimingStatus.NEEDS_ATTENTION
+
+
+def test_task_timing_status_active_when_not_close_to_deadline() -> None:
+    now = datetime(2025, 1, 1, 10, 30, tzinfo=UTC)
+    task = _build_task(
+        scheduled_date=now.date(),
+        time_window=TimeWindow(start_time=time(10, 0), end_time=time(11, 0)),
+    )
+
+    result = TimingStatusService.task_status(task, now, timezone="UTC")
+
+    assert result.status == TimingStatus.ACTIVE
+
+
 def test_routine_timing_status_inactive_when_task_upcoming() -> None:
     now = datetime(2025, 1, 1, 9, 40, tzinfo=UTC)
     routine_definition_id = uuid4()

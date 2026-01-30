@@ -15,6 +15,7 @@ from lykke.domain.value_objects import (
 
 UPCOMING_WINDOW_TASK = timedelta(minutes=30)
 UPCOMING_WINDOW_ROUTINE = timedelta(hours=2)
+NEEDS_ATTENTION_WINDOW_TASK = timedelta(minutes=15)
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,7 @@ class TimingStatusService:
         routine_time_window: TimeWindow | None = None,
         routine_snoozed_until: datetime | None = None,
         upcoming_window: timedelta = UPCOMING_WINDOW_TASK,
+        needs_attention_window: timedelta = NEEDS_ATTENTION_WINDOW_TASK,
     ) -> TimingStatusInfo:
         if task.status in (TaskStatus.COMPLETE, TaskStatus.PUNT):
             return TimingStatusInfo(status=TimingStatus.HIDDEN)
@@ -58,6 +60,7 @@ class TimingStatusService:
             window=window,
             snoozed_until=snoozed_until,
             upcoming_window=upcoming_window,
+            needs_attention_window=needs_attention_window,
         )
 
     @staticmethod
@@ -92,7 +95,8 @@ class TimingStatusService:
         has_past_due = any(info.status == TimingStatus.PAST_DUE for info in task_infos)
         has_active = any(info.status == TimingStatus.ACTIVE for info in task_infos)
         has_available = any(
-            info.status == TimingStatus.AVAILABLE for info in task_infos
+            info.status in (TimingStatus.AVAILABLE, TimingStatus.NEEDS_ATTENTION)
+            for info in task_infos
         )
         has_inactive = any(info.status == TimingStatus.INACTIVE for info in task_infos)
 
@@ -179,7 +183,11 @@ class TimingStatusService:
             ]
         )
 
-        if availability_start and availability_end and availability_end < availability_start:
+        if (
+            availability_start
+            and availability_end
+            and availability_end < availability_start
+        ):
             return None
 
         if active_start and active_end and active_end < active_start:
@@ -238,6 +246,7 @@ class TimingStatusService:
         window: EffectiveWindow | None,
         snoozed_until: datetime | None,
         upcoming_window: timedelta,
+        needs_attention_window: timedelta,
     ) -> TimingStatusInfo:
         if snoozed_until and snoozed_until > now:
             next_available: datetime | None = snoozed_until
@@ -262,11 +271,25 @@ class TimingStatusService:
 
         if window.active_start and now >= window.active_start:
             if window.active_end is None or now <= window.active_end:
+                if (
+                    window.availability_end
+                    and now <= window.availability_end
+                    and (window.availability_end - now) <= needs_attention_window
+                    and (window.availability_end - now) > timedelta(0)
+                ):
+                    return TimingStatusInfo(status=TimingStatus.NEEDS_ATTENTION)
                 return TimingStatusInfo(status=TimingStatus.ACTIVE)
 
-        if (
-            window.availability_start is None or now >= window.availability_start
-        ) and (window.availability_end is None or now <= window.availability_end):
+        if (window.availability_start is None or now >= window.availability_start) and (
+            window.availability_end is None or now <= window.availability_end
+        ):
+            if (
+                window.availability_end
+                and now <= window.availability_end
+                and (window.availability_end - now) <= needs_attention_window
+                and (window.availability_end - now) > timedelta(0)
+            ):
+                return TimingStatusInfo(status=TimingStatus.NEEDS_ATTENTION)
             return TimingStatusInfo(status=TimingStatus.AVAILABLE)
 
         if window.availability_start and now < window.availability_start:
@@ -284,9 +307,7 @@ class TimingStatusService:
         return TimingStatusInfo(status=TimingStatus.HIDDEN)
 
     @staticmethod
-    def _latest_time(
-        left: datetime | None, right: datetime | None
-    ) -> datetime | None:
+    def _latest_time(left: datetime | None, right: datetime | None) -> datetime | None:
         if left is None:
             return right
         if right is None:
