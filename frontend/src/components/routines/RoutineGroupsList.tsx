@@ -22,6 +22,11 @@ import { useStreamingData } from "@/providers/streamingData";
 import { filterVisibleTasks } from "@/utils/tasks";
 import type { Routine, Task, TimingStatus } from "@/types/api";
 import SnoozeActionModal from "@/components/shared/SnoozeActionModal";
+import {
+  getRoutineCompletionState,
+  getRoutineStatusLabel,
+  getRoutineStatusPillClass,
+} from "@/components/routines/routineStatus";
 
 export interface RoutineGroup {
   routineId: string | null;
@@ -270,40 +275,27 @@ export const RoutineGroupsList: Component<RoutineGroupsListProps> = (props) => {
             status: getRoutineStatus(routine),
             nextAvailableTime: getRoutineNextAvailableTime(routine),
           }));
+          const completionState = createMemo(() =>
+            getRoutineCompletionState({
+              totalCount: routine.totalCount,
+              completedCount: routine.completedCount,
+              puntedCount: routine.puntedCount,
+            }),
+          );
 
           const getStatusLabel = () => {
-            const status = statusInfo().status;
-            if (status === "active") return "Active";
-            if (status === "available") return "Available";
-            if (status === "past-due") return "Past due";
-            if (status === "inactive") {
-              const nextTime = statusInfo().nextAvailableTime;
-              if (nextTime) {
-                return `Starts ${nextTime.toLocaleTimeString([], {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}`;
-              }
-              return "Soon";
-            }
-            const nextTime = statusInfo().nextAvailableTime;
-            if (nextTime) {
-              return `Starts ${nextTime.toLocaleTimeString([], {
-                hour: "numeric",
-                minute: "2-digit",
-              })}`;
-            }
-            return "Later";
+            return getRoutineStatusLabel({
+              completionState: completionState(),
+              timingStatus: statusInfo().status,
+              nextAvailableTime: statusInfo().nextAvailableTime,
+            });
           };
 
           const getStatusPillClass = () => {
-            const status = statusInfo().status;
-            if (status === "active")
-              return "bg-emerald-100/70 text-emerald-700";
-            if (status === "available") return "bg-amber-100/80 text-amber-700";
-            if (status === "past-due") return "bg-rose-100/80 text-rose-700";
-            if (status === "inactive") return "bg-stone-100 text-stone-600";
-            return "bg-stone-100 text-stone-600";
+            return getRoutineStatusPillClass({
+              completionState: completionState(),
+              timingStatus: statusInfo().status,
+            });
           };
 
           const getStatusClass = () => {

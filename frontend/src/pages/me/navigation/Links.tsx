@@ -5,6 +5,7 @@ import {
   faRightFromBracket,
   faGear,
   faHouse,
+  faCalendarDay,
   faTerminal,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -39,6 +40,12 @@ const NavPage: Component = () => {
           description: "Go back to your day overview.",
           icon: faHouse,
           url: "/me",
+        },
+        {
+          label: "Tomorrow",
+          description: "Preview and plan your next day.",
+          icon: faCalendarDay,
+          url: "/me/tomorrow",
         },
         {
           label: "Commands",
