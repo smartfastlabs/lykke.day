@@ -127,6 +127,7 @@ class GetIncrementalChangesHandler(
                 entity_data = await self._load_entity_data(
                     audit_log.entity_type or "unknown",
                     audit_log.entity_id,
+                    activity_type=audit_log.activity_type,
                     user_timezone=user_timezone,
                 )
 
@@ -162,6 +163,7 @@ class GetIncrementalChangesHandler(
         entity_type: str,
         entity_id: UUID,
         *,
+        activity_type: str,
         user_timezone: str | None,
     ) -> dict[str, Any] | None:
         """Load the full entity data from the repository and convert to dict.
@@ -213,15 +215,29 @@ class GetIncrementalChangesHandler(
                 day = await self.day_ro_repo.get(entity_id)
                 if not day:
                     return None
-                # Convert day to dict using schema mapper
-                brain_dump_items = await self.brain_dump_ro_repo.search(
-                    value_objects.BrainDumpQuery(date=day.date)
-                )
-                day_schema = map_day_to_schema(day, brain_dump_items=brain_dump_items)
+                # Only load brain dumps when the day update was caused by a brain dump
+                # event. Otherwise day updates (e.g. alarms) must not be blocked by
+                # brain dump loading.
+                if activity_type in {
+                    "BrainDumpAddedEvent",
+                    "BrainDumpStatusChangedEvent",
+                    "BrainDumpRemovedEvent",
+                }:
+                    brain_dump_items = []
+                    try:
+                        brain_dump_items = await self.brain_dump_ro_repo.search(
+                            value_objects.BrainDumpQuery(date=day.date)
+                        )
+                    except Exception:
+                        brain_dump_items = []
+
+                    day_schema = map_day_to_schema(
+                        day, brain_dump_items=brain_dump_items
+                    )
+                else:
+                    day_schema = map_day_to_schema(day)
                 return day_schema.model_dump(mode="json")
 
             return None
         except Exception:
-            # If we can't load the entity, return None
-            # The change will still be sent but without entity_data
             return None

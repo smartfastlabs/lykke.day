@@ -50,6 +50,22 @@ class RecordRoutineDefinitionActionHandler(
                 )
             )
 
+            # Only apply "punt" / "complete" to tasks that haven't already been
+            # punted or completed.
+            if command.action.type in (
+                value_objects.ActionType.PUNT,
+                value_objects.ActionType.COMPLETE,
+            ):
+                tasks = [
+                    task
+                    for task in tasks
+                    if task.status
+                    not in (
+                        value_objects.TaskStatus.PUNT,
+                        value_objects.TaskStatus.COMPLETE,
+                    )
+                ]
+
             # Record the action on each task
             updated_tasks: list[TaskEntity] = []
             for task in tasks:

@@ -572,6 +572,7 @@ async def _handle_realtime_events(
                                     await incremental_changes_handler._load_entity_data(
                                         domain_event.entity_type,
                                         entity_id,
+                                        activity_type=activity_type,
                                         user_timezone=user_timezone,
                                     )
                                 )

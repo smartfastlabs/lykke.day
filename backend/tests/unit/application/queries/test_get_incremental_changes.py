@@ -159,7 +159,10 @@ class TestLoadEntityData:
         handler_with_mocks.task_ro_repo.get = AsyncMock(return_value=mock_task)
 
         result = await handler_with_mocks._load_entity_data(
-            "task", task_id, user_timezone="America/Chicago"
+            "task",
+            task_id,
+            activity_type="TaskUpdatedEvent",
+            user_timezone="America/Chicago",
         )
 
         assert result is not None
@@ -191,7 +194,10 @@ class TestLoadEntityData:
 
         # Use the correct entity type (no underscore)
         result = await handler_with_mocks._load_entity_data(
-            "calendarentry", entry_id, user_timezone="America/Chicago"
+            "calendarentry",
+            entry_id,
+            activity_type="EntityUpdatedEvent",
+            user_timezone="America/Chicago",
         )
 
         assert result is not None
@@ -215,12 +221,75 @@ class TestLoadEntityData:
         handler_with_mocks.brain_dump_ro_repo.search = AsyncMock(return_value=[])
 
         result = await handler_with_mocks._load_entity_data(
-            "day", day_id, user_timezone="America/Chicago"
+            "day",
+            day_id,
+            activity_type="DayUpdatedEvent",
+            user_timezone="America/Chicago",
         )
 
         assert result is not None
         assert result["date"] == "2025-01-15"
         handler_with_mocks.day_ro_repo.get.assert_called_once_with(day_id)
+
+    @pytest.mark.asyncio
+    async def test_load_day_entity_data_survives_brain_dump_failures(
+        self, handler_with_mocks
+    ):
+        """Day entity loading for non-brain-dump events should not query brain dumps.
+
+        Regression for: alarm triggers (which update the day) not reaching the
+        frontend because we accidentally coupled *all* day updates to loading
+        brain dumps.
+        """
+        day_id = uuid4()
+        mock_day = DayEntity(
+            id=day_id,
+            user_id=uuid4(),
+            date=dt_date(2025, 1, 15),
+            reminders=[],
+        )
+        handler_with_mocks.day_ro_repo.get = AsyncMock(return_value=mock_day)
+        handler_with_mocks.brain_dump_ro_repo.search = AsyncMock(
+            side_effect=RuntimeError("db error")
+        )
+
+        result = await handler_with_mocks._load_entity_data(
+            "day",
+            day_id,
+            activity_type="AlarmTriggeredEvent",
+            user_timezone="America/Chicago",
+        )
+
+        assert result is not None
+        assert result["date"] == "2025-01-15"
+        # For non-brain-dump updates we should not be querying brain dumps at all.
+        handler_with_mocks.brain_dump_ro_repo.search.assert_not_called()
+        assert "alarms" in result
+
+    @pytest.mark.asyncio
+    async def test_load_day_entity_data_loads_brain_dumps_for_brain_dump_events(
+        self, handler_with_mocks
+    ):
+        """Brain dump events should still include brain dumps in the day payload."""
+        day_id = uuid4()
+        mock_day = DayEntity(
+            id=day_id,
+            user_id=uuid4(),
+            date=dt_date(2025, 1, 15),
+            reminders=[],
+        )
+        handler_with_mocks.day_ro_repo.get = AsyncMock(return_value=mock_day)
+        handler_with_mocks.brain_dump_ro_repo.search = AsyncMock(return_value=[])
+
+        result = await handler_with_mocks._load_entity_data(
+            "day",
+            day_id,
+            activity_type="BrainDumpAddedEvent",
+            user_timezone="America/Chicago",
+        )
+
+        assert result is not None
+        handler_with_mocks.brain_dump_ro_repo.search.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_load_routine_definition_entity_data(self, handler_with_mocks):
@@ -243,6 +312,7 @@ class TestLoadEntityData:
         result = await handler_with_mocks._load_entity_data(
             "routine_definition",
             routine_definition_id,
+            activity_type="RoutineDefinitionUpdatedEvent",
             user_timezone="America/Chicago",
         )
 
@@ -253,7 +323,10 @@ class TestLoadEntityData:
     async def test_load_unknown_entity_type_returns_none(self, handler_with_mocks):
         """Test that unknown entity types return None."""
         result = await handler_with_mocks._load_entity_data(
-            "unknown_type", uuid4(), user_timezone="America/Chicago"
+            "unknown_type",
+            uuid4(),
+            activity_type="EntityUpdatedEvent",
+            user_timezone="America/Chicago",
         )
         assert result is None
 
@@ -268,7 +341,10 @@ class TestLoadEntityData:
         """
         # This should NOT call any repository because 'calendar_entry' is not recognized
         result = await handler_with_mocks._load_entity_data(
-            "calendar_entry", uuid4(), user_timezone="America/Chicago"
+            "calendar_entry",
+            uuid4(),
+            activity_type="EntityUpdatedEvent",
+            user_timezone="America/Chicago",
         )
         assert result is None
 
