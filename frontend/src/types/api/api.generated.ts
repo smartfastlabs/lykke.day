@@ -221,7 +221,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/me/today/reminders": {
+    "/me/tomorrow/ensure-scheduled": {
         parameters: {
             query?: never;
             header?: never;
@@ -231,17 +231,17 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Add Reminder To Today
-         * @description Add a reminder to today.
+         * Ensure Tomorrow Scheduled
+         * @description Ensure tomorrow exists and is scheduled. Returns the Day.
          */
-        post: operations["add_reminder_to_today_me_today_reminders_post"];
+        post: operations["ensure_tomorrow_scheduled_me_tomorrow_ensure_scheduled_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/me/today/reminders/{reminder_id}": {
+    "/me/tomorrow/reschedule": {
         parameters: {
             query?: never;
             header?: never;
@@ -249,20 +249,120 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
-        post?: never;
         /**
-         * Remove Reminder From Today
-         * @description Remove a reminder from today.
+         * Reschedule Tomorrow
+         * @description Reschedule tomorrow by cleaning up and recreating all non-adhoc tasks.
          */
-        delete: operations["remove_reminder_from_today_me_today_reminders__reminder_id__delete"];
+        put: operations["reschedule_tomorrow_me_tomorrow_reschedule_put"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/tomorrow/day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         /**
-         * Update Today Reminder Status
-         * @description Update a reminder's status for today.
+         * Get Tomorrow Day
+         * @description Get tomorrow's Day (requires it to be scheduled).
          */
-        patch: operations["update_today_reminder_status_me_today_reminders__reminder_id__patch"];
+        get: operations["get_tomorrow_day_me_tomorrow_day_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/tomorrow/calendar-entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Tomorrow Calendar Entries
+         * @description Get tomorrow's calendar entries (requires it to be scheduled).
+         */
+        get: operations["get_tomorrow_calendar_entries_me_tomorrow_calendar_entries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/tomorrow/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Tomorrow Tasks
+         * @description Get tomorrow's tasks (requires it to be scheduled).
+         */
+        get: operations["get_tomorrow_tasks_me_tomorrow_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/tomorrow/routines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Tomorrow Routines
+         * @description Get tomorrow's routines (requires it to be scheduled).
+         */
+        get: operations["get_tomorrow_routines_me_tomorrow_routines_get"];
+        put?: never;
+        /**
+         * Add Routine To Tomorrow
+         * @description Add a routine's tasks to tomorrow (creates tomorrow's routine if needed).
+         */
+        post: operations["add_routine_to_tomorrow_me_tomorrow_routines_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/tomorrow/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Tomorrow Context
+         * @description Get tomorrow's full DayContext snapshot (requires it to be scheduled).
+         */
+        get: operations["get_tomorrow_context_me_tomorrow_context_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/me/today/alarms": {
@@ -287,6 +387,50 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/me/tomorrow/alarms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Alarm To Tomorrow
+         * @description Add an alarm to tomorrow.
+         */
+        post: operations["add_alarm_to_tomorrow_me_tomorrow_alarms_post"];
+        /**
+         * Remove Alarm From Tomorrow
+         * @description Remove an alarm from tomorrow.
+         */
+        delete: operations["remove_alarm_from_tomorrow_me_tomorrow_alarms_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/tomorrow/alarms/{alarm_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Alarm Status For Tomorrow
+         * @description Update an alarm's status for tomorrow.
+         */
+        patch: operations["update_alarm_status_for_tomorrow_me_tomorrow_alarms__alarm_id__patch"];
         trace?: never;
     };
     "/me/today/alarms/{alarm_id}": {
@@ -712,6 +856,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tasks/{_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Task
+         * @description Delete a task.
+         */
+        delete: operations["delete_task_tasks___id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tasks/adhoc": {
         parameters: {
             query?: never;
@@ -723,7 +887,7 @@ export interface paths {
         put?: never;
         /**
          * Create Adhoc Task
-         * @description Create an adhoc task.
+         * @description Create an adhoc or reminder task.
          */
         post: operations["create_adhoc_task_tasks_adhoc_post"];
         delete?: never;
@@ -1777,7 +1941,7 @@ export interface components {
         ActionType: "COMPLETE" | "DELETE" | "EDIT" | "NOTIFY" | "PAUSE" | "PUNT" | "RESUME" | "SNOOZE" | "START" | "VIEW";
         /**
          * AdhocTaskCreateSchema
-         * @description API schema for creating adhoc tasks.
+         * @description API schema for creating adhoc or reminder tasks.
          */
         AdhocTaskCreateSchema: {
             /**
@@ -1787,6 +1951,8 @@ export interface components {
             scheduled_date: string;
             /** Name */
             name: string;
+            /** @default ADHOC */
+            type: components["schemas"]["TaskType"];
             /** Description */
             description?: string | null;
             category: components["schemas"]["TaskCategory"];
@@ -2262,8 +2428,6 @@ export interface components {
             /** Tags */
             tags?: components["schemas"]["DayTag"][];
             template?: components["schemas"]["DayTemplateSchema"] | null;
-            /** Reminders */
-            reminders?: components["schemas"]["ReminderSchema"][];
             /** Alarms */
             alarms?: components["schemas"]["AlarmSchema"][];
             /** Brain Dump Items */
@@ -2483,11 +2647,10 @@ export interface components {
          * @description Request body for early access opt-in.
          */
         EarlyAccessRequestSchema: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
+            /** Email */
+            email?: string | null;
+            /** Phone Number */
+            phone_number?: string | null;
         };
         /** ErrorModel */
         ErrorModel: {
@@ -2512,8 +2675,6 @@ export interface components {
             factoid_type: components["schemas"]["FactoidType"];
             /** @default normal */
             criticality: components["schemas"]["FactoidCriticality"];
-            /** Conversation Id */
-            conversation_id?: string | null;
             /**
              * Ai Suggested
              * @default false
@@ -2545,14 +2706,10 @@ export interface components {
             created_before?: string | null;
             /** Created After */
             created_after?: string | null;
-            /** Conversation Id */
-            conversation_id?: string | null;
             /** Factoid Type */
             factoid_type?: string | null;
             /** Criticality */
             criticality?: string | null;
-            /** Is Global */
-            is_global?: boolean | null;
         };
         /**
          * FactoidSchema
@@ -2566,8 +2723,6 @@ export interface components {
              * Format: uuid
              */
             user_id: string;
-            /** Conversation Id */
-            conversation_id?: string | null;
             /** Factoid Type */
             factoid_type: string;
             /** Criticality */
@@ -2621,8 +2776,6 @@ export interface components {
             content?: string | null;
             factoid_type?: components["schemas"]["FactoidType"] | null;
             criticality?: components["schemas"]["FactoidCriticality"] | null;
-            /** Conversation Id */
-            conversation_id?: string | null;
             /** User Confirmed */
             user_confirmed?: boolean | null;
         };
@@ -3156,25 +3309,6 @@ export interface components {
             day_number?: number | null;
         };
         /**
-         * ReminderSchema
-         * @description API schema for Reminder value object.
-         */
-        ReminderSchema: {
-            /** Id */
-            id?: string | null;
-            /** Name */
-            name: string;
-            status: components["schemas"]["ReminderStatus"];
-            /** Created At */
-            created_at?: string | null;
-        };
-        /**
-         * ReminderStatus
-         * @description Status of a reminder.
-         * @enum {string}
-         */
-        ReminderStatus: "INCOMPLETE" | "COMPLETE" | "PUNT";
-        /**
          * RoutineDefinitionCreateSchema
          * @description API schema for creating a RoutineDefinition entity.
          */
@@ -3550,7 +3684,7 @@ export interface components {
          * TaskType
          * @enum {string}
          */
-        TaskType: "ADHOC" | "MEAL" | "WORK" | "MEETING" | "EXERCISE" | "EVENT" | "SOCIAL" | "CHORE" | "ERRAND" | "SHOPPING" | "PERSONAL_CARE" | "ACTIVITY" | "ENTERTAINMENT" | "LEARNING" | "COMMUTE" | "TRAVEL" | "APPOINTMENT" | "COMMUNICATION" | "FINANCIAL" | "MAINTENANCE" | "PLANNING" | "TECHNOLOGY";
+        TaskType: "ADHOC" | "MEAL" | "WORK" | "MEETING" | "EXERCISE" | "EVENT" | "SOCIAL" | "CHORE" | "ERRAND" | "SHOPPING" | "PERSONAL_CARE" | "ACTIVITY" | "ENTERTAINMENT" | "LEARNING" | "COMMUTE" | "TRAVEL" | "APPOINTMENT" | "COMMUNICATION" | "FINANCIAL" | "MAINTENANCE" | "PLANNING" | "TECHNOLOGY" | "REMINDER";
         /**
          * TimeBlockCategory
          * @enum {string}
@@ -3785,10 +3919,6 @@ export interface components {
             /** Is Verified */
             is_verified: boolean;
             settings: components["schemas"]["UserSettingsSchema"];
-            /** Default Conversation Id */
-            default_conversation_id?: string | null;
-            /** Sms Conversation Id */
-            sms_conversation_id?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -3859,10 +3989,6 @@ export interface components {
             /** Is Verified */
             is_verified?: boolean | null;
             settings?: components["schemas"]["UserSettingsUpdateSchema"] | null;
-            /** Default Conversation Id */
-            default_conversation_id?: string | null;
-            /** Sms Conversation Id */
-            sms_conversation_id?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -4286,10 +4412,130 @@ export interface operations {
             };
         };
     };
-    add_reminder_to_today_me_today_reminders_post: {
+    ensure_tomorrow_scheduled_me_tomorrow_ensure_scheduled_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DaySchema"];
+                };
+            };
+        };
+    };
+    reschedule_tomorrow_me_tomorrow_reschedule_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DaySchema"];
+                };
+            };
+        };
+    };
+    get_tomorrow_day_me_tomorrow_day_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DaySchema"];
+                };
+            };
+        };
+    };
+    get_tomorrow_calendar_entries_me_tomorrow_calendar_entries_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarEntrySchema"][];
+                };
+            };
+        };
+    };
+    get_tomorrow_tasks_me_tomorrow_tasks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSchema"][];
+                };
+            };
+        };
+    };
+    get_tomorrow_routines_me_tomorrow_routines_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutineSchema"][];
+                };
+            };
+        };
+    };
+    add_routine_to_tomorrow_me_tomorrow_routines_post: {
         parameters: {
             query: {
-                name: string;
+                routine_definition_id: string;
             };
             header?: never;
             path?: never;
@@ -4303,7 +4549,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReminderSchema"];
+                    "application/json": components["schemas"]["TaskSchema"][];
                 };
             };
             /** @description Validation Error */
@@ -4317,13 +4563,11 @@ export interface operations {
             };
         };
     };
-    remove_reminder_from_today_me_today_reminders__reminder_id__delete: {
+    get_tomorrow_context_me_tomorrow_context_get: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                reminder_id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -4334,49 +4578,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReminderSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_today_reminder_status_me_today_reminders__reminder_id__patch: {
-        parameters: {
-            query: {
-                status: components["schemas"]["ReminderStatus"];
-            };
-            header?: never;
-            path: {
-                reminder_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReminderSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["DayContextSchema"];
                 };
             };
         };
@@ -4425,6 +4627,108 @@ export interface operations {
             };
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlarmSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_alarm_to_tomorrow_me_tomorrow_alarms_post: {
+        parameters: {
+            query: {
+                time: string;
+                name?: string | null;
+                alarm_type?: components["schemas"]["AlarmType"];
+                url?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlarmSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_alarm_from_tomorrow_me_tomorrow_alarms_delete: {
+        parameters: {
+            query: {
+                name: string;
+                time: string;
+                alarm_type?: components["schemas"]["AlarmType"] | null;
+                url?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlarmSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_alarm_status_for_tomorrow_me_tomorrow_alarms__alarm_id__patch: {
+        parameters: {
+            query: {
+                status: components["schemas"]["AlarmStatus"];
+                snoozed_until?: string | null;
+            };
+            header?: never;
+            path: {
+                alarm_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -5337,6 +5641,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TaskSchema"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_task_tasks___id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                _id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

@@ -34,7 +34,12 @@ from .google import (
     HandleGoogleLoginCallbackHandler,
     HandleGoogleLoginCallbackResult,
 )
-from .message import ReceiveSmsMessageCommand, ReceiveSmsMessageHandler
+from .message import (
+    ProcessInboundSmsCommand,
+    ProcessInboundSmsHandler,
+    ReceiveSmsMessageCommand,
+    ReceiveSmsMessageHandler,
+)
 from .notifications import SmartNotificationCommand, SmartNotificationHandler
 from .task import (
     CreateAdhocTaskCommand,
@@ -66,6 +71,8 @@ __all__ = [
     "HandleGoogleLoginCallbackResult",
     "ProcessBrainDumpCommand",
     "ProcessBrainDumpHandler",
+    "ProcessInboundSmsCommand",
+    "ProcessInboundSmsHandler",
     "ReceiveSmsMessageCommand",
     "ReceiveSmsMessageHandler",
     "RecordRoutineActionCommand",

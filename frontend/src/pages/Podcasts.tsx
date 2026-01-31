@@ -26,7 +26,7 @@ const podcasts: MediaItem[] = [
     title: "Ten Percent Happier",
     creator: "Dan Harris",
     summary:
-      "Meditation for skeptics—conversations with mindfulness teachers, therapists, and scientists on building a calmer, less reactive life.",
+      "Meditation for skeptics—episodes with mindfulness teachers, therapists, and scientists on building a calmer, less reactive life.",
     url: "https://www.danharris.com/s/10-happier",
     vibe: "practical meditation",
     thumbnail: "/images/covers/podcasts/10-percent-happier.webp",
@@ -53,7 +53,7 @@ const podcasts: MediaItem[] = [
     title: "On Being",
     creator: "Krista Tippett",
     summary:
-      "Intimate conversations with poets, theologians, and thinkers on meaning, resilience, and what it means to be human—spacious, contemplative, and deeply grounding.",
+      "Intimate episodes with poets, theologians, and thinkers on meaning, resilience, and what it means to be human—spacious, contemplative, and deeply grounding.",
     url: "https://onbeing.org/series/podcast/",
     vibe: "meaning & contemplation",
     thumbnail: "/images/covers/podcasts/on-being.webp",
@@ -71,7 +71,7 @@ const podcasts: MediaItem[] = [
     title: "Terrible, Thanks for Asking",
     creator: "Nora McInerny",
     summary:
-      "Honest, funny, heartbreaking conversations about grief, hardship, and the messy parts of being human—permission to not be okay.",
+      "Honest, funny, heartbreaking episodes about grief, hardship, and the messy parts of being human—permission to not be okay.",
     url: "https://feelingsand.co/podcasts/terrible-thanks-for-asking/",
     vibe: "honest emotions",
     thumbnail: "/images/covers/podcasts/terrible-thanks-for-asking.webp",
@@ -80,7 +80,7 @@ const podcasts: MediaItem[] = [
     title: "We Can Do Hard Things",
     creator: "Glennon Doyle",
     summary:
-      "Author Glennon Doyle and her family navigating relationships, identity, and courage—warm, vulnerable conversations on becoming who you are.",
+      "Author Glennon Doyle and her family navigating relationships, identity, and courage—warm, vulnerable episodes on becoming who you are.",
     url: "https://momastery.com/podcast/",
     vibe: "brave living",
     thumbnail: "/images/covers/podcasts/we-can-do-hard-things.webp",
@@ -101,15 +101,15 @@ const Podcasts: Component = () => {
     <>
       <SEO
         title="Podcasts We Recommend"
-        description="Conversations on attention, burnout recovery, and building a kinder relationship with productivity. Brilliant companions for in-between moments that explore mindfulness and intentional living."
+        description="Episodes on attention, burnout recovery, and building a kinder relationship with productivity. Brilliant companions for in-between moments that explore mindfulness and intentional living."
         path="/podcasts"
       />
       <MediaPage
-      title="Lykke.day Podcasts"
-      subtitle="lykke.day podcasts"
-      description="These podcasts accompanied me through my journey to adapting to life after covid—but they're just a starting point.<br><br>Podcasts are brilliant companions for in-between moments: walking in nature, commuting, doing dishes. Learning about mindfulness while watching trees sway is different than staring at a screen. They're intimate and conversational.<br><br>But remember: you can listen to every episode about living better and still not change a thing. Let these voices inspire you, then step outside and practice what resonates."
-      items={podcasts}
-    />
+        title="Lykke.day Podcasts"
+        subtitle="lykke.day podcasts"
+        description="These podcasts accompanied me through my journey to adapting to life after covid—but they're just a starting point.<br><br>Podcasts are brilliant companions for in-between moments: walking in nature, commuting, doing dishes. Learning about mindfulness while watching trees sway is different than staring at a screen. They're intimate and story-driven.<br><br>But remember: you can listen to every episode about living better and still not change a thing. Let these voices inspire you, then step outside and practice what resonates."
+        items={podcasts}
+      />
     </>
   );
 };

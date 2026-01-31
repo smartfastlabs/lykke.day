@@ -17,7 +17,6 @@ def factoid() -> FactoidEntity:
     return FactoidEntity(
         id=uuid4(),
         user_id=uuid4(),
-        conversation_id=uuid4(),
         factoid_type=value_objects.FactoidType.EPISODIC,
         criticality=value_objects.FactoidCriticality.NORMAL,
         content="User mentioned they love hiking on weekends.",
@@ -36,7 +35,6 @@ def test_factoid_creation() -> None:
     )
 
     assert factoid.user_id == user_id
-    assert factoid.conversation_id is None  # Global factoid
     assert factoid.factoid_type == value_objects.FactoidType.SEMANTIC
     assert factoid.criticality == value_objects.FactoidCriticality.NORMAL
     assert factoid.content == content
@@ -147,29 +145,6 @@ def test_mark_ai_suggested(factoid: FactoidEntity) -> None:
 
     assert marked.ai_suggested is True
     assert factoid.ai_suggested is False  # Original unchanged
-
-
-def test_global_vs_conversation_factoid() -> None:
-    """Test distinction between global and conversation-specific factoids."""
-    conversation_id = uuid4()
-
-    # Conversation-specific factoid
-    conversation_factoid = FactoidEntity(
-        user_id=uuid4(),
-        conversation_id=conversation_id,
-        factoid_type=value_objects.FactoidType.EPISODIC,
-        content="User mentioned this in conversation",
-    )
-    assert conversation_factoid.conversation_id == conversation_id
-
-    # Global factoid
-    global_factoid = FactoidEntity(
-        user_id=uuid4(),
-        conversation_id=None,
-        factoid_type=value_objects.FactoidType.SEMANTIC,
-        content="User's general preference",
-    )
-    assert global_factoid.conversation_id is None
 
 
 def test_factoid_types() -> None:

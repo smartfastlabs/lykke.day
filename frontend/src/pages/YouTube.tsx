@@ -26,7 +26,7 @@ const channels: MediaItem[] = [
     title: "HealthyGamerGG",
     creator: "Dr. Alok Kanojia",
     summary:
-      "A Harvard-trained psychiatrist blending modern mental health science with ancient yogic wisdom—conversations on gaming, addiction, motivation, and finding purpose.",
+      "A Harvard-trained psychiatrist blending modern mental health science with ancient yogic wisdom—discussions on gaming, addiction, motivation, and finding purpose.",
     url: "https://www.youtube.com/@HealthyGamerGG",
     vibe: "mental wellness",
     thumbnail: "/images/covers/youtube/healthy-gamer.jpg",
@@ -96,11 +96,11 @@ const YouTube: Component = () => {
         path="/youtube"
       />
       <MediaPage
-      title="Lykke.day YouTube Channels"
-      subtitle="lykke.day youtube"
-      description="These channels captivated me during my journey to adapting to life after covid—but they're just a starting point.<br><br>YouTube is incredible for visual learning and making complex ideas click. But here's the tradeoff: it's easy to lose three hours in a rabbit hole, emerging enlightened about dopamine regulation but having done nothing with your actual day.<br><br>YouTube can inspire change or become a way to avoid it. Watch, learn, get excited—then close the tab and go live. Consuming content about intentional living isn't the same as living intentionally."
-      items={channels}
-    />
+        title="Lykke.day YouTube Channels"
+        subtitle="lykke.day youtube"
+        description="These channels captivated me during my journey to adapting to life after covid—but they're just a starting point.<br><br>YouTube is incredible for visual learning and making complex ideas click. But here's the tradeoff: it's easy to lose three hours in a rabbit hole, emerging enlightened about dopamine regulation but having done nothing with your actual day.<br><br>YouTube can inspire change or become a way to avoid it. Watch, learn, get excited—then close the tab and go live. Consuming content about intentional living isn't the same as living intentionally."
+        items={channels}
+      />
     </>
   );
 };

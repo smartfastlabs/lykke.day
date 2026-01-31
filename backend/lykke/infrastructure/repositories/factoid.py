@@ -30,21 +30,11 @@ class FactoidRepository(
         stmt = super().build_query(query)
 
         # Add factoid-specific filtering
-        if query.conversation_id is not None:
-            stmt = stmt.where(self.table.c.conversation_id == query.conversation_id)
-
         if query.factoid_type is not None:
             stmt = stmt.where(self.table.c.factoid_type == query.factoid_type)
 
         if query.criticality is not None:
             stmt = stmt.where(self.table.c.criticality == query.criticality)
-
-        # Filter for global vs conversation-specific factoids
-        if query.is_global is not None:
-            if query.is_global:
-                stmt = stmt.where(self.table.c.conversation_id.is_(None))
-            else:
-                stmt = stmt.where(self.table.c.conversation_id.isnot(None))
 
         return stmt
 
@@ -54,7 +44,6 @@ class FactoidRepository(
         return {
             "id": factoid.id,
             "user_id": factoid.user_id,
-            "conversation_id": factoid.conversation_id,
             "factoid_type": factoid.factoid_type.value,
             "criticality": factoid.criticality.value,
             "content": factoid.content,

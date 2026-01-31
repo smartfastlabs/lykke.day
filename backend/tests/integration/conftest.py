@@ -10,11 +10,10 @@ from lykke.domain.entities import (
     AuthTokenEntity,
     BotPersonalityEntity,
     CalendarEntity,
-    ConversationEntity,
     UserEntity,
 )
 from lykke.domain.entities.day_template import DayTemplateEntity
-from lykke.domain.value_objects.ai_chat import ConversationChannel, LLMProvider
+from lykke.domain.value_objects.ai_chat import LLMProvider
 from lykke.domain.value_objects.user import UserSetting
 from lykke.infrastructure.repositories import (
     AuditLogRepository,
@@ -23,16 +22,15 @@ from lykke.infrastructure.repositories import (
     BrainDumpRepository,
     CalendarEntryRepository,
     CalendarRepository,
-    ConversationRepository,
     DayRepository,
     DayTemplateRepository,
     FactoidRepository,
     MessageRepository,
     PushSubscriptionRepository,
     RoutineDefinitionRepository,
+    TacticRepository,
     TaskDefinitionRepository,
     TaskRepository,
-    TacticRepository,
     TimeBlockDefinitionRepository,
     TriggerRepository,
     UserRepository,
@@ -249,14 +247,8 @@ async def bot_personality_repo(test_user):
 
 
 @pytest_asyncio.fixture
-async def conversation_repo(test_user):
-    """ConversationRepository scoped to test_user."""
-    return ConversationRepository(user_id=test_user.id)
-
-
-@pytest_asyncio.fixture
 async def message_repo(test_user):
-    """MessageRepository (not user-scoped directly)."""
+    """MessageRepository scoped to test_user."""
     return MessageRepository(user_id=test_user.id)
 
 
@@ -298,40 +290,3 @@ async def create_bot_personality(bot_personality_repo, test_user):
         return await bot_personality_repo.put(personality)
 
     return _create_bot_personality
-
-
-@pytest_asyncio.fixture
-async def conversation(conversation_repo, test_user, bot_personality):
-    """Create a test conversation."""
-    conv = ConversationEntity(
-        id=uuid4(),
-        user_id=test_user.id,
-        bot_personality_id=bot_personality.id,
-        channel=ConversationChannel.IN_APP,
-        llm_provider=LLMProvider.ANTHROPIC,
-    )
-    return await conversation_repo.put(conv)
-
-
-@pytest_asyncio.fixture
-async def create_conversation(conversation_repo, test_user, bot_personality):
-    """Factory to create conversations for a user."""
-
-    async def _create_conversation(
-        *,
-        user_id: UUID | None = None,
-        bot_personality_id: UUID | None = None,
-        **kwargs,
-    ) -> ConversationEntity:
-        if user_id is None:
-            user_id = test_user.id
-        if bot_personality_id is None:
-            bot_personality_id = bot_personality.id
-        conv = ConversationEntity(
-            user_id=user_id,
-            bot_personality_id=bot_personality_id,
-            **kwargs,
-        )
-        return await conversation_repo.put(conv)
-
-    return _create_conversation

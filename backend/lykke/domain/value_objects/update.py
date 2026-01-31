@@ -105,8 +105,6 @@ class UserUpdateObject(BaseUpdateObject):
     is_verified: bool | None = None
     settings_update: UserSettingUpdate | None = None
     status: UserStatus | None = None
-    default_conversation_id: UUID | None = None
-    sms_conversation_id: UUID | None = None
 
 
 @dataclass(kw_only=True)
@@ -204,19 +202,10 @@ class BotPersonalityUpdateObject(BaseUpdateObject):
 
 
 @dataclass(kw_only=True)
-class ConversationUpdateObject(BaseUpdateObject):
-    """Update object for Conversation entity."""
-
-    status: str | None = None  # ConversationStatus enum as string
-    context: dict | None = None
-
-
-@dataclass(kw_only=True)
 class FactoidUpdateObject(BaseUpdateObject):
     """Update object for Factoid entity."""
 
     content: str | None = None
     factoid_type: FactoidType | None = None
     criticality: FactoidCriticality | None = None
-    conversation_id: UUID | None = None
     user_confirmed: bool | None = None

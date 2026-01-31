@@ -19,7 +19,6 @@ from lykke.application.repositories import (
     CalendarEntryRepositoryReadOnlyProtocol,
     CalendarEntrySeriesRepositoryReadOnlyProtocol,
     CalendarRepositoryReadOnlyProtocol,
-    ConversationRepositoryReadOnlyProtocol,
     DayRepositoryReadOnlyProtocol,
     DayTemplateRepositoryReadOnlyProtocol,
     FactoidRepositoryReadOnlyProtocol,
@@ -70,7 +69,6 @@ class UnitOfWorkProtocol(Protocol):
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
     calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
-    conversation_ro_repo: ConversationRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
     factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
@@ -232,7 +230,6 @@ class ReadOnlyRepositories(Protocol):
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
     calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
-    conversation_ro_repo: ConversationRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
     factoid_ro_repo: FactoidRepositoryReadOnlyProtocol

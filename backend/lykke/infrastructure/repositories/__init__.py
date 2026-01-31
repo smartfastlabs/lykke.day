@@ -5,7 +5,6 @@ from .brain_dump import BrainDumpRepository
 from .calendar import CalendarRepository
 from .calendar_entry import CalendarEntryRepository
 from .calendar_entry_series import CalendarEntrySeriesRepository
-from .conversation import ConversationRepository
 from .day import DayRepository
 from .day_template import DayTemplateRepository
 from .factoid import FactoidRepository
@@ -30,7 +29,6 @@ __all__ = [
     "CalendarEntryRepository",
     "CalendarEntrySeriesRepository",
     "CalendarRepository",
-    "ConversationRepository",
     "DayRepository",
     "DayTemplateRepository",
     "FactoidRepository",

@@ -56,13 +56,6 @@ class UserRepository(BaseRepository[UserEntity, value_objects.UserQuery]):
         else:
             row["settings"] = dataclass_to_json_dict(value_objects.UserSetting())
 
-        # Handle conversation IDs
-        if hasattr(user, "default_conversation_id"):
-            row["default_conversation_id"] = user.default_conversation_id
-
-        if hasattr(user, "sms_conversation_id"):
-            row["sms_conversation_id"] = user.sms_conversation_id
-
         # Set timestamps
         if hasattr(user, "created_at") and user.created_at:
             row["created_at"] = user.created_at

@@ -63,11 +63,6 @@ async def twilio_sms_webhook(
         logger.warning("No user found for inbound SMS from {}", from_number)
         return Response(status_code=200)
 
-    conversation_id = user.sms_conversation_id or user.default_conversation_id
-    if conversation_id is None:
-        logger.warning("User {} has no SMS conversation configured", user.id)
-        return Response(status_code=200)
-
     factory = CommandHandlerFactory(
         user_id=user.id,
         ro_repo_factory=ro_repo_factory,
@@ -76,7 +71,6 @@ async def twilio_sms_webhook(
     handler = factory.create(ReceiveSmsMessageHandler)
     await handler.handle(
         ReceiveSmsMessageCommand(
-            conversation_id=conversation_id,
             from_number=from_number,
             to_number=to_number,
             body=body,

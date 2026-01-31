@@ -12,13 +12,14 @@ from .base import BaseEntityObject
 
 @dataclass(kw_only=True)
 class MessageEntity(BaseEntityObject):
-    """Message entity representing a single message in a conversation."""
+    """Message entity representing a single message."""
 
-    user_id: UUID | None = None
-    conversation_id: UUID
+    user_id: UUID
     role: value_objects.MessageRole
+    type: value_objects.MessageType = value_objects.MessageType.UNKNOWN
     content: str
     meta: dict[str, Any] = field(default_factory=dict)  # Provider-specific metadata
+    llm_run_result: value_objects.LLMRunResultSnapshot | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def get_content_preview(self, max_length: int = 100) -> str:

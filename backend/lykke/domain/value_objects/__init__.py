@@ -1,11 +1,10 @@
 from .action import Action, ActionType
 from .ai_chat import (
-    ConversationChannel,
-    ConversationStatus,
     FactoidCriticality,
     FactoidType,
     LLMProvider,
     MessageRole,
+    MessageType,
 )
 from .base import BaseRequestObject, BaseResponseObject, BaseValueObject
 from .calendar_subscription import CalendarSubscription
@@ -39,7 +38,6 @@ from .query import (
     CalendarEntryQuery,
     CalendarEntrySeriesQuery,
     CalendarQuery,
-    ConversationQuery,
     DateQuery,
     DayQuery,
     DayTemplateQuery,
@@ -87,7 +85,6 @@ from .update import (
     CalendarEntrySeriesUpdateObject,
     CalendarEntryUpdateObject,
     CalendarUpdateObject,
-    ConversationUpdateObject,
     DayTemplateUpdateObject,
     DayUpdateObject,
     FactoidUpdateObject,
@@ -129,10 +126,6 @@ __all__ = [
     "CalendarQuery",
     "CalendarSubscription",
     "CalendarUpdateObject",
-    "ConversationChannel",
-    "ConversationQuery",
-    "ConversationStatus",
-    "ConversationUpdateObject",
     "DateQuery",
     "DayContext",
     "DayMode",
@@ -158,6 +151,7 @@ __all__ = [
     "LLMToolCallResultSnapshot",
     "MessageQuery",
     "MessageRole",
+    "MessageType",
     "NotificationAction",
     "NotificationDecision",
     "NotificationPayload",

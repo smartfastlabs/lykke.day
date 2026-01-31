@@ -44,7 +44,6 @@ function getEventCluster(eventType: string): string {
   if (lower.startsWith("trigger") || lower.startsWith("tactic"))
     return "Trigger/Tactic";
   if (lower.startsWith("user")) return "User";
-  if (lower.startsWith("conversation")) return "Chat";
   return "Other";
 }
 

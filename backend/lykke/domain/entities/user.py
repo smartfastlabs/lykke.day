@@ -29,8 +29,6 @@ class UserEntity(BaseEntityObject[UserUpdateObject, "UserUpdatedEvent"]):
     settings: value_objects.UserSetting = field(
         default_factory=value_objects.UserSetting
     )
-    default_conversation_id: UUID | None = None
-    sms_conversation_id: UUID | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime | None = None
 

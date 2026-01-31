@@ -16,6 +16,7 @@ from .common import (
     get_google_gateway,
     get_morning_overview_handler,
     get_process_brain_dump_handler,
+    get_process_inbound_sms_handler,
     get_read_only_repository_factory,
     get_schedule_day_handler,
     get_smart_notification_handler,
@@ -25,6 +26,7 @@ from .common import (
     get_unit_of_work_factory,
     get_user_repository,
 )
+from .inbound_sms import process_inbound_sms_message_task
 from .misc import example_triggered_task, heartbeat_task
 from .new_day import (
     emit_new_day_event_for_all_users_task,
@@ -58,6 +60,7 @@ __all__ = [
     "get_google_gateway",
     "get_morning_overview_handler",
     "get_process_brain_dump_handler",
+    "get_process_inbound_sms_handler",
     "get_read_only_repository_factory",
     "get_schedule_day_handler",
     "get_smart_notification_handler",
@@ -69,6 +72,7 @@ __all__ = [
     "get_user_repository",
     "heartbeat_task",
     "process_brain_dump_item_task",
+    "process_inbound_sms_message_task",
     "register_worker_event_handlers",
     "resubscribe_calendar_task",
     "schedule_all_users_day_task",

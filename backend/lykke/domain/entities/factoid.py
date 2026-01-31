@@ -13,10 +13,9 @@ from .base import BaseEntityObject
 
 @dataclass(kw_only=True)
 class FactoidEntity(BaseEntityObject):
-    """Factoid entity representing a piece of information stored from conversations."""
+    """Factoid entity representing a piece of stored information."""
 
     user_id: UUID
-    conversation_id: UUID | None = None  # None for global factoids
     factoid_type: value_objects.FactoidType
     criticality: value_objects.FactoidCriticality = (
         value_objects.FactoidCriticality.NORMAL
@@ -29,14 +28,6 @@ class FactoidEntity(BaseEntityObject):
     access_count: int = 0
     meta: dict[str, Any] = field(default_factory=dict)  # Additional metadata
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-
-    def is_global(self) -> bool:
-        """Check if this is a global factoid (not tied to a specific conversation).
-
-        Returns:
-            True if conversation_id is None
-        """
-        return self.conversation_id is None
 
     def access(self) -> "FactoidEntity":
         """Record access to this factoid.

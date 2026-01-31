@@ -180,11 +180,6 @@ def serialize_day_context(
                 "content": factoid.content,
                 "factoid_type": factoid.factoid_type.value,
                 "criticality": factoid.criticality.value,
-                "conversation_id": (
-                    str(factoid.conversation_id)
-                    if factoid.conversation_id is not None
-                    else None
-                ),
                 "ai_suggested": factoid.ai_suggested,
                 "user_confirmed": factoid.user_confirmed,
                 "created_at": factoid.created_at.isoformat(),
@@ -195,7 +190,7 @@ def serialize_day_context(
         result["messages"] = [
             {
                 "id": str(message.id),
-                "conversation_id": str(message.conversation_id),
+                "user_id": str(message.user_id),
                 "role": message.role.value,
                 "content": message.content,
                 "meta": message.meta,

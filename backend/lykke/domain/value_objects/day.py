@@ -179,4 +179,3 @@ class LLMPromptContext(DayContext):
     factoids: list["FactoidEntity"] = field(default_factory=list)
     messages: list["MessageEntity"] = field(default_factory=list)
     push_notifications: list["PushNotificationEntity"] = field(default_factory=list)
-    push_notifications: list["PushNotificationEntity"] = field(default_factory=list)

@@ -37,7 +37,7 @@ const Resources: Component = () => {
     {
       title: "Podcasts",
       description:
-        "Conversations on attention, burnout recovery, and building a kinder relationship with productivity.",
+        "Episodes on attention, burnout recovery, and building a kinder relationship with productivity.",
       href: "/podcasts",
       gradient: "from-purple-500/80 to-indigo-600/80",
     },

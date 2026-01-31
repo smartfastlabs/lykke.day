@@ -184,4 +184,3 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
         data = filter_init_false_fields(data, DayEntity)
         data = ensure_datetimes_utc(data, keys=("scheduled_at", "starts_at", "ends_at"))
         return DayEntity(**data)
-        return DayEntity(**data)

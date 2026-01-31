@@ -14,7 +14,6 @@ class WebSocketUserMessageSchema(BaseSchema):
     """Client → Server: User sends a message."""
 
     type: Literal["user_message"] = "user_message"
-    conversation_id: UUID
     content: str
     message_id: UUID | None = None  # Client can provide for idempotency
 

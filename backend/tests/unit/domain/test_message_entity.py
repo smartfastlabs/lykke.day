@@ -13,7 +13,7 @@ def message() -> MessageEntity:
     """Create a test message entity."""
     return MessageEntity(
         id=uuid4(),
-        conversation_id=uuid4(),
+        user_id=uuid4(),
         role=value_objects.MessageRole.USER,
         content="Hello, how are you today?",
     )
@@ -21,16 +21,16 @@ def message() -> MessageEntity:
 
 def test_message_creation() -> None:
     """Test creating a message entity."""
-    conversation_id = uuid4()
+    user_id = uuid4()
     content = "Test message"
 
     message = MessageEntity(
-        conversation_id=conversation_id,
+        user_id=user_id,
         role=value_objects.MessageRole.ASSISTANT,
         content=content,
     )
 
-    assert message.conversation_id == conversation_id
+    assert message.user_id == user_id
     assert message.role == value_objects.MessageRole.ASSISTANT
     assert message.content == content
     assert message.meta == {}
@@ -46,7 +46,7 @@ def test_message_with_metadata() -> None:
     }
 
     message = MessageEntity(
-        conversation_id=uuid4(),
+        user_id=uuid4(),
         role=value_objects.MessageRole.ASSISTANT,
         content="Response with metadata",
         meta=meta_data,
@@ -66,7 +66,7 @@ def test_get_content_preview_long_message() -> None:
     """Test content preview with message longer than max length."""
     long_content = "A" * 200
     message = MessageEntity(
-        conversation_id=uuid4(),
+        user_id=uuid4(),
         role=value_objects.MessageRole.USER,
         content=long_content,
     )
@@ -81,7 +81,7 @@ def test_get_content_preview_exact_length() -> None:
     """Test content preview when content is exactly max length."""
     content = "A" * 100
     message = MessageEntity(
-        conversation_id=uuid4(),
+        user_id=uuid4(),
         role=value_objects.MessageRole.USER,
         content=content,
     )
@@ -95,7 +95,7 @@ def test_get_content_preview_default_length() -> None:
     """Test content preview with default max length of 100."""
     long_content = "B" * 150
     message = MessageEntity(
-        conversation_id=uuid4(),
+        user_id=uuid4(),
         role=value_objects.MessageRole.USER,
         content=long_content,
     )
@@ -107,24 +107,24 @@ def test_get_content_preview_default_length() -> None:
 
 def test_message_roles() -> None:
     """Test all message role types."""
-    conversation_id = uuid4()
+    user_id = uuid4()
 
     user_message = MessageEntity(
-        conversation_id=conversation_id,
+        user_id=user_id,
         role=value_objects.MessageRole.USER,
         content="User message",
     )
     assert user_message.role == value_objects.MessageRole.USER
 
     assistant_message = MessageEntity(
-        conversation_id=conversation_id,
+        user_id=user_id,
         role=value_objects.MessageRole.ASSISTANT,
         content="Assistant message",
     )
     assert assistant_message.role == value_objects.MessageRole.ASSISTANT
 
     system_message = MessageEntity(
-        conversation_id=conversation_id,
+        user_id=user_id,
         role=value_objects.MessageRole.SYSTEM,
         content="System message",
     )
@@ -134,7 +134,7 @@ def test_message_roles() -> None:
 def test_message_immutability() -> None:
     """Test that message entities are immutable (via clone)."""
     original = MessageEntity(
-        conversation_id=uuid4(),
+        user_id=uuid4(),
         role=value_objects.MessageRole.USER,
         content="Original content",
     )

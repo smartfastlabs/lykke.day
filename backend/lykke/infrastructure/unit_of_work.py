@@ -32,7 +32,6 @@ from lykke.domain.entities import (
     CalendarEntity,
     CalendarEntryEntity,
     CalendarEntrySeriesEntity,
-    ConversationEntity,
     DayEntity,
     DayTemplateEntity,
     FactoidEntity,
@@ -71,7 +70,6 @@ from lykke.infrastructure.repositories import (
     CalendarEntryRepository,
     CalendarEntrySeriesRepository,
     CalendarRepository,
-    ConversationRepository,
     DayRepository,
     DayTemplateRepository,
     FactoidRepository,
@@ -111,8 +109,6 @@ if TYPE_CHECKING:
         CalendarEntrySeriesRepositoryReadWriteProtocol,
         CalendarRepositoryReadOnlyProtocol,
         CalendarRepositoryReadWriteProtocol,
-        ConversationRepositoryReadOnlyProtocol,
-        ConversationRepositoryReadWriteProtocol,
         DayRepositoryReadOnlyProtocol,
         DayRepositoryReadWriteProtocol,
         DayTemplateRepositoryReadOnlyProtocol,
@@ -173,7 +169,6 @@ class SqlAlchemyUnitOfWork:
     calendar_entry_ro_repo: CalendarEntryRepositoryReadOnlyProtocol
     calendar_ro_repo: CalendarRepositoryReadOnlyProtocol
     calendar_entry_series_ro_repo: CalendarEntrySeriesRepositoryReadOnlyProtocol
-    conversation_ro_repo: ConversationRepositoryReadOnlyProtocol
     day_ro_repo: DayRepositoryReadOnlyProtocol
     day_template_ro_repo: DayTemplateRepositoryReadOnlyProtocol
     factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
@@ -206,7 +201,6 @@ class SqlAlchemyUnitOfWork:
             "_calendar_entry_series_rw_repo",
         ),
         CalendarEntity: ("calendar_ro_repo", "_calendar_rw_repo"),
-        ConversationEntity: ("conversation_ro_repo", "_conversation_rw_repo"),
         FactoidEntity: ("factoid_ro_repo", "_factoid_rw_repo"),
         MessageEntity: ("message_ro_repo", "_message_rw_repo"),
         PushNotificationEntity: (
@@ -268,9 +262,6 @@ class SqlAlchemyUnitOfWork:
             CalendarEntrySeriesRepositoryReadWriteProtocol | None
         ) = None
         self._calendar_rw_repo: CalendarRepositoryReadWriteProtocol | None = None
-        self._conversation_rw_repo: ConversationRepositoryReadWriteProtocol | None = (
-            None
-        )
         self._day_rw_repo: DayRepositoryReadWriteProtocol | None = None
         self._day_template_rw_repo: DayTemplateRepositoryReadWriteProtocol | None = None
         self._factoid_rw_repo: FactoidRepositoryReadWriteProtocol | None = None
@@ -470,15 +461,6 @@ class SqlAlchemyUnitOfWork:
             "BrainDumpRepositoryReadOnlyProtocol", brain_dump_repo
         )
         self._brain_dump_rw_repo = brain_dump_repo
-
-        conversation_repo = cast(
-            "ConversationRepositoryReadWriteProtocol",
-            ConversationRepository(user_id=self.user_id),
-        )
-        self.conversation_ro_repo = cast(
-            "ConversationRepositoryReadOnlyProtocol", conversation_repo
-        )
-        self._conversation_rw_repo = conversation_repo
 
         message_repo = cast(
             "MessageRepositoryReadWriteProtocol",
@@ -1258,12 +1240,6 @@ class SqlAlchemyReadOnlyRepositories:
             BrainDumpRepository(user_id=self.user_id),
         )
         self.brain_dump_ro_repo = brain_dump_repo
-
-        conversation_repo = cast(
-            "ConversationRepositoryReadOnlyProtocol",
-            ConversationRepository(user_id=self.user_id),
-        )
-        self.conversation_ro_repo = conversation_repo
 
         message_repo = cast(
             "MessageRepositoryReadOnlyProtocol",

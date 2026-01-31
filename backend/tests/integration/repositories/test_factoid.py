@@ -11,12 +11,11 @@ from lykke.domain.entities import FactoidEntity
 
 
 @pytest.mark.asyncio
-async def test_get(factoid_repo, test_user, conversation):
+async def test_get(factoid_repo, test_user):
     """Test getting a factoid by ID."""
     factoid = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.EPISODIC,
         criticality=value_objects.FactoidCriticality.NORMAL,
         content="User prefers morning workouts.",
@@ -38,17 +37,16 @@ async def test_get_not_found(factoid_repo):
 
 
 @pytest.mark.asyncio
-async def test_put(factoid_repo, test_user, conversation):
+async def test_put(factoid_repo, test_user):
     """Test creating a new factoid."""
     factoid = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.SEMANTIC,
         criticality=value_objects.FactoidCriticality.IMPORTANT,
         content="User has a cat named Whiskers.",
         ai_suggested=True,
-        meta={"source": "conversation", "confidence": 0.95},
+        meta={"source": "test", "confidence": 0.95},
     )
 
     result = await factoid_repo.put(factoid)
@@ -57,34 +55,15 @@ async def test_put(factoid_repo, test_user, conversation):
     assert result.factoid_type == value_objects.FactoidType.SEMANTIC
     assert result.criticality == value_objects.FactoidCriticality.IMPORTANT
     assert result.ai_suggested is True
-    assert result.meta == {"source": "conversation", "confidence": 0.95}
+    assert result.meta == {"source": "test", "confidence": 0.95}
 
 
 @pytest.mark.asyncio
-async def test_global_factoid(factoid_repo, test_user):
-    """Test creating a global factoid (no conversation_id)."""
-    factoid = FactoidEntity(
-        id=uuid4(),
-        user_id=test_user.id,
-        conversation_id=None,
-        factoid_type=value_objects.FactoidType.SEMANTIC,
-        criticality=value_objects.FactoidCriticality.CRITICAL,
-        content="User is allergic to peanuts.",
-    )
-    await factoid_repo.put(factoid)
-
-    result = await factoid_repo.get(factoid.id)
-    assert result.is_global()
-    assert result.conversation_id is None
-
-
-@pytest.mark.asyncio
-async def test_update_criticality(factoid_repo, test_user, conversation):
+async def test_update_criticality(factoid_repo, test_user):
     """Test updating factoid criticality."""
     factoid = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.EPISODIC,
         criticality=value_objects.FactoidCriticality.NORMAL,
         content="User mentioned they like coffee.",
@@ -102,12 +81,11 @@ async def test_update_criticality(factoid_repo, test_user, conversation):
 
 
 @pytest.mark.asyncio
-async def test_access_tracking(factoid_repo, test_user, conversation):
+async def test_access_tracking(factoid_repo, test_user):
     """Test factoid access tracking."""
     factoid = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.PROCEDURAL,
         content="User's preferred meditation technique is box breathing.",
         access_count=0,
@@ -123,64 +101,17 @@ async def test_access_tracking(factoid_repo, test_user, conversation):
 
 
 @pytest.mark.asyncio
-async def test_search_by_conversation(
-    factoid_repo, test_user, conversation, create_conversation
-):
-    """Test searching factoids by conversation_id."""
-    other_conversation = await create_conversation(
-        channel=value_objects.ConversationChannel.IN_APP,
-        status=value_objects.ConversationStatus.ACTIVE,
-        llm_provider=value_objects.LLMProvider.ANTHROPIC,
-    )
-    factoid1 = FactoidEntity(
-        id=uuid4(),
-        user_id=test_user.id,
-        conversation_id=conversation.id,
-        factoid_type=value_objects.FactoidType.EPISODIC,
-        content="Factoid 1",
-    )
-    factoid2 = FactoidEntity(
-        id=uuid4(),
-        user_id=test_user.id,
-        conversation_id=conversation.id,
-        factoid_type=value_objects.FactoidType.SEMANTIC,
-        content="Factoid 2",
-    )
-    factoid3 = FactoidEntity(
-        id=uuid4(),
-        user_id=test_user.id,
-        conversation_id=other_conversation.id,
-        factoid_type=value_objects.FactoidType.EPISODIC,
-        content="Factoid 3",
-    )
-    await factoid_repo.put(factoid1)
-    await factoid_repo.put(factoid2)
-    await factoid_repo.put(factoid3)
-
-    results = await factoid_repo.search(
-        value_objects.FactoidQuery(conversation_id=conversation.id)
-    )
-
-    assert len(results) == 2
-    factoid_ids = [f.id for f in results]
-    assert factoid1.id in factoid_ids
-    assert factoid2.id in factoid_ids
-
-
-@pytest.mark.asyncio
-async def test_search_by_type(factoid_repo, test_user, conversation):
+async def test_search_by_type(factoid_repo, test_user):
     """Test searching factoids by factoid_type."""
     factoid1 = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.EPISODIC,
         content="Episodic memory",
     )
     factoid2 = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.SEMANTIC,
         content="Semantic memory",
     )
@@ -198,12 +129,11 @@ async def test_search_by_type(factoid_repo, test_user, conversation):
 
 
 @pytest.mark.asyncio
-async def test_search_by_criticality(factoid_repo, test_user, conversation):
+async def test_search_by_criticality(factoid_repo, test_user):
     """Test searching factoids by criticality."""
     factoid1 = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.SEMANTIC,
         criticality=value_objects.FactoidCriticality.CRITICAL,
         content="Critical information",
@@ -211,7 +141,6 @@ async def test_search_by_criticality(factoid_repo, test_user, conversation):
     factoid2 = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.SEMANTIC,
         criticality=value_objects.FactoidCriticality.NORMAL,
         content="Normal information",
@@ -230,48 +159,12 @@ async def test_search_by_criticality(factoid_repo, test_user, conversation):
 
 
 @pytest.mark.asyncio
-async def test_search_global_factoids(factoid_repo, test_user, conversation):
-    """Test searching for global vs conversation-specific factoids."""
-    global_factoid = FactoidEntity(
-        id=uuid4(),
-        user_id=test_user.id,
-        conversation_id=None,
-        factoid_type=value_objects.FactoidType.SEMANTIC,
-        content="Global fact",
-    )
-    conversation_factoid = FactoidEntity(
-        id=uuid4(),
-        user_id=test_user.id,
-        conversation_id=conversation.id,
-        factoid_type=value_objects.FactoidType.EPISODIC,
-        content="Conversation-specific fact",
-    )
-    await factoid_repo.put(global_factoid)
-    await factoid_repo.put(conversation_factoid)
-
-    # Search for global factoids only
-    global_results = await factoid_repo.search(
-        value_objects.FactoidQuery(is_global=True)
-    )
-    assert len(global_results) == 1
-    assert global_results[0].id == global_factoid.id
-
-    # Search for conversation-specific factoids only
-    conversation_results = await factoid_repo.search(
-        value_objects.FactoidQuery(is_global=False)
-    )
-    assert len(conversation_results) == 1
-    assert conversation_results[0].id == conversation_factoid.id
-
-
-@pytest.mark.asyncio
-async def test_factoid_with_embedding(factoid_repo, test_user, conversation):
+async def test_factoid_with_embedding(factoid_repo, test_user):
     """Test factoid with vector embedding."""
     embedding = [0.1, 0.2, 0.3, 0.4, 0.5] * 307  # 1535 dimensions (example)
     factoid = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.SEMANTIC,
         content="Factoid with embedding",
         embedding=embedding,
@@ -283,12 +176,11 @@ async def test_factoid_with_embedding(factoid_repo, test_user, conversation):
 
 
 @pytest.mark.asyncio
-async def test_entity_to_row_and_back(factoid_repo, test_user, conversation):
+async def test_entity_to_row_and_back(factoid_repo, test_user):
     """Test round-trip conversion: entity -> row -> entity."""
     original = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.PROCEDURAL,
         criticality=value_objects.FactoidCriticality.IMPORTANT,
         content="User's morning routine: wake at 6am, meditate for 10 minutes, then breakfast.",
@@ -307,7 +199,6 @@ async def test_entity_to_row_and_back(factoid_repo, test_user, conversation):
     # Verify row structure
     assert row["id"] == original.id
     assert row["user_id"] == test_user.id
-    assert row["conversation_id"] == conversation.id
     assert row["factoid_type"] == "procedural"
     assert row["criticality"] == "important"
     assert row["content"] == original.content
@@ -323,7 +214,6 @@ async def test_entity_to_row_and_back(factoid_repo, test_user, conversation):
     # Verify entity matches original
     assert restored.id == original.id
     assert restored.user_id == original.user_id
-    assert restored.conversation_id == original.conversation_id
     assert restored.factoid_type == original.factoid_type
     assert restored.criticality == original.criticality
     assert restored.content == original.content
@@ -337,12 +227,11 @@ async def test_entity_to_row_and_back(factoid_repo, test_user, conversation):
 
 
 @pytest.mark.asyncio
-async def test_boolean_string_conversion(factoid_repo, test_user, conversation):
+async def test_boolean_string_conversion(factoid_repo, test_user):
     """Test that boolean fields are properly converted to/from strings."""
     factoid = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.SEMANTIC,
         content="Test boolean conversion",
         ai_suggested=True,
@@ -356,12 +245,11 @@ async def test_boolean_string_conversion(factoid_repo, test_user, conversation):
 
 
 @pytest.mark.asyncio
-async def test_is_important_or_critical_method(factoid_repo, test_user, conversation):
+async def test_is_important_or_critical_method(factoid_repo, test_user):
     """Test the is_important_or_critical helper method."""
     normal_factoid = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.EPISODIC,
         criticality=value_objects.FactoidCriticality.NORMAL,
         content="Normal fact",
@@ -369,7 +257,6 @@ async def test_is_important_or_critical_method(factoid_repo, test_user, conversa
     important_factoid = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.SEMANTIC,
         criticality=value_objects.FactoidCriticality.IMPORTANT,
         content="Important fact",
@@ -377,7 +264,6 @@ async def test_is_important_or_critical_method(factoid_repo, test_user, conversa
     critical_factoid = FactoidEntity(
         id=uuid4(),
         user_id=test_user.id,
-        conversation_id=conversation.id,
         factoid_type=value_objects.FactoidType.SEMANTIC,
         criticality=value_objects.FactoidCriticality.CRITICAL,
         content="Critical fact",

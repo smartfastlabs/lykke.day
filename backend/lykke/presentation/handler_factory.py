@@ -16,9 +16,11 @@ from lykke.application.commands.calendar import (
     SyncCalendarHandler,
     UnsubscribeCalendarHandler,
 )
+from lykke.application.commands.day import AddAlarmToDayHandler
 from lykke.application.commands.day.reschedule_day import RescheduleDayHandler
 from lykke.application.commands.day.schedule_day import ScheduleDayHandler
 from lykke.application.commands.google import HandleGoogleLoginCallbackHandler
+from lykke.application.commands.message import ProcessInboundSmsHandler
 from lykke.application.commands.notifications import (
     MorningOverviewHandler,
     SmartNotificationHandler,
@@ -40,6 +42,7 @@ from lykke.application.queries.base import BaseQueryHandler
 from lykke.infrastructure.gateways import (
     GoogleCalendarGateway,
     RedisPubSubGateway,
+    TwilioGateway,
     WebPushGateway,
 )
 
@@ -51,6 +54,7 @@ if TYPE_CHECKING:
     from lykke.application.gateways.llm_gateway_factory_protocol import (
         LLMGatewayFactoryProtocol,
     )
+    from lykke.application.gateways.sms_provider_protocol import SMSProviderProtocol
     from lykke.application.gateways.web_push_protocol import WebPushGatewayProtocol
     from lykke.application.unit_of_work import (
         ReadOnlyRepositories,
@@ -68,6 +72,10 @@ def _default_google_gateway() -> GoogleCalendarGatewayProtocol:
 
 def _default_web_push_gateway() -> WebPushGatewayProtocol:
     return WebPushGateway()
+
+
+def _default_sms_gateway() -> SMSProviderProtocol:
+    return TwilioGateway()
 
 
 def _default_llm_gateway_factory() -> LLMGatewayFactoryProtocol:
@@ -330,6 +338,22 @@ def _build_process_brain_dump_handler(
     )
 
 
+def _build_process_inbound_sms_handler(
+    factory: CommandHandlerFactory,
+) -> ProcessInboundSmsHandler:
+    return ProcessInboundSmsHandler(
+        factory.ro_repos,
+        factory.uow_factory,
+        factory.user_id,
+        factory.llm_gateway_factory,
+        factory.query_factory.create(GetLLMPromptContextHandler),
+        factory.create(CreateAdhocTaskHandler),
+        factory.create(RecordTaskActionHandler),
+        factory.create(AddAlarmToDayHandler),
+        factory.sms_gateway,
+    )
+
+
 DEFAULT_COMMAND_HANDLER_REGISTRY: dict[
     type[BaseCommandHandler], CommandHandlerProvider
 ] = {
@@ -347,6 +371,7 @@ DEFAULT_COMMAND_HANDLER_REGISTRY: dict[
     SmartNotificationHandler: _build_smart_notification_handler,
     MorningOverviewHandler: _build_morning_overview_handler,
     ProcessBrainDumpHandler: _build_process_brain_dump_handler,
+    ProcessInboundSmsHandler: _build_process_inbound_sms_handler,
 }
 
 
@@ -364,6 +389,7 @@ class CommandHandlerFactory:
         google_gateway_provider: Callable[[], GoogleCalendarGatewayProtocol]
         | None = None,
         web_push_gateway_provider: Callable[[], WebPushGatewayProtocol] | None = None,
+        sms_gateway_provider: Callable[[], SMSProviderProtocol] | None = None,
         llm_gateway_factory_provider: Callable[[], LLMGatewayFactoryProtocol]
         | None = None,
         registry: dict[type[BaseCommandHandler], CommandHandlerProvider] | None = None,
@@ -383,11 +409,13 @@ class CommandHandlerFactory:
         self._web_push_gateway_provider = (
             web_push_gateway_provider or _default_web_push_gateway
         )
+        self._sms_gateway_provider = sms_gateway_provider or _default_sms_gateway
         self._llm_gateway_factory_provider = (
             llm_gateway_factory_provider or _default_llm_gateway_factory
         )
         self._google_gateway: GoogleCalendarGatewayProtocol | None = None
         self._web_push_gateway: WebPushGatewayProtocol | None = None
+        self._sms_gateway: SMSProviderProtocol | None = None
         self._llm_gateway_factory: LLMGatewayFactoryProtocol | None = None
 
     @property
@@ -405,6 +433,12 @@ class CommandHandlerFactory:
         if self._web_push_gateway is None:
             self._web_push_gateway = self._web_push_gateway_provider()
         return self._web_push_gateway
+
+    @property
+    def sms_gateway(self) -> SMSProviderProtocol:
+        if self._sms_gateway is None:
+            self._sms_gateway = self._sms_gateway_provider()
+        return self._sms_gateway
 
     @property
     def llm_gateway_factory(self) -> LLMGatewayFactoryProtocol:
@@ -479,6 +513,11 @@ class CommandHandlerFactory:
     def create(
         self, handler_class: type[ProcessBrainDumpHandler]
     ) -> ProcessBrainDumpHandler: ...
+
+    @overload
+    def create(
+        self, handler_class: type[ProcessInboundSmsHandler]
+    ) -> ProcessInboundSmsHandler: ...
 
     @overload
     def create(self, handler_class: type[CommandHandlerT]) -> CommandHandlerT: ...

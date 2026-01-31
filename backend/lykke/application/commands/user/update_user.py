@@ -46,8 +46,6 @@ class UpdateUserHandler(BaseCommandHandler[UpdateUserCommand, UserEntity]):
                     is_verified=update_data.is_verified,
                     settings_update=update_data.settings_update,
                     status=update_data.status,
-                    default_conversation_id=update_data.default_conversation_id,
-                    sms_conversation_id=update_data.sms_conversation_id,
                 )
 
             # Apply updates using domain method (adds EntityUpdatedEvent)
