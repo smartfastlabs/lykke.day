@@ -10,12 +10,6 @@ from uuid import UUID
 from loguru import logger
 
 from lykke.application.commands.base import BaseCommandHandler, Command
-from lykke.application.commands.day import (
-    AddReminderToDayCommand,
-    AddReminderToDayHandler,
-    UpdateReminderStatusCommand,
-    UpdateReminderStatusHandler,
-)
 from lykke.application.commands.task import (
     CreateAdhocTaskCommand,
     CreateAdhocTaskHandler,
@@ -66,16 +60,12 @@ class ProcessBrainDumpHandler(
         llm_gateway_factory: LLMGatewayFactoryProtocol,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
         create_adhoc_task_handler: CreateAdhocTaskHandler,
-        add_reminder_handler: AddReminderToDayHandler,
-        update_reminder_status_handler: UpdateReminderStatusHandler,
         record_task_action_handler: RecordTaskActionHandler,
     ) -> None:
         super().__init__(ro_repos, uow_factory, user_id)
         self._llm_gateway_factory = llm_gateway_factory
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
         self._create_adhoc_task_handler = create_adhoc_task_handler
-        self._add_reminder_handler = add_reminder_handler
-        self._update_reminder_status_handler = update_reminder_status_handler
         self._record_task_action_handler = record_task_action_handler
         self._brain_dump_item: BrainDumpEntity | None = None
         self._brain_dump_date: dt_date | None = None
@@ -176,13 +166,18 @@ class ProcessBrainDumpHandler(
             )
 
         async def add_reminder(reminder: str) -> None:
-            """Create a new reminder based on the brain dump item."""
+            """Create a new reminder (task with type REMINDER) based on the brain dump item."""
             await self._mark_brain_dump_item_as_command(
                 date=brain_dump_date,
                 item_id=brain_dump_item.id,
             )
-            await self._add_reminder_handler.handle(
-                AddReminderToDayCommand(date=brain_dump_date, reminder=reminder)
+            await self._create_adhoc_task_handler.handle(
+                CreateAdhocTaskCommand(
+                    scheduled_date=brain_dump_date,
+                    name=reminder,
+                    category=value_objects.TaskCategory.PLANNING,
+                    type=value_objects.TaskType.REMINDER,
+                )
             )
 
         async def update_task(
@@ -210,18 +205,24 @@ class ProcessBrainDumpHandler(
 
         async def update_reminder(
             reminder_id: UUID,
-            status: value_objects.ReminderStatus,
+            action: Literal["complete", "punt"],
         ) -> None:
-            """Update an existing reminder's status."""
+            """Update an existing reminder task (complete or punt)."""
             await self._mark_brain_dump_item_as_command(
                 date=brain_dump_date,
                 item_id=brain_dump_item.id,
             )
-            await self._update_reminder_status_handler.handle(
-                UpdateReminderStatusCommand(
-                    date=brain_dump_date,
-                    reminder_id=reminder_id,
-                    status=status,
+            action_type = (
+                value_objects.ActionType.COMPLETE
+                if action == "complete"
+                else value_objects.ActionType.PUNT
+            )
+            await self._record_task_action_handler.handle(
+                RecordTaskActionCommand(
+                    task_id=reminder_id,
+                    action=value_objects.Action(
+                        type=action_type, data={"source": "llm"}
+                    ),
                 )
             )
 
@@ -257,8 +258,8 @@ class ProcessBrainDumpHandler(
             LLMTool(
                 callback=update_reminder,
                 prompt_notes=[
-                    "Use only when the item refers to an existing reminder.",
-                    "status must be one of the ReminderStatus enum values (UPPERCASE).",
+                    "Use only when the item refers to an existing reminder (task type REMINDER).",
+                    'action must be "complete" or "punt".',
                 ],
             ),
             LLMTool(

@@ -1,11 +1,11 @@
 import { Component, For, Show } from "solid-js";
 import type { Accessor } from "solid-js";
-import { Reminder, ReminderStatus } from "@/types/api";
+import type { Task, TaskStatus } from "@/types/api";
 import { Icon } from "@/components/shared/Icon";
 import { useStreamingData } from "@/providers/streamingData";
 import { SwipeableItem } from "@/components/shared/SwipeableItem";
 
-const getStatusClasses = (status: ReminderStatus): string => {
+const getStatusClasses = (status: TaskStatus): string => {
   switch (status) {
     case "COMPLETE":
       return "bg-stone-50/50";
@@ -16,15 +16,13 @@ const getStatusClasses = (status: ReminderStatus): string => {
   }
 };
 
-const ReminderItem: Component<{ reminder: Reminder }> = (props) => {
+const ReminderItem: Component<{ reminder: Task }> = (props) => {
   const { updateReminderStatus, removeReminder } = useStreamingData();
 
   const handleSwipeLeft = () => {
     if (props.reminder.status === "COMPLETE") {
-      // If already complete, remove it on left swipe
       removeReminder(props.reminder.id);
     } else {
-      // Otherwise punt it
       updateReminderStatus(props.reminder, "PUNT");
     }
   };
@@ -39,12 +37,9 @@ const ReminderItem: Component<{ reminder: Reminder }> = (props) => {
       compact={true}
     >
       <div class="flex items-center gap-4">
-        {/* Reminder icon */}
         <span class="w-4 flex-shrink-0 flex items-center justify-center text-amber-600">
           <span class="text-lg">🎯</span>
         </span>
-
-        {/* Reminder name */}
         <div class="flex-1 min-w-0">
           <span
             class={`text-sm truncate block ${
@@ -56,7 +51,6 @@ const ReminderItem: Component<{ reminder: Reminder }> = (props) => {
             {props.reminder.name}
           </span>
         </div>
-
         <Show when={props.reminder.status === "COMPLETE"}>
           <div class="flex-shrink-0 w-4 text-amber-600">
             <Icon key="checkMark" />
@@ -68,7 +62,7 @@ const ReminderItem: Component<{ reminder: Reminder }> = (props) => {
 };
 
 interface ReminderListProps {
-  reminders: Accessor<Reminder[]>;
+  reminders: Accessor<Task[]>;
 }
 
 const ReminderList: Component<ReminderListProps> = (props) => {
@@ -76,7 +70,9 @@ const ReminderList: Component<ReminderListProps> = (props) => {
 
   return (
     <>
-      <For each={reminders()}>{(reminder) => <ReminderItem reminder={reminder} />}</For>
+      <For each={reminders()}>
+        {(reminder) => <ReminderItem reminder={reminder} />}
+      </For>
     </>
   );
 };

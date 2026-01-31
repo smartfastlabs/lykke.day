@@ -18,7 +18,6 @@ import {
   NotificationUseCaseConfig,
   LLMRunResultSnapshot,
   Alarm,
-  Reminder,
   BrainDump,
   PushNotification,
   Factoid,
@@ -191,6 +190,7 @@ export const taskAPI = {
   createAdhocTask: (payload: {
     scheduled_date: string;
     name: string;
+    type?: Task["type"];
     category: Task["category"];
     description?: string | null;
     time_window?: TimeWindow | null;
@@ -200,34 +200,8 @@ export const taskAPI = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-};
-
-export const reminderAPI = {
-  addReminder: (name: string): Promise<Reminder> => {
-    // The endpoint expects name as a query parameter
-    const params = new URLSearchParams({ name });
-    return fetchData<Reminder>(`/api/me/today/reminders?${params.toString()}`, {
-      method: "POST",
-    });
-  },
-
-  updateReminderStatus: (
-    reminderId: string,
-    status: string,
-  ): Promise<Reminder> => {
-    const params = new URLSearchParams({ status });
-    return fetchData<Reminder>(
-      `/api/me/today/reminders/${reminderId}?${params.toString()}`,
-      {
-        method: "PATCH",
-      },
-    );
-  },
-
-  removeReminder: (reminderId: string): Promise<Reminder> =>
-    fetchData<Reminder>(`/api/me/today/reminders/${reminderId}`, {
-      method: "DELETE",
-    }),
+  deleteTask: (taskId: string): Promise<void> =>
+    fetchData<void>(`/api/tasks/${taskId}`, { method: "DELETE" }),
 };
 
 export const tomorrowAPI = {
@@ -243,30 +217,6 @@ export const tomorrowAPI = {
   getTasks: (): Promise<Task[]> => fetchData<Task[]>("/api/me/tomorrow/tasks"),
   getRoutines: (): Promise<import("@/types/api").Routine[]> =>
     fetchData<import("@/types/api").Routine[]>("/api/me/tomorrow/routines"),
-
-  addReminder: (name: string): Promise<Reminder> => {
-    const params = new URLSearchParams({ name });
-    return fetchData<Reminder>(
-      `/api/me/tomorrow/reminders?${params.toString()}`,
-      {
-        method: "POST",
-      },
-    );
-  },
-  updateReminderStatus: (
-    reminderId: string,
-    status: string,
-  ): Promise<Reminder> => {
-    const params = new URLSearchParams({ status });
-    return fetchData<Reminder>(
-      `/api/me/tomorrow/reminders/${reminderId}?${params.toString()}`,
-      { method: "PATCH" },
-    );
-  },
-  removeReminder: (reminderId: string): Promise<Reminder> =>
-    fetchData<Reminder>(`/api/me/tomorrow/reminders/${reminderId}`, {
-      method: "DELETE",
-    }),
 
   addAlarm: (payload: {
     name?: string;

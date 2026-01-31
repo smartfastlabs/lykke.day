@@ -43,7 +43,8 @@ export const ALL_TASK_TYPES: TaskType[] = [
   "FINANCIAL",
   "MAINTENANCE",
   "PLANNING",
-  "TECHNOLOGY"
+  "TECHNOLOGY",
+  "REMINDER",
 ];
 
 /**
@@ -84,7 +85,7 @@ export const ALL_TASK_CATEGORIES: TaskCategory[] = [
   "DIGITAL",
   "PET",
   "PLANNING",
-  "ADMIN"
+  "ADMIN",
 ];
 
 /**
@@ -100,5 +101,5 @@ export const ALL_TASK_FREQUENCIES: TaskFrequency[] = [
   "MONTHLY",
   "BI_WEEKLY",
   "WORK_DAYS",
-  "WEEKENDS"
+  "WEEKENDS",
 ];

@@ -10,11 +10,12 @@ from lykke.domain.entities import DayEntity, TaskEntity
 
 @dataclass(frozen=True)
 class CreateAdhocTaskCommand(Command):
-    """Command to create an adhoc task."""
+    """Command to create an adhoc or reminder task."""
 
     scheduled_date: dt_date
     name: str
     category: value_objects.TaskCategory
+    type: value_objects.TaskType = value_objects.TaskType.ADHOC
     description: str | None = None
     time_window: value_objects.TimeWindow | None = None
     tags: list[value_objects.TaskTag] = field(default_factory=list)
@@ -43,7 +44,7 @@ class CreateAdhocTaskHandler(BaseCommandHandler[CreateAdhocTaskCommand, TaskEnti
                 scheduled_date=command.scheduled_date,
                 name=command.name,
                 status=value_objects.TaskStatus.NOT_STARTED,
-                type=value_objects.TaskType.ADHOC,
+                type=command.type,
                 description=command.description,
                 category=command.category,
                 frequency=value_objects.TaskFrequency.ONCE,

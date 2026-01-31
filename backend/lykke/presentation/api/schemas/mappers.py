@@ -51,7 +51,6 @@ from lykke.presentation.api.schemas import (
     HighLevelPlanSchema,
     MessageSchema,
     PushSubscriptionSchema,
-    ReminderSchema,
     RoutineDefinitionSchema,
     RoutineSchema,
     SyncSubscriptionSchema,
@@ -75,16 +74,6 @@ from lykke.presentation.api.schemas.routine_definition import (
 def map_action_to_schema(action: value_objects.Action) -> ActionSchema:
     """Convert Action entity to Action schema."""
     return ActionSchema(**asdict(action))
-
-
-def map_reminder_to_schema(reminder: value_objects.Reminder) -> ReminderSchema:
-    """Convert Reminder value object to Reminder schema."""
-    return ReminderSchema(
-        id=reminder.id,
-        name=reminder.name,
-        status=reminder.status,
-        created_at=reminder.created_at,
-    )
 
 
 def map_alarm_to_schema(alarm: value_objects.Alarm) -> AlarmSchema:
@@ -257,7 +246,6 @@ def map_day_to_schema(
     """Convert Day entity to Day schema."""
     template_schema = map_day_template_to_schema(day.template) if day.template else None
 
-    reminder_schemas = [map_reminder_to_schema(reminder) for reminder in day.reminders]
     alarm_schemas = [map_alarm_to_schema(alarm) for alarm in day.alarms]
     brain_dump_item_schemas = [
         map_brain_dump_to_schema(item) for item in (brain_dump_items or [])
@@ -273,7 +261,6 @@ def map_day_to_schema(
         ends_at=day.ends_at,
         tags=day.tags,
         template=template_schema,
-        reminders=reminder_schemas,
         alarms=alarm_schemas,
         brain_dump_items=brain_dump_item_schemas,
         high_level_plan=(

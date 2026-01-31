@@ -16,12 +16,8 @@ from lykke.application.commands.calendar import (
     SyncCalendarHandler,
     UnsubscribeCalendarHandler,
 )
-from lykke.application.commands.day.add_reminder import AddReminderToDayHandler
 from lykke.application.commands.day.reschedule_day import RescheduleDayHandler
 from lykke.application.commands.day.schedule_day import ScheduleDayHandler
-from lykke.application.commands.day.update_reminder_status import (
-    UpdateReminderStatusHandler,
-)
 from lykke.application.commands.google import HandleGoogleLoginCallbackHandler
 from lykke.application.commands.notifications import (
     MorningOverviewHandler,
@@ -30,6 +26,7 @@ from lykke.application.commands.notifications import (
 from lykke.application.commands.push_subscription import SendPushNotificationHandler
 from lykke.application.commands.task import (
     CreateAdhocTaskHandler,
+    DeleteTaskHandler,
     RecordTaskActionHandler,
 )
 from lykke.application.queries import (
@@ -329,8 +326,6 @@ def _build_process_brain_dump_handler(
         factory.llm_gateway_factory,
         factory.query_factory.create(GetLLMPromptContextHandler),
         factory.create(CreateAdhocTaskHandler),
-        factory.create(AddReminderToDayHandler),
-        factory.create(UpdateReminderStatusHandler),
         factory.create(RecordTaskActionHandler),
     )
 

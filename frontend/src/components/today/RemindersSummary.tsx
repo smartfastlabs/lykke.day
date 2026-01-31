@@ -2,20 +2,22 @@ import { Component, Show, createMemo } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { Icon } from "@/components/shared/Icon";
 import { faBullseye, faPlus } from "@fortawesome/free-solid-svg-icons";
-import type { Reminder } from "@/types/api";
+import type { Task } from "@/types/api";
 import ReminderList from "@/components/reminders/List";
 
 export interface RemindersSummaryProps {
-  reminders: Reminder[];
+  reminders: Task[];
   href?: string;
 }
 
 export const RemindersSummary: Component<RemindersSummaryProps> = (props) => {
   const navigate = useNavigate();
 
-  // Filter out completed and punted reminders - only show active (INCOMPLETE) reminders
+  // Filter to active reminder tasks (not COMPLETE or PUNT)
   const activeReminders = createMemo(() =>
-    props.reminders.filter((r) => r.status === "INCOMPLETE")
+    props.reminders.filter(
+      (r) => r.status !== "COMPLETE" && r.status !== "PUNT",
+    ),
   );
 
   const hasLink = createMemo(() => Boolean(props.href));
@@ -28,7 +30,9 @@ export const RemindersSummary: Component<RemindersSummaryProps> = (props) => {
           fallback={
             <div class="flex items-center gap-3 text-left">
               <Icon icon={faBullseye} class="w-5 h-5 fill-amber-600" />
-              <p class="text-xs uppercase tracking-wide text-amber-700">Reminders</p>
+              <p class="text-xs uppercase tracking-wide text-amber-700">
+                Reminders
+              </p>
             </div>
           }
         >
@@ -39,7 +43,9 @@ export const RemindersSummary: Component<RemindersSummaryProps> = (props) => {
             aria-label="See all reminders"
           >
             <Icon icon={faBullseye} class="w-5 h-5 fill-amber-600" />
-            <p class="text-xs uppercase tracking-wide text-amber-700">Reminders</p>
+            <p class="text-xs uppercase tracking-wide text-amber-700">
+              Reminders
+            </p>
           </button>
         </Show>
         <div class="flex items-center gap-3">

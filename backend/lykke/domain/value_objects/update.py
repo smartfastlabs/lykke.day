@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from .ai_chat import FactoidCriticality, FactoidType
-    from .day import Alarm, DayStatus, DayTag, Reminder
+    from .day import Alarm, DayStatus, DayTag
     from .high_level_plan import HighLevelPlan
     from .routine_definition import (
         RecurrenceSchedule,
@@ -184,7 +184,6 @@ class DayUpdateObject(BaseUpdateObject):
     template_id: UUID | None = None
     time_blocks: list[DayTimeBlock] | None = None
     active_time_block_id: UUID | None = None
-    reminders: list[Reminder] | None = None
     alarms: list[Alarm] | None = None
     high_level_plan: HighLevelPlan | None = None
 

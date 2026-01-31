@@ -252,58 +252,6 @@ async def test_delete(
 
 
 @pytest.mark.asyncio
-async def test_remove_all_reminders_clears_field_in_database(
-    day_repo, day_template_repo, test_user, test_date, setup_day_templates
-):
-    """Regression test: Removing all reminders clears the reminders field in the database.
-
-    This test verifies that when all reminders are removed from a day, the reminders field
-    is properly cleared in the database (not left with the previous value).
-    """
-    await setup_day_templates
-    templates = await day_template_repo.all()
-    default_template = templates[0] if templates else None
-    if not default_template:
-        pytest.skip("No templates available")
-
-    # Create a day with reminders
-    day = DayEntity(
-        user_id=test_user.id,
-        date=test_date,
-        status=value_objects.DayStatus.SCHEDULED,
-        scheduled_at=get_current_datetime(),
-        template=default_template,
-    )
-    day.add_reminder("Reminder 1")
-    day.add_reminder("Reminder 2")
-    # Clear events from add_reminder
-    day.collect_events()
-
-    # Save day with reminders to database
-    await day_repo.put(day)
-
-    # Verify reminders were saved
-    retrieved = await day_repo.get(day.id)
-    assert len(retrieved.reminders) == 2
-
-    # Remove all reminders
-    reminder1_id = retrieved.reminders[0].id
-    reminder2_id = retrieved.reminders[1].id
-    retrieved.remove_reminder(reminder1_id)
-    retrieved.remove_reminder(reminder2_id)
-    # Clear events from remove_reminder
-    retrieved.collect_events()
-
-    # Save day without reminders to database
-    await day_repo.put(retrieved)
-
-    # Reload from database and verify reminders field is cleared (empty list, not None)
-    final_retrieved = await day_repo.get(day.id)
-    assert final_retrieved.reminders == []
-    assert len(final_retrieved.reminders) == 0
-
-
-@pytest.mark.asyncio
 async def test_put_with_alarms_persists_to_database(
     day_repo, day_template_repo, test_user, test_date, setup_day_templates
 ):

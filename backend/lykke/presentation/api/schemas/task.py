@@ -44,10 +44,11 @@ class TaskSchema(BaseEntitySchema):
 
 
 class AdhocTaskCreateSchema(BaseSchema):
-    """API schema for creating adhoc tasks."""
+    """API schema for creating adhoc or reminder tasks."""
 
     scheduled_date: date
     name: str
+    type: TaskType = TaskType.ADHOC
     description: str | None = None
     category: TaskCategory
     time_window: TimeWindowSchema | None = None

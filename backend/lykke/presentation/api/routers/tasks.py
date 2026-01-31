@@ -8,6 +8,8 @@ from fastapi import APIRouter, Depends
 from lykke.application.commands import (
     CreateAdhocTaskCommand,
     CreateAdhocTaskHandler,
+    DeleteTaskCommand,
+    DeleteTaskHandler,
     RecordTaskActionCommand,
     RecordTaskActionHandler,
 )
@@ -33,23 +35,35 @@ async def add_task_action(
     return map_task_to_schema(task)
 
 
+@router.delete("/{_id}", status_code=204)
+async def delete_task(
+    _id: uuid.UUID,
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+) -> None:
+    """Delete a task."""
+    handler = command_factory.create(DeleteTaskHandler)
+    await handler.handle(DeleteTaskCommand(task_id=_id))
+
+
 @router.post("/adhoc", response_model=TaskSchema, status_code=201)
 async def create_adhoc_task(
     task_data: AdhocTaskCreateSchema,
     command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
 ) -> TaskSchema:
-    """Create an adhoc task."""
+    """Create an adhoc or reminder task."""
     handler = command_factory.create(CreateAdhocTaskHandler)
     time_window = (
         value_objects.TimeWindow(**task_data.time_window.model_dump())
         if task_data.time_window
         else None
     )
+    task_type = task_data.type
     task = await handler.handle(
         CreateAdhocTaskCommand(
             scheduled_date=task_data.scheduled_date,
             name=task_data.name,
             category=task_data.category,
+            type=task_type,
             description=task_data.description,
             time_window=time_window,
             tags=task_data.tags,

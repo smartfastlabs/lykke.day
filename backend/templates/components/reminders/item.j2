@@ -1,3 +1,3 @@
 - name: {{ reminder.name }}
-  status: {{ reminder.status.value }}
-  {{- kv_line("  ", "created_at", reminder.created_at and fmt_datetime(reminder.created_at)) -}}
+  status: {{ reminder.status }}
+  {{- kv_line("  ", "completed_at", reminder.completed_at and fmt_datetime(reminder.completed_at)) -}}

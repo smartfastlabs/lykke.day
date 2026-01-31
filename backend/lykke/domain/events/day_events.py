@@ -15,11 +15,7 @@ if TYPE_CHECKING:
     from datetime import date as dt_date, time
     from uuid import UUID
 
-    from lykke.domain.value_objects.day import (
-        BrainDumpStatus,
-        BrainDumpType,
-        ReminderStatus,
-    )
+    from lykke.domain.value_objects.day import BrainDumpStatus, BrainDumpType
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,38 +54,6 @@ class DayUnscheduledEvent(DomainEvent):
 @dataclass(frozen=True, kw_only=True)
 class DayUpdatedEvent(EntityUpdatedEvent[DayUpdateObject]):
     """Event raised when a day is updated via apply_update()."""
-
-
-@dataclass(frozen=True, kw_only=True)
-class ReminderAddedEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a reminder is added to a day."""
-
-    day_id: UUID
-    date: dt_date
-    reminder_id: UUID
-    reminder_name: str
-
-
-@dataclass(frozen=True, kw_only=True)
-class ReminderStatusChangedEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a reminder status changes."""
-
-    day_id: UUID
-    date: dt_date
-    reminder_id: UUID
-    old_status: ReminderStatus
-    new_status: ReminderStatus
-    reminder_name: str
-
-
-@dataclass(frozen=True, kw_only=True)
-class ReminderRemovedEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a reminder is removed from a day."""
-
-    day_id: UUID
-    date: dt_date
-    reminder_id: UUID
-    reminder_name: str
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -283,7 +247,4 @@ __all__ = [
     "DayUnscheduledEvent",
     "DayUpdatedEvent",
     "NewDayEvent",
-    "ReminderAddedEvent",
-    "ReminderRemovedEvent",
-    "ReminderStatusChangedEvent",
 ]

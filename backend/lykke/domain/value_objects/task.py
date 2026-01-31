@@ -107,6 +107,7 @@ class TaskType(str, Enum):
     MAINTENANCE = "MAINTENANCE"
     PLANNING = "PLANNING"
     TECHNOLOGY = "TECHNOLOGY"
+    REMINDER = "REMINDER"
 
 
 class TaskStatus(str, Enum):

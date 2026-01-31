@@ -5,10 +5,12 @@ import FloatingActionButtons from "@/components/shared/FloatingActionButtons";
 import { Icon } from "@/components/shared/Icon";
 import { faBullseye } from "@fortawesome/free-solid-svg-icons";
 import { FormError, Input, SubmitButton } from "@/components/forms";
-import { tomorrowAPI } from "@/utils/api";
+import { taskAPI } from "@/utils/api";
+import { useTomorrowData } from "./useTomorrowData";
 
 const AddTomorrowReminderPage: Component = () => {
   const navigate = useNavigate();
+  const { day, refetchAll } = useTomorrowData();
   const [reminderName, setReminderName] = createSignal("");
   const [isSaving, setIsSaving] = createSignal(false);
   const [formError, setFormError] = createSignal("");
@@ -21,10 +23,21 @@ const AddTomorrowReminderPage: Component = () => {
       setFormError("Reminder name is required.");
       return;
     }
+    const scheduledDate = day()?.date;
+    if (!scheduledDate) {
+      setFormError("Day not loaded.");
+      return;
+    }
 
     try {
       setIsSaving(true);
-      await tomorrowAPI.addReminder(name);
+      await taskAPI.createAdhocTask({
+        scheduled_date: scheduledDate,
+        name,
+        category: "PLANNING",
+        type: "REMINDER",
+      });
+      refetchAll();
       navigate("/me/tomorrow");
     } catch (error) {
       setFormError(

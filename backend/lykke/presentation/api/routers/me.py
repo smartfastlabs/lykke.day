@@ -17,22 +17,16 @@ from lykke.application.commands.brain_dump import (
 from lykke.application.commands.day import (
     AddAlarmToDayCommand,
     AddAlarmToDayHandler,
-    AddReminderToDayCommand,
-    AddReminderToDayHandler,
     AddRoutineDefinitionToDayCommand,
     AddRoutineDefinitionToDayHandler,
     RemoveAlarmFromDayCommand,
     RemoveAlarmFromDayHandler,
-    RemoveReminderCommand,
-    RemoveReminderHandler,
     RescheduleDayCommand,
     RescheduleDayHandler,
     ScheduleDayCommand,
     ScheduleDayHandler,
     UpdateAlarmStatusCommand,
     UpdateAlarmStatusHandler,
-    UpdateReminderStatusCommand,
-    UpdateReminderStatusHandler,
 )
 from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
 from lykke.application.queries import GetDayContextHandler, GetDayContextQuery
@@ -56,7 +50,6 @@ from lykke.presentation.api.schemas import (
     CalendarEntrySchema,
     DayContextSchema,
     DaySchema,
-    ReminderSchema,
     RoutineSchema,
     TaskSchema,
     UserSchema,
@@ -68,7 +61,6 @@ from lykke.presentation.api.schemas.mappers import (
     map_calendar_entry_to_schema,
     map_day_context_to_schema,
     map_day_to_schema,
-    map_reminder_to_schema,
     map_routine_to_schema,
     map_task_to_schema,
     map_user_to_schema,
@@ -270,104 +262,6 @@ async def get_tomorrow_context(
         query_factory=query_factory, user_timezone=user.settings.timezone
     )
     return map_day_context_to_schema(context, user_timezone=user.settings.timezone)
-
-
-# ============================================================================
-# Today's Reminders
-# ============================================================================
-
-
-@router.post("/today/reminders", response_model=ReminderSchema)
-async def add_reminder_to_today(
-    name: str,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> ReminderSchema:
-    """Add a reminder to today."""
-    date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(AddReminderToDayHandler)
-    reminder = await handler.handle(AddReminderToDayCommand(date=date, reminder=name))
-    return map_reminder_to_schema(reminder)
-
-
-# ============================================================================
-# Tomorrow's Reminders
-# ============================================================================
-
-
-@router.post("/tomorrow/reminders", response_model=ReminderSchema)
-async def add_reminder_to_tomorrow(
-    name: str,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> ReminderSchema:
-    """Add a reminder to tomorrow."""
-    date = get_tomorrows_date(user.settings.timezone)
-    handler = command_factory.create(AddReminderToDayHandler)
-    reminder = await handler.handle(AddReminderToDayCommand(date=date, reminder=name))
-    return map_reminder_to_schema(reminder)
-
-
-@router.patch("/tomorrow/reminders/{reminder_id}", response_model=ReminderSchema)
-async def update_tomorrow_reminder_status(
-    reminder_id: UUID,
-    status: value_objects.ReminderStatus,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> ReminderSchema:
-    """Update a reminder's status for tomorrow."""
-    date = get_tomorrows_date(user.settings.timezone)
-    handler = command_factory.create(UpdateReminderStatusHandler)
-    reminder = await handler.handle(
-        UpdateReminderStatusCommand(date=date, reminder_id=reminder_id, status=status)
-    )
-    return map_reminder_to_schema(reminder)
-
-
-@router.delete("/tomorrow/reminders/{reminder_id}", response_model=ReminderSchema)
-async def remove_reminder_from_tomorrow(
-    reminder_id: UUID,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> ReminderSchema:
-    """Remove a reminder from tomorrow."""
-    date = get_tomorrows_date(user.settings.timezone)
-    handler = command_factory.create(RemoveReminderHandler)
-    reminder = await handler.handle(
-        RemoveReminderCommand(date=date, reminder_id=reminder_id)
-    )
-    return map_reminder_to_schema(reminder)
-
-
-@router.patch("/today/reminders/{reminder_id}", response_model=ReminderSchema)
-async def update_today_reminder_status(
-    reminder_id: UUID,
-    status: value_objects.ReminderStatus,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> ReminderSchema:
-    """Update a reminder's status for today."""
-    date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(UpdateReminderStatusHandler)
-    reminder = await handler.handle(
-        UpdateReminderStatusCommand(date=date, reminder_id=reminder_id, status=status)
-    )
-    return map_reminder_to_schema(reminder)
-
-
-@router.delete("/today/reminders/{reminder_id}", response_model=ReminderSchema)
-async def remove_reminder_from_today(
-    reminder_id: UUID,
-    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
-    user: Annotated[UserEntity, Depends(get_current_user)],
-) -> ReminderSchema:
-    """Remove a reminder from today."""
-    date = get_current_date(user.settings.timezone)
-    handler = command_factory.create(RemoveReminderHandler)
-    reminder = await handler.handle(
-        RemoveReminderCommand(date=date, reminder_id=reminder_id)
-    )
-    return map_reminder_to_schema(reminder)
 
 
 # ============================================================================

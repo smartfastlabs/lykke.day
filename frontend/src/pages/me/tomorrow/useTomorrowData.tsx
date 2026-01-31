@@ -4,7 +4,7 @@ import {
   createResource,
   useContext,
 } from "solid-js";
-import type { Alarm, Day, Event, Reminder, Routine, Task } from "@/types/api";
+import type { Alarm, Day, Event, Routine, Task } from "@/types/api";
 import { tomorrowAPI } from "@/utils/api";
 
 export type TomorrowData = {
@@ -24,7 +24,7 @@ export type TomorrowData = {
   isRoutinesLoading: () => boolean;
   routinesError: () => unknown;
 
-  reminders: () => Reminder[];
+  reminders: () => Task[];
   alarms: () => Alarm[];
 
   refetchAll: () => void;
@@ -50,7 +50,7 @@ export function useTomorrowData(): TomorrowData {
 }
 
 function createTomorrowData(): TomorrowData {
-  // Phase 1: ensure scheduled + get day shell (reminders/alarms live on Day)
+  // Phase 1: ensure scheduled + get day shell (alarms live on Day; reminders are tasks with type REMINDER)
   const [day, { refetch: refetchDay }] = createResource<Day>(() =>
     tomorrowAPI.ensureScheduled(),
   );
@@ -70,7 +70,7 @@ function createTomorrowData(): TomorrowData {
     async () => tomorrowAPI.getRoutines(),
   );
 
-  const reminders = () => day()?.reminders ?? [];
+  const reminders = () => (tasks() ?? []).filter((t) => t.type === "REMINDER");
   const alarms = () => day()?.alarms ?? [];
 
   const refetchAll = () => {

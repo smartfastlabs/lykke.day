@@ -139,18 +139,6 @@ def serialize_day_context(
 
         calendar_entries.append(entry_data)
 
-    # Serialize reminders
-    reminders = []
-    for reminder in day.reminders:
-        reminder_data: dict[str, Any] = {
-            "id": str(reminder.id),
-            "name": reminder.name,
-            "status": reminder.status.value,
-        }
-        if reminder.created_at:
-            reminder_data["created_at"] = reminder.created_at.isoformat()
-        reminders.append(reminder_data)
-
     # Serialize brain dump items
     brain_dump_items = []
     for item in context.brain_dump_items:
@@ -175,7 +163,6 @@ def serialize_day_context(
         "tasks": tasks,
         "routines": routines,
         "calendar_entries": calendar_entries,
-        "reminders": reminders,
         "brain_dump_items": brain_dump_items,
     }
 

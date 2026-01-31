@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     from .alarm import AlarmSchema
     from .brain_dump import BrainDumpSchema
     from .day_template import DayTemplateSchema
-    from .reminder import ReminderSchema
 
 
 class DaySchema(BaseEntitySchema):
@@ -29,7 +28,6 @@ class DaySchema(BaseEntitySchema):
     ends_at: datetime | None = None
     tags: list[DayTag] = Field(default_factory=list)
     template: Optional["DayTemplateSchema"] = None
-    reminders: list["ReminderSchema"] = Field(default_factory=list)
     alarms: list["AlarmSchema"] = Field(default_factory=list)
     brain_dump_items: list["BrainDumpSchema"] = Field(default_factory=list)
     high_level_plan: HighLevelPlanSchema | None = None

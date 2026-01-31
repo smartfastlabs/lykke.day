@@ -21,8 +21,6 @@ from .day import (
     DayStatus,
     DayTag,
     LLMPromptContext,
-    Reminder,
-    ReminderStatus,
 )
 from .high_level_plan import HighLevelPlan
 from .llm_run import (
@@ -169,8 +167,6 @@ __all__ = [
     "PushSubscriptionQuery",
     "PushSubscriptionUpdateObject",
     "RecurrenceSchedule",
-    "Reminder",
-    "ReminderStatus",
     "RoutineDefinitionQuery",
     "RoutineDefinitionTask",
     "RoutineDefinitionUpdateObject",

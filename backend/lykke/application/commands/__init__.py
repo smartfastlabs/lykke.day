@@ -39,6 +39,8 @@ from .notifications import SmartNotificationCommand, SmartNotificationHandler
 from .task import (
     CreateAdhocTaskCommand,
     CreateAdhocTaskHandler,
+    DeleteTaskCommand,
+    DeleteTaskHandler,
     RecordRoutineActionCommand,
     RecordRoutineActionHandler,
     RecordRoutineDefinitionActionCommand,
@@ -55,6 +57,8 @@ __all__ = [
     "CreateBrainDumpHandler",
     "DeleteBrainDumpCommand",
     "DeleteBrainDumpHandler",
+    "DeleteTaskCommand",
+    "DeleteTaskHandler",
     "EvaluateTimingStatusCommand",
     "EvaluateTimingStatusHandler",
     "HandleGoogleLoginCallbackCommand",

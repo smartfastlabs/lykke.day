@@ -1,15 +1,17 @@
 import { Component, createMemo } from "solid-js";
 import { useStreamingData } from "@/providers/streamingData";
 import ReminderList from "@/components/reminders/List";
-import { Reminder } from "@/types/api";
+import type { Task } from "@/types/api";
 import { AnimatedSection } from "@/components/shared/AnimatedSection";
 import { StatsCard } from "@/components/shared/StatsCard";
 import { SectionCard } from "@/components/shared/SectionCard";
 import { MotivationalQuote } from "@/components/shared/MotivationalQuote";
 
-const getReminderStats = (reminders: Reminder[]) => {
+const getReminderStats = (reminders: Task[]) => {
   const total = reminders.length;
-  const incomplete = reminders.filter((r) => r.status === "INCOMPLETE").length;
+  const incomplete = reminders.filter(
+    (r) => r.status !== "COMPLETE" && r.status !== "PUNT",
+  ).length;
   const completed = reminders.filter((r) => r.status === "COMPLETE").length;
   const punted = reminders.filter((r) => r.status === "PUNT").length;
   return { total, incomplete, completed, punted };

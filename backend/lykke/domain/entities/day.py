@@ -18,9 +18,6 @@ from lykke.domain.events.day_events import (
     DayCompletedEvent,
     DayScheduledEvent,
     DayUnscheduledEvent,
-    ReminderAddedEvent,
-    ReminderRemovedEvent,
-    ReminderStatusChangedEvent,
 )
 from lykke.domain.events.task_events import (
     TaskActionRecordedEvent,
@@ -50,7 +47,6 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
     template: DayTemplateEntity | None = None
     time_blocks: list[value_objects.DayTimeBlock] = field(default_factory=list)
     active_time_block_id: UUID | None = None
-    reminders: list[value_objects.Reminder] = field(default_factory=list)
     alarms: list[value_objects.Alarm] = field(default_factory=list)
     high_level_plan: value_objects.HighLevelPlan | None = None
     id: UUID = field(default=None, init=True)  # type: ignore[assignment]
@@ -277,40 +273,6 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
         # Return the updated task (mutated in place by record_action)
         return task
 
-    def add_reminder(self, name: str) -> value_objects.Reminder:
-        """Add a reminder to this day.
-
-        Args:
-            name: The name of the reminder to add
-
-        Returns:
-            The created Reminder value object
-        """
-        reminder = value_objects.Reminder(
-            id=uuid4(),
-            name=name,
-            status=value_objects.ReminderStatus.INCOMPLETE,
-            created_at=datetime.now(UTC),
-        )
-
-        # Create a new list with the new reminder (reminders list is immutable)
-        self.reminders = [*list(self.reminders), reminder]
-
-        self._add_event(
-            ReminderAddedEvent(
-                user_id=self.user_id,
-                day_id=self.id,
-                date=self.date,
-                reminder_id=reminder.id,
-                reminder_name=reminder.name,
-                entity_id=self.id,
-                entity_type="day",
-                entity_date=self.date,
-            )
-        )
-
-        return reminder
-
     def add_alarm(self, alarm: value_objects.Alarm) -> value_objects.Alarm:
         """Add an alarm to this day.
 
@@ -485,96 +447,3 @@ class DayEntity(BaseEntityObject[DayUpdateObject, "DayUpdatedEvent"], AuditableE
             )
 
         return updated_alarm
-
-    def update_reminder_status(
-        self, reminder_id: UUID, status: value_objects.ReminderStatus
-    ) -> value_objects.Reminder:
-        """Update the status of a reminder.
-
-        Args:
-            reminder_id: The ID of the reminder to update
-            status: The new status for the reminder
-
-        Raises:
-            DomainError: If the reminder is not found
-        """
-        reminder_index = None
-        old_reminder = None
-        for i, reminder in enumerate(self.reminders):
-            if reminder.id == reminder_id:
-                reminder_index = i
-                old_reminder = reminder
-                break
-
-        if reminder_index is None or old_reminder is None:
-            raise DomainError(f"Reminder with id {reminder_id} not found in this day")
-
-        if old_reminder.status == status:
-            # No change needed
-            return old_reminder
-
-        # Create updated reminder with new status
-        updated_reminder = value_objects.Reminder(
-            id=old_reminder.id,
-            name=old_reminder.name,
-            status=status,
-            created_at=old_reminder.created_at,
-        )
-
-        # Create new list with updated reminder
-        new_reminders = list(self.reminders)
-        new_reminders[reminder_index] = updated_reminder
-        self.reminders = new_reminders
-
-        self._add_event(
-            ReminderStatusChangedEvent(
-                user_id=self.user_id,
-                day_id=self.id,
-                date=self.date,
-                reminder_id=reminder_id,
-                old_status=old_reminder.status,
-                new_status=status,
-                reminder_name=old_reminder.name,
-                entity_id=self.id,
-                entity_type="day",
-                entity_date=self.date,
-            )
-        )
-        return updated_reminder
-
-    def remove_reminder(self, reminder_id: UUID) -> value_objects.Reminder:
-        """Remove a reminder from this day.
-
-        Args:
-            reminder_id: The ID of the reminder to remove
-
-        Raises:
-            DomainError: If the reminder is not found
-        """
-        reminder_to_remove = None
-        for reminder in self.reminders:
-            if reminder.id == reminder_id:
-                reminder_to_remove = reminder
-                break
-
-        if reminder_to_remove is None:
-            raise DomainError(f"Reminder with id {reminder_id} not found in this day")
-
-        # Create new list without the removed reminder
-        self.reminders = [
-            reminder for reminder in self.reminders if reminder.id != reminder_id
-        ]
-
-        self._add_event(
-            ReminderRemovedEvent(
-                user_id=self.user_id,
-                day_id=self.id,
-                date=self.date,
-                reminder_id=reminder_id,
-                reminder_name=reminder_to_remove.name,
-                entity_id=self.id,
-                entity_type="day",
-                entity_date=self.date,
-            )
-        )
-        return reminder_to_remove

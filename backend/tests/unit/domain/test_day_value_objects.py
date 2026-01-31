@@ -15,8 +15,6 @@ from lykke.domain.value_objects.day import (
     DayMode,
     DayStatus,
     DayTag,
-    Reminder,
-    ReminderStatus,
 )
 
 
@@ -89,56 +87,6 @@ def test_day_context_defaults() -> None:
     assert context.tasks == []
     assert context.routines == []
     assert context.brain_dump_items == []
-
-
-@pytest.mark.parametrize(
-    ("status", "expected_value"),
-    [
-        (ReminderStatus.INCOMPLETE, "INCOMPLETE"),
-        (ReminderStatus.COMPLETE, "COMPLETE"),
-        (ReminderStatus.PUNT, "PUNT"),
-    ],
-)
-def test_reminder_status_values(status: ReminderStatus, expected_value: str) -> None:
-    """Test ReminderStatus enum values."""
-    assert status.value == expected_value
-
-
-def test_reminder_creation() -> None:
-    """Test Reminder can be created with required fields."""
-    reminder = Reminder(
-        id=uuid4(),
-        name="Test Reminder",
-        status=ReminderStatus.INCOMPLETE,
-    )
-    assert reminder.name == "Test Reminder"
-    assert reminder.status == ReminderStatus.INCOMPLETE
-    assert reminder.created_at is None
-
-
-def test_reminder_creation_with_defaults() -> None:
-    """Test Reminder uses default values when not specified."""
-    reminder = Reminder(
-        id=uuid4(),
-        name="Test Reminder",
-    )
-    assert reminder.name == "Test Reminder"
-    assert reminder.status == ReminderStatus.INCOMPLETE
-    assert reminder.created_at is None
-
-
-def test_reminder_creation_with_all_fields() -> None:
-    """Test Reminder can be created with all fields."""
-    created_at = datetime.datetime(2025, 11, 27, 12, 0, 0, tzinfo=UTC)
-    reminder = Reminder(
-        id=uuid4(),
-        name="Test Reminder",
-        status=ReminderStatus.COMPLETE,
-        created_at=created_at,
-    )
-    assert reminder.name == "Test Reminder"
-    assert reminder.status == ReminderStatus.COMPLETE
-    assert reminder.created_at == created_at
 
 
 @pytest.mark.parametrize(

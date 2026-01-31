@@ -72,7 +72,7 @@ class TestEntityTypeNamingConsistency:
         """Test DayEntity generates 'day' which should be handled by filter.
 
         REGRESSION TEST: Previously 'day' entity type was not handled,
-        causing reminder updates to not be pushed via websocket.
+        causing day updates to not be pushed via websocket.
         """
         entity_type = _get_entity_type_name("DayEntity")
         assert entity_type == "day", (
@@ -242,23 +242,14 @@ class TestIsAuditLogForTodayDayFiltering:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_day_with_reminders_for_today_returns_true(self):
-        """Test day entity with reminders for today returns True.
-
-        This simulates a reminder being added/updated/removed.
-        """
+    async def test_day_for_today_with_extra_fields_returns_true(self):
+        """Test day entity for today with extra entity_data fields returns True."""
         today = dt_date(2025, 1, 15)
         audit_log = _make_audit_log(
             entity_type="day",
             entity_data={
                 "date": "2025-01-15",
-                "reminders": [
-                    {
-                        "id": str(uuid4()),
-                        "name": "Test Reminder",
-                        "status": "INCOMPLETE",
-                    }
-                ],
+                "tags": ["WORKDAY"],
             },
         )
 

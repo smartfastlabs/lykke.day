@@ -72,7 +72,7 @@ class TestEntityTypeHandling:
         """Test that 'day' entity type is recognized.
 
         REGRESSION TEST: Previously the handler didn't have a case for 'day',
-        causing reminder changes to not include full entity data.
+        causing day changes to not include full entity data.
         """
         entity_type = _get_entity_type_name("DayEntity")
         assert entity_type == "day"
@@ -215,7 +215,6 @@ class TestLoadEntityData:
             id=day_id,
             user_id=uuid4(),
             date=dt_date(2025, 1, 15),
-            reminders=[],
         )
         handler_with_mocks.day_ro_repo.get = AsyncMock(return_value=mock_day)
         handler_with_mocks.brain_dump_ro_repo.search = AsyncMock(return_value=[])
@@ -246,7 +245,6 @@ class TestLoadEntityData:
             id=day_id,
             user_id=uuid4(),
             date=dt_date(2025, 1, 15),
-            reminders=[],
         )
         handler_with_mocks.day_ro_repo.get = AsyncMock(return_value=mock_day)
         handler_with_mocks.brain_dump_ro_repo.search = AsyncMock(
@@ -276,7 +274,6 @@ class TestLoadEntityData:
             id=day_id,
             user_id=uuid4(),
             date=dt_date(2025, 1, 15),
-            reminders=[],
         )
         handler_with_mocks.day_ro_repo.get = AsyncMock(return_value=mock_day)
         handler_with_mocks.brain_dump_ro_repo.search = AsyncMock(return_value=[])
@@ -358,7 +355,7 @@ class TestEntityTypeConsistencyIntegration:
     def test_all_daycontext_entity_types_are_handled(self):
         """Verify all DayContext entity types are handled in _load_entity_data.
 
-        DayContext includes: tasks, calendar_entries (calendarentry), routines, and day (for reminders)
+        DayContext includes: tasks, calendar_entries (calendarentry), routines, and day
         """
         # These are the entity types that should be handled
         expected_types = {"task", "calendarentry", "routine", "day"}

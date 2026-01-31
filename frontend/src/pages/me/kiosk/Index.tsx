@@ -24,7 +24,7 @@ import { useStreamingData } from "@/providers/streamingData";
 import { getDateString } from "@/utils/dates";
 import { filterVisibleTasks } from "@/utils/tasks";
 import { buildRoutineGroups } from "@/components/routines/RoutineGroupsList";
-import type { DayTemplate, Reminder } from "@/types/api";
+import type { DayTemplate, Task } from "@/types/api";
 
 type TimeBlock = NonNullable<DayTemplate["time_blocks"]>[number];
 
@@ -122,7 +122,10 @@ const KioskPage: Component = () => {
   const allReminders = createMemo(() => reminders() ?? []);
   const allRoutines = createMemo(() => routines() ?? []);
   const activeReminders = createMemo(() =>
-    allReminders().filter((reminder) => reminder.status === "INCOMPLETE"),
+    allReminders().filter(
+      (reminder) =>
+        reminder.status !== "COMPLETE" && reminder.status !== "PUNT",
+    ),
   );
   const visibleTasks = createMemo(() => filterVisibleTasks(allTasks()));
   const activeTasks = createMemo(() =>
@@ -306,7 +309,7 @@ const KioskPage: Component = () => {
   );
 
   const reminderItems = createMemo<KioskItem[]>(() =>
-    activeReminders().map((reminder: Reminder) => ({
+    activeReminders().map((reminder: Task) => ({
       label: reminder.name,
       meta: "reminder",
     })),

@@ -42,7 +42,6 @@ from .push_subscription import (
     PushSubscriptionUpdateSchema,
 )
 from .query import QuerySchema
-from .reminder import ReminderSchema
 from .routine import RoutineSchema
 from .routine_definition import (
     RoutineDefinitionCreateSchema,
@@ -115,7 +114,6 @@ TacticSchema.model_rebuild()
 DayContextSchema.model_rebuild()
 AlarmSchema.model_rebuild()
 AlarmPresetSchema.model_rebuild()
-ReminderSchema.model_rebuild()
 BrainDumpSchema.model_rebuild()
 BrainDumpCreateSchema.model_rebuild()
 BrainDumpUpdateSchema.model_rebuild()
@@ -197,7 +195,6 @@ __all__ = [
     "PushSubscriptionSchema",
     "PushSubscriptionUpdateSchema",
     "QuerySchema",
-    "ReminderSchema",
     "RoutineDefinitionCreateSchema",
     "RoutineDefinitionSchema",
     "RoutineDefinitionTaskCreateSchema",

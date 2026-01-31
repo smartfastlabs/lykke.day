@@ -1,9 +1,9 @@
 import { Component, For } from "solid-js";
 import type { Accessor } from "solid-js";
-import type { Reminder } from "@/types/api";
+import type { Task } from "@/types/api";
 
 export interface ReadOnlyReminderListProps {
-  reminders: Accessor<Reminder[]>;
+  reminders: Accessor<Task[]>;
 }
 
 export const ReadOnlyReminderList: Component<ReadOnlyReminderListProps> = (
@@ -26,7 +26,9 @@ export const ReadOnlyReminderList: Component<ReadOnlyReminderListProps> = (
                 </span>
               </div>
               <span class="text-[10px] uppercase tracking-wide text-stone-500">
-                {reminder.status === "INCOMPLETE"
+                {reminder.status === "NOT_STARTED" ||
+                reminder.status === "READY" ||
+                reminder.status === "PENDING"
                   ? "active"
                   : reminder.status.toLowerCase()}
               </span>

@@ -39,24 +39,6 @@ class DayMode(str, Enum):
     POST_DAY = "POST_DAY"
 
 
-class ReminderStatus(str, Enum):
-    """Status of a reminder."""
-
-    INCOMPLETE = "INCOMPLETE"
-    COMPLETE = "COMPLETE"
-    PUNT = "PUNT"
-
-
-@dataclass(kw_only=True)
-class Reminder(BaseValueObject):
-    """Reminder value object representing a day-specific reminder."""
-
-    id: UUID = field(default_factory=uuid4)
-    name: str
-    status: ReminderStatus = ReminderStatus.INCOMPLETE
-    created_at: dt_datetime | None = field(default=None)
-
-
 class AlarmType(str, Enum):
     """Type of alarm behavior."""
 
@@ -196,4 +178,5 @@ class LLMPromptContext(DayContext):
 
     factoids: list["FactoidEntity"] = field(default_factory=list)
     messages: list["MessageEntity"] = field(default_factory=list)
+    push_notifications: list["PushNotificationEntity"] = field(default_factory=list)
     push_notifications: list["PushNotificationEntity"] = field(default_factory=list)

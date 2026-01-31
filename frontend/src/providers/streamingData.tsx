@@ -15,8 +15,6 @@ import {
   Event,
   Day,
   TaskStatus,
-  Reminder,
-  ReminderStatus,
   Alarm,
   AlarmType,
   AlarmStatus,
@@ -30,7 +28,6 @@ import {
   brainDumpAPI,
   notificationAPI,
   alarmAPI,
-  reminderAPI,
   routineAPI,
   TaskActionPayload,
   taskAPI,
@@ -60,7 +57,7 @@ interface StreamingDataContextValue {
   dayContext: Accessor<DayContextWithRoutines | undefined>;
   tasks: Accessor<Task[]>;
   events: Accessor<Event[]>;
-  reminders: Accessor<Reminder[]>;
+  reminders: Accessor<Task[]>;
   alarms: Accessor<Alarm[]>;
   brainDumps: Accessor<BrainDump[]>;
   notifications: Accessor<PushNotification[]>;
@@ -85,10 +82,7 @@ interface StreamingDataContextValue {
   ) => Promise<void>;
   addAdhocTask: (name: string, category: TaskCategory) => Promise<void>;
   addReminder: (name: string) => Promise<void>;
-  updateReminderStatus: (
-    reminder: Reminder,
-    status: ReminderStatus,
-  ) => Promise<void>;
+  updateReminderStatus: (reminder: Task, status: TaskStatus) => Promise<void>;
   removeReminder: (reminderId: string) => Promise<void>;
   addAlarm: (payload: {
     name?: string;
@@ -192,7 +186,6 @@ export function StreamingDataProvider(props: ParentProps) {
   let isMounted = false;
   let wsClient: WsClient<DomainEventEnvelope> | null = null;
 
-  type ReminderWithOptionalId = Omit<Reminder, "id"> & { id?: string | null };
   type BrainDumpWithOptionalId = Omit<BrainDump, "id"> & {
     id?: string | null;
   };
@@ -218,9 +211,6 @@ export function StreamingDataProvider(props: ParentProps) {
     }
     return deduped;
   };
-
-  const normalizeReminders = (items?: ReminderWithOptionalId[]): Reminder[] =>
-    dedupeById((items ?? []).filter(hasNonEmptyId));
 
   const normalizeBrainDumps = (
     items?: BrainDumpWithOptionalId[],
@@ -250,15 +240,9 @@ export function StreamingDataProvider(props: ParentProps) {
       (event) => !shouldHideEvent(event.attendance_status),
     ),
   );
-  const reminders = createMemo(() => {
-    // Reminders are stored on the day entity within day_context
-    // Note: reminders may not be in the generated types yet, but they exist at runtime
-    const day = dayContextStore.data?.day;
-    if (!day) return [];
-    return normalizeReminders(
-      (day as { reminders?: ReminderWithOptionalId[] }).reminders,
-    );
-  });
+  const reminders = createMemo(() =>
+    (tasks() ?? []).filter((t) => t.type === "REMINDER"),
+  );
   const alarms = createMemo(() => {
     const day = dayContextStore.data?.day;
     if (!day) return [];
@@ -295,7 +279,6 @@ export function StreamingDataProvider(props: ParentProps) {
     if (!currentDay) return undefined;
     return {
       ...currentDay,
-      reminders: reminders(),
       alarms: alarms(),
       brain_dump_items: brainDumps(),
     };
@@ -721,23 +704,6 @@ export function StreamingDataProvider(props: ParentProps) {
     addTaskLocally(created);
   };
 
-  // Optimistically update reminders in local state
-  const updateRemindersLocally = (updatedReminders: Reminder[]) => {
-    setDayContextStore((current) => {
-      if (!current.data || !current.data.day) return current;
-      const updated = {
-        data: {
-          ...current.data,
-          day: {
-            ...current.data.day,
-            reminders: dedupeById(updatedReminders),
-          },
-        },
-      };
-      return updated;
-    });
-  };
-
   const updateAlarmsLocally = (updatedAlarms: Alarm[]) => {
     setDayContextStore((current) => {
       if (!current.data || !current.data.day) return current;
@@ -778,54 +744,38 @@ export function StreamingDataProvider(props: ParentProps) {
   };
 
   const addReminder = async (name: string): Promise<void> => {
-    const reminder = await reminderAPI.addReminder(name);
-    updateRemindersLocally([...(reminders() ?? []), reminder]);
+    const currentDay = day();
+    if (!currentDay?.date) return;
+    const created = await taskAPI.createAdhocTask({
+      scheduled_date: currentDay.date,
+      name,
+      category: "PLANNING",
+      type: "REMINDER",
+    });
+    addTaskLocally(created);
   };
 
   const updateReminderStatus = async (
-    reminder: Reminder,
-    status: ReminderStatus,
+    reminder: Task,
+    status: TaskStatus,
   ): Promise<void> => {
-    // Optimistic update
-    const previousReminders = reminders();
-    const updatedReminders = previousReminders.map((r: Reminder) =>
-      r.id === reminder.id ? { ...r, status } : r,
-    );
-    updateRemindersLocally(updatedReminders);
-
-    try {
-      const updatedReminder = await reminderAPI.updateReminderStatus(
-        reminder.id,
-        status,
-      );
-      const nextReminders = previousReminders.map((r: Reminder) =>
-        r.id === updatedReminder.id ? updatedReminder : r,
-      );
-      updateRemindersLocally(nextReminders);
-    } catch (error) {
-      // Rollback on error
-      updateRemindersLocally(previousReminders);
-      throw error;
-    }
+    await setTaskStatus(reminder, status);
   };
 
   const removeReminder = async (reminderId: string): Promise<void> => {
-    // Optimistic update
-    const previousReminders = reminders();
-    const updatedReminders = previousReminders.filter(
-      (r: Reminder) => r.id !== reminderId,
-    );
-    updateRemindersLocally(updatedReminders);
-
+    const previousTasks = tasks();
+    const updatedTasks = previousTasks.filter((t) => t.id !== reminderId);
+    setDayContextStore((current) => {
+      if (!current.data) return current;
+      return { data: { ...current.data, tasks: updatedTasks } };
+    });
     try {
-      const removedReminder = await reminderAPI.removeReminder(reminderId);
-      const nextReminders = previousReminders.filter(
-        (r) => r.id !== removedReminder.id,
-      );
-      updateRemindersLocally(nextReminders);
+      await taskAPI.deleteTask(reminderId);
     } catch (error) {
-      // Rollback on error
-      updateRemindersLocally(previousReminders);
+      setDayContextStore((current) => {
+        if (!current.data) return current;
+        return { data: { ...current.data, tasks: previousTasks } };
+      });
       throw error;
     }
   };

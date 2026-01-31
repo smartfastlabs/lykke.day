@@ -46,14 +46,6 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
             dataclass_to_json_dict(day.high_level_plan) if day.high_level_plan else None
         )
 
-        # Always include reminders, even if empty, so that removing all reminders
-        # clears the field in the database
-        row["reminders"] = (
-            [dataclass_to_json_dict(reminder) for reminder in day.reminders]
-            if day.reminders
-            else []
-        )
-
         # Always include alarms, even if empty, so that removing all alarms
         # clears the field in the database
         row["alarms"] = (
@@ -178,33 +170,8 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
             template_data = filter_init_false_fields(template_data, DayTemplateEntity)
             data["template"] = DayTemplateEntity(**template_data)
 
-        # Handle reminders - it comes as a list of dicts from JSONB, need to convert to Reminder value objects
-        if data.get("reminders") and isinstance(data["reminders"], list):
-            reminders_list = []
-            for reminder_dict in data["reminders"]:
-                if isinstance(reminder_dict, dict):
-                    reminder_data = dict(reminder_dict)
-                    # Convert string UUIDs to UUID objects
-                    if "id" in reminder_data and isinstance(reminder_data["id"], str):
-                        reminder_data["id"] = UUID(reminder_data["id"])
-                    # Convert status string to enum if needed
-                    if "status" in reminder_data and isinstance(
-                        reminder_data["status"], str
-                    ):
-                        reminder_data["status"] = value_objects.ReminderStatus(
-                            reminder_data["status"]
-                        )
-                    # Convert created_at string to datetime if needed
-                    if (
-                        "created_at" in reminder_data
-                        and reminder_data["created_at"]
-                        and isinstance(reminder_data["created_at"], str)
-                    ):
-                        reminder_data["created_at"] = dt_datetime.fromisoformat(
-                            reminder_data["created_at"].replace("Z", "+00:00")
-                        )
-                    reminders_list.append(value_objects.Reminder(**reminder_data))
-            data["reminders"] = reminders_list
+        # Reminders are now tasks (TaskType.REMINDER); ignore legacy reminders column if present
+        data.pop("reminders", None)
 
         # Handle alarms - it comes as a list of dicts from JSONB, need to convert to Alarm value objects
         if data.get("alarms") and isinstance(data["alarms"], list):
@@ -216,4 +183,5 @@ class DayRepository(UserScopedBaseRepository[DayEntity, BaseQuery]):
 
         data = filter_init_false_fields(data, DayEntity)
         data = ensure_datetimes_utc(data, keys=("scheduled_at", "starts_at", "ends_at"))
+        return DayEntity(**data)
         return DayEntity(**data)

@@ -32,13 +32,6 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
         text="Deep work on core project",
         intentions=["Ship feature"],
     )
-    day.reminders.append(
-        value_objects.Reminder(
-            name="Call mom",
-            status=value_objects.ReminderStatus.INCOMPLETE,
-            created_at=current_time,
-        )
-    )
     brain_dump_item = BrainDumpEntity(
         user_id=user_id,
         date=day_date,
@@ -154,7 +147,6 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
     assert serialized["calendar_entries"][0]["id"] == str(calendar_entry.id)
     assert serialized["calendar_entries"][0]["minutes_until_start"] == 240
 
-    assert serialized["reminders"][0]["created_at"] == current_time.isoformat()
     assert serialized["brain_dump_items"][0]["created_at"] == current_time.isoformat()
 
     assert serialized["factoids"][0]["content"] == "Has a dog named Oakley"

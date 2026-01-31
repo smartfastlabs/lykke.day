@@ -97,18 +97,7 @@ class RescheduleDayHandler(
                 value_objects.AuditLogQuery(date=command.date)
             )
 
-            # Step 4: Reset reminders (clear all existing reminders from rescheduled day)
-            # Reminders should be re-added if needed after rescheduling
-            if day.reminders:
-                # Remove all reminders by iterating backwards to avoid index issues
-                reminder_ids_to_remove = [reminder.id for reminder in day.reminders]
-                for reminder_id in reminder_ids_to_remove:
-                    day.remove_reminder(reminder_id)
-                logger.info(
-                    f"Cleared {len(reminder_ids_to_remove)} reminders from rescheduled day"
-                )
-
-            # Step 5: Reuse ScheduleDay logic to rebuild template, time blocks, and tasks
+            # Step 4: Reuse ScheduleDay logic to rebuild template, time blocks, and tasks
             day_context = await self.schedule_day_handler.schedule_day_in_uow(
                 uow,
                 ScheduleDayCommand(date=command.date, template_id=command.template_id),

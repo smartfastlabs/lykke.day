@@ -28,12 +28,12 @@ Existing tasks (use IDs for updates):
     {{- kv_line("    ", "end_time", task.schedule and task.schedule.end_time and fmt_time(task.schedule.end_time)) -}}
 {% endfor %}
 
-Existing reminders (use IDs for updates):
-{% for reminder in context.day.reminders %}
+Existing reminders (tasks with type REMINDER; use task IDs for updates):
+{% for reminder in context.tasks if reminder.type == "REMINDER" %}
 - id: {{ reminder.id }}
   name: {{ reminder.name }}
-  status: {{ reminder.status.value }}
-  {{- kv_line("  ", "created_at", reminder.created_at and fmt_datetime(reminder.created_at)) -}}
+  status: {{ reminder.status }}
+  {{- kv_line("  ", "completed_at", reminder.completed_at and fmt_datetime(reminder.completed_at)) -}}
 {% endfor %}
 
 Other brain dump items:

@@ -108,8 +108,6 @@ async def test_process_brain_dump_add_task_creates_adhoc_task() -> None:
         object(),
         task_recorder,
         _Recorder(commands=[]),
-        _Recorder(commands=[]),
-        _Recorder(commands=[]),
     )
 
     async def run_llm_side_effect() -> None:
@@ -177,8 +175,6 @@ async def test_process_brain_dump_update_task_records_action() -> None:
         _LLMGatewayFactory(),
         object(),
         _Recorder(commands=[]),
-        _Recorder(commands=[]),
-        _Recorder(commands=[]),
         task_action_recorder,
     )
 
@@ -202,14 +198,15 @@ async def test_process_brain_dump_update_task_records_action() -> None:
 
 
 @pytest.mark.asyncio
-async def test_process_brain_dump_update_reminder_updates_status() -> None:
+async def test_process_brain_dump_update_reminder_records_task_action() -> None:
+    """Update-reminder tool records RecordTaskActionCommand (reminders are tasks)."""
     user_id = uuid4()
     date = dt_date(2025, 11, 27)
     template = DayTemplateEntity(user_id=user_id, slug="default")
     day = DayEntity.create_for_date(date, user_id=user_id, template=template)
     item = BrainDumpEntity(user_id=user_id, date=date, text="Mark reminder complete")
 
-    reminder_id = uuid4()
+    reminder_task_id = uuid4()
     prompt_context = value_objects.LLMPromptContext(
         day=day,
         tasks=[],
@@ -219,7 +216,7 @@ async def test_process_brain_dump_update_reminder_updates_status() -> None:
         push_notifications=[],
     )
 
-    reminder_status_recorder = _Recorder(commands=[])
+    task_action_recorder = _Recorder(commands=[])
 
     brain_dump_repo = create_brain_dump_repo_double()
     allow(brain_dump_repo).get.with_args(item.id).and_return(item)
@@ -244,9 +241,7 @@ async def test_process_brain_dump_update_reminder_updates_status() -> None:
         _LLMGatewayFactory(),
         object(),
         _Recorder(commands=[]),
-        _Recorder(commands=[]),
-        reminder_status_recorder,
-        _Recorder(commands=[]),
+        task_action_recorder,
     )
 
     async def run_llm_side_effect() -> None:
@@ -257,18 +252,18 @@ async def test_process_brain_dump_update_reminder_updates_status() -> None:
         )
         tool = next(tool for tool in tools if tool.name == "update_reminder")
         await tool.callback(
-            reminder_id=reminder_id,
-            status=value_objects.ReminderStatus.COMPLETE,
+            reminder_id=reminder_task_id,
+            action="complete",
         )
 
     handler.run_llm = run_llm_side_effect  # type: ignore[method-assign]
 
     await handler.handle(ProcessBrainDumpCommand(date=date, item_id=item.id))
 
-    assert len(reminder_status_recorder.commands) == 1
-    command = reminder_status_recorder.commands[0]
-    assert command.reminder_id == reminder_id
-    assert command.status == value_objects.ReminderStatus.COMPLETE
+    assert len(task_action_recorder.commands) == 1
+    command = task_action_recorder.commands[0]
+    assert command.task_id == reminder_task_id
+    assert command.action.type == value_objects.ActionType.COMPLETE
 
 
 @pytest.mark.asyncio
@@ -312,8 +307,6 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
         object(),
         _Recorder(commands=[]),
         _Recorder(commands=[]),
-        _Recorder(commands=[]),
-        _Recorder(commands=[]),
     )
 
     async def run_llm_side_effect() -> None:
@@ -336,6 +329,7 @@ async def test_process_brain_dump_marks_item_as_command_on_tool_call() -> None:
     updated = uow.added[0]
     assert updated.type == value_objects.BrainDumpType.COMMAND
     events = updated.collect_events()
+    assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)
     assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)
     assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)
     assert any(isinstance(event, BrainDumpTypeChangedEvent) for event in events)

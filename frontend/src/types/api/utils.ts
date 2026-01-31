@@ -36,7 +36,6 @@ export type Event = components["schemas"]["CalendarEntrySchema"];
 export type CalendarEntryAttendanceStatus =
   components["schemas"]["CalendarEntryAttendanceStatus"];
 export type Day = components["schemas"]["DaySchema"] & {
-  reminders?: Reminder[];
   alarms?: Alarm[];
   brain_dump_items?: BrainDump[];
 };
@@ -47,7 +46,6 @@ export type DayContext = Omit<BaseDayContext, "calendar_entries"> & {
   events?: Event[];
   calendar_entries?: Event[];
   tasks?: Task[];
-  reminders?: Reminder[];
   alarms?: Alarm[];
 };
 
@@ -83,14 +81,6 @@ export type RecurrenceSchedule =
   components["schemas"]["RecurrenceScheduleSchema"];
 export type Action = components["schemas"]["ActionSchema"];
 
-// Reminder types - manually defined as they may not be in generated types yet
-export interface Reminder {
-  id: string;
-  name: string;
-  status: ReminderStatus;
-  created_at?: string | null;
-}
-
 export interface Alarm {
   id?: string | null;
   name: string;
@@ -124,9 +114,6 @@ export type DayOfWeek = components["schemas"]["DayOfWeek"];
 export type TimeBlockType = components["schemas"]["TimeBlockType"];
 export type TimeBlockCategory = components["schemas"]["TimeBlockCategory"];
 export type ActionType = components["schemas"]["ActionType"];
-
-// ReminderStatus enum - manually defined as it may not be in generated types yet
-export type ReminderStatus = "INCOMPLETE" | "COMPLETE" | "PUNT";
 
 export type AlarmType = "URL" | "GENERIC";
 export type AlarmStatus = "ACTIVE" | "TRIGGERED" | "SNOOZED" | "CANCELLED";

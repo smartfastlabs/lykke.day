@@ -149,11 +149,15 @@ def test_day_record_task_action_validates_task() -> None:
     task = _build_task(user_id, dt_date(2025, 11, 28))
 
     with pytest.raises(DomainError, match="does not match day date"):
-        day.record_task_action(task, value_objects.Action(type=value_objects.ActionType.NOTIFY))
+        day.record_task_action(
+            task, value_objects.Action(type=value_objects.ActionType.NOTIFY)
+        )
 
     task = _build_task(uuid4(), day.date)
     with pytest.raises(DomainError, match="does not match day user_id"):
-        day.record_task_action(task, value_objects.Action(type=value_objects.ActionType.NOTIFY))
+        day.record_task_action(
+            task, value_objects.Action(type=value_objects.ActionType.NOTIFY)
+        )
 
 
 def test_day_alarm_lifecycle() -> None:
@@ -319,18 +323,4 @@ def test_day_update_alarm_status_noop_returns_alarm() -> None:
 
     assert same.id == alarm.id
     assert day.collect_events() == []
-
-
-def test_day_update_reminder_status_skips_non_matching_reminders() -> None:
-    user_id = uuid4()
-    day = _build_day(user_id)
-    reminder_a = day.add_reminder("Reminder A")
-    reminder_b = day.add_reminder("Reminder B")
-    day.collect_events()
-
-    updated = day.update_reminder_status(
-        reminder_b.id, value_objects.ReminderStatus.COMPLETE
-    )
-
-    assert updated.id == reminder_b.id
-    assert any(reminder.id == reminder_a.id for reminder in day.reminders)
+    assert day.collect_events() == []
