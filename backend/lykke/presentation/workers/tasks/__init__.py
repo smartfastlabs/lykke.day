@@ -26,6 +26,10 @@ from .common import (
     get_user_repository,
 )
 from .misc import example_triggered_task, heartbeat_task
+from .new_day import (
+    emit_new_day_event_for_all_users_task,
+    emit_new_day_event_for_user_task,
+)
 from .notifications import (
     evaluate_morning_overview_task,
     evaluate_morning_overviews_for_all_users_task,
@@ -44,6 +48,8 @@ register_worker_event_handlers()
 
 __all__ = [
     "clear_task_overrides",
+    "emit_new_day_event_for_all_users_task",
+    "emit_new_day_event_for_user_task",
     "evaluate_morning_overview_task",
     "evaluate_morning_overviews_for_all_users_task",
     "evaluate_smart_notification_task",

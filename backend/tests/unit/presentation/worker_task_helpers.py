@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Protocol
 from uuid import UUID
 
@@ -14,18 +13,22 @@ from tests.support.dobles import create_user_repo_double
 
 
 class TaskProtocol(Protocol):
-    async def kiq(self, **kwargs: Any) -> None:
-        ...
+    async def kiq(self, **kwargs: Any) -> None: ...
 
 
 class HandlerProtocol(Protocol):
-    async def handle(self, command: object) -> None:
-        ...
+    async def handle(self, command: object) -> None: ...
 
 
 class GatewayProtocol(Protocol):
-    async def close(self) -> None:
-        ...
+    async def publish_to_user_channel(
+        self,
+        user_id: UUID,
+        channel_type: str,
+        message: dict[str, Any],
+    ) -> None: ...
+
+    async def close(self) -> None: ...
 
 
 def _protocol_path(protocol_class: type) -> str:
@@ -57,6 +60,16 @@ def create_handler_recorder() -> tuple[InstanceDouble, list[object]]:
 def create_gateway_recorder() -> tuple[InstanceDouble, dict[str, bool]]:
     state = {"closed": False}
     gateway = InstanceDouble(_protocol_path(GatewayProtocol))
+
+    async def publish_to_user_channel(
+        user_id: UUID,
+        channel_type: str,
+        message: dict[str, Any],
+    ) -> None:
+        # No-op, but allows tests to assert it was called via dobles stubs if needed.
+        _ = (user_id, channel_type, message)
+
+    gateway.publish_to_user_channel = publish_to_user_channel
 
     async def close() -> None:
         state["closed"] = True
