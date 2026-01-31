@@ -31,100 +31,109 @@ class _TaskRecorder:
 
 
 @pytest.mark.asyncio
-async def test_smart_notification_trigger_enqueues_task(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_smart_notification_trigger_enqueues_task() -> None:
+    from lykke.presentation.workers import tasks as worker_tasks
+
     user_id = uuid4()
     recorder = _TaskRecorder(calls=[])
 
-    monkeypatch.setattr(
-        "lykke.presentation.workers.tasks.evaluate_smart_notification_task",
+    worker_tasks.set_worker_override(
+        worker_tasks.evaluate_smart_notification_task,
         recorder,
     )
-
-    handler = SmartNotificationTriggerHandler(create_read_only_repos_double(), user_id)
-    event = TaskCompletedEvent(
-        user_id=user_id,
-        task_id=uuid4(),
-        completed_at=datetime.now(UTC),
-        task_scheduled_date=datetime(2025, 11, 27, tzinfo=UTC).date(),
-        task_name="Task",
-        task_type="work",
-        task_category="work",
-        entity_id=uuid4(),
-        entity_type="task",
-        entity_date=datetime(2025, 11, 27, tzinfo=UTC).date(),
-    )
-
-    await handler.handle(event)
-
-    assert recorder.calls == [{"user_id": user_id, "triggered_by": "task_completed"}]
+    try:
+        handler = SmartNotificationTriggerHandler(
+            create_read_only_repos_double(), user_id
+        )
+        event = TaskCompletedEvent(
+            user_id=user_id,
+            task_id=uuid4(),
+            completed_at=datetime.now(UTC),
+            task_scheduled_date=datetime(2025, 11, 27, tzinfo=UTC).date(),
+            task_name="Task",
+            task_type="work",
+            task_category="work",
+            entity_id=uuid4(),
+            entity_type="task",
+            entity_date=datetime(2025, 11, 27, tzinfo=UTC).date(),
+        )
+        await handler.handle(event)
+        assert recorder.calls == [
+            {"user_id": user_id, "triggered_by": "task_completed"}
+        ]
+    finally:
+        worker_tasks.clear_worker_overrides()
 
 
 @pytest.mark.asyncio
-async def test_smart_notification_trigger_handles_errors(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_smart_notification_trigger_handles_errors() -> None:
+    from lykke.presentation.workers import tasks as worker_tasks
+
     user_id = uuid4()
 
-    class _Task:
+    class _Worker:
         async def kiq(self, **_: Any) -> None:
             raise RuntimeError("boom")
 
-    monkeypatch.setattr(
-        "lykke.presentation.workers.tasks.evaluate_smart_notification_task",
-        _Task(),
+    worker_tasks.set_worker_override(
+        worker_tasks.evaluate_smart_notification_task,
+        _Worker(),
     )
-
-    handler = SmartNotificationTriggerHandler(create_read_only_repos_double(), user_id)
-    event = TaskPuntedEvent(
-        user_id=user_id,
-        task_id=uuid4(),
-        old_status="ready",
-        new_status="punt",
-        task_scheduled_date=datetime(2025, 11, 27, tzinfo=UTC).date(),
-        task_name="Task",
-        task_type="work",
-        task_category="work",
-        entity_id=uuid4(),
-        entity_type="task",
-        entity_date=datetime(2025, 11, 27, tzinfo=UTC).date(),
-    )
-
-    await handler.handle(event)
+    try:
+        handler = SmartNotificationTriggerHandler(
+            create_read_only_repos_double(), user_id
+        )
+        event = TaskPuntedEvent(
+            user_id=user_id,
+            task_id=uuid4(),
+            old_status="ready",
+            new_status="punt",
+            task_scheduled_date=datetime(2025, 11, 27, tzinfo=UTC).date(),
+            task_name="Task",
+            task_type="work",
+            task_category="work",
+            entity_id=uuid4(),
+            entity_type="task",
+            entity_date=datetime(2025, 11, 27, tzinfo=UTC).date(),
+        )
+        await handler.handle(event)
+    finally:
+        worker_tasks.clear_worker_overrides()
 
 
 @pytest.mark.asyncio
-async def test_smart_notification_trigger_handles_status_change(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_smart_notification_trigger_handles_status_change() -> None:
+    from lykke.presentation.workers import tasks as worker_tasks
+
     user_id = uuid4()
     recorder = _TaskRecorder(calls=[])
 
-    monkeypatch.setattr(
-        "lykke.presentation.workers.tasks.evaluate_smart_notification_task",
+    worker_tasks.set_worker_override(
+        worker_tasks.evaluate_smart_notification_task,
         recorder,
     )
-
-    handler = SmartNotificationTriggerHandler(create_read_only_repos_double(), user_id)
-    event = TaskStatusChangedEvent(
-        user_id=user_id,
-        task_id=uuid4(),
-        old_status="ready",
-        new_status="complete",
-    )
-
-    await handler.handle(event)
-
-    assert recorder.calls == [
-        {"user_id": user_id, "triggered_by": "task_status_changed"}
-    ]
+    try:
+        handler = SmartNotificationTriggerHandler(
+            create_read_only_repos_double(), user_id
+        )
+        event = TaskStatusChangedEvent(
+            user_id=user_id,
+            task_id=uuid4(),
+            old_status="ready",
+            new_status="complete",
+        )
+        await handler.handle(event)
+        assert recorder.calls == [
+            {"user_id": user_id, "triggered_by": "task_status_changed"}
+        ]
+    finally:
+        worker_tasks.clear_worker_overrides()
 
 
 @pytest.mark.asyncio
-async def test_smart_notification_trigger_handles_unknown_event(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_smart_notification_trigger_handles_unknown_event() -> None:
+    from lykke.presentation.workers import tasks as worker_tasks
+
     user_id = uuid4()
     recorder = _TaskRecorder(calls=[])
 
@@ -132,16 +141,18 @@ async def test_smart_notification_trigger_handles_unknown_event(
     class _OtherEvent(DomainEvent):
         pass
 
-    monkeypatch.setattr(
-        "lykke.presentation.workers.tasks.evaluate_smart_notification_task",
+    worker_tasks.set_worker_override(
+        worker_tasks.evaluate_smart_notification_task,
         recorder,
     )
-
-    handler = SmartNotificationTriggerHandler(create_read_only_repos_double(), user_id)
-
-    await handler.handle(_OtherEvent(user_id=user_id))
-
-    assert recorder.calls == [{"user_id": user_id, "triggered_by": "task_event"}]
+    try:
+        handler = SmartNotificationTriggerHandler(
+            create_read_only_repos_double(), user_id
+        )
+        await handler.handle(_OtherEvent(user_id=user_id))
+        assert recorder.calls == [{"user_id": user_id, "triggered_by": "task_event"}]
+    finally:
+        worker_tasks.clear_worker_overrides()
 
 
 @pytest.mark.asyncio

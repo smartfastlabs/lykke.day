@@ -1,20 +1,30 @@
-"""Task override registry for worker tasks."""
+"""Worker override registry for background workers."""
 
+from collections.abc import Callable
 from typing import Any
 
-_TASK_OVERRIDES: dict[str, Any] = {}
+_WORKER_OVERRIDES: dict[str, Any] = {}
 
 
-def set_task_override(name: str, task: Any) -> None:
-    """Override a task by name for testing."""
-    _TASK_OVERRIDES[name] = task
+def set_worker_override(name: str | Callable[..., Any], worker: Any) -> None:
+    """Override a worker by name or by function (uses __name__) for testing."""
+    key = name if isinstance(name, str) else name.__name__
+    _WORKER_OVERRIDES[key] = worker
 
 
-def clear_task_overrides() -> None:
-    """Clear all task overrides."""
-    _TASK_OVERRIDES.clear()
+def clear_worker_overrides() -> None:
+    """Clear all worker overrides."""
+    _WORKER_OVERRIDES.clear()
 
 
-def get_task(name: str, default: Any) -> Any:
-    """Return an overridden task if set, otherwise the default."""
-    return _TASK_OVERRIDES.get(name, default)
+def get_worker(worker: Callable[..., Any]) -> Any:
+    """Return an overridden worker if set, otherwise the given worker."""
+    return _WORKER_OVERRIDES.get(worker.__name__, worker)
+
+
+class WorkerRegistry:
+    """Injectable registry that resolves workers with override support."""
+
+    def get_worker(self, worker: Callable[..., Any]) -> Any:
+        """Return the worker, or an override if set (for testing)."""
+        return get_worker(worker)

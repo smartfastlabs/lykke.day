@@ -39,7 +39,12 @@ from .notifications import (
     evaluate_smart_notifications_for_all_users_task,
 )
 from .registration import register_worker_event_handlers
-from .registry import clear_task_overrides, get_task, set_task_override
+from .registry import (
+    WorkerRegistry,
+    clear_worker_overrides,
+    get_worker,
+    set_worker_override,
+)
 from .scheduling import schedule_all_users_day_task, schedule_user_day_task
 
 # Create a scheduler for periodic tasks
@@ -48,8 +53,12 @@ scheduler = TaskiqScheduler(broker=broker, sources=[LabelScheduleSource(broker)]
 # Ensure handlers are registered when the worker tasks module is imported
 register_worker_event_handlers()
 
+from .post_commit_workers import WorkersToSchedule
+
 __all__ = [
-    "clear_task_overrides",
+    "WorkerRegistry",
+    "WorkersToSchedule",
+    "clear_worker_overrides",
     "emit_new_day_event_for_all_users_task",
     "emit_new_day_event_for_user_task",
     "evaluate_morning_overview_task",
@@ -67,9 +76,9 @@ __all__ = [
     "get_subscribe_calendar_handler",
     "get_sync_all_calendars_handler",
     "get_sync_calendar_handler",
-    "get_task",
     "get_unit_of_work_factory",
     "get_user_repository",
+    "get_worker",
     "heartbeat_task",
     "process_brain_dump_item_task",
     "process_inbound_sms_message_task",
@@ -78,7 +87,7 @@ __all__ = [
     "schedule_all_users_day_task",
     "schedule_user_day_task",
     "scheduler",
-    "set_task_override",
+    "set_worker_override",
     "sync_calendar_task",
     "sync_single_calendar_task",
     "trigger_alarms_for_all_users_task",

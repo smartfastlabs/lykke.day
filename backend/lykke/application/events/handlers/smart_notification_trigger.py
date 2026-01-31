@@ -49,11 +49,10 @@ class SmartNotificationTriggerHandler(DomainEventHandler):
         try:
             from lykke.presentation.workers import tasks as worker_tasks
 
-            task = worker_tasks.get_task(
-                "evaluate_smart_notification_task",
-                worker_tasks.evaluate_smart_notification_task,
+            worker = worker_tasks.get_worker(
+                worker_tasks.evaluate_smart_notification_task
             )
-            await task.kiq(
+            await worker.kiq(
                 user_id=user_id,
                 triggered_by=triggered_by,
             )

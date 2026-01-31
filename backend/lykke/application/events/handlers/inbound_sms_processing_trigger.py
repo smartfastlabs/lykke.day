@@ -22,11 +22,10 @@ class InboundSmsProcessingTriggerHandler(DomainEventHandler):
         try:
             from lykke.presentation.workers import tasks as worker_tasks
 
-            task = worker_tasks.get_task(
-                "process_inbound_sms_message_task",
-                worker_tasks.process_inbound_sms_message_task,
+            worker = worker_tasks.get_worker(
+                worker_tasks.process_inbound_sms_message_task
             )
-            await task.kiq(user_id=event.user_id, message_id=event.message_id)
+            await worker.kiq(user_id=event.user_id, message_id=event.message_id)
             logger.debug(
                 "Enqueued inbound SMS processing for user %s message %s",
                 event.user_id,

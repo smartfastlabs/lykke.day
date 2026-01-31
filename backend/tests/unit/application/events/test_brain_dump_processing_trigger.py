@@ -25,68 +25,69 @@ class _TaskRecorder:
 
 
 @pytest.mark.asyncio
-async def test_brain_dump_processing_enqueues_task(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_brain_dump_processing_enqueues_task() -> None:
+    from lykke.presentation.workers import tasks as worker_tasks
+
     user_id = uuid4()
     item_id = uuid4()
     recorder = _TaskRecorder(calls=[])
 
-    monkeypatch.setattr(
-        "lykke.presentation.workers.tasks.process_brain_dump_item_task",
+    worker_tasks.set_worker_override(
+        worker_tasks.process_brain_dump_item_task,
         recorder,
     )
-
-    handler = BrainDumpProcessingTriggerHandler(
-        create_read_only_repos_double(), user_id
-    )
-    event = BrainDumpAddedEvent(
-        user_id=user_id,
-        day_id=uuid4(),
-        date=dt_date(2025, 11, 27),
-        item_id=item_id,
-        item_text="New item",
-    )
-
-    await handler.handle(event)
-
-    assert recorder.calls == [
-        {
-            "user_id": user_id,
-            "day_date": "2025-11-27",
-            "item_id": item_id,
-        }
-    ]
+    try:
+        handler = BrainDumpProcessingTriggerHandler(
+            create_read_only_repos_double(), user_id
+        )
+        event = BrainDumpAddedEvent(
+            user_id=user_id,
+            day_id=uuid4(),
+            date=dt_date(2025, 11, 27),
+            item_id=item_id,
+            item_text="New item",
+        )
+        await handler.handle(event)
+        assert recorder.calls == [
+            {
+                "user_id": user_id,
+                "day_date": "2025-11-27",
+                "item_id": item_id,
+            }
+        ]
+    finally:
+        worker_tasks.clear_worker_overrides()
 
 
 @pytest.mark.asyncio
-async def test_brain_dump_processing_handles_errors(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_brain_dump_processing_handles_errors() -> None:
+    from lykke.presentation.workers import tasks as worker_tasks
+
     user_id = uuid4()
     item_id = uuid4()
 
-    class _Task:
+    class _Worker:
         async def kiq(self, **_: Any) -> None:
             raise RuntimeError("boom")
 
-    monkeypatch.setattr(
-        "lykke.presentation.workers.tasks.process_brain_dump_item_task",
-        _Task(),
+    worker_tasks.set_worker_override(
+        worker_tasks.process_brain_dump_item_task,
+        _Worker(),
     )
-
-    handler = BrainDumpProcessingTriggerHandler(
-        create_read_only_repos_double(), user_id
-    )
-    event = BrainDumpAddedEvent(
-        user_id=user_id,
-        day_id=uuid4(),
-        date=dt_date(2025, 11, 27),
-        item_id=item_id,
-        item_text="New item",
-    )
-
-    await handler.handle(event)
+    try:
+        handler = BrainDumpProcessingTriggerHandler(
+            create_read_only_repos_double(), user_id
+        )
+        event = BrainDumpAddedEvent(
+            user_id=user_id,
+            day_id=uuid4(),
+            date=dt_date(2025, 11, 27),
+            item_id=item_id,
+            item_text="New item",
+        )
+        await handler.handle(event)
+    finally:
+        worker_tasks.clear_worker_overrides()
 
 
 @pytest.mark.asyncio

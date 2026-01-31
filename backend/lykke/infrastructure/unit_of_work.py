@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, date as dt_date, datetime
 from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast
@@ -14,6 +15,7 @@ from redis import asyncio as aioredis  # type: ignore
 
 from lykke.application.events import send_domain_events
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
+from lykke.application.worker_schedule import NoOpWorkersToSchedule
 from lykke.core.config import settings
 from lykke.core.constants import (
     MAX_DOMAIN_EVENT_LOG_SIZE,
@@ -143,6 +145,10 @@ if TYPE_CHECKING:
         UserRepositoryReadWriteProtocol,
     )
     from lykke.application.unit_of_work import ReadOnlyRepositories, UnitOfWorkProtocol
+    from lykke.application.worker_schedule import (
+        WorkerRegistryProtocol,
+        WorkersToScheduleProtocol,
+    )
     from lykke.domain import value_objects
 
 # Type variable for entities
@@ -185,6 +191,7 @@ class SqlAlchemyUnitOfWork:
     time_block_definition_ro_repo: TimeBlockDefinitionRepositoryReadOnlyProtocol
     trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
+    workers_to_schedule: WorkersToScheduleProtocol
 
     # Entity type to repository attribute name mapping
     # Maps: entity_type -> (ro_repo_attr, rw_repo_attr)
@@ -234,15 +241,26 @@ class SqlAlchemyUnitOfWork:
         UseCaseConfigEntity: ("usecase_config_ro_repo", "_usecase_config_rw_repo"),
     }
 
-    def __init__(self, user_id: UUID, pubsub_gateway: PubSubGatewayProtocol) -> None:
+    def __init__(
+        self,
+        user_id: UUID,
+        pubsub_gateway: PubSubGatewayProtocol,
+        *,
+        workers_to_schedule_factory: (
+            Callable[[], WorkersToScheduleProtocol] | None
+        ) = None,
+    ) -> None:
         """Initialize the unit of work for a specific user.
 
         Args:
             user_id: The UUID of the user to scope repositories to.
             pubsub_gateway: PubSub gateway for broadcasting events
+            workers_to_schedule_factory: Optional callable that returns a fresh
+                WorkersToScheduleProtocol per UOW. When None, a no-op is used.
         """
         self.user_id = user_id
         self._connection: AsyncConnection | None = None
+        self._workers_to_schedule_factory = workers_to_schedule_factory
         self._token: Token[AsyncConnection | None] | None = None
         self._is_nested = False
         # Track entities that need to be saved
@@ -500,6 +518,12 @@ class SqlAlchemyUnitOfWork:
         )
         self._push_notification_rw_repo = push_notification_repo
 
+        self.workers_to_schedule = (
+            self._workers_to_schedule_factory()
+            if self._workers_to_schedule_factory is not None
+            else NoOpWorkersToSchedule()
+        )
+
         return self
 
     async def __aexit__(
@@ -643,6 +667,9 @@ class SqlAlchemyUnitOfWork:
         # Broadcast ALL domain events via PubSub after successful commit
         # This ensures external systems (WebSocket clients) only see committed data
         await self._broadcast_domain_events_to_redis(events)
+
+        # Flush workers scheduled during this transaction (only after commit)
+        await self.workers_to_schedule.flush()
 
     async def rollback(self) -> None:
         """Rollback the current transaction."""

@@ -22,11 +22,8 @@ class BrainDumpProcessingTriggerHandler(DomainEventHandler):
         try:
             from lykke.presentation.workers import tasks as worker_tasks
 
-            task = worker_tasks.get_task(
-                "process_brain_dump_item_task",
-                worker_tasks.process_brain_dump_item_task,
-            )
-            await task.kiq(
+            worker = worker_tasks.get_worker(worker_tasks.process_brain_dump_item_task)
+            await worker.kiq(
                 user_id=event.user_id,
                 day_date=event.date.isoformat(),
                 item_id=event.item_id,

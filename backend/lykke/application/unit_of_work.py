@@ -8,7 +8,7 @@ The Unit of Work pattern provides a way to:
 5. Track entities that need to be saved (via add() method)
 """
 
-from typing import Protocol, Self, TypeVar
+from typing import TYPE_CHECKING, Protocol, Self, TypeVar
 from uuid import UUID
 
 from lykke.application.repositories import (
@@ -38,6 +38,9 @@ from lykke.application.repositories import (
 )
 from lykke.domain import value_objects
 from lykke.domain.entities.base import BaseEntityObject
+
+if TYPE_CHECKING:
+    from lykke.application.worker_schedule import WorkersToScheduleProtocol
 
 # Type variable for entities
 _T = TypeVar("_T", bound=BaseEntityObject)
@@ -86,6 +89,9 @@ class UnitOfWorkProtocol(Protocol):
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
     sms_login_code_ro_repo: SmsLoginCodeRepositoryReadOnlyProtocol
+
+    # Workers to schedule after commit; flushed to broker only on successful commit
+    workers_to_schedule: "WorkersToScheduleProtocol"
 
     async def __aenter__(self) -> Self:
         """Enter the unit of work context.
