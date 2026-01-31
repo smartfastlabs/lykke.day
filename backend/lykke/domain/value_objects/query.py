@@ -167,19 +167,9 @@ class TimeBlockDefinitionQuery(BaseQuery):
 
 
 @dataclass(kw_only=True)
-class ConversationQuery(BaseQuery):
-    """Query class for Conversation entities."""
-
-    channel: str | None = None
-    status: str | None = None
-    bot_personality_id: UUID | None = None
-
-
-@dataclass(kw_only=True)
 class MessageQuery(BaseQuery):
     """Query class for Message entities."""
 
-    conversation_id: UUID | None = None
     role: str | None = None
 
 
@@ -195,10 +185,8 @@ class BotPersonalityQuery(BaseQuery):
 class FactoidQuery(BaseQuery):
     """Query class for Factoid entities."""
 
-    conversation_id: UUID | None = None
     factoid_type: str | None = None
     criticality: str | None = None
-    is_global: bool | None = None  # Filter for global vs conversation-specific factoids
 
 
 @dataclass(kw_only=True)

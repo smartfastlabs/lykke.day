@@ -871,10 +871,13 @@ export const calendarEntryAPI = {
 };
 
 export const marketingAPI = {
-  requestEarlyAccess: (email: string): Promise<void> =>
+  requestEarlyAccess: (payload: {
+    email?: string;
+    phone_number?: string;
+  }): Promise<void> =>
     fetchData<void>("/api/early-access", {
       method: "POST",
-      body: JSON.stringify({ email }),
+      body: JSON.stringify(payload),
       suppressAuthRedirect: true,
       suppressError: true,
     }),

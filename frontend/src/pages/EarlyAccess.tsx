@@ -23,7 +23,7 @@ export default function EarlyAccess() {
     setIsLoading(true);
 
     try {
-      await marketingAPI.requestEarlyAccess(value);
+      await marketingAPI.requestEarlyAccess({ email: value });
       setSuccess(true);
     } catch (err: unknown) {
       const message =

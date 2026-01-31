@@ -612,15 +612,193 @@
         ]
       }
     },
-    "/me/today/reminders": {
+    "/me/tomorrow/ensure-scheduled": {
       "post": {
         "tags": [
           "auth",
           "user"
         ],
-        "summary": "Add Reminder To Today",
-        "description": "Add a reminder to today.",
-        "operationId": "add_reminder_to_today_me_today_reminders_post",
+        "summary": "Ensure Tomorrow Scheduled",
+        "description": "Ensure tomorrow exists and is scheduled. Returns the Day.",
+        "operationId": "ensure_tomorrow_scheduled_me_tomorrow_ensure_scheduled_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DaySchema"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/me/tomorrow/reschedule": {
+      "put": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Reschedule Tomorrow",
+        "description": "Reschedule tomorrow by cleaning up and recreating all non-adhoc tasks.",
+        "operationId": "reschedule_tomorrow_me_tomorrow_reschedule_put",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DaySchema"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/me/tomorrow/day": {
+      "get": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Get Tomorrow Day",
+        "description": "Get tomorrow's Day (requires it to be scheduled).",
+        "operationId": "get_tomorrow_day_me_tomorrow_day_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DaySchema"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/me/tomorrow/calendar-entries": {
+      "get": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Get Tomorrow Calendar Entries",
+        "description": "Get tomorrow's calendar entries (requires it to be scheduled).",
+        "operationId": "get_tomorrow_calendar_entries_me_tomorrow_calendar_entries_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarEntrySchema"
+                  },
+                  "type": "array",
+                  "title": "Response Get Tomorrow Calendar Entries Me Tomorrow Calendar Entries Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/me/tomorrow/tasks": {
+      "get": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Get Tomorrow Tasks",
+        "description": "Get tomorrow's tasks (requires it to be scheduled).",
+        "operationId": "get_tomorrow_tasks_me_tomorrow_tasks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TaskSchema"
+                  },
+                  "type": "array",
+                  "title": "Response Get Tomorrow Tasks Me Tomorrow Tasks Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
+    },
+    "/me/tomorrow/routines": {
+      "get": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Get Tomorrow Routines",
+        "description": "Get tomorrow's routines (requires it to be scheduled).",
+        "operationId": "get_tomorrow_routines_me_tomorrow_routines_get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoutineSchema"
+                  },
+                  "title": "Response Get Tomorrow Routines Me Tomorrow Routines Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Add Routine To Tomorrow",
+        "description": "Add a routine's tasks to tomorrow (creates tomorrow's routine if needed).",
+        "operationId": "add_routine_to_tomorrow_me_tomorrow_routines_post",
         "security": [
           {
             "APIKeyCookie": []
@@ -628,12 +806,13 @@
         ],
         "parameters": [
           {
-            "name": "name",
+            "name": "routine_definition_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Name"
+              "format": "uuid",
+              "title": "Routine Definition Id"
             }
           }
         ],
@@ -643,7 +822,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReminderSchema"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskSchema"
+                  },
+                  "title": "Response Add Routine To Tomorrow Me Tomorrow Routines Post"
                 }
               }
             }
@@ -661,110 +844,32 @@
         }
       }
     },
-    "/me/today/reminders/{reminder_id}": {
-      "patch": {
+    "/me/tomorrow/context": {
+      "get": {
         "tags": [
           "auth",
           "user"
         ],
-        "summary": "Update Today Reminder Status",
-        "description": "Update a reminder's status for today.",
-        "operationId": "update_today_reminder_status_me_today_reminders__reminder_id__patch",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "reminder_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Reminder Id"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/ReminderStatus"
-            }
-          }
-        ],
+        "summary": "Get Tomorrow Context",
+        "description": "Get tomorrow's full DayContext snapshot (requires it to be scheduled).",
+        "operationId": "get_tomorrow_context_me_tomorrow_context_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReminderSchema"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/DayContextSchema"
                 }
               }
             }
           }
-        }
-      },
-      "delete": {
-        "tags": [
-          "auth",
-          "user"
-        ],
-        "summary": "Remove Reminder From Today",
-        "description": "Remove a reminder from today.",
-        "operationId": "remove_reminder_from_today_me_today_reminders__reminder_id__delete",
+        },
         "security": [
           {
             "APIKeyCookie": []
           }
-        ],
-        "parameters": [
-          {
-            "name": "reminder_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Reminder Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReminderSchema"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
+        ]
       }
     },
     "/me/today/alarms": {
@@ -914,6 +1019,255 @@
                 }
               ],
               "title": "Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/tomorrow/alarms": {
+      "post": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Add Alarm To Tomorrow",
+        "description": "Add an alarm to tomorrow.",
+        "operationId": "add_alarm_to_tomorrow_me_tomorrow_alarms_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "time",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "time",
+              "title": "Time"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Name"
+            }
+          },
+          {
+            "name": "alarm_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/AlarmType",
+              "default": "URL"
+            }
+          },
+          {
+            "name": "url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Remove Alarm From Tomorrow",
+        "description": "Remove an alarm from tomorrow.",
+        "operationId": "remove_alarm_from_tomorrow_me_tomorrow_alarms_delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "time",
+              "title": "Time"
+            }
+          },
+          {
+            "name": "alarm_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AlarmType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Alarm Type"
+            }
+          },
+          {
+            "name": "url",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlarmSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/tomorrow/alarms/{alarm_id}": {
+      "patch": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "Update Alarm Status For Tomorrow",
+        "description": "Update an alarm's status for tomorrow.",
+        "operationId": "update_alarm_status_for_tomorrow_me_tomorrow_alarms__alarm_id__patch",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "alarm_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alarm Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AlarmStatus"
+            }
+          },
+          {
+            "name": "snoozed_until",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Snoozed Until"
             }
           }
         ],
@@ -2347,13 +2701,55 @@
         }
       }
     },
+    "/tasks/{_id}": {
+      "delete": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Delete Task",
+        "description": "Delete a task.",
+        "operationId": "delete_task_tasks___id__delete",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": " Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tasks/adhoc": {
       "post": {
         "tags": [
           "tasks"
         ],
         "summary": "Create Adhoc Task",
-        "description": "Create an adhoc task.",
+        "description": "Create an adhoc or reminder task.",
         "operationId": "create_adhoc_task_tasks_adhoc_post",
         "requestBody": {
           "content": {
@@ -5661,6 +6057,10 @@
             "type": "string",
             "title": "Name"
           },
+          "type": {
+            "$ref": "#/components/schemas/TaskType",
+            "default": "ADHOC"
+          },
           "description": {
             "anyOf": [
               {
@@ -5700,7 +6100,7 @@
           "category"
         ],
         "title": "AdhocTaskCreateSchema",
-        "description": "API schema for creating adhoc tasks."
+        "description": "API schema for creating adhoc or reminder tasks."
       },
       "AlarmPresetSchema": {
         "properties": {
@@ -7098,13 +7498,6 @@
               }
             ]
           },
-          "reminders": {
-            "items": {
-              "$ref": "#/components/schemas/ReminderSchema"
-            },
-            "type": "array",
-            "title": "Reminders"
-          },
           "alarms": {
             "items": {
               "$ref": "#/components/schemas/AlarmSchema"
@@ -7758,15 +8151,30 @@
       "EarlyAccessRequestSchema": {
         "properties": {
           "email": {
-            "type": "string",
-            "format": "email",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Email"
+          },
+          "phone_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number"
           }
         },
         "type": "object",
-        "required": [
-          "email"
-        ],
         "title": "EarlyAccessRequestSchema",
         "description": "Request body for early access opt-in."
       },
@@ -7817,18 +8225,6 @@
           "criticality": {
             "$ref": "#/components/schemas/FactoidCriticality",
             "default": "normal"
-          },
-          "conversation_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Conversation Id"
           },
           "ai_suggested": {
             "type": "boolean",
@@ -7928,18 +8324,6 @@
             ],
             "title": "Created After"
           },
-          "conversation_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Conversation Id"
-          },
           "factoid_type": {
             "anyOf": [
               {
@@ -7961,17 +8345,6 @@
               }
             ],
             "title": "Criticality"
-          },
-          "is_global": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Global"
           }
         },
         "type": "object",
@@ -7995,18 +8368,6 @@
             "type": "string",
             "format": "uuid",
             "title": "User Id"
-          },
-          "conversation_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Conversation Id"
           },
           "factoid_type": {
             "type": "string",
@@ -8119,18 +8480,6 @@
                 "type": "null"
               }
             ]
-          },
-          "conversation_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Conversation Id"
           },
           "user_confirmed": {
             "anyOf": [
@@ -9574,58 +9923,6 @@
         "title": "RecurrenceScheduleSchema",
         "description": "API schema for RecurrenceSchedule value object."
       },
-      "ReminderSchema": {
-        "properties": {
-          "id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "status": {
-            "$ref": "#/components/schemas/ReminderStatus"
-          },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "status"
-        ],
-        "title": "ReminderSchema",
-        "description": "API schema for Reminder value object."
-      },
-      "ReminderStatus": {
-        "type": "string",
-        "enum": [
-          "INCOMPLETE",
-          "COMPLETE",
-          "PUNT"
-        ],
-        "title": "ReminderStatus",
-        "description": "Status of a reminder."
-      },
       "RoutineDefinitionCreateSchema": {
         "properties": {
           "name": {
@@ -10873,7 +11170,8 @@
           "FINANCIAL",
           "MAINTENANCE",
           "PLANNING",
-          "TECHNOLOGY"
+          "TECHNOLOGY",
+          "REMINDER"
         ],
         "title": "TaskType"
       },
@@ -11536,30 +11834,6 @@
           "settings": {
             "$ref": "#/components/schemas/UserSettingsSchema"
           },
-          "default_conversation_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Default Conversation Id"
-          },
-          "sms_conversation_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sms Conversation Id"
-          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -11828,30 +12102,6 @@
                 "type": "null"
               }
             ]
-          },
-          "default_conversation_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Default Conversation Id"
-          },
-          "sms_conversation_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sms Conversation Id"
           }
         },
         "type": "object",

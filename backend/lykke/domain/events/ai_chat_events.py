@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 from lykke.domain.value_objects.update import (
     BotPersonalityUpdateObject,
-    ConversationUpdateObject,
     FactoidUpdateObject,
 )
 
@@ -18,8 +17,6 @@ if TYPE_CHECKING:
 
 __all__ = [
     "BotPersonalityUpdatedEvent",
-    "ConversationCreatedEvent",
-    "ConversationUpdatedEvent",
     "FactoidCreatedEvent",
     "FactoidCriticalityUpdatedEvent",
     "FactoidUpdatedEvent",
@@ -29,45 +26,26 @@ __all__ = [
 
 
 @dataclass(frozen=True, kw_only=True)
-class ConversationCreatedEvent(DomainEvent):
-    """Event raised when a new conversation is created."""
-
-    conversation_id: UUID
-    bot_personality_id: UUID
-    channel: str  # ConversationChannel enum as string
-
-
-@dataclass(frozen=True, kw_only=True)
-class ConversationUpdatedEvent(EntityUpdatedEvent[ConversationUpdateObject]):
-    """Event raised when a conversation is updated."""
-
-
-@dataclass(frozen=True, kw_only=True)
 class MessageSentEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a message is sent in a conversation.
+    """Event raised when a message is sent.
 
-    Uses AuditableDomainEvent: User sent a message in AI chat conversation,
-    this is a deliberate user action that represents engagement with the AI.
-    Important for conversation history and context.
+    Uses AuditableDomainEvent: User sent a message to the system.
     """
 
     message_id: UUID
-    conversation_id: UUID
     role: str  # MessageRole enum as string
     content_preview: str  # First 100 chars of content
 
 
 @dataclass(frozen=True, kw_only=True)
 class MessageReceivedEvent(DomainEvent, AuditableDomainEvent):
-    """Event raised when a message is received in a conversation.
+    """Event raised when a message is received.
 
-    Uses AuditableDomainEvent: User sent a message to the system (via SMS or other
-    inbound channels). This is a deliberate user action and should appear in
-    the activity timeline.
+    Uses AuditableDomainEvent: User sent a message to the system (via SMS or other inbound channels).
+    This is a deliberate user action and should appear in the activity timeline.
     """
 
     message_id: UUID
-    conversation_id: UUID
     role: str  # MessageRole enum as string
     content_preview: str  # First 100 chars of content
 
@@ -77,7 +55,6 @@ class FactoidCreatedEvent(DomainEvent):
     """Event raised when a new factoid is created."""
 
     factoid_id: UUID
-    conversation_id: UUID | None  # None for global factoids
     factoid_type: str  # FactoidType enum as string
     criticality: str  # FactoidCriticality enum as string
 

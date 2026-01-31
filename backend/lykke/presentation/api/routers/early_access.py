@@ -54,9 +54,9 @@ async def request_early_access(
     ],
 ) -> StatusResponseSchema:
     """Capture lead contact as a user with status NEW_LEAD."""
-    normalized_email = data.email.strip().lower()
-
     handler = command_handler_factory.create(CreateLeadUserHandler)
-    await handler.handle(CreateLeadUserCommand(email=normalized_email))
+    await handler.handle(
+        CreateLeadUserCommand(email=data.email, phone_number=data.phone_number)
+    )
 
     return StatusResponseSchema()

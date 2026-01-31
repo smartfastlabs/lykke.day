@@ -4,7 +4,6 @@ export type FactoidCriticality = "normal" | "important" | "critical";
 export type Factoid = {
   id?: string | null;
   user_id?: string;
-  conversation_id?: string | null;
   factoid_type: FactoidType;
   criticality: FactoidCriticality;
   content: string;

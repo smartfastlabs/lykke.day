@@ -10,7 +10,7 @@ from .base import BaseEntitySchema, BaseSchema
 class MessageSchema(BaseEntitySchema):
     """API schema for Message entity."""
 
-    conversation_id: UUID
+    user_id: UUID
     role: str
     content: str
     meta: dict[str, Any] | None = None
@@ -18,7 +18,7 @@ class MessageSchema(BaseEntitySchema):
 
 
 class SendMessageRequestSchema(BaseSchema):
-    """API schema for sending a message to a conversation."""
+    """API schema for sending a message."""
 
     content: str
 

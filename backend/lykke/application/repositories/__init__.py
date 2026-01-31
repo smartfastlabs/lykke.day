@@ -29,10 +29,6 @@ from .calendar_repository import (
     CalendarRepositoryReadOnlyProtocol,
     CalendarRepositoryReadWriteProtocol,
 )
-from .conversation_repository import (
-    ConversationRepositoryReadOnlyProtocol,
-    ConversationRepositoryReadWriteProtocol,
-)
 from .day_repository import (
     DayRepositoryReadOnlyProtocol,
     DayRepositoryReadWriteProtocol,
@@ -109,8 +105,6 @@ __all__ = [
     "CalendarEntrySeriesRepositoryReadWriteProtocol",
     "CalendarRepositoryReadOnlyProtocol",
     "CalendarRepositoryReadWriteProtocol",
-    "ConversationRepositoryReadOnlyProtocol",
-    "ConversationRepositoryReadWriteProtocol",
     "DayRepositoryReadOnlyProtocol",
     "DayRepositoryReadWriteProtocol",
     "DayTemplateRepositoryReadOnlyProtocol",

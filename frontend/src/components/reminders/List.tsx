@@ -21,7 +21,9 @@ const ReminderItem: Component<{ reminder: Task }> = (props) => {
 
   const handleSwipeLeft = () => {
     if (props.reminder.status === "COMPLETE") {
-      removeReminder(props.reminder.id);
+      const reminderId = props.reminder.id;
+      if (!reminderId) return;
+      removeReminder(reminderId);
     } else {
       updateReminderStatus(props.reminder, "PUNT");
     }

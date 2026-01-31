@@ -74,7 +74,6 @@ async def create_factoid(
     handler = command_factory.create(CreateFactoidHandler)
     factoid = FactoidEntity(
         user_id=user.id,
-        conversation_id=factoid_data.conversation_id,
         factoid_type=factoid_data.factoid_type,
         criticality=factoid_data.criticality,
         content=factoid_data.content,
@@ -97,7 +96,6 @@ async def update_factoid(
         content=update_data.content,
         factoid_type=update_data.factoid_type,
         criticality=update_data.criticality,
-        conversation_id=update_data.conversation_id,
         user_confirmed=update_data.user_confirmed,
     )
     updated = await handler.handle(

@@ -8,15 +8,12 @@ from .base import Base
 
 
 class Factoid(Base):
-    """Factoid table for storing conversation factoids."""
+    """Factoid table for storing user factoids."""
 
     __tablename__ = "factoids"
 
     id = Column(PGUUID, primary_key=True)
     user_id = Column(PGUUID, ForeignKey("users.id"), nullable=False)
-    conversation_id = Column(
-        PGUUID, ForeignKey("conversations.id"), nullable=True
-    )  # None for global factoids
     factoid_type = Column(String, nullable=False)  # FactoidType enum as string
     criticality = Column(String, nullable=False)  # FactoidCriticality enum as string
     content = Column(Text, nullable=False)  # Factoid content
@@ -36,7 +33,6 @@ class Factoid(Base):
 
     __table_args__ = (
         Index("idx_factoids_user_id", "user_id"),
-        Index("idx_factoids_conversation_id", "conversation_id"),
         Index("idx_factoids_criticality", "criticality"),
         Index("idx_factoids_factoid_type", "factoid_type"),
         Index("idx_factoids_user_criticality", "user_id", "criticality"),

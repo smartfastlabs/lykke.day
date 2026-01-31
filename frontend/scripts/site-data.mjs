@@ -36,7 +36,7 @@ export const MARKETING_ROUTES = [
     path: "/podcasts",
     title: "Podcasts We Recommend",
     description:
-      "Conversations on attention, burnout recovery, and building a kinder relationship with productivity. Brilliant companions for in-between moments that explore mindfulness and intentional living.",
+      "Episodes on attention, burnout recovery, and building a kinder relationship with productivity. Brilliant companions for in-between moments that explore mindfulness and intentional living.",
   },
   {
     path: "/faq",

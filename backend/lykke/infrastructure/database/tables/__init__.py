@@ -8,7 +8,6 @@ from .brain_dumps import BrainDump
 from .calendar_entries import CalendarEntry
 from .calendar_entry_series import CalendarEntrySeries
 from .calendars import Calendar
-from .conversations import Conversation
 from .day_templates import DayTemplate
 from .days import Day
 from .factoids import Factoid
@@ -34,7 +33,6 @@ brain_dumps_tbl = BrainDump.__table__
 calendar_entries_tbl = CalendarEntry.__table__
 calendar_entry_series_tbl = CalendarEntrySeries.__table__
 calendars_tbl = Calendar.__table__
-conversations_tbl = Conversation.__table__
 day_templates_tbl = DayTemplate.__table__
 days_tbl = Day.__table__
 factoids_tbl = Factoid.__table__
@@ -63,7 +61,6 @@ __all__ = [
     "Calendar",
     "CalendarEntry",
     "CalendarEntrySeries",
-    "Conversation",
     "Day",
     "DayTemplate",
     "Factoid",
@@ -88,7 +85,6 @@ __all__ = [
     "calendar_entries_tbl",
     "calendar_entry_series_tbl",
     "calendars_tbl",
-    "conversations_tbl",
     "day_templates_tbl",
     "days_tbl",
     "factoids_tbl",

@@ -8,7 +8,6 @@ from uuid import UUID
 from lykke.application.queries.base import BaseQueryHandler, Query
 from lykke.application.queries.get_day_context import GetDayContextHandler
 from lykke.application.repositories import (
-    ConversationRepositoryReadOnlyProtocol,
     FactoidRepositoryReadOnlyProtocol,
     MessageRepositoryReadOnlyProtocol,
     PushNotificationRepositoryReadOnlyProtocol,
@@ -34,7 +33,6 @@ class GetLLMPromptContextHandler(
 ):
     """Gets the complete context needed for LLM prompts."""
 
-    conversation_ro_repo: ConversationRepositoryReadOnlyProtocol
     factoid_ro_repo: FactoidRepositoryReadOnlyProtocol
     message_ro_repo: MessageRepositoryReadOnlyProtocol
     push_notification_ro_repo: PushNotificationRepositoryReadOnlyProtocol
@@ -84,28 +82,14 @@ class GetLLMPromptContextHandler(
         )
 
     async def _get_recent_messages(self) -> list[MessageEntity]:
-        """Load recent messages from the most active conversation."""
-        conversations = await self.conversation_ro_repo.search(
-            value_objects.ConversationQuery(
-                status=value_objects.ConversationStatus.ACTIVE.value,
-                order_by="last_message_at",
-                order_by_desc=True,
-                limit=1,
-            )
-        )
-
-        if not conversations:
-            return []
-
+        """Load recent messages for the user."""
         messages = await self.message_ro_repo.search(
             value_objects.MessageQuery(
-                conversation_id=conversations[0].id,
                 order_by="created_at",
                 order_by_desc=True,
                 limit=_RECENT_MESSAGES_LIMIT,
             )
         )
-
         return list(reversed(messages))
 
     async def _get_factoids(self) -> list[FactoidEntity]:

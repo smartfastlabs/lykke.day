@@ -19,6 +19,7 @@ if TYPE_CHECKING:
         SyncAllCalendarsHandler,
         SyncCalendarHandler,
     )
+    from lykke.application.commands.message import ProcessInboundSmsHandler
     from lykke.application.commands.notifications import (
         MorningOverviewHandler,
         SmartNotificationHandler,
@@ -181,3 +182,20 @@ def get_process_brain_dump_handler(
         uow_factory=uow_factory,
     )
     return factory.create(ProcessBrainDumpHandler)
+
+
+def get_process_inbound_sms_handler(
+    user_id: UUID,
+    uow_factory: UnitOfWorkFactory,
+    ro_repo_factory: ReadOnlyRepositoryFactory,
+) -> ProcessInboundSmsHandler:
+    """Get a ProcessInboundSmsHandler instance for a user."""
+    from lykke.application.commands.message import ProcessInboundSmsHandler
+    from lykke.presentation.handler_factory import CommandHandlerFactory
+
+    factory = CommandHandlerFactory(
+        user_id=user_id,
+        ro_repo_factory=ro_repo_factory,
+        uow_factory=uow_factory,
+    )
+    return factory.create(ProcessInboundSmsHandler)

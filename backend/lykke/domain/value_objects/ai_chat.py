@@ -3,19 +3,20 @@
 from enum import Enum
 
 
-class ConversationChannel(str, Enum):
-    """Channel through which a conversation takes place."""
-
-    IN_APP = "in_app"
-    SMS = "sms"
-
-
 class MessageRole(str, Enum):
     """Role of the message sender."""
 
     USER = "user"
     ASSISTANT = "assistant"
     SYSTEM = "system"
+
+
+class MessageType(str, Enum):
+    """Type of message (channel/direction)."""
+
+    UNKNOWN = "UNKNOWN"
+    SMS_INBOUND = "SMS_INBOUND"
+    SMS_OUTBOUND = "SMS_OUTBOUND"
 
 
 class FactoidType(str, Enum):
@@ -39,11 +40,3 @@ class LLMProvider(str, Enum):
 
     ANTHROPIC = "anthropic"
     OPENAI = "openai"
-
-
-class ConversationStatus(str, Enum):
-    """Status of a conversation."""
-
-    ACTIVE = "active"
-    ARCHIVED = "archived"
-    PAUSED = "paused"

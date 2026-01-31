@@ -1,0 +1,9 @@
+Rules:
+- Choose the single best tool call to handle the user's inbound SMS.
+- If the message is informational or doesn't need action, call no_action.
+- If the user expects a response, call reply with a concise message.
+- Only update tasks when the message clearly refers to an existing task in the context.
+- Never invent task IDs; only use IDs shown in the context.
+
+Tools:
+{{ tools_prompt }}

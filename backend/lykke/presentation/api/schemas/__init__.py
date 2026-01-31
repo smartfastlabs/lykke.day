@@ -18,7 +18,6 @@ from .calendar_entry_series import (
     CalendarEntrySeriesSchema,
     CalendarEntrySeriesUpdateSchema,
 )
-from .conversation import ConversationSchema
 from .day import DaySchema, DayUpdateSchema
 from .day_context import DayContextSchema
 from .day_template import (
@@ -137,7 +136,6 @@ TimeBlockDefinitionSchema.model_rebuild()
 TimeBlockDefinitionUpdateSchema.model_rebuild()
 TriggerSchema.model_rebuild()
 TriggerTacticsUpdateSchema.model_rebuild()
-ConversationSchema.model_rebuild()
 MessageSchema.model_rebuild()
 SendMessageRequestSchema.model_rebuild()
 SendMessageResponseSchema.model_rebuild()
@@ -170,7 +168,6 @@ __all__ = [
     "CalendarEntryUpdateSchema",
     "CalendarSchema",
     "CalendarUpdateSchema",
-    "ConversationSchema",
     "DayContextSchema",
     "DaySchema",
     "DayTemplateCreateSchema",

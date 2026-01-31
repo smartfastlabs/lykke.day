@@ -69,7 +69,7 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
     )
 
     message = MessageEntity(
-        conversation_id=uuid4(),
+        user_id=user_id,
         role=value_objects.MessageRole.USER,
         content="Hello!",
         meta={"source": "test"},
@@ -154,6 +154,7 @@ def test_serialize_day_context_with_llm_prompt_data() -> None:
 
     assert serialized["messages"][0]["role"] == "user"
     assert serialized["messages"][0]["meta"]["source"] == "test"
+    assert serialized["messages"][0]["user_id"] == str(user_id)
 
     notification = serialized["push_notifications"][0]
     assert notification["content"]["title"] == "Hello"

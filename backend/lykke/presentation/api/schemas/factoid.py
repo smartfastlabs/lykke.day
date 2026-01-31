@@ -17,7 +17,6 @@ class FactoidCreateSchema(BaseSchema):
     content: str
     factoid_type: FactoidType = FactoidType.SEMANTIC
     criticality: FactoidCriticality = FactoidCriticality.NORMAL
-    conversation_id: UUID | None = None
     ai_suggested: bool = False
     user_confirmed: bool = True
 
@@ -28,7 +27,6 @@ class FactoidUpdateSchema(BaseSchema):
     content: str | None = None
     factoid_type: FactoidType | None = None
     criticality: FactoidCriticality | None = None
-    conversation_id: UUID | None = None
     user_confirmed: bool | None = None
 
 
@@ -36,7 +34,6 @@ class FactoidSchema(BaseEntitySchema):
     """Schema for Factoid entity."""
 
     user_id: UUID
-    conversation_id: UUID | None = None
     factoid_type: str
     criticality: str
     content: str
