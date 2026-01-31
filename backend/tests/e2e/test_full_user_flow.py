@@ -32,14 +32,17 @@ async def test_full_user_flow_e2e(test_client: TestClient):
     await reset_engine()
 
     # Step 1: Register a new user
-    email = f"test-{uuid4()}@example.com"
+    uid = uuid4()
+    email = f"test-{uid}@example.com"
     password = "test_password_123"
+    phone_number = f"+1555{uid.hex[:7]}"
 
     register_response = test_client.post(
         "/auth/register",
         json={
             "email": email,
             "password": password,
+            "phone_number": phone_number,
         },
     )
 

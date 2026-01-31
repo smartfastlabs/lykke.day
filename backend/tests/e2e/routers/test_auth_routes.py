@@ -8,14 +8,17 @@ import pytest
 @pytest.mark.asyncio
 async def test_register(test_client):
     """Test user registration via fastapi-users."""
-    email = f"test-{uuid4()}@example.com"
+    uid = uuid4()
+    email = f"test-{uid}@example.com"
     password = "password123"
+    phone_number = f"+1555{uid.hex[:7]}"
 
     response = test_client.post(
         "/auth/register",
         json={
             "email": email,
             "password": password,
+            "phone_number": phone_number,
         },
     )
 
@@ -28,8 +31,10 @@ async def test_register(test_client):
 @pytest.mark.asyncio
 async def test_register_duplicate_email(test_client):
     """Test registering with duplicate email fails."""
-    email = f"test-{uuid4()}@example.com"
+    uid = uuid4()
+    email = f"test-{uid}@example.com"
     password = "password123"
+    phone_number = f"+1555{uid.hex[:7]}"
 
     # Register first user
     test_client.post(
@@ -37,15 +42,17 @@ async def test_register_duplicate_email(test_client):
         json={
             "email": email,
             "password": password,
+            "phone_number": phone_number,
         },
     )
 
-    # Try to register again with same email
+    # Try to register again with same email (different phone)
     response = test_client.post(
         "/auth/register",
         json={
             "email": email,
             "password": password,
+            "phone_number": f"+1555{uuid4().hex[:7]}",
         },
     )
 
@@ -55,13 +62,19 @@ async def test_register_duplicate_email(test_client):
 @pytest.mark.asyncio
 async def test_login(test_client):
     """Test user login via fastapi-users."""
-    email = f"test-{uuid4()}@example.com"
+    uid = uuid4()
+    email = f"test-{uid}@example.com"
     password = "password123"
+    phone_number = f"+1555{uid.hex[:7]}"
 
     # Register user first
     test_client.post(
         "/auth/register",
-        json={"email": email, "password": password},
+        json={
+            "email": email,
+            "password": password,
+            "phone_number": phone_number,
+        },
     )
 
     # Login
@@ -79,13 +92,19 @@ async def test_login(test_client):
 @pytest.mark.asyncio
 async def test_login_wrong_password(test_client):
     """Test login with wrong password fails."""
-    email = f"test-{uuid4()}@example.com"
+    uid = uuid4()
+    email = f"test-{uid}@example.com"
     password = "correct_password"
+    phone_number = f"+1555{uid.hex[:7]}"
 
     # Register user
     test_client.post(
         "/auth/register",
-        json={"email": email, "password": password},
+        json={
+            "email": email,
+            "password": password,
+            "phone_number": phone_number,
+        },
     )
 
     # Try wrong password
@@ -101,13 +120,19 @@ async def test_login_wrong_password(test_client):
 @pytest.mark.asyncio
 async def test_logout(test_client):
     """Test user logout."""
-    email = f"test-{uuid4()}@example.com"
+    uid = uuid4()
+    email = f"test-{uid}@example.com"
     password = "password123"
+    phone_number = f"+1555{uid.hex[:7]}"
 
     # Register and login
     test_client.post(
         "/auth/register",
-        json={"email": email, "password": password},
+        json={
+            "email": email,
+            "password": password,
+            "phone_number": phone_number,
+        },
     )
     test_client.post(
         "/auth/login",

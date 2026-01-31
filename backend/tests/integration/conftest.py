@@ -41,13 +41,20 @@ from lykke.infrastructure.repositories import (
 async def create_test_user():
     """Factory to create unique test users."""
 
-    async def _create_user(email: str | None = None, **kwargs) -> UserEntity:
-        """Create a test user with unique email."""
+    async def _create_user(
+        email: str | None = None,
+        phone_number: str | None = None,
+        **kwargs,
+    ) -> UserEntity:
+        """Create a test user with unique email and phone."""
         if email is None:
             email = f"test-{uuid4()}@example.com"
+        if phone_number is None:
+            phone_number = f"+1555{uuid4().hex[:7]}"
 
         user = UserEntity(
             email=email,
+            phone_number=phone_number,
             hashed_password="test_hash",
             settings=kwargs.pop("settings", UserSetting()),
             **kwargs,

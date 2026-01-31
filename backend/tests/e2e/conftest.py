@@ -46,6 +46,7 @@ def setup_test_user_day_template():
         test_user_email = f"test_{uuid4()}@lykke.day"
         test_user = UserEntity(
             email=test_user_email,
+            phone_number=f"+1555{uuid4().hex[:7]}",
             hashed_password=pwd_context.hash("test_password"),
             settings=UserSetting(),
         )

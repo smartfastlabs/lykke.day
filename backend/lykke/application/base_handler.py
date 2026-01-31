@@ -22,6 +22,7 @@ if TYPE_CHECKING:
         PushSubscriptionRepositoryReadOnlyProtocol,
         RoutineDefinitionRepositoryReadOnlyProtocol,
         RoutineRepositoryReadOnlyProtocol,
+        SmsLoginCodeRepositoryReadOnlyProtocol,
         TacticRepositoryReadOnlyProtocol,
         TaskDefinitionRepositoryReadOnlyProtocol,
         TaskRepositoryReadOnlyProtocol,
@@ -73,6 +74,7 @@ class BaseHandler:
     trigger_ro_repo: "TriggerRepositoryReadOnlyProtocol"
     usecase_config_ro_repo: "UseCaseConfigRepositoryReadOnlyProtocol"
     user_ro_repo: "UserRepositoryReadOnlyProtocol"
+    sms_login_code_ro_repo: "SmsLoginCodeRepositoryReadOnlyProtocol"
 
     def __init__(self, ro_repos: ReadOnlyRepositories, user_id: UUID) -> None:
         """Initialize the handler with its dependencies.

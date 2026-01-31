@@ -48,6 +48,9 @@ class UserRepository(BaseRepository[UserEntity, value_objects.UserQuery]):
             "phone_number": user.phone_number,
             "hashed_password": user.hashed_password,
             "status": user.status,
+            "is_active": user.is_active,
+            "is_superuser": user.is_superuser,
+            "is_verified": user.is_verified,
         }
 
         # Handle settings JSONB field

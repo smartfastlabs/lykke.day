@@ -31,6 +31,7 @@ from lykke.application.repositories import (
     PushSubscriptionRepositoryReadOnlyProtocol,
     RoutineDefinitionRepositoryReadOnlyProtocol,
     RoutineRepositoryReadOnlyProtocol,
+    SmsLoginCodeRepositoryReadOnlyProtocol,
     TacticRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
@@ -296,6 +297,9 @@ def create_read_only_repos_double(
     repos_double.user_ro_repo = user_repo or create_repo_double(
         UserRepositoryReadOnlyProtocol
     )
+    repos_double.sms_login_code_ro_repo = create_repo_double(
+        SmsLoginCodeRepositoryReadOnlyProtocol
+    )
 
     return repos_double
 
@@ -405,6 +409,9 @@ def create_uow_double(
     )
     uow_double.user_ro_repo = user_repo or create_repo_double(
         UserRepositoryReadOnlyProtocol
+    )
+    uow_double.sms_login_code_ro_repo = create_repo_double(
+        SmsLoginCodeRepositoryReadOnlyProtocol
     )
 
     # Stub async context manager methods

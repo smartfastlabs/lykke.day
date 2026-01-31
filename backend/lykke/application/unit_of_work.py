@@ -27,6 +27,7 @@ from lykke.application.repositories import (
     PushSubscriptionRepositoryReadOnlyProtocol,
     RoutineDefinitionRepositoryReadOnlyProtocol,
     RoutineRepositoryReadOnlyProtocol,
+    SmsLoginCodeRepositoryReadOnlyProtocol,
     TacticRepositoryReadOnlyProtocol,
     TaskDefinitionRepositoryReadOnlyProtocol,
     TaskRepositoryReadOnlyProtocol,
@@ -84,6 +85,7 @@ class UnitOfWorkProtocol(Protocol):
     trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
+    sms_login_code_ro_repo: SmsLoginCodeRepositoryReadOnlyProtocol
 
     async def __aenter__(self) -> Self:
         """Enter the unit of work context.
@@ -245,6 +247,7 @@ class ReadOnlyRepositories(Protocol):
     trigger_ro_repo: TriggerRepositoryReadOnlyProtocol
     usecase_config_ro_repo: UseCaseConfigRepositoryReadOnlyProtocol
     user_ro_repo: UserRepositoryReadOnlyProtocol
+    sms_login_code_ro_repo: SmsLoginCodeRepositoryReadOnlyProtocol
 
 
 class ReadOnlyRepositoryFactory(Protocol):

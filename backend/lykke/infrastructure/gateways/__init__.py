@@ -7,6 +7,7 @@ from .sendgrid import SendGridGateway
 from .structured_log import StructuredLogGateway
 from .structured_log_backlog_redis import RedisStructuredLogBacklogGateway
 from .stub_pubsub import StubPubSubGateway
+from .stub_sms import StubSMSGateway
 from .twilio import TwilioGateway
 from .web_push import WebPushGateway
 
@@ -19,6 +20,7 @@ __all__ = [
     "SendGridGateway",
     "StructuredLogGateway",
     "StubPubSubGateway",
+    "StubSMSGateway",
     "TwilioGateway",
     "WebPushGateway",
     "google",

@@ -28,7 +28,9 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     email: Mapped[str] = mapped_column(
         String(length=320), unique=True, index=True, nullable=False
     )
-    phone_number = Column(String, nullable=True, unique=True)
+    phone_number: Mapped[str] = mapped_column(
+        String, nullable=False, unique=True, index=True
+    )
     settings = Column(JSONB)  # UserSetting as JSONB
     status: Mapped[str] = mapped_column(String, nullable=False, server_default="active")
     created_at = Column(DateTime, nullable=False)

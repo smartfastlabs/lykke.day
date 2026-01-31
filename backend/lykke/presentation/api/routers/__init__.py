@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from . import (
     admin,
+    auth_sms,
     brain_dump,
     calendar_entries,
     calendar_entry_series,

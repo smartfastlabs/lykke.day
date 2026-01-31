@@ -9,11 +9,13 @@ interface ButtonProps {
 }
 
 export const Button: Component<ButtonProps> = (props) => {
-  const baseClass = "w-full py-3 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
-  
-  const variantClass = () => props.variant === "secondary"
-    ? "bg-neutral-100 text-neutral-900 hover:bg-neutral-200 focus:ring-neutral-500"
-    : "bg-neutral-900 text-white hover:bg-neutral-800 focus:ring-neutral-900";
+  const baseClass =
+    "w-full py-3 px-4 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
+
+  const variantClass = () =>
+    props.variant === "secondary"
+      ? "bg-neutral-100 text-neutral-900 hover:bg-neutral-200 focus:ring-neutral-500"
+      : "bg-neutral-900 text-white hover:bg-neutral-800 focus:ring-neutral-900";
 
   return (
     <button
@@ -38,4 +40,3 @@ export const SubmitButton: Component<SubmitButtonProps> = (props) => (
     {props.isLoading ? (props.loadingText ?? "Loading...") : props.text}
   </Button>
 );
-

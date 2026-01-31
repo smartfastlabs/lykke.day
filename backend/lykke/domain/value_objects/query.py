@@ -54,6 +54,14 @@ class AuthTokenQuery(BaseQuery):
 
 
 @dataclass(kw_only=True)
+class SmsLoginCodeQuery(BaseQuery):
+    """Query class for SmsLoginCode entities."""
+
+    phone_number: str | None = None
+    consumed: bool | None = None  # False = only non-consumed (consumed_at is null)
+
+
+@dataclass(kw_only=True)
 class CalendarQuery(BaseQuery):
     """Query class for Calendar entities."""
 

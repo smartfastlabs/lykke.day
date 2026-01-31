@@ -28,9 +28,11 @@ USER_TIMEZONE = "America/Chicago"
 async def test_user():
     """Create a unique user for each test."""
     user_repo = UserRepository()
+    uid = uuid4()
     user = UserEntity(
-        id=uuid4(),
-        email=f"test-{uuid4()}@example.com",
+        id=uid,
+        email=f"test-{uid}@example.com",
+        phone_number=f"+1555{uid.hex[:7]}",
         hashed_password="test_hash",
         settings=UserSetting(timezone=USER_TIMEZONE),
     )

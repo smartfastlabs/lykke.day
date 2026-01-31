@@ -61,6 +61,10 @@ from .routine_repository import (
     RoutineRepositoryReadOnlyProtocol,
     RoutineRepositoryReadWriteProtocol,
 )
+from .sms_login_code_repository import (
+    SmsLoginCodeRepositoryReadOnlyProtocol,
+    SmsLoginCodeRepositoryReadWriteProtocol,
+)
 from .tactic_repository import (
     TacticRepositoryReadOnlyProtocol,
     TacticRepositoryReadWriteProtocol,
@@ -121,6 +125,8 @@ __all__ = [
     "RoutineDefinitionRepositoryReadWriteProtocol",
     "RoutineRepositoryReadOnlyProtocol",
     "RoutineRepositoryReadWriteProtocol",
+    "SmsLoginCodeRepositoryReadOnlyProtocol",
+    "SmsLoginCodeRepositoryReadWriteProtocol",
     "TacticRepositoryReadOnlyProtocol",
     "TacticRepositoryReadWriteProtocol",
     "TaskDefinitionRepositoryReadOnlyProtocol",

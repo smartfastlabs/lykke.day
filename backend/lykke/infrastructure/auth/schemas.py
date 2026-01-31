@@ -17,7 +17,19 @@ class UserRead(schemas.BaseUser[UUID]):
 class UserCreate(schemas.BaseUserCreate):
     """Schema for creating a new user."""
 
-    pass
+    phone_number: str
+
+    @field_validator("phone_number", mode="before")
+    @classmethod
+    def normalize_phone_number_input(cls, v: str | None) -> str:
+        if v is None or not str(v).strip():
+            msg = "Phone number is required"
+            raise ValueError(msg)
+        normalized = normalize_phone_number(str(v))
+        if not normalized:
+            msg = "Invalid phone number"
+            raise ValueError(msg)
+        return normalized
 
 
 class UserUpdate(schemas.BaseUserUpdate):

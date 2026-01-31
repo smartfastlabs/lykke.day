@@ -13,6 +13,7 @@ from .push_notification import PushNotificationRepository
 from .push_subscription import PushSubscriptionRepository
 from .routine import RoutineRepository
 from .routine_definition import RoutineDefinitionRepository
+from .sms_login_code import SmsLoginCodeRepository
 from .tactic import TacticRepository
 from .task import TaskRepository
 from .task_definition import TaskDefinitionRepository
@@ -37,6 +38,7 @@ __all__ = [
     "PushSubscriptionRepository",
     "RoutineDefinitionRepository",
     "RoutineRepository",
+    "SmsLoginCodeRepository",
     "TacticRepository",
     "TaskDefinitionRepository",
     "TaskRepository",

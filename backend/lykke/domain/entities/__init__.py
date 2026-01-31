@@ -15,6 +15,7 @@ from .push_notification import PushNotificationEntity
 from .push_subscription import PushSubscriptionEntity
 from .routine import RoutineEntity
 from .routine_definition import RoutineDefinitionEntity
+from .sms_login_code import SmsLoginCodeEntity
 from .tactic import TacticEntity
 from .task import TaskEntity
 from .task_definition import TaskDefinitionEntity
@@ -42,6 +43,7 @@ __all__ = [
     "PushSubscriptionEntity",
     "RoutineDefinitionEntity",
     "RoutineEntity",
+    "SmsLoginCodeEntity",
     "TacticEntity",
     "TaskDefinitionEntity",
     "TaskEntity",

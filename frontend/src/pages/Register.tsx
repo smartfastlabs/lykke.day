@@ -7,6 +7,7 @@ import { authAPI } from "@/utils/api";
 export default function Register() {
   const navigate = useNavigate();
   const [email, setEmail] = createSignal("");
+  const [phoneNumber, setPhoneNumber] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [error, setError] = createSignal("");
@@ -18,6 +19,11 @@ export default function Register() {
 
     if (!email() || !email().trim()) {
       setError("Email is required");
+      return;
+    }
+
+    if (!phoneNumber() || !phoneNumber().trim()) {
+      setError("Phone number is required");
       return;
     }
 
@@ -34,7 +40,7 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      await authAPI.register(email().trim(), password());
+      await authAPI.register(email().trim(), password(), phoneNumber().trim());
       await authAPI.login(email().trim(), password());
       navigate("/me/today");
     } catch (err: unknown) {
@@ -62,6 +68,16 @@ export default function Register() {
           value={email}
           onChange={setEmail}
           autocomplete="email"
+          required
+        />
+
+        <Input
+          id="phone"
+          type="tel"
+          placeholder="Phone number (e.g. +1 555 123 4567)"
+          value={phoneNumber}
+          onChange={setPhoneNumber}
+          autocomplete="tel"
           required
         />
 

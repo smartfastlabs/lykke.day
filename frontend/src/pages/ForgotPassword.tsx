@@ -1,96 +1,126 @@
 import { Show, createSignal } from "solid-js";
-import { A } from "@solidjs/router";
+import { A, useNavigate } from "@solidjs/router";
 import { Input, SubmitButton, FormError } from "@/components/forms";
 import ModalPage from "@/components/shared/ModalPage";
 import { authAPI } from "@/utils/api";
 
 export default function ForgotPassword() {
-  const [email, setEmail] = createSignal("");
+  const navigate = useNavigate();
+  const [phoneNumber, setPhoneNumber] = createSignal("");
+  const [code, setCode] = createSignal("");
+  const [step, setStep] = createSignal<"phone" | "code">("phone");
   const [error, setError] = createSignal("");
   const [isLoading, setIsLoading] = createSignal(false);
-  const [sent, setSent] = createSignal(false);
 
-  const handleSubmit = async (e: Event) => {
+  const handleRequestCode = async (e: Event) => {
     e.preventDefault();
-    const value = email().trim();
     setError("");
 
-    if (!value) {
-      setError("Email is required");
+    if (!phoneNumber() || !phoneNumber().trim()) {
+      setError("Phone number required");
       return;
     }
 
     setIsLoading(true);
+
     try {
-      await authAPI.forgotPassword(value);
-      setSent(true);
+      await authAPI.requestSmsCode(phoneNumber().trim());
+      setStep("code");
     } catch (err: unknown) {
       const message =
-        err instanceof Error
-          ? err.message
-          : "Unable to start the password reset process";
+        err instanceof Error ? err.message : "Unable to send login code";
       setError(message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleVerifyCode = async (e: Event) => {
+    e.preventDefault();
+    setError("");
+
+    if (!code() || !code().trim()) {
+      setError("Verification code required");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await authAPI.verifySmsCode(phoneNumber().trim(), code().trim());
+      navigate("/me/today");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Invalid or expired code";
+      setError(message);
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <ModalPage subtitle="We'll send a secure link to reset your password.">
+    <ModalPage subtitle="We'll text you a code to sign in.">
+      <div class="text-center space-y-1">
+        <p class="text-sm uppercase tracking-[0.2em] text-amber-600/80">
+          sign in with SMS
+        </p>
+        <p class="text-lg font-semibold text-stone-800">
+          {step() === "phone" ? "Enter your phone number" : "Enter the code"}
+        </p>
+      </div>
+
       <Show
-        when={!sent()}
+        when={step() === "phone"}
         fallback={
-          <div class="space-y-6 text-center">
-            <div class="space-y-2">
-              <p class="text-sm uppercase tracking-[0.2em] text-amber-600/80">
-                email sent
-              </p>
-              <p class="text-lg font-semibold text-stone-800">
-                Check your inbox
-              </p>
-            </div>
-            <p class="text-stone-600 text-sm leading-relaxed">
-              If your account exists, you'll receive an email with a link to
-              reset your password. The link will expire shortly for security.
+          <form onSubmit={handleVerifyCode} class="space-y-6">
+            <p class="text-sm text-stone-600">
+              We sent a 6-digit code to {phoneNumber()}
             </p>
-            <div class="space-y-2 text-sm text-stone-600">
-              <A
-                href="/login"
+
+            <Input
+              id="code"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              placeholder="000000"
+              value={code}
+              onChange={setCode}
+              autocomplete="one-time-code"
+            />
+
+            <FormError error={error()} />
+
+            <SubmitButton
+              isLoading={isLoading()}
+              loadingText="Verifying..."
+              text="Verify & sign in"
+            />
+
+            <p class="text-sm text-center text-stone-600">
+              Wrong number?{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("phone");
+                  setCode("");
+                  setError("");
+                }}
                 class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
               >
-                Return to sign in
-              </A>
-              <div>
-                or{" "}
-                <A
-                  href="/register"
-                  class="text-amber-700 font-semibold hover:text-amber-800 transition-colors"
-                >
-                  create an account
-                </A>
-              </div>
-            </div>
-          </div>
+                Go back
+              </button>
+            </p>
+          </form>
         }
       >
-        <div class="text-center space-y-1">
-          <p class="text-sm uppercase tracking-[0.2em] text-amber-600/80">
-            reset password
-          </p>
-          <p class="text-lg font-semibold text-stone-800">Forgot your password?</p>
-        </div>
-
-        <form onSubmit={handleSubmit} class="space-y-6">
+        <form onSubmit={handleRequestCode} class="space-y-6">
           <Input
-            id="email"
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(value) => {
-              setEmail(value);
-              setError("");
-            }}
-            autocomplete="email"
+            id="phone"
+            type="tel"
+            placeholder="Phone number (e.g. +1 555 123 4567)"
+            value={phoneNumber}
+            onChange={setPhoneNumber}
+            autocomplete="tel"
             required
           />
 
@@ -98,8 +128,8 @@ export default function ForgotPassword() {
 
           <SubmitButton
             isLoading={isLoading()}
-            loadingText="Sending link..."
-            text="Send reset link"
+            loadingText="Sending code..."
+            text="Send login code"
           />
 
           <p class="text-sm text-center text-stone-600">
@@ -110,11 +140,9 @@ export default function ForgotPassword() {
             >
               Sign in
             </A>
-            .
           </p>
         </form>
       </Show>
     </ModalPage>
   );
 }
-

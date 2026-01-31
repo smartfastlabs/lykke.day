@@ -431,12 +431,42 @@ export const authAPI = {
     }
   },
 
-  register: async (email: string, password: string): Promise<unknown> => {
+  register: async (
+    email: string,
+    password: string,
+    phone_number: string,
+  ): Promise<unknown> => {
     return fetchData("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, phone_number }),
       suppressAuthRedirect: true,
     });
+  },
+
+  requestSmsCode: async (phone_number: string): Promise<void> => {
+    await fetchData<{ status: string }>("/api/auth/sms/request", {
+      method: "POST",
+      body: JSON.stringify({ phone_number }),
+      suppressAuthRedirect: true,
+    });
+  },
+
+  verifySmsCode: async (phone_number: string, code: string): Promise<void> => {
+    const response = await fetch("/api/auth/sms/verify", {
+      method: "POST",
+      body: JSON.stringify({ phone_number, code }),
+      headers: DEFAULT_HEADERS,
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiRequestError(
+        (errorData as ApiError).detail || "Invalid or expired code",
+        response.status,
+        (errorData as ApiError).detail,
+      );
+    }
   },
 
   logout: async (): Promise<void> => {
@@ -447,42 +477,6 @@ export const authAPI = {
 
     if (!response.ok) {
       throw new ApiRequestError("Logout failed", response.status);
-    }
-  },
-
-  forgotPassword: async (email: string): Promise<void> => {
-    const response = await fetch("/api/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify({ email }),
-      headers: DEFAULT_HEADERS,
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new ApiRequestError(
-        (errorData as ApiError).detail || "Unable to request password reset",
-        response.status,
-        (errorData as ApiError).detail,
-      );
-    }
-  },
-
-  resetPassword: async (token: string, password: string): Promise<void> => {
-    const response = await fetch("/api/auth/reset-password", {
-      method: "POST",
-      body: JSON.stringify({ token, password }),
-      headers: DEFAULT_HEADERS,
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new ApiRequestError(
-        (errorData as ApiError).detail || "Unable to reset password",
-        response.status,
-        (errorData as ApiError).detail,
-      );
     }
   },
 

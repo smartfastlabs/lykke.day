@@ -16,6 +16,7 @@ from .push_notifications import PushNotification
 from .push_subscriptions import PushSubscription
 from .routine_definitions import RoutineDefinition
 from .routines import Routine
+from .sms_login_codes import SmsLoginCode
 from .tactics import Tactic
 from .task_definitions import TaskDefinition
 from .tasks import Task
@@ -41,6 +42,7 @@ push_notifications_tbl = PushNotification.__table__
 push_subscriptions_tbl = PushSubscription.__table__
 routines_tbl = Routine.__table__
 routine_definitions_tbl = RoutineDefinition.__table__
+sms_login_codes_tbl = SmsLoginCode.__table__
 task_definitions_tbl = TaskDefinition.__table__
 tactics_tbl = Tactic.__table__
 trigger_tactics_tbl = TriggerTactic.__table__
@@ -69,6 +71,7 @@ __all__ = [
     "PushSubscription",
     "Routine",
     "RoutineDefinition",
+    "SmsLoginCode",
     "Task",
     "Tactic",
     "TaskDefinition",
@@ -94,6 +97,7 @@ __all__ = [
     "push_subscriptions_tbl",
     "routines_tbl",
     "routine_definitions_tbl",
+    "sms_login_codes_tbl",
     "task_definitions_tbl",
     "tactics_tbl",
     "trigger_tactics_tbl",

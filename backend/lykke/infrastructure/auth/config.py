@@ -11,9 +11,11 @@ from fastapi_users.authentication import AuthenticationBackend, CookieTransport
 from fastapi_users.authentication.strategy import JWTStrategy
 from fastapi_users.exceptions import UserAlreadyExists
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from lykke.core.config import settings
+from lykke.core.utils.phone_numbers import normalize_phone_number
 from lykke.domain import value_objects
 from lykke.domain.entities.day_template import DayTemplateEntity
 from lykke.infrastructure.auth.schemas import UserCreate
@@ -78,9 +80,18 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         request: Request | None = None,
     ) -> User:
         """Create a new user with custom fields."""
-        # Check if user already exists
+        # Check if user already exists by email
         existing_user = await self.user_db.get_by_email(user_create.email)
         if existing_user is not None:
+            raise UserAlreadyExists()
+
+        # Check if user already exists by phone
+        normalized_phone = normalize_phone_number(user_create.phone_number)
+        session = self.user_db.session  # type: ignore[attr-defined]
+        result = await session.execute(
+            select(User).where(User.phone_number == normalized_phone)
+        )
+        if result.scalar_one_or_none() is not None:
             raise UserAlreadyExists()
 
         # Set custom fields before creation

@@ -21,7 +21,7 @@ from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
 )
-from lykke.presentation.api.routers import router
+from lykke.presentation.api.routers import auth_sms, router
 from lykke.presentation.handler_factory import build_domain_event_handler
 
 
@@ -130,10 +130,13 @@ app.include_router(
     tags=["auth"],
 )
 
+# Reset-password router removed; use SMS login flow instead
+
+# SMS code auth (phone-only signup/login)
 app.include_router(
-    fastapi_users.get_reset_password_router(),
-    prefix=f"{settings.API_PREFIX}/auth",
-    tags=["auth"],
+    auth_sms.router,
+    prefix=f"{settings.API_PREFIX}/auth/sms",
+    tags=["auth", "sms"],
 )
 
 # Include application router

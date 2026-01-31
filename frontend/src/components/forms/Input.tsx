@@ -6,7 +6,7 @@ const inputClass =
 
 interface InputProps {
   id: string;
-  type?: "text" | "email" | "password" | "number" | "time";
+  type?: "text" | "email" | "password" | "number" | "time" | "tel";
   placeholder: string;
   value: Accessor<string>;
   onChange: (value: string) => void;

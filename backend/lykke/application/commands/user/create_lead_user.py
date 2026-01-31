@@ -44,6 +44,12 @@ class CreateLeadUserHandler(BaseCommandHandler[CreateLeadUserCommand, None]):
                 if existing_by_phone:
                     return
 
+            # Users require phone_number; when capturing email-only leads, use placeholder
+            if not normalized_phone:
+                normalized_phone = (
+                    f"+1{digits_only(normalized_email or '') or uuid4().hex[:10]}"
+                )
+
             # Users require an email in storage; when capturing phone-only leads,
             # generate a stable placeholder email under a reserved domain.
             if normalized_email:

@@ -78,6 +78,7 @@ from lykke.infrastructure.repositories import (
     PushSubscriptionRepository,
     RoutineDefinitionRepository,
     RoutineRepository,
+    SmsLoginCodeRepository,
     TacticRepository,
     TaskDefinitionRepository,
     TaskRepository,
@@ -125,6 +126,7 @@ if TYPE_CHECKING:
         RoutineDefinitionRepositoryReadWriteProtocol,
         RoutineRepositoryReadOnlyProtocol,
         RoutineRepositoryReadWriteProtocol,
+        SmsLoginCodeRepositoryReadOnlyProtocol,
         TacticRepositoryReadOnlyProtocol,
         TacticRepositoryReadWriteProtocol,
         TaskDefinitionRepositoryReadOnlyProtocol,
@@ -325,6 +327,11 @@ class SqlAlchemyUnitOfWork:
             "AuthTokenRepositoryReadOnlyProtocol", auth_token_repo
         )
         self._auth_token_rw_repo = auth_token_repo
+
+        sms_login_code_repo = cast(
+            "SmsLoginCodeRepositoryReadOnlyProtocol", SmsLoginCodeRepository()
+        )
+        self.sms_login_code_ro_repo = sms_login_code_repo
 
         # All other repositories are user-scoped
         calendar_repo = cast(
@@ -1265,6 +1272,12 @@ class SqlAlchemyReadOnlyRepositories:
             PushNotificationRepository(user_id=self.user_id),
         )
         self.push_notification_ro_repo = push_notification_repo
+
+        sms_login_code_repo = cast(
+            "SmsLoginCodeRepositoryReadOnlyProtocol",
+            SmsLoginCodeRepository(),
+        )
+        self.sms_login_code_ro_repo = sms_login_code_repo
 
 
 class SqlAlchemyReadOnlyRepositoryFactory:
