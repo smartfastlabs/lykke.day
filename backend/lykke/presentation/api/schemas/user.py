@@ -3,8 +3,9 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
+from lykke.core.utils.phone_numbers import normalize_phone_number
 from lykke.domain.value_objects import LLMProvider, UserStatus
 
 from .alarm import AlarmPresetSchema
@@ -65,3 +66,11 @@ class UserUpdateSchema(BaseSchema):
     settings: UserSettingsUpdateSchema | None = None
     default_conversation_id: UUID | None = None
     sms_conversation_id: UUID | None = None
+
+    @field_validator("phone_number", mode="before")
+    @classmethod
+    def normalize_phone_number_input(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        normalized = normalize_phone_number(v)
+        return normalized or None

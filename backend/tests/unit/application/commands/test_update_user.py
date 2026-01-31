@@ -35,7 +35,7 @@ async def test_update_user_updates_fields_and_settings():
     handler = UpdateUserHandler(ro_repos, uow_factory, user.id)
 
     update_data = UserUpdateObject(
-        phone_number="123",
+        phone_number="(978) 844-4177",
         status=UserStatus.NEW_LEAD,
         settings_update=UserSettingUpdate.from_dict(
             {"template_defaults": ["a", "b", "c", "d", "e", "f", "g"]}
@@ -44,7 +44,7 @@ async def test_update_user_updates_fields_and_settings():
 
     updated = await handler.handle(UpdateUserCommand(update_data=update_data))
 
-    assert updated.phone_number == "123"
+    assert updated.phone_number == "+19788444177"
     assert updated.status == UserStatus.NEW_LEAD
     assert updated.settings.template_defaults == ["a", "b", "c", "d", "e", "f", "g"]
     assert uow.added == [updated]

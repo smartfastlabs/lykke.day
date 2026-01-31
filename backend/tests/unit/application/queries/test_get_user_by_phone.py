@@ -7,10 +7,7 @@ from dobles import allow
 
 from lykke.application.queries.user import GetUserByPhoneHandler, GetUserByPhoneQuery
 from lykke.domain.entities import UserEntity
-from tests.support.dobles import (
-    create_read_only_repos_double,
-    create_user_repo_double,
-)
+from tests.support.dobles import create_read_only_repos_double, create_user_repo_double
 
 
 @pytest.mark.asyncio
@@ -26,9 +23,7 @@ async def test_get_user_by_phone_returns_user_when_found():
     ro_repos = create_read_only_repos_double(user_repo=user_repo)
     handler = GetUserByPhoneHandler(ro_repos=ro_repos, user_id=uuid4())
 
-    result = await handler.handle(
-        GetUserByPhoneQuery(phone_number="+15551234567")
-    )
+    result = await handler.handle(GetUserByPhoneQuery(phone_number="+15551234567"))
 
     assert result == user
 
@@ -41,8 +36,6 @@ async def test_get_user_by_phone_returns_none_when_missing():
     ro_repos = create_read_only_repos_double(user_repo=user_repo)
     handler = GetUserByPhoneHandler(ro_repos=ro_repos, user_id=uuid4())
 
-    result = await handler.handle(
-        GetUserByPhoneQuery(phone_number="+15550000000")
-    )
+    result = await handler.handle(GetUserByPhoneQuery(phone_number="+15550000000"))
 
     assert result is None

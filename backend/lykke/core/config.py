@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     API_BASE_URL: str = "https://localhost:8080"
     WEB_DOMAIN: str = "http://localhost:8888"
     DEBUG: bool = False
+    DEFAULT_PHONE_REGION: str = "US"
     VAPID_SECRET_KEY: str = ""
     VAPID_PUBLIC_KEY: str = ""
     TWILIO_ACCOUNT_SID: str = ""

@@ -10,6 +10,7 @@ from lykke.application.commands.message import (
 )
 from lykke.application.queries.user import GetUserByPhoneHandler, GetUserByPhoneQuery
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
+from lykke.core.utils.phone_numbers import normalize_phone_number
 from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
     QueryHandlerFactory,
@@ -49,6 +50,9 @@ async def twilio_sms_webhook(
     if not from_number or body is None:
         logger.warning("Twilio SMS webhook missing From/Body")
         return Response(status_code=200)
+
+    from_number = normalize_phone_number(from_number)
+    to_number = normalize_phone_number(to_number) if to_number else None
 
     query_factory = QueryHandlerFactory(
         user_id=uuid4(), ro_repo_factory=ro_repo_factory

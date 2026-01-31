@@ -29,7 +29,13 @@ async def test_get_current_user_profile(authenticated_client):
 async def test_update_current_user_profile(authenticated_client):
     client, user = await authenticated_client()
 
-    phone_number = f"123-456-{user.id.hex[:6]}"
+    # Generate a unique, valid-ish NANP number per user to avoid unique constraint collisions
+    unique_suffix = int(user.id.hex[-7:], 16) % 10_000_000
+    suffix = f"{unique_suffix:07d}"
+    exchange_first = str((int(suffix[0]) % 8) + 2)  # 2-9
+    national = f"202{exchange_first}{suffix[1:3]}{suffix[3:]}"  # 10 digits
+    phone_number = national  # user-entered form (no +1)
+    expected_e164 = f"+1{national}"
     payload = {
         "phone_number": phone_number,
         "status": "new-lead",
@@ -45,7 +51,7 @@ async def test_update_current_user_profile(authenticated_client):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["phone_number"] == phone_number
+    assert data["phone_number"] == expected_e164
     assert data["status"] == "new-lead"
     assert data["is_verified"] is True
     assert data["settings"]["template_defaults"] == [
@@ -85,7 +91,12 @@ async def test_update_current_user_persists_settings_and_updates_timestamp(
     client, user = await authenticated_client()
     original_updated_at = user.updated_at
 
-    phone_number = f"999-888-7777-{user.id.hex[:6]}"
+    unique_suffix = int(user.id.hex[-7:], 16) % 10_000_000
+    suffix = f"{unique_suffix:07d}"
+    exchange_first = str((int(suffix[0]) % 8) + 2)  # 2-9
+    national = f"303{exchange_first}{suffix[1:3]}{suffix[3:]}"  # 10 digits, different area code
+    phone_number = national
+    expected_e164 = f"+1{national}"
     payload = {
         "phone_number": phone_number,
         "settings": {
@@ -101,7 +112,7 @@ async def test_update_current_user_persists_settings_and_updates_timestamp(
     updated_user = await repo.get(user.id)
 
     assert updated_user.settings.template_defaults == ["x"] * 7
-    assert updated_user.phone_number == phone_number
+    assert updated_user.phone_number == expected_e164
     assert updated_user.updated_at is not None
     assert updated_user.updated_at != original_updated_at
 
