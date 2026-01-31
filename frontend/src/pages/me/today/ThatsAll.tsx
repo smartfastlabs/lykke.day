@@ -13,11 +13,13 @@ const endOfDayQuotes = [
     author: "lykke",
   },
   {
-    quote: "The day is done. You've done what you could. Tomorrow is a fresh start.",
+    quote:
+      "The day is done. You've done what you could. Tomorrow is a fresh start.",
     author: "lykke",
   },
   {
-    quote: "Rest is not a reward for finishing everything. Rest is a requirement for living well.",
+    quote:
+      "Rest is not a reward for finishing everything. Rest is a requirement for living well.",
     author: "lykke",
   },
   {
@@ -38,7 +40,7 @@ export const ThatsAllPage: Component = () => {
     const today = new Date();
     const dayOfYear = Math.floor(
       (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) /
-        (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24),
     );
     return endOfDayQuotes[dayOfYear % endOfDayQuotes.length];
   });
@@ -74,7 +76,7 @@ export const ThatsAllPage: Component = () => {
             type="button"
             onClick={() => {
               setShowTodayCookie();
-              navigate("/me");
+              navigate("/me/today");
             }}
             class="inline-flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors"
             aria-label="Back to home"

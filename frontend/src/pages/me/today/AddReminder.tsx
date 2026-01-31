@@ -26,10 +26,10 @@ const AddReminderPage: Component = () => {
     try {
       setIsSaving(true);
       await addReminder(name);
-      navigate("/me");
+      navigate("/me/today");
     } catch (error) {
       setFormError(
-        error instanceof Error ? error.message : "Failed to add reminder."
+        error instanceof Error ? error.message : "Failed to add reminder.",
       );
     } finally {
       setIsSaving(false);
@@ -64,7 +64,7 @@ const AddReminderPage: Component = () => {
             />
             <button
               type="button"
-              onClick={() => navigate("/me")}
+              onClick={() => navigate("/me/today")}
               disabled={isSaving() || isLoading()}
               class="flex-1 h-11 flex items-center justify-center bg-white border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >

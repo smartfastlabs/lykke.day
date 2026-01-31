@@ -29,7 +29,7 @@ export default function Login() {
 
     try {
       await authAPI.login(email(), password());
-      navigate("/me");
+      navigate("/me/today");
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Authentication failed";

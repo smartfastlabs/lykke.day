@@ -199,15 +199,19 @@ export const TodayPage: Component = () => {
       <div class="mb-3">
         <NeedsAttentionSection tasks={allTasks()} />
       </div>
-      <div class="mb-6">
-        <RemindersSummary
-          reminders={allReminders()}
-          href="/me/today/reminders"
-        />
-      </div>
-      <div class="mb-6">
-        <AlarmsSummary alarms={allAlarms()} href="/me/today/alarms" />
-      </div>
+      <Show when={allReminders().length > 0}>
+        <div class="mb-6">
+          <RemindersSummary
+            reminders={allReminders()}
+            href="/me/today/reminders"
+          />
+        </div>
+      </Show>
+      <Show when={allAlarms().length > 0}>
+        <div class="mb-6">
+          <AlarmsSummary alarms={allAlarms()} href="/me/today/alarms" />
+        </div>
+      </Show>
       <div class="mb-6 flex flex-col md:flex-row gap-4">
         <Show when={hasUpcomingEvents()}>
           <div class="w-full md:w-1/2">

@@ -13,7 +13,10 @@ const formatTimeForInput = (value?: string | null): string => {
   return `${hours}:${minutes}`;
 };
 
-const buildIsoDateTime = (dayDate: string, timeValue: string): string | null => {
+const buildIsoDateTime = (
+  dayDate: string,
+  timeValue: string,
+): string | null => {
   const trimmedValue = timeValue.trim();
   if (!trimmedValue) return null;
   const [year, month, day] = dayDate.split("-").map(Number);
@@ -94,7 +97,7 @@ export const TodayEditPage: Component = () => {
       setIsDirty(false);
       // Trigger sync to ensure data is fresh
       sync();
-      navigate("/me");
+      navigate("/me/today");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to update day";
@@ -200,7 +203,9 @@ export const TodayEditPage: Component = () => {
                       <button
                         type="button"
                         onClick={() => {
-                          setIntentions(intentions().filter((_, i) => i !== index()));
+                          setIntentions(
+                            intentions().filter((_, i) => i !== index()),
+                          );
                           setIsDirty(true);
                         }}
                         class="text-amber-600 hover:text-amber-700"

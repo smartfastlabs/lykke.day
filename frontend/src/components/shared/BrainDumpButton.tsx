@@ -166,7 +166,7 @@ const BrainDumpButton: Component = () => {
     setIsAddModalOpen(false);
   };
 
-  const isOnMeHome = createMemo(() => location.pathname === "/me");
+  const isOnMeHome = createMemo(() => location.pathname === "/me/today");
 
   const closeDictationModal = () => {
     stopDictation(true);
@@ -245,7 +245,7 @@ const BrainDumpButton: Component = () => {
                 openAddModal();
                 return;
               }
-              navigate("/me");
+              navigate("/me/today");
             }}
             class="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 bg-white/80 text-stone-600 shadow-lg shadow-stone-900/5 transition hover:bg-white active:scale-95"
             aria-label={isOnMeHome() ? "Add" : "Go to home"}

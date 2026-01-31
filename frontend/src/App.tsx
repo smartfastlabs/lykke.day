@@ -26,7 +26,7 @@ import Podcasts from "@/pages/Podcasts";
 import Resources from "@/pages/Resources";
 import Install from "@/pages/Install";
 import HomeLayout from "@/pages/me/today/Layout";
-import PreviewView from "@/pages/me/today/Preview";
+import TodayIndexView from "@/pages/me/today/Index";
 import TasksView from "@/pages/me/today/Tasks";
 import EventsView from "@/pages/me/today/Events";
 import AlarmsView from "@/pages/me/today/Alarms";
@@ -273,12 +273,7 @@ export default function App() {
               />
 
               <Route path="/me" component={AuthGuard}>
-                <Route path="/" component={HomeLayout}>
-                  <Route path="/" component={PreviewView} />
-                  <Route path="/tasks" component={TasksView} />
-                  <Route path="/events" component={EventsView} />
-                  <Route path="/edit" component={TodayEditPage} />
-                </Route>
+                <Route path="/" component={NotFound} />
                 <Route path="/today/kiosk" component={KioskPage} />
                 <Route path="/brain-dump" component={BrainDumpPage} />
                 <Route path="/adhoc-task" component={AddAdhocTaskPage} />
@@ -310,7 +305,7 @@ export default function App() {
                   component={TodayBrainDumpDetailPage}
                 />
                 <Route path="/today" component={HomeLayout}>
-                  <Route path="/" component={PreviewView} />
+                  <Route path="/" component={TodayIndexView} />
                   <Route path="/tasks" component={TasksView} />
                   <Route path="/events" component={EventsView} />
                   <Route path="/alarms" component={AlarmsView} />

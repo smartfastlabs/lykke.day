@@ -32,10 +32,10 @@ const AddAdhocTaskPage: Component = () => {
     try {
       setIsSaving(true);
       await addAdhocTask(name, taskCategory());
-      navigate("/me");
+      navigate("/me/today");
     } catch (error) {
       setFormError(
-        error instanceof Error ? error.message : "Failed to add task."
+        error instanceof Error ? error.message : "Failed to add task.",
       );
     } finally {
       setIsSaving(false);
@@ -78,7 +78,7 @@ const AddAdhocTaskPage: Component = () => {
             />
             <button
               type="button"
-              onClick={() => navigate("/me")}
+              onClick={() => navigate("/me/today")}
               disabled={isSaving() || isLoading()}
               class="flex-1 h-11 flex items-center justify-center bg-white border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >

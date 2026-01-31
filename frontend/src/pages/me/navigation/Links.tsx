@@ -39,7 +39,7 @@ const NavPage: Component = () => {
           label: "Home",
           description: "Go back to your day overview.",
           icon: faHouse,
-          url: "/me",
+          url: "/me/today",
         },
         {
           label: "Tomorrow",

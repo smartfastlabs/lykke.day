@@ -89,10 +89,10 @@ const AddAlarmPage: Component = () => {
         alarmType: alarmType(),
         url: url || undefined,
       });
-      navigate("/me");
+      navigate("/me/today");
     } catch (error) {
       setFormError(
-        error instanceof Error ? error.message : "Failed to add alarm."
+        error instanceof Error ? error.message : "Failed to add alarm.",
       );
     } finally {
       setIsSaving(false);
@@ -161,7 +161,7 @@ const AddAlarmPage: Component = () => {
             />
             <button
               type="button"
-              onClick={() => navigate("/me")}
+              onClick={() => navigate("/me/today")}
               disabled={isSaving() || isLoading()}
               class="flex-1 h-11 flex items-center justify-center bg-white border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >

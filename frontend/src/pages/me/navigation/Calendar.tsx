@@ -32,7 +32,7 @@ const CalendarPage: Component = () => {
   const days = getNextSevenDays();
 
   function onClick(_item: DayItem) {
-    navigate("/me");
+    navigate("/me/today");
   }
 
   return (
