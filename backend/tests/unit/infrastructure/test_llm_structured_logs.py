@@ -51,7 +51,8 @@ class _FakeStructuredGateway:
         self.closed = True
 
 
-def _echo_message(message: str) -> dict[str, str]:
+def echo_message(message: str) -> dict[str, str]:
+    """Echo a message."""
     return {"message": message}
 
 
@@ -66,7 +67,7 @@ async def test_openai_gateway_emits_structured_log(monkeypatch) -> None:
     result = await gateway.run_usecase(
         system_prompt="system",
         ask_prompt="ask",
-        tools=[LLMTool(name="echo_message", callback=_echo_message)],
+        tools=[LLMTool(callback=echo_message)],
         metadata={"user_id": "user-1"},
     )
 
@@ -90,7 +91,7 @@ async def test_anthropic_gateway_emits_structured_log(monkeypatch) -> None:
     result = await gateway.run_usecase(
         system_prompt="system",
         ask_prompt="ask",
-        tools=[LLMTool(name="echo_message", callback=_echo_message)],
+        tools=[LLMTool(callback=echo_message)],
         metadata={"user_id": "user-1"},
     )
 

@@ -197,7 +197,7 @@ class MorningOverviewHandler(
             priority: Literal["high", "medium", "low"] | None = None,
             reason: str | None = None,
         ) -> None:
-            """Send a morning overview notification if warranted."""
+            """Decide whether to send a morning overview."""
             if not should_notify:
                 logger.debug(
                     "LLM decided not to send morning overview for user %s",
@@ -276,9 +276,5 @@ class MorningOverviewHandler(
             return None
 
         return [
-            LLMTool(
-                name="decide_morning_overview",
-                callback=decide_morning_overview,
-                description="Decide whether to send a morning overview.",
-            )
+            LLMTool(callback=decide_morning_overview)
         ]

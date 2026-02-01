@@ -138,7 +138,14 @@ class ProcessBrainDumpHandler(
             cutoff_time: time | None = None,
             tags: list[value_objects.TaskTag] | None = None,
         ) -> None:
-            """Create a new task based on the brain dump item."""
+            """Create a new task based on the brain dump item.
+
+            Notes:
+            - Use when the item is a to-do or action.
+            - category must be one of the TaskCategory enum values (UPPERCASE).
+            - Time fields (available_time, start_time, end_time, cutoff_time)
+              should be 24h format HH:MM.
+            """
             await self._mark_brain_dump_item_as_command(
                 date=brain_dump_date,
                 item_id=brain_dump_item.id,
@@ -166,7 +173,11 @@ class ProcessBrainDumpHandler(
             )
 
         async def add_reminder(reminder: str) -> None:
-            """Create a new reminder (task with type REMINDER) based on the brain dump item."""
+            """Create a new reminder (task with type REMINDER) based on the brain dump item.
+
+            Notes:
+            - Use for simple, quick reminders.
+            """
             await self._mark_brain_dump_item_as_command(
                 date=brain_dump_date,
                 item_id=brain_dump_item.id,
@@ -184,7 +195,12 @@ class ProcessBrainDumpHandler(
             task_id: UUID,
             action: Literal["complete", "punt"],
         ) -> None:
-            """Update an existing task when the brain dump implies a status change."""
+            """Update an existing task when the brain dump implies a status change.
+
+            Notes:
+            - Use only when the item refers to an existing task.
+            - action must be "complete" or "punt".
+            """
             await self._mark_brain_dump_item_as_command(
                 date=brain_dump_date,
                 item_id=brain_dump_item.id,
@@ -207,7 +223,12 @@ class ProcessBrainDumpHandler(
             reminder_id: UUID,
             action: Literal["complete", "punt"],
         ) -> None:
-            """Update an existing reminder task (complete or punt)."""
+            """Update an existing reminder task (complete or punt).
+
+            Notes:
+            - Use only when the item refers to an existing reminder (task type REMINDER).
+            - action must be "complete" or "punt".
+            """
             await self._mark_brain_dump_item_as_command(
                 date=brain_dump_date,
                 item_id=brain_dump_item.id,
@@ -227,7 +248,11 @@ class ProcessBrainDumpHandler(
             )
 
         async def no_action(reason: str | None = None) -> None:
-            """Take no action if the brain dump is informational only."""
+            """Take no action if the brain dump is informational only.
+
+            Notes:
+            - If unsure or no action needed, choose this.
+            """
             if reason:
                 logger.debug(
                     "Brain dump item %s has no action: %s",
@@ -236,36 +261,11 @@ class ProcessBrainDumpHandler(
                 )
 
         return [
-            LLMTool(
-                callback=add_task,
-                prompt_notes=[
-                    "Use when the item is a to-do or action.",
-                    "category must be one of the TaskCategory enum values (UPPERCASE).",
-                    "Time fields (available_time, start_time, end_time, cutoff_time) should be 24h format HH:MM.",
-                ],
-            ),
-            LLMTool(
-                callback=add_reminder,
-                prompt_notes=["Use for simple, quick reminders."],
-            ),
-            LLMTool(
-                callback=update_task,
-                prompt_notes=[
-                    "Use only when the item refers to an existing task.",
-                    'action must be "complete" or "punt".',
-                ],
-            ),
-            LLMTool(
-                callback=update_reminder,
-                prompt_notes=[
-                    "Use only when the item refers to an existing reminder (task type REMINDER).",
-                    'action must be "complete" or "punt".',
-                ],
-            ),
-            LLMTool(
-                callback=no_action,
-                prompt_notes=["If unsure or no action needed, choose this."],
-            ),
+            LLMTool(callback=add_task),
+            LLMTool(callback=add_reminder),
+            LLMTool(callback=update_task),
+            LLMTool(callback=update_reminder),
+            LLMTool(callback=no_action),
         ]
 
     async def _mark_brain_dump_item_as_command(

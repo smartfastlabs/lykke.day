@@ -64,7 +64,9 @@ const LLMSnapshotDetails: Component<Props> = (props) => (
               <details class="rounded-xl border border-stone-200/80 bg-white/80 p-3">
                 <summary class="cursor-pointer text-xs font-semibold text-stone-700 flex flex-wrap gap-2">
                   <span>{toolName}</span>
-                  <span class="text-stone-400">{description}</span>
+                  <span class="text-stone-400 whitespace-pre-line break-words w-full">
+                    {description}
+                  </span>
                 </summary>
                 <pre class="mt-3 rounded-xl bg-stone-900/90 text-amber-100 text-xs p-4 overflow-auto whitespace-pre-wrap">
                   {safeStringify(tool)}

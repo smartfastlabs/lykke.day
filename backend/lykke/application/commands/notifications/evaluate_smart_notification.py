@@ -145,7 +145,7 @@ class SmartNotificationHandler(
             priority: Literal["high", "medium", "low"] | None = None,
             reason: str | None = None,
         ) -> None:
-            """Send a smart notification if warranted."""
+            """Decide whether to send a smart notification."""
             if not should_notify:
                 logger.debug(
                     "LLM decided not to send notification for user %s",
@@ -231,9 +231,5 @@ class SmartNotificationHandler(
             return None
 
         return [
-            LLMTool(
-                name="decide_notification",
-                callback=decide_notification,
-                description="Decide whether to send a smart notification.",
-            )
+            LLMTool(callback=decide_notification)
         ]

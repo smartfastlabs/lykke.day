@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from dataclasses import MISSING, fields, is_dataclass
 from typing import Any, TypeVar, cast, get_type_hints
 
@@ -42,11 +43,8 @@ def make_command_tool(
     handler: CommandHandler[CommandT, Any],
     command_type: type[CommandT],
     description: str | None = None,
-    prompt_notes: list[str] | None = None,
 ) -> LLMTool:
     """Create a thin LLMTool wrapper around a command handler."""
-    args_model = build_args_model_from_command(command_type)
-
     async def _call(**kwargs: Any) -> Any:
         command = command_type(**kwargs)
         return await handler.handle(command)
@@ -58,10 +56,27 @@ def make_command_tool(
     if description is None and handler.handle.__doc__:
         _call.__doc__ = handler.handle.__doc__
 
-    return LLMTool(
-        name=name,
-        callback=_call,
-        description=description,
-        prompt_notes=prompt_notes,
-        args_model=args_model,
-    )
+    hints = get_type_hints(command_type)
+    params: list[inspect.Parameter] = []
+    for command_field in fields(command_type):
+        annotation = hints.get(command_field.name, Any)
+        if command_field.default is not MISSING:
+            default = command_field.default
+        elif command_field.default_factory is not MISSING:
+            default = command_field.default_factory()
+        else:
+            default = inspect.Parameter.empty
+        params.append(
+            inspect.Parameter(
+                command_field.name,
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                default=default,
+                annotation=annotation,
+            )
+        )
+    _call.__signature__ = inspect.Signature(params)  # type: ignore[attr-defined]
+    _call.__annotations__ = {
+        field.name: hints.get(field.name, Any) for field in fields(command_type)
+    }
+
+    return LLMTool(callback=_call)

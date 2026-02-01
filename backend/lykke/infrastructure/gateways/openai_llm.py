@@ -377,7 +377,6 @@ class OpenAILLMGateway:
                 tool.callback,
                 tool_name=tool_name,
                 description=tool.description,
-                args_model=tool.args_model,
             )
             tool_specs.append(tool_spec)
             models_by_name[tool_name] = model

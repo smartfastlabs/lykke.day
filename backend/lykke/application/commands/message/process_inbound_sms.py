@@ -7,11 +7,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import time
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from loguru import logger
-from pydantic import Field, create_model
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.commands.day.add_alarm import (
@@ -246,13 +245,22 @@ class ProcessInboundSmsHandler(
             await _send_sms(message)
 
         async def reply(message: str | None = None) -> None:
-            """Reply to the user via SMS (optional message for no action)."""
+            """Reply to the user via SMS (optional message for no action).
+
+            Notes:
+            - Use when you want to respond or when no action is needed.
+            - Leave message empty to take no action.
+            """
             if message is None or not message.strip():
                 return
             await _send_sms(message)
 
         async def ask_question(message: str) -> None:
-            """Ask the user a follow-up question."""
+            """Ask the user a follow-up question.
+
+            Notes:
+            - Use when you need more information.
+            """
             await _send_sms(message)
 
         async def add_task(
@@ -266,7 +274,14 @@ class ProcessInboundSmsHandler(
             tags: list[value_objects.TaskTag] | None = None,
             message: str | None = None,
         ) -> None:
-            """Create a new task based on the inbound SMS."""
+            """Create a new task based on the inbound SMS.
+
+            Notes:
+            - Use when the SMS contains a to-do or action.
+            - category must be one of the TaskCategory enum values (UPPERCASE).
+            - Time fields should be 24h format HH:MM.
+            - Include an acknowledgment message when required.
+            """
             time_window = None
             if any([available_time, start_time, end_time, cutoff_time]):
                 time_window = value_objects.TimeWindow(
@@ -289,7 +304,12 @@ class ProcessInboundSmsHandler(
             await _maybe_send_acknowledgment(message)
 
         async def add_reminder(reminder: str, message: str | None = None) -> None:
-            """Create a new reminder (task type REMINDER) based on the inbound SMS."""
+            """Create a new reminder (task type REMINDER) based on the inbound SMS.
+
+            Notes:
+            - Use for simple, quick reminders.
+            - Include an acknowledgment message when required.
+            """
             await self._create_adhoc_task_handler.handle(
                 CreateAdhocTaskCommand(
                     scheduled_date=day_date,
@@ -301,9 +321,18 @@ class ProcessInboundSmsHandler(
             await _maybe_send_acknowledgment(message)
 
         async def update_task(
-            task_id: UUID, action: Literal["complete", "punt"], message: str | None = None
+            task_id: UUID,
+            action: Literal["complete", "punt"],
+            message: str | None = None,
         ) -> None:
-            """Update an existing task when the inbound SMS implies a status change."""
+            """Update an existing task when the inbound SMS implies a status change.
+
+            Notes:
+            - Use only when the SMS refers to an existing task.
+            - action must be "complete" or "punt".
+            - Never invent task IDs; only use IDs shown in the context.
+            - Include an acknowledgment message when required.
+            """
             action_type = (
                 value_objects.ActionType.COMPLETE
                 if action == "complete"
@@ -326,7 +355,13 @@ class ProcessInboundSmsHandler(
             alarm_type: value_objects.AlarmType = value_objects.AlarmType.URL,
             message: str | None = None,
         ) -> None:
-            """Add an alarm to today's day (user-local time)."""
+            """Add an alarm to today's day (user-local time).
+
+            Notes:
+            - Use when the user asks to set an alarm.
+            - alarm_time should be 24h format HH:MM.
+            - Include an acknowledgment message when required.
+            """
             await self._add_alarm_to_day_handler.handle(
                 AddAlarmToDayCommand(
                     date=day_date,
@@ -338,109 +373,13 @@ class ProcessInboundSmsHandler(
             )
             await _maybe_send_acknowledgment(message)
 
-        message_required = self._send_acknowledgment
-        message_field: tuple[Any, Any] = (
-            (
-                str,
-                Field(..., description="Acknowledgment message for the user."),
-            )
-            if message_required
-            else (
-                str | None,
-                Field(default=None, description="Optional acknowledgment message."),
-            )
-        )
-        reply_args = create_model(
-            "InboundSmsReplyArgs",
-            message=(str | None, Field(default=None, description="Optional reply.")),
-        )
-        ask_question_args = create_model(
-            "InboundSmsAskQuestionArgs",
-            message=(str, Field(..., description="Question for the user.")),
-        )
-        add_task_args = create_model(
-            "InboundSmsAddTaskArgs",
-            name=(str, Field(...)),
-            category=(value_objects.TaskCategory, Field(...)),
-            description=(str | None, Field(default=None)),
-            available_time=(time | None, Field(default=None)),
-            start_time=(time | None, Field(default=None)),
-            end_time=(time | None, Field(default=None)),
-            cutoff_time=(time | None, Field(default=None)),
-            tags=(list[value_objects.TaskTag] | None, Field(default=None)),
-            message=message_field,
-        )
-        add_reminder_args = create_model(
-            "InboundSmsAddReminderArgs",
-            reminder=(str, Field(...)),
-            message=message_field,
-        )
-        update_task_args = create_model(
-            "InboundSmsUpdateTaskArgs",
-            task_id=(UUID, Field(...)),
-            action=(Literal["complete", "punt"], Field(...)),
-            message=message_field,
-        )
-        add_alarm_args = create_model(
-            "InboundSmsAddAlarmArgs",
-            alarm_time=(time, Field(...)),
-            name=(str | None, Field(default=None)),
-            url=(str, Field(default="")),
-            alarm_type=(
-                value_objects.AlarmType,
-                Field(default=value_objects.AlarmType.URL),
-            ),
-            message=message_field,
-        )
-
         return [
-            LLMTool(
-                callback=reply,
-                args_model=reply_args,
-                prompt_notes=[
-                    "Use when you want to respond or when no action is needed.",
-                    "Leave message empty to take no action.",
-                ],
-            ),
-            LLMTool(
-                callback=ask_question,
-                args_model=ask_question_args,
-                prompt_notes=["Use when you need more information."],
-            ),
-            LLMTool(
-                callback=add_task,
-                args_model=add_task_args,
-                prompt_notes=[
-                    "Use when the SMS contains a to-do or action.",
-                    "category must be one of the TaskCategory enum values (UPPERCASE).",
-                    "Time fields should be 24h format HH:MM.",
-                    "Include an acknowledgment message when required.",
-                ],
-            ),
-            LLMTool(
-                callback=add_reminder,
-                args_model=add_reminder_args,
-                prompt_notes=["Use for simple, quick reminders."],
-            ),
-            LLMTool(
-                callback=add_alarm,
-                args_model=add_alarm_args,
-                prompt_notes=[
-                    "Use when the user asks to set an alarm.",
-                    "alarm_time should be 24h format HH:MM.",
-                    "Include an acknowledgment message when required.",
-                ],
-            ),
-            LLMTool(
-                callback=update_task,
-                args_model=update_task_args,
-                prompt_notes=[
-                    "Use only when the SMS refers to an existing task.",
-                    'action must be "complete" or "punt".',
-                    "Never invent task IDs; only use IDs shown in the context.",
-                    "Include an acknowledgment message when required.",
-                ],
-            ),
+            LLMTool(callback=reply),
+            LLMTool(callback=ask_question),
+            LLMTool(callback=add_task),
+            LLMTool(callback=add_reminder),
+            LLMTool(callback=add_alarm),
+            LLMTool(callback=update_task),
         ]
 
     async def _get_send_acknowledgment(self) -> bool:

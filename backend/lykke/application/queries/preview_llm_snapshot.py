@@ -7,7 +7,6 @@ from datetime import time
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import Field, create_model
 
 from lykke.application.gateways.llm_gateway_factory_protocol import (
     LLMGatewayFactoryProtocol,
@@ -184,11 +183,7 @@ class PreviewLLMSnapshotHandler(
             return None
 
         return [
-            LLMTool(
-                name="decide_notification",
-                callback=decide_notification,
-                description="Decide whether to send a smart notification.",
-            )
+            LLMTool(callback=decide_notification)
         ]
 
     @staticmethod
@@ -204,22 +199,28 @@ class PreviewLLMSnapshotHandler(
             return None
 
         return [
-            LLMTool(
-                name="decide_morning_overview",
-                callback=decide_morning_overview,
-                description="Decide whether to send a morning overview.",
-            )
+            LLMTool(callback=decide_morning_overview)
         ]
 
     @staticmethod
     def _build_inbound_sms_tools(send_acknowledgment: bool) -> list[LLMTool]:
+        _ = send_acknowledgment
         async def reply(message: str | None = None) -> None:
-            """Reply to the user via SMS (optional message for no action)."""
+            """Reply to the user via SMS (optional message for no action).
+
+            Notes:
+            - Use when you want to respond or when no action is needed.
+            - Leave message empty to take no action.
+            """
             _ = message
             return None
 
         async def ask_question(message: str) -> None:
-            """Ask the user a follow-up question."""
+            """Ask the user a follow-up question.
+
+            Notes:
+            - Use when you need more information.
+            """
             _ = message
             return None
 
@@ -234,7 +235,14 @@ class PreviewLLMSnapshotHandler(
             tags: list[value_objects.TaskTag] | None = None,
             message: str | None = None,
         ) -> None:
-            """Create a new task based on the inbound SMS."""
+            """Create a new task based on the inbound SMS.
+
+            Notes:
+            - Use when the SMS contains a to-do or action.
+            - category must be one of the TaskCategory enum values (UPPERCASE).
+            - Time fields should be 24h format HH:MM.
+            - Include an acknowledgment message when required.
+            """
             _ = (
                 name,
                 category,
@@ -249,7 +257,12 @@ class PreviewLLMSnapshotHandler(
             return None
 
         async def add_reminder(reminder: str, message: str | None = None) -> None:
-            """Create a new reminder (task type REMINDER) based on the inbound SMS."""
+            """Create a new reminder (task type REMINDER) based on the inbound SMS.
+
+            Notes:
+            - Use for simple, quick reminders.
+            - Include an acknowledgment message when required.
+            """
             _ = (reminder, message)
             return None
 
@@ -258,7 +271,14 @@ class PreviewLLMSnapshotHandler(
             action: Literal["complete", "punt"],
             message: str | None = None,
         ) -> None:
-            """Update an existing task when the inbound SMS implies a status change."""
+            """Update an existing task when the inbound SMS implies a status change.
+
+            Notes:
+            - Use only when the SMS refers to an existing task.
+            - action must be "complete" or "punt".
+            - Never invent task IDs; only use IDs shown in the context.
+            - Include an acknowledgment message when required.
+            """
             _ = (task_id, action, message)
             return None
 
@@ -269,65 +289,23 @@ class PreviewLLMSnapshotHandler(
             alarm_type: value_objects.AlarmType = value_objects.AlarmType.URL,
             message: str | None = None,
         ) -> None:
-            """Add an alarm to today's day (user-local time)."""
+            """Add an alarm to today's day (user-local time).
+
+            Notes:
+            - Use when the user asks to set an alarm.
+            - alarm_time should be 24h format HH:MM.
+            - Include an acknowledgment message when required.
+            """
             _ = (alarm_time, name, url, alarm_type, message)
             return None
 
-        message_field: tuple[Any, Any] = (
-            (str, Field(..., description="Acknowledgment message."))
-            if send_acknowledgment
-            else (str | None, Field(default=None, description="Optional message."))
-        )
-        reply_args = create_model(
-            "PreviewInboundSmsReplyArgs",
-            message=(str | None, Field(default=None)),
-        )
-        ask_question_args = create_model(
-            "PreviewInboundSmsAskQuestionArgs",
-            message=(str, Field(...)),
-        )
-        add_task_args = create_model(
-            "PreviewInboundSmsAddTaskArgs",
-            name=(str, Field(...)),
-            category=(value_objects.TaskCategory, Field(...)),
-            description=(str | None, Field(default=None)),
-            available_time=(time | None, Field(default=None)),
-            start_time=(time | None, Field(default=None)),
-            end_time=(time | None, Field(default=None)),
-            cutoff_time=(time | None, Field(default=None)),
-            tags=(list[value_objects.TaskTag] | None, Field(default=None)),
-            message=message_field,
-        )
-        add_reminder_args = create_model(
-            "PreviewInboundSmsAddReminderArgs",
-            reminder=(str, Field(...)),
-            message=message_field,
-        )
-        update_task_args = create_model(
-            "PreviewInboundSmsUpdateTaskArgs",
-            task_id=(UUID, Field(...)),
-            action=(Literal["complete", "punt"], Field(...)),
-            message=message_field,
-        )
-        add_alarm_args = create_model(
-            "PreviewInboundSmsAddAlarmArgs",
-            alarm_time=(time, Field(...)),
-            name=(str | None, Field(default=None)),
-            url=(str, Field(default="")),
-            alarm_type=(
-                value_objects.AlarmType,
-                Field(default=value_objects.AlarmType.URL),
-            ),
-            message=message_field,
-        )
-
         return [
-            LLMTool(callback=reply, args_model=reply_args),
-            LLMTool(callback=ask_question, args_model=ask_question_args),
-            LLMTool(callback=add_task, args_model=add_task_args),
-            LLMTool(callback=add_reminder, args_model=add_reminder_args),
-            LLMTool(callback=add_alarm, args_model=add_alarm_args),
-            LLMTool(callback=update_task, args_model=update_task_args),
+            LLMTool(callback=reply),
+            LLMTool(callback=ask_question),
+            LLMTool(callback=add_task),
+            LLMTool(callback=add_reminder),
+            LLMTool(callback=add_alarm),
+            LLMTool(callback=update_task),
         ]
 
     async def _get_send_acknowledgment(self, usecase: str) -> bool:

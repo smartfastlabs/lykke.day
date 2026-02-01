@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Awaitable, Callable, Sequence
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, get_type_hints
 
 if TYPE_CHECKING:
     from pydantic import BaseModel
+from pydantic import Field, create_model
 
 T = TypeVar("T")
 
@@ -18,19 +19,49 @@ class LLMTool:
     """Tool definition for LLM calls."""
 
     callback: Callable[..., Awaitable[Any] | Any]
-    name: str | None = None
-    description: str | None = None
-    prompt_notes: list[str] | None = None
-    args_model: type[BaseModel] | None = None
+    name: str = field(init=False)
+    description: str | None = field(init=False)
+    args_model: type[BaseModel] = field(init=False)
 
     def __post_init__(self) -> None:
-        if self.name is None:
-            inferred_name = getattr(self.callback, "__name__", None) or "tool"
-            object.__setattr__(self, "name", inferred_name)
-        if self.description is None:
-            inferred_description = inspect.getdoc(self.callback)
-            if inferred_description:
-                object.__setattr__(self, "description", inferred_description)
+        inferred_name = getattr(self.callback, "__name__", None) or "tool"
+        object.__setattr__(self, "name", inferred_name)
+
+        inferred_description = inspect.getdoc(self.callback)
+        object.__setattr__(self, "description", inferred_description)
+
+        args_model = self._build_args_model(self.callback, inferred_name)
+        object.__setattr__(self, "args_model", args_model)
+
+    @staticmethod
+    def _build_args_model(
+        callback: Callable[..., Awaitable[Any] | Any], tool_name: str
+    ) -> type[BaseModel]:
+        signature = inspect.signature(callback)
+        hints = get_type_hints(callback)
+        fields: dict[str, tuple[Any, Any]] = {}
+
+        for name, param in signature.parameters.items():
+            if name == "self":
+                continue
+            if param.kind in (
+                inspect.Parameter.VAR_POSITIONAL,
+                inspect.Parameter.VAR_KEYWORD,
+            ):
+                raise ValueError("LLM tool callbacks must use named parameters")
+
+            annotation = param.annotation
+            if annotation is inspect.Parameter.empty:
+                annotation = hints.get(name, Any)
+            elif isinstance(annotation, str):
+                annotation = hints.get(name, Any)
+            default_value: Any = (
+                ... if param.default is inspect.Parameter.empty else param.default
+            )
+            fields[name] = (annotation, Field(default=default_value))
+
+        model_name = "".join(part.title() for part in tool_name.split("_")) + "Args"
+        return create_model(model_name, **cast("dict[str, Any]", fields))
 
 
 @dataclass(frozen=True)

@@ -19,6 +19,7 @@ async def test_anthropic_llm_gateway_with_vcr() -> None:
         pytest.skip("ANTHROPIC_API_KEY is required to record the cassette.")
 
     def echo_message(message: str) -> dict[str, str]:
+        """Echo a message."""
         return {"message": message}
 
     gateway = AnthropicLLMGateway()
@@ -26,11 +27,7 @@ async def test_anthropic_llm_gateway_with_vcr() -> None:
         system_prompt="You are a test assistant.",
         ask_prompt="Call the echo_message tool with message 'hello'.",
         tools=[
-            LLMTool(
-                name="echo_message",
-                callback=echo_message,
-                description="Echo a message.",
-            )
+            LLMTool(callback=echo_message)
         ],
     )
 

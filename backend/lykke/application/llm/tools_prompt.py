@@ -15,7 +15,4 @@ def render_tools_prompt(tools: Sequence[LLMTool]) -> str:
             lines.append(f"- {tool.name}: {tool.description}")
         else:
             lines.append(f"- {tool.name}")
-        if tool.prompt_notes:
-            for note in tool.prompt_notes:
-                lines.append(f"  - {note}")
     return "\n".join(lines)
