@@ -57,11 +57,25 @@ class DayUpdatedEvent(EntityUpdatedEvent[DayUpdateObject]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class AlarmAddedEvent(DomainEvent, AuditableDomainEvent):
+class _AlarmDayEventBase(DomainEvent, AuditableDomainEvent):
+    """Base class for alarm events tied to a day."""
+
+    day_id: UUID
+    date: dt_date
+
+    def __post_init__(self) -> None:
+        if self.entity_id is None:
+            object.__setattr__(self, "entity_id", self.day_id)
+        if self.entity_type is None:
+            object.__setattr__(self, "entity_type", "day")
+        if self.entity_date is None:
+            object.__setattr__(self, "entity_date", self.date)
+
+
+@dataclass(frozen=True, kw_only=True)
+class AlarmAddedEvent(_AlarmDayEventBase):
     """Event raised when an alarm is added to a day."""
 
-    day_id: UUID
-    date: dt_date
     alarm_name: str
     alarm_time: time
     alarm_type: AlarmType
@@ -69,11 +83,9 @@ class AlarmAddedEvent(DomainEvent, AuditableDomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class AlarmRemovedEvent(DomainEvent, AuditableDomainEvent):
+class AlarmRemovedEvent(_AlarmDayEventBase):
     """Event raised when an alarm is removed from a day."""
 
-    day_id: UUID
-    date: dt_date
     alarm_name: str
     alarm_time: time
     alarm_type: AlarmType
@@ -81,11 +93,9 @@ class AlarmRemovedEvent(DomainEvent, AuditableDomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class AlarmTriggeredEvent(DomainEvent, AuditableDomainEvent):
+class AlarmTriggeredEvent(_AlarmDayEventBase):
     """Event raised when an alarm is triggered."""
 
-    day_id: UUID
-    date: dt_date
     alarm_id: UUID
     alarm_name: str
     alarm_time: time
@@ -123,11 +133,9 @@ class AlarmTriggeredEvent(DomainEvent, AuditableDomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
-class AlarmStatusChangedEvent(DomainEvent, AuditableDomainEvent):
+class AlarmStatusChangedEvent(_AlarmDayEventBase):
     """Event raised when an alarm's status changes."""
 
-    day_id: UUID
-    date: dt_date
     alarm_id: UUID
     alarm_name: str
     alarm_time: time

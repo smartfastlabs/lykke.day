@@ -269,6 +269,9 @@ def test_day_update_alarm_status_emits_events() -> None:
     )
     events = day.collect_events()
     assert isinstance(events[0], AlarmStatusChangedEvent)
+    assert events[0].entity_id == day.id
+    assert events[0].entity_type == "day"
+    assert events[0].entity_date == day.date
     assert updated.snoozed_until is not None
 
     triggered = day.update_alarm_status(
@@ -277,6 +280,9 @@ def test_day_update_alarm_status_emits_events() -> None:
     )
     events = day.collect_events()
     assert isinstance(events[0], AlarmTriggeredEvent)
+    assert events[0].entity_id == day.id
+    assert events[0].entity_type == "day"
+    assert events[0].entity_date == day.date
     assert triggered.status == value_objects.AlarmStatus.TRIGGERED
 
 
