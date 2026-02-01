@@ -36,6 +36,12 @@ class MessageSentEvent(DomainEvent, AuditableDomainEvent):
     role: str  # MessageRole enum as string
     content_preview: str  # First 100 chars of content
 
+    def __post_init__(self) -> None:
+        if self.entity_id is None:
+            object.__setattr__(self, "entity_id", self.message_id)
+        if self.entity_type is None:
+            object.__setattr__(self, "entity_type", "message")
+
 
 @dataclass(frozen=True, kw_only=True)
 class MessageReceivedEvent(DomainEvent, AuditableDomainEvent):
@@ -48,6 +54,12 @@ class MessageReceivedEvent(DomainEvent, AuditableDomainEvent):
     message_id: UUID
     role: str  # MessageRole enum as string
     content_preview: str  # First 100 chars of content
+
+    def __post_init__(self) -> None:
+        if self.entity_id is None:
+            object.__setattr__(self, "entity_id", self.message_id)
+        if self.entity_type is None:
+            object.__setattr__(self, "entity_type", "message")
 
 
 @dataclass(frozen=True, kw_only=True)

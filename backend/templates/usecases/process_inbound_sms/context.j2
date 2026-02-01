@@ -4,6 +4,6 @@ Inbound SMS:
 - meta: {{ inbound_message.meta }}
 
 Day context (today):
-{{ context | tojson(indent=2) }}
+{{ context_json | tojson(indent=2) }}
 
 Current time: {{ current_time }}

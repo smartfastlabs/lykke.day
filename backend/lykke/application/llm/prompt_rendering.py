@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any
 
 from lykke.application.repositories import UseCaseConfigRepositoryReadOnlyProtocol
+from lykke.core.utils.day_context_serialization import serialize_day_context
 from lykke.core.utils.templates import render_for_user
 from lykke.domain import value_objects
 from lykke.domain.entities import UserEntity
@@ -59,17 +60,17 @@ def render_context_prompt(
     extra_template_vars: dict[str, Any],
 ) -> str:
     """Render the context prompt for a usecase."""
+    context_json = serialize_day_context(prompt_context, current_time=current_time)
     return render_for_user(
         usecase,
         "context",
         context=prompt_context,
+        context_json=context_json,
         current_time=current_time,
         **extra_template_vars,
     )
 
 
-def render_ask_prompt(
-    *, usecase: str, extra_template_vars: dict[str, Any]
-) -> str:
+def render_ask_prompt(*, usecase: str, extra_template_vars: dict[str, Any]) -> str:
     """Render the ask prompt for a usecase."""
     return render_for_user(usecase, "ask", **extra_template_vars)
