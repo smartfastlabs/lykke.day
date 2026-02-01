@@ -5,6 +5,7 @@ from typing import ClassVar
 from loguru import logger
 
 from lykke.application.events.handlers.base import DomainEventHandler
+from lykke.application.worker_schedule import get_current_workers_to_schedule
 from lykke.domain.events.base import DomainEvent
 from lykke.domain.events.task_events import (
     TaskCompletedEvent,
@@ -47,18 +48,30 @@ class SmartNotificationTriggerHandler(DomainEventHandler):
         # Enqueue background task to evaluate notification
         # This runs asynchronously and doesn't block the transaction
         try:
-            from lykke.presentation.workers import tasks as worker_tasks
-
-            worker = worker_tasks.get_worker(
-                worker_tasks.evaluate_smart_notification_task
+            from lykke.presentation.workers.tasks.notifications import (
+                evaluate_smart_notification_task,
             )
-            await worker.kiq(
+
+            workers_to_schedule = get_current_workers_to_schedule()
+            if workers_to_schedule is None:
+                logger.warning(
+                    "No post-commit worker scheduler available for user %s "
+                    "(triggered by %s)",
+                    user_id,
+                    triggered_by,
+                )
+                return
+
+            workers_to_schedule.schedule(
+                evaluate_smart_notification_task,
                 user_id=user_id,
                 triggered_by=triggered_by,
             )
             logger.debug(
-                f"Enqueued smart notification evaluation for user {user_id} "
-                f"(triggered by {triggered_by})"
+                "Queued smart notification evaluation for user %s (triggered by %s) "
+                "(post-commit)",
+                user_id,
+                triggered_by,
             )
         except Exception as e:
             # Log but don't fail - this is a background task

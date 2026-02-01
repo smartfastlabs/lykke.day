@@ -157,12 +157,12 @@ class SmartNotificationHandler(
                 priority=priority or "medium",
                 reason=reason,
             )
-            if decision.priority != "high":
-                logger.debug(
-                    "LLM decided to send %s priority notification for user %s",
-                    decision.priority,
-                    self.user_id,
-                )
+            logger.debug(
+                "LLM decided to send %s priority notification for user %s",
+                decision.priority,
+                self.user_id,
+            )
+            if decision.priority not in ["high", "medium"]:
                 return
 
             llm_snapshot = build_llm_snapshot(
@@ -230,6 +230,4 @@ class SmartNotificationHandler(
                 logger.exception(exc)
             return None
 
-        return [
-            LLMTool(callback=decide_notification)
-        ]
+        return [LLMTool(callback=decide_notification)]
