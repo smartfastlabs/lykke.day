@@ -7,10 +7,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import time
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
 from loguru import logger
+from pydantic import Field, create_model
 
 from lykke.application.commands.base import BaseCommandHandler, Command
 from lykke.application.commands.day.add_alarm import (
@@ -81,6 +82,7 @@ class ProcessInboundSmsHandler(
         self._sms_gateway = sms_gateway
 
         self._inbound_message: MessageEntity | None = None
+        self._send_acknowledgment = True
 
     async def handle(self, command: ProcessInboundSmsCommand) -> None:
         """Run LLM processing for an inbound message and apply actions."""
@@ -117,12 +119,16 @@ class ProcessInboundSmsHandler(
         if self._inbound_message is None:
             raise RuntimeError("Inbound message context was not initialized")
 
+        self._send_acknowledgment = await self._get_send_acknowledgment()
         prompt_context = await self._get_llm_prompt_context_handler.handle(
             GetLLMPromptContextQuery(date=date)
         )
         return UseCasePromptInput(
             prompt_context=prompt_context,
-            extra_template_vars={"inbound_message": self._inbound_message},
+            extra_template_vars={
+                "inbound_message": self._inbound_message,
+                "send_acknowledgment": self._send_acknowledgment,
+            },
         )
 
     def _build_llm_run_result_snapshot(
@@ -189,8 +195,7 @@ class ProcessInboundSmsHandler(
 
         day_date = prompt_context.day.date
 
-        async def reply(message: str) -> None:
-            """Reply to the user via SMS."""
+        async def _send_sms(message: str) -> None:
             body = message.strip()
             if not body:
                 return
@@ -224,6 +229,27 @@ class ProcessInboundSmsHandler(
             except Exception as exc:  # pylint: disable=broad-except
                 logger.error("Failed sending SMS reply to %s: %s", from_number, exc)
 
+        async def _maybe_send_acknowledgment(message: str | None) -> None:
+            if not self._send_acknowledgment:
+                return
+            if message is None or not message.strip():
+                logger.debug(
+                    "Expected acknowledgment message for inbound message %s",
+                    inbound_message.id,
+                )
+                return
+            await _send_sms(message)
+
+        async def reply(message: str | None = None) -> None:
+            """Reply to the user via SMS (optional message for no action)."""
+            if message is None or not message.strip():
+                return
+            await _send_sms(message)
+
+        async def ask_question(message: str) -> None:
+            """Ask the user a follow-up question."""
+            await _send_sms(message)
+
         async def add_task(
             name: str,
             category: value_objects.TaskCategory,
@@ -233,6 +259,7 @@ class ProcessInboundSmsHandler(
             end_time: time | None = None,
             cutoff_time: time | None = None,
             tags: list[value_objects.TaskTag] | None = None,
+            message: str | None = None,
         ) -> None:
             """Create a new task based on the inbound SMS."""
             time_window = None
@@ -254,8 +281,9 @@ class ProcessInboundSmsHandler(
                     tags=tags or [],
                 )
             )
+            await _maybe_send_acknowledgment(message)
 
-        async def add_reminder(reminder: str) -> None:
+        async def add_reminder(reminder: str, message: str | None = None) -> None:
             """Create a new reminder (task type REMINDER) based on the inbound SMS."""
             await self._create_adhoc_task_handler.handle(
                 CreateAdhocTaskCommand(
@@ -265,9 +293,10 @@ class ProcessInboundSmsHandler(
                     type=value_objects.TaskType.REMINDER,
                 )
             )
+            await _maybe_send_acknowledgment(message)
 
         async def update_task(
-            task_id: UUID, action: Literal["complete", "punt"]
+            task_id: UUID, action: Literal["complete", "punt"], message: str | None = None
         ) -> None:
             """Update an existing task when the inbound SMS implies a status change."""
             action_type = (
@@ -283,12 +312,14 @@ class ProcessInboundSmsHandler(
                     ),
                 )
             )
+            await _maybe_send_acknowledgment(message)
 
         async def add_alarm(
             alarm_time: time,
             name: str | None = None,
             url: str = "",
             alarm_type: value_objects.AlarmType = value_objects.AlarmType.URL,
+            message: str | None = None,
         ) -> None:
             """Add an alarm to today's day (user-local time)."""
             await self._add_alarm_to_day_handler.handle(
@@ -300,51 +331,120 @@ class ProcessInboundSmsHandler(
                     url=url,
                 )
             )
+            await _maybe_send_acknowledgment(message)
 
-        async def no_action(reason: str | None = None) -> None:
-            """Take no action if the inbound SMS is informational only."""
-            if reason:
-                logger.debug(
-                    "Inbound message %s has no action: %s", inbound_message.id, reason
-                )
+        message_required = self._send_acknowledgment
+        message_field: tuple[Any, Any] = (
+            (
+                str,
+                Field(..., description="Acknowledgment message for the user."),
+            )
+            if message_required
+            else (
+                str | None,
+                Field(default=None, description="Optional acknowledgment message."),
+            )
+        )
+        reply_args = create_model(
+            "InboundSmsReplyArgs",
+            message=(str | None, Field(default=None, description="Optional reply.")),
+        )
+        ask_question_args = create_model(
+            "InboundSmsAskQuestionArgs",
+            message=(str, Field(..., description="Question for the user.")),
+        )
+        add_task_args = create_model(
+            "InboundSmsAddTaskArgs",
+            name=(str, Field(...)),
+            category=(value_objects.TaskCategory, Field(...)),
+            description=(str | None, Field(default=None)),
+            available_time=(time | None, Field(default=None)),
+            start_time=(time | None, Field(default=None)),
+            end_time=(time | None, Field(default=None)),
+            cutoff_time=(time | None, Field(default=None)),
+            tags=(list[value_objects.TaskTag] | None, Field(default=None)),
+            message=message_field,
+        )
+        add_reminder_args = create_model(
+            "InboundSmsAddReminderArgs",
+            reminder=(str, Field(...)),
+            message=message_field,
+        )
+        update_task_args = create_model(
+            "InboundSmsUpdateTaskArgs",
+            task_id=(UUID, Field(...)),
+            action=(Literal["complete", "punt"], Field(...)),
+            message=message_field,
+        )
+        add_alarm_args = create_model(
+            "InboundSmsAddAlarmArgs",
+            alarm_time=(time, Field(...)),
+            name=(str | None, Field(default=None)),
+            url=(str, Field(default="")),
+            alarm_type=(
+                value_objects.AlarmType,
+                Field(default=value_objects.AlarmType.URL),
+            ),
+            message=message_field,
+        )
 
         return [
             LLMTool(
                 callback=reply,
+                args_model=reply_args,
                 prompt_notes=[
-                    "Use when the user expects a response via SMS.",
-                    "Keep replies concise and actionable.",
+                    "Use when you want to respond or when no action is needed.",
+                    "Leave message empty to take no action.",
                 ],
             ),
             LLMTool(
+                callback=ask_question,
+                args_model=ask_question_args,
+                prompt_notes=["Use when you need more information."],
+            ),
+            LLMTool(
                 callback=add_task,
+                args_model=add_task_args,
                 prompt_notes=[
                     "Use when the SMS contains a to-do or action.",
                     "category must be one of the TaskCategory enum values (UPPERCASE).",
                     "Time fields should be 24h format HH:MM.",
+                    "Include an acknowledgment message when required.",
                 ],
             ),
             LLMTool(
                 callback=add_reminder,
+                args_model=add_reminder_args,
                 prompt_notes=["Use for simple, quick reminders."],
             ),
             LLMTool(
                 callback=add_alarm,
+                args_model=add_alarm_args,
                 prompt_notes=[
                     "Use when the user asks to set an alarm.",
                     "alarm_time should be 24h format HH:MM.",
+                    "Include an acknowledgment message when required.",
                 ],
             ),
             LLMTool(
                 callback=update_task,
+                args_model=update_task_args,
                 prompt_notes=[
                     "Use only when the SMS refers to an existing task.",
                     'action must be "complete" or "punt".',
                     "Never invent task IDs; only use IDs shown in the context.",
+                    "Include an acknowledgment message when required.",
                 ],
             ),
-            LLMTool(
-                callback=no_action,
-                prompt_notes=["If unsure or no action needed, choose this."],
-            ),
         ]
+
+    async def _get_send_acknowledgment(self) -> bool:
+        configs = await self.usecase_config_ro_repo.search(
+            value_objects.UseCaseConfigQuery(usecase=self.template_usecase)
+        )
+        if not configs:
+            return True
+        send_acknowledgment = configs[0].config.get("send_acknowledgment")
+        if isinstance(send_acknowledgment, bool):
+            return send_acknowledgment
+        return True

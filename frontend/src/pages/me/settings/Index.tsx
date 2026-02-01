@@ -15,6 +15,7 @@ import {
   faBolt,
   faBullseye,
   faMobileScreenButton,
+  faCommentDots,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { Icon } from "@/components/shared/Icon";
@@ -109,6 +110,12 @@ const settingsSections: SettingsSection[] = [
         description: "Manage reminders and alerts.",
         icon: faBell,
         url: "/me/settings/notifications",
+      },
+      {
+        label: "Messaging",
+        description: "Control inbound message handling.",
+        icon: faCommentDots,
+        url: "/me/settings/messaging",
       },
       {
         label: "Alarm Presets",

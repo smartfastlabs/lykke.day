@@ -16,6 +16,7 @@ import {
   RecurrenceSchedule,
   UseCaseConfig,
   NotificationUseCaseConfig,
+  MessagingUseCaseConfig,
   LLMRunResultSnapshot,
   Alarm,
   BrainDump,
@@ -624,6 +625,45 @@ export const usecaseConfigAPI = {
   getNotificationLLMSnapshotPreview: (): Promise<LLMRunResultSnapshot | null> =>
     fetchData<LLMRunResultSnapshot | null>(
       "/api/usecase-configs/notification/llm-preview",
+      { suppressError: true },
+    ).catch((err) => {
+      if (err instanceof ApiRequestError && err.status === 404) {
+        return null;
+      }
+      throw err;
+    }),
+
+  // Typed methods for messaging usecase
+  getMessagingConfig: (): Promise<MessagingUseCaseConfig> =>
+    fetchData<MessagingUseCaseConfig>(
+      "/api/usecase-configs/process_inbound_sms",
+      {
+        suppressError: true, // 404 is expected when no config exists
+      },
+    ).catch((err) => {
+      if (err instanceof ApiRequestError && err.status === 404) {
+        return {
+          user_amendments: [],
+          send_acknowledgment: true,
+        } as MessagingUseCaseConfig;
+      }
+      throw err;
+    }),
+
+  updateMessagingConfig: (
+    config: MessagingUseCaseConfig,
+  ): Promise<MessagingUseCaseConfig> =>
+    fetchData<MessagingUseCaseConfig>(
+      "/api/usecase-configs/process_inbound_sms",
+      {
+        method: "PUT",
+        body: JSON.stringify(config),
+      },
+    ),
+
+  getMessagingLLMSnapshotPreview: (): Promise<LLMRunResultSnapshot | null> =>
+    fetchData<LLMRunResultSnapshot | null>(
+      "/api/usecase-configs/process_inbound_sms/llm-preview",
       { suppressError: true },
     ).catch((err) => {
       if (err instanceof ApiRequestError && err.status === 404) {

@@ -31,3 +31,4 @@ class NotificationUseCaseConfigSchema(BaseSchema):
 
     user_amendments: list[str] = Field(default_factory=list)
     rendered_prompt: str | None = None
+    send_acknowledgment: bool | None = None

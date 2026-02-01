@@ -52,6 +52,9 @@ async def get_usecase_config(
         user_amendments = config.config.get("user_amendments", [])
         if not isinstance(user_amendments, list):
             user_amendments = []
+        send_acknowledgment = config.config.get("send_acknowledgment")
+        if not isinstance(send_acknowledgment, bool):
+            send_acknowledgment = None
 
         rendered_prompt = await render_system_prompt(
             usecase=usecase,
@@ -62,6 +65,7 @@ async def get_usecase_config(
         return NotificationUseCaseConfigSchema(
             user_amendments=user_amendments,
             rendered_prompt=rendered_prompt,
+            send_acknowledgment=send_acknowledgment,
         )
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
@@ -83,7 +87,11 @@ async def update_usecase_config(
     """Create or update usecase config."""
     create_handler = command_factory.create(CreateUseCaseConfigHandler)
     query_handler = query_factory.create(GetUseCaseConfigHandler)
-    config_dict = {"user_amendments": config_data.user_amendments or []}
+    existing_config = await query_handler.handle(GetUseCaseConfigQuery(usecase=usecase))
+    config_dict = dict(existing_config.config) if existing_config else {}
+    config_dict["user_amendments"] = config_data.user_amendments or []
+    if config_data.send_acknowledgment is not None:
+        config_dict["send_acknowledgment"] = config_data.send_acknowledgment
 
     await create_handler.handle(
         CreateUseCaseConfigCommand(
@@ -99,6 +107,9 @@ async def update_usecase_config(
         user_amendments = saved_config.config.get("user_amendments", [])
         if not isinstance(user_amendments, list):
             user_amendments = []
+        send_acknowledgment = saved_config.config.get("send_acknowledgment")
+        if not isinstance(send_acknowledgment, bool):
+            send_acknowledgment = None
 
         rendered_prompt = await render_system_prompt(
             usecase=usecase,
@@ -109,6 +120,7 @@ async def update_usecase_config(
         return NotificationUseCaseConfigSchema(
             user_amendments=user_amendments,
             rendered_prompt=rendered_prompt,
+            send_acknowledgment=send_acknowledgment,
         )
 
     return config_data

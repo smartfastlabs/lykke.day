@@ -135,3 +135,9 @@ export interface NotificationUseCaseConfig {
   user_amendments: string[];
   rendered_prompt?: string;
 }
+
+export interface MessagingUseCaseConfig {
+  user_amendments: string[];
+  rendered_prompt?: string;
+  send_acknowledgment?: boolean;
+}
