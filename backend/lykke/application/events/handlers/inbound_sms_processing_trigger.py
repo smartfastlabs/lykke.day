@@ -27,20 +27,19 @@ class InboundSmsProcessingTriggerHandler(DomainEventHandler):
                 worker_tasks.process_inbound_sms_message_task
             )
             workers_to_schedule = get_current_workers_to_schedule()
-            if workers_to_schedule is not None:
-                workers_to_schedule.schedule(
-                    worker, user_id=event.user_id, message_id=event.message_id
-                )
-                logger.debug(
-                    "Queued inbound SMS processing for user %s message %s (post-commit)",
+            if workers_to_schedule is None:
+                logger.warning(
+                    "No post-commit worker scheduler available for user %s message %s",
                     event.user_id,
                     event.message_id,
                 )
                 return
 
-            await worker.kiq(user_id=event.user_id, message_id=event.message_id)
+            workers_to_schedule.schedule(
+                worker, user_id=event.user_id, message_id=event.message_id
+            )
             logger.debug(
-                "Enqueued inbound SMS processing for user %s message %s",
+                "Queued inbound SMS processing for user %s message %s (post-commit)",
                 event.user_id,
                 event.message_id,
             )
