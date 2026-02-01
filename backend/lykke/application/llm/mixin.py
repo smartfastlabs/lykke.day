@@ -14,6 +14,7 @@ from lykke.application.gateways.llm_gateway_factory_protocol import (
 )
 from lykke.application.gateways.llm_protocol import LLMTool, LLMToolCallResult
 from lykke.application.llm.prompt_rendering import (
+    combine_system_prompt,
     render_ask_prompt,
     render_context_prompt,
     render_system_prompt,
@@ -152,6 +153,9 @@ class LLMHandlerMixin(ABC):
             usecase=self.template_usecase,
             extra_template_vars=extra_template_vars,
         )
+        combined_system_prompt = combine_system_prompt(
+            system_prompt=system_prompt, context_prompt=context_prompt
+        )
 
         try:
             llm_gateway = self._llm_gateway_factory.create_gateway(llm_provider)
@@ -165,18 +169,24 @@ class LLMHandlerMixin(ABC):
         logger.info(
             f"Running LLM handler {self.template_usecase} with tools {tool_names}"
         )
-        request_messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": context_prompt},
-            {"role": "user", "content": ask_prompt},
-        ]
-        request_tools = [
-            {
-                "name": t.name,
-                "description": t.description or "",
-            }
-            for t in tools
-        ]
+        metadata = {
+            "user_id": str(self.user_id),
+            "handler": self.name,
+            "usecase": self.template_usecase,
+            "llm_provider": llm_provider.value,
+        }
+
+        request_payload = await llm_gateway.preview_usecase(
+            combined_system_prompt,
+            ask_prompt,
+            tools,
+            metadata=metadata,
+        )
+        request_messages = request_payload.get("request_messages")
+        request_tools = request_payload.get("request_tools")
+        request_tool_choice = request_payload.get("request_tool_choice")
+        request_model_params = request_payload.get("request_model_params")
+
         self._llm_snapshot_context = LLMRunSnapshotContext(
             prompt_context=prompt_input.prompt_context,
             current_time=current_time,
@@ -187,21 +197,15 @@ class LLMHandlerMixin(ABC):
             tools_prompt=tools_prompt,
             request_messages=request_messages,
             request_tools=request_tools,
-            request_tool_choice="auto",
-            request_model_params={"llm_provider": llm_provider.value},
+            request_tool_choice=request_tool_choice,
+            request_model_params=request_model_params,
         )
 
         tool_result = await llm_gateway.run_usecase(
-            system_prompt,
-            context_prompt,
+            combined_system_prompt,
             ask_prompt,
             tools,
-            metadata={
-                "user_id": str(self.user_id),
-                "handler": self.name,
-                "usecase": self.template_usecase,
-                "llm_provider": llm_provider.value,
-            },
+            metadata=metadata,
         )
         if tool_result is None:
             logger.debug(

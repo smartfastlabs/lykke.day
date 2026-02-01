@@ -60,7 +60,6 @@ class LLMGatewayProtocol(Protocol):
     async def run_usecase(
         self,
         system_prompt: str,
-        context_prompt: str,
         ask_prompt: str,
         tools: Sequence[LLMTool],
         metadata: dict[str, Any] | None = None,
@@ -69,12 +68,31 @@ class LLMGatewayProtocol(Protocol):
 
         Args:
             system_prompt: The system prompt defining the LLM's role and instructions
-            context_prompt: The user context prompt to evaluate
             ask_prompt: The specific ask prompt for the LLM
             tools: Tools available for the LLM to call
             metadata: Optional metadata for logging/diagnostics
 
         Returns:
             The tool call results or None if no completion was returned
+        """
+        raise NotImplementedError
+
+    async def preview_usecase(
+        self,
+        system_prompt: str,
+        ask_prompt: str,
+        tools: Sequence[LLMTool],
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Preview the exact request payload for an LLM use case.
+
+        Args:
+            system_prompt: The system prompt defining the LLM's role and instructions
+            ask_prompt: The specific ask prompt for the LLM
+            tools: Tools available for the LLM to call
+            metadata: Optional metadata for logging/diagnostics
+
+        Returns:
+            Request payload that would be sent to the LLM provider
         """
         raise NotImplementedError

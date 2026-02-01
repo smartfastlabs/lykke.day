@@ -9,8 +9,12 @@ from uuid import UUID
 
 from pydantic import Field, create_model
 
+from lykke.application.gateways.llm_gateway_factory_protocol import (
+    LLMGatewayFactoryProtocol,
+)
 from lykke.application.gateways.llm_protocol import LLMTool
 from lykke.application.llm.prompt_rendering import (
+    combine_system_prompt,
     render_ask_prompt,
     render_context_prompt,
     render_system_prompt,
@@ -22,6 +26,7 @@ from lykke.application.queries.get_llm_prompt_context import (
     GetLLMPromptContextQuery,
 )
 from lykke.application.unit_of_work import ReadOnlyRepositories
+from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 from lykke.core.utils.day_context_serialization import serialize_day_context
 from lykke.core.utils.llm_snapshot import build_referenced_entities
@@ -46,9 +51,11 @@ class PreviewLLMSnapshotHandler(
         ro_repos: ReadOnlyRepositories,
         user_id: UUID,
         get_llm_prompt_context_handler: GetLLMPromptContextHandler,
+        llm_gateway_factory: LLMGatewayFactoryProtocol,
     ) -> None:
         super().__init__(ro_repos, user_id)
         self._get_llm_prompt_context_handler = get_llm_prompt_context_handler
+        self._llm_gateway_factory = llm_gateway_factory
 
     async def handle(
         self, query: PreviewLLMSnapshotQuery
@@ -112,17 +119,32 @@ class PreviewLLMSnapshotHandler(
         ask_prompt = render_ask_prompt(
             usecase=query.usecase, extra_template_vars=extra_template_vars
         )
+        combined_system_prompt = combine_system_prompt(
+            system_prompt=system_prompt, context_prompt=context_prompt
+        )
 
-        request_messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": context_prompt},
-            {"role": "user", "content": ask_prompt},
-        ]
-        request_tools = [
-            {"name": t.name or "tool", "description": t.description or ""}
-            for t in tools
-        ]
-        request_model_params = {"llm_provider": user.settings.llm_provider.value}
+        try:
+            llm_gateway = self._llm_gateway_factory.create_gateway(
+                user.settings.llm_provider
+            )
+        except DomainError:
+            return None
+
+        request_payload = await llm_gateway.preview_usecase(
+            combined_system_prompt,
+            ask_prompt,
+            tools,
+            metadata={
+                "user_id": str(self.user_id),
+                "handler": "preview_llm_snapshot",
+                "usecase": query.usecase,
+                "llm_provider": user.settings.llm_provider.value,
+            },
+        )
+        request_messages = request_payload.get("request_messages")
+        request_tools = request_payload.get("request_tools")
+        request_tool_choice = request_payload.get("request_tool_choice")
+        request_model_params = request_payload.get("request_model_params")
 
         return value_objects.LLMRunResultSnapshot(
             tool_calls=[
@@ -145,7 +167,7 @@ class PreviewLLMSnapshotHandler(
             referenced_entities=build_referenced_entities(prompt_context),
             request_messages=request_messages,
             request_tools=request_tools,
-            request_tool_choice="auto",
+            request_tool_choice=request_tool_choice,
             request_model_params=request_model_params,
         )
 

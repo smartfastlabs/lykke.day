@@ -167,7 +167,6 @@ class AnthropicLLMGateway:
     async def run_usecase(
         self,
         system_prompt: str,
-        context_prompt: str,
         ask_prompt: str,
         tools: Sequence[LLMTool],
         metadata: dict[str, Any] | None = None,
@@ -176,7 +175,6 @@ class AnthropicLLMGateway:
 
         Args:
             system_prompt: The system prompt defining the LLM's role and instructions
-            context_prompt: The user context prompt to evaluate
             ask_prompt: The specific ask prompt for the LLM
             tools: Tools available for the LLM to call
 
@@ -195,45 +193,28 @@ class AnthropicLLMGateway:
             if not tools:
                 raise ValueError("At least one tool must be provided")
 
-            tool_specs: list[dict[str, Any]] = []
-            models_by_name: dict[str, Any] = {}
-            callbacks_by_name: dict[str, Callable[..., Any]] = {}
-
-            for tool in tools:
-                if tool.name is None:
-                    raise ValueError("LLM tool name cannot be None")
-                tool_name = tool.name
-                tool_spec, model = build_tool_spec_from_callable(
-                    tool.callback,
-                    tool_name=tool_name,
-                    description=tool.description,
-                    args_model=tool.args_model,
-                )
-                tool_specs.append(tool_spec)
-                models_by_name[tool_name] = model
-                callbacks_by_name[tool_name] = tool.callback
-            # Call LLM with provided prompts
+            tool_specs, models_by_name, callbacks_by_name = self._build_tool_data(
+                tools
+            )
+            request_payload = await self.preview_usecase(
+                system_prompt,
+                ask_prompt,
+                tools,
+                metadata=metadata,
+            )
+            request_messages = request_payload.get("request_messages", [])
             messages = [
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=context_prompt),
-                HumanMessage(content=ask_prompt),
+                SystemMessage(
+                    content=request_messages[0]["content"]
+                    if len(request_messages) > 0
+                    else system_prompt
+                ),
+                HumanMessage(
+                    content=request_messages[1]["content"]
+                    if len(request_messages) > 1
+                    else ask_prompt
+                ),
             ]
-            request_messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": context_prompt},
-                {"role": "user", "content": ask_prompt},
-            ]
-            request_tool_choice = "auto"
-            request_model_params = {
-                "model": getattr(self._llm, "model_name", settings.ANTHROPIC_MODEL),
-                "temperature": getattr(self._llm, "temperature", 0.7),
-            }
-            request_payload = {
-                "request_messages": request_messages,
-                "request_tools": [_coerce_json_safe(s) for s in tool_specs],
-                "request_tool_choice": request_tool_choice,
-                "request_model_params": request_model_params,
-            }
             llm = self._llm.bind_tools(tool_specs)
             response = await llm.ainvoke(messages)
 
@@ -329,7 +310,6 @@ class AnthropicLLMGateway:
                 "metadata": _coerce_json_safe(metadata or {}),
                 "prompts": {
                     "system": system_prompt,
-                    "context": context_prompt,
                     "ask": ask_prompt,
                 },
                 "tools": [
@@ -356,3 +336,52 @@ class AnthropicLLMGateway:
                 logger.error(f"Failed to emit structured LLM log: {exc}")
             finally:
                 await gateway.close()
+
+    async def preview_usecase(
+        self,
+        system_prompt: str,
+        ask_prompt: str,
+        tools: Sequence[LLMTool],
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Preview the request payload for this LLM use case."""
+        _ = metadata
+        tool_specs, _, _ = self._build_tool_data(tools)
+        request_messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": ask_prompt},
+        ]
+        request_tool_choice = "auto"
+        request_model_params = {
+            "model": getattr(self._llm, "model_name", settings.ANTHROPIC_MODEL),
+            "temperature": getattr(self._llm, "temperature", 0.7),
+        }
+        return {
+            "request_messages": request_messages,
+            "request_tools": [_coerce_json_safe(s) for s in tool_specs],
+            "request_tool_choice": request_tool_choice,
+            "request_model_params": request_model_params,
+        }
+
+    @staticmethod
+    def _build_tool_data(
+        tools: Sequence[LLMTool],
+    ) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Callable[..., Any]]]:
+        tool_specs: list[dict[str, Any]] = []
+        models_by_name: dict[str, Any] = {}
+        callbacks_by_name: dict[str, Callable[..., Any]] = {}
+
+        for tool in tools:
+            if tool.name is None:
+                raise ValueError("LLM tool name cannot be None")
+            tool_name = tool.name
+            tool_spec, model = build_tool_spec_from_callable(
+                tool.callback,
+                tool_name=tool_name,
+                description=tool.description,
+                args_model=tool.args_model,
+            )
+            tool_specs.append(tool_spec)
+            models_by_name[tool_name] = model
+            callbacks_by_name[tool_name] = tool.callback
+        return tool_specs, models_by_name, callbacks_by_name

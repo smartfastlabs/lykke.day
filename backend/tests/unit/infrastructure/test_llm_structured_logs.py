@@ -65,7 +65,6 @@ async def test_openai_gateway_emits_structured_log(monkeypatch) -> None:
     gateway = openai_llm.OpenAILLMGateway()
     result = await gateway.run_usecase(
         system_prompt="system",
-        context_prompt="context",
         ask_prompt="ask",
         tools=[LLMTool(name="echo_message", callback=_echo_message)],
         metadata={"user_id": "user-1"},
@@ -90,7 +89,6 @@ async def test_anthropic_gateway_emits_structured_log(monkeypatch) -> None:
     gateway = anthropic_llm.AnthropicLLMGateway()
     result = await gateway.run_usecase(
         system_prompt="system",
-        context_prompt="context",
         ask_prompt="ask",
         tools=[LLMTool(name="echo_message", callback=_echo_message)],
         metadata={"user_id": "user-1"},

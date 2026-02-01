@@ -31,17 +31,34 @@ class _LLMGateway:
     async def run_usecase(
         self,
         system_prompt: str,
-        context_prompt: str,
         ask_prompt: str,
         tools: list[LLMTool],
         metadata: dict[str, Any] | None = None,
     ) -> LLMToolRunResult | None:
         _ = system_prompt
-        _ = context_prompt
         _ = ask_prompt
         _ = tools
         _ = metadata
         return None
+
+    async def preview_usecase(
+        self,
+        system_prompt: str,
+        ask_prompt: str,
+        tools: list[LLMTool],
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        _ = tools
+        _ = metadata
+        return {
+            "request_messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": ask_prompt},
+            ],
+            "request_tools": [],
+            "request_tool_choice": "auto",
+            "request_model_params": {},
+        }
 
 
 class _LLMGatewayFactory:

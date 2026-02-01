@@ -80,3 +80,12 @@ def render_context_prompt(
 def render_ask_prompt(*, usecase: str, extra_template_vars: dict[str, Any]) -> str:
     """Render the ask prompt for a usecase."""
     return render_for_user(usecase, "ask", **extra_template_vars)
+
+
+def combine_system_prompt(*, system_prompt: str, context_prompt: str) -> str:
+    """Combine system and context prompts into a single system prompt."""
+    system_text = system_prompt.strip()
+    context_text = context_prompt.strip()
+    if system_text and context_text:
+        return f"{system_text}\n\n{context_text}"
+    return system_text or context_text

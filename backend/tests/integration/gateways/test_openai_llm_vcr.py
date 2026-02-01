@@ -24,7 +24,6 @@ async def test_anthropic_llm_gateway_with_vcr() -> None:
     gateway = AnthropicLLMGateway()
     result = await gateway.run_usecase(
         system_prompt="You are a test assistant.",
-        context_prompt="Context for a basic integration test.",
         ask_prompt="Call the echo_message tool with message 'hello'.",
         tools=[
             LLMTool(

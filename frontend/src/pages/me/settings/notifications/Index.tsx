@@ -48,7 +48,6 @@ const NotificationConfigPage: Component = () => {
       });
       // Update the resource directly to avoid refetch delay
       mutate(updated);
-
       refetchSnapshotPreview();
 
       globalNotifications.addSuccess(
@@ -109,12 +108,11 @@ const NotificationConfigPage: Component = () => {
           placeholder="Enter a new customization instruction..."
         />
 
-        <div class="rounded-2xl border border-amber-100/80 bg-white/80 p-5 shadow-sm shadow-amber-900/5 space-y-4">
+        <div class="rounded-2xl border border-emerald-100/80 bg-white/80 p-5 shadow-sm shadow-emerald-900/5 space-y-4">
           <div>
-            <h2 class="text-lg font-semibold mb-2">Fully Rendered Prompt</h2>
+            <h2 class="text-lg font-semibold mb-2">LLM Request Payload</h2>
             <p class="text-sm text-gray-600">
-              This preview shows the full prompt, tools, and context that would
-              be stored with a notification decision.
+              Preview the exact payload that would be sent to the LLM provider.
             </p>
           </div>
           <Show
@@ -128,7 +126,7 @@ const NotificationConfigPage: Component = () => {
               fallback={
                 <div class="text-sm text-stone-500">
                   No LLM snapshot preview is available yet. Configure an LLM
-                  provider to see the full prompt.
+                  provider to see the request payload.
                 </div>
               }
             >

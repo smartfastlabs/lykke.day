@@ -131,6 +131,7 @@ def _build_preview_llm_snapshot_handler(
         factory.ro_repos,
         factory.user_id,
         factory.create(GetLLMPromptContextHandler),
+        _default_llm_gateway_factory(),
     )
 
 
