@@ -23,6 +23,8 @@ from lykke.infrastructure.unit_of_work import (
 )
 from lykke.presentation.api.routers import auth_sms, router
 from lykke.presentation.handler_factory import build_domain_event_handler
+from lykke.presentation.workers.tasks.post_commit_workers import WorkersToSchedule
+from lykke.presentation.workers.tasks.registry import WorkerRegistry
 
 
 def is_testing() -> bool:
@@ -62,7 +64,10 @@ async def init_lifespan(fastapi_app: FastAPI) -> AsyncIterator[Never]:
 
     # Auto-register all domain event handlers
     ro_repo_factory = SqlAlchemyReadOnlyRepositoryFactory()
-    uow_factory = SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
+    uow_factory = SqlAlchemyUnitOfWorkFactory(
+        pubsub_gateway=pubsub_gateway,
+        workers_to_schedule_factory=lambda: WorkersToSchedule(WorkerRegistry()),
+    )
     register_all_handlers(
         ro_repo_factory=ro_repo_factory,
         uow_factory=uow_factory,

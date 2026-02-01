@@ -33,6 +33,8 @@ from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
     QueryHandlerFactory,
 )
+from lykke.presentation.workers.tasks.post_commit_workers import WorkersToSchedule
+from lykke.presentation.workers.tasks.registry import WorkerRegistry
 
 
 async def get_pubsub_gateway(
@@ -138,7 +140,10 @@ async def get_unit_of_work_factory(
     redis_pool = getattr(request.app.state, "redis_pool", None)
     pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
     try:
-        yield SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
+        yield SqlAlchemyUnitOfWorkFactory(
+            pubsub_gateway=pubsub_gateway,
+            workers_to_schedule_factory=lambda: WorkersToSchedule(WorkerRegistry()),
+        )
     finally:
         await pubsub_gateway.close()
 
@@ -159,7 +164,10 @@ async def get_unit_of_work_factory_websocket(
     redis_pool = getattr(websocket.app.state, "redis_pool", None)
     pubsub_gateway = RedisPubSubGateway(redis_pool=redis_pool)
     try:
-        yield SqlAlchemyUnitOfWorkFactory(pubsub_gateway=pubsub_gateway)
+        yield SqlAlchemyUnitOfWorkFactory(
+            pubsub_gateway=pubsub_gateway,
+            workers_to_schedule_factory=lambda: WorkersToSchedule(WorkerRegistry()),
+        )
     finally:
         await pubsub_gateway.close()
 

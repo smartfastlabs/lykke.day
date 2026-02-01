@@ -9,6 +9,8 @@ from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProt
 from lykke.application.repositories import UserRepositoryReadOnlyProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.infrastructure.gateways import GoogleCalendarGateway, RedisPubSubGateway
+from lykke.presentation.workers.tasks.post_commit_workers import WorkersToSchedule
+from lykke.presentation.workers.tasks.registry import WorkerRegistry
 from lykke.infrastructure.repositories import UserRepository
 
 if TYPE_CHECKING:
@@ -44,7 +46,10 @@ def get_unit_of_work_factory(
     from lykke.infrastructure.unit_of_work import SqlAlchemyUnitOfWorkFactory
 
     gateway = pubsub_gateway or RedisPubSubGateway()
-    return SqlAlchemyUnitOfWorkFactory(pubsub_gateway=gateway)
+    return SqlAlchemyUnitOfWorkFactory(
+        pubsub_gateway=gateway,
+        workers_to_schedule_factory=lambda: WorkersToSchedule(WorkerRegistry()),
+    )
 
 
 def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:

@@ -1147,13 +1147,23 @@ def _attach_entity_snapshot(
 class SqlAlchemyUnitOfWorkFactory:
     """Factory for creating SqlAlchemyUnitOfWork instances."""
 
-    def __init__(self, pubsub_gateway: PubSubGatewayProtocol) -> None:
+    def __init__(
+        self,
+        pubsub_gateway: PubSubGatewayProtocol,
+        *,
+        workers_to_schedule_factory: (
+            Callable[[], WorkersToScheduleProtocol] | None
+        ) = None,
+    ) -> None:
         """Initialize the factory.
 
         Args:
             pubsub_gateway: PubSub gateway for broadcasting events
+            workers_to_schedule_factory: Optional callable that returns a fresh
+                WorkersToScheduleProtocol per UOW. When None, a no-op is used.
         """
         self._pubsub_gateway = pubsub_gateway
+        self._workers_to_schedule_factory = workers_to_schedule_factory
 
     def create(self, user_id: UUID) -> UnitOfWorkProtocol:
         """Create a new UnitOfWork instance for the given user.
@@ -1165,7 +1175,9 @@ class SqlAlchemyUnitOfWorkFactory:
             A new UnitOfWork instance (not yet entered).
         """
         return SqlAlchemyUnitOfWork(
-            user_id=user_id, pubsub_gateway=self._pubsub_gateway
+            user_id=user_id,
+            pubsub_gateway=self._pubsub_gateway,
+            workers_to_schedule_factory=self._workers_to_schedule_factory,
         )
 
 
