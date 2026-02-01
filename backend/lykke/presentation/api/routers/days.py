@@ -58,7 +58,6 @@ from lykke.presentation.api.schemas.websocket_message import (
     WebSocketTopicEventSchema,
 )
 from lykke.presentation.handler_factory import CommandHandlerFactory
-from lykke.presentation.utils.structured_logging import emit_structured_log
 
 from .dependencies.factories import command_handler_factory
 from .dependencies.services import (

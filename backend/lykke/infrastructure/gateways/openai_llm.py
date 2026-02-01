@@ -19,7 +19,6 @@ from lykke.application.gateways.llm_protocol import (
 from lykke.core.config import settings
 from lykke.core.utils.serialization import dataclass_to_json_dict
 from lykke.infrastructure.gateways.llm_tools import build_tool_spec_from_callable
-from lykke.infrastructure.gateways.structured_log import StructuredLogGateway
 
 
 def _normalize_response_content(content: str | list[str | dict[str, Any]]) -> str:
@@ -323,18 +322,6 @@ class OpenAILLMGateway:
                 "response_length": response_length,
                 "error": error_info,
             }
-            gateway = StructuredLogGateway()
-            try:
-                await gateway.log_event(
-                    event_type="LLMUsecaseRun",
-                    event_data=event_data,
-                    occurred_at=started_at,
-                )
-            except Exception as exc:
-                logger.error(f"Failed to emit structured LLM log: {exc}")
-            finally:
-                await gateway.close()
-
     async def preview_usecase(
         self,
         system_prompt: str,

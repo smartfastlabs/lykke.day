@@ -170,29 +170,37 @@
         }
       }
     },
-    "/auth/forgot-password": {
+    "/auth/sms/request": {
       "post": {
         "tags": [
-          "auth"
+          "auth",
+          "sms"
         ],
-        "summary": "Reset:Forgot Password",
-        "operationId": "reset_forgot_password_auth_forgot_password_post",
+        "summary": "Request Sms Code",
+        "description": "Request an SMS login code. Always returns success (no info leak).",
+        "operationId": "request_sms_code_auth_sms_request_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_reset_forgot_password_auth_forgot_password_post"
+                "$ref": "#/components/schemas/RequestSmsCodeSchema"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "202": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Request Sms Code Auth Sms Request Post"
+                }
               }
             }
           },
@@ -209,58 +217,28 @@
         }
       }
     },
-    "/auth/reset-password": {
+    "/auth/sms/verify": {
       "post": {
         "tags": [
-          "auth"
+          "auth",
+          "sms"
         ],
-        "summary": "Reset:Reset Password",
-        "operationId": "reset_reset_password_auth_reset_password_post",
+        "summary": "Verify Sms Code",
+        "description": "Verify SMS code and set auth cookie. Returns 204 on success.",
+        "operationId": "verify_sms_code_auth_sms_verify_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_reset_reset_password_auth_reset_password_post"
+                "$ref": "#/components/schemas/VerifySmsCodeSchema"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorModel"
-                },
-                "examples": {
-                  "RESET_PASSWORD_BAD_TOKEN": {
-                    "summary": "Bad or expired token.",
-                    "value": {
-                      "detail": "RESET_PASSWORD_BAD_TOKEN"
-                    }
-                  },
-                  "RESET_PASSWORD_INVALID_PASSWORD": {
-                    "summary": "Password validation failed.",
-                    "value": {
-                      "detail": {
-                        "code": "RESET_PASSWORD_INVALID_PASSWORD",
-                        "reason": "Password should be at least 3 characters"
-                      }
-                    }
-                  }
-                }
-              }
-            }
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -578,6 +556,143 @@
             "APIKeyCookie": []
           }
         ]
+      }
+    },
+    "/me/admin/domain-events": {
+      "get": {
+        "tags": [
+          "auth",
+          "user"
+        ],
+        "summary": "List Domain Events",
+        "description": "List domain events for the current user from Redis.",
+        "operationId": "list_domain_events_me_admin_domain_events_get",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Text search in event data",
+              "title": "Search"
+            },
+            "description": "Text search in event data"
+          },
+          {
+            "name": "event_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by event type (partial match)",
+              "title": "Event Type"
+            },
+            "description": "Filter by event type (partial match)"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter events after this time",
+              "title": "Start Time"
+            },
+            "description": "Filter events after this time"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter events before this time",
+              "title": "End Time"
+            },
+            "description": "Filter events before this time"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainEventListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/me/base-personalities": {
@@ -2673,6 +2788,65 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Action"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{_id}/reschedule": {
+      "post": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Reschedule Task",
+        "description": "Reschedule a task to a new date.",
+        "operationId": "reschedule_task_tasks___id__reschedule_post",
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": " Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskRescheduleSchema"
               }
             }
           }
@@ -5790,160 +5964,6 @@
         }
       }
     },
-    "/admin/events": {
-      "get": {
-        "tags": [
-          "admin"
-        ],
-        "summary": "List Structured Log Events",
-        "description": "List structured log backlog events with optional filters.\n\nReturns paginated list of structured log backlog events (Redis sorted set),\nwith optional filtering by search text, user_id, event_type, and time range.\n\nOnly accessible by superusers.",
-        "operationId": "list_structured_log_events_admin_events_get",
-        "security": [
-          {
-            "APIKeyCookie": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Text search in event data",
-              "title": "Search"
-            },
-            "description": "Text search in event data"
-          },
-          {
-            "name": "user_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter by user ID",
-              "title": "User Id"
-            },
-            "description": "Filter by user ID"
-          },
-          {
-            "name": "event_type",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter by event type (partial match)",
-              "title": "Event Type"
-            },
-            "description": "Filter by event type (partial match)"
-          },
-          {
-            "name": "start_time",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter events after this time",
-              "title": "Start Time"
-            },
-            "description": "Filter events after this time"
-          },
-          {
-            "name": "end_time",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter events before this time",
-              "title": "End Time"
-            },
-            "description": "Filter events before this time"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 500,
-              "minimum": 1,
-              "default": 100,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DomainEventListResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/health": {
       "get": {
         "summary": "Health Check",
@@ -6319,38 +6339,6 @@
           "password"
         ],
         "title": "Body_auth_cookie_login_auth_login_post"
-      },
-      "Body_reset_forgot_password_auth_forgot_password_post": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          }
-        },
-        "type": "object",
-        "required": [
-          "email"
-        ],
-        "title": "Body_reset_forgot_password_auth_forgot_password_post"
-      },
-      "Body_reset_reset_password_auth_reset_password_post": {
-        "properties": {
-          "token": {
-            "type": "string",
-            "title": "Token"
-          },
-          "password": {
-            "type": "string",
-            "title": "Password"
-          }
-        },
-        "type": "object",
-        "required": [
-          "token",
-          "password"
-        ],
-        "title": "Body_reset_reset_password_auth_reset_password_post"
       },
       "BrainDumpCreateSchema": {
         "properties": {
@@ -8115,7 +8103,7 @@
           "has_previous"
         ],
         "title": "DomainEventListResponse",
-        "description": "Schema for paginated structured log backlog list response."
+        "description": "Schema for paginated domain event backlog list response."
       },
       "DomainEventSchema": {
         "properties": {
@@ -8146,7 +8134,7 @@
           "stored_at"
         ],
         "title": "DomainEventSchema",
-        "description": "Schema for a single structured log backlog entry.\n\nNote: The endpoint is historically named `/admin/events`, but these entries\nare produced by the structured logger backlog, not the core domain-event bus."
+        "description": "Schema for a single domain event backlog entry."
       },
       "EarlyAccessRequestSchema": {
         "properties": {
@@ -8574,6 +8562,17 @@
               }
             ],
             "title": "Rendered Prompt"
+          },
+          "send_acknowledgment": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Send Acknowledgment"
           }
         },
         "type": "object",
@@ -9923,6 +9922,20 @@
         "title": "RecurrenceScheduleSchema",
         "description": "API schema for RecurrenceSchedule value object."
       },
+      "RequestSmsCodeSchema": {
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "title": "Phone Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone_number"
+        ],
+        "title": "RequestSmsCodeSchema",
+        "description": "Request body for requesting an SMS login code."
+      },
       "RoutineDefinitionCreateSchema": {
         "properties": {
           "name": {
@@ -10975,6 +10988,21 @@
         ],
         "title": "TaskFrequency"
       },
+      "TaskRescheduleSchema": {
+        "properties": {
+          "scheduled_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Scheduled Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scheduled_date"
+        ],
+        "title": "TaskRescheduleSchema",
+        "description": "API schema for rescheduling a task."
+      },
       "TaskSchema": {
         "properties": {
           "id": {
@@ -11737,12 +11765,17 @@
             ],
             "title": "Is Verified",
             "default": false
+          },
+          "phone_number": {
+            "type": "string",
+            "title": "Phone Number"
           }
         },
         "type": "object",
         "required": [
           "email",
-          "password"
+          "password",
+          "phone_number"
         ],
         "title": "UserCreate",
         "description": "Schema for creating a new user."
@@ -12140,6 +12173,25 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VerifySmsCodeSchema": {
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "title": "Phone Number"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone_number",
+          "code"
+        ],
+        "title": "VerifySmsCodeSchema",
+        "description": "Request body for verifying an SMS login code."
       }
     },
     "securitySchemes": {

@@ -1,11 +1,10 @@
 from . import google, redis_pubsub, sendgrid, stub_pubsub, twilio, web_push
 from .anthropic_llm import AnthropicLLMGateway
+from .domain_event_backlog_redis import RedisDomainEventBacklogGateway
 from .google import GoogleCalendarGateway
 from .openai_llm import OpenAILLMGateway
 from .redis_pubsub import RedisPubSubGateway
 from .sendgrid import SendGridGateway
-from .structured_log import StructuredLogGateway
-from .structured_log_backlog_redis import RedisStructuredLogBacklogGateway
 from .stub_pubsub import StubPubSubGateway
 from .stub_sms import StubSMSGateway
 from .twilio import TwilioGateway
@@ -15,10 +14,9 @@ __all__ = [
     "AnthropicLLMGateway",
     "GoogleCalendarGateway",
     "OpenAILLMGateway",
+    "RedisDomainEventBacklogGateway",
     "RedisPubSubGateway",
-    "RedisStructuredLogBacklogGateway",
     "SendGridGateway",
-    "StructuredLogGateway",
     "StubPubSubGateway",
     "StubSMSGateway",
     "TwilioGateway",

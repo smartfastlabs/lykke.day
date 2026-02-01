@@ -10,25 +10,30 @@ from typing import Annotated
 
 from fastapi import Depends, Request, WebSocket
 
-from lykke.application.admin import ListStructuredLogEventsHandler
 from lykke.application.commands import ScheduleDayHandler
-from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
-from lykke.application.gateways.structured_log_backlog_protocol import (
-    StructuredLogBacklogGatewayProtocol,
-    StructuredLogBacklogStreamGatewayProtocol,
+from lykke.application.gateways.domain_event_backlog_protocol import (
+    DomainEventBacklogGatewayProtocol,
 )
-from lykke.application.queries import GetDayContextHandler, GetIncrementalChangesHandler
+from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
+from lykke.application.queries import (
+    GetDayContextHandler,
+    GetIncrementalChangesHandler,
+    ListDomainEventsHandler,
+)
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.domain.entities import UserEntity
 from lykke.infrastructure.gateways import (
+    RedisDomainEventBacklogGateway,
     RedisPubSubGateway,
-    RedisStructuredLogBacklogGateway,
 )
 from lykke.infrastructure.unit_of_work import (
     SqlAlchemyReadOnlyRepositoryFactory,
     SqlAlchemyUnitOfWorkFactory,
 )
-from lykke.presentation.api.routers.dependencies.user import get_current_user_from_token
+from lykke.presentation.api.routers.dependencies.user import (
+    get_current_user,
+    get_current_user_from_token,
+)
 from lykke.presentation.handler_factory import (
     CommandHandlerFactory,
     QueryHandlerFactory,
@@ -88,38 +93,40 @@ async def get_pubsub_gateway_for_request(
         await gateway.close()
 
 
-async def get_structured_log_backlog_gateway_for_request(
+def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
+    """Get a ReadOnlyRepositoryFactory instance."""
+    return SqlAlchemyReadOnlyRepositoryFactory()
+
+
+async def get_domain_event_backlog_gateway_for_request(
     request: Request,
-) -> AsyncIterator[StructuredLogBacklogGatewayProtocol]:
-    """Get a StructuredLogBacklogGateway instance for HTTP requests."""
+) -> AsyncIterator[DomainEventBacklogGatewayProtocol]:
+    """Get a DomainEventBacklogGateway instance for HTTP requests."""
     redis_pool = getattr(request.app.state, "redis_pool", None)
-    gateway = RedisStructuredLogBacklogGateway(redis_pool=redis_pool)
+    gateway = RedisDomainEventBacklogGateway(redis_pool=redis_pool)
     try:
         yield gateway
     finally:
         await gateway.close()
 
 
-async def get_structured_log_backlog_stream_gateway(
-    websocket: WebSocket,
-) -> AsyncIterator[StructuredLogBacklogStreamGatewayProtocol]:
-    """Get a StructuredLogBacklogStreamGateway instance for WebSocket requests."""
-    redis_pool = getattr(websocket.app.state, "redis_pool", None)
-    gateway = RedisStructuredLogBacklogGateway(redis_pool=redis_pool)
-    try:
-        yield gateway
-    finally:
-        await gateway.close()
-
-
-async def get_list_structured_log_events_handler(
+async def get_list_domain_events_handler(
     request: Request,
-) -> AsyncIterator[ListStructuredLogEventsHandler]:
-    """Get a ListStructuredLogEventsHandler instance with infra gateway wired."""
+    user: Annotated[UserEntity, Depends(get_current_user)],
+    ro_repo_factory: Annotated[
+        ReadOnlyRepositoryFactory, Depends(get_read_only_repository_factory)
+    ],
+) -> AsyncIterator[ListDomainEventsHandler]:
+    """Get a ListDomainEventsHandler instance with infra gateway wired."""
     redis_pool = getattr(request.app.state, "redis_pool", None)
-    gateway = RedisStructuredLogBacklogGateway(redis_pool=redis_pool)
+    gateway = RedisDomainEventBacklogGateway(redis_pool=redis_pool)
     try:
-        yield ListStructuredLogEventsHandler(backlog_gateway=gateway)
+        ro_repos = ro_repo_factory.create(user.id)
+        yield ListDomainEventsHandler(
+            ro_repos=ro_repos,
+            user_id=user.id,
+            backlog_gateway=gateway,
+        )
     finally:
         await gateway.close()
 
@@ -170,11 +177,6 @@ async def get_unit_of_work_factory_websocket(
         )
     finally:
         await pubsub_gateway.close()
-
-
-def get_read_only_repository_factory() -> ReadOnlyRepositoryFactory:
-    """Get a ReadOnlyRepositoryFactory instance."""
-    return SqlAlchemyReadOnlyRepositoryFactory()
 
 
 # For WebSocket routes - use get_current_user_from_token

@@ -14,7 +14,6 @@ from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProt
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
-from lykke.presentation.utils.structured_logging import structured_task
 
 from .common import (
     get_google_gateway,
@@ -31,7 +30,6 @@ class _CalendarHandler(Protocol):
 
 
 @broker.task  # type: ignore[untyped-decorator]
-@structured_task()
 async def sync_calendar_task(
     user_id: UUID,
     *,
@@ -67,7 +65,6 @@ async def sync_calendar_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
-@structured_task()
 async def sync_single_calendar_task(
     user_id: UUID,
     calendar_id: UUID,
@@ -109,7 +106,6 @@ async def sync_single_calendar_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
-@structured_task()
 async def resubscribe_calendar_task(
     user_id: UUID,
     calendar_id: UUID,

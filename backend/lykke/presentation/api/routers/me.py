@@ -1,10 +1,12 @@
 """Endpoints for retrieving the current authenticated user."""
 
-from datetime import datetime as dt_datetime, time as dt_time
-from typing import Annotated
+from datetime import UTC, datetime as dt_datetime, time as dt_time
+from typing import Annotated, Any
 from uuid import UUID
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
+from loguru import logger
 
 from lykke.application.commands.brain_dump import (
     CreateBrainDumpCommand,
@@ -29,7 +31,13 @@ from lykke.application.commands.day import (
     UpdateAlarmStatusHandler,
 )
 from lykke.application.commands.user import UpdateUserCommand, UpdateUserHandler
-from lykke.application.queries import GetDayContextHandler, GetDayContextQuery
+from lykke.application.gateways.pubsub_protocol import PubSubGatewayProtocol
+from lykke.application.queries import (
+    GetDayContextHandler,
+    GetDayContextQuery,
+    ListDomainEventsHandler,
+    ListDomainEventsQuery,
+)
 from lykke.application.queries.list_base_personalities import (
     ListBasePersonalitiesHandler,
     ListBasePersonalitiesQuery,
@@ -55,6 +63,10 @@ from lykke.presentation.api.schemas import (
     UserSchema,
     UserUpdateSchema,
 )
+from lykke.presentation.api.schemas.admin import (
+    DomainEventListResponse,
+    DomainEventSchema,
+)
 from lykke.presentation.api.schemas.mappers import (
     map_alarm_to_schema,
     map_brain_dump_to_schema,
@@ -71,9 +83,40 @@ from lykke.presentation.handler_factory import (
 )
 
 from .dependencies.factories import command_handler_factory, query_handler_factory
-from .dependencies.user import get_current_user
+from .dependencies.services import (
+    get_list_domain_events_handler,
+    get_pubsub_gateway,
+)
+from .dependencies.user import get_current_user, get_current_user_from_token
 
 router = APIRouter()
+
+
+def _build_domain_event_payload(message: dict[str, Any]) -> DomainEventSchema | None:
+    event_type = message.get("event_type")
+    event_data = message.get("event_data")
+    if not isinstance(event_type, str) or not isinstance(event_data, dict):
+        return None
+
+    stored_at = message.get("stored_at")
+    if isinstance(stored_at, str):
+        try:
+            stored_at = dt_datetime.fromisoformat(stored_at)
+        except ValueError:
+            stored_at = None
+    if not isinstance(stored_at, dt_datetime):
+        stored_at = dt_datetime.now(UTC)
+
+    event_id = message.get("id")
+    if not isinstance(event_id, str):
+        event_id = str(uuid4())
+
+    return DomainEventSchema(
+        id=event_id,
+        event_type=event_type,
+        event_data=event_data,
+        stored_at=stored_at,
+    )
 
 
 @router.get("", response_model=UserSchema)
@@ -82,6 +125,92 @@ async def get_current_user_profile(
 ) -> UserSchema:
     """Return the currently authenticated user."""
     return map_user_to_schema(user)
+
+
+@router.get("/admin/domain-events")
+async def list_domain_events(
+    handler: Annotated[
+        ListDomainEventsHandler, Depends(get_list_domain_events_handler)
+    ],
+    search: Annotated[
+        str | None, Query(description="Text search in event data")
+    ] = None,
+    event_type: Annotated[
+        str | None, Query(description="Filter by event type (partial match)")
+    ] = None,
+    start_time: Annotated[
+        dt_datetime | None, Query(description="Filter events after this time")
+    ] = None,
+    end_time: Annotated[
+        dt_datetime | None, Query(description="Filter events before this time")
+    ] = None,
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> DomainEventListResponse:
+    """List domain events for the current user from Redis."""
+    result = await handler.handle(
+        ListDomainEventsQuery(
+            search=search,
+            event_type=event_type,
+            start_time=start_time,
+            end_time=end_time,
+            limit=limit,
+            offset=offset,
+        )
+    )
+    items = [
+        DomainEventSchema(
+            id=item.id,
+            event_type=item.event_type,
+            event_data=item.event_data,
+            stored_at=item.stored_at,
+        )
+        for item in result.items
+    ]
+    return DomainEventListResponse(
+        items=items,
+        total=result.total,
+        limit=result.limit,
+        offset=result.offset,
+        has_next=result.has_next,
+        has_previous=result.has_previous,
+    )
+
+
+@router.websocket("/admin/domain-events/stream")
+async def domain_events_stream(
+    websocket: WebSocket,
+    user: Annotated[UserEntity, Depends(get_current_user_from_token)],
+    pubsub_gateway: Annotated[
+        PubSubGatewayProtocol, Depends(get_pubsub_gateway)
+    ],
+) -> None:
+    """WebSocket endpoint for real-time domain events for the current user."""
+    await websocket.accept()
+    try:
+        async with pubsub_gateway.subscribe_to_user_channel(
+            user_id=user.id, channel_type="domain-events"
+        ) as subscription:
+            while True:
+                payload = await subscription.get_message(timeout=1.0)
+                if payload:
+                    event_payload = _build_domain_event_payload(payload)
+                    if event_payload is None:
+                        continue
+                    await websocket.send_json(
+                        {"type": "domain_event", "data": event_payload.model_dump()}
+                    )
+    except WebSocketDisconnect:
+        logger.info("Domain events WebSocket disconnected for user %s", user.id)
+    except Exception as exc:
+        logger.error("Domain events WebSocket error: %s", exc)
+        try:
+            await websocket.send_json(
+                {"type": "error", "message": "An unexpected error occurred"}
+            )
+            await websocket.close()
+        except Exception:
+            pass
 
 
 @router.put("", response_model=UserSchema)

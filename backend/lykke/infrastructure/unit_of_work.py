@@ -25,9 +25,8 @@ from lykke.application.worker_schedule import (
 )
 from lykke.core.config import settings
 from lykke.core.constants import (
-    MAX_DOMAIN_EVENT_LOG_SIZE,
-    STRUCTURED_LOG_BACKLOG_KEY,
-    STRUCTURED_LOG_STREAM_CHANNEL,
+    DOMAIN_EVENT_BACKLOG_KEY_PREFIX,
+    MAX_DOMAIN_EVENT_BACKLOG_SIZE,
 )
 from lykke.core.exceptions import BadRequestError, NotFoundError
 from lykke.core.utils.domain_event_serialization import serialize_domain_event
@@ -1020,16 +1019,23 @@ class SqlAlchemyUnitOfWork:
                 try:
                     # Serialize domain event to JSON-compatible dict
                     message = serialize_domain_event(event)
+                    event_id = str(uuid.uuid4())
+                    stored_at = datetime.now(UTC).isoformat()
+                    message_with_meta = {
+                        **message,
+                        "id": event_id,
+                        "stored_at": stored_at,
+                    }
 
                     # Publish to user-specific domain-events channel
                     # Note: We publish to the user_id from the UnitOfWork context
                     await self._pubsub_gateway.publish_to_user_channel(
                         user_id=self.user_id,
                         channel_type="domain-events",
-                        message=message,
+                        message=message_with_meta,
                     )
 
-                    # Store a backlog entry for admin inspection
+                    # Store a backlog entry for this user
                     if redis is None:
                         redis = await aioredis.from_url(
                             settings.REDIS_URL,
@@ -1037,24 +1043,22 @@ class SqlAlchemyUnitOfWork:
                             decode_responses=True,
                         )
 
-                    event_id = str(uuid.uuid4())
                     timestamp_ms = int(event.occurred_at.timestamp() * 1000)
                     log_entry = {
                         "id": event_id,
                         "event_type": message["event_type"],
                         "event_data": message["event_data"],
-                        "stored_at": datetime.now(UTC).isoformat(),
+                        "stored_at": stored_at,
                     }
 
                     await redis.zadd(
-                        STRUCTURED_LOG_BACKLOG_KEY,
+                        f"{DOMAIN_EVENT_BACKLOG_KEY_PREFIX}:{self.user_id}",
                         {json.dumps(log_entry): timestamp_ms},
                     )
                     await redis.zremrangebyrank(
-                        STRUCTURED_LOG_BACKLOG_KEY, 0, -(MAX_DOMAIN_EVENT_LOG_SIZE + 1)
-                    )
-                    await redis.publish(
-                        STRUCTURED_LOG_STREAM_CHANNEL, json.dumps(log_entry)
+                        f"{DOMAIN_EVENT_BACKLOG_KEY_PREFIX}:{self.user_id}",
+                        0,
+                        -(MAX_DOMAIN_EVENT_BACKLOG_SIZE + 1),
                     )
                 except Exception as e:
                     # Log error but don't fail the commit

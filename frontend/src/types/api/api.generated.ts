@@ -55,7 +55,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/forgot-password": {
+    "/auth/sms/request": {
         parameters: {
             query?: never;
             header?: never;
@@ -64,15 +64,18 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reset:Forgot Password */
-        post: operations["reset_forgot_password_auth_forgot_password_post"];
+        /**
+         * Request Sms Code
+         * @description Request an SMS login code. Always returns success (no info leak).
+         */
+        post: operations["request_sms_code_auth_sms_request_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auth/reset-password": {
+    "/auth/sms/verify": {
         parameters: {
             query?: never;
             header?: never;
@@ -81,8 +84,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reset:Reset Password */
-        post: operations["reset_reset_password_auth_reset_password_post"];
+        /**
+         * Verify Sms Code
+         * @description Verify SMS code and set auth cookie. Returns 204 on success.
+         */
+        post: operations["verify_sms_code_auth_sms_verify_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -194,6 +200,26 @@ export interface paths {
          * @description Update the current authenticated user.
          */
         put: operations["update_current_user_profile_me_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/admin/domain-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Domain Events
+         * @description List domain events for the current user from Redis.
+         */
+        get: operations["list_domain_events_me_admin_domain_events_get"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -850,6 +876,26 @@ export interface paths {
          * @description Record an action on a task.
          */
         post: operations["add_task_action_tasks___id__actions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tasks/{_id}/reschedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reschedule Task
+         * @description Reschedule a task to a new date.
+         */
+        post: operations["reschedule_task_tasks___id__reschedule_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1854,31 +1900,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Structured Log Events
-         * @description List structured log backlog events with optional filters.
-         *
-         *     Returns paginated list of structured log backlog events (Redis sorted set),
-         *     with optional filtering by search text, user_id, event_type, and time range.
-         *
-         *     Only accessible by superusers.
-         */
-        get: operations["list_structured_log_events_admin_events_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/health": {
         parameters: {
             query?: never;
@@ -2048,21 +2069,6 @@ export interface components {
              * Format: password
              */
             client_secret?: string | null;
-        };
-        /** Body_reset_forgot_password_auth_forgot_password_post */
-        Body_reset_forgot_password_auth_forgot_password_post: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-        };
-        /** Body_reset_reset_password_auth_reset_password_post */
-        Body_reset_reset_password_auth_reset_password_post: {
-            /** Token */
-            token: string;
-            /** Password */
-            password: string;
         };
         /**
          * BrainDumpCreateSchema
@@ -2604,7 +2610,7 @@ export interface components {
         };
         /**
          * DomainEventListResponse
-         * @description Schema for paginated structured log backlog list response.
+         * @description Schema for paginated domain event backlog list response.
          */
         DomainEventListResponse: {
             /** Items */
@@ -2622,10 +2628,7 @@ export interface components {
         };
         /**
          * DomainEventSchema
-         * @description Schema for a single structured log backlog entry.
-         *
-         *     Note: The endpoint is historically named `/admin/events`, but these entries
-         *     are produced by the structured logger backlog, not the core domain-event bus.
+         * @description Schema for a single domain event backlog entry.
          */
         DomainEventSchema: {
             /** Id */
@@ -2811,6 +2814,8 @@ export interface components {
             user_amendments?: string[];
             /** Rendered Prompt */
             rendered_prompt?: string | null;
+            /** Send Acknowledgment */
+            send_acknowledgment?: boolean | null;
         };
         /** PagedResponseSchema[BrainDumpSchema] */
         PagedResponseSchema_BrainDumpSchema_: {
@@ -3309,6 +3314,14 @@ export interface components {
             day_number?: number | null;
         };
         /**
+         * RequestSmsCodeSchema
+         * @description Request body for requesting an SMS login code.
+         */
+        RequestSmsCodeSchema: {
+            /** Phone Number */
+            phone_number: string;
+        };
+        /**
          * RoutineDefinitionCreateSchema
          * @description API schema for creating a RoutineDefinition entity.
          */
@@ -3631,6 +3644,17 @@ export interface components {
          */
         TaskFrequency: "DAILY" | "CUSTOM_WEEKLY" | "WEEKLY" | "ONCE" | "YEARLY" | "MONTHLY" | "BI_WEEKLY" | "WORK_DAYS" | "WEEKENDS";
         /**
+         * TaskRescheduleSchema
+         * @description API schema for rescheduling a task.
+         */
+        TaskRescheduleSchema: {
+            /**
+             * Scheduled Date
+             * Format: date
+             */
+            scheduled_date: string;
+        };
+        /**
          * TaskSchema
          * @description API schema for Task entity.
          */
@@ -3863,6 +3887,8 @@ export interface components {
              * @default false
              */
             is_verified: boolean | null;
+            /** Phone Number */
+            phone_number: string;
         };
         /**
          * UserRead
@@ -3999,6 +4025,16 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /**
+         * VerifySmsCodeSchema
+         * @description Request body for verifying an SMS login code.
+         */
+        VerifySmsCodeSchema: {
+            /** Phone Number */
+            phone_number: string;
+            /** Code */
+            code: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -4133,7 +4169,7 @@ export interface operations {
             };
         };
     };
-    reset_forgot_password_auth_forgot_password_post: {
+    request_sms_code_auth_sms_request_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -4142,17 +4178,19 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Body_reset_forgot_password_auth_forgot_password_post"];
+                "application/json": components["schemas"]["RequestSmsCodeSchema"];
             };
         };
         responses: {
             /** @description Successful Response */
-            202: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        [key: string]: string;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -4166,7 +4204,7 @@ export interface operations {
             };
         };
     };
-    reset_reset_password_auth_reset_password_post: {
+    verify_sms_code_auth_sms_verify_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -4175,27 +4213,16 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Body_reset_reset_password_auth_reset_password_post"];
+                "application/json": components["schemas"]["VerifySmsCodeSchema"];
             };
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorModel"];
-                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -4379,6 +4406,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_domain_events_me_admin_domain_events_get: {
+        parameters: {
+            query?: {
+                /** @description Text search in event data */
+                search?: string | null;
+                /** @description Filter by event type (partial match) */
+                event_type?: string | null;
+                /** @description Filter events after this time */
+                start_time?: string | null;
+                /** @description Filter events before this time */
+                end_time?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DomainEventListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5630,6 +5697,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["Action"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSchema"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reschedule_task_tasks___id__reschedule_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                _id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskRescheduleSchema"];
             };
         };
         responses: {
@@ -7634,48 +7736,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
-                };
-            };
-        };
-    };
-    list_structured_log_events_admin_events_get: {
-        parameters: {
-            query?: {
-                /** @description Text search in event data */
-                search?: string | null;
-                /** @description Filter by user ID */
-                user_id?: string | null;
-                /** @description Filter by event type (partial match) */
-                event_type?: string | null;
-                /** @description Filter events after this time */
-                start_time?: string | null;
-                /** @description Filter events before this time */
-                end_time?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DomainEventListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

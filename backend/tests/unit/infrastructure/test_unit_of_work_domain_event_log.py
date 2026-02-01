@@ -1,4 +1,4 @@
-"""Unit tests for UnitOfWork structured-log backlog logging."""
+"""Unit tests for UnitOfWork domain event backlog logging."""
 
 import json
 from datetime import UTC, datetime
@@ -7,9 +7,8 @@ from uuid import uuid4
 import pytest
 
 from lykke.core.constants import (
-    MAX_DOMAIN_EVENT_LOG_SIZE,
-    STRUCTURED_LOG_BACKLOG_KEY,
-    STRUCTURED_LOG_STREAM_CHANNEL,
+    DOMAIN_EVENT_BACKLOG_KEY_PREFIX,
+    MAX_DOMAIN_EVENT_BACKLOG_SIZE,
 )
 from lykke.domain.events.task_events import TaskCompletedEvent
 from lykke.infrastructure.gateways import StubPubSubGateway
@@ -20,7 +19,6 @@ class _FakeRedis:
     def __init__(self) -> None:
         self.zadd_calls: list[tuple[str, dict[str, int]]] = []
         self.zrem_calls: list[tuple[str, int, int]] = []
-        self.publish_calls: list[tuple[str, str]] = []
         self.closed = False
 
     async def zadd(self, key: str, mapping: dict[str, int]) -> None:
@@ -29,16 +27,13 @@ class _FakeRedis:
     async def zremrangebyrank(self, key: str, start: int, end: int) -> None:
         self.zrem_calls.append((key, start, end))
 
-    async def publish(self, channel: str, message: str) -> None:
-        self.publish_calls.append((channel, message))
-
     async def close(self) -> None:
         self.closed = True
 
 
 @pytest.mark.asyncio
-async def test_broadcast_domain_events_logs_and_streams(monkeypatch) -> None:
-    """Ensure post-commit broadcast logs to backlog and admin stream."""
+async def test_broadcast_domain_events_logs_to_backlog(monkeypatch) -> None:
+    """Ensure post-commit broadcast logs to the user's backlog."""
     fake_redis = _FakeRedis()
     created: list[_FakeRedis] = []
 
@@ -67,7 +62,7 @@ async def test_broadcast_domain_events_logs_and_streams(monkeypatch) -> None:
 
     assert len(fake_redis.zadd_calls) == 1
     zadd_key, zadd_mapping = fake_redis.zadd_calls[0]
-    assert zadd_key == STRUCTURED_LOG_BACKLOG_KEY
+    assert zadd_key == f"{DOMAIN_EVENT_BACKLOG_KEY_PREFIX}:{user_id}"
     assert len(zadd_mapping) == 1
 
     log_json = next(iter(zadd_mapping.keys()))
@@ -78,7 +73,9 @@ async def test_broadcast_domain_events_logs_and_streams(monkeypatch) -> None:
     assert "stored_at" in log_entry
 
     assert fake_redis.zrem_calls == [
-        (STRUCTURED_LOG_BACKLOG_KEY, 0, -(MAX_DOMAIN_EVENT_LOG_SIZE + 1))
+        (
+            f"{DOMAIN_EVENT_BACKLOG_KEY_PREFIX}:{user_id}",
+            0,
+            -(MAX_DOMAIN_EVENT_BACKLOG_SIZE + 1),
+        )
     ]
-
-    assert fake_redis.publish_calls == [(STRUCTURED_LOG_STREAM_CHANNEL, log_json)]

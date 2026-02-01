@@ -25,7 +25,6 @@ from lykke.core.utils.dates import (
 from lykke.domain import value_objects
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
-from lykke.presentation.utils.structured_logging import structured_task
 
 from .common import (
     get_morning_overview_handler,
@@ -48,7 +47,6 @@ class _NotificationHandler(Protocol[_CommandT]):
 
 
 @broker.task(schedule=[{"cron": "0,19,20,30,50 * * * *"}])  # type: ignore[untyped-decorator]
-@structured_task()
 async def evaluate_smart_notifications_for_all_users_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
     *,
@@ -76,7 +74,6 @@ async def evaluate_smart_notifications_for_all_users_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
-@structured_task()
 async def evaluate_smart_notification_task(
     user_id: UUID,
     triggered_by: str | None = None,
@@ -126,7 +123,6 @@ async def evaluate_smart_notification_task(
 
 
 @broker.task(schedule=[{"cron": "*/15 * * * *"}])  # type: ignore[untyped-decorator]
-@structured_task()
 async def evaluate_morning_overviews_for_all_users_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
     *,
@@ -225,7 +221,6 @@ async def evaluate_morning_overviews_for_all_users_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
-@structured_task()
 async def evaluate_morning_overview_task(
     user_id: UUID,
     *,

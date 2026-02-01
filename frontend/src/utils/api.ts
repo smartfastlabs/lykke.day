@@ -969,7 +969,6 @@ export interface DomainEventItem {
 
 export interface DomainEventFilters {
   search?: string;
-  user_id?: string;
   event_type?: string;
   start_time?: string;
   end_time?: string;
@@ -992,7 +991,6 @@ export const adminAPI = {
   ): Promise<DomainEventListResponse> => {
     const params = new URLSearchParams();
     if (filters.search) params.set("search", filters.search);
-    if (filters.user_id) params.set("user_id", filters.user_id);
     if (filters.event_type) params.set("event_type", filters.event_type);
     if (filters.start_time) params.set("start_time", filters.start_time);
     if (filters.end_time) params.set("end_time", filters.end_time);
@@ -1000,7 +998,7 @@ export const adminAPI = {
     if (filters.offset) params.set("offset", String(filters.offset));
 
     return fetchData<DomainEventListResponse>(
-      `/api/admin/events?${params.toString()}`,
+      `/api/me/admin/domain-events?${params.toString()}`,
     );
   },
 };

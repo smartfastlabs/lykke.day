@@ -58,7 +58,6 @@ const EventsPage: Component = () => {
     offset: 0,
   });
   const [searchText, setSearchText] = createSignal("");
-  const [userIdFilter, setUserIdFilter] = createSignal("");
   const [eventTypeFilter, setEventTypeFilter] = createSignal("");
   const [realtimeEvents, setRealtimeEvents] = createSignal<DomainEventItem[]>(
     [],
@@ -85,7 +84,7 @@ const EventsPage: Component = () => {
     const token = getCookie("lykke_auth");
 
     // Build WebSocket URL - same pattern as days websocket
-    let wsUrl = `${protocol}//${baseUrl}/admin/events/stream`;
+    let wsUrl = `${protocol}//${baseUrl}/me/admin/domain-events/stream`;
     if (token) {
       wsUrl += `?token=${encodeURIComponent(token)}`;
     }
@@ -191,7 +190,6 @@ const EventsPage: Component = () => {
     setFilters((f) => ({
       ...f,
       search: searchText() || undefined,
-      user_id: userIdFilter() || undefined,
       event_type: eventTypeFilter() || undefined,
       offset: 0,
     }));
@@ -199,7 +197,6 @@ const EventsPage: Component = () => {
 
   const clearFilters = () => {
     setSearchText("");
-    setUserIdFilter("");
     setEventTypeFilter("");
     setRealtimeEvents([]);
     setFilters({ limit: 100, offset: 0 });
@@ -263,18 +260,6 @@ const EventsPage: Component = () => {
         </div>
 
         <div class="flex flex-wrap gap-4">
-          <div class="flex-1 min-w-48">
-            <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">
-              User ID
-            </label>
-            <input
-              type="text"
-              placeholder="Filter by user ID..."
-              value={userIdFilter()}
-              onInput={(e) => setUserIdFilter(e.currentTarget.value)}
-              class="w-full px-3 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-amber-200"
-            />
-          </div>
           <div class="flex-1 min-w-48">
             <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">
               Event Type

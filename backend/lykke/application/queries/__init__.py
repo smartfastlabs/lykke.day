@@ -26,6 +26,7 @@ from .get_incremental_changes import (
     GetIncrementalChangesQuery,
 )
 from .get_llm_prompt_context import GetLLMPromptContextHandler, GetLLMPromptContextQuery
+from .list_domain_events import ListDomainEventsHandler, ListDomainEventsQuery
 from .list_base_personalities import (
     BasePersonalityInfo,
     ListBasePersonalitiesHandler,
@@ -56,6 +57,8 @@ __all__ = [
     "GetUseCaseConfigQuery",
     "ListBasePersonalitiesHandler",
     "ListBasePersonalitiesQuery",
+    "ListDomainEventsHandler",
+    "ListDomainEventsQuery",
     "PreviewDayHandler",
     "PreviewDayQuery",
     "PreviewLLMSnapshotHandler",

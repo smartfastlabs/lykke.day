@@ -32,8 +32,5 @@ HTTP_STATUS_NOT_FOUND = 404
 HTTP_STATUS_INTERNAL_SERVER_ERROR = 500
 
 # Redis keys/channels
-# NOTE: Legacy Redis key/channel names are preserved to avoid losing backlog data.
-# These store the StructuredLogGateway backlog + stream (not the core domain-event bus).
-STRUCTURED_LOG_BACKLOG_KEY = "domain_events:log"
-STRUCTURED_LOG_STREAM_CHANNEL = "admin:domain-events"
-MAX_DOMAIN_EVENT_LOG_SIZE = 10_000
+DOMAIN_EVENT_BACKLOG_KEY_PREFIX = "domain-events:backlog"
+MAX_DOMAIN_EVENT_BACKLOG_SIZE = 10_000

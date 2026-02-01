@@ -9,7 +9,6 @@ from lykke.application.commands.message import ProcessInboundSmsCommand
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
-from lykke.presentation.utils.structured_logging import structured_task
 
 from .common import (
     get_process_inbound_sms_handler,
@@ -23,7 +22,6 @@ class _InboundSmsHandler(Protocol):
 
 
 @broker.task  # type: ignore[untyped-decorator]
-@structured_task()
 async def process_inbound_sms_message_task(
     user_id: UUID,
     message_id: UUID,

@@ -23,7 +23,6 @@ from lykke.domain.entities import DayEntity
 from lykke.domain.events.day_events import NewDayEvent
 from lykke.infrastructure.gateways import RedisPubSubGateway
 from lykke.infrastructure.workers.config import broker
-from lykke.presentation.utils.structured_logging import structured_task
 
 from .common import get_user_repository
 
@@ -44,7 +43,6 @@ class _PubSubGateway(Protocol):
 
 
 @broker.task(schedule=[{"cron": "5 3 * * *"}])  # type: ignore[untyped-decorator]
-@structured_task()
 async def emit_new_day_event_for_all_users_task(
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
     *,
@@ -64,7 +62,6 @@ async def emit_new_day_event_for_all_users_task(
 
 
 @broker.task  # type: ignore[untyped-decorator]
-@structured_task()
 async def emit_new_day_event_for_user_task(
     user_id: UUID,
     user_repo: Annotated[UserRepositoryReadOnlyProtocol, Depends(get_user_repository)],
