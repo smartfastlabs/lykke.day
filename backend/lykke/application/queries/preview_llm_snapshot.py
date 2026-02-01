@@ -25,7 +25,6 @@ from lykke.application.unit_of_work import ReadOnlyRepositories
 from lykke.core.utils.dates import get_current_date, get_current_datetime_in_timezone
 from lykke.core.utils.day_context_serialization import serialize_day_context
 from lykke.core.utils.llm_snapshot import build_referenced_entities
-
 from lykke.domain import value_objects
 from lykke.domain.entities import MessageEntity
 
@@ -108,6 +107,17 @@ class PreviewLLMSnapshotHandler(
             usecase=query.usecase, extra_template_vars=extra_template_vars
         )
 
+        request_messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": context_prompt},
+            {"role": "user", "content": ask_prompt},
+        ]
+        request_tools = [
+            {"name": t.name or "tool", "description": t.description or ""}
+            for t in tools
+        ]
+        request_model_params = {"llm_provider": user.settings.llm_provider.value}
+
         return value_objects.LLMRunResultSnapshot(
             tool_calls=[
                 value_objects.LLMToolCallResultSnapshot(
@@ -127,6 +137,10 @@ class PreviewLLMSnapshotHandler(
             ask_prompt=ask_prompt,
             tools_prompt=tools_prompt,
             referenced_entities=build_referenced_entities(prompt_context),
+            request_messages=request_messages,
+            request_tools=request_tools,
+            request_tool_choice="auto",
+            request_model_params=request_model_params,
         )
 
     @staticmethod
@@ -192,7 +206,9 @@ class PreviewLLMSnapshotHandler(
             return None
 
         async def update_task(
-            task_id: UUID, action: Literal["complete", "punt"], message: str | None = None
+            task_id: UUID,
+            action: Literal["complete", "punt"],
+            message: str | None = None,
         ) -> None:
             """Update an existing task when the inbound SMS implies a status change."""
             _ = (task_id, action, message)

@@ -216,6 +216,22 @@ class OpenAILLMGateway:
                 HumanMessage(content=context_prompt),
                 HumanMessage(content=ask_prompt),
             ]
+            request_messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": context_prompt},
+                {"role": "user", "content": ask_prompt},
+            ]
+            request_tool_choice = "auto"
+            request_model_params = {
+                "model": settings.OPENAI_MODEL,
+                "temperature": getattr(self._llm, "temperature", 0.7),
+            }
+            request_payload = {
+                "request_messages": request_messages,
+                "request_tools": [_coerce_json_safe(s) for s in tool_specs],
+                "request_tool_choice": request_tool_choice,
+                "request_model_params": request_model_params,
+            }
             llm = self._llm.bind_tools(tool_specs)
             response = await llm.ainvoke(messages)
 
@@ -279,7 +295,10 @@ class OpenAILLMGateway:
             if not tool_results:
                 status = "no_tool_results"
                 return None
-            return LLMToolRunResult(tool_results=tool_results)
+            return LLMToolRunResult(
+                tool_results=tool_results,
+                request_payload=request_payload,
+            )
 
         except json.JSONDecodeError as e:
             status = "error"

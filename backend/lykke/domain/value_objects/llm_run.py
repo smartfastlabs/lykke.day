@@ -37,3 +37,8 @@ class LLMRunResultSnapshot(BaseValueObject):
     ask_prompt: str
     tools_prompt: str
     referenced_entities: list[LLMReferencedEntitySnapshot] = field(default_factory=list)
+    # Exact request payload sent to the LLM (optional, for debugging)
+    request_messages: list[dict[str, Any]] | None = None
+    request_tools: list[dict[str, Any]] | None = None
+    request_tool_choice: Any = None
+    request_model_params: dict[str, Any] | None = None

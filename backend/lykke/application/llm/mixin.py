@@ -53,6 +53,7 @@ class LLMRunResult:
     context_prompt: str
     ask_prompt: str
     tools_prompt: str
+    request_payload: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,10 @@ class LLMRunSnapshotContext:
     context_prompt: str
     ask_prompt: str
     tools_prompt: str
+    request_messages: list[dict[str, Any]] | None = None
+    request_tools: list[dict[str, Any]] | None = None
+    request_tool_choice: Any = None
+    request_model_params: dict[str, Any] | None = None
 
 
 class LLMHandlerMixin(ABC):
@@ -160,6 +165,18 @@ class LLMHandlerMixin(ABC):
         logger.info(
             f"Running LLM handler {self.template_usecase} with tools {tool_names}"
         )
+        request_messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": context_prompt},
+            {"role": "user", "content": ask_prompt},
+        ]
+        request_tools = [
+            {
+                "name": t.name,
+                "description": t.description or "",
+            }
+            for t in tools
+        ]
         self._llm_snapshot_context = LLMRunSnapshotContext(
             prompt_context=prompt_input.prompt_context,
             current_time=current_time,
@@ -168,6 +185,10 @@ class LLMHandlerMixin(ABC):
             context_prompt=context_prompt,
             ask_prompt=ask_prompt,
             tools_prompt=tools_prompt,
+            request_messages=request_messages,
+            request_tools=request_tools,
+            request_tool_choice="auto",
+            request_model_params={"llm_provider": llm_provider.value},
         )
 
         tool_result = await llm_gateway.run_usecase(
@@ -197,4 +218,5 @@ class LLMHandlerMixin(ABC):
             context_prompt=context_prompt,
             ask_prompt=ask_prompt,
             tools_prompt=tools_prompt,
+            request_payload=tool_result.request_payload,
         )

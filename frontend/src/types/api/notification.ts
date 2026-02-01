@@ -14,6 +14,10 @@ export type LLMRunResultSnapshot = {
   ask_prompt?: string;
   tools_prompt?: string;
   referenced_entities?: { entity_type: string; entity_id: string }[];
+  request_messages?: { role: string; content: string | unknown }[];
+  request_tools?: Record<string, unknown>[];
+  request_tool_choice?: unknown;
+  request_model_params?: Record<string, unknown>;
 };
 
 export type PushNotification = {

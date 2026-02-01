@@ -133,6 +133,10 @@ class SmartNotificationHandler(
                 referenced_entities=build_referenced_entities(
                     snapshot_context.prompt_context
                 ),
+                request_messages=snapshot_context.request_messages,
+                request_tools=snapshot_context.request_tools,
+                request_tool_choice=snapshot_context.request_tool_choice,
+                request_model_params=snapshot_context.request_model_params,
             )
 
         async def decide_notification(

@@ -47,6 +47,7 @@ class LLMToolRunResult:
     """Result for an LLM run that may include multiple tool calls."""
 
     tool_results: list[LLMToolCallResult]
+    request_payload: dict[str, Any] | None = None
 
 
 class LLMGatewayProtocol(Protocol):

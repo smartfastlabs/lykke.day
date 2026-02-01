@@ -307,6 +307,7 @@ class ProcessBrainDumpHandler(
             )
             for tool_result in result.tool_results
         ]
+        payload = result.request_payload or {}
         return value_objects.LLMRunResultSnapshot(
             tool_calls=tool_calls,
             prompt_context=prompt_context_snapshot,
@@ -317,6 +318,10 @@ class ProcessBrainDumpHandler(
             ask_prompt=result.ask_prompt,
             tools_prompt=result.tools_prompt,
             referenced_entities=referenced_entities,
+            request_messages=payload.get("request_messages"),
+            request_tools=payload.get("request_tools"),
+            request_tool_choice=payload.get("request_tool_choice"),
+            request_model_params=payload.get("request_model_params"),
         )
 
     async def _record_llm_run_result(
