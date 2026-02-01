@@ -47,8 +47,8 @@ class NoOpWorkersToSchedule:
         """No-op."""
 
 
-_current_workers_to_schedule: ContextVar[WorkersToScheduleProtocol | None] = (
-    ContextVar("current_workers_to_schedule", default=None)
+_current_workers_to_schedule: ContextVar[WorkersToScheduleProtocol | None] = ContextVar(
+    "current_workers_to_schedule", default=None
 )
 
 

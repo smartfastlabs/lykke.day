@@ -9,9 +9,9 @@ from lykke.application.gateways.google_protocol import GoogleCalendarGatewayProt
 from lykke.application.repositories import UserRepositoryReadOnlyProtocol
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory, UnitOfWorkFactory
 from lykke.infrastructure.gateways import GoogleCalendarGateway, RedisPubSubGateway
+from lykke.infrastructure.repositories import UserRepository
 from lykke.presentation.workers.tasks.post_commit_workers import WorkersToSchedule
 from lykke.presentation.workers.tasks.registry import WorkerRegistry
-from lykke.infrastructure.repositories import UserRepository
 
 if TYPE_CHECKING:
     from lykke.application.commands import ScheduleDayHandler
