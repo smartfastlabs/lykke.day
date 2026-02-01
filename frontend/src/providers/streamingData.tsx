@@ -212,6 +212,16 @@ export function StreamingDataProvider(props: ParentProps) {
     );
   };
 
+  const dedupeAlarms = (items: Alarm[]): Alarm[] => {
+    const deduped: Alarm[] = [];
+    items.forEach((alarm) => {
+      if (!deduped.some((existing) => isSameAlarm(existing, alarm))) {
+        deduped.push(alarm);
+      }
+    });
+    return deduped;
+  };
+
   // Derived values from the store
   const dayContext = createMemo(() => dayContextStore.data);
   const tasks = createMemo(() => dayContextStore.data?.tasks ?? []);
@@ -724,12 +734,13 @@ export function StreamingDataProvider(props: ParentProps) {
   const updateAlarmsLocally = (updatedAlarms: Alarm[]) => {
     setDayContextStore((current) => {
       if (!current.data || !current.data.day) return current;
+      const dedupedAlarms = dedupeAlarms(updatedAlarms);
       const updated = {
         data: {
           ...current.data,
           day: {
             ...current.data.day,
-            alarms: updatedAlarms,
+            alarms: dedupedAlarms,
           },
         },
       };
@@ -809,7 +820,12 @@ export function StreamingDataProvider(props: ParentProps) {
       alarm_type: payload.alarmType,
       url: payload.url,
     });
-    updateAlarmsLocally([...(alarms() ?? []), created]);
+    const existing = alarms() ?? [];
+    if (existing.some((alarm) => isSameAlarm(alarm, created))) {
+      updateAlarmLocally(created);
+      return;
+    }
+    updateAlarmsLocally([...existing, created]);
   };
 
   const setAlarmStatus = async (

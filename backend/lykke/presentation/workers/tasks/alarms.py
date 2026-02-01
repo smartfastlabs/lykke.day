@@ -126,8 +126,6 @@ async def trigger_alarms_for_user_task(
                 if day.has_events():
                     uow.add(day)
 
-        logger.info("Alarm evaluation completed for user %s", user_id)
+        logger.info(f"Alarm evaluation completed for user {user_id}")
     finally:
-        await pubsub_gateway.close()
-        await pubsub_gateway.close()
         await pubsub_gateway.close()
