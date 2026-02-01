@@ -1,4 +1,8 @@
-Rules:
+# Inbound SMS:
+- received_at: {{ inbound_message.created_at }}
+- content: {{ inbound_message.content }}
+
+# Rules:
 - Choose the single best tool call to handle the user's inbound SMS.
 - If you need more information, call ask_question with a concise question.
 - Use reply when you want to respond without taking action. Leave message empty to take no action.
@@ -8,5 +12,5 @@ Rules:
 - Only update tasks when the message clearly refers to an existing task in the context.
 - Never invent task IDs; only use IDs shown in the context.
 
-Tools:
+# Tools:
 {{ tools_prompt }}

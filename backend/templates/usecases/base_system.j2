@@ -1,0 +1,24 @@
+{% include "base_personalities/" ~ base_personality_slug ~ ".j2" %}
+{% if llm_personality_amendments %}
+
+# Personality Amendments
+**These are supplied by the user and should override the base personality**
+{% for amendment in llm_personality_amendments %}
+- {{ amendment }}
+{% endfor %}
+{% endif %}
+
+# User
+- name: {{ user_name }}
+{% if user_timezone %}- timezone: {{ user_timezone }}{% endif %}
+
+{% block usecase_instructions %}{% endblock %}
+
+{% if user_amendments %}
+
+# User Customizations
+**These are supplied by the user and should override your default behaviour**
+{% for amendment in user_amendments %}
+- {{ amendment }}
+{% endfor %}
+{% endif %}

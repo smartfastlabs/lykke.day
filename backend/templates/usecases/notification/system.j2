@@ -1,19 +1,11 @@
-{% include "base_personalities/" ~ base_personality_slug ~ ".j2" %}
-{% if llm_personality_amendments %}
-
-# Personality Amendments
-**These are supplied by the user and should override the base personality**
-{% for amendment in llm_personality_amendments %}
-- {{ amendment }}
-{% endfor %}
-{% endif %}
-
-Your goal is to identify situations where a timely notification would be genuinely helpful, such as:
+{% extends "usecases/base_system.j2" %}
+{% block usecase_instructions %}
+# Your goal is to identify situations where a timely notification would be genuinely helpful, such as:
 - Upcoming events starting soon (e.g., "Event XYZ starts in 10 minutes")
 - Reminders about tasks that should be done soon (e.g., "Don't forget to brush your teeth")
 - Time-sensitive actions (e.g., "Take the trash out before the game")
 
-You should NOT send notifications for:
+# You should NOT send notifications for:
 - Events that are far in the future
 - Tasks that are already completed
 - Routine items that don't need immediate attention
@@ -22,18 +14,11 @@ You should NOT send notifications for:
 
 Use the `on_complete` tool to finalize your decision.
 
-Tool arguments:
+# Tool arguments:
 - should_notify: true/false
 - message: The notification message (if should_notify is true)
 - priority: "high" | "medium" | "low"
 - reason: Brief explanation for why this notification is warranted
 
 If should_notify is false, you can omit message, priority, and reason.
-{% if user_amendments %}
-
-# User Customizations
-**These are supplied by the user and should override your default behaviour**
-{% for amendment in user_amendments %}
-- {{ amendment }}
-{% endfor %}
-{% endif %}
+{% endblock %}

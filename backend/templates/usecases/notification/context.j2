@@ -1,19 +1,4 @@
-User context for notification decision.
-Current time: {{ fmt_datetime(current_time) }}
-Day:
-- date: {{ context.day.date.isoformat() }}
-  status: {{ context.day.status.value }}
-  {% if context.day.tags %}tags: {{ context.day.tags | map(attribute='value') | list }}{% endif %}
-  {% if context.day.high_level_plan %}
-  high_level_plan:
-    title: {{ context.day.high_level_plan.title }}
-    {{- kv_line("    ", "text", context.day.high_level_plan.text) -}}
-    {{- kv_line("    ", "intentions", context.day.high_level_plan.intentions) -}}
-  {% endif %}
-{% include "components/tasks/list.j2" %}
-{% include "components/calendar_entries/list.j2" %}
-{% include "components/reminders/list.j2" %}
-{% include "components/brain_dumps/list.j2" %}
-{% include "components/factoids/list.j2" %}
-{% include "components/messages/list.j2" %}
-{% include "components/push_notifications/list.j2" %}
+{% extends "usecases/base_context.j2" %}
+{% block header %}
+# User context for notification decision.
+{% endblock %}

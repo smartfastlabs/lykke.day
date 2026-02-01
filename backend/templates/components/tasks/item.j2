@@ -2,13 +2,22 @@
   status: {{ task.status.value }}
   type: {{ task.type.value }}
   category: {{ task.category.value }}
-  scheduled_date: {{ task.scheduled_date.isoformat() }}{% if task.description %}
-  description: {{ task.description }}{% endif %}
+  scheduled_date: {{ task.scheduled_date.isoformat() }}
+  {% if task.description %}
+  description: {{ task.description }}
+  {% endif %}
   frequency: {{ task.frequency.value }}
-  {% if task.tags %}tags: {{ task.tags | map(attribute='value') | list }}{% endif %}{% if task.completed_at %}
-  completed_at: {{ fmt_datetime(task.completed_at) }}{% endif %}
+  {% if task.tags %}
+  tags: {{ task.tags | map(attribute='value') | list }}
+  {% endif %}
+  {% if task.completed_at %}
+  completed_at: {{ fmt_datetime(task.completed_at) }}
+  {% endif %}
+  {% set schedule = task.schedule %}
+  {% if schedule and (schedule.timing_type or schedule.available_time or schedule.start_time or schedule.end_time) %}
   schedule:
-    {{- kv_line("    ", "timing_type", task.schedule and task.schedule.timing_type.value) -}}
-    {{- kv_line("    ", "available_time", task.schedule and task.schedule.available_time and fmt_time(task.schedule.available_time)) -}}
-    {{- kv_line("    ", "start_time", task.schedule and task.schedule.start_time and fmt_time(task.schedule.start_time)) -}}
-    {{- kv_line("    ", "end_time", task.schedule and task.schedule.end_time and fmt_time(task.schedule.end_time)) -}}
+    {{- kv_line("    ", "timing_type", schedule.timing_type and schedule.timing_type.value) -}}
+    {{- kv_line("    ", "available_time", schedule.available_time and fmt_time(schedule.available_time)) -}}
+    {{- kv_line("    ", "start_time", schedule.start_time and fmt_time(schedule.start_time)) -}}
+    {{- kv_line("    ", "end_time", schedule.end_time and fmt_time(schedule.end_time)) -}}
+  {% endif %}

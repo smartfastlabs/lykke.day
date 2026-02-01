@@ -1,0 +1,23 @@
+{% block header %}{% endblock %}
+Current time: {{ fmt_datetime(current_time) }}
+# Day
+- date: {{ context.day.date.isoformat() }}
+  status: {{ context.day.status.value }}
+  {% if context.day.tags %}tags: {{ context.day.tags | map(attribute='value') | list }}{% endif %}
+  {% if context.day.high_level_plan %}
+  high_level_plan:
+    title: {{ context.day.high_level_plan.title }}
+    {{- kv_line("    ", "text", context.day.high_level_plan.text) -}}
+    {{- kv_line("    ", "intentions", context.day.high_level_plan.intentions) -}}
+  {% endif %}
+
+{% block extra_context %}{% endblock %}
+
+{% block tasks_section %}{% include "components/tasks/list.j2" %}{% endblock %}
+{% block routines_section %}{% include "components/routines/list.j2" %}{% endblock %}
+{% block calendar_entries_section %}{% include "components/calendar_entries/list.j2" %}{% endblock %}
+{% block reminders_section %}{% include "components/reminders/list.j2" %}{% endblock %}
+{% block brain_dumps_section %}{% include "components/brain_dumps/list.j2" %}{% endblock %}
+{% block factoids_section %}{% include "components/factoids/list.j2" %}{% endblock %}
+{% block messages_section %}{% include "components/messages/list.j2" %}{% endblock %}
+{% block push_notifications_section %}{% include "components/push_notifications/list.j2" %}{% endblock %}

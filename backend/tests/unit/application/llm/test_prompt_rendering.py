@@ -55,8 +55,7 @@ def test_render_context_prompt_serializes_llm_prompt_context() -> None:
         extra_template_vars={"inbound_message": inbound_message},
     )
 
-    assert "Day context (today):" in rendered
-    assert '"day"' in rendered
+    assert rendered.startswith("Current time")
 
 
 @pytest.mark.asyncio
@@ -82,4 +81,7 @@ async def test_render_system_prompt_uses_base_personality_slug() -> None:
         usecase_config_ro_repo=usecase_config_repo,
     )
 
+    assert "direct, no-nonsense tone" in result
+    assert "direct, no-nonsense tone" in result
+    assert "direct, no-nonsense tone" in result
     assert "direct, no-nonsense tone" in result

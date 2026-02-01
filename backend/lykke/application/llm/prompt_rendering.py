@@ -40,15 +40,21 @@ async def render_system_prompt(
     user_amendments = await fetch_user_amendments(usecase, usecase_config_ro_repo)
     base_personality_slug = None
     llm_personality_amendments: list[str] | None = None
+    user_timezone = None
     if user.settings:
         base_personality_slug = user.settings.base_personality_slug
         llm_personality_amendments = user.settings.llm_personality_amendments
+        user_timezone = user.settings.timezone
+    user_name = user.email
     return render_for_user(
         usecase,
         "system",
         user_amendments=user_amendments,
         base_personality_slug=base_personality_slug,
         llm_personality_amendments=llm_personality_amendments,
+        user=user,
+        user_name=user_name,
+        user_timezone=user_timezone,
     )
 
 

@@ -1,0 +1,14 @@
+- name: {{ routine.name }}
+  status: {{ routine.status.value }}
+  category: {{ routine.category.value }}
+  date: {{ routine.date.isoformat() }}{% if routine.description %}
+  description: {{ routine.description }}{% endif %}
+  {% if routine.snoozed_until %}snoozed_until: {{ fmt_datetime(routine.snoozed_until) }}{% endif %}
+  {% set time_window = routine.time_window %}
+  {% if time_window and (time_window.available_time or time_window.start_time or time_window.end_time or time_window.cutoff_time) %}
+  time_window:
+    {{- kv_line("    ", "available_time", time_window.available_time and fmt_time(time_window.available_time)) -}}
+    {{- kv_line("    ", "start_time", time_window.start_time and fmt_time(time_window.start_time)) -}}
+    {{- kv_line("    ", "end_time", time_window.end_time and fmt_time(time_window.end_time)) -}}
+    {{- kv_line("    ", "cutoff_time", time_window.cutoff_time and fmt_time(time_window.cutoff_time)) -}}
+  {% endif %}

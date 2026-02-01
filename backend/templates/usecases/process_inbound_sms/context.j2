@@ -1,9 +1,1 @@
-Inbound SMS:
-- created_at: {{ inbound_message.created_at }}
-- content: {{ inbound_message.content }}
-- meta: {{ inbound_message.meta }}
-
-Day context (today):
-{{ context_json | tojson(indent=2) }}
-
-Current time: {{ current_time }}
+{% extends "usecases/base_context.j2" %}

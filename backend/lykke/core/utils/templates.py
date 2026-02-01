@@ -1,3 +1,4 @@
+import re
 import textwrap
 from pathlib import Path
 from typing import Any
@@ -34,14 +35,52 @@ def _register_template_helpers(environment: Environment) -> None:
     environment.globals["kv_line"] = kv_line
 
 
-env = Environment(loader=FileSystemLoader(TEMPLATE_PATH))
+env = Environment(
+    loader=FileSystemLoader(TEMPLATE_PATH),
+    trim_blocks=True,
+    lstrip_blocks=True,
+)
 _register_template_helpers(env)
+
+
+def _post_process_rendered(rendered: str) -> str:
+    dedented = textwrap.dedent(str(rendered))
+    lines = [line.rstrip() for line in dedented.splitlines()]
+
+    cleaned_lines: list[str] = []
+    empty_streak = 0
+    for line in lines:
+        if line.strip() == "":
+            empty_streak += 1
+            if empty_streak > 1:
+                continue
+            cleaned_lines.append("")
+        else:
+            empty_streak = 0
+            cleaned_lines.append(line)
+
+    normalized_lines: list[str] = []
+    for line in cleaned_lines:
+        match = re.match(r"^(?P<prefix>.*?)(?P<header>#+\s+\S.*)$", line)
+        if match and match.group("prefix").strip():
+            normalized_lines.append(match.group("prefix").rstrip())
+            line = match.group("header").lstrip()
+
+        stripped = line.lstrip()
+        is_header = stripped.startswith("#")
+        is_h1 = stripped.startswith("# ") and not stripped.startswith("##")
+        if is_header and normalized_lines:
+            while normalized_lines and normalized_lines[-1] == "":
+                normalized_lines.pop()
+            normalized_lines.extend(["", ""] if is_h1 else [""])
+        normalized_lines.append(line)
+    return "\n".join(normalized_lines).strip()
 
 
 def render(template_name: str, /, **kwargs: Any) -> str:
     template = env.get_template(template_name)
     rendered = template.render(**kwargs)
-    return textwrap.dedent(str(rendered)).strip()
+    return _post_process_rendered(rendered)
 
 
 def normalize_template_key(key: str) -> str:
@@ -122,7 +161,11 @@ def template_display_name(value: str) -> str:
 
 def create_template_environment() -> Environment:
     """Create a Jinja2 environment for system templates."""
-    environment = Environment(loader=FileSystemLoader(TEMPLATE_PATH))
+    environment = Environment(
+        loader=FileSystemLoader(TEMPLATE_PATH),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
     _register_template_helpers(environment)
     return environment
 
@@ -139,4 +182,4 @@ def render_for_user(
     template = environment.get_template(to_template_name(template_key))
     resolved_slug = resolve_base_personality_slug(base_personality_slug)
     kwargs.setdefault("base_personality_slug", resolved_slug)
-    return textwrap.dedent(template.render(**kwargs)).strip()
+    return _post_process_rendered(template.render(**kwargs))

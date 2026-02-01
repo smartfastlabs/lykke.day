@@ -1,6 +1,6 @@
 {% set reminder_tasks = context.tasks | selectattr("type", "equalto", "REMINDER") | list %}
 {% if reminder_tasks %}
-Reminders by status (meaning in parentheses):
+# Reminders by status (meaning in parentheses):
 {% set status_descriptions = {
   "NOT_STARTED": "Still needs attention.",
   "READY": "Still needs attention.",
@@ -11,7 +11,7 @@ Reminders by status (meaning in parentheses):
 {% for status in ["NOT_STARTED", "READY", "PENDING", "COMPLETE", "PUNT"] %}
 {% set items = reminder_tasks | selectattr("status", "equalto", status) | list %}
 {% if items %}
-{{ status }} ({{ status_descriptions.get(status, status) }}):
+## {{ status }} ({{ status_descriptions.get(status, status) }}):
 {% for reminder in items %}
 {% include "components/reminders/item.j2" %}
 {% endfor %}

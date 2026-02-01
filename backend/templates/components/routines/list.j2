@@ -1,5 +1,5 @@
-{% if context.tasks %}
-# Tasks by status (meaning in parentheses):
+{% if context.routines %}
+# Routines by status (meaning in parentheses):
 {% set status_descriptions = {
   "READY": "Ready to start now.",
   "PENDING": "Scheduled time arrived; should be worked on.",
@@ -9,11 +9,11 @@
   "PUNT": "Intentionally deferred; do not notify, included only as context."
 } %}
 {% for status in ["READY", "PENDING", "NOT_STARTED", "NOT_READY", "COMPLETE", "PUNT"] %}
-{% set items = context.tasks | selectattr("status.value", "equalto", status) | list %}
+{% set items = context.routines | selectattr("status.value", "equalto", status) | list %}
 {% if items %}
 ## {{ status }} ({{ status_descriptions[status] }}):
-{% for task in items %}
-{% include "components/tasks/item.j2" %}
+{% for routine in items %}
+{% include "components/routines/item.j2" %}
 {% endfor %}
 {% endif %}
 {% endfor %}
