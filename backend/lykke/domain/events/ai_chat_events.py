@@ -20,6 +20,7 @@ __all__ = [
     "FactoidCreatedEvent",
     "FactoidCriticalityUpdatedEvent",
     "FactoidUpdatedEvent",
+    "MessageLLMRunRecordedEvent",
     "MessageReceivedEvent",
     "MessageSentEvent",
 ]
@@ -60,6 +61,13 @@ class MessageReceivedEvent(DomainEvent, AuditableDomainEvent):
             object.__setattr__(self, "entity_id", self.message_id)
         if self.entity_type is None:
             object.__setattr__(self, "entity_type", "message")
+
+
+@dataclass(frozen=True, kw_only=True)
+class MessageLLMRunRecordedEvent(DomainEvent):
+    """Event raised when an LLM run result is stored for a message."""
+
+    message_id: UUID
 
 
 @dataclass(frozen=True, kw_only=True)

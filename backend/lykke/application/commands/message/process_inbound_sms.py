@@ -164,7 +164,7 @@ class ProcessInboundSmsHandler(
                     "Message %s not found while recording llm_run_result", message_id
                 )
                 return
-            updated = message.clone(llm_run_result=snapshot)
+            updated = message.update_llm_run_result(snapshot)
             if updated is message:
                 return
             uow.add(updated)

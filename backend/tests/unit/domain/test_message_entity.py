@@ -1,11 +1,15 @@
 """Unit tests for MessageEntity domain logic."""
 
+from __future__ import annotations
+
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
 
 from lykke.domain import value_objects
 from lykke.domain.entities import MessageEntity
+from lykke.domain.events.ai_chat_events import MessageLLMRunRecordedEvent
 
 
 @pytest.fixture
@@ -146,3 +150,32 @@ def test_message_immutability() -> None:
     assert updated.content == "Updated content"
     assert original.id == updated.id  # ID preserved
     assert original is not updated  # Different instances
+
+
+def test_message_updates_llm_run_result_emits_event() -> None:
+    user_id = uuid4()
+    message = MessageEntity(
+        user_id=user_id,
+        role=value_objects.MessageRole.USER,
+        type=value_objects.MessageType.SMS_INBOUND,
+        content="Hello",
+        meta={"provider": "twilio", "from_number": "+15551234567"},
+    )
+
+    snapshot = value_objects.LLMRunResultSnapshot(
+        tool_calls=[],
+        prompt_context={"day": {"id": str(uuid4())}},
+        current_time=datetime(2026, 1, 31, 8, 30, tzinfo=UTC),
+        llm_provider=value_objects.LLMProvider.OPENAI,
+        system_prompt="system",
+        context_prompt="context",
+        ask_prompt="ask",
+        tools_prompt="tools",
+        referenced_entities=[],
+    )
+
+    updated = message.update_llm_run_result(snapshot)
+
+    assert updated is not message
+    events = updated.collect_events()
+    assert any(isinstance(event, MessageLLMRunRecordedEvent) for event in events)
