@@ -16,6 +16,7 @@ import {
   faBullseye,
   faMobileScreenButton,
   faCommentDots,
+  faSun,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { Icon } from "@/components/shared/Icon";
@@ -110,6 +111,12 @@ const settingsSections: SettingsSection[] = [
         description: "Manage reminders and alerts.",
         icon: faBell,
         url: "/me/settings/notifications",
+      },
+      {
+        label: "Morning Overview",
+        description: "Configure your daily morning summary.",
+        icon: faSun,
+        url: "/me/settings/morning",
       },
       {
         label: "Messaging",

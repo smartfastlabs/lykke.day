@@ -638,6 +638,42 @@ export const usecaseConfigAPI = {
       throw err;
     }),
 
+  // Typed methods for morning overview usecase
+  getMorningOverviewConfig: (): Promise<NotificationUseCaseConfig> =>
+    fetchData<NotificationUseCaseConfig>(
+      "/api/usecase-configs/morning_overview",
+      {
+        suppressError: true, // 404 is expected when no config exists
+      },
+    ).catch((err) => {
+      if (err instanceof ApiRequestError && err.status === 404) {
+        return { user_amendments: [] } as NotificationUseCaseConfig;
+      }
+      throw err;
+    }),
+
+  updateMorningOverviewConfig: (
+    config: NotificationUseCaseConfig,
+  ): Promise<NotificationUseCaseConfig> =>
+    fetchData<NotificationUseCaseConfig>(
+      "/api/usecase-configs/morning_overview",
+      {
+        method: "PUT",
+        body: JSON.stringify(config),
+      },
+    ),
+
+  getMorningOverviewLLMSnapshotPreview: (): Promise<LLMRunResultSnapshot | null> =>
+    fetchData<LLMRunResultSnapshot | null>(
+      "/api/usecase-configs/morning_overview/llm-preview",
+      { suppressError: true },
+    ).catch((err) => {
+      if (err instanceof ApiRequestError && err.status === 404) {
+        return null;
+      }
+      throw err;
+    }),
+
   // Typed methods for messaging usecase
   getMessagingConfig: (): Promise<MessagingUseCaseConfig> =>
     fetchData<MessagingUseCaseConfig>(

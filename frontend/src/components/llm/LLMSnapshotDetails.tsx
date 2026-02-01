@@ -110,11 +110,8 @@ const LLMSnapshotDetails: Component<Props> = (props) => (
               Messages
             </div>
             <div class="space-y-2">
-              {props.snapshot.request_messages!.map((msg, i) => (
-                <div
-                  class="rounded-lg border border-stone-200/80 bg-white/90 p-3"
-                  key={i}
-                >
+              {props.snapshot.request_messages!.map((msg) => (
+                <div class="rounded-lg border border-stone-200/80 bg-white/90 p-3">
                   <span class="text-xs font-medium text-stone-500 uppercase">
                     {msg.role}
                   </span>

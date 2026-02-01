@@ -54,7 +54,11 @@ class PreviewLLMSnapshotHandler(
         self, query: PreviewLLMSnapshotQuery
     ) -> value_objects.LLMRunResultSnapshot | None:
         """Build a synthetic snapshot without running the LLM."""
-        if query.usecase not in {"notification", "process_inbound_sms"}:
+        if query.usecase not in {
+            "notification",
+            "morning_overview",
+            "process_inbound_sms",
+        }:
             return None
 
         user = await self.user_ro_repo.get(self.user_id)
@@ -69,13 +73,15 @@ class PreviewLLMSnapshotHandler(
 
         if query.usecase == "notification":
             tools = self._build_notification_tools()
+        elif query.usecase == "morning_overview":
+            tools = self._build_morning_overview_tools()
         else:
             send_acknowledgment = await self._get_send_acknowledgment(query.usecase)
             tools = self._build_inbound_sms_tools(send_acknowledgment)
 
         tools_prompt = render_tools_prompt(tools)
 
-        if query.usecase == "notification":
+        if query.usecase in {"notification", "morning_overview"}:
             extra_template_vars: dict[str, Any] = {"tools_prompt": tools_prompt}
         else:
             inbound_message = MessageEntity(
@@ -160,6 +166,26 @@ class PreviewLLMSnapshotHandler(
                 name="decide_notification",
                 callback=decide_notification,
                 description="Decide whether to send a smart notification.",
+            )
+        ]
+
+    @staticmethod
+    def _build_morning_overview_tools() -> list[LLMTool]:
+        async def decide_morning_overview(
+            should_notify: bool,
+            message: str | None = None,
+            priority: str | None = None,
+            reason: str | None = None,
+        ) -> None:
+            """Decide whether to send a morning overview."""
+            _ = (should_notify, message, priority, reason)
+            return None
+
+        return [
+            LLMTool(
+                name="decide_morning_overview",
+                callback=decide_morning_overview,
+                description="Decide whether to send a morning overview.",
             )
         ]
 
@@ -296,6 +322,13 @@ class PreviewLLMSnapshotHandler(
     @staticmethod
     def _default_tool_call_arguments(tool_name: str) -> dict[str, object | None]:
         if tool_name == "decide_notification":
+            return {
+                "should_notify": None,
+                "message": None,
+                "priority": None,
+                "reason": None,
+            }
+        if tool_name == "decide_morning_overview":
             return {
                 "should_notify": None,
                 "message": None,

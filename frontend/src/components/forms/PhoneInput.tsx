@@ -131,15 +131,12 @@ interface PhoneInputProps {
 export const PhoneInput: Component<PhoneInputProps> = (props) => {
   const config = () => COUNTRY_CONFIGS[props.country];
 
-  const handleInput = (e: InputEvent) => {
-    const raw = (e.target as HTMLInputElement).value;
+  const handleInput = (e: Event & { currentTarget: { value: string } }) => {
+    const raw = e.currentTarget.value;
     const digits = digitsOnly(raw).slice(0, config().digitsMax);
     const formatted = config().format(digits);
     props.onChange(formatted);
   };
-
-  const cfg = config();
-  const maxLength = cfg.placeholder.length + 2; // padding for edge cases
 
   return (
     <input
@@ -147,14 +144,14 @@ export const PhoneInput: Component<PhoneInputProps> = (props) => {
       type="tel"
       inputmode="numeric"
       autocomplete="tel"
-      placeholder={cfg.placeholder}
+      placeholder={config().placeholder}
       value={props.value()}
       onInput={handleInput}
       class={inputClass}
-      style={{ width: `${cfg.widthCh}ch` }}
+      style={{ width: `${config().widthCh}ch` }}
       required={props.required}
-      maxlength={maxLength}
-      title={`Enter a valid ${cfg.label} phone number`}
+      maxlength={config().placeholder.length + 2}
+      title={`Enter a valid ${config().label} phone number`}
       aria-label="Phone number"
     />
   );

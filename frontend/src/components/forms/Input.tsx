@@ -7,6 +7,15 @@ const inputClass =
 interface InputProps {
   id: string;
   type?: "text" | "email" | "password" | "number" | "time" | "tel";
+  inputMode?:
+    | "none"
+    | "text"
+    | "search"
+    | "url"
+    | "email"
+    | "tel"
+    | "decimal"
+    | "numeric";
   placeholder: string;
   value: Accessor<string>;
   onChange: (value: string) => void;
@@ -14,6 +23,8 @@ interface InputProps {
   autocomplete?: string;
   min?: string;
   max?: string;
+  maxLength?: number;
+  pattern?: string;
 }
 
 export const Input: Component<InputProps> = (props) => (
@@ -24,6 +35,7 @@ export const Input: Component<InputProps> = (props) => (
     <input
       id={props.id}
       type={props.type ?? "text"}
+      inputmode={props.inputMode}
       placeholder={props.placeholder}
       value={props.value()}
       onInput={(e) => props.onChange(e.currentTarget.value)}
@@ -32,6 +44,8 @@ export const Input: Component<InputProps> = (props) => (
       autocomplete={props.autocomplete}
       min={props.min}
       max={props.max}
+      maxLength={props.maxLength}
+      pattern={props.pattern}
     />
   </div>
 );
