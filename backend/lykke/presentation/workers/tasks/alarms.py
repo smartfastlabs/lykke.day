@@ -72,7 +72,7 @@ async def trigger_alarms_for_user_task(
         current_datetime_provider = current_datetime_provider or get_current_datetime
         target_date = current_date_provider(timezone)
         now = current_datetime_provider()
-        evaluation_time = now.replace(second=0, microsecond=0)
+        evaluation_time = now
         previous_date = target_date - dt_timedelta(days=1)
 
         def evaluate_day_alarms(
