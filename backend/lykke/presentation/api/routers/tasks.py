@@ -12,9 +12,12 @@ from lykke.application.commands import (
     DeleteTaskHandler,
     RecordTaskActionCommand,
     RecordTaskActionHandler,
+    RescheduleTaskCommand,
+    RescheduleTaskHandler,
 )
 from lykke.domain import value_objects
 from lykke.presentation.api.schemas import AdhocTaskCreateSchema, TaskSchema
+from lykke.presentation.api.schemas.task import TaskRescheduleSchema
 from lykke.presentation.api.schemas.mappers import map_task_to_schema
 from lykke.presentation.handler_factory import CommandHandlerFactory
 
@@ -32,6 +35,20 @@ async def add_task_action(
     """Record an action on a task."""
     handler = command_factory.create(RecordTaskActionHandler)
     task = await handler.handle(RecordTaskActionCommand(task_id=_id, action=action))
+    return map_task_to_schema(task)
+
+
+@router.post("/{_id}/reschedule", response_model=TaskSchema)
+async def reschedule_task(
+    _id: uuid.UUID,
+    payload: TaskRescheduleSchema,
+    command_factory: Annotated[CommandHandlerFactory, Depends(command_handler_factory)],
+) -> TaskSchema:
+    """Reschedule a task to a new date."""
+    handler = command_factory.create(RescheduleTaskHandler)
+    task = await handler.handle(
+        RescheduleTaskCommand(task_id=_id, scheduled_date=payload.scheduled_date)
+    )
     return map_task_to_schema(task)
 
 

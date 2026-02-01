@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from .base import BaseRequestObject
 
 if TYPE_CHECKING:
-    from datetime import datetime, time
+    from datetime import date as dt_date, datetime, time
     from uuid import UUID
 
     from .ai_chat import FactoidCriticality, FactoidType
@@ -25,6 +25,7 @@ if TYPE_CHECKING:
         EventCategory,
         TaskCategory,
         TaskFrequency,
+        TaskStatus,
         TaskType,
     )
     from .time_block import (
@@ -53,6 +54,15 @@ class TaskDefinitionUpdateObject(BaseUpdateObject):
     name: str | None = None
     description: str | None = None
     type: TaskType | None = None
+
+
+@dataclass(kw_only=True)
+class TaskUpdateObject(BaseUpdateObject):
+    """Update object for Task entity."""
+
+    scheduled_date: dt_date | None = None
+    status: TaskStatus | None = None
+    snoozed_until: datetime | None = None
 
 
 @dataclass(kw_only=True)

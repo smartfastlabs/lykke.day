@@ -5,7 +5,12 @@ from uuid import UUID
 from lykke.core.exceptions import DomainError
 from lykke.core.utils.dates import ensure_utc
 from lykke.domain import value_objects
-from lykke.domain.events.task_events import TaskCreatedEvent, TaskStateUpdatedEvent
+from lykke.domain.value_objects.update import TaskUpdateObject
+from lykke.domain.events.task_events import (
+    TaskCreatedEvent,
+    TaskStateUpdatedEvent,
+    TaskUpdatedEvent,
+)
 
 from .auditable import AuditableEntity
 from .base import BaseEntityObject
@@ -106,6 +111,11 @@ class TaskEntity(BaseEntityObject, AuditableEntity):
         )
 
         return old_status
+
+    def reschedule(self, scheduled_date: dt_date) -> "TaskEntity":
+        """Reschedule this task to a new date via an update event."""
+        update = TaskUpdateObject(scheduled_date=scheduled_date)
+        return self.apply_update(update, TaskUpdatedEvent)
 
     def mark_pending(self) -> value_objects.TaskStatus:
         """Mark the task as pending (ready to be worked on).

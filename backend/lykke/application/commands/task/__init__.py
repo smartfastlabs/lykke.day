@@ -11,6 +11,7 @@ from .record_routine_definition_action import (
     RecordRoutineDefinitionActionHandler,
 )
 from .record_task_action import RecordTaskActionCommand, RecordTaskActionHandler
+from .reschedule_task import RescheduleTaskCommand, RescheduleTaskHandler
 
 __all__ = [
     "CreateAdhocTaskCommand",
@@ -23,4 +24,6 @@ __all__ = [
     "RecordRoutineDefinitionActionHandler",
     "RecordTaskActionCommand",
     "RecordTaskActionHandler",
+    "RescheduleTaskCommand",
+    "RescheduleTaskHandler",
 ]

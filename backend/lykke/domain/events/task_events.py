@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from lykke.domain.value_objects.update import TaskDefinitionUpdateObject
+from lykke.domain.value_objects.update import TaskDefinitionUpdateObject, TaskUpdateObject
 
 from .base import AuditableDomainEvent, DomainEvent, EntityUpdatedEvent
 
@@ -23,6 +23,7 @@ __all__ = [
     "TaskPuntedEvent",
     "TaskStateUpdatedEvent",
     "TaskStatusChangedEvent",
+    "TaskUpdatedEvent",
 ]
 
 
@@ -208,3 +209,8 @@ class TaskStateUpdatedEvent(DomainEvent):
 @dataclass(frozen=True, kw_only=True)
 class TaskDefinitionUpdatedEvent(EntityUpdatedEvent[TaskDefinitionUpdateObject]):
     """Event raised when a task definition is updated via apply_update()."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class TaskUpdatedEvent(EntityUpdatedEvent[TaskUpdateObject]):
+    """Event raised when a task is updated via apply_update()."""

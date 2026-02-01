@@ -75,6 +75,7 @@ interface StreamingDataContextValue {
   syncIncremental: (sinceTimestamp: string) => void;
   setTaskStatus: (task: Task, status: TaskStatus) => Promise<void>;
   snoozeTask: (task: Task, snoozedUntil: string) => Promise<void>;
+  rescheduleTask: (task: Task, scheduledDate: string) => Promise<void>;
   setRoutineAction: (
     routineId: string,
     routineDefinitionId: string,
@@ -636,6 +637,39 @@ export function StreamingDataProvider(props: ParentProps) {
     }
   };
 
+  const rescheduleTask = async (
+    task: Task,
+    scheduledDate: string,
+  ): Promise<void> => {
+    if (!task.id) {
+      throw new Error("Task id is missing");
+    }
+
+    const previousTasks = tasks();
+    const updatedTasks = previousTasks.filter((t) => t.id !== task.id);
+    setDayContextStore((current) => {
+      if (!current.data) return current;
+      return { data: { ...current.data, tasks: updatedTasks } };
+    });
+
+    try {
+      const updatedTask = await taskAPI.rescheduleTask(
+        task.id,
+        scheduledDate,
+      );
+      const currentDay = day();
+      if (currentDay?.date === updatedTask.scheduled_date) {
+        addTaskLocally(updatedTask);
+      }
+    } catch (error) {
+      setDayContextStore((current) => {
+        if (!current.data) return current;
+        return { data: { ...current.data, tasks: previousTasks } };
+      });
+      throw error;
+    }
+  };
+
   const setRoutineAction = async (
     routineId: string,
     routineDefinitionId: string,
@@ -994,6 +1028,7 @@ export function StreamingDataProvider(props: ParentProps) {
     syncIncremental,
     setTaskStatus,
     snoozeTask,
+    rescheduleTask,
     setRoutineAction,
     addAdhocTask,
     addReminder,

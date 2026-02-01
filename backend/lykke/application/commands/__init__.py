@@ -52,6 +52,8 @@ from .task import (
     RecordRoutineDefinitionActionHandler,
     RecordTaskActionCommand,
     RecordTaskActionHandler,
+    RescheduleTaskCommand,
+    RescheduleTaskHandler,
 )
 from .timing_status import EvaluateTimingStatusCommand, EvaluateTimingStatusHandler
 
@@ -81,6 +83,8 @@ __all__ = [
     "RecordRoutineDefinitionActionHandler",
     "RecordTaskActionCommand",
     "RecordTaskActionHandler",
+    "RescheduleTaskCommand",
+    "RescheduleTaskHandler",
     "RescheduleDayCommand",
     "RescheduleDayHandler",
     "ScheduleDayCommand",

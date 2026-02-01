@@ -51,7 +51,7 @@ from .routine_definition import (
     TimeWindowSchema,
 )
 from .tactic import TacticCreateSchema, TacticSchema, TacticUpdateSchema
-from .task import AdhocTaskCreateSchema, TaskSchema
+from .task import AdhocTaskCreateSchema, TaskRescheduleSchema, TaskSchema
 from .task_definition import (
     TaskDefinitionCreateSchema,
     TaskDefinitionSchema,
@@ -108,6 +108,7 @@ DayUpdateSchema.model_rebuild()
 HighLevelPlanSchema.model_rebuild()
 TaskSchema.model_rebuild()
 AdhocTaskCreateSchema.model_rebuild()
+TaskRescheduleSchema.model_rebuild()
 TaskDefinitionUpdateSchema.model_rebuild()
 TacticSchema.model_rebuild()
 DayContextSchema.model_rebuild()
@@ -208,6 +209,7 @@ __all__ = [
     "TaskDefinitionCreateSchema",
     "TaskDefinitionSchema",
     "TaskDefinitionUpdateSchema",
+    "TaskRescheduleSchema",
     "TaskSchema",
     "TimeBlockDefinitionCreateSchema",
     "TimeBlockDefinitionSchema",

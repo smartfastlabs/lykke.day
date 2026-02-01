@@ -53,3 +53,9 @@ class AdhocTaskCreateSchema(BaseSchema):
     category: TaskCategory
     time_window: TimeWindowSchema | None = None
     tags: list[TaskTag] = Field(default_factory=list)
+
+
+class TaskRescheduleSchema(BaseSchema):
+    """API schema for rescheduling a task."""
+
+    scheduled_date: date

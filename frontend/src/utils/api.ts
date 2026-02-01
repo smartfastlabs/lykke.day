@@ -201,6 +201,11 @@ export const taskAPI = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  rescheduleTask: (taskId: string, scheduledDate: string): Promise<Task> =>
+    fetchData<Task>(`/api/tasks/${taskId}/reschedule`, {
+      method: "POST",
+      body: JSON.stringify({ scheduled_date: scheduledDate }),
+    }),
   deleteTask: (taskId: string): Promise<void> =>
     fetchData<void>(`/api/tasks/${taskId}`, { method: "DELETE" }),
 };
