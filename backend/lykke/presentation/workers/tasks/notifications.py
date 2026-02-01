@@ -202,13 +202,11 @@ async def evaluate_morning_overviews_for_all_users_task(
             existing_notifications = await push_notification_repo.search(
                 value_objects.PushNotificationQuery(
                     sent_after=today_start,
-                    status="sent",
+                    triggered_by="morning_overview",
                 )
             )
 
-            morning_overview_sent_today = any(
-                n.triggered_by == "morning_overview" for n in existing_notifications
-            )
+            morning_overview_sent_today = bool(existing_notifications)
 
             if morning_overview_sent_today:
                 logger.debug(
