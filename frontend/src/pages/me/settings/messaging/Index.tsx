@@ -101,8 +101,8 @@ const MessagingConfigPage: Component = () => {
           </label>
 
           <p class="text-xs text-gray-500">
-            When disabled, actions are still taken but no confirmation message is
-            sent.
+            When disabled, actions are still taken but no confirmation message
+            is sent.
           </p>
         </div>
 

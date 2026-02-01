@@ -35,10 +35,10 @@ const PromptDetailsBlock: Component<{
 const hasRequestPayload = (snapshot: LLMRunResultSnapshot): boolean =>
   Boolean(
     snapshot.request_messages?.length ||
-      snapshot.request_tools?.length ||
-      snapshot.request_tool_choice !== undefined ||
-      (snapshot.request_model_params &&
-        Object.keys(snapshot.request_model_params).length > 0),
+    snapshot.request_tools?.length ||
+    snapshot.request_tool_choice !== undefined ||
+    (snapshot.request_model_params &&
+      Object.keys(snapshot.request_model_params).length > 0),
   );
 
 const LLMSnapshotDetails: Component<Props> = (props) => (
@@ -47,9 +47,7 @@ const LLMSnapshotDetails: Component<Props> = (props) => (
       <div class="text-sm font-semibold text-stone-700">Tools</div>
       <Show
         when={(props.snapshot.request_tools?.length ?? 0) > 0}
-        fallback={
-          <div class="text-xs text-stone-500">No tools available.</div>
-        }
+        fallback={<div class="text-xs text-stone-500">No tools available.</div>}
       >
         <div class="space-y-2">
           {props.snapshot.request_tools!.map((tool, index) => {

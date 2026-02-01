@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import uuid
 from collections.abc import Callable
+from contextvars import Token
 from dataclasses import replace
 from datetime import UTC, date as dt_date, datetime
 from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast
@@ -15,7 +16,13 @@ from redis import asyncio as aioredis  # type: ignore
 
 from lykke.application.events import send_domain_events
 from lykke.application.unit_of_work import ReadOnlyRepositoryFactory
-from lykke.application.worker_schedule import NoOpWorkersToSchedule
+from lykke.application.worker_schedule import (
+    NoOpWorkersToSchedule,
+    WorkersToScheduleProtocol,
+    get_current_workers_to_schedule,
+    reset_current_workers_to_schedule,
+    set_current_workers_to_schedule,
+)
 from lykke.core.config import settings
 from lykke.core.constants import (
     MAX_DOMAIN_EVENT_LOG_SIZE,
@@ -260,6 +267,7 @@ class SqlAlchemyUnitOfWork:
         """
         self.user_id = user_id
         self._connection: AsyncConnection | None = None
+        self._workers_token: Token[WorkersToScheduleProtocol | None] | None = None
         self._workers_to_schedule_factory = workers_to_schedule_factory
         self._token: Token[AsyncConnection | None] | None = None
         self._is_nested = False
@@ -523,6 +531,10 @@ class SqlAlchemyUnitOfWork:
             if self._workers_to_schedule_factory is not None
             else NoOpWorkersToSchedule()
         )
+        if get_current_workers_to_schedule() is None:
+            self._workers_token = set_current_workers_to_schedule(
+                self.workers_to_schedule
+            )
 
         return self
 
@@ -556,6 +568,9 @@ class SqlAlchemyUnitOfWork:
             if self._token is not None:
                 reset_transaction_connection(self._token)
                 self._token = None
+            if self._workers_token is not None:
+                reset_current_workers_to_schedule(self._workers_token)
+                self._workers_token = None
 
             # Close the connection
             if self._connection is not None:

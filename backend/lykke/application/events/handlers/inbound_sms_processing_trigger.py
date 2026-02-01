@@ -5,6 +5,7 @@ from typing import ClassVar
 from loguru import logger
 
 from lykke.application.events.handlers.base import DomainEventHandler
+from lykke.application.worker_schedule import get_current_workers_to_schedule
 from lykke.domain.events.ai_chat_events import MessageReceivedEvent
 from lykke.domain.events.base import DomainEvent
 
@@ -25,6 +26,18 @@ class InboundSmsProcessingTriggerHandler(DomainEventHandler):
             worker = worker_tasks.get_worker(
                 worker_tasks.process_inbound_sms_message_task
             )
+            workers_to_schedule = get_current_workers_to_schedule()
+            if workers_to_schedule is not None:
+                workers_to_schedule.schedule(
+                    worker, user_id=event.user_id, message_id=event.message_id
+                )
+                logger.debug(
+                    "Queued inbound SMS processing for user %s message %s (post-commit)",
+                    event.user_id,
+                    event.message_id,
+                )
+                return
+
             await worker.kiq(user_id=event.user_id, message_id=event.message_id)
             logger.debug(
                 "Enqueued inbound SMS processing for user %s message %s",

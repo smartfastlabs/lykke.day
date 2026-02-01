@@ -533,6 +533,7 @@ async def _handle_realtime_events(
                     if (
                         "Created" in activity_type
                         or activity_type == "EntityCreatedEvent"
+                        or activity_type in {"MessageReceivedEvent", "MessageSentEvent"}
                     ):
                         change_type = "created"
                     elif (

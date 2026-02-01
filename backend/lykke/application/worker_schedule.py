@@ -1,6 +1,7 @@
 """Protocols for post-commit worker scheduling after UOW commit."""
 
 from collections.abc import Callable
+from contextvars import ContextVar, Token
 from typing import Any, Protocol
 
 
@@ -44,3 +45,27 @@ class NoOpWorkersToSchedule:
 
     async def flush(self) -> None:
         """No-op."""
+
+
+_current_workers_to_schedule: ContextVar[WorkersToScheduleProtocol | None] = (
+    ContextVar("current_workers_to_schedule", default=None)
+)
+
+
+def get_current_workers_to_schedule() -> WorkersToScheduleProtocol | None:
+    """Return the UOW-scoped workers-to-schedule instance if present."""
+    return _current_workers_to_schedule.get()
+
+
+def set_current_workers_to_schedule(
+    workers: WorkersToScheduleProtocol,
+) -> Token[WorkersToScheduleProtocol | None]:
+    """Set the current workers-to-schedule instance for this context."""
+    return _current_workers_to_schedule.set(workers)
+
+
+def reset_current_workers_to_schedule(
+    token: Token[WorkersToScheduleProtocol | None],
+) -> None:
+    """Reset the current workers-to-schedule instance to its previous state."""
+    _current_workers_to_schedule.reset(token)

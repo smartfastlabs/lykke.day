@@ -1,4 +1,10 @@
-import { Component, Show, createResource, createSignal, createEffect } from "solid-js";
+import {
+  Component,
+  Show,
+  createResource,
+  createSignal,
+  createEffect,
+} from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import SettingsPage from "@/components/shared/SettingsPage";
 import AmendmentsEditor from "@/components/shared/AmendmentsEditor";
